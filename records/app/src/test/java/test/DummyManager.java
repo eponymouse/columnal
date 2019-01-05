@@ -9,25 +9,10 @@ import records.error.UserException;
 import records.transformations.TransformationManager;
 
 /**
- * Created by neil on 16/11/2016.
+ * A TableManager implementation useful for testing
  */
 public class DummyManager extends TableManager
 {
-    // TODO eliminate the use of this; too hacky
-    public static final DummyManager INSTANCE;
-
-    static
-    {
-        try
-        {
-            INSTANCE = new DummyManager();
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     public DummyManager() throws InternalException, UserException
     {
         super(TransformationManager.getInstance(), new TableManagerListener()
@@ -51,4 +36,16 @@ public class DummyManager extends TableManager
             }
         });
     };
+    
+    public static DummyManager make()
+    {
+        try
+        {
+            return new DummyManager();
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -65,7 +65,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         {
             DataType type = makeType(r);
             Pair<@Value Object, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond(), this);
+            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), getTypeManager(), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {
@@ -76,7 +76,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     @Override
     public TypeManager getTypeManager()
     {
-        return DummyManager.INSTANCE.getTypeManager();
+        return dummyManager.getTypeManager();
     }
 
     @NonNull

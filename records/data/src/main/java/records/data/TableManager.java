@@ -61,7 +61,7 @@ public class TableManager
     {
         this.transformationLoader = transformationLoader;
         this.listener = listener;
-        this.unitManager = new UnitManager();;
+        this.unitManager = new UnitManager();
         this.typeManager = new TypeManager(unitManager);
     }
 

@@ -37,7 +37,7 @@ public abstract class BackwardsProvider
 
     protected Unit getUnit(String name) throws InternalException, UserException
     {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        UnitManager m = parent.getTypeManager().getUnitManager();
         return m.loadUse(name);
     }
 }

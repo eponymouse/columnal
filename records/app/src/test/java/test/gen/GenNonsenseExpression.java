@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class GenNonsenseExpression extends Generator<Expression>
 {
     private final GenUnit genUnit = new GenUnit();
-    private TableManager tableManager = DummyManager.INSTANCE;
+    private TableManager tableManager = DummyManager.make();
     
     public GenNonsenseExpression()
     {

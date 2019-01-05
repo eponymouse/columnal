@@ -31,7 +31,7 @@ public class BackwardsFixType extends BackwardsProvider
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of(() -> {
-            TypeManager m = DummyManager.INSTANCE.getTypeManager();
+            TypeManager m = parent.getTypeManager();
             return TypeLiteralExpression.fixType(m, JellyType.fromConcrete(targetType), parent.make(targetType, targetValue, maxLevels - 1));
         });
     }

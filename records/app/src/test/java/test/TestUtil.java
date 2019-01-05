@@ -436,12 +436,14 @@ public class TestUtil
         return columnIds;
     }
 
-    public static List<DataType> distinctTypes;
-    static {
+    public static Pair<DummyManager, List<DataType>> managerWithTestTypes()
+    {
         try
         {
+            DummyManager dummyManager = new DummyManager();
+            
             // TODO add more higher-order types
-            TypeManager typeManager = DummyManager.INSTANCE.getTypeManager();
+            TypeManager typeManager = dummyManager.getTypeManager();
             @SuppressWarnings("nullness")
             DataType a = typeManager.registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
             @SuppressWarnings("nullness")
@@ -461,7 +463,7 @@ public class TestUtil
                             new TagType<>("Right", JellyType.number(JellyUnit.unitVariable("b"))))
             ).instantiate(ImmutableList.of(Either.left(Unit.SCALAR), Either.left(typeManager.getUnitManager().loadUse("m"))), typeManager);
             
-            distinctTypes = Arrays.<DataType>asList(
+            return new Pair<>(dummyManager, Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
                 DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
@@ -471,12 +473,12 @@ public class TestUtil
                 DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)),
                 //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)),
                 DataType.NUMBER,
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("GBP"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^3/s^3"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("(USD*m)/s^2"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("GBP"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m^2"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m^3/s^3"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("cm"))),
+                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("(USD*m)/s^2"))),
                 a,
                 b,
                 c,
@@ -490,7 +492,7 @@ public class TestUtil
                 DataType.array(DataType.NUMBER),
                 DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))),
                 DataType.array(DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))))
-            );
+            ));
         }
         catch (UserException | InternalException e)
         {
@@ -509,11 +511,13 @@ public class TestUtil
         {
             UnitManager unitManager = new UnitManager();
             TypeManager typeManager = new TypeManager(unitManager);
+            /*
             List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
             for (DataType t : taggedTypes)
             {
                 typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
             }
+            */
             return new TypeState(unitManager, typeManager);
         }
         catch (InternalException | UserException e)
@@ -770,69 +774,6 @@ public class TestUtil
         }
     }
 
-    // Registers all tagged types contained within, recursively
-    public static void registerAllTaggedTypes(TypeManager typeManager, DataType outer) throws InternalException, UserException
-    {
-        outer.apply(new DataTypeVisitor<@Nullable Void>()
-        {
-            @Override
-            public @Nullable Void number(NumberInfo numberInfo) throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public @Nullable Void text() throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public @Nullable Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public @Nullable Void bool() throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), Utility.mapListInt(tags, t -> t.mapInt(JellyType::fromConcrete)));
-                for (TagType<DataType> tag : tags)
-                {
-                    if (tag.getInner() != null)
-                    {
-                        registerAllTaggedTypes(typeManager, tag.getInner());
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public @Nullable Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                for (DataType dataType : inner)
-                {
-                    registerAllTaggedTypes(typeManager, dataType);
-                }
-                return null;
-            }
-
-            @Override
-            public @Nullable Void array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner != null)
-                    registerAllTaggedTypes(typeManager, inner);
-                return null;
-            }
-        });
-    }
-
     @OnThread(Tag.Simulation)
     public static String save(TableManager tableManager) throws ExecutionException, InterruptedException, InvocationTargetException
     {
@@ -1067,7 +1008,7 @@ public class TestUtil
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
-        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
+        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
@@ -1101,7 +1042,7 @@ public class TestUtil
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
-        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
+        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
@@ -1143,7 +1084,7 @@ public class TestUtil
     @OnThread(Tag.Simulation)
     public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
     {
-        DummyManager mgr = managerWithTestTypes();
+        DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
         expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
         return expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst();
@@ -1258,25 +1199,6 @@ public class TestUtil
         if (var.getFirst() == TypeVariableKind.UNIT)
             return unit.getDetails().containsKey(ComparableEither.left(var.getSecond()));
         return false;
-    }
-
-    public static DummyManager managerWithTestTypes()
-    {
-        DummyManager mgr;
-        try
-        {
-            mgr = new DummyManager();
-            for (TaggedTypeDefinition taggedTypeDefinition : DummyManager.INSTANCE.getTypeManager().getKnownTaggedTypes().values())
-            {
-                mgr.getTypeManager().registerTaggedType(taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments(), taggedTypeDefinition.getTags());
-            }
-        }
-        catch (InternalException | UserException e)
-        {
-            assumeNoException(e);
-            throw new RuntimeException(e);
-        }
-        return mgr;
     }
 
     @OnThread(Tag.FXPlatform)

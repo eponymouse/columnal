@@ -7,6 +7,7 @@ import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
 import test.DummyManager;
+import test.TestUtil;
 
 /**
  * No randomness involved; this is just an easy way to pass a fresh table manager to
@@ -22,13 +23,6 @@ public class GenTableManager extends Generator<TableManager>
     @Override
     public TableManager generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        try
-        {
-            return new DummyManager();
-        }
-        catch (UserException | InternalException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return TestUtil.managerWithTestTypes().getFirst();
     }
 }

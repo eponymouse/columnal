@@ -254,7 +254,7 @@ public class PropStringFunctions
     {
         FunctionDefinition toString = new ToString();
         @SuppressWarnings("nullness") // Will throw if null
-        @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "from text");
+        @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text");
         @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
         @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), DataType.TEXT, typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
@@ -281,7 +281,7 @@ public class PropStringFunctions
     public void testEscape() throws InternalException, UserException
     {
         @SuppressWarnings("nullness") // Will throw if null
-        @NonNull FunctionDefinition toString = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "to text");
+        @NonNull FunctionDefinition toString = FunctionList.lookup(DummyManager.make().getUnitManager(), "to text");
 
         @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, DataType.TEXT, DataType.TEXT, null);
         assertNotNull(checkedToString);

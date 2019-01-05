@@ -347,7 +347,7 @@ public class BackwardsMatch extends BackwardsProvider
                             {
                                 TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                                 @Nullable DataType inner = tagType.getInner();
-                                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                                @Nullable TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
                                 if (typeDefinition == null)
                                     throw new InternalException("Looked up type but null definition: " + typeName);
                                 if (inner == null)

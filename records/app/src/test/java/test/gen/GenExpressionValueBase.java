@@ -12,6 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import test.DummyManager;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -25,7 +26,10 @@ import java.util.stream.Stream;
 public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValue>
 {
     private final IdentityHashMap<Expression, Pair<DataType, @Value Object>> expressionValues = new IdentityHashMap<>();
-    
+    protected DummyManager dummyManager;
+    private List<DataType> distinctTypes;
+
+    @SuppressWarnings("initialization")
     protected GenExpressionValueBase()
     {
         super(ExpressionValue.class);
@@ -37,8 +41,16 @@ public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValu
     {
         this.r = r;
         this.gs = generationStatus;
+        Pair<DummyManager, List<DataType>> p = TestUtil.managerWithTestTypes();
+        dummyManager = p.getFirst();
+        distinctTypes = p.getSecond();
         expressionValues.clear();
         return generate();
+    }
+
+    public final DataType makeType(SourceOfRandomness r)
+    {
+        return r.choose(distinctTypes);
     }
 
     @OnThread(value = Tag.Simulation, ignoreParent = true)
@@ -86,7 +98,7 @@ public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValu
     {
         try
         {
-            return Expression.parse(null, DataTypeUtility.valueToString(dataType, object, null, true), DummyManager.INSTANCE.getTypeManager());
+            return Expression.parse(null, DataTypeUtility.valueToString(dataType, object, null, true), dummyManager.getTypeManager());
         }
         catch (InternalException | UserException e)
         {

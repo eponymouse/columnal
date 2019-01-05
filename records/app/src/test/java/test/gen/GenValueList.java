@@ -7,6 +7,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import test.TestUtil;
 import test.gen.GenValueList.ListAndType;
 import utility.Utility.ListEx;
 
@@ -45,7 +46,7 @@ public class GenValueList extends GenValueBase<ListAndType>
     {
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
-        DataType t = makeType(r);
+        DataType t = r.choose(TestUtil.managerWithTestTypes().getSecond());
         int length = r.nextInt(0, 100);
         @Value Object[] values = new @Value Object[length];
         for (int i = 0; i < length; i++)

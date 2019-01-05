@@ -106,7 +106,7 @@ public class TestFormat
     @OnThread(Tag.Simulation)
     private static void assertFormat(FinalTextFormat fmt, String... lines) throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
-        FinalTextFormat actual = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), ImmutableMap.of(Charset.forName("UTF-8"), Arrays.asList(lines)), null, null)._test_getResultNoGUI();
+        FinalTextFormat actual = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), ImmutableMap.of(Charset.forName("UTF-8"), Arrays.asList(lines)), null, null)._test_getResultNoGUI();
         assertEquals(fmt.initialTextFormat, actual.initialTextFormat);
         // We only care about top.  If they have to trim more from sides due to header, that is fine:
         assertEquals(fmt.toString(), fmt.trimChoice.trimFromTop, actual.trimChoice.trimFromTop);
@@ -122,7 +122,7 @@ public class TestFormat
     {
         try
         {
-            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0, commonPrefix, null);
+            return new NumericColumnType(DummyManager.make().getUnitManager().loadUse(unit), 0, commonPrefix, null);
         }
         catch (InternalException | UserException e)
         {

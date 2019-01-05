@@ -197,12 +197,12 @@ public class PropDateFunctions
     @OnThread(Tag.Simulation)
     private Object strTo(String src, DateTimeType dateTimeType) throws Throwable
     {
-        @Nullable FunctionDefinition fromText = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "from text to");
+        @Nullable FunctionDefinition fromText = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text to");
         if (fromText == null)
             throw new RuntimeException("Cannot find from text to function");
         // First param should be Type Date, but it shouldn't be used....
         @Value Object[] args = new @Value Object[] {v(""), v(src)};
-        return runFunction1(DataTypeUtility.value(args), DataType.tuple(DummyManager.INSTANCE.getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
+        return runFunction1(DataTypeUtility.value(args), DataType.tuple(DummyManager.make().getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
     }
 
     // Tests single numeric input, numeric output function

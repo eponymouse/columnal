@@ -201,8 +201,8 @@ public class TestExpressionEditorDragPaste extends FXApplicationTest implements 
                             int destBeforeNodexIndexIncl,
                             String afterSrc) throws Exception
     {
-        Expression expression = Expression.parse(null, expressionSrc, DummyManager.INSTANCE.getTypeManager());
-        Expression after = Expression.parse(null, afterSrc, DummyManager.INSTANCE.getTypeManager());
+        Expression expression = Expression.parse(null, expressionSrc, DummyManager.make().getTypeManager());
+        Expression after = Expression.parse(null, afterSrc, DummyManager.make().getTypeManager());
 
         for (MoveMethod moveMethod : MoveMethod.values())
         {

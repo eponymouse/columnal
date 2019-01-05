@@ -214,12 +214,13 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
-        Expression expression = Expression.parse(null, expressionSrc, DummyManager.INSTANCE.getTypeManager());
+        DummyManager dummyManager = new DummyManager();
+        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager());
         
         testEntry(new ExpressionValue(
             DataType.BOOLEAN, // Type is unused here
             ImmutableList.of(),
-            DummyManager.INSTANCE.getTypeManager(),
+            dummyManager.getTypeManager(),
             new KnownLengthRecordSet(ImmutableList.of(), 0),
             expression,
             null

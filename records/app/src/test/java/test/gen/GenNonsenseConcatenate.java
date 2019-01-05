@@ -42,7 +42,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
-        DummyManager mgr = TestUtil.managerWithTestTypes();
+        DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         ImmutableList<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));

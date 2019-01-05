@@ -32,18 +32,23 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     @Override
     public final Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
     {
-        return calculateBounds(visibleBounds).flatMap(e -> e.either(b -> Optional.of(b), r -> visibleBounds.clampVisible(r).map(bounds -> {
-            double left = visibleBounds.getXCoord(bounds.topLeftIncl.columnIndex);
-            double top = visibleBounds.getYCoord(bounds.topLeftIncl.rowIndex);
-            // Take one pixel off so that we are on top of the right/bottom divider inset
-            // rather than showing it just inside the rectangle (which looks weird)
-            double right = visibleBounds.getXCoordAfter(bounds.bottomRightIncl.columnIndex) - 1;
-            double bottom = visibleBounds.getYCoordAfter(bounds.bottomRightIncl.rowIndex) - 1;
+        return calculateBounds(visibleBounds)
+            .flatMap(e -> e.either(b -> Optional.of(b), 
+                r -> visibleBounds.clampVisible(r).map(bounds -> calculateBoundingBox(visibleBounds, bounds))));
+    }
 
-            return new BoundingBox(
-                    left, top, right - left, bottom - top
-            );
-        })));
+    protected BoundingBox calculateBoundingBox(VisibleBounds visibleBounds, RectangleBounds bounds)
+    {
+        double left = visibleBounds.getXCoord(bounds.topLeftIncl.columnIndex);
+        double top = visibleBounds.getYCoord(bounds.topLeftIncl.rowIndex);
+        // Take one pixel off so that we are on top of the right/bottom divider inset
+        // rather than showing it just inside the rectangle (which looks weird)
+        double right = visibleBounds.getXCoordAfter(bounds.bottomRightIncl.columnIndex) - 1;
+        double bottom = visibleBounds.getYCoordAfter(bounds.bottomRightIncl.rowIndex) - 1;
+
+        return new BoundingBox(
+                left, top, right - left, bottom - top
+        );
     }
 
     /**

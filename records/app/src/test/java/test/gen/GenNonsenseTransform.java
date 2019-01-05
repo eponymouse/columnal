@@ -40,8 +40,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            DummyManager mgr = new DummyManager();
-            mgr.getTypeManager()._test_copyTaggedTypesFrom(DummyManager.INSTANCE.getTypeManager());
+            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
 
@@ -57,7 +56,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
             }
             return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             throw new RuntimeException(e);
         }

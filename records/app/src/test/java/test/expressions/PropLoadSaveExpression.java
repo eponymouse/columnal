@@ -73,13 +73,13 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     public void testNoOpEdit(String src) throws UserException, InternalException
     {
-        testNoOpEdit(Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
+        testNoOpEdit(Expression.parse(null, src, DummyManager.make().getTypeManager()));
     }
 
     @OnThread(Tag.FXPlatform)
     private void testNoOpEdit(Expression expression)
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make(), e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
@@ -102,7 +102,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     {
         String saved = expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
-        Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
+        Expression reloaded = Expression.parse(null, saved, DummyManager.make().getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);

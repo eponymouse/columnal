@@ -179,7 +179,7 @@ public class TestUnit
         {
             @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(new AsUnit(),
                 DataType.tuple(
-                    DummyManager.INSTANCE.getTypeManager().unitGADTFor(mgr.loadUse(destUnit)),
+                    DummyManager.make().getTypeManager().unitGADTFor(mgr.loadUse(destUnit)),
                     DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))
                 )
             );

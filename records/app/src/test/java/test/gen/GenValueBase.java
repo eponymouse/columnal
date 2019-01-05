@@ -22,6 +22,7 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -58,7 +59,6 @@ import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static test.TestUtil.distinctTypes;
 import static test.TestUtil.generateNumberV;
 
 /**
@@ -247,11 +247,6 @@ public abstract class GenValueBase<T> extends Generator<T>
         }
         while (n instanceof BigDecimal);
         return DataTypeUtility.value(n.longValue());
-    }
-
-    public static DataType makeType(SourceOfRandomness r)
-    {
-        return r.choose(distinctTypes);
     }
 
     @SuppressWarnings("recorded")

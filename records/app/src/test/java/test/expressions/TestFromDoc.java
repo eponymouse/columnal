@@ -182,7 +182,7 @@ public class TestFromDoc
 
                 Expression expression = Expression.parse(null, line, typeManager);
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                TypeState typeState = new TypeState(DummyManager.INSTANCE.getUnitManager(), typeManager);
+                TypeState typeState = new TypeState(DummyManager.make().getUnitManager(), typeManager);
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {
                     typeState = typeState.add(e.getKey(), e.getValue(), s -> {throw new RuntimeException(e.toString());});

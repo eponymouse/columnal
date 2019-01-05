@@ -75,8 +75,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
-import static test.TestUtil.distinctTypes;
-
 /**
  * Generates expressions and resulting values by working the value forwards.
  * At each step, we generate an expression and then work out what its
@@ -95,7 +93,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     @SuppressWarnings("initialization")
     public GenExpressionValueForwards()
     {
-        
     }
 
     // Easier than passing parameters around:
@@ -113,7 +110,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         {
             DataType type = makeType(r);
             Pair<List<@Value Object>, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, p.getFirst(), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond(), this);
+            return new ExpressionValue(type, p.getFirst(), dummyManager.getTypeManager(), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {
@@ -134,11 +131,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     public Pair<List<@Value Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
         return make(type, 4);
-    }
-
-    public static DataType makeType(SourceOfRandomness r)
-    {
-        return r.choose(distinctTypes);
     }
 
     private Pair<List<@Value Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
@@ -550,14 +542,14 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 nonTerm.add(fix(maxLevels - 1, type));
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                @Nullable TaggedTypeDefinition typeDefinition = dummyManager.getTypeManager().lookupDefinition(typeName);
                 if (typeDefinition == null)
                     throw new InternalException("Looked up type but null definition: " + typeName);
                 TagInfo tagInfo = new TagInfo(typeDefinition, tagIndex);
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), TestUtil.tagged(DummyManager.INSTANCE.getUnitManager(), tagInfo, null, type)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type)));
                 }
                 else
                 {
@@ -565,7 +557,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     nonTerm.add(() ->
                     {
                         Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> TestUtil.tagged(DummyManager.INSTANCE.getUnitManager(), tagInfo, e, type));
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);
@@ -674,13 +666,13 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
 
     private Unit getUnit(String name) throws InternalException, UserException
     {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        UnitManager m = dummyManager.getUnitManager();
         return m.loadUse(name);
     }
 
     private Unit makeUnit() throws InternalException, UserException
     {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        UnitManager m = dummyManager.getUnitManager();
         return r.<@NonNull Unit>choose(Arrays.asList(
             m.loadUse("m"),
             m.loadUse("cm"),
@@ -712,7 +704,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     
     private ExpressionMaker fix(int maxLevels, DataType type)
     {
-        TypeManager m = DummyManager.INSTANCE.getTypeManager();
+        TypeManager m = dummyManager.getTypeManager();
         return () -> {
             Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
             return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), inner.getSecond()));

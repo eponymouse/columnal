@@ -48,7 +48,7 @@ public class GenFormat extends Generator<FinalTextFormat>
         {
             // Only EUR has reliable one-to-one connection with currency symbol:
             currencies = Arrays.asList(
-                DummyManager.INSTANCE.getUnitManager().loadUse("EUR")
+                DummyManager.make().getUnitManager().loadUse("EUR")
             );
         }
         catch (InternalException | UserException e)

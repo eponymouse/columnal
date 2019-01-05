@@ -18,12 +18,14 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.ExFunction;
+import utility.Pair;
 import utility.SimulationFunction;
 
 import java.lang.annotation.Retention;
@@ -64,7 +66,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     {
         try
         {
-            TableManager mgr = new GenTableManager().generate(r, generationStatus);
+            Pair<DummyManager, List<DataType>> mgrAndTypes = TestUtil.managerWithTestTypes();
 
             List<ImmediateDataSource> tables = new ArrayList<>();
 
@@ -77,7 +79,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 
                 int numColumns = r.nextInt(1, 12);
                 List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
-                GenColumn genColumn = new GenColumn(mgr);
+                GenColumn genColumn = new GenColumn(mgrAndTypes.getFirst(), mgrAndTypes.getSecond());
                 for (int i = 0; i < numColumns; i++)
                 {
                     ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
@@ -91,11 +93,11 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 }
 
                 @SuppressWarnings({"keyfor", "units"})
-                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, new InitialLoadDetails(new TableId("Test" + nextTableNum++), null, null), new EditableRecordSet(columns, () -> length));
-                mgr.record(dataSource);
+                ImmediateDataSource dataSource = new ImmediateDataSource(mgrAndTypes.getFirst(), new InitialLoadDetails(new TableId("Test" + nextTableNum++), null, null), new EditableRecordSet(columns, () -> length));
+                mgrAndTypes.getFirst().record(dataSource);
                 tables.add(dataSource);
             }
-            return new ImmediateData_Mgr(mgr, tables);
+            return new ImmediateData_Mgr(mgrAndTypes.getFirst(), tables);
         }
         catch (InternalException | UserException e)
         {

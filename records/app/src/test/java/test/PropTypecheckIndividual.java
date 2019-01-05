@@ -363,7 +363,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
     {
-        return checkConcrete(DummyManager.INSTANCE.getTypeManager(), e);
+        return checkConcrete(DummyManager.make().getTypeManager(), e);
     }
 
     private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
@@ -462,7 +462,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkUnits() throws InternalException, UserException
     {
-        Unit m = DummyManager.INSTANCE.getUnitManager().loadUse("m");
+        Unit m = DummyManager.make().getUnitManager().loadUse("m");
         checkConcreteType(DataType.BOOLEAN, "1 < 2");
         checkConcreteType(DataType.BOOLEAN, "1 < 2{m}");
         checkConcreteType(DataType.BOOLEAN, "1 < 2{m} <= 3");
@@ -481,6 +481,6 @@ public class PropTypecheckIndividual
 
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
     {
-        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager())));
+        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, DummyManager.make().getTypeManager())));
     }
 }

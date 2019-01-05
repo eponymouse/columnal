@@ -122,17 +122,16 @@ public class BackwardsNumbers extends BackwardsProvider
 
     private Unit makeUnit() throws InternalException, UserException
     {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
         return r.<@NonNull Unit>choose(Arrays.asList(
-                m.loadUse("m"),
-                m.loadUse("cm"),
-                m.loadUse("inch"),
-                m.loadUse("g"),
-                m.loadUse("kg"),
-                m.loadUse("deg"),
-                m.loadUse("s"),
-                m.loadUse("hour"),
-                m.loadUse("USD")
+            getUnit("m"),
+            getUnit("cm"),
+            getUnit("inch"),
+            getUnit("g"),
+            getUnit("kg"),
+            getUnit("deg"),
+            getUnit("s"),
+            getUnit("hour"),
+            getUnit("USD")
         ));
     }
 }

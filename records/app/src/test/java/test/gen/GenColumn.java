@@ -17,6 +17,7 @@ import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.Utility;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -35,12 +36,14 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
             return new ColumnId("GenCol" + (nextId++));
         }
     };
+    private final List<DataType> distinctTypes;
 
     @SuppressWarnings("unchecked")
-    public GenColumn(TableManager mgr)
+    public GenColumn(TableManager mgr, List<DataType> distinctTypes)
     {
         super((Class<ExBiFunction<Integer, RecordSet, Column>>)(Class<?>)BiFunction.class);
         this.mgr = mgr;
+        this.distinctTypes = distinctTypes;
     }
 
     @Override
@@ -49,13 +52,12 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     {
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
-        DataType type = sourceOfRandomness.choose(TestUtil.distinctTypes);
+        DataType type = sourceOfRandomness.choose(distinctTypes);
         try
         {
-            TestUtil.registerAllTaggedTypes(mgr.getTypeManager(), type);
             return columnForType(type);
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             throw new RuntimeException(e);
         }

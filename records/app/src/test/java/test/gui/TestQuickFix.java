@@ -266,7 +266,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
 
     private String dotCssClassFor(String expression) throws InternalException, UserException
     {
-        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager()));
+        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.make().getTypeManager()));
     }
 
     /**

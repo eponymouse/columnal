@@ -48,7 +48,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            Expression.parse(null, "@column Card", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column Card", DummyManager.make().getTypeManager())
         );
     }
     @Test
@@ -60,7 +60,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@column Card <> \"xxx\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column Card <> \"xxx\"", DummyManager.make().getTypeManager())
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
@@ -112,7 +112,7 @@ public class TestLoadSaveExpression
 
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
-        assertEquals(expression, Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
+        assertEquals(expression, Expression.parse(null, src, DummyManager.make().getTypeManager()));
         assertEquals(src, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
     }
 }

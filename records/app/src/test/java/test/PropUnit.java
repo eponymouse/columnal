@@ -26,10 +26,21 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropUnit
 {
+    private final UnitManager mgr;
+    {
+        try
+        {
+            mgr = new UnitManager();
+        }
+        catch (UserException | InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Property
     public void propUnits(@From(GenUnit.class) Unit a, @From(GenUnit.class) Unit b) throws UserException, InternalException
     {
-        UnitManager mgr = new UnitManager();
         assertEquals(a.equals(b), b.equals(a));
         assertEquals(a.canScaleTo(b, mgr), b.canScaleTo(a, mgr).map(Rational::reciprocal));
         assertEquals(a, a.reciprocal().reciprocal());
@@ -131,6 +142,6 @@ public class PropUnit
 
     private Unit unit(String unit) throws UserException, InternalException
     {
-        return DummyManager.INSTANCE.getUnitManager().loadUse(unit);
+        return mgr.loadUse(unit);
     }
 }

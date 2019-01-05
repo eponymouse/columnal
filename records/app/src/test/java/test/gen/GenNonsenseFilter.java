@@ -33,14 +33,13 @@ public class GenNonsenseFilter extends Generator<Transformation_Mgr>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            DummyManager mgr = new DummyManager();
-            mgr.getTypeManager()._test_copyTaggedTypesFrom(DummyManager.INSTANCE.getTypeManager());
+            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
             return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), nonsenseExpression));
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             throw new RuntimeException(e);
         }

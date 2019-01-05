@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
  */
 public class GenTypecheckFail extends Generator<TypecheckInfo>
 {
+    private GenExpressionValueForwards gen;
 
     @SuppressWarnings("initialization")
     public GenTypecheckFail()
@@ -90,7 +91,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     @SuppressWarnings("nullness")
     public TypecheckInfo generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        GenExpressionValueForwards gen = new GenExpressionValueForwards();
+        gen = new GenExpressionValueForwards();
         ExpressionValue valid = gen.generate(r, generationStatus);
         Expression expression = valid.expression;
         try
@@ -108,7 +109,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
     @SuppressWarnings("nullness") // Some problem with Collectors.toList
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    private static TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, Expression expression)
+    private TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, Expression expression)
     {
         try
         {
@@ -194,9 +195,9 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                         @Override
                         public TypeManager getTypeManager()
                         {
-                            return DummyManager.INSTANCE.getTypeManager();
+                            return DummyManager.make().getTypeManager();
                         }
-                    }, DummyManager.INSTANCE.getUnitManager());
+                    }, DummyManager.make().getUnitManager());
                     if (failedCopy == null)
                         return null;
                     else
@@ -237,12 +238,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             .map(e -> getTypecheckInfo(random, larger.gen, e)).collect(Collectors.<TypecheckInfo>toList());
     }
 
-    private static DataType pickType(SourceOfRandomness r)
+    private DataType pickType(SourceOfRandomness r)
     {
-        return GenExpressionValueBackwards.makeType(r);
+        return gen.makeType(r);
     }
 
-    private static DataType pickTypeOtherThan(@Nullable TypeExp type, SourceOfRandomness r) throws InternalException, UserException
+    private DataType pickTypeOtherThan(@Nullable TypeExp type, SourceOfRandomness r) throws InternalException, UserException
     {
         DataType picked;
         do
@@ -253,7 +254,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return picked;
     }
 
-    private static DataType pickNonNumericType(SourceOfRandomness r)
+    private DataType pickNonNumericType(SourceOfRandomness r)
     {
         DataType picked;
         do

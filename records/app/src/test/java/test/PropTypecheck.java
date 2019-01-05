@@ -67,7 +67,7 @@ public class PropTypecheck
     @Test
     public void testTypeComparison() throws InternalException, UserException
     {
-        List<DataType> types = TestUtil.distinctTypes;
+        List<DataType> types = TestUtil.managerWithTestTypes().getSecond();
         for (DataType a : types)
         {
             for (DataType b : types)
@@ -174,19 +174,19 @@ public class PropTypecheck
 
         boolean same = unitA.equals(unitB);
 
-        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), numberA, numberB, numberAV, numberBV, same);
+        checkSameRelations(DummyManager.make().getTypeManager(), numberA, numberB, numberAV, numberBV, same);
     }
 
     @Test
     public void checkBool() throws InternalException, UserException
     {
-        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), DataType.BOOLEAN, DataType.BOOLEAN, DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), true);
+        checkSameRelations(DummyManager.make().getTypeManager(), DataType.BOOLEAN, DataType.BOOLEAN, DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), true);
     }
 
     @Test
     public void checkText() throws InternalException, UserException
     {
-        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), DataType.TEXT, DataType.TEXT, DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), true);
+        checkSameRelations(DummyManager.make().getTypeManager(), DataType.TEXT, DataType.TEXT, DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), true);
     }
 
     @Property
@@ -199,7 +199,7 @@ public class PropTypecheck
 
         boolean same = dateTimeInfoA.sameType(dateTimeInfoB);
 
-        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), dateA, dateB, dateAV, dateBV, same);
+        checkSameRelations(DummyManager.make().getTypeManager(), dateA, dateB, dateAV, dateBV, same);
     }
 
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):

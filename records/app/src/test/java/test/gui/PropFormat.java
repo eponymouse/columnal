@@ -79,16 +79,16 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     public void testGuessFormat(@When(seed=-7933145534890491151L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
-        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
+        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
         @OnThread(Tag.Simulation) FinalTextFormat ftf = format._test_getResultNoGUI();
         assertEquals("Failure with content: " + content, formatAndData.format, ftf);
-        checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.INSTANCE.getTypeManager(), writeDataToFile(formatAndData), ftf));
+        checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.make().getTypeManager(), writeDataToFile(formatAndData), ftf));
         
         List<DataSource> loaded = new ArrayList<>();
         File htmlFile = File.createTempFile("data", "html");
         FileUtils.writeStringToFile(htmlFile, formatAndData.htmlContent, StandardCharsets.UTF_8);
         SimulationConsumer<ImmutableList<DataSource>> addToLoaded = loaded::addAll;
-        FXPlatformConsumer<Integer> loadTable = HTMLImporter.importHTMLFile(null, DummyManager.INSTANCE, htmlFile, htmlFile.toURI().toURL(), CellPosition.ORIGIN, addToLoaded).getSecond();
+        FXPlatformConsumer<Integer> loadTable = HTMLImporter.importHTMLFile(null, DummyManager.make(), htmlFile, htmlFile.toURI().toURL(), CellPosition.ORIGIN, addToLoaded).getSecond();
         CompletableFuture<Boolean> f = new CompletableFuture<>();
         Platform.runLater(() -> {
             loadTable.consume(0);
