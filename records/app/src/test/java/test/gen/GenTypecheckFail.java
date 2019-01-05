@@ -19,6 +19,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
+import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
@@ -52,12 +53,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         public final RecordSet recordSet;
         public final List<Expression> expressionFailures;
         public final GenExpressionValueForwards gen;
+        public final TypeManager typeManager;
 
-        public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures, GenExpressionValueForwards gen)
+        public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures, TypeManager typeManager, GenExpressionValueForwards gen)
         {
             this.original = original;
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
+            this.typeManager = typeManager;
             this.gen = gen;
         }
 
@@ -96,7 +99,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
+            if (null == expression.check(valid, new TypeState(valid.typeManager.getUnitManager(), valid.typeManager), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)
@@ -104,12 +107,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-        return getTypecheckInfo(r, gen, expression);
+        return getTypecheckInfo(r, gen, valid.typeManager, expression);
     }
 
     @SuppressWarnings("nullness") // Some problem with Collectors.toList
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    private TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, Expression expression)
+    private TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, TypeManager typeManager, Expression expression)
     {
         try
         {
@@ -221,7 +224,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             //    System.err.println("Transformed " + valid.expression + " into failure " + failure);
             //}
 
-            return new TypecheckInfo(expression, gen.getRecordSet(), failures, gen);
+            return new TypecheckInfo(expression, gen.getRecordSet(), failures, typeManager, gen);
         }
         catch (InternalException | UserException | RuntimeException e)
         {
@@ -235,7 +238,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     public List<TypecheckInfo> doShrink(SourceOfRandomness random, TypecheckInfo larger)
     {
         return larger.original._test_childMutationPoints().map(p -> p.getFirst())
-            .map(e -> getTypecheckInfo(random, larger.gen, e)).collect(Collectors.<TypecheckInfo>toList());
+            .map(e -> getTypecheckInfo(random, larger.gen, larger.typeManager, e)).collect(Collectors.<TypecheckInfo>toList());
     }
 
     private DataType pickType(SourceOfRandomness r)

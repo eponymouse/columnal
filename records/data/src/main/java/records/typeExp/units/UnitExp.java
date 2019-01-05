@@ -373,4 +373,10 @@ public final class UnitExp implements StyledShowable
     {
         return this.units.keySet().stream().allMatch(Either::isLeft);
     }
+
+    @Override
+    public String toString()
+    {
+        return toStyledString().toPlain();
+    }
 }
