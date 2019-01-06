@@ -42,7 +42,7 @@ public class TestFormat
 {
     private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, null, null);
     private static final ColumnType TEXT = new TextColumnType();
-    private static final ColumnType BOOL = new BoolColumnType("true");
+    private static final ColumnType BOOL = new BoolColumnType("true", "false");
     private static final ColumnType DATE = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, m(" ", DAY, MONTH_NUM, YEAR2), LocalDate::from);
     private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), LocalTime::from);
     private static final Charset UTF8 = Charset.forName("UTF-8");

@@ -8,6 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -23,12 +24,12 @@ public class MemoryTemporalColumn extends EditableColumn
     @OnThread(Tag.Any)
     private final @Value TemporalAccessor defaultValue;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list, TemporalAccessor defaultValue) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Either<String, TemporalAccessor>> list, TemporalAccessor defaultValue) throws InternalException
     {
         super(rs, title);
         this.defaultValue = DataTypeUtility.value(dateTimeInfo, defaultValue);
         this.storage = new TemporalColumnStorage(dateTimeInfo);
-        this.storage.addAll(list);
+        this.storage.addAll(list.stream());
     }
 
     @Override
@@ -53,7 +54,7 @@ public class MemoryTemporalColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override

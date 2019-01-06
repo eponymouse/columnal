@@ -14,20 +14,23 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 04/11/2016.
  */
-public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
+public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAccessor> implements ColumnStorage<TemporalAccessor>
 {
     private final ArrayList<@Value TemporalAccessor> values;
     private final DumbObjectPool<@Value TemporalAccessor> pool;
@@ -67,11 +70,14 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     }
 
     @Override
-    public void addAll(List<TemporalAccessor> items) throws InternalException
+    public void addAll(Stream<Either<String, TemporalAccessor>> items) throws InternalException
     {
-        this.values.ensureCapacity(this.values.size() + items.size());
-        for (TemporalAccessor t : items)
+        for (Either<String, TemporalAccessor> item : Utility.iterableStream(items))
         {
+            TemporalAccessor t = item.either(err -> {
+                setError(values.size(), err);
+                return Instant.EPOCH;
+            }, v -> v);
             this.values.add(pool.pool(DataTypeUtility.value(dateTimeInfo, t)));
         }
     }
@@ -108,17 +114,28 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, List<TemporalAccessor> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<@Nullable TemporalAccessor> items) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.<TemporalAccessor, @Value TemporalAccessor>mapListInt(items, t -> pool.pool(DataTypeUtility.value(dateTimeInfo, t))));
+        values.ensureCapacity(values.size() + items.size());
+        for (@Nullable TemporalAccessor item : items)
+        {
+            if (item == null)
+            {
+                @SuppressWarnings("value")
+                @Value Instant dummy = Instant.EPOCH;
+                values.add(pool.pool(dummy));
+            }
+            else
+                values.add(pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
+        }
         int count = items.size();
-        return () -> removeRows(index, count);
+        return () -> _removeRows(index, count);
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());

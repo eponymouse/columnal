@@ -29,14 +29,14 @@ public class MemoryTaggedColumn extends EditableColumn
     private final TaggedValue defaultValue;
     private final ImmutableList<Either<Unit, DataType>> typeVars;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DataType>> tags, List<Either<String, TaggedValue>> values, TaggedValue defaultValue) throws InternalException
     {
         super(rs, title);
         this.typeName = typeName;
         this.typeVars = typeVars;
         this.defaultValue = defaultValue;
         this.storage = new TaggedColumnStorage(typeName, typeVars, tags);
-        this.storage.addAll(list);
+        this.storage.addAll(values.stream());
     }
 
     @Override
@@ -66,10 +66,11 @@ public class MemoryTaggedColumn extends EditableColumn
     }
 
 
+    @SuppressWarnings("value") // Not 100% sure why this is needed
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override

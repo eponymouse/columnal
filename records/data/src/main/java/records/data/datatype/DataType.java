@@ -1149,46 +1149,53 @@ public class DataType implements StyledShowable
     {
         return apply(new DataTypeVisitor<SimulationFunction<RecordSet, EditableColumn>>()
         {
+            @SuppressWarnings("value")
+            private <T> List<Either<String, T>> listRight(List<@Value Object> values, FunctionInt<@Value Object, @Value T> applyValue) throws InternalException
+            {
+                return Utility.mapListInt(values, x -> Either.<String, T>right(applyValue.apply(x)));
+            }
+            
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
+                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, listRight(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
-                return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString), Utility.cast(defaultValue, String.class));
+                return rs -> new MemoryStringColumn(rs, columnId, listRight(value, Utility::valueString), Utility.cast(defaultValue, String.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
+                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, listRight(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
-                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
+                return rs -> new MemoryBooleanColumn(rs, columnId, listRight(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
+                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, listRight(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
 
+            @SuppressWarnings("value")
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.<@Value Object, @Value Object @Value[]>mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, this.<@Value Object[]>listRight(value, (@Value Object t) -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
             }
 
             @Override
@@ -1198,7 +1205,7 @@ public class DataType implements StyledShowable
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");
                 DataType innerFinal = inner;
-                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Utility.mapListEx(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
+                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, listRight(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
             }
         });
     }

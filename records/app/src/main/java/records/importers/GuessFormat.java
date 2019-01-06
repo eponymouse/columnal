@@ -900,7 +900,7 @@ public class GuessFormat
             }
             else if (!possibleBooleanSets.isEmpty())
             {
-                columnTypes.add(new BoolColumnType(possibleBooleanSets.get(0).get(0)));
+                columnTypes.add(new BoolColumnType(possibleBooleanSets.get(0).get(0), possibleBooleanSets.get(0).get(1)));
             }
             else if (allNumeric)
             {

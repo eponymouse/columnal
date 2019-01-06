@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
+import utility.Either;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -68,10 +69,17 @@ public class CleanDateColumnType extends ColumnType
         return formatter;
     }
 
-    public TemporalAccessor parse(@NonNull String s) throws InternalException
+    public Either<String, TemporalAccessor> parse(@NonNull String s) throws InternalException
     {
         s = s.trim();
-        return getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(preprocessDate ? Utility.preprocessDate(s) : s, query));
+        try
+        {
+            return Either.right(getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(preprocessDate ? Utility.preprocessDate(s) : s, query)));
+        }
+        catch (RuntimeException e)
+        {
+            return Either.left(s);
+        }
     }
 
     public DateTimeInfo getDateTimeInfo()

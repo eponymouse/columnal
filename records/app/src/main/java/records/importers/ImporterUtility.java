@@ -99,16 +99,16 @@ public class ImporterUtility
             }
             else if (columnType instanceof TextColumnType || columnType instanceof BlankColumnType)
             {
-                columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice, ""));
+                columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, Utility.mapList(slice, Either::right), ""));
             }
             else if (columnType instanceof CleanDateColumnType)
             {
-                columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
+                columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, Either<String, TemporalAccessor>>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
             }
             else if (columnType instanceof BoolColumnType)
             {
                 BoolColumnType bool = (BoolColumnType) columnType;
-                columns.add(rs -> new MemoryBooleanColumn(rs, columnInfo.title, Utility.mapList(slice, bool::isTrue), false));
+                columns.add(rs -> new MemoryBooleanColumn(rs, columnInfo.title, Utility.mapList(slice, bool::parse), false));
             }
             else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
             {
@@ -119,11 +119,11 @@ public class ImporterUtility
                     ImmutableList.of(Either.right(numberType)), mgr
                 );
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
+                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, (String item) -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
-                        return new TaggedValue(0, null);
+                        return Either.<String, TaggedValue>right(new TaggedValue(0, null));
                     else
-                        return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefixAndSuffix(item))));
+                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(n -> Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n)))).orElse(Either.left(item));
                 }), new TaggedValue(0, null)));
             }
             else

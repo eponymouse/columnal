@@ -7,6 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -20,12 +21,12 @@ public class MemoryStringColumn extends EditableColumn
     private final StringColumnStorage storage;
     private final @Value String defaultValue;
 
-    public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values, String defaultValue) throws InternalException
+    public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<Either<String, String>> values, String defaultValue) throws InternalException
     {
         super(recordSet, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
         this.storage = new StringColumnStorage();
-        this.storage.addAll(values);
+        this.storage.addAll(values.stream());
     }
 
     public void add(String value) throws InternalException
@@ -47,13 +48,13 @@ public class MemoryStringColumn extends EditableColumn
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException
+    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
@@ -75,11 +76,5 @@ public class MemoryStringColumn extends EditableColumn
     public void setValue(int index, @Value String value) throws InternalException
     {
         storage.setValue(index, value);
-    }
-
-    // Used by InferTypeColumn to easily directly access the values:
-    public List<String> getAll() throws InternalException, UserException
-    {
-        return storage.getAllCollapsed(0, storage.filled());
     }
 }

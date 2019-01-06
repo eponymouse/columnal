@@ -12,17 +12,20 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExBiConsumer;
 import utility.SimulationRunnable;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 08/12/2016.
  */
-public class BooleanColumnStorage implements ColumnStorage<Boolean>
+public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> implements ColumnStorage<Boolean>
 {
     private int length = 0;
     private final BitSet data = new BitSet();
@@ -72,11 +75,11 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     }
 
     @Override
-    public void addAll(List<Boolean> items) throws InternalException
+    public void addAll(Stream<Either<String, Boolean>> items) throws InternalException
     {
-        for (Boolean item : items)
+        for (Either<String, Boolean> item : Utility.iterableStream(items))
         {
-            data.set(length, item);
+            item.either_(e -> setError(length, e), b -> data.set(length, b));
             length += 1;
         }
     }
@@ -87,18 +90,8 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         return type;
     }
 
-    public List<Boolean> getShrunk(int shrunkLength)
-    {
-        List<Boolean> r = new ArrayList<>(shrunkLength);
-        for (int i = 0;i < shrunkLength; i++)
-        {
-            r.add(data.get(i));
-        }
-        return r;
-    }
-
     @Override
-    public SimulationRunnable insertRows(int index, List<Boolean> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable Boolean> items) throws InternalException, UserException
     {
         int count = items.size();
         // Could probably do this faster:
@@ -108,13 +101,18 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         // Initialise bits to false:
         data.clear(index, index + count);
         for (int i = 0; i < count; i++)
-            data.set(index + i, items.get(i));
+        {
+            int destIndex = index + i;
+            Boolean item = items.get(i);
+            if (item != null)
+                data.set(destIndex, item);
+        }
         length += count;
         return () -> removeRows(index, count);
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
     {
         // Could save some memory here:
         BitSet old = (BitSet)data.clone();

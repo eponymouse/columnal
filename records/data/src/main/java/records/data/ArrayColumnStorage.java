@@ -11,6 +11,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExBiConsumer;
 import utility.Pair;
 import utility.SimulationRunnable;
@@ -19,6 +20,7 @@ import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * For some reason, thi is the difficult one to wrap your head around.  An array
@@ -32,7 +34,7 @@ import java.util.List;
  *
  * Thus the storage is just a list of DataTypeValue, i.e. accessors of the array content.
  */
-public class ArrayColumnStorage implements ColumnStorage<ListEx>
+public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> implements ColumnStorage<ListEx>
 {
     // We are a column storage.  Each element here is one row, which is also
     // a list because it is an array.  We are a list of lists (column of arrays)
@@ -101,14 +103,15 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     }*/
 
     @Override
-    public void addAll(List<ListEx> items) throws InternalException
+    public void addAll(Stream<Either<String, ListEx>> items) throws InternalException
     {
-        for (Object item : items)
+        for (Either<String, ListEx> item : Utility.iterableStream(items))
         {
-            if (!(item instanceof ListEx))
-                throw new InternalException("Not ListEx: " + item.getClass());
+            storage.add(item.either(err -> {
+                setError(storage.size(), err);
+                return ListEx.empty();
+            }, l -> l));
         }
-        storage.addAll(items);
     }
 
     @Override
@@ -119,15 +122,21 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, List<ListEx> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable ListEx> items) throws InternalException, UserException
     {
-        storage.addAll(index, items);
+        storage.ensureCapacity(storage.size() + items.size());
+        for (ListEx item : items)
+        {
+            if (item == null)
+                item = ListEx.empty();
+            storage.add(item);
+        }
         int count = items.size();
-        return () -> removeRows(index, count);
+        return () -> _removeRows(index, count);
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
     {
         List<ListEx> old = new ArrayList<>(storage.subList(index, index + count));
         storage.subList(index, index + count).clear();

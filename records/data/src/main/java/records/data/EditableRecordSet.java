@@ -19,6 +19,7 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import utility.Either;
 import utility.ExFunction;
@@ -73,14 +74,21 @@ public class EditableRecordSet extends RecordSet
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T> List<@UnknownIfValue T> getAll(GetValue<@Value T> g) throws InternalException, UserException
+            private <T> List<Either<String, @UnknownIfValue T>> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
-                List<@UnknownIfValue T> r = new ArrayList<>();
+                List<Either<String, @UnknownIfValue T>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
-                    @SuppressWarnings("value")
-                    T t = g.get(i);
-                    r.add(t);
+                    try
+                    {
+                        @SuppressWarnings("value")
+                        T t = g.get(i);
+                        r.add(Either.right(t));
+                    }
+                    catch (InvalidImmediateValueException e)
+                    {
+                        r.add(Either.left(e.getInvalid()));
+                    }
                 }
                 return r;
             }
@@ -112,12 +120,12 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
-                List<TaggedValue> r = new ArrayList<>();
+                List<Either<String, TaggedValue>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
                     int tagIndex = g.get(i);
                     @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
-                    r.add(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i)));
+                    r.add(Either.right(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i))));
                 }
                 return new MemoryTaggedColumn(rs, original.getName(), typeName, typeVars, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
             }
@@ -125,7 +133,7 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
-                List<@Value Object @Value []> r = new ArrayList<>();
+                List<Either<String, @Value Object @Value []>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
@@ -133,7 +141,7 @@ public class EditableRecordSet extends RecordSet
                     {
                         array[tupleIndex] = types.get(tupleIndex).getCollapsed(index);
                     }
-                    r.add(array);
+                    r.add(Either.right(array));
                 }
                 @Value Object @Value [] tupleOfDefaults = DataTypeUtility.value(new Object[types.size()]);
                 for (int i = 0; i < tupleOfDefaults.length; i++)
@@ -146,7 +154,7 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
-                List<ListEx> r = new ArrayList<>();
+                List<Either<String, ListEx>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     List<Object> array = new ArrayList<>();
@@ -156,7 +164,7 @@ public class EditableRecordSet extends RecordSet
                         // Need to look for indexInArray, not index, to get full list:
                         array.add(details.getSecond().getCollapsed(indexInArray));
                     }
-                    r.add(DataTypeUtility.value(array));
+                    r.add(Either.right(DataTypeUtility.value(array)));
                 }
                 return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
             }

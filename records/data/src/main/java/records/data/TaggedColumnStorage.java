@@ -16,6 +16,7 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -31,11 +32,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 05/11/2016.
  */
-public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
+public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> implements ColumnStorage<TaggedValue>
 {
     // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
@@ -257,17 +259,20 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @Override
-    public SimulationRunnable insertRows(int insertAtOriginalIndex, List<TaggedValue> insertItems) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int insertAtOriginalIndex, List<@Nullable TaggedValue> insertItems) throws InternalException, UserException
     {
         int insertAtIndex = insertAtOriginalIndex;
         for (TaggedValue insertItem : insertItems)
         {
-            tagStore.addAll(insertAtIndex, Collections.singletonList(insertItem.getTagIndex()));
+            if (insertItem == null)
+                insertItem = new TaggedValue(0, null); // Dummy value, should not be accessed so shouldn't matter it's invalid
+            
+            tagStore.addAll(insertAtIndex, Stream.of(insertItem.getTagIndex()));
             if (insertItem.getInner() == null)
             {
                 // Empty tags are easy:
 
-                innerValueIndex.addAll(insertAtIndex, Utility.<Number>replicate(1, -1));
+                innerValueIndex.addAll(insertAtIndex, Stream.of(-1));
             }
             else
             {
@@ -280,7 +285,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                         lastInnerValueIndex = innerValueIndex.getInt(i);
                 }
                 // Add a new one:
-                innerValueIndex.addAll(insertAtIndex, Collections.singletonList(lastInnerValueIndex + 1));
+                innerValueIndex.addAll(insertAtIndex, Stream.of(lastInnerValueIndex + 1));
                 @Nullable ColumnStorage<?> valueStore = valueStores.get(insertItem.getTagIndex());
                 if (valueStore == null)
                     throw new InternalException("No value store for inner type tag: " + insertItem.getTagIndex());
@@ -303,9 +308,9 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
     {
-        List<TaggedValue> prevValues = getAllCollapsed(index, index + count);
+        ImmutableList<Either<String, TaggedValue>> prevValues = getAllCollapsed(index, index + count);
 
         int[] firstRemovedInnerValueIndex = new int[valueStores.size()];
         int[] lastRemovedInnerValueIndex = new int[valueStores.size()];
@@ -369,10 +374,11 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
     */
 
-    public void addAll(List<TaggedValue> values) throws InternalException
+    @Override
+    public void addAll(Stream<Either<String, TaggedValue>> values) throws InternalException
     {
-        for (TaggedValue v : values)
-            addUnpacked(v);
+        for (Either<String, TaggedValue> v : Utility.iterableStream(values))
+            addUnpacked(v.either(e -> new TaggedValue(0, null), t -> t));
     }
 
     protected void addUnpacked(TaggedValue value) throws InternalException
@@ -403,12 +409,20 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
         storage.add(innerValue);
     }
 
-    public List<TaggedValue> getShrunk(int shrunkLength) throws UserException, InternalException
+    public List<Either<String, TaggedValue>> getShrunk(int shrunkLength) throws UserException, InternalException
     {
-        List<TaggedValue> s = new ArrayList<>();
+        List<Either<String, TaggedValue>> s = new ArrayList<>();
         for (int i = 0; i < shrunkLength; i++)
         {
-            s.add((TaggedValue)getType().getCollapsed(i));
+            try
+            {
+                s.add(Either.right((TaggedValue) getType().getCollapsed(i)));
+            }
+            catch (InvalidImmediateValueException e)
+            {
+                s.add(Either.left(e.getInvalid()));
+            }
+            
         }
         return s;
     }

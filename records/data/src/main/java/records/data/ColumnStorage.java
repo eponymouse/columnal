@@ -9,11 +9,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 04/11/2016.
@@ -26,27 +28,27 @@ public interface ColumnStorage<T>
 
     default public void add(@NonNull T item) throws InternalException
     {
-        addAll(Collections.<@NonNull T>singletonList(item));
+        addAll(Stream.<Either<String, @NonNull T>>of(Either.right(item)));
     }
-    public void addAll(List<@NonNull T> items) throws InternalException;
+    public void addAll(Stream<Either<String, @NonNull T>> items) throws InternalException;
 
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
 
-    default public ImmutableList<T> getAllCollapsed(int fromIncl, int toExcl) throws UserException, InternalException
+    default public ImmutableList<Either<String, T>> getAllCollapsed(int fromIncl, int toExcl) throws UserException, InternalException
     {
-        List<T> r = new ArrayList<>(toExcl - fromIncl);
+        List<Either<String, T>> r = new ArrayList<>(toExcl - fromIncl);
         for (int i = fromIncl; i < toExcl; i++)
         {
             @SuppressWarnings("unchecked")
             T collapsed = (T) getType().getCollapsed(i);
-            r.add(collapsed);
+            r.add(Either.right(collapsed));
         }
         return ImmutableList.copyOf(r);
     }
 
     // Returns revert operation
-    public SimulationRunnable insertRows(int index, List<T> items) throws InternalException, UserException;
+    public SimulationRunnable insertRows(int index, List<Either<String, T>> items) throws InternalException, UserException;
     // Returns revert operation
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException;
 

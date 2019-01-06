@@ -7,6 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -21,12 +22,12 @@ public class MemoryBooleanColumn extends EditableColumn
     @OnThread(Tag.Any)
     private final @Value Boolean defaultValue;
 
-    public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list, Boolean defaultValue) throws InternalException
+    public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Either<String, Boolean>> list, Boolean defaultValue) throws InternalException
     {
         super(rs, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
         this.storage = new BooleanColumnStorage();
-        this.storage.addAll(list);
+        this.storage.addAll(list.stream());
     }
 
     @Override
@@ -37,9 +38,9 @@ public class MemoryBooleanColumn extends EditableColumn
     }
 
     @Override
-    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryBooleanColumn(rs, getName(), storage.getShrunk(shrunkLength), false);
+        return new MemoryBooleanColumn(rs, getName(), storage.getAllCollapsed(0, shrunkLength), false);
     }
 
     public void add(boolean b) throws InternalException
@@ -50,7 +51,7 @@ public class MemoryBooleanColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package records.data;
 
 import com.google.common.collect.ImmutableList;
+import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
@@ -11,17 +12,20 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExBiConsumer;
 import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 03/01/2017.
  */
-public class TupleColumnStorage implements ColumnStorage<Object[]>
+public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> implements ColumnStorage<Object[]>
 {
     // For tuples, each element is one column-major part of tuple (i.e. a column)
     private final ImmutableList<ColumnStorage<?>> storage;
@@ -63,18 +67,24 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
 
     @SuppressWarnings("unchecked")
     @Override
-    public void addAll(List<Object[]> items) throws InternalException
+    public void addAll(Stream<Either<String, Object[]>> items) throws InternalException
     {
-        if (type.isTuple())
+        // Each Object[] is one tuple record, add each element to each storage
+        for (Either<String, Object[]> item : Utility.iterableStream(items))
         {
-            // Each Object[] is one tuple record, add each element to each storage
-            for (Object[] tuple : items)
-            {
+            item.eitherInt_(s -> {
+                setError(filled(), s);
+                for (ColumnStorage<?> columnStorage : storage)
+                {
+                    columnStorage.addAll(Stream.of(Either.left(s)));
+                }
+            }, tuple -> {
+
                 for (int i = 0; i < tuple.length; i++)
                 {
-                    ((ColumnStorage)storage.get(i)).add(tuple[i]);
+                    ((ColumnStorage) storage.get(i)).add(tuple[i]);
                 }
-            }
+            });
         }
     }
 
@@ -86,7 +96,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, List<Object[]> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<Object @Nullable []> items) throws InternalException, UserException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try
@@ -95,9 +105,11 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
             {
                 ColumnStorage<?> columnStorage = storage.get(column);
                 int columnFinal = column;
+                // Note: can't use ImmutableList here as it contains nulls
                 // Declaration to use suppression:
                 @SuppressWarnings("unchecked")
-                boolean b = reverts.add(columnStorage.insertRows(index, (List)Utility.mapList(items, x -> x[columnFinal])));
+                boolean b = reverts.add(columnStorage.insertRows(index, 
+                        (List)items.stream().map(x -> x == null ? Either.<String, Object>left("") : Either.<String, Object>right(x[columnFinal])).collect(Collectors.toList())));
             }
             return () ->
             {
@@ -118,7 +130,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try

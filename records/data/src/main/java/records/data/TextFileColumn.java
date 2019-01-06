@@ -90,7 +90,16 @@ public final class TextFileColumn extends Column
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns, 
             (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
-            (storage, values) -> storage.addAll(Utility.<String, TemporalAccessor>mapListInt(values, s -> dateTimeInfo.fromParsed(dateTimeFormatter.parse(s, query))))
+            (storage, values) -> storage.addAll(Utility.<String, Either<String, TemporalAccessor>>mapListInt(values, s -> {
+                try
+                {
+                    return Either.right(dateTimeInfo.fromParsed(dateTimeFormatter.parse(s, query)));
+                }
+                catch (RuntimeException e)
+                {
+                    return Either.left(s);
+                }
+            }).stream())
         );
 
     }
@@ -116,16 +125,16 @@ public final class TextFileColumn extends Column
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns,
             (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
-            (storage, values) -> storage.addAll(values)
+            (storage, values) -> storage.addAll(values.stream().map(Either::right))
         );
     }
 
-    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, Either<String, TaggedValue>> parseValue) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns,
             (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, typeVars, tagTypes, fill),
             (storage, values) -> {
-                storage.addAll(Utility.mapListEx(values, parseValue));
+                storage.addAll(Utility.mapListEx(values, parseValue).stream());
             }
         );
     }

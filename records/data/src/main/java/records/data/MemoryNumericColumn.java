@@ -8,6 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -30,10 +31,10 @@ public class MemoryNumericColumn extends EditableColumn
         storage = new NumericColumnStorage(numberInfo);
     }
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values, Number defaultValue) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, Number defaultValue) throws InternalException
     {
         this(rs, title, numberInfo, defaultValue);
-        storage.addAll(values);
+        storage.addAll(values.stream());
     }
 
     public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
@@ -66,7 +67,7 @@ public class MemoryNumericColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override

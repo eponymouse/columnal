@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,6 +18,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -25,6 +27,8 @@ import java.math.MathContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A class to store numbers or a series of values of the type
@@ -57,7 +61,7 @@ import java.util.OptionalInt;
  * BigDecimal and BigInteger arrays are as sparse as possible.
  *
  */
-public class NumericColumnStorage implements ColumnStorage<Number>
+public class NumericColumnStorage extends SparseErrorColumnStorage<Number> implements ColumnStorage<Number>
 {
     private int filled = 0;
     // We only use bytes, shorts, ints if all the numbers fit.
@@ -103,7 +107,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         this.beforeGet = beforeGet;
     }
 
-    public void addRead(String number) throws InternalException, UserException
+    public void addRead(String number) throws InternalException
     {
         number = number.replace(",", ""); // TODO parameterise this behaviour
         // First try as a long:
@@ -134,14 +138,14 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // but is Long.MIN_VALUE or close by, as they are special values.
         }
         catch (NumberFormatException ex) { }
-        // Ok, last try: big decimal (and rethrow if not)
+        // Ok, last try: big decimal (and add text if not)
         try
         {
             addBigDecimal(OptionalInt.empty(), new BigDecimal(number, MathContext.DECIMAL128).stripTrailingZeros());
         }
         catch (NumberFormatException e)
         {
-            throw new FetchException("Could not parse number: \"" + number + "\"", e);
+            addAll(Stream.of(Either.left(number)));
         }
     }
 
@@ -478,17 +482,17 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, List<Number> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable Number> items) throws InternalException, UserException
     {
-        addAll(index, items);
+        addAll(index, items.stream().map(n -> n == null ? 0 : n));
         int count = items.size();
-        return () -> removeRows(index, count);
+        return () -> _removeRows(index, count);
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
     {
-        List<Number> old = getAllCollapsed(index, index + count);
+        ImmutableList<Either<String, Number>> old = getAllCollapsed(index, index + count);
         if (bytes != null)
             System.arraycopy(bytes, index + count, bytes, index, filled - (index + count));
         else if (shorts != null)
@@ -502,17 +506,29 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 System.arraycopy(bigDecimals, index + count, bigDecimals, index, bigDecimals.length - (index + count));
         }
         filled -= count;
-        return () -> insertRows(index, old);
+        // Can't use ImmutableList because of nulls: 
+        return () -> _insertRows(index, old.stream().<@Nullable Number>map(e -> e.<@Nullable Number>either(s -> null, n -> n)).collect(Collectors.toList()));
     }
 
     @Override
-    public void addAll(List<Number> items) throws InternalException
+    public void addAll(Stream<Either<String, Number>> items) throws InternalException
     {
+        _addAll(items);
+    }
+    
+    public int _addAll(Stream<Either<String, Number>> items) throws InternalException
+    {
+        int count = 0;
         // TODO this could be improved rather than calling add lots of times
-        for (Number n : items)
+        for (Either<String, Number> item : Utility.iterableStream(items))
         {
-            add(n);
+            add(item.either(err -> {
+                setError(filled, err);
+                return 0;
+            }, v -> v));
+            count++;
         }
+        return count;
     }
 
     // If index is empty, add at end.
@@ -575,47 +591,47 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         return displayInfo;
     }
 
-    public void addAll(int insertAtIndex, List<Number> newNumbers) throws InternalException
+    public void addAll(int insertAtIndex, Stream<Number> newNumbers) throws InternalException
     {
         int originalLength = this.filled;
         // First, add them on the end:
-        addAll(newNumbers);
+        int newNumbersSize = _addAll(newNumbers.map(Either::right));
         // Now, swap existing numbers and new numbers:
         if (bytes != null)
         {
             // New to temp:
             byte[] newVals = Arrays.copyOfRange(bytes, originalLength, filled);
             // Old to new:
-            System.arraycopy(bytes, insertAtIndex, bytes, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
+            System.arraycopy(bytes, insertAtIndex, bytes, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
             // New [temp] to old:
-            System.arraycopy(newVals, 0, bytes, insertAtIndex, newNumbers.size());
+            System.arraycopy(newVals, 0, bytes, insertAtIndex, newNumbersSize);
         }
         else if (shorts != null)
         {
             // New to temp:
             short[] newVals = Arrays.copyOfRange(shorts, originalLength, filled);
             // Old to new:
-            System.arraycopy(shorts, insertAtIndex, shorts, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
+            System.arraycopy(shorts, insertAtIndex, shorts, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
             // New [temp] to old:
-            System.arraycopy(newVals, 0, shorts, insertAtIndex, newNumbers.size());
+            System.arraycopy(newVals, 0, shorts, insertAtIndex, newNumbersSize);
         }
         else if (ints != null)
         {
             // New to temp:
             int[] newVals = Arrays.copyOfRange(ints, originalLength, filled);
             // Old to new:
-            System.arraycopy(ints, insertAtIndex, ints, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
+            System.arraycopy(ints, insertAtIndex, ints, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
             // New [temp] to old:
-            System.arraycopy(newVals, 0, ints, insertAtIndex, newNumbers.size());
+            System.arraycopy(newVals, 0, ints, insertAtIndex, newNumbersSize);
         }
         else if (longs != null)
         {
             // New to temp:
             long[] newVals = Arrays.copyOfRange(longs, originalLength, filled);
             // Old to new:
-            System.arraycopy(longs, insertAtIndex, longs, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
+            System.arraycopy(longs, insertAtIndex, longs, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
             // New [temp] to old:
-            System.arraycopy(newVals, 0, longs, insertAtIndex, newNumbers.size());
+            System.arraycopy(newVals, 0, longs, insertAtIndex, newNumbersSize);
 
             if (bigDecimals != null)
             {
@@ -627,9 +643,9 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 // New to temp:
                 @Nullable BigDecimal @Nullable[] newValsBD = Arrays.copyOfRange(bigDecimals, originalLength, filled);
                 // Old to new:
-                System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
+                System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
                 // New [temp] to old:
-                System.arraycopy(newValsBD, 0, bigDecimals, insertAtIndex, newNumbers.size());
+                System.arraycopy(newValsBD, 0, bigDecimals, insertAtIndex, newNumbersSize);
             }
         }
     }

@@ -3,7 +3,7 @@ package records.error;
 import java.io.IOException;
 
 /**
- * Created by neil on 22/10/2016.
+ * Exception thrown when there is an issue reading external data.
  */
 public class FetchException extends UserException
 {

@@ -7,6 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -28,16 +29,16 @@ public class MemoryTupleColumn extends EditableColumn
         this.storage = new TupleColumnStorage(dataTypes);
     }
 
-    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, List<@Value Object @Value[]> values, @Value Object @Value[] defaultValue) throws InternalException
+    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, List<Either<String, @Value Object @Value[]>> values, @Value Object @Value[] defaultValue) throws InternalException
     {
         this(recordSet, title, dataTypes, defaultValue);
         addAllValue(storage, values);
     }
 
     @SuppressWarnings("value") // addAll doesn't require @Value
-    private static void addAllValue(TupleColumnStorage storage, List<@Value Object @Value []> values) throws InternalException
+    private static void addAllValue(TupleColumnStorage storage, List<Either<String, @Value Object @Value []>> values) throws InternalException
     {
-        storage.addAll(values);
+        storage.addAll(values.stream());
     }
 
     @Override
@@ -51,7 +52,7 @@ public class MemoryTupleColumn extends EditableColumn
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getMemberType(), defaultValue);
-        shrunk.storage.addAll(storage.getAllCollapsed(0, shrunkLength));
+        shrunk.storage.addAll(storage.getAllCollapsed(0, shrunkLength).stream());
         return shrunk;
     }
 
@@ -64,7 +65,7 @@ public class MemoryTupleColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, defaultValue));
+        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
     }
 
     @Override

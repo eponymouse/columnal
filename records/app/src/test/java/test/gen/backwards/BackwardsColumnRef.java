@@ -58,28 +58,28 @@ public class BackwardsColumnRef extends BackwardsProvider
                 @OnThread(Tag.Simulation)
                 public Column text() throws InternalException, UserException
                 {
-                    return new MemoryStringColumn(rs, name, Collections.singletonList((String)value), "");
+                    return new MemoryStringColumn(rs, name, Collections.singletonList(Either.right((String)value)), "");
                 }
 
                 @Override
                 @OnThread(Tag.Simulation)
                 public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList((Temporal)value), DateTimeInfo.DEFAULT_VALUE);
+                    return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList(Either.right((Temporal)value)), DateTimeInfo.DEFAULT_VALUE);
                 }
 
                 @Override
                 @OnThread(Tag.Simulation)
                 public Column bool() throws InternalException, UserException
                 {
-                    return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value), false);
+                    return new MemoryBooleanColumn(rs, name, Collections.singletonList(Either.right((Boolean) value)), false);
                 }
 
                 @Override
                 @OnThread(Tag.Simulation)
                 public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
-                    return new MemoryTaggedColumn(rs, name, typeName, typeVars, tags, Collections.singletonList((TaggedValue) value), (TaggedValue)parent.makeValue(type));
+                    return new MemoryTaggedColumn(rs, name, typeName, typeVars, tags, Collections.singletonList(Either.right((TaggedValue) value)), (TaggedValue)parent.makeValue(type));
                 }
 
                 @Override
@@ -87,14 +87,14 @@ public class BackwardsColumnRef extends BackwardsProvider
                 @OnThread(Tag.Simulation)
                 public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                 {
-                    return new MemoryTupleColumn(rs, name, inner, Collections.singletonList((Object[])value), (Object[])parent.makeValue(type));
+                    return new MemoryTupleColumn(rs, name, inner, Collections.singletonList(Either.right((Object[])value)), (Object[])parent.makeValue(type));
                 }
 
                 @Override
                 @OnThread(Tag.Simulation)
                 public Column array(@Nullable DataType inner) throws InternalException, UserException
                 {
-                    return new MemoryArrayColumn(rs, name, inner, Collections.singletonList((ListEx)value), new ListExList(Collections.emptyList()));
+                    return new MemoryArrayColumn(rs, name, inner, Collections.singletonList(Either.right((ListEx)value)), new ListExList(Collections.emptyList()));
                 }
             }));
             return new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW);

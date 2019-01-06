@@ -2,16 +2,19 @@ package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import utility.Either;
 
 import java.util.Objects;
 
 public class BoolColumnType extends ColumnType
 {
     private final String lowerCaseTrue;
+    private final String lowerCaseFalse;
 
-    public BoolColumnType(String lowerCaseTrue)
+    public BoolColumnType(String lowerCaseTrue, String lowerCaseFalse)
     {
         this.lowerCaseTrue = lowerCaseTrue;
+        this.lowerCaseFalse = lowerCaseFalse;
     }
 
     @Override
@@ -35,8 +38,13 @@ public class BoolColumnType extends ColumnType
         return "Boolean[" + lowerCaseTrue + "]";
     }
 
-    public boolean isTrue(@NonNull String s)
+    public Either<String, Boolean> parse(@NonNull String s)
     {
-        return s.trim().equalsIgnoreCase(lowerCaseTrue);
+        if (s.trim().equalsIgnoreCase(lowerCaseTrue))
+            return Either.right(Boolean.TRUE);
+        else if (s.trim().equalsIgnoreCase(lowerCaseFalse))
+            return Either.right(Boolean.FALSE);
+        else
+            return Either.left(s);
     }
 }

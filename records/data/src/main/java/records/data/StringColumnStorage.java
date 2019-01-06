@@ -12,17 +12,19 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 04/11/2016.
  */
-public class StringColumnStorage implements ColumnStorage<String>
+public class StringColumnStorage extends SparseErrorColumnStorage<String> implements ColumnStorage<String>
 {
     private final ArrayList<@Value String> values;
     @SuppressWarnings("unchecked")
@@ -59,11 +61,12 @@ public class StringColumnStorage implements ColumnStorage<String>
     }
 
     @Override
-    public void addAll(List<String> items) throws InternalException
+    public void addAll(Stream<Either<String, String>> items) throws InternalException
     {
-        this.values.ensureCapacity(this.values.size() + items.size());
-        for (String s : items)
+        for (Either<String, String> item : Utility.iterableStream(items))
         {
+            String s = item.either(err -> "", v -> v);
+            item.ifLeft(err -> setError(this.values.size(), err));
             this.values.add(pool.pool(DataTypeUtility.value(s)));
         }
     }
@@ -113,17 +116,23 @@ public class StringColumnStorage implements ColumnStorage<String>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, List<String> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<@Nullable String> items) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.<String, @Value String>mapListInt(items, s -> pool.pool(DataTypeUtility.value(s))));
+        values.ensureCapacity(values.size() + items.size());
+        for (String item : items)
+        {
+            if (item == null)
+                item = "";
+            values.add(pool.pool(DataTypeUtility.value(item)));
+        }
         int count = items.size();
-        return () -> removeRows(index, count);
+        return () -> _removeRows(index, count);
     }
 
     @Override
-    public SimulationRunnable removeRows(int index, int count) throws InternalException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         if (index < 0 || index + count > values.size())
             throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());
