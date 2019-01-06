@@ -51,7 +51,7 @@ public class MemoryTupleColumn extends EditableColumn
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getMemberType(), defaultValue);
-        shrunk.storage.addAll(storage._test_getShrunk(shrunkLength));
+        shrunk.storage.addAll(storage.getAllCollapsed(0, shrunkLength));
         return shrunk;
     }
 

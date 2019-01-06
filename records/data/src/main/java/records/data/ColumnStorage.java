@@ -24,8 +24,6 @@ public interface ColumnStorage<T>
     // as many columns will be loaded/calculated on demand.
     public int filled();
 
-    //public @NonNull T get(int index) throws InternalException, UserException;
-
     default public void add(@NonNull T item) throws InternalException
     {
         addAll(Collections.<@NonNull T>singletonList(item));
@@ -34,11 +32,6 @@ public interface ColumnStorage<T>
 
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
-
-    default public ImmutableList<T> getAllCollapsed(int arrayLength) throws UserException, InternalException
-    {
-        return getAllCollapsed(0, arrayLength);
-    }
 
     default public ImmutableList<T> getAllCollapsed(int fromIncl, int toExcl) throws UserException, InternalException
     {
@@ -50,12 +43,6 @@ public interface ColumnStorage<T>
             r.add(collapsed);
         }
         return ImmutableList.copyOf(r);
-    }
-
-
-    default public List<T> _test_getShrunk(int length) throws InternalException, UserException
-    {
-        return getAllCollapsed(length);
     }
 
     // Returns revert operation

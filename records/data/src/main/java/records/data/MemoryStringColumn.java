@@ -43,7 +43,7 @@ public class MemoryStringColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryStringColumn(rs, getName(), storage._test_getShrunk(shrunkLength), "");
+        return new MemoryStringColumn(rs, getName(), storage.getAllCollapsed(0, shrunkLength), "");
     }
 
     @Override
@@ -80,6 +80,6 @@ public class MemoryStringColumn extends EditableColumn
     // Used by InferTypeColumn to easily directly access the values:
     public List<String> getAll() throws InternalException, UserException
     {
-        return storage.getAllCollapsed(storage.filled());
+        return storage.getAllCollapsed(0, storage.filled());
     }
 }

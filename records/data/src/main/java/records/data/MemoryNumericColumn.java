@@ -60,7 +60,7 @@ public class MemoryNumericColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength), 0);
+        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage.getAllCollapsed(0, shrunkLength), 0);
     }
 
     @Override
