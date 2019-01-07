@@ -30,6 +30,6 @@ public class StreamTreeBuilder<T>
     
     public Stream<T> stream()
     {
-        return items.stream().flatMap(t -> t.either(Stream::of, s -> s));
+        return items.stream().flatMap(t -> t.either(x -> Stream.of(x), s -> s));
     }
 }

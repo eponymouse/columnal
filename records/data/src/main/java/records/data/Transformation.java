@@ -31,7 +31,7 @@ public abstract class Transformation extends Table
     @OnThread(Tag.Any)
     public final ImmutableSet<TableId> getSources()
     {
-        return Stream.concat(getPrimarySources(), getSourcesFromExpressions()).collect(ImmutableSet.toImmutableSet());
+        return Stream.concat(getPrimarySources(), getSourcesFromExpressions()).collect(ImmutableSet.<TableId>toImmutableSet());
     }
 
     // Which tables are used in expressions?
@@ -50,7 +50,7 @@ public abstract class Transformation extends Table
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
         b.t(MainLexer.TRANSFORMATION).id(renames.tableId(getId())).id(getTransformationName(), QuoteBehaviour.QUOTE_SPACES).nl();
         b.t(MainLexer.SOURCE);
-        for (TableId src : getPrimarySources().collect(ImmutableList.toImmutableList()))
+        for (TableId src : getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
         b.inner(() -> saveDetail(destination, renames));

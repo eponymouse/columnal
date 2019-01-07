@@ -190,7 +190,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                                 horizDist = 0;
                             
                             return new NodeInfo(vertDist, horizDist, graphicalItem);
-                        }).min(Comparator.naturalOrder()).orElse(null);
+                        }).min(Comparator.<NodeInfo>naturalOrder()).orElse(null);
                         if (latest != null)
                         {
                             if (closest == null)
@@ -262,7 +262,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     protected void loadContent(LoadableExpression<EXPRESSION, SAVER> startingValue, boolean unmaskErrors)
     {
         atomicEdit.set(true);
-        children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
+        children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
         atomicEdit.set(false);
         if (unmaskErrors)
             unmaskErrors();

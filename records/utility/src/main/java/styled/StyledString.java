@@ -184,7 +184,7 @@ public final class StyledString
             Arrays.stream(items)
                 .flatMap(ss -> ss.members.stream())
                 .filter(ss -> !ss.getSecond().isEmpty())
-                .collect(ImmutableList.toImmutableList())
+                .collect(ImmutableList.<Pair<ImmutableStyleMap, String>>toImmutableList())
         );
     }
     

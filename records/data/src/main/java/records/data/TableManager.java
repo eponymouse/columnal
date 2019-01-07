@@ -103,7 +103,7 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public synchronized void record(Table table)
     {
-        usedIds.computeIfAbsent(table.getId(), x -> Sets.newIdentityHashSet()).add(table);
+        usedIds.computeIfAbsent(table.getId(), x -> Sets.<Table>newIdentityHashSet()).add(table);
         if (table instanceof DataSource)
         {
             if (sources.add((DataSource)table))
@@ -224,7 +224,7 @@ public class TableManager
         }
 
 
-        List<TablesWithSameId> ordered = GraphUtility.lineariseDAG(values.values(), incomingEdges, Collections.emptyList());
+        List<TablesWithSameId> ordered = GraphUtility.<TablesWithSameId>lineariseDAG(values.values(), incomingEdges, Collections.<TablesWithSameId>emptyList());
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(ordered);
@@ -260,7 +260,7 @@ public class TableManager
 
     public synchronized ImmutableList<Table> getAllTables()
     {
-        return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(ImmutableList.toImmutableList());
+        return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(ImmutableList.<Table>toImmutableList());
     }
 
     public static interface TableMaker

@@ -41,7 +41,7 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
             if (pp == null)
                 return error("Expected ')' to end tuple");
             ImmutableList<SuccessDetails<Object>> all = soFar.build();
-            return success(DataTypeUtility.value(all.stream().map(s -> s.value).<@Value Object>toArray(n -> new @Value Object[n])), all.stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.toImmutableList()), pp);
+            return success(DataTypeUtility.value(all.stream().map(s -> s.value).<@Value Object>toArray(n -> new @Value Object[n])), all.stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
         }
         
         if (expectComma)
@@ -51,8 +51,8 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
                 return error("Expected ',' to separate tuple items");
         }
         
-        return nextMember.next().process(pp, false).map(s -> s.asObject())
-            .flatMap(succ -> {
+        return nextMember.next().process(pp, false).<SuccessDetails<Object>>map(s -> s.asObject())
+            .<SuccessDetails<@Value Object @Value[]>>flatMap((SuccessDetails<Object> succ) -> {
                 soFar.add(succ);
                 return next(true, expectClosingBracket, nextMember, succ.parseProgress, soFar);
             });

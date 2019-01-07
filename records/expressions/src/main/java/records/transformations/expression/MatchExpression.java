@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -330,7 +331,7 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.<ColumnReference>concat(expression.allColumnReferences(), clauses.stream().flatMap(c -> c.outcome.allColumnReferences()));
+        return Stream.<ColumnReference>concat(expression.allColumnReferences(), clauses.stream().<ColumnReference>flatMap(c -> c.outcome.allColumnReferences()));
     }
 
     @Override
@@ -396,7 +397,7 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < immPatternExpressions.size(); i++)
         {
             Expression expression = immPatternExpressions.get(i);
-            List<QuickFix<Expression, ExpressionSaver>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i));
+            List<QuickFix<Expression, ExpressionSaver>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {
                 // Must show an error to get the quick fixes to show:

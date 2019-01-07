@@ -150,7 +150,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             if (anyArePattern)
                 reqs = items.stream().filter(c -> c.expressionKind != ExpressionKind.PATTERN)
                         .map(c -> c.typeExp)
-                        .collect(ImmutableList.toImmutableList());
+                        .collect(ImmutableList.<TypeExp>toImmutableList());
             else
                 reqs = ImmutableList.of();
             return new CheckedExp(typeExp, typeState, kind, reqs);
@@ -475,7 +475,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 new Lit<String>("datetimezoned{", s -> new TemporalLiteral(DateTimeType.DATETIMEZONED, s), s -> s, s -> s)
             );
             
-            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(Stream::of).orElse(Stream.empty())).findFirst();
+            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(s -> Stream.of(s)).orElse(Stream.empty())).findFirst();
             
             return loaded.orElseGet(() -> InvalidIdentExpression.identOrUnfinished(literalContent.replace('{','_').replace('}', '_')));
         }
@@ -643,7 +643,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Used for testing
     public final Stream<Pair<Expression, Function<Expression, Expression>>> _test_allMutationPoints()
     {
-        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(Stream.of(new Pair<>(this, e -> e)), _test_childMutationPoints());
+        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(Stream.<Pair<Expression, Function<Expression, Expression>>>of(new Pair<>(this, e -> e)), _test_childMutationPoints());
     }
 
     public abstract Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints();

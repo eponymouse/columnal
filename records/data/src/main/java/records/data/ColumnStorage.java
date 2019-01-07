@@ -28,7 +28,7 @@ public interface ColumnStorage<T>
 
     default public void add(@NonNull T item) throws InternalException
     {
-        addAll(Stream.<Either<String, @NonNull T>>of(Either.right(item)));
+        addAll(Stream.<Either<String, @NonNull T>>of(Either.<String, @NonNull T>right(item)));
     }
     public void addAll(Stream<Either<String, @NonNull T>> items) throws InternalException;
 

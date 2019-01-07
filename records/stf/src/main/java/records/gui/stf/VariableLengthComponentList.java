@@ -103,7 +103,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     @Override
     public List<Item> getItems()
     {
-        return allComponents.stream().flatMap(c -> c.getItems().stream()).collect(Collectors.toList());
+        return allComponents.stream().flatMap(c -> c.getItems().stream()).collect(Collectors.<Item>toList());
     }
 
     @Override
@@ -369,7 +369,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         @Override
         public Either<List<ErrorFix>, Void> endEdit(StructuredTextField field)
         {
-            return Either.left(Collections.emptyList());
+            return Either.left(Collections.<ErrorFix>emptyList());
         }
     }
 }

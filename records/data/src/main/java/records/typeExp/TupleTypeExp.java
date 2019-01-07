@@ -136,7 +136,7 @@ public class TupleTypeExp extends TypeExp
     public StyledString toStyledString(int maxDepth)
     {
         return StyledString.concat(StyledString.s("("), 
-            StyledString.intercalate(StyledString.s(", "), knownMembers.stream().map(t -> t.toStyledString(maxDepth)).collect(ImmutableList.toImmutableList())),
+            StyledString.intercalate(StyledString.s(", "), knownMembers.stream().map(t -> t.toStyledString(maxDepth)).collect(ImmutableList.<StyledString>toImmutableList())),
             StyledString.s(complete ? ")" : ", ...)"));
     }
 }

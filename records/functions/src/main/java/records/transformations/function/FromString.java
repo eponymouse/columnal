@@ -168,7 +168,7 @@ public class FromString
                     // Need to check longest tags first, otherwise we may consume a short tag
                     // which is a prefix of a longer tag's name.  Compare by negative length
                     // to put longest first:
-                    Collections.sort(indexedTags, Comparator.comparing(p -> -p.getSecond().getName().length()));
+                    Collections.<Pair<Integer, TagType<DataType>>>sort(indexedTags, Comparator.<Pair<Integer, TagType<DataType>>, Integer>comparing(p -> -p.getSecond().getName().length()));
 
                     for (Pair<Integer, TagType<DataType>> indexedTag : indexedTags)
                     {

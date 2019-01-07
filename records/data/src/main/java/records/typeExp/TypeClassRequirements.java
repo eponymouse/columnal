@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledString;
 import utility.Utility;
 
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,7 +57,7 @@ public class TypeClassRequirements
     public static TypeClassRequirements union(TypeClassRequirements a, TypeClassRequirements b)
     {
         ImmutableMap<String, Context> m = Stream.concat(a.typeClasses.entrySet().stream(), b.typeClasses.entrySet().stream())
-                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue(), Context::merge));
+                .collect(ImmutableMap.<Entry<String, Context>, String, Context>toImmutableMap(e -> e.getKey(), e -> e.getValue(), Context::merge));
         return new TypeClassRequirements(m);
     }
     

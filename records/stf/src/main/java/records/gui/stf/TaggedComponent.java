@@ -115,7 +115,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
             if (currentChild != null)
             {
                 Either<List<ErrorFix>, ? extends @Value Object> inner = currentChild.endEdit(field);
-                return inner.either(x -> Either.left(x), (@Value Object v) -> Either.right(new TaggedValue(tagIndex.getAsInt(), v)));
+                return inner.map((@Value Object v) -> new TaggedValue(tagIndex.getAsInt(), v));
             }
             else
             {
@@ -124,7 +124,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         }
         else
         {
-            return Either.left(Collections.emptyList());
+            return Either.left(Collections.<ErrorFix>emptyList());
         }
     }
 

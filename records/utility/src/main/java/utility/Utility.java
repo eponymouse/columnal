@@ -101,7 +101,7 @@ public class Utility
 
     public static <T, R> ImmutableList<@NonNull R> mapListExI(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
     {
-        return ImmutableList.copyOf(mapListEx(list, func));
+        return ImmutableList.<@NonNull R>copyOf(Utility.<T, R>mapListEx(list, func));
     }
 
     @OnThread(Tag.Simulation)
@@ -860,17 +860,17 @@ public class Utility
     
     public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c)
     {
-        return Stream.concat(a, Stream.concat(b, c));
+        return Stream.<T>concat(a, Stream.<T>concat(b, c));
     }
 
     public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c, Stream<T> d)
     {
-        return Stream.concat(Stream.concat(a, b), Stream.concat(c, d));
+        return Stream.<T>concat(Stream.<T>concat(a, b), Stream.<T>concat(c, d));
     }
 
     public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c, Stream<T> d, Stream<T> e)
     {
-        return Stream.concat(Stream.concat(Stream.concat(a, b), Stream.concat(c, d)), e);
+        return Stream.<T>concat(Stream.<T>concat(Stream.<T>concat(a, b), Stream.<T>concat(c, d)), e);
     }
     
     public static <A, B, R> ImmutableList<R> allPairs(List<A> as, List<B> bs, BiFunction<A, B, R> function)
@@ -902,7 +902,7 @@ public class Utility
     
     public static <T> ImmutableList<T> filterList(List<T> src, Predicate<T> filterBy)
     {
-        return src.stream().filter(filterBy).collect(ImmutableList.toImmutableList());
+        return src.stream().filter(filterBy).collect(ImmutableList.<T>toImmutableList());
     }
 
     @SuppressWarnings("nullness")
@@ -913,7 +913,7 @@ public class Utility
 
     public static <T> Stream<T> filterOptional(Stream<Optional<T>> stream)
     {
-        return stream.flatMap(x -> x.isPresent() ? Stream.of(x.get()) : Stream.empty());
+        return stream.flatMap(x -> x.isPresent() ? Stream.<T>of(x.get()) : Stream.<T>empty());
     }
 
     // Having different arity versions of this prevents the varargs/generics warning
@@ -1231,7 +1231,7 @@ public class Utility
 
     public static <T> Stream<T> appendStream(Stream<T> stream, T appendItem)
     {
-        return Stream.concat(stream, Stream.of(appendItem));
+        return Stream.<T>concat(stream, Stream.<T>of(appendItem));
     }
 
     public interface WrappedCharSequence extends CharSequence
@@ -1747,7 +1747,7 @@ public class Utility
             File mruFile = new File(getStorageDirectory(), MRU_FILE_NAME);
             if (mruFile.exists())
             {
-                return FileUtils.readLines(mruFile, "UTF-8").stream().map(File::new).collect(ImmutableList.toImmutableList());
+                return FileUtils.readLines(mruFile, "UTF-8").stream().map(File::new).collect(ImmutableList.<File>toImmutableList());
             }
         }
         catch (IOException e)
@@ -1810,7 +1810,7 @@ public class Utility
     public static <T> Stream<T> intercalateStreamM(Stream<T> original, Supplier<T> makeSpacer)
     {
         // Not ideal, but it works:
-        ImmutableList<T> origList = original.collect(ImmutableList.toImmutableList());
+        ImmutableList<T> origList = original.collect(ImmutableList.<T>toImmutableList());
         ArrayList<T> inclSpacers = new ArrayList<>();
         for (int i = 0; i < origList.size(); i++)
         {

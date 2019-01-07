@@ -292,7 +292,7 @@ public class UnitManager
 
     public List<SingleUnit> getAllDeclared()
     {
-        return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<@NonNull SingleUnit>toList());
+        return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.<SingleUnit>empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<@NonNull SingleUnit>toList());
     }
 
     public boolean isUnit(String unitName)

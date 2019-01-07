@@ -98,7 +98,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         }
         catch (UserException e)
         {
-            return Either.left(Collections.emptyList());
+            return Either.left(Collections.<ErrorFix>emptyList());
         }
     }
 

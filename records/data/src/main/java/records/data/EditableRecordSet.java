@@ -65,7 +65,7 @@ public class EditableRecordSet extends RecordSet
 
     public EditableRecordSet(RecordSet copyFrom) throws InternalException, UserException
     {
-        this(Utility.mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
+        this(Utility.<Column, SimulationFunction<RecordSet, EditableColumn>>mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
     private static SimulationFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
@@ -174,7 +174,7 @@ public class EditableRecordSet extends RecordSet
     @NonNull
     public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, @Value Object defaultValue) throws InternalException, UserException
     {
-        return new EditableRecordSet(Collections.singletonList(type.makeImmediateColumn(name, defaultValue)::apply), () -> 0);
+        return new EditableRecordSet(Collections.<SimulationFunction<RecordSet, EditableColumn>>singletonList(type.makeImmediateColumn(name, defaultValue)::apply), () -> 0);
     }
 
     @Override

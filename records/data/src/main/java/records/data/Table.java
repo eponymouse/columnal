@@ -227,7 +227,7 @@ public abstract class Table
                 initialShowColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
             else
             {
-                ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
+                ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 

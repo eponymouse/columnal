@@ -167,7 +167,7 @@ public final class UnitExp implements StyledShowable
         // so no type vars to resolve:
         if (units.isEmpty())
             return true;
-        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
+        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.<Pair<MutUnitVar, Integer>>empty())).collect(Collectors.<Pair<MutUnitVar, Integer>>toList());
         
         // If no type vars (and not empty overall) then we can't unify to one: fail
         if (typeVars.isEmpty())
@@ -221,7 +221,7 @@ public final class UnitExp implements StyledShowable
         MutUnitVar newVar = new MutUnitVar();
         
         // Get rid of old unit:
-        units.remove(ComparableEither.left(lowestAbsPower.getFirst()));
+        units.remove(ComparableEither.<MutUnitVar, SingleUnit>left(lowestAbsPower.getFirst()));
         // Ready new subsitution, but only insert at end (don't want to adjust its powers):
         UnitExp subst = new UnitExp();
         subst.units.put(ComparableEither.left(newVar), 1);

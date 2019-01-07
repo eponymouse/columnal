@@ -270,7 +270,7 @@ public class Workers
     @OnThread(Tag.FXPlatform)
     public static synchronized ImmutableList<WorkInfo> getTaskList()
     {
-        return Stream.concat(currentlyRunning.stream(), workQueue.stream()).map(WorkInfo::new).collect(ImmutableList.toImmutableList());
+        return Stream.concat(currentlyRunning.stream(), workQueue.stream()).map(WorkInfo::new).collect(ImmutableList.<WorkInfo>toImmutableList());
     }
 
     @OnThread(Tag.Any)

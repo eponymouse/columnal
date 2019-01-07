@@ -601,7 +601,7 @@ public class DataTypeUtility
     public static @Value TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws UserException
     {
         src.skipSpaces();
-        ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.toImmutableList());
+        ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.<DateTimeFormatter>toImmutableList());
         // Updated char position and return value:
         ArrayList<Pair<Integer, @Value TemporalAccessor>> possibles = new ArrayList<>();
         WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
@@ -628,7 +628,7 @@ public class DataTypeUtility
         else if (possibles.size() > 1)
         {
             ArrayList<Pair<Integer, TemporalAccessor>> possiblesByLength = new ArrayList<>(possibles);
-            Collections.sort(possiblesByLength, Pair.comparatorFirst());
+            Collections.sort(possiblesByLength, Pair.<Integer, TemporalAccessor>comparatorFirst());
             // Choose the longest one, if it's strictly longer than the others:
             int longest = possiblesByLength.get(possiblesByLength.size() - 1).getFirst();
             if (longest > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
@@ -639,7 +639,7 @@ public class DataTypeUtility
             }
             // If all the values of longest length are the same, that's fine:
             HashSet<Pair<Integer, TemporalAccessor>> distinctValues = new HashSet<>(
-                possibles.stream().filter(p -> p.getFirst() == longest).collect(Collectors.toList())
+                possibles.stream().filter(p -> p.getFirst() == longest).collect(Collectors.<Pair<Integer, TemporalAccessor>>toList())
             );
             if (distinctValues.size() == 1)
             {
@@ -651,7 +651,7 @@ public class DataTypeUtility
             // Otherwise, throw because it's too ambiguous:
             throw new UserException(Integer.toString(distinctValues.size()) + " ways to interpret " + dateTimeInfo + " value "
                 + src.snippet() + ": "
-                + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond()))
+                + Utility.listToString(Utility.<Pair<Integer, @Value TemporalAccessor>, @Value TemporalAccessor>mapList(possibles, p -> p.getSecond()))
                 + " using formatters "
                 + Utility.listToString(possibleFormatters));
         }

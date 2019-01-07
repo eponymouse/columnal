@@ -1,5 +1,6 @@
 package utility;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -88,6 +89,6 @@ public class DumbObjectPool<T>
     @SuppressWarnings("nullness")
     public List<@NonNull T> get()
     {
-        return Collections.unmodifiableList(Arrays.asList(Arrays.copyOfRange(pool, 0, used)));
+        return ImmutableList.copyOf(Arrays.<T>copyOfRange(pool, 0, used));
     }
 }

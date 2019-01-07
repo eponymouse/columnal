@@ -116,10 +116,10 @@ public class ErrorableTextField<T>
         {
             popOver.setTitle(TranslationUtility.getString(hasError ? "error.popup.title.error" : "error.popup.title.warnings"));
             //popOver.setHeaderAlwaysVisible(true);
-            popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.concat(
-                Utility.streamNullable(result.getError()),
+            popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.<String>concat(
+                Utility.<String>streamNullable(result.getError()),
                 result.getWarnings().stream()
-            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.copyOf(Utility.mapList(result.getFixes(), f -> new FixInfo(f.fixDescription, ImmutableList.of(), () -> setText(f.fixedValue)))))));
+            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.<FixInfo>copyOf(Utility.<QuickFix, FixInfo>mapList(result.getFixes(), f -> new FixInfo(f.fixDescription, ImmutableList.of(), () -> setText(f.fixedValue)))))));
 
             if (!popOver.isShowing())
             {

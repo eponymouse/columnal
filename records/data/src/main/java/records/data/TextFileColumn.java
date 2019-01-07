@@ -125,7 +125,7 @@ public final class TextFileColumn extends Column
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns,
             (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
-            (storage, values) -> storage.addAll(values.stream().map(Either::right))
+            (storage, values) -> storage.addAll(values.stream().map(x -> Either.<String, String>right(x)))
         );
     }
 

@@ -37,7 +37,7 @@ public class EditorKit<T>
         this.onChange = onChange;
         this.relinquishFocus = relinquishFocus;
         this.latestValue = recogniser.process(ParseProgress.fromStart(initialValue), false).mapBoth(err -> err.error, succ -> succ.value);        
-        this.latestDocument = ReadOnlyStyledDocument.fromString(initialValue, ImmutableList.of(), ImmutableList.of(), StyledText.textOps());
+        this.latestDocument = ReadOnlyStyledDocument.fromString(initialValue, ImmutableList.<String>of(), ImmutableList.<String>of(), StyledText.<Collection<String>>textOps());
         this.unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
     }
 

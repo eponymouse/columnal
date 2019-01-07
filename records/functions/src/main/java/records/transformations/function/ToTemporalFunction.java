@@ -81,7 +81,7 @@ public abstract class ToTemporalFunction
                     usedFormats.set(i, formats.replaceSecond(formats.getSecond() + 1));
                     // We only need to sort if we passed the one before us (equal is still fine):
                     if (i > 0 && usedFormats.get(i).getSecond() < usedFormats.get(i - 1).getSecond())
-                        Collections.sort(usedFormats, Comparator.comparing(p -> p.getSecond()));
+                        Collections.<Pair<List<DateTimeFormatter>, Integer>>sort(usedFormats, Comparator.<Pair<List<DateTimeFormatter>, Integer>, Integer>comparing(p -> p.getSecond()));
                     return possibilities.get(0).getSecond();
                 }
                 else if (possibilities.size() > 1)

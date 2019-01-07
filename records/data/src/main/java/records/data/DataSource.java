@@ -154,7 +154,7 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detail(), p ->
+            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detail(), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
@@ -163,7 +163,7 @@ public abstract class DataSource extends Table
             }));
         }
 
-        public static SimulationFunction<RecordSet, ? extends EditableColumn> create(DataType.ColumnMaker<?, ?> c)
+        public static <C extends EditableColumn, V> SimulationFunction<RecordSet, EditableColumn> create(DataType.ColumnMaker<C, V> c)
         {
             return rs -> c.apply(rs);
         }

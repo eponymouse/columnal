@@ -31,8 +31,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -51,8 +52,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -64,8 +66,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -77,8 +80,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -90,8 +94,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -103,8 +108,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -116,8 +122,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />

@@ -57,7 +57,7 @@ public final class DataTypeValue extends DataType
 
     public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.toImmutableList())), null, null, null, null, null, getTag, null);
+        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.<TagType<DataType>>toImmutableList())), null, null, null, null, null, getTag, null);
     }
 
     public static DataTypeValue text(GetValue<@Value String> getText)

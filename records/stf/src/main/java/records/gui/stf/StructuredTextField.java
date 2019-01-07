@@ -333,7 +333,7 @@ public class StructuredTextField extends StyleClassedTextArea
         @MonotonicNonNull ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = null;
         for (Item subItem : subItems)
         {
-            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> nextSeg = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(subItem.toStyledText(), Collections.emptyList(), subItem.toStyles(), StyledText.<Collection<String>>textOps());
+            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> nextSeg = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(subItem.toStyledText(), Collections.<String>emptyList(), subItem.toStyles(), StyledText.<Collection<String>>textOps());
             doc = doc == null ? nextSeg : doc.concat(nextSeg);
         }
         if (doc != null)
@@ -342,7 +342,7 @@ public class StructuredTextField extends StyleClassedTextArea
         }
         else
         {
-            return ReadOnlyStyledDocument.fromString("", Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
+            return ReadOnlyStyledDocument.fromString("", Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.<Collection<String>>textOps());
         }
     }
     
@@ -368,7 +368,7 @@ public class StructuredTextField extends StyleClassedTextArea
         {
             insertPos += editorKit.contentComponent.delete(start, end).startDelta;
         }
-        ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
+        ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.<Integer>toImmutableList());
         if (!replacementCodepoints.isEmpty())
         {
             InsertState insertState = editorKit.contentComponent.insert(new InsertState(0, insertPos, replacementCodepoints));
@@ -782,7 +782,7 @@ public class StructuredTextField extends StyleClassedTextArea
         public Item(ImmutableList<Component<?>> parent, String divider, String... otherEntryOptions)
         {
             this(parent, divider, ItemVariant.DIVIDER, "");
-            this.otherEntryOptions.addAll(Arrays.stream(otherEntryOptions).flatMapToInt(String::codePoints).boxed().collect(Collectors.toList()));
+            this.otherEntryOptions.addAll(Arrays.stream(otherEntryOptions).flatMapToInt(String::codePoints).boxed().collect(Collectors.<Integer>toList()));
         }
 
         public Item(ImmutableList<Component<?>> parent, String content, ItemVariant itemVariant, @Localized String prompt)

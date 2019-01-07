@@ -64,6 +64,6 @@ public class PlusMinusOffsetComponent extends TerminalComponent<@Value ZoneOffse
             items.set(3, items.get(3).replaceContent(String.format("%02d", Math.abs(minute))));
             return Either.right(ZoneOffset.ofHoursMinutes(hour, minute));
         }
-        return Either.left(Collections.emptyList() /*TODO*/);
+        return Either.left(Collections.<ErrorFix>emptyList() /*TODO*/);
     }
 }

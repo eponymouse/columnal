@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import javafx.collections.FXCollections;
+import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
@@ -128,7 +129,7 @@ public class STFAutoComplete extends PopupControl
          */
 
         // We can't seem to ignore the keypresses so we must override them and perform the appropriate action:
-        Nodes.addInputMap(listView, InputMap.sequence(
+        Nodes.addInputMap(listView, InputMap.<Event>sequence(
             Arrays.<Pair<KeyCombination, FXPlatformRunnable>>asList(
                 new Pair<>(new KeyCodeCombination(KeyCode.HOME), () -> parent.lineStart(SelectionPolicy.CLEAR)),
                 new Pair<>(new KeyCodeCombination(KeyCode.HOME, KeyCombination.SHIFT_DOWN), () -> parent.lineStart(SelectionPolicy.EXTEND)),
@@ -138,7 +139,7 @@ public class STFAutoComplete extends PopupControl
                 new Pair<>(new KeyCodeCombination(KeyCode.TAB), () -> parent.tabPressed()),
                 new Pair<>(new KeyCodeCombination(KeyCode.ESCAPE), () -> parent.escapePressed()),
                 new Pair<>(new KeyCodeCombination(KeyCode.ENTER), () -> parent.enterPressed())
-            ).stream().map(k -> InputMap.consume(EventPattern.keyPressed(k.getFirst()), ev -> k.getSecond().run())).toArray(InputMap[]::new)
+            ).stream().map(k -> InputMap.consume(EventPattern.keyPressed(k.getFirst()), ev -> k.getSecond().run())).<InputMap>toArray(InputMap[]::new)
         ));
     }
 

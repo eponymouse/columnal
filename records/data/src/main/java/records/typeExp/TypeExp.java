@@ -166,13 +166,13 @@ public abstract class TypeExp implements StyledShowable
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
     public static TypeExp typeExpToTypeGADT(@Nullable ExpressionBase src, TypeExp exp) throws InternalException
     {
-        return new TypeCons(src, CONS_TYPE, ImmutableList.of(Either.right(exp)), ImmutableSet.of());
+        return new TypeCons(src, CONS_TYPE, ImmutableList.of(Either.<UnitExp, TypeExp>right(exp)), ImmutableSet.of());
     }
 
     // This is like a function: unit -> Unit unit, except that the parameter is not a value of that unit, it's the unit itself.
     public static TypeExp unitExpToUnitGADT(@Nullable ExpressionBase src, UnitExp exp) throws InternalException
     {
-        return new TypeCons(src, CONS_UNIT, ImmutableList.of(Either.left(exp)), ImmutableSet.of());
+        return new TypeCons(src, CONS_UNIT, ImmutableList.of(Either.<UnitExp, TypeExp>left(exp)), ImmutableSet.of());
     }
 
     // package-protected:
@@ -266,12 +266,12 @@ public abstract class TypeExp implements StyledShowable
 
     public static TypeExp list(@Nullable ExpressionBase src, TypeExp inner)
     {
-        return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(Either.right(inner)), ALL_TYPE_CLASSES);
+        return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(Either.<UnitExp, TypeExp>right(inner)), ALL_TYPE_CLASSES);
     }
     
     public static TypeExp function(@Nullable ExpressionBase src, TypeExp paramType, TypeExp returnType)
     {
-        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.right(paramType), Either.right(returnType)), ImmutableSet.of());
+        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.<UnitExp, TypeExp>right(paramType), Either.<UnitExp, TypeExp>right(returnType)), ImmutableSet.of());
     }
 
     public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType) throws InternalException
@@ -319,13 +319,13 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.right(inner == null ? new MutVar(src) : fromDataType(src, inner))), ALL_TYPE_CLASSES);
+                return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.<UnitExp, TypeExp>right(inner == null ? new MutVar(src) : fromDataType(src, inner))), ALL_TYPE_CLASSES);
             }
 
             @Override
             public TypeExp function(DataType argType, DataType resultType) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.right(fromDataType(null, argType)), Either.right(fromDataType(null, resultType))), ImmutableSet.of());
+                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.<UnitExp, TypeExp>right(fromDataType(null, argType)), Either.<UnitExp, TypeExp>right(fromDataType(null, resultType))), ImmutableSet.of());
             }
         });
     }

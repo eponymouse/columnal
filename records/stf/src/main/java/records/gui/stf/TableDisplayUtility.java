@@ -166,7 +166,7 @@ public class TableDisplayUtility
                     typeLabel = GUI.label("column.type.unknown", "stable-view-column-type-unknown");
                 }
                 // Wrap typeLabel in a BorderPane so that it can centre-align:
-                return Utility.concatI(super.makeHeaderContent(), ImmutableList.of(new BorderPane(typeLabel)));
+                return Utility.concatI(super.makeHeaderContent(), ImmutableList.<BorderPane>of(new BorderPane(typeLabel)));
             }
         };
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
@@ -316,10 +316,10 @@ public class TableDisplayUtility
     @SafeVarargs
     static StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> docFromSegments(StyledText<Collection<String>>... segments)
     {
-        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment((StyledText<Collection<String>>)segments[0], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
+        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment((StyledText<Collection<String>>)segments[0], Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.<Collection<String>>textOps());
         for (int i = 1; i < segments.length; i++)
         {
-            doc = doc.concat(ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(segments[i], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps()));
+            doc = doc.concat(ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(segments[i], Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.<Collection<String>>textOps()));
         }
         return doc;
     }

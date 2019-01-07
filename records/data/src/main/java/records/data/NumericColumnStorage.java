@@ -145,7 +145,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         }
         catch (NumberFormatException e)
         {
-            addAll(Stream.of(Either.left(number)));
+            addAll(Stream.of(Either.<String, Number>left(number)));
         }
     }
 
@@ -510,7 +510,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         }
         filled -= count;
         // Can't use ImmutableList because of nulls: 
-        return () -> _insertRows(index, old.stream().<@Nullable Number>map(e -> e.<@Nullable Number>either(s -> null, n -> n)).collect(Collectors.toList()));
+        return () -> _insertRows(index, old.stream().<@Nullable Number>map(e -> e.<@Nullable Number>either(s -> null, n -> n)).collect(Collectors.<@Nullable Number>toList()));
     }
 
     @Override
@@ -598,7 +598,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     {
         int originalLength = this.filled;
         // First, add them on the end:
-        int newNumbersSize = _addAll(newNumbers.map(Either::right));
+        int newNumbersSize = _addAll(newNumbers.map(x -> Either.<String, Number>right(x)));
         // Now, swap existing numbers and new numbers:
         if (bytes != null)
         {

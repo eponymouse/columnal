@@ -40,7 +40,7 @@ public class BoolComponent extends TerminalComponent<@Value Boolean>
             return Either.right(DataTypeUtility.value(false));
         }
         else
-            return Either.left(Collections.emptyList());
+            return Either.left(Collections.<ErrorFix>emptyList());
     }
 
     @Override

@@ -235,7 +235,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
 
     public ImmutableList<T> getItems()
     {
-        return cells.stream().map(c -> c.value.get()).collect(ImmutableList.toImmutableList());
+        return cells.stream().map(c -> c.value.get()).collect(ImmutableList.<T>toImmutableList());
     }
     
     protected Stream<Cell> streamCells(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
@@ -320,7 +320,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 else
                 {
                     // Just delete this one
-                    deleteCells(ImmutableList.of(Utility.later(this)));
+                    deleteCells(ImmutableList.<Cell>of(Utility.<Cell>later(this)));
                 }
             });
             deleteButton.setOnHover(entered -> {

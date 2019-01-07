@@ -46,7 +46,7 @@ public class JellyUnit
     {
         JellyUnit u = new JellyUnit();
         u.units.putAll(unit.getDetails().entrySet().stream().collect(Collectors.<Entry<SingleUnit, Integer>, ComparableEither<String, SingleUnit>, Integer>toMap(
-            (Entry<SingleUnit, Integer> e) -> ComparableEither.right(e.getKey()),
+            (Entry<SingleUnit, Integer> e) -> ComparableEither.<String, SingleUnit>right(e.getKey()),
             e -> e.getValue()    
         )));
         return u;

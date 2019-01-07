@@ -55,7 +55,7 @@ public class MemoryArrayColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, Either.right(defaultValue)));
+        return storage.insertRows(index, Utility.<Either<String, ListEx>>replicate(count, Either.<String, ListEx>right(defaultValue)));
     }
 
     @Override

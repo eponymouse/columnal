@@ -308,7 +308,7 @@ public class TypeManager
     public String save()
     {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
-        List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.toList());
+        List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.<TaggedTypeDefinition>toList());
         
         Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
         for (TaggedTypeDefinition taggedTypeDefinition : typesToSave)
@@ -328,9 +328,9 @@ public class TypeManager
 
         List<TaggedTypeDefinition> typeDefinitions = new ArrayList<>(typesToSave);
         // Sort by name by default:
-        Collections.sort(typeDefinitions, Comparator.comparing(t -> t.getTaggedTypeName().getRaw()));
+        Collections.<TaggedTypeDefinition>sort(typeDefinitions, Comparator.<TaggedTypeDefinition, String>comparing((TaggedTypeDefinition t) -> t.getTaggedTypeName().getRaw()));
         
-        List<TaggedTypeDefinition> orderedDataTypes = GraphUtility.<TaggedTypeDefinition>lineariseDAG(typeDefinitions, incomingRefs, Collections.emptyList());
+        List<TaggedTypeDefinition> orderedDataTypes = GraphUtility.<TaggedTypeDefinition>lineariseDAG(typeDefinitions, incomingRefs, Collections.<TaggedTypeDefinition>emptyList());
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(orderedDataTypes);
@@ -398,13 +398,13 @@ public class TypeManager
     // Basically, t -> Type t
     public DataType typeGADTFor(DataType type) throws InternalException, UserException
     {
-        return typeGADT.instantiate(ImmutableList.of(Either.right(type)), this);
+        return typeGADT.instantiate(ImmutableList.of(Either.<Unit, DataType>right(type)), this);
     }
 
     // Basically, u -> Unit u
     public DataType unitGADTFor(Unit unit) throws InternalException, UserException
     {
-        return unitGADT.instantiate(ImmutableList.of(Either.left(unit)), this);
+        return unitGADT.instantiate(ImmutableList.of(Either.<Unit, DataType>left(unit)), this);
     }
 
     public void clearAllUser()

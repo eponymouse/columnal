@@ -1701,7 +1701,7 @@ public class DataType implements StyledShowable
                         return r.build();
                         */
                 }
-                return ImmutableList.of(ImmutableList.of(getStrictFormatter()));
+                return ImmutableList.<ImmutableList<DateTimeFormatter>>of(ImmutableList.<DateTimeFormatter>of(getStrictFormatter()));
             });
         }
 
@@ -2067,7 +2067,7 @@ public class DataType implements StyledShowable
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
-                            .thenComparing((TemporalAccessor t) -> ZonedDateTime.from(t).getZone().toString())
+                            .<String>thenComparing((TemporalAccessor t) -> ZonedDateTime.from(t).getZone().toString())
                     );
             }
             throw new InternalException("Unknown date type: " + type);

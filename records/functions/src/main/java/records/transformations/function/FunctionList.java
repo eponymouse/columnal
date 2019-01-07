@@ -41,7 +41,7 @@ public class FunctionList
 {
     public static ImmutableList<FunctionDefinition> getAllFunctions(UnitManager unitManager) throws InternalException
     {
-        return Utility.concatStreams(Arrays.<FunctionDefinition>asList(
+        return Utility.<FunctionDefinition>concatStreams(Arrays.<FunctionDefinition>asList(
             new Absolute(),
             new AddDays(),
             new AnyAllNone.Any(),
@@ -94,7 +94,7 @@ public class FunctionList
                 new ToDateTime(),
                 new ToDateTimeZone(),
                 new ToYearMonth()
-        ).flatMap(t -> {
+        ).<FunctionDefinition>flatMap(t -> {
             try
             {
                 return t.getTemporalFunctions(unitManager).stream();
@@ -104,7 +104,7 @@ public class FunctionList
                 Log.log(e);
                 return Stream.empty();
             }
-        })).collect(ImmutableList.toImmutableList());
+        })).collect(ImmutableList.<FunctionDefinition>toImmutableList());
     }
 
     public static @Nullable FunctionDefinition lookup(UnitManager mgr, String functionName) throws InternalException

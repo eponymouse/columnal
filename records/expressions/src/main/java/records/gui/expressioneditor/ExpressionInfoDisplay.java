@@ -170,7 +170,7 @@ public class ExpressionInfoDisplay
     
     public <EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SAVER>> fixes, ConsecutiveBase<EXPRESSION, SAVER> editor)
     {
-        this.fixes = Utility.concatI(this.fixes, fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
+        this.fixes = Utility.<FixInfo>concatI(this.fixes, fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
             Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
                 popup.hidePopup(true);
@@ -186,7 +186,7 @@ public class ExpressionInfoDisplay
                 // User clicked expecting it to work, so better tell them:
                 FXUtility.showError("Error applying fix", e);
             }
-        })).collect(ImmutableList.toImmutableList()));
+        })).collect(ImmutableList.<FixInfo>toImmutableList()));
         // The listener on this property should make the popup every time and set the fixes too, hence we 
         // must set errorMessage after setting fixes:
         errorMessage = StyledString.concat(errorMessage, msg);

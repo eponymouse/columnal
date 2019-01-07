@@ -29,7 +29,7 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
             @Override
             public Either<List<ErrorFix>, T> endEdit(StructuredTextField field)
             {
-                return Either.left(Collections.emptyList());
+                return Either.left(Collections.<ErrorFix>emptyList());
             }
         }, null, () -> {}, ImmutableList.of());
     }

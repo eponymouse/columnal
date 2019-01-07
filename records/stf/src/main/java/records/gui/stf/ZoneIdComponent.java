@@ -36,7 +36,7 @@ public class ZoneIdComponent extends TerminalComponent<@Value ZoneId>
         }
         catch (DateTimeException e)
         {
-            return Either.left(Collections.emptyList());
+            return Either.left(Collections.<ErrorFix>emptyList());
         }
     }
 
@@ -44,6 +44,6 @@ public class ZoneIdComponent extends TerminalComponent<@Value ZoneId>
     public ImmutableList<Suggestion> getSuggestions()
     {
         // TODO also add +00:00 style completions
-        return ZoneId.getAvailableZoneIds().stream().map(s -> new Suggestion(getItems().get(0), s)).collect(ImmutableList.toImmutableList());
+        return ZoneId.getAvailableZoneIds().stream().map(s -> new Suggestion(getItems().get(0), s)).collect(ImmutableList.<Suggestion>toImmutableList());
     }
 }

@@ -121,13 +121,13 @@ public class FlexibleTextField extends StyleClassedTextArea
     }
 
     @RequiresNonNull("editorKit")
-    private <T> void focusGained()
+    private void focusGained()
     {
         editorKit.focusChanged(getText(), true);
     }
 
     @RequiresNonNull("editorKit")
-    private <T> void focusLost()
+    private void focusLost()
     {
         // Deselect when focus is lost:
         deselect();
@@ -136,10 +136,10 @@ public class FlexibleTextField extends StyleClassedTextArea
     
     public static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc(ImmutableList<StyledText<Collection<String>>> segments)
     {
-        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> overall = ReadOnlyStyledDocument.fromString("", ImmutableList.of(), ImmutableList.of(), StyledText.textOps());
+        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> overall = ReadOnlyStyledDocument.fromString("", ImmutableList.<String>of(), ImmutableList.<String>of(), StyledText.<Collection<String>>textOps());
         for (StyledText<Collection<String>> segment : segments)
         {
-            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> latest = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromString(segment.getText(), ImmutableList.of(), segment.getStyle(), StyledText.textOps());
+            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> latest = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromString(segment.getText(), ImmutableList.<String>of(), segment.getStyle(), StyledText.<Collection<String>>textOps());
             overall = overall.concat(latest);
         }
         return overall;

@@ -90,7 +90,7 @@ public class TypeCons extends TypeExp
                 return Either.left(StyledString.s("Cannot match units with a type"));
             }
         }
-        return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build(), ImmutableSet.copyOf(Sets.intersection(typeClasses, ((TypeCons) b).typeClasses))));
+        return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build(), ImmutableSet.copyOf(Sets.<String>intersection(typeClasses, ((TypeCons) b).typeClasses))));
     }
 
     @Override
@@ -140,9 +140,9 @@ public class TypeCons extends TypeExp
                             return Either.left(new TypeConcretisationError(StyledString.s("Unit unspecified; could be any unit: " + u)));
                         Either<Unit, DataType> unitOrType = Either.left(concreteUnit);
                         return Either.right(unitOrType);
-                    }, t -> t.toConcreteType(typeManager).map(Either::right));
+                    }, t -> t.toConcreteType(typeManager).map(x -> Either.<Unit, DataType>right(x)));
                 });
-                return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
+                return errOrOperandsAsTypes.eitherEx(err -> Either.<TypeConcretisationError, DataType>left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
                     @Nullable DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));
                     if (tagged != null)
                     {

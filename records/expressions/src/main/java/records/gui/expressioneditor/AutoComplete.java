@@ -263,7 +263,7 @@ public class AutoComplete<C extends Completion>
             ImmutableList<C> completionWithoutLast = ImmutableList.of();
             try
             {
-                completionWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.toImmutableList());
+                completionWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
             }
             catch (InternalException | UserException e)
             {
@@ -281,7 +281,7 @@ public class AutoComplete<C extends Completion>
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
-                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT).collect(Collectors.toList());
+                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
                         @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(withoutLast).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, Utility.codePointToString(last));
                         if (newContent == null)
@@ -966,7 +966,7 @@ public class AutoComplete<C extends Completion>
             {
                 List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
                         .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplaySortKey(text)))
-                        .collect(Collectors.toList());
+                        .collect(Collectors.<C>toList());
                 this.completions.getItems().setAll(calculated);
             }
             catch (InternalException | UserException e)

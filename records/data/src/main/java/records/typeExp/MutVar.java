@@ -120,7 +120,7 @@ public class MutVar extends TypeExp
     @Override
     public TypeExp prune()
     {
-        typeClassesOrPointer = typeClassesOrPointer.either(t -> Either.left(t), p -> Either.right(p.prune()));
+        typeClassesOrPointer = typeClassesOrPointer.map(p -> p.prune());
         return typeClassesOrPointer.either(t -> this, p -> p);
     }
 

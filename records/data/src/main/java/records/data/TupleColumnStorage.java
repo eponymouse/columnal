@@ -61,7 +61,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
         return r;
     }*/
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "all"})
     @Override
     public void addAll(Stream<Either<String, Object[]>> items) throws InternalException
     {
@@ -70,9 +70,9 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
         {
             item.eitherInt_(s -> {
                 setError(filled(), s);
-                for (ColumnStorage<?> columnStorage : storage)
+                for (ColumnStorage columnStorage : storage)
                 {
-                    columnStorage.addAll(Stream.of(Either.left(s)));
+                    columnStorage.addAll(Stream.<Either<String, Object>>of(Either.<String, Object>left(s)));
                 }
             }, tuple -> {
 
@@ -103,7 +103,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
                 int columnFinal = column;
                 // Note: can't use ImmutableList here as it contains nulls
                 // Declaration to use suppression:
-                @SuppressWarnings("unchecked")
+                @SuppressWarnings({"unchecked", "all"})
                 boolean b = reverts.add(columnStorage.insertRows(index, 
                         (List)items.stream().map(x -> x == null ? Either.<String, Object>left("") : Either.<String, Object>right(x[columnFinal])).collect(Collectors.toList())));
             }

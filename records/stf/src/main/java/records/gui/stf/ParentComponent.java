@@ -27,7 +27,7 @@ public abstract class ParentComponent<T> extends Component<T>
     @Override
     public final List<Item> getItems()
     {
-        return getChildComponents().stream().flatMap(c -> c.getItems().stream()).collect(Collectors.toList());
+        return getChildComponents().stream().flatMap(c -> c.getItems().stream()).collect(Collectors.<Item>toList());
     }
 
     @Override

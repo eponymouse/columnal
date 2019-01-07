@@ -100,8 +100,8 @@ public class Either<A, B>
     // Right is only returned if both inputs are right, otherwise Left will be returned.
     public static <E, A, B, C> Either<List<E>, C> combineConcatError(Either<List<E>, ? extends A> ea, Either<List<E>, ? extends B> eb, BiFunction<A, B, C> combine)
     {
-        return ea.either(errsA -> eb.either(errsB -> Either.left(Utility.concat(errsA, errsB)), bx -> Either.left(errsA)),
-                  ax -> eb.either(errsB -> Either.left(errsB), bx -> Either.right(combine.apply(ax, bx))));
+        return ea.either(errsA -> Either.<List<E>, C>left(eb.<List<E>>either(errsB -> Utility.<E>concat(errsA, errsB), bx -> errsA)),
+                  ax -> eb.either(errsB -> Either.<List<E>, C>left(errsB), bx -> Either.<List<E>, C>right(combine.apply(ax, bx))));
     }
     
     @SuppressWarnings("nullness")
@@ -288,27 +288,22 @@ public class Either<A, B>
 
     public <C, D> Either<C, D> mapBoth(Function<A, C> withLeft, Function <B, D> withRight)
     {
-        return either(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+        return either(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
     public <C, D> Either<C, D> mapBothInt(FunctionInt<A, C> withLeft, FunctionInt<B, D> withRight) throws InternalException
     {
-        return eitherInt(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+        return eitherInt(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
     
     public <C, D> Either<C, D> mapBothEx(ExFunction<A, C> withLeft, ExFunction<B, D> withRight) throws InternalException, UserException
     {
-        return eitherEx(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+        return eitherEx(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
     // If the value in the either is null, return null, else return a new either without the nullable qualifier
     public static <A, B> @Nullable Either<@NonNull A, @NonNull B> surfaceNull(Either<@Nullable A, @Nullable B> e)
     {
         return e.<@Nullable Either<@NonNull A, @NonNull B>>either((@Nullable A l) -> l == null ? null : Either.<@NonNull A, @NonNull B>left(l), (@Nullable B r) -> r == null ? null : Either.<@NonNull A, @NonNull B>right(r));
-    }
-    
-    public Either<B, A> swap()
-    {
-        return either(Either::right, Either::left);
     }
 }

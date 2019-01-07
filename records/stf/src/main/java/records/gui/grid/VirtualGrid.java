@@ -363,7 +363,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (selection == null)
                     return Optional.empty();
                 else
-                    return Optional.of(Either.right(selection.getSelectionDisplayRectangle()));
+                    return Optional.of(Either.<BoundingBox, RectangleBounds>right(selection.getSelectionDisplayRectangle()));
             }
 
             @Override
@@ -1252,7 +1252,7 @@ public final class VirtualGrid implements ScrollBindable
                             focusedCellPosition.doCopy();
                         e.consume();
                     }),
-                    InputMap.<Event, KeyEvent>consume(EventPattern.anyOf(EventPattern.keyPressed(KeyCode.ENTER), EventPattern.keyPressed(KeyCode.SPACE)), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.ENTER), EventPattern.keyPressed(KeyCode.SPACE)), e -> {
                         @Nullable CellSelection sel = selection.get();
                         if (sel != null)
                         {
@@ -1522,7 +1522,7 @@ public final class VirtualGrid implements ScrollBindable
                 Streams.mapWithIndex(this.gridAreas.stream()
                         .sorted(Comparator.<GridArea, Integer>comparing(t -> t.getPosition().columnIndex).thenComparing(t -> t.getSortKey())),
                         (x, i) -> new Pair<> (i, x))
-            .collect(Collectors.toList()));
+            .collect(Collectors.<Pair<Long, GridArea>>toList()));
 
         // Any currently open grid areas.  These will not overlap with each other vertically:
         ArrayList<Pair<Long, GridArea>> openGridAreas = new ArrayList<>();
@@ -1738,7 +1738,7 @@ public final class VirtualGrid implements ScrollBindable
                     box.getHeight()    
                 );
             })
-            .collect(ImmutableList.toImmutableList());
+            .collect(ImmutableList.<BoundingBox>toImmutableList());
     }
 
     // A really simple class that manages a single button which is shown when an empty location is focused
@@ -1949,7 +1949,7 @@ public final class VirtualGrid implements ScrollBindable
                 return Optional.empty();
             else
             {
-                return visibleBounds.clampVisible(picked).map(b -> Either.left(getRectangleBoundsInContainer(b)));
+                return visibleBounds.clampVisible(picked).map(b -> Either.<BoundingBox, RectangleBounds>left(getRectangleBoundsInContainer(b)));
             }
         }
 
