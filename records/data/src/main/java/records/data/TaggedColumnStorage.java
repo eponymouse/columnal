@@ -107,58 +107,63 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             }
 
             @Override
-            public void set(int index, Integer newTag) throws InternalException, UserException
+            public void set(int index, Either<String, Integer> errOrNewTag) throws InternalException, UserException
             {
-                int oldTag = tagStore.getInt(index);
-                if (newTag.intValue() == oldTag)
-                    return; // No need to change anything here.
+                errOrNewTag.eitherEx_(err -> {
+                    setError(index, err);
+                }, newTag -> {
 
-                tagStore.set(OptionalInt.of(index), newTag);
+                    int oldTag = tagStore.getInt(index);
+                    if (newTag.intValue() == oldTag)
+                        return; // No need to change anything here.
 
-                // Must remove old value:
-                @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
-                if (oldInner != null)
-                {
-                    oldInner.removeRows(innerValueIndex.getInt(index), 1);
-                    // No need to change index itself, as it's about to be replaced
-                    for (int i = index + 1; i < tagStore.filled(); i++)
+                    tagStore.set(OptionalInt.of(index), newTag);
+
+                    // Must remove old value:
+                    @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
+                    if (oldInner != null)
                     {
-                        if (tagStore.getInt(i) == oldTag)
+                        oldInner.removeRows(innerValueIndex.getInt(index), 1);
+                        // No need to change index itself, as it's about to be replaced
+                        for (int i = index + 1; i < tagStore.filled(); i++)
                         {
-                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
+                            if (tagStore.getInt(i) == oldTag)
+                            {
+                                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
+                            }
                         }
                     }
-                }
-                @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
-                if (newInner != null)
-                {
-                    // Work out destination position by seeing how many are before us:
-                    int newValueIndex = 0;
-                    for (int i = 0; i < index; i++)
+                    @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
+                    if (newInner != null)
                     {
-                        if (tagStore.getInt(i) == newTag)
+                        // Work out destination position by seeing how many are before us:
+                        int newValueIndex = 0;
+                        for (int i = 0; i < index; i++)
                         {
-                            newValueIndex++;
+                            if (tagStore.getInt(i) == newTag)
+                            {
+                                newValueIndex++;
+                            }
+                        }
+                        innerValueIndex.set(OptionalInt.of(index), newValueIndex);
+                        @SuppressWarnings("unchecked")
+                        List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
+                        @SuppressWarnings("unchecked")
+                        SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
+                        for (int i = index + 1; i < tagStore.filled(); i++)
+                        {
+                            if (tagStore.getInt(i) == newTag)
+                            {
+                                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
+                            }
                         }
                     }
-                    innerValueIndex.set(OptionalInt.of(index), newValueIndex);
-                    @SuppressWarnings("unchecked")
-                    List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
-                    @SuppressWarnings("unchecked")
-                    SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
-                    for (int i = index + 1; i < tagStore.filled(); i++)
+                    else
                     {
-                        if (tagStore.getInt(i) == newTag)
-                        {
-                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
-                        }
+                        // If no new inner store, blank the inner value index:
+                        innerValueIndex.set(OptionalInt.of(index), -1);
                     }
-                }
-                else
-                {
-                    // If no new inner store, blank the inner value index:
-                    innerValueIndex.set(OptionalInt.of(index), -1);
-                }
+                });
             }
         });
     }
@@ -194,7 +199,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
                     }
 
                     @Override
-                    public void set(int index, T value) throws InternalException, UserException
+                    public void set(int index, Either<String, T> value) throws InternalException, UserException
                     {
                         g.set(innerValueIndex.getInt(index), value);
                     }
@@ -290,7 +295,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
                 if (valueStore == null)
                     throw new InternalException("No value store for inner type tag: " + insertItem.getTagIndex());
                 @SuppressWarnings("unchecked")
-                List single = Collections.singletonList(insertItem.getInner());
+                List single = Collections.singletonList(Either.right(insertItem.getInner()));
                 @SuppressWarnings("unchecked")
                 SimulationRunnable _r = valueStore.insertRows(lastInnerValueIndex + 1, single);
                 // Increment all after us accordingly:

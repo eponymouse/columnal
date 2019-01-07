@@ -70,21 +70,26 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
                 }
 
                 @Override
-                public void set(int index, Pair<Integer, DataTypeValue> value) throws InternalException, UserException
+                public void set(int index, Either<String, Pair<Integer, DataTypeValue>> value) throws InternalException, UserException
                 {
-                    storage.set(index, new ListEx()
-                    {
-                        @Override
-                        public int size() throws InternalException, UserException
+                    value.eitherInt_(err -> {
+                        setError(index, err);
+                        storage.set(index, ListEx.empty());
+                    }, v -> {
+                        storage.set(index, new ListEx()
                         {
-                            return value.getFirst();
-                        }
+                            @Override
+                            public int size() throws InternalException, UserException
+                            {
+                                return v.getFirst();
+                            }
 
-                        @Override
-                        public @Value Object get(int index) throws InternalException, UserException
-                        {
-                            return value.getSecond().getCollapsed(index);
-                        }
+                            @Override
+                            public @Value Object get(int index) throws InternalException, UserException
+                            {
+                                return v.getSecond().getCollapsed(index);
+                            }
+                        });
                     });
                 }
             });

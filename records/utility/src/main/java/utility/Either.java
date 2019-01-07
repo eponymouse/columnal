@@ -86,6 +86,15 @@ public class Either<A, B>
             withRight.accept(b);
     }
 
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public void eitherEx_(ExConsumer<? super A> withLeft, ExConsumer<? super B> withRight) throws InternalException, UserException
+    {
+        if (isA)
+            withLeft.accept(a);
+        else
+            withRight.accept(b);
+    }
+
     // Bit like liftA2/liftM2 for Either monad, but it does examine both Eithers
     // and it concatenates the errors rather than just using the first one
     // Right is only returned if both inputs are right, otherwise Left will be returned.

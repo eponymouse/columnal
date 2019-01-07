@@ -104,9 +104,11 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
                 }
 
                 @Override
-                public void set(int index, @Value TemporalAccessor value) throws InternalException, UserException
+                public void set(int index, Either<String, @Value TemporalAccessor> value) throws InternalException, UserException
                 {
-                    values.set(index, value);
+                    value.eitherInt_(err -> {
+                        setError(index, err);
+                    }, v -> values.set(index, v));
                 }
             });
         }

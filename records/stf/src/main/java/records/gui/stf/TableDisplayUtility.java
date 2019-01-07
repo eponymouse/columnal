@@ -378,14 +378,14 @@ public class TableDisplayUtility
         public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
             MakeEditorKit<@Value T> makeEditorKit = (int rowIndex, Pair<String, @Nullable T> value, FXPlatformConsumer<CellPosition> relinquishFocus) -> {
-                FXPlatformBiConsumer<String, @Value T> saveChange = (String s, @Value T v) -> {};
+                FXPlatformBiConsumer<String, @Nullable @Value T> saveChange = (String s, @Value T v) -> {};
                 if (isEditable)
-                    saveChange = new FXPlatformBiConsumer<String, @Value T>()
+                    saveChange = new FXPlatformBiConsumer<String, @Nullable @Value T>()
                 {
                     @Override
-                    public @OnThread(Tag.FXPlatform) void consume(String text, @Value T v)
+                    public @OnThread(Tag.FXPlatform) void consume(String text, @Nullable @Value T v)
                     {
-                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v)));
+                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
                         onModify.run();
                     }
                 };
@@ -541,12 +541,14 @@ public class TableDisplayUtility
                     @Override
                     @OnThread(Tag.Simulation)
                     @SuppressWarnings("unchecked")
-                    public void set(int index, @Value Object @Value[] value) throws InternalException, UserException
+                    public void set(int index, Either<String, @Value Object @Value[]> errOrValue) throws InternalException, UserException
                     {
-                        for (int i = 0; i < value.length; i++)
+                        
+                        for (int i = 0; i < gvacs.size(); i++)
                         {
+                            int iFinal = i;
                             // Cast because we can't express type safety:
-                            ((GetValue)gvacs.get(i).g).set(index, value[i]);
+                            ((GetValue)gvacs.get(i).g).set(index, errOrValue.map(v -> v[iFinal]));
                         }
                     }
                 };

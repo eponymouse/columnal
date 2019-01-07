@@ -444,17 +444,19 @@ public class DataTypeUtility
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, TaggedValue value) throws InternalException, UserException
+            public @OnThread(Tag.Simulation) void set(int index, Either<String, TaggedValue> errOrValue) throws InternalException, UserException
             {
-                g.set(index, value.getTagIndex());
-                @Nullable DataTypeValue inner = tagTypes.get(value.getTagIndex()).getInner();
-                if (inner != null)
-                {
-                    @Nullable @Value Object innerVal = value.getInner();
-                    if (innerVal == null)
-                        throw new InternalException("Inner type present but not inner value " + tagTypes + " #" + value.getTagIndex());
-                    inner.setCollapsed(index, innerVal);
-                }
+                g.set(index, errOrValue.map(v -> v.getTagIndex()));
+                errOrValue.eitherEx_(err -> {}, value -> {
+                    @Nullable DataTypeValue inner = tagTypes.get(value.getTagIndex()).getInner();
+                    if (inner != null)
+                    {
+                        @Nullable @Value Object innerVal = value.getInner();
+                        if (innerVal == null)
+                            throw new InternalException("Inner type present but not inner value " + tagTypes + " #" + value.getTagIndex());
+                        inner.setCollapsed(index, innerVal);
+                    }
+                });
             }
         };
     }
@@ -553,9 +555,9 @@ public class DataTypeUtility
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, ListEx value) throws InternalException, UserException
+            public @OnThread(Tag.Simulation) void set(int index, Either<String,ListEx> value) throws InternalException, UserException
             {
-                g.set(index, new Pair<>(value.size(), innerType.fromCollapsed((i, prog) -> value.get(i))));
+                g.set(index, value.mapEx(v -> new Pair<>(v.size(), innerType.fromCollapsed((i, prog) -> v.get(i)))));
             }
         };
     }

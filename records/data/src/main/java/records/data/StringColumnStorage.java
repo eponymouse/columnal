@@ -93,9 +93,12 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException
+                public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value String> value) throws InternalException
                 {
-                    setValue(index, value);
+                    value.eitherInt_(err -> {
+                        setError(index, err);
+                        setValue(index, DataTypeUtility.value(""));
+                    }, v -> setValue(index, v));
                 }
             });
         }

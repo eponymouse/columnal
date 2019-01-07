@@ -46,9 +46,11 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, @Value Boolean value) throws InternalException
+            public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Boolean> value) throws InternalException
             {
-                data.set(index, value);
+                value.eitherInt_(err -> {
+                    setError(index, err);
+                }, v -> data.set(index, v));
             }
         });
     }

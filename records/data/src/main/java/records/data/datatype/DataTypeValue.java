@@ -94,11 +94,17 @@ public final class DataTypeValue extends DataType
     {
         applyGet(new DataTypeVisitorGet<Void>()
         {
+            @OnThread(Tag.Simulation)
+            private <T> void set(GetValue<T> g, int index, T value) throws UserException, InternalException
+            {
+                g.set(index, Either.<String, T>right(value));
+            }
+            
             @Override
             @OnThread(Tag.Simulation)
             public Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                g.set(rowIndex, (Number)value);
+                set(g, rowIndex, (Number)value);
                 return null;
             }
 
@@ -106,7 +112,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void text(GetValue<@Value String> g) throws InternalException, UserException
             {
-                g.set(rowIndex, (String)value);
+                set(g, rowIndex, (String)value);
                 return null;
             }
 
@@ -114,7 +120,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
-                g.set(rowIndex, (Boolean) value);
+                set(g, rowIndex, (Boolean) value);
                 return null;
             }
 
@@ -122,7 +128,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                g.set(rowIndex, (TemporalAccessor) value);
+                set(g, rowIndex, (TemporalAccessor) value);
                 return null;
             }
 
@@ -131,7 +137,7 @@ public final class DataTypeValue extends DataType
             public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
-                g.set(rowIndex, taggedValue.getTagIndex());
+                set(g, rowIndex, taggedValue.getTagIndex());
                 @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
                 if (innerType != null)
                 {
@@ -161,7 +167,7 @@ public final class DataTypeValue extends DataType
                 if (inner == null)
                     throw new InternalException("Attempting to set value in empty array");
                 ListEx listEx = (ListEx)value;
-                g.set(rowIndex, new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx)));
+                set(g, rowIndex, new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx)));
                 return null;
             }
         });
@@ -311,7 +317,7 @@ public final class DataTypeValue extends DataType
         default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
 
         @OnThread(Tag.Simulation)
-        default void set(int index, T value) throws InternalException, UserException
+        default void set(int index, Either<String, T> value) throws InternalException, UserException
         {
             throw new InternalException("Attempted to set value for uneditable column: " + getClass());
         };

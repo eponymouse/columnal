@@ -24,14 +24,14 @@ import java.util.function.UnaryOperator;
 public class EditorKit<T>
 {
     private final Recogniser<T> recogniser;
-    private final FXPlatformBiConsumer<String, T> onChange;
+    private final FXPlatformBiConsumer<String, @Nullable T> onChange;
     private final FXPlatformRunnable relinquishFocus;
     private Either<StyledString, T> latestValue = Either.left(StyledString.s("Loading"));
     private ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> latestDocument;
     private Pair<ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>>, UnaryOperator<Integer>> unfocusedDocument;
     private @Nullable FlexibleTextField field;
 
-    public EditorKit(String initialValue, Recogniser<T> recogniser, FXPlatformBiConsumer<String, T> onChange, FXPlatformRunnable relinquishFocus)
+    public EditorKit(String initialValue, Recogniser<T> recogniser, FXPlatformBiConsumer<String, @Nullable T> onChange, FXPlatformRunnable relinquishFocus)
     {
         this.recogniser = recogniser;
         this.onChange = onChange;

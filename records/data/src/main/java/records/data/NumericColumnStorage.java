@@ -465,16 +465,20 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, @Value Number value) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Number> value) throws InternalException, UserException
                 {
-                    if (index == filled)
-                    {
-                        NumericColumnStorage.this.set(OptionalInt.empty(), value);
-                    }
-                    else
-                    {
-                        NumericColumnStorage.this.set(OptionalInt.of(index), value);
-                    }
+                    value.eitherInt_(err -> {
+                        setError(index, err);
+                    }, v -> {
+                        if (index == filled)
+                        {
+                            NumericColumnStorage.this.set(OptionalInt.empty(), v);
+                        }
+                        else
+                        {
+                            NumericColumnStorage.this.set(OptionalInt.of(index), v);
+                        }
+                    });
                 }
             });
         }

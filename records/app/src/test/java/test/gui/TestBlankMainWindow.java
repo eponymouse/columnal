@@ -366,7 +366,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propDefaultValue(@When(seed=-3291684708783208768L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
