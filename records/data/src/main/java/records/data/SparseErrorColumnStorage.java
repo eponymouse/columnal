@@ -1,9 +1,16 @@
 package records.data;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
+import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
@@ -111,5 +118,37 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
             removed.forEach(this::setError);
             revert.run();
         };
+    }
+    
+    protected abstract class GetValueOrError<V> implements GetValue<V>
+    {
+        @OnThread(Tag.Any)
+        public GetValueOrError()
+        {
+        }
+
+        @NonNull
+        @Override
+        public final V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+        {
+            String err = getError(index);
+            if (err != null)
+                throw new InvalidImmediateValueException(StyledString.s("Invalid value: " + err), err);
+            else
+                return _getWithProgress(index, progressListener);
+        }
+
+        @Override
+        @OnThread(Tag.Simulation)
+        public final void set(int index, Either<String, V> value) throws InternalException, UserException
+        {
+            value.eitherEx_(err -> {setError(index, err); _set(index, null);},
+                v -> _set(index, v));
+        }
+
+        protected abstract @NonNull V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
+
+        @OnThread(Tag.Simulation)
+        protected abstract void _set(int index, @Nullable V value) throws InternalException, UserException;
     }
 }

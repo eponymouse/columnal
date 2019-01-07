@@ -32,6 +32,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
@@ -444,9 +445,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 {
                     return Either.right(column.getCollapsed(iFinal));
                 }
-                catch (UserException e)
+                catch (InvalidImmediateValueException e)
                 {
-                    return Either.left(e.getLocalizedMessage());
+                    return Either.left(e.getInvalid());
                 }
                 // Deliberately do not catch InternalException or other exceptions.
             }));

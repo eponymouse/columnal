@@ -456,29 +456,28 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.number(displayInfo, new GetValue<@Value Number>()
+            dataType = DataTypeValue.number(displayInfo, new GetValueOrError<@Value Number>()
             {
                 @Override
-                public @Value Number getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value Number _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return DataTypeUtility.value(NumericColumnStorage.this.getNonBlank(i, prog));
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Number> value) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value Number value) throws InternalException, UserException
                 {
-                    value.eitherInt_(err -> {
-                        setError(index, err);
-                    }, v -> {
-                        if (index == filled)
-                        {
-                            NumericColumnStorage.this.set(OptionalInt.empty(), v);
-                        }
-                        else
-                        {
-                            NumericColumnStorage.this.set(OptionalInt.of(index), v);
-                        }
-                    });
+                    if (value == null)
+                        value = DataTypeUtility.value(0);
+                    
+                    if (index == filled)
+                    {
+                        NumericColumnStorage.this.set(OptionalInt.empty(), value);
+                    }
+                    else
+                    {
+                        NumericColumnStorage.this.set(OptionalInt.of(index), value);
+                    }
                 }
             });
         }

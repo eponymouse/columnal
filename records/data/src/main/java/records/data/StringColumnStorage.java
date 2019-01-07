@@ -84,21 +84,21 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text(new GetValue<@Value String>()
+            dataType = DataTypeValue.text(new GetValueOrError<@Value String>()
             {
                 @Override
-                public @Value String getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value String _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return StringColumnStorage.this.get(i, prog);
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value String> value) throws InternalException
+                public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value String value) throws InternalException
                 {
-                    value.eitherInt_(err -> {
-                        setError(index, err);
-                        setValue(index, DataTypeUtility.value(""));
-                    }, v -> setValue(index, v));
+                    if (value == null)
+                        value = DataTypeUtility.value("");
+                    
+                    setValue(index, value);
                 }
             });
         }

@@ -80,9 +80,9 @@ public class EditorKit<T>
                 return err.error;
             }, succ -> {
                 // TODO apply styles
-                onChange.consume(text, succ.value);
                 return succ.value;
             });
+            onChange.consume(text, latestValue.leftToNull());
             unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
         }
         else

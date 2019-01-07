@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -95,20 +96,19 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date(dateTimeInfo, new GetValue<@Value TemporalAccessor>()
+            dataType = DataTypeValue.date(dateTimeInfo, new GetValueOrError<@Value TemporalAccessor>()
             {
                 @Override
-                public @Value TemporalAccessor getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value TemporalAccessor _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return TemporalColumnStorage.this.get(i, prog);
                 }
 
                 @Override
-                public void set(int index, Either<String, @Value TemporalAccessor> value) throws InternalException, UserException
+                public void _set(int index, @Nullable @Value TemporalAccessor value) throws InternalException, UserException
                 {
-                    value.eitherInt_(err -> {
-                        setError(index, err);
-                    }, v -> values.set(index, v));
+                    if (value != null)
+                        values.set(index, value);
                 }
             });
         }

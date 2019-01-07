@@ -51,10 +51,10 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
         else
         {
             DataType innerFinal = innerToCopy;
-            this.type = DataTypeValue.arrayV(innerToCopy, new GetValue<Pair<Integer, DataTypeValue>>()
+            this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<Pair<Integer, DataTypeValue>>()
             {
                 @Override
-                public Pair<Integer, DataTypeValue> getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+                public Pair<Integer, DataTypeValue> _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                 {
                     if (beforeGet != null)
                         beforeGet.beforeGet(ArrayColumnStorage.this, i, prog);
@@ -70,26 +70,21 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
                 }
 
                 @Override
-                public void set(int index, Either<String, Pair<Integer, DataTypeValue>> value) throws InternalException, UserException
+                public void _set(int index, Pair<Integer, DataTypeValue> v) throws InternalException, UserException
                 {
-                    value.eitherInt_(err -> {
-                        setError(index, err);
-                        storage.set(index, ListEx.empty());
-                    }, v -> {
-                        storage.set(index, new ListEx()
+                    storage.set(index, new ListEx()
+                    {
+                        @Override
+                        public int size() throws InternalException, UserException
                         {
-                            @Override
-                            public int size() throws InternalException, UserException
-                            {
-                                return v.getFirst();
-                            }
+                            return v.getFirst();
+                        }
 
-                            @Override
-                            public @Value Object get(int index) throws InternalException, UserException
-                            {
-                                return v.getSecond().getCollapsed(index);
-                            }
-                        });
+                        @Override
+                        public @Value Object get(int index) throws InternalException, UserException
+                        {
+                            return v.getSecond().getCollapsed(index);
+                        }
                     });
                 }
             });

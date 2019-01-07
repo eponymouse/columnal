@@ -96,10 +96,10 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
                 valueStores.add(null);
             }
         }
-        dataType = DataTypeValue.tagged(typeName, typeVars, ImmutableList.copyOf(tagTypes), new GetValue<Integer>()
+        dataType = DataTypeValue.tagged(typeName, typeVars, ImmutableList.copyOf(tagTypes), new GetValueOrError<Integer>()
         {
             @Override
-            public Integer getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+            public Integer _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
             {
                 if (beforeGet != null)
                     beforeGet.beforeGet(TaggedColumnStorage.this, i, prog);
@@ -107,63 +107,58 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             }
 
             @Override
-            public void set(int index, Either<String, Integer> errOrNewTag) throws InternalException, UserException
+            public void _set(int index, Integer newTag) throws InternalException, UserException
             {
-                errOrNewTag.eitherEx_(err -> {
-                    setError(index, err);
-                }, newTag -> {
+                int oldTag = tagStore.getInt(index);
+                if (newTag.intValue() == oldTag)
+                    return; // No need to change anything here.
 
-                    int oldTag = tagStore.getInt(index);
-                    if (newTag.intValue() == oldTag)
-                        return; // No need to change anything here.
+                tagStore.set(OptionalInt.of(index), newTag);
 
-                    tagStore.set(OptionalInt.of(index), newTag);
-
-                    // Must remove old value:
-                    @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
-                    if (oldInner != null)
+                // Must remove old value:
+                @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
+                if (oldInner != null)
+                {
+                    oldInner.removeRows(innerValueIndex.getInt(index), 1);
+                    // No need to change index itself, as it's about to be replaced
+                    for (int i = index + 1; i < tagStore.filled(); i++)
                     {
-                        oldInner.removeRows(innerValueIndex.getInt(index), 1);
-                        // No need to change index itself, as it's about to be replaced
-                        for (int i = index + 1; i < tagStore.filled(); i++)
+                        if (tagStore.getInt(i) == oldTag)
                         {
-                            if (tagStore.getInt(i) == oldTag)
-                            {
-                                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
-                            }
+                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
                         }
                     }
-                    @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
-                    if (newInner != null)
+                }
+                @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
+                if (newInner != null)
+                {
+                    // Work out destination position by seeing how many are before us:
+                    int newValueIndex = 0;
+                    for (int i = 0; i < index; i++)
                     {
-                        // Work out destination position by seeing how many are before us:
-                        int newValueIndex = 0;
-                        for (int i = 0; i < index; i++)
+                        if (tagStore.getInt(i) == newTag)
                         {
-                            if (tagStore.getInt(i) == newTag)
-                            {
-                                newValueIndex++;
-                            }
-                        }
-                        innerValueIndex.set(OptionalInt.of(index), newValueIndex);
-                        @SuppressWarnings("unchecked")
-                        List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
-                        @SuppressWarnings("unchecked")
-                        SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
-                        for (int i = index + 1; i < tagStore.filled(); i++)
-                        {
-                            if (tagStore.getInt(i) == newTag)
-                            {
-                                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
-                            }
+                            newValueIndex++;
                         }
                     }
-                    else
+                    innerValueIndex.set(OptionalInt.of(index), newValueIndex);
+                    @SuppressWarnings("unchecked")
+                    List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
+                    @SuppressWarnings("unchecked")
+                    SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
+                    for (int i = index + 1; i < tagStore.filled(); i++)
                     {
-                        // If no new inner store, blank the inner value index:
-                        innerValueIndex.set(OptionalInt.of(index), -1);
+                        if (tagStore.getInt(i) == newTag)
+                        {
+                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
+                        }
                     }
-                });
+                }
+                else
+                {
+                    // If no new inner store, blank the inner value index:
+                    innerValueIndex.set(OptionalInt.of(index), -1);
+                }
             }
         });
     }

@@ -37,20 +37,18 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
     {
         this.beforeGet = beforeGet;
-        this.type = DataTypeValue.bool(new GetValue<@Value Boolean>()
+        this.type = DataTypeValue.bool(new GetValueOrError<@Value Boolean>()
         {
             @Override
-            public @Value Boolean getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
+            public @Value Boolean _getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
             {
                 return BooleanColumnStorage.this.getWithProgress(i, progressListener);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Boolean> value) throws InternalException
+            public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value Boolean value) throws InternalException
             {
-                value.eitherInt_(err -> {
-                    setError(index, err);
-                }, v -> data.set(index, v));
+                data.set(index, value != null ? value : DataTypeUtility.value(false));
             }
         });
     }
