@@ -128,7 +128,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         {
             if (item == null)
                 item = "";
-            values.add(pool.pool(DataTypeUtility.value(item)));
+            values.add(index, pool.pool(DataTypeUtility.value(item)));
         }
         int count = items.size();
         return () -> _removeRows(index, count);

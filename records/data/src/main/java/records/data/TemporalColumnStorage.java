@@ -75,9 +75,9 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
     {
         for (Either<String, TemporalAccessor> item : Utility.iterableStream(items))
         {
-            TemporalAccessor t = item.either(err -> {
+            TemporalAccessor t = item.eitherInt(err -> {
                 setError(values.size(), err);
-                return Instant.EPOCH;
+                return dateTimeInfo.getDefaultValue();
             }, v -> v);
             this.values.add(pool.pool(DataTypeUtility.value(dateTimeInfo, t)));
         }
@@ -125,12 +125,11 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         {
             if (item == null)
             {
-                @SuppressWarnings("value")
-                @Value Instant dummy = Instant.EPOCH;
-                values.add(pool.pool(dummy));
+                @Value TemporalAccessor dummy = dateTimeInfo.getDefaultValue();
+                values.add(index, pool.pool(dummy));
             }
             else
-                values.add(pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
+                values.add(index, pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
         }
         int count = items.size();
         return () -> _removeRows(index, count);

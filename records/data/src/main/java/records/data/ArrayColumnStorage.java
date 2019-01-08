@@ -129,7 +129,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
         {
             if (item == null)
                 item = ListEx.empty();
-            storage.add(item);
+            storage.add(index, item);
         }
         int count = items.size();
         return () -> _removeRows(index, count);
