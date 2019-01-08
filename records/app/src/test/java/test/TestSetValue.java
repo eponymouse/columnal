@@ -16,6 +16,7 @@ import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public class TestSetValue
         while (!pendingReplacements.isEmpty())
         {
             Pair<Integer, @Value Object> repl = TestUtil.removeRandom(r, pendingReplacements);
-            col.getType().setCollapsed(repl.getFirst(), repl.getSecond());
+            col.getType().setCollapsed(repl.getFirst(), Either.right(repl.getSecond()));
         }
 
         // Check replacement worked:

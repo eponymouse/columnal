@@ -48,12 +48,6 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
-    {
-        this(typeName, typeVars, copyTagTypes, null);
-    }
-
-    @SuppressWarnings("initialization")
     public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage();
@@ -75,10 +69,10 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
         dataType = DataTypeValue.tagged(typeName, typeVars, Utility.mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.map(t -> t.getType())), new GetValueOrError<Integer>()
         {
             @Override
-            public Integer _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+            public Integer _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
             {
                 if (beforeGet != null)
-                    beforeGet.beforeGet(TaggedColumnStorage.this, i, prog);
+                    beforeGet.beforeGet(Utility.later(TaggedColumnStorage.this), i, prog);
                 return tagStore.getInt(i);
             }
 
@@ -86,19 +80,24 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             public void _set(int index, @Nullable Integer newTag) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
-                if (newTag.intValue() == oldTag)
+                if (newTag != null && newTag.intValue() == oldTag)
                     return; // No need to change anything here.
 
-                tagStore.set(OptionalInt.of(index), newTag);
+                tagStore.set(OptionalInt.of(index), newTag == null ? 0 : newTag);
 
                 for (int i = 0; i < tagTypes.size(); i++)
                 {
                     ColumnStorage<?> colStore = tagTypes.get(i).getInner();
-                    if (i != index)
-                        colStore.getType().setCollapsed(i, null);
+                    if (i != index && colStore != null)
+                        colStore.getType().setCollapsed(i, Either.left("Attempting to fetch tagged inner value for invalid row"));
                 }
             }
         });
+    }
+
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
+    {
+        this(typeName, typeVars, copyTagTypes, null);
     }
     
     @OnThread(Tag.Any)

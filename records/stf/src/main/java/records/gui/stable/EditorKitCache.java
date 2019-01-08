@@ -268,11 +268,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         private final FXPlatformConsumer<Boolean> onFocusChange;
         private final FXPlatformConsumer<CellPosition> relinquishFocus;
 
-        @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
         public DisplayCacheItem(@TableDataRowIndex int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
         {
             this.rowIndex = index;
-            loader = new ValueLoader(index, this);
+            loader = new ValueLoader(index, Utility.later(this));
             this.onFocusChange = onFocusChange;
             this.relinquishFocus = relinquishFocus;
             this.callbackSetCellContent = callbackSetCellContent;
@@ -332,8 +331,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         private long us;
 
         @OnThread(Tag.FXPlatform)
-        @SuppressWarnings("initialization") // For displayCacheItem
-        public ValueLoader(int index, @UnknownInitialization DisplayCacheItem displayCacheItem)
+        public ValueLoader(int index, DisplayCacheItem displayCacheItem)
         {
             this.originalIndex = index;
             this.displayCacheItem = displayCacheItem;

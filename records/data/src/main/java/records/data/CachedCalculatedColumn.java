@@ -12,6 +12,7 @@ import utility.ExBiConsumer;
 import utility.ExConsumer;
 import utility.ExFunction;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.function.Predicate;
 
@@ -23,12 +24,11 @@ public class CachedCalculatedColumn<S extends ColumnStorage<?>> extends Calculat
     private final S cache;
     private final ExConsumer<S> addToCache;
 
-    @SuppressWarnings("initialization") // Passing ourselves to constructor
     public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, ExFunction<BeforeGet<S>, S> cache, ExConsumer<S> addToCache) throws InternalException, UserException
     {
         super(recordSet, name);
-        this.cache = cache.apply(this);
         this.addToCache = addToCache;
+        this.cache = cache.apply(Utility.later(this));
     }
 
     @Override

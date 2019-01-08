@@ -67,7 +67,6 @@ public class Filter extends Transformation
     private @MonotonicNonNull DataType type;
     private boolean typeChecked = false;
 
-    @SuppressWarnings("initialization")
     public Filter(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression filterExpression) throws InternalException
     {
         super(mgr, initialLoadDetails);
@@ -116,7 +115,7 @@ public class Filter extends Transformation
                         if (index < indexMap.filled())
                             return true;
 
-                        fillIndexMapTo(index, tableLookup, data,null);
+                        Utility.later(Filter.this).fillIndexMapTo(index, tableLookup, data,null);
                         return index < indexMap.filled();
                     }
                 };

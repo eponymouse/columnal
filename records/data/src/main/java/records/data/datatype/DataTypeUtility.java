@@ -454,7 +454,7 @@ public class DataTypeUtility
                         @Nullable @Value Object innerVal = value.getInner();
                         if (innerVal == null)
                             throw new InternalException("Inner type present but not inner value " + tagTypes + " #" + value.getTagIndex());
-                        inner.setCollapsed(index, innerVal);
+                        inner.setCollapsed(index, Either.right(innerVal));
                     }
                 });
             }

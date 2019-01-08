@@ -33,14 +33,13 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     private final DataTypeValue type;
     private final @Nullable BeforeGet<BooleanColumnStorage> beforeGet;
 
-    @SuppressWarnings("initialization") // getWithProgress method reference
     public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
     {
         this.beforeGet = beforeGet;
         this.type = DataTypeValue.bool(new GetValueOrError<@Value Boolean>()
         {
             @Override
-            public @Value Boolean _getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
+            public @Value Boolean _getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
             {
                 return BooleanColumnStorage.this.getWithProgress(i, progressListener);
             }

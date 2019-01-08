@@ -78,7 +78,6 @@ public class Concatenate extends Transformation
     @OnThread(Tag.Any)
     private final @Nullable RecordSet recordSet;
 
-    @SuppressWarnings("initialization")
     public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, IncompleteColumnHandling incompleteColumnHandling) throws InternalException
     {
         super(mgr, initialLoadDetails);
@@ -107,7 +106,7 @@ public class Concatenate extends Transformation
                 }
             }
             
-            tables = Utility.mapListEx(sources, getManager()::getSingleTableOrThrow);
+            tables = Utility.mapListEx(sources, mgr::getSingleTableOrThrow);
             // We used LinkedHashMap to keep original column ordering:
             // Function is either identity (represented by null), or has a default, or is a custom wrapping function:.
             LinkedHashMap<ColumnId, ColumnDetails> ourColumns = new LinkedHashMap<>();
@@ -196,7 +195,8 @@ public class Concatenate extends Transformation
                                             }
                                             else
                                             {
-                                                DataTypeValue wrapped = colDetails.getValue().dataType.fromCollapsed((i, progB) -> colDetails.getValue().wrapValue.apply(oldColumn.getType().getCollapsed(concatenatedRow - start)));
+                                                Function<@Value Object, @Value Object> wrapValue = colDetails.getValue().wrapValue;
+                                                DataTypeValue wrapped = colDetails.getValue().dataType.fromCollapsed((i, progB) -> wrapValue.apply(oldColumn.getType().getCollapsed(concatenatedRow - start)));
                                                 return new Pair<>(wrapped, 0);
                                             }
                                         }

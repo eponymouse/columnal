@@ -18,6 +18,7 @@ import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 
 import javax.swing.SwingUtilities;
 import java.lang.reflect.InvocationTargetException;
@@ -59,7 +60,7 @@ public class PropStorageSet
             int rowIndex = r.nextInt(10);
             @Value Object value = typeAndValueGen.makeValue();
             DataTypeValue columnType = c.getType();
-            columnType.setCollapsed(rowIndex, value);
+            columnType.setCollapsed(rowIndex, Either.right(value));
             TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, value, c.getType().getCollapsed(rowIndex));
             vals.put(rowIndex, value);
         }

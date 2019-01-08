@@ -151,7 +151,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         public final void set(int index, Either<String, V> value) throws InternalException, UserException
         {
             value.eitherEx_(err -> {setError(index, err); _set(index, null);},
-                v -> _set(index, v));
+                v -> {errorEntries.remove(index); _set(index, v);});
         }
 
         protected abstract @NonNull V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;

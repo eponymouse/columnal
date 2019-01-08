@@ -90,21 +90,22 @@ public final class DataTypeValue extends DataType
         return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, null);
     }
 
-    public void setCollapsed(int rowIndex, @Value Object value) throws InternalException, UserException
+    public void setCollapsed(int rowIndex, Either<String, @Value Object> value) throws InternalException, UserException
     {
         applyGet(new DataTypeVisitorGet<Void>()
         {
+            @SuppressWarnings("value")
             @OnThread(Tag.Simulation)
-            private <T> void set(GetValue<T> g, int index, T value) throws UserException, InternalException
+            private <T> void set(GetValue<@Value T> g, Class<T> castTo) throws UserException, InternalException
             {
-                g.set(index, Either.<String, T>right(value));
+                g.set(rowIndex, value.<@Value T>map(v -> castTo.cast(v)));
             }
             
             @Override
             @OnThread(Tag.Simulation)
             public Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                set(g, rowIndex, (Number)value);
+                set(g, Number.class);
                 return null;
             }
 
@@ -112,7 +113,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void text(GetValue<@Value String> g) throws InternalException, UserException
             {
-                set(g, rowIndex, (String)value);
+                set(g, String.class);
                 return null;
             }
 
@@ -120,7 +121,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
-                set(g, rowIndex, (Boolean) value);
+                set(g, Boolean.class);
                 return null;
             }
 
@@ -128,7 +129,7 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                set(g, rowIndex, (TemporalAccessor) value);
+                set(g, TemporalAccessor.class);
                 return null;
             }
 
@@ -136,26 +137,30 @@ public final class DataTypeValue extends DataType
             @OnThread(Tag.Simulation)
             public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
-                TaggedValue taggedValue = (TaggedValue)value;
-                set(g, rowIndex, taggedValue.getTagIndex());
-                @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
-                if (innerType != null)
-                {
-                    @Nullable @Value Object innerValue = ((TaggedValue) value).getInner();
-                    if (innerValue == null)
-                        throw new InternalException("Inner value present but no slot for it");
-                    innerType.setCollapsed(rowIndex, innerValue);
-                }
+                
+                g.set(rowIndex, value.map(v -> ((TaggedValue)v).getTagIndex()));
+                value.eitherEx_(err -> {}, orig -> {
+                    TaggedValue taggedValue = (TaggedValue) orig;
+
+                    @Nullable DataTypeValue innerType = tagTypes.get(taggedValue.getTagIndex()).getInner();
+                    if (innerType != null)
+                    {
+                        @Nullable @Value Object innerValue = taggedValue.getInner();
+                        if (innerValue == null)
+                            throw new InternalException("Inner value present but no slot for it");
+                        innerType.setCollapsed(rowIndex, Either.right(innerValue));
+                    }
+                });
                 return null;
             }
 
             @Override
             public Void tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
-                @Value Object[] tuple = (@Value Object[])value;
                 for (int i = 0; i < types.size(); i++)
                 {
-                    types.get(i).setCollapsed(rowIndex, tuple[i]);
+                    int iFinal = i;
+                    types.get(i).setCollapsed(rowIndex, value.<@Value Object>map(v -> ((@Value Object[]) v)[iFinal]));
                 }
                 return null;
             }
@@ -166,8 +171,10 @@ public final class DataTypeValue extends DataType
             {
                 if (inner == null)
                     throw new InternalException("Attempting to set value in empty array");
-                ListEx listEx = (ListEx)value;
-                set(g, rowIndex, new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx)));
+                g.set(rowIndex, value.mapEx(v -> {
+                    ListEx listEx = (ListEx)v;
+                    return new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx));
+                }));
                 return null;
             }
         });
