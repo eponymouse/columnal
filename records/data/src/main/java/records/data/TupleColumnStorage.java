@@ -92,7 +92,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<Object @Nullable []> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<Object @Nullable []> items) throws InternalException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try
@@ -115,7 +115,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
                 }
             };
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             for (SimulationRunnable revert : reverts)
             {
@@ -126,7 +126,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
     }
 
     @Override
-    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try
@@ -143,7 +143,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
                 }
             };
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             for (SimulationRunnable revert : reverts)
             {

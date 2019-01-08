@@ -210,7 +210,7 @@ public class EditableRecordSet extends RecordSet
                 {
                     revertOne.run();
                 }
-                catch (InternalException | UserException e2)
+                catch (InternalException e2)
                 {
                     Platform.runLater(() -> FXUtility.showError("Error reversing row insertion", e2));
                 }
@@ -256,7 +256,7 @@ public class EditableRecordSet extends RecordSet
                 {
                     revertOne.run();
                 }
-                catch (InternalException | UserException e2)
+                catch (InternalException e2)
                 {
                     Platform.runLater(() -> FXUtility.showError("Error reversing row removal", e2));
                 }

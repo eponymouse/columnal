@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -41,29 +42,8 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
 {
     // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
-    // This stores the index at which each inner value resides.
-    // For example, let's stay you have the type:
-    // \A:Number \B \C:Date \D:Number
-    // And you add the following data:
-    // \A:0
-    // \B
-    // \A:4
-    // \C:...
-    // \D:6
-    // \A:5
-    // tagStore will have 0, 1, 0, 2, 3, 0 (the tag indexes)
-    // innerValueIndex will have 0, -1 [none], 1, 0, 0, 2 (effectively, the per-tag index
-    // within the corresponding value store).  i.e. we compress each
-    // storage so that we don't leave gaps.  The indexes must be
-    // in ascending order
-    private final NumericColumnStorage innerValueIndex;
-    // This is the list of storage columns for inner types.
-    // We could share them among same-types, but it doesn't save memory so
-    // we keep it simple.  We put a null entry where there is no inner type.
-    // We could also collapse nested tagged columns, but we choose not to,
-    // again to keep it simple:
-    protected final List<@Nullable ColumnStorage<?>> valueStores;
-    private final List<TagType<DataTypeValue>> tagTypes;
+    // This stores the inner values
+    private final List<TagType<ColumnStorage<?>>> tagTypes;
     // Effectively a cached version of tagTypes:
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
@@ -77,8 +57,6 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
     public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage();
-        innerValueIndex = new NumericColumnStorage();
-        valueStores = new ArrayList<>();
         tagTypes = new ArrayList<>();
         for (int i = 0; i < copyTagTypes.size(); i++)
         {
@@ -87,16 +65,14 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType())));
-                valueStores.add(result);
+                tagTypes.add(new TagType<>(tagType.getName(), result));
             }
             else
             {
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), null));
-                valueStores.add(null);
+                tagTypes.add(new TagType<>(tagType.getName(), null));
             }
         }
-        dataType = DataTypeValue.tagged(typeName, typeVars, ImmutableList.copyOf(tagTypes), new GetValueOrError<Integer>()
+        dataType = DataTypeValue.tagged(typeName, typeVars, Utility.mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.map(t -> t.getType())), new GetValueOrError<Integer>()
         {
             @Override
             public Integer _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
@@ -107,7 +83,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             }
 
             @Override
-            public void _set(int index, Integer newTag) throws InternalException, UserException
+            public void _set(int index, @Nullable Integer newTag) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
                 if (newTag.intValue() == oldTag)
@@ -115,246 +91,65 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
 
                 tagStore.set(OptionalInt.of(index), newTag);
 
-                // Must remove old value:
-                @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
-                if (oldInner != null)
+                for (int i = 0; i < tagTypes.size(); i++)
                 {
-                    oldInner.removeRows(innerValueIndex.getInt(index), 1);
-                    // No need to change index itself, as it's about to be replaced
-                    for (int i = index + 1; i < tagStore.filled(); i++)
-                    {
-                        if (tagStore.getInt(i) == oldTag)
-                        {
-                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
-                        }
-                    }
-                }
-                @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
-                if (newInner != null)
-                {
-                    // Work out destination position by seeing how many are before us:
-                    int newValueIndex = 0;
-                    for (int i = 0; i < index; i++)
-                    {
-                        if (tagStore.getInt(i) == newTag)
-                        {
-                            newValueIndex++;
-                        }
-                    }
-                    innerValueIndex.set(OptionalInt.of(index), newValueIndex);
-                    @SuppressWarnings("unchecked")
-                    List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
-                    @SuppressWarnings("unchecked")
-                    SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
-                    for (int i = index + 1; i < tagStore.filled(); i++)
-                    {
-                        if (tagStore.getInt(i) == newTag)
-                        {
-                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
-                        }
-                    }
-                }
-                else
-                {
-                    // If no new inner store, blank the inner value index:
-                    innerValueIndex.set(OptionalInt.of(index), -1);
+                    ColumnStorage<?> colStore = tagTypes.get(i).getInner();
+                    if (i != index)
+                        colStore.getType().setCollapsed(i, null);
                 }
             }
         });
     }
-
-    /**
-     * Given the inner storage used to store those items, returns a DataTypeValue
-     * for the wrapped type, which has to map the indexes.  Recall that if you have
-     * tags A:Bool, B, C:Integer, the index of the value for C in the store for C
-     * is totally independent of the index in the store of A for values of A.  We must
-     * re map.  Remapping while getting is quite straightforward: just use the innerValueIndex
-     * mapping.  The tricky part is updating the mapping when storing.
-     *
-     * @param innerStore The storage to store in
-     * @param innerStoreTagIndex If present, it means we are responsible for updating the indexes,
-     *                           and should update them for the given inner store.  If missing,
-     *                           it's not up to us (e.g. we're second in a tuple, and first is responsible)
-     *                           so leave them alone, and assume they've already been done.
-     */
-    private DataTypeValue reMap(DataTypeValue dataTypeValue) throws InternalException
-    {
-        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
-        {
-            // We are given the GetValue for the inner storage
-            // We must map through innerValueIndex
-            private <T> GetValue<T> reMapGV(GetValue<T> g)
-            {
-                return new GetValue<T>()
-                {
-                    @Override
-                    public @NonNull T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-                    {
-                        return g.getWithProgress(innerValueIndex.getInt(index), progressListener);
-                    }
-
-                    @Override
-                    public void set(int index, Either<String, T> value) throws InternalException, UserException
-                    {
-                        g.set(innerValueIndex.getInt(index), value);
-                    }
-                };
-            }
-
-            @Override
-            public DataTypeValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
-            {
-                return DataTypeValue.number(displayInfo, reMapGV(g));
-            }
-
-            @Override
-            public DataTypeValue text(GetValue<@Value String> g) throws InternalException
-            {
-                return DataTypeValue.text(reMapGV(g));
-            }
-
-            @Override
-            public DataTypeValue bool(GetValue<@Value Boolean> g) throws InternalException
-            {
-                return DataTypeValue.bool(reMapGV(g));
-            }
-
-            @Override
-            public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
-            {
-                return DataTypeValue.date(dateTimeInfo, reMapGV(g));
-            }
-
-            @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
-            {
-                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : reMap(tt.getInner()))), reMapGV(g));
-            }
-
-            @Override
-            public DataTypeValue tuple(ImmutableList<DataTypeValue> types) throws InternalException
-            {
-                List<DataTypeValue> reMapped = new ArrayList<>();
-                for (int i = 0; i < types.size(); i++)
-                {
-                    reMapped.add(reMap(types.get(i)));
-                }
-                return DataTypeValue.tupleV(reMapped);
-            }
-
-            @Override
-            public DataTypeValue array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
-            {
-                if (inner == null)
-                    throw new InternalException("Tagged type cannot contain empty array");
-                return DataTypeValue.arrayV(inner, reMapGV(g));
-            }
-        });
-    }
-
+    
     @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
         return dataType;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public SimulationRunnable _insertRows(int insertAtOriginalIndex, List<@Nullable TaggedValue> insertItems) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int insertAtOriginalIndex, List<@Nullable TaggedValue> insertItems) throws InternalException
     {
         int insertAtIndex = insertAtOriginalIndex;
-        for (TaggedValue insertItem : insertItems)
+        tagStore.addAll(insertAtIndex, insertItems.stream().map(t -> t == null ? 0 : t.getTagIndex()));
+        for (int i = 0; i < tagTypes.size(); i++)
         {
-            if (insertItem == null)
-                insertItem = new TaggedValue(0, null); // Dummy value, should not be accessed so shouldn't matter it's invalid
-            
-            tagStore.addAll(insertAtIndex, Stream.of(insertItem.getTagIndex()));
-            if (insertItem.getInner() == null)
-            {
-                // Empty tags are easy:
-
-                innerValueIndex.addAll(insertAtIndex, Stream.of(-1));
-            }
-            else
-            {
-                // TODO could do this more efficiently by incrementing all following items once for each tag index
-                int lastInnerValueIndex = -1;
-                // Find last used index before us:
-                for (int i = 0; i < insertAtIndex; i++)
-                {
-                    if (tagStore.getInt(i) == insertItem.getTagIndex())
-                        lastInnerValueIndex = innerValueIndex.getInt(i);
-                }
-                // Add a new one:
-                innerValueIndex.addAll(insertAtIndex, Stream.of(lastInnerValueIndex + 1));
-                @Nullable ColumnStorage<?> valueStore = valueStores.get(insertItem.getTagIndex());
-                if (valueStore == null)
-                    throw new InternalException("No value store for inner type tag: " + insertItem.getTagIndex());
-                @SuppressWarnings("unchecked")
-                List single = Collections.singletonList(Either.right(insertItem.getInner()));
-                @SuppressWarnings("unchecked")
-                SimulationRunnable _r = valueStore.insertRows(lastInnerValueIndex + 1, single);
-                // Increment all after us accordingly:
-                for (int i = insertAtIndex + 1; i < innerValueIndex.filled(); i++)
-                {
-                    if (tagStore.getInt(i) == insertItem.getTagIndex())
-                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
-                }
-            }
-            insertAtIndex += 1;
+            int iFinal = i;
+            ColumnStorage colStore = tagTypes.get(i).getInner();
+            if (colStore != null)
+                colStore.insertRows(insertAtIndex, insertItems.stream().map((@Nullable TaggedValue t) -> {
+                    if (t == null)
+                        return Either.<String, Object>left("Internal tagged error");
+                    else if (t.getTagIndex() == iFinal && t.getInner() != null)
+                        return Either.<String, Object>right(t.getInner());
+                    else 
+                        return Either.<String, Object>left("Internal tagged error");
+                }).collect(Collectors.<Either<String, Object>>toList()));
         }
-
+        
         int insertCount = insertItems.size();
         return () -> removeRows(insertAtOriginalIndex, insertCount);
     }
 
     @Override
-    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
-        ImmutableList<Either<String, TaggedValue>> prevValues = getAllCollapsed(index, index + count);
-
-        int[] firstRemovedInnerValueIndex = new int[valueStores.size()];
-        int[] lastRemovedInnerValueIndex = new int[valueStores.size()];
-        Arrays.fill(firstRemovedInnerValueIndex, -1);
-        Arrays.fill(lastRemovedInnerValueIndex, -1);
-        // Go through items and remove from innerValue storage:
-        for (int i = index; i < index + count; i++)
-        {
-            int tag = tagStore.getInt(i);
-            int valIndex = innerValueIndex.getInt(i);
-            if (valIndex != -1)
-            {
-                if (firstRemovedInnerValueIndex[tag] == -1)
-                    firstRemovedInnerValueIndex[tag] = valIndex;
-                lastRemovedInnerValueIndex[tag] = valIndex;
-            }
-        }
-        for (int i = index + count; i < filled(); i++)
-        {
-            int tag = tagStore.getInt(i);
-            if (firstRemovedInnerValueIndex[tag] != -1)
-            {
-                int diff = lastRemovedInnerValueIndex[tag] - firstRemovedInnerValueIndex[tag] + 1;
-                // Push all the indexes down:
-                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - diff);
-            }
-        }
+        ArrayList<SimulationRunnable> reInsert = new ArrayList<>();
         // Now actually remove everything:
-        tagStore.removeRows(index, count);
-        innerValueIndex.removeRows(index, count);
-        for (int i = 0; i < firstRemovedInnerValueIndex.length; i++)
+        reInsert.add(tagStore.removeRows(index, count));
+        for (TagType<ColumnStorage<?>> tagType : tagTypes)
         {
-            if (firstRemovedInnerValueIndex[i] != -1)
-            {
-                ColumnStorage<?> columnStorage = valueStores.get(i);
-                if (columnStorage == null)
-                {
-                    throw new InternalException("Column storage null yet some indexes point into it: " + i);
-                }
-                columnStorage.removeRows(firstRemovedInnerValueIndex[i], lastRemovedInnerValueIndex[i] - firstRemovedInnerValueIndex[i] + 1);
-            }
+            ColumnStorage<?> inner = tagType.getInner();
+            if (inner != null)
+                reInsert.add(inner.removeRows(index, count));
         }
+        
         return () -> {
-            insertRows(index, prevValues);
+            for (SimulationRunnable re : reInsert)
+            {
+                re.run();
+            }
         };
     }
 
@@ -377,30 +172,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
     @Override
     public void addAll(Stream<Either<String, TaggedValue>> values) throws InternalException
     {
-        for (Either<String, TaggedValue> v : Utility.iterableStream(values))
-            addUnpacked(v.either(e -> new TaggedValue(0, null), t -> t));
-    }
-
-    protected void addUnpacked(TaggedValue value) throws InternalException
-    {
-        //Walk the tag structure, adding to store depending on tag:
-        int tagIndex = value.getTagIndex();
-        tagStore.add(tagIndex);
-
-        @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
-        if (inner == null)
-        {
-            innerValueIndex.add(-1);
-            return;
-        }
-        ColumnStorage storage = valueStores.get(tagIndex);
-        if (storage == null)
-            throw new InternalException("Value but no store for tag " + tagIndex);
-        innerValueIndex.add(storage.filled());
-        @Nullable Object innerValue = value.getInner();
-        if (innerValue == null)
-            throw new InternalException("Inner value despite no inner type");
-        addNoWarning(storage, innerValue);
+        insertRows(filled(), values.collect(Collectors.<Either<String, TaggedValue>>toList()));
     }
 
     @SuppressWarnings("unchecked")

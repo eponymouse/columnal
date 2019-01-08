@@ -122,7 +122,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable ListEx> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable ListEx> items) throws InternalException
     {
         storage.ensureCapacity(storage.size() + items.size());
         for (ListEx item : items)
@@ -136,7 +136,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     }
 
     @Override
-    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         List<ListEx> old = new ArrayList<>(storage.subList(index, index + count));
         storage.subList(index, index + count).clear();

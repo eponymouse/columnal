@@ -957,7 +957,7 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static void assertUserException(SimulationRunnable simulationRunnable)
+    public static void assertUserException(SimulationEx simulationRunnable)
     {
         try
         {

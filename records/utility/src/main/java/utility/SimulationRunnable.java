@@ -12,5 +12,5 @@ import threadchecker.Tag;
 @OnThread(Tag.Simulation)
 public interface SimulationRunnable
 {
-    public void run() throws InternalException, UserException;
+    public void run() throws InternalException;
 }

@@ -35,22 +35,12 @@ public interface ColumnStorage<T>
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
 
-    default public ImmutableList<Either<String, T>> getAllCollapsed(int fromIncl, int toExcl) throws UserException, InternalException
-    {
-        List<Either<String, T>> r = new ArrayList<>(toExcl - fromIncl);
-        for (int i = fromIncl; i < toExcl; i++)
-        {
-            @SuppressWarnings("unchecked")
-            T collapsed = (T) getType().getCollapsed(i);
-            r.add(Either.right(collapsed));
-        }
-        return ImmutableList.copyOf(r);
-    }
+    public ImmutableList<Either<String, T>> getAllCollapsed(int fromIncl, int toExcl) throws InternalException;
 
     // Returns revert operation
-    public SimulationRunnable insertRows(int index, List<Either<String, T>> items) throws InternalException, UserException;
+    public SimulationRunnable insertRows(int index, List<Either<String, T>> items) throws InternalException;
     // Returns revert operation
-    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException;
+    public SimulationRunnable removeRows(int index, int count) throws InternalException;
 
     public static interface BeforeGet<S extends ColumnStorage<?>>
     {

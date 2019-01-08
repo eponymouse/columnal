@@ -485,7 +485,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable Number> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable Number> items) throws InternalException
     {
         addAll(index, items.stream().map(n -> n == null ? 0 : n));
         int count = items.size();
@@ -493,7 +493,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
 
     @Override
-    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         ImmutableList<Either<String, Number>> old = getAllCollapsed(index, index + count);
         if (bytes != null)

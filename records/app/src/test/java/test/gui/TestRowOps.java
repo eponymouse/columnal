@@ -260,12 +260,12 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         if (targetNewRow < newSrcLength)
         {
             String prefix = "Sorted by " + sortBy.getName().getRaw() + " inserted at " + targetNewRow + " before default is " + beforeDefault + " first after default " + (firstAfterDefault == null ? "null" : Integer.toString(firstAfterDefault.getFirst())) + ";";
-            TestUtil.sim_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + ONE_ROW, getRowVals(srcData.getData(), targetNewRow)));
+            TestUtil.sim_(() -> TestUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + ONE_ROW, getRowVals(srcData.getData(), targetNewRow))));
             if (firstAfterDefault != null)
             {
                 scrollToRow(calculated.getId(), beforeDefault + ONE_ROW);
                 Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
-                TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
+                TestUtil.sim_(() -> TestUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst()))));
             }
         }
 

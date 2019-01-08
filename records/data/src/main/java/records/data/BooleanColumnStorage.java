@@ -91,7 +91,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable Boolean> items) throws InternalException, UserException
+    public SimulationRunnable _insertRows(int index, List<@Nullable Boolean> items) throws InternalException
     {
         int count = items.size();
         // Could probably do this faster:
@@ -112,7 +112,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     }
 
     @Override
-    public SimulationRunnable _removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         // Could save some memory here:
         BitSet old = (BitSet)data.clone();
