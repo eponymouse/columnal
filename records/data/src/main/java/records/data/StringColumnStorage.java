@@ -138,7 +138,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
     public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
         if (index < 0 || index + count > values.size())
-            throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());
+            throw new InternalException("Trying to remove rows at invalid index: " + index + " + " + count + " length is: " + values.size());
         List<@Value String> old = new ArrayList<>(values.subList(index, index + count));
         values.subList(index, index + count).clear();
         return () -> values.addAll(index, old);

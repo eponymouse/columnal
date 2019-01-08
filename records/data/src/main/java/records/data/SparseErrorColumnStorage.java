@@ -92,12 +92,8 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     public final SimulationRunnable insertRows(int index, List<Either<String, T>> itemsErr) throws InternalException
     {
         ArrayList<@Nullable T> items = new ArrayList<>();
-        int errCount = 0;
         for (Either<String, T> errOrValue : itemsErr)
         {
-            if (errOrValue.isLeft())
-                errCount += 1;
-            
             items.add(errOrValue.<@Nullable T>either(err -> {
                 return null;
             }, v -> {
@@ -105,13 +101,13 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
             }));             
         }
         
-        int errCountFinal = errCount;
-        mapErrors(i -> i < index ? i : i + errCountFinal);
+        int itemsSize = items.size();
+        mapErrors(i -> i < index ? i : i + itemsSize);
         
         SimulationRunnable revert = _insertRows(index, items);
         return () -> {
             revert.run();
-            mapErrors(i -> i < index ? i : i - errCountFinal);
+            mapErrors(i -> i < index ? i : (i >= index + itemsSize ? i - itemsSize : null));
         };
     }
     
@@ -119,8 +115,8 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     @Override
     public final SimulationRunnable removeRows(int index, int count) throws InternalException
     {
-        HashMap<Integer, String> removed = mapErrors(i -> i < index ? i : (i < index + count ? null : i - count));
         SimulationRunnable revert = _removeRows(index, count);
+        HashMap<Integer, String> removed = mapErrors(i -> i < index ? i : (i < index + count ? null : i - count));
         return () -> {
             mapErrors(i -> i < index ? i : i + count);
             removed.forEach(this::setError);

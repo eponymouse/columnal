@@ -107,7 +107,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
                 data.set(destIndex, item);
         }
         length += count;
-        return () -> removeRows(index, count);
+        return () -> _removeRows(index, count);
     }
 
     @Override

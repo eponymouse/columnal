@@ -129,7 +129,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
         }
         
         int insertCount = insertItems.size();
-        return () -> removeRows(insertAtOriginalIndex, insertCount);
+        return () -> _removeRows(insertAtOriginalIndex, insertCount);
     }
 
     @Override
