@@ -27,10 +27,10 @@ public class ListTypeExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Utility.concatStreams(
-            Stream.of(TypeEntry.load("[")),
+        return Utility.<SingleLoader<TypeExpression, TypeSaver>>concatStreams(
+            Stream.<SingleLoader<TypeExpression, TypeSaver>>of(TypeEntry.load("[")),
             innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED),
-            Stream.of(TypeEntry.load("]"))
+            Stream.<SingleLoader<TypeExpression, TypeSaver>>of(TypeEntry.load("]"))
         );
     }
 

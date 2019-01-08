@@ -262,7 +262,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (mostRecentSave != null)
         {
             atomicEdit.set(true);
-            children.setAll(operations.replaceAndLoad(mostRecentSave, target, replacement, getChildrenBracketedStatus()).map(l -> l.load(this)).collect(Collectors.toList()));
+            children.setAll(operations.replaceAndLoad(mostRecentSave, target, replacement, getChildrenBracketedStatus()).map(l -> l.load(this)).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
             atomicEdit.set(false);
         }
     }
@@ -316,7 +316,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             atomicEdit.set(true);
             //Utility.logStackTrace("Removing " + oldNode + " from " + this);
             children.remove(index).cleanup();
-            children.addAll(index, items.map(l -> l.load(this)).collect(Collectors.toList()));
+            children.addAll(index, items.map(l -> l.load(this)).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
             atomicEdit.set(false);
         }
     }
@@ -344,7 +344,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             return; // Nothing to do; already acceptable
         // Must add:
         atomicEdit.set(true);
-        children.addAll(index + 1, makeNew.get().map(l -> l.load(this)).collect(Collectors.toList()));
+        children.addAll(index + 1, makeNew.get().map(l -> l.load(this)).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
         atomicEdit.set(false);
     }
 
@@ -965,7 +965,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                     beforeIndex = children.size();
                 }
                 atomicEdit.set(true);
-                children.addAll(beforeIndex, parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
+                children.addAll(beforeIndex, parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
                 atomicEdit.set(false);
                 return true;
             }

@@ -39,7 +39,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
-            }).collect(ImmutableList.toImmutableList());
+            }).collect(ImmutableList.<UnitExpression>toImmutableList());
         
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
         
@@ -48,7 +48,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
-            }).collect(ImmutableList.toImmutableList());
+            }).collect(ImmutableList.<UnitExpression>toImmutableList());
         
         if (bottom.isEmpty())
             return r;
@@ -66,7 +66,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
-            }).collect(ImmutableList.toImmutableList());
+            }).collect(ImmutableList.<UnitExpression>toImmutableList());
 
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
 
@@ -75,7 +75,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
-            }).collect(ImmutableList.toImmutableList());
+            }).collect(ImmutableList.<UnitExpression>toImmutableList());
 
         if (bottom.isEmpty())
             return r;
@@ -146,7 +146,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         }
         else if (ctx.timesBy() != null && ctx.timesBy().size() > 0)
         {
-            return new UnitTimesExpression(Stream.concat(Stream.of(ctx.unit()), ctx.timesBy().stream().map(t -> t.unit())).map(c -> loadUnit(c)).collect(ImmutableList.toImmutableList()));
+            return new UnitTimesExpression(Stream.<UnitContext>concat(Stream.<UnitContext>of(ctx.unit()), ctx.timesBy().stream().<UnitContext>map(t -> t.unit())).<UnitExpression>map(c -> loadUnit(c)).collect(ImmutableList.<UnitExpression>toImmutableList()));
         }
         else
         {

@@ -27,7 +27,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
         if (content != null)
         {
             atomicEdit.set(true);
-            children.addAll(content.map(f -> f.load(Utility.later(this))).collect(Collectors.toList()));
+            children.addAll(content.map(f -> f.load(Utility.later(this))).collect(Collectors.<ConsecutiveChild<EXPRESSION, SAVER>>toList()));
             if (children.isEmpty())
                 children.add(Utility.later(this).makeBlankChild(false));
             atomicEdit.set(false);

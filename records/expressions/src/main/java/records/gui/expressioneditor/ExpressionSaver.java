@@ -80,15 +80,15 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     // Shouldn't ever be null:
                     if (callTarget != null)
                     {
-                        return Either.left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed)));
+                        return Either.<Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed)));
                     }
                 }
-                return Either.left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
+                return Either.<Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
             }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<Expression, Terminator>left(e), prefixKeyword)));
         }
         else if (keyword == Keyword.IF)
         {
@@ -101,7 +101,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     invalid.add(thenPart);
                     invalid.add(record(thenEnd, thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
                     return Either.right(expect(Keyword.ENDIF, miscBrackets(thenEnd), (elsePart, elseEnd) -> {
-                        return Either.left(errorDisplayerRecord.record(errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
+                        return Either.<Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
                     }, invalid::build));
                 }, invalid::build));
             }, invalid::build)));
@@ -383,7 +383,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
                     {
                         MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, me -> me.new MatchClause(newPatterns, lastExpression)));
-                        return Either.left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
+                        return Either.<Expression, Terminator>left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
                     }
                 }
             ), prefixIfInvalid));
@@ -406,7 +406,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 {
                     // All is well:
                     @Recorded Expression expressionBefore = makeContent.fetchContent(brackets);
-                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.concat(prefixIfInvalid, Stream.of(expressionBefore, new InvalidIdentExpression(choice.keyword.getContent()))));
+                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.<Expression>concat(prefixIfInvalid, Stream.<Expression>of(expressionBefore, new InvalidIdentExpression(choice.keyword.getContent()))));
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
                     return;
                 }
@@ -417,11 +417,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
-            items.addAll(prefixIfInvalid.collect(Collectors.toList()));
+            items.addAll(prefixIfInvalid.collect(Collectors.<@Recorded Expression>toList()));
             items.add(makeContent.fetchContent(brackets));
             if (terminator != null)
                 items.add(errorDisplayerRecord.record(keywordErrorDisplayer, keywordErrorDisplayer, new InvalidIdentExpression(terminator.getContent())));
-            @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
+            @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.<InvalidOperatorExpression>recordG(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
             currentScopes.peek().items.add(Either.left(invalid));
         }};
     }
@@ -484,9 +484,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
     @SuppressWarnings("recorded")
-    final ImmutableList<ImmutableList<OperatorExpressionInfo>> OPERATORS = ImmutableList.of(
+    final ImmutableList<ImmutableList<OperatorExpressionInfo>> OPERATORS = ImmutableList.<ImmutableList<OperatorExpressionInfo>>of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(
                 opD(Op.RAISE, "op.raise")
                 , (lhs, _n, rhs, _b, _e) -> new RaiseExpression(lhs, rhs))
@@ -494,7 +494,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         // Arithmetic operators are all one group.  I know we could separate +- from */, but if you see
         // an expression like 1 + 2 * 3, I'm not sure either bracketing is obviously more likely than the other.
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.ADD, "op.plus"),
                 opD(Op.SUBTRACT, "op.minus")
@@ -510,21 +510,21 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         // String concatenation lower than arithmetic.  If you write "val: (" ; 1 * 2; ")" then what you meant
         // is "val: (" ; to.string(1 * 2); ")" which requires an extra function call, but bracketing the arithmetic
         // will be the first step, and much more likely than ("val: (" ; 1) * (2; ")")
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.STRING_CONCAT, "op.stringConcat")
             ), ExpressionSaver::makeStringConcat)
         ),
 
         // It's moot really whether this is before or after string concat, but feels odd putting them in same group:
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(
                 opD(Op.PLUS_MINUS, "op.plusminus")
                 , (lhs, _n, rhs, _b, _e) -> new PlusMinusPatternExpression(lhs, rhs))
         ),
 
         // Equality and comparison operators:
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.EQUALS, "op.equal")
             ), ExpressionSaver::makeEqual),
@@ -543,7 +543,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         // Boolean and, or expressions come near-last.  If you see a = b & c = d, it's much more likely you wanted (a = b) & (c = d) than
         // a = (b & c) = d.
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.AND, "op.and")
             ), ExpressionSaver::makeAnd),
@@ -554,7 +554,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
-        ImmutableList.of(
+        ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(
                 opD(Op.COMMA, "op.separator")
                 , (lhs, _n, rhs, _b, _e) -> /* Dummy, see below: */ lhs)

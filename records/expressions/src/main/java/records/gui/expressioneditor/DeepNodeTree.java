@@ -55,7 +55,7 @@ abstract class DeepNodeTree
         if (atomicEdit.get())
             return;
 
-        nodes().setAll(calculateNodes().collect(Collectors.toList()));
+        nodes().setAll(calculateNodes().collect(Collectors.<Node>toList()));
 
         updateDisplay();
     }

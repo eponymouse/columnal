@@ -100,7 +100,7 @@ public class UnitTimesExpression extends UnitExpression
         boolean needsBrackets = bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED && bracketedStatus != BracketedStatus.TOP_LEVEL;
         if (needsBrackets)
             r.add(UnitEntry.load(UnitBracket.OPEN_ROUND.getContent()));
-        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitSaver>>>intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
+        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitSaver>>>intercalateStreamM(operands.stream().<Stream<SingleLoader<UnitExpression, UnitSaver>>>map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
         if (needsBrackets)
             r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
         return r.stream();

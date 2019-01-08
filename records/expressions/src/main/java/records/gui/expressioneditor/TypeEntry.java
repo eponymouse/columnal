@@ -71,15 +71,15 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     public TypeEntry(ConsecutiveBase<TypeExpression, TypeSaver> parent, String initialContent)
     {
         super(TypeExpression.class, parent);
-        this.allCompletions = Utility.concatStreams(
-            Stream.of(listCompletion, bracketCompletion, unitBracketCompletion, endBracketCompletion, endListCompletion),
-            Stream.of(endCompletion), // TODO hide this if we are not last in a type
-            PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.getFirst().toString(), d.getSecond(), d.getFirst().equals(DataType.NUMBER) || d.getFirst().equals(DataType.TEXT))),
+        this.allCompletions = Utility.<Completion>concatStreams(
+            Stream.<Completion>of(listCompletion, bracketCompletion, unitBracketCompletion, endBracketCompletion, endListCompletion),
+            Stream.<Completion>of(endCompletion), // TODO hide this if we are not last in a type
+            PRIMITIVE_TYPES.stream().<Completion>map(d -> new TypeCompletion(d.getFirst().toString(), d.getSecond(), d.getFirst().equals(DataType.NUMBER) || d.getFirst().equals(DataType.TEXT))),
             parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream()
                 // Don't show phantom types like Void, Unit:
                 .filter(t -> !t.getTags().isEmpty())
-                .map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), null))
-        ).collect(ImmutableList.toImmutableList());
+                .<Completion>map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), null))
+        ).collect(ImmutableList.<Completion>toImmutableList());
         
         this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
 
@@ -247,7 +247,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     @Override
     protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) TypeEntry this)
     {
-        return Stream.concat(Utility.streamNullable(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
+        return Stream.<Node>concat(Utility.<Node>streamNullable(container), unitSpecifier == null ? Stream.<Node>empty() : unitSpecifier.nodes().stream());
     }
     
     @Override

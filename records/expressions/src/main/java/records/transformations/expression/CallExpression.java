@@ -109,7 +109,7 @@ public class CallExpression extends Expression
                 {
                     ColumnReference colRef = (ColumnReference)param;
                     // Offer to turn a this-row column reference into whole column:
-                    onError.recordQuickFixes(this, Collections.singletonList(
+                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                         new QuickFix<>("fix.wholeColumn", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                             CallExpression newCall = new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
@@ -122,7 +122,7 @@ public class CallExpression extends Expression
                 {
                     // Offer to turn tuple into a list:
                     Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
-                    onError.recordQuickFixes(this, Collections.singletonList(
+                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                             new QuickFix<>("fix.squareBracketAs", this, () -> {
                                 @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                                 CallExpression newCall = new CallExpression(function, replacementParam);
@@ -137,7 +137,7 @@ public class CallExpression extends Expression
                     // Offer to make a list:
                     @SuppressWarnings("recorded")
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
-                    onError.recordQuickFixes(this, Collections.singletonList(
+                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                         new QuickFix<>("fix.singleItemList", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                             CallExpression newCall = new CallExpression(function, replacementParam);
@@ -228,9 +228,9 @@ public class CallExpression extends Expression
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return Stream.concat(
-            function._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), param))),
-            param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
+        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(
+            function._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), param))),
+            param._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
         );
     }
 

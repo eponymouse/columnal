@@ -64,9 +64,16 @@ public class ErrorDisplayerRecord
     {
         this.showErrors = showErrors;
     }
+
+    // Non-generic version that avoids type checker arguments.
+    public @NonNull @Recorded Expression record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull Expression e)
+    {
+        return this.<Expression>recordG(start, end, e);
+    }
     
+    // Generic version that lets you return a particular expression
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION recordG(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, new Span<>(start, end));
         Pair<StyledString, List<QuickFix<?, ?>>> pendingItem = pending.remove(e);

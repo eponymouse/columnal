@@ -175,12 +175,6 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
         insertRows(filled(), values.collect(Collectors.<Either<String, TaggedValue>>toList()));
     }
 
-    @SuppressWarnings("unchecked")
-    private static void addNoWarning(ColumnStorage storage, Object innerValue) throws InternalException
-    {
-        storage.add(innerValue);
-    }
-
     public List<Either<String, TaggedValue>> getShrunk(int shrunkLength) throws UserException, InternalException
     {
         List<Either<String, TaggedValue>> s = new ArrayList<>();

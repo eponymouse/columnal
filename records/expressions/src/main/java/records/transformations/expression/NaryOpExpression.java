@@ -278,7 +278,7 @@ public abstract class NaryOpExpression extends Expression
             }
         }
 
-        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.toImmutableList());
+        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.<Optional<TypeExp>>toImmutableList());
 
         if (!allValid)
         {

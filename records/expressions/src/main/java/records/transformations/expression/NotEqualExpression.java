@@ -57,7 +57,7 @@ public class NotEqualExpression extends BinaryOpExpression
         rhsType.requireEquatable(oneIsPattern);
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
         {
-            ImmutableList<Optional<TypeExp>> expressionTypes = ImmutableList.of(Optional.of(lhsType.typeExp), Optional.of(rhsType.typeExp));
+            ImmutableList<Optional<TypeExp>> expressionTypes = ImmutableList.<Optional<TypeExp>>of(Optional.<TypeExp>of(lhsType.typeExp), Optional.<TypeExp>of(rhsType.typeExp));
             onError.recordQuickFixes(lhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 0)));
             onError.recordQuickFixes(rhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 1)));
             return null;

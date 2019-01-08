@@ -205,7 +205,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
                 // Use reference equality, as tables may share names if we compare them:
                 if (t == srcTable && allowsSameRow)
                 {
-                    return Stream.concat(wholeColumns, columns.stream().map(c -> new ColumnReference(c.getName(), ColumnReferenceType.CORRESPONDING_ROW)));
+                    return Stream.<ColumnReference>concat(wholeColumns, columns.stream().<ColumnReference>map(c -> new ColumnReference(c.getName(), ColumnReferenceType.CORRESPONDING_ROW)));
                 }
                 else
                 {

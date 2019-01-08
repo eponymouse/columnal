@@ -190,7 +190,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
 
     public static ImmutableList<@Recorded ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<@Recorded Expression> possibleArgs)
     {
-        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), (Class<@Recorded ImplicitLambdaArg>)ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
+        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), (Class<@Recorded ImplicitLambdaArg>)ImplicitLambdaArg.class).collect(ImmutableList.<@Recorded ImplicitLambdaArg>toImmutableList());
     }
 
     @Override

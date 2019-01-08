@@ -51,7 +51,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
             {
                 try
                 {
-                    return Utility.concatI(cssClasses, ImmutableList.of(OperandOps.makeCssClass(makeReplacement.get())));
+                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(OperandOps.makeCssClass(makeReplacement.get())));
                 }
                 catch (InternalException e)
                 {

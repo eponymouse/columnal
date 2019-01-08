@@ -9,6 +9,7 @@ import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.unit.Unit;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
@@ -20,6 +21,7 @@ import records.gui.expressioneditor.TypeEntry.Operator;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeSaver.Context;
+import records.typeExp.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -59,9 +61,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     items.add(errorDisplayerRecord.recordType(operators.get(i).getSecond(), operators.get(i).getSecond(), InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getFirst().getContent())));
             }
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                return ImmutableList.of(errorDisplayerRecord.recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(items.build())));
+                return ImmutableList.<@Recorded TypeExpression>of(errorDisplayerRecord.<InvalidOpTypeExpression>recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(items.build())));
             else
-                return ImmutableList.of(errorDisplayerRecord.recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(items.build())));
+                return ImmutableList.<@Recorded TypeExpression>of(errorDisplayerRecord.<InvalidOpTypeExpression>recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(items.build())));
         }
     }
     
@@ -95,22 +97,22 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                 {
                                     TypeApplyExpression applyExpression = (TypeApplyExpression) callTarget;
                                     
-                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.concatI(applyExpression.getArgumentsOnly(), ImmutableList.of(newArg)));
+                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.<Either<UnitExpression, TypeExpression>>concatI(applyExpression.getArgumentsOnly(), ImmutableList.<Either<UnitExpression, TypeExpression>>of(newArg)));
                                 }
                                 else
                                 {
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
                                     typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.of(newArg));
                                 }
-                                return Either.left(errorDisplayerRecord.recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, typeExpression));
+                                return Either.<TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, typeExpression));
                             }
                         }
-                        return Either.left(errorDisplayerRecord.recordType(errorDisplayer, bracketEnd, bracketed));
+                        return Either.<TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayer, bracketEnd, bracketed));
             }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<TypeExpression, Terminator>left(e), prefixKeyword)));
         }
         else
         {

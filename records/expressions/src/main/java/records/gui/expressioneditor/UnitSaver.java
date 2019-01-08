@@ -59,8 +59,8 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
         else
-            return new InvalidOperatorUnitExpression(ImmutableList.of(
-                    lhs, errorDisplayerRecord.recordUnit(opNode, opNode, new InvalidSingleUnitExpression("^")), rhs
+            return new InvalidOperatorUnitExpression(ImmutableList.<@Recorded UnitExpression>of(
+                    lhs, errorDisplayerRecord.<InvalidSingleUnitExpression>recordUnit(opNode, opNode, new InvalidSingleUnitExpression("^")), rhs
             ));
     };
 

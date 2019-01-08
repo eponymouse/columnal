@@ -64,7 +64,7 @@ public class NumericLiteral extends Literal
         }
 
         Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<Either<StyledString, TypeExp>>eitherInt(err -> {
+        return errOrUnit.<StyledString, TypeExp>mapBothInt(err -> {
             /*
             onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
                 @SuppressWarnings("recorded")
@@ -72,8 +72,8 @@ public class NumericLiteral extends Literal
                 return new QuickFix<>("quick.fix.unit", CURRENT, replacement);
             }));
             */
-            return Either.left(err.getFirst());
-        }, u -> Either.right(new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of()))));
+            return err.getFirst();
+        }, u -> new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of())));
     }
 
     @Override

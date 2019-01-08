@@ -228,7 +228,7 @@ public class ExpressionEditorUtil
         
         // For us to offer the quick fix, we need the following conditions: all non-literals
         // have the same known unit (and there is at least one non-literal).
-        List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
+        List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.<Unit>toList());
         if (uniqueNonLiteralUnits.size() == 1)
         {
             for (Pair<NumericLiteral, @Nullable Unit> literal : literals)

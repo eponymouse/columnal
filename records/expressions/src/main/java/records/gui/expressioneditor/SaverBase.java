@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -684,7 +685,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 {
                     @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                     errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
+                    errorDisplayerRecord.getRecorder().<EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Utility.<Pair<BracketedStatus, ImmutableList<@Recorded EXPRESSION>>, QuickFix<@Recorded EXPRESSION, SAVER>>mapList(possibles, e -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
                         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                         @Recorded EXPRESSION r = applyBrackets.apply(e.getFirst(), e.getSecond());
                         return r;
@@ -720,7 +721,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 {
                     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                     @NonNull @Recorded EXPRESSION replacementFinal = replacement;
-                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
+                    errorDisplayerRecord.getRecorder().<EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION, SAVER>>singletonList(
                         new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
                 }
@@ -729,7 +730,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         else
         {
             // We may be able to suggest some brackets
-            Collections.sort(operatorSections, Comparator.comparing(os -> os.operatorSetPrecedence));
+            Collections.<OperatorSection>sort(operatorSections, Comparator.<OperatorSection, Integer>comparing(os -> os.operatorSetPrecedence));
             int precedence = operatorSections.get(0).operatorSetPrecedence;
 
             for (int i = 0; i < operatorSections.size(); i++)
@@ -785,7 +786,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
                 if (replacement != null)
                 {
-                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION, SAVER>>singletonList(
                         new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                             @Recorded EXPRESSION r = replacement;
