@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -85,11 +86,11 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
 
                 tagStore.set(OptionalInt.of(index), newTag == null ? 0 : newTag);
 
-                for (int i = 0; i < tagTypes.size(); i++)
+                for (int tagIndex = 0; tagIndex < tagTypes.size(); tagIndex++)
                 {
-                    ColumnStorage<?> colStore = tagTypes.get(i).getInner();
-                    if (i != index && colStore != null)
-                        colStore.getType().setCollapsed(i, Either.left("Attempting to fetch tagged inner value for invalid row"));
+                    ColumnStorage<?> colStore = tagTypes.get(tagIndex).getInner();
+                    if (!Objects.equals((Integer)tagIndex, newTag) && colStore != null)
+                        colStore.getType().setCollapsed(index, Either.left("Attempting to fetch tagged inner value for invalid row"));
                 }
             }
         });

@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -13,6 +14,7 @@ import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
@@ -37,9 +39,9 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropStorageSet
 {
-    @Property(trials = 10)
+    @Property(trials = 100)
     @OnThread(Tag.Simulation)
-    public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException, Exception
+    public void testSet(@When(seed=1L) @From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException, Exception
     {
         // Make sure FX is initialised:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
@@ -49,27 +51,44 @@ public class PropStorageSet
         EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
         Column c = recordSet.getColumns().get(0);
         assertEquals(0, c.getLength());
-        recordSet.insertRows(0, 10);
-        assertEquals(10, c.getLength());
+        recordSet.insertRows(0, 20);
+        assertEquals(20, c.getLength());
 
-        Map<Integer, @Value Object> vals = new HashMap<>();
+        Map<Integer, Either<String, @Value Object>> vals = new HashMap<>();
 
         // Do many writes:
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 40; i++)
         {
-            int rowIndex = r.nextInt(10);
+            int rowIndex = r.nextInt(20);
             @Value Object value = typeAndValueGen.makeValue();
             DataTypeValue columnType = c.getType();
-            columnType.setCollapsed(rowIndex, Either.right(value));
-            TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, value, c.getType().getCollapsed(rowIndex));
-            vals.put(rowIndex, value);
+            Either<String, @Value Object> valueOrErr = r.nextInt(5) == 1 ? Either.left(("Err " + i)) : Either.right(value);
+            columnType.setCollapsed(rowIndex, valueOrErr);
+            TestUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
+            vals.put(rowIndex, valueOrErr);
         }
+
+        assertEquals(20, c.getLength());
+        
         // Test all at end, helps test post overwrites:
-        for (Entry<@KeyFor("vals") Integer, @Value Object> entry : vals.entrySet())
+        for (Entry<@KeyFor("vals") Integer, Either<String, @Value Object>> entry : vals.entrySet())
         {
-            TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + entry.getKey(), entry.getValue(), c.getType().getCollapsed(entry.getKey()));
+            TestUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
         }
         // TODO test reverting
+    }
+
+    @OnThread(Tag.Simulation)
+    private Either<String, @Value Object> collapseErr(DataTypeValue type, int rowIndex) throws UserException, InternalException
+    {
+        try
+        {
+            return Either.right(type.getCollapsed(rowIndex));
+        }
+        catch (InvalidImmediateValueException e)
+        {
+            return Either.left(e.getInvalid());
+        }
     }
 
 }
