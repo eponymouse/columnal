@@ -118,13 +118,26 @@
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="expressions" />
       </profile>
+      <profile name="Annotation profile for tests" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="skipDefs" value="records.grammar.|one.util." />
+        <option name="stubs" value="$PROJECT_DIR$/records/tests/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
+        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <module name="tests" />
+      </profile>
       <profile name="Annotation profile for records" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -143,6 +156,7 @@
       <module name="parsers" target="1.8" />
       <module name="records" target="1.8" />
       <module name="stf" target="1.8" />
+      <module name="tests" target="1.8" />
       <module name="utility" target="1.8" />
     </bytecodeTargetLevel>
   </component>

@@ -19,6 +19,7 @@
         <module>stf</module>
         <module>expressions</module>
         <module>functions</module>
+        <module>tests</module>
     </modules>
     
     <dependencies>
