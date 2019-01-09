@@ -437,7 +437,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             visibleBounds.getYCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curSelectionBounds.bottomRightIncl.rowIndex) - y
                     );
                         
-                    return Optional.of(Either.right(curSelectionBounds));
+                    return Optional.of(Either.<BoundingBox, RectangleBounds>right(curSelectionBounds));
                 }
 
                 @Override

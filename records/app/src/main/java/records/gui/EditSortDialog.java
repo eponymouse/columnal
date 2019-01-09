@@ -154,7 +154,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
         public void updateButtonWidths(@UnknownInitialization(FancyList.class) SortList this)
         {
-            ImmutableList<SortPane.DirectionButton> buttons = streamCells().map(c -> c.getContent().button).collect(ImmutableList.toImmutableList());
+            ImmutableList<SortPane.DirectionButton> buttons = streamCells().map(c -> c.getContent().button).collect(ImmutableList.<SortPane.DirectionButton>toImmutableList());
             if (buttons.isEmpty())
                 return;
             // Find the largest preferred width:

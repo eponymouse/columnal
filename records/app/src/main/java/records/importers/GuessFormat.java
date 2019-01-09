@@ -75,6 +75,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/10/2016.
@@ -143,11 +144,11 @@ public class GuessFormat
         }
     }
 
-    public static <C extends Charset> ChoiceDetails<Charset> charsetChoiceDetails(Collection<C> available)
+    public static ChoiceDetails<Charset> charsetChoiceDetails(Stream<Charset> available)
     {
         // In future, we should allow users to specify
         // (For now, they can just re-save as UTF-8)
-        return new ChoiceDetails<>("guess.charset", "guess-format/charset", ImmutableList.copyOf(available), null);
+        return new ChoiceDetails<>("guess.charset", "guess-format/charset", available.collect(ImmutableList.<Charset>toImmutableList()), null);
     }
 
     // public for testing
@@ -374,7 +375,7 @@ public class GuessFormat
                 if (labelledGrid == null)
                 {
                     labelledGrid = new LabelledGrid();
-                    labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(initialByCharset.keySet()), charsetChoice));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(initialByCharset.keySet().stream().map(x -> x)), charsetChoice));
                     labelledGrid.addRow(ImporterGUI.makeGUI(separatorChoiceDetails(), sepChoice));
                     labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice));
 
@@ -721,7 +722,7 @@ public class GuessFormat
     private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
     {
         // true should be the first item in each sub-list:
-        final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.of(ImmutableList.of("t", "f"), ImmutableList.of("true", "false"), ImmutableList.of("y", "n"), ImmutableList.of("yes", "no"));
+        final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.<ImmutableList<String>>of(ImmutableList.<String>of("t", "f"), ImmutableList.<String>of("true", "false"), ImmutableList.<String>of("y", "n"), ImmutableList.<String>of("yes", "no"));
         List<List<String>> initialVals = trimChoice.trim(untrimmed);
         int columnCount = initialVals.isEmpty() ? 0 : initialVals.get(0).size();
         List<ColumnType> columnTypes = new ArrayList<>();

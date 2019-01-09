@@ -171,7 +171,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     public void setColumns(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
     {
         // Remove old columns:
-        columnHeaderItems.forEach(floatingItems::removeItem);
+        columnHeaderItems.forEach(x -> floatingItems.removeItem(x));
         columnHeaderItems.clear();
         this.displayColumns = columns;        
         
@@ -223,7 +223,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     public void removeCellStyle(CellStyle cellStyle)
     {
-        cellStyles.set(cellStyles.get().stream().filter(s -> !s.equals(cellStyle)).collect(ImmutableList.toImmutableList()));
+        cellStyles.set(cellStyles.get().stream().filter(s -> !s.equals(cellStyle)).collect(ImmutableList.<CellStyle>toImmutableList()));
     }
 
     public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
@@ -443,7 +443,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         {
             Point2D effectiveScreenTopLeft = lastMousePosScreen.subtract(offsetFromTopLeftOfSource);
             Point2D topLeft = visibleBounds.screenToLayout(effectiveScreenTopLeft);
-            return Optional.of(Either.left(new BoundingBox(topLeft.getX(), topLeft.getY(), width, height)));
+            return Optional.of(Either.<BoundingBox, RectangleBounds>left(new BoundingBox(topLeft.getX(), topLeft.getY(), width, height)));
         }
 
         @Override
@@ -491,7 +491,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             if (pos.isPresent())
             {
                 destPosition = pos.get(); 
-                return Optional.of(Either.right(new RectangleBounds(
+                return Optional.of(Either.<BoundingBox, RectangleBounds>right(new RectangleBounds(
                     destPosition,
                     destPosition.offsetByRowCols(getBottomRightIncl().rowIndex - getPosition().rowIndex, getBottomRightIncl().columnIndex - getPosition().columnIndex)
                 )));
@@ -713,7 +713,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     CellPosition dest = ((MoveDestinationSnapped)overlays.get(0)).getDestinationPosition();
                     overlays.forEach(o -> floatingItems.removeItem(o));
                     FXUtility.mouse(DataDisplay.this).cellStyles.set(
-                        FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.toImmutableList())
+                        FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.<CellStyle>toImmutableList())
                     );
                     CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
                     // setPosition calls updateParent()

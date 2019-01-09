@@ -74,7 +74,7 @@ public class HideColumnsPanel
             {
                 try
                 {
-                    ImmutableList<ColumnId> columnIds = src.getData().getColumns().stream().map(c -> c.getName()).collect(ImmutableList.toImmutableList());
+                    ImmutableList<ColumnId> columnIds = src.getData().getColumns().stream().map(c -> c.getName()).collect(ImmutableList.<ColumnId>toImmutableList());
                     FXUtility.runFX(() -> allSourceColumns.setAll(columnIds));
                 }
                 catch (InternalException | UserException e)
@@ -172,7 +172,7 @@ public class HideColumnsPanel
             // works out neatly) and sort by name.
             int srcIndex = srcList.indexOf(col);
             return new Pair<Integer, ColumnId>(srcIndex, col);
-        }, Pair.comparator()));
+        }, Pair.<Integer, ColumnId>comparator()));
     }
 
     public Node getNode()

@@ -32,6 +32,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ReadOnlyStringColumnHandler;
@@ -99,7 +100,7 @@ public class ImporterUtility
             }
             else if (columnType instanceof TextColumnType || columnType instanceof BlankColumnType)
             {
-                columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, Utility.mapList(slice, Either::right), ""));
+                columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, Utility.mapList(slice, x -> Either.<String, String>right(x)), ""));
             }
             else if (columnType instanceof CleanDateColumnType)
             {
@@ -116,10 +117,10 @@ public class ImporterUtility
                 NumericColumnType inner = (NumericColumnType) or.getInner();
                 DataType numberType = DataType.number(new NumberInfo(inner.unit));
                 @Nullable DataType type = mgr.getMaybeType().instantiate(
-                    ImmutableList.of(Either.right(numberType)), mgr
+                    ImmutableList.of(Either.<Unit, DataType>right(numberType)), mgr
                 );
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, (String item) -> {
+                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.<Unit, DataType>right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, (String item) -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return Either.<String, TaggedValue>right(new TaggedValue(0, null));
                     else

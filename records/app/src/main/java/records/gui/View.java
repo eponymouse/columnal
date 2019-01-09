@@ -300,7 +300,7 @@ public class View extends StackPane
         if (table instanceof Transformation)
         {
             Collection<TableId> sourceIds = ((Transformation) table).getSources();
-            return sourceIds.stream().flatMap(id -> Utility.streamNullable(tableManager.getSingleTableOrNull(id))).collect(ImmutableList.toImmutableList());
+            return sourceIds.stream().flatMap(id -> Utility.streamNullable(tableManager.getSingleTableOrNull(id))).collect(ImmutableList.<Table>toImmutableList());
         }
         else
             return ImmutableList.of();
@@ -793,7 +793,7 @@ public class View extends StackPane
             results.getItems().setAll(allPossibleResults);
 
             FXUtility.addChangeListenerPlatformNN(findField.textProperty(), text -> {
-                results.getItems().setAll(allPossibleResults.stream().filter(r -> r.matches(text)).collect(Collectors.toList()));
+                results.getItems().setAll(allPossibleResults.stream().filter(r -> r.matches(text)).collect(Collectors.<Result>toList()));
                 results.getSelectionModel().selectFirst();
             });
             findField.setOnAction(e -> selectResult());

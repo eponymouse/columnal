@@ -20,6 +20,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -187,9 +188,9 @@ public class TextImporter implements Importer
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
-                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(numberType)), typeManager);
+                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(numberType)), typeManager);
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.<DataType>taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.<Unit, DataType>right(numberType)), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return Either.<String, TaggedValue>right(new TaggedValue(1, null));

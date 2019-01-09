@@ -228,8 +228,8 @@ public class HTMLImporter implements Importer
                 return null;
         });
 
-        List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.toList());
-        Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading HTML", () -> withDataSources.consume(Utility.mapListExI(sources, s -> s.get()))));
+        List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.<SimulationSupplier<DataSource>>toList());
+        Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading HTML", () -> withDataSources.consume(Utility.<SimulationSupplier<DataSource>, DataSource>mapListExI(sources, s -> s.get()))));
     }
 
     @OnThread(Tag.Simulation)

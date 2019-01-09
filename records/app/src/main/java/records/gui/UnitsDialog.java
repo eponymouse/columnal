@@ -173,7 +173,7 @@ public class UnitsDialog extends Dialog<Void>
                             return p.getFirst();
                         return canonicalBaseUnit.stream().sorted().collect(Collectors.joining(":")) + ";";
                     }))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>toList()));
         }
     }
 

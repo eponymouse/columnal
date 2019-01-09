@@ -19,6 +19,7 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
@@ -116,7 +117,7 @@ public class Concatenate extends Transformation
                 if (entry.getValue().elementSet().size() > 1)
                 {
                     // This will get caught at end of constructor:
-                    throw new UserException("Column " + entry.getKey() + " has differing types in the source tables: " + Utility.listToString(ImmutableList.copyOf(entry.getValue().elementSet())));
+                    throw new UserException("Column " + entry.getKey() + " has differing types in the source tables: " + Utility.<DataType>listToString(ImmutableList.<DataType>copyOf(entry.getValue().elementSet())));
                 }
                 DataType origType = entry.getValue().elementSet().iterator().next();
                 // Otherwise there's one type, so we know the type.  Based on how many copies there are of that type, we know
@@ -132,7 +133,7 @@ public class Concatenate extends Transformation
                             break;
                         case WRAPMAYBE:
                             
-                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(origType)), mgr.getTypeManager());
+                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(origType)), mgr.getTypeManager());
                             ourColumns.put(entry.getKey(), new ColumnDetails(wrappedInMaybe, mgr.getTypeManager().maybeMissing(), orig -> {
                                 return mgr.getTypeManager().maybePresent(orig);
                             }));

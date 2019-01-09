@@ -326,7 +326,7 @@ public class SummaryStatistics extends Transformation
             {
                 summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
-            ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.toImmutableList());
+            ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
             return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
         }
     }

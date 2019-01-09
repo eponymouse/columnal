@@ -66,7 +66,7 @@ public class ImporterGUI
             }
             if (choiceDetails.stringEntry != null)
                 quickAndOther.add(new PickOrOther<>());
-            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
+            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.<PickOrOther<C>>observableArrayList(quickAndOther));
             GUI.addIdClass(combo, choiceDetails.getLabelKey());
             @Nullable C choice = currentChoice.get();
             if (choice == null || !combo.getItems().contains(new PickOrOther<>(choice)))

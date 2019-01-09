@@ -94,7 +94,7 @@ public class HideColumns extends Transformation
             if (shownColumns.isEmpty())
                 throw new UserException("Cannot hide all columns");
 
-            theResult = new <Column>RecordSet(Utility.mapList(shownColumns, c -> (SimulationFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
+            theResult = new <Column>RecordSet(Utility.<Column, SimulationFunction<RecordSet, Column>>mapList(shownColumns, c -> (SimulationFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
             {
                 @Override
                 public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
@@ -192,7 +192,7 @@ public class HideColumns extends Transformation
         {
             HideColumnsContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::hideColumns);
 
-            return new HideColumns(mgr, initialLoadDetails, srcTableId, loaded.hideColumn().stream().map(hc -> new ColumnId(hc.column.getText())).collect(ImmutableList.toImmutableList()));
+            return new HideColumns(mgr, initialLoadDetails, srcTableId, loaded.hideColumn().stream().map(hc -> new ColumnId(hc.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList()));
         }
 
         @Override

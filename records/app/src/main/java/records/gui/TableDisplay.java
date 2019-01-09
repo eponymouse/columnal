@@ -330,7 +330,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     try
                     {
                         RecordSet data = table.getData();
-                        setDisplay(Display.CUSTOM, Utility.prependToList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())));
+                        List<ColumnId> alteredColumnNames = data.getColumns().stream().filter(c -> c.isAltered()).<ColumnId>map(c -> c.getName()).collect(Collectors.<ColumnId>toList());
+                        setDisplay(Display.CUSTOM, Utility.<ColumnId>prependToList(columnId, alteredColumnNames));
                     }
                     catch (UserException | InternalException e)
                     {
@@ -1290,7 +1291,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             {
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
-                                    new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
+                                    new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
                                         Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
                                             parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
                                     })));
@@ -1339,8 +1340,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         }
                     }).withStyle(new StyledCSS("edit-calculate-column")));
                     if (calc.getCalculatedColumns().keySet().size() > 3)
-                        threeEditLinks = Stream.concat(threeEditLinks, Stream.of(StyledString.s("...")));
-                    builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.toList())));
+                        threeEditLinks = Stream.<StyledString>concat(threeEditLinks, Stream.<StyledString>of(StyledString.s("...")));
+                    builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.<StyledString>toList())));
                 }
                 builder.append(" ");
                 builder.append(StyledString.s("(add new)").withStyle(new Clickable() {
@@ -1480,7 +1481,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             double right = visibleBounds.getXCoordAfter(bottomRight.columnIndex) - 1;
             double bottom = visibleBounds.getYCoordAfter(bottomRight.rowIndex) - 1;
 
-            return Optional.of(Either.left(new BoundingBox(
+            return Optional.of(Either.<BoundingBox, RectangleBounds>left(new BoundingBox(
                     left, top, right - left, bottom - top
             )));
         }

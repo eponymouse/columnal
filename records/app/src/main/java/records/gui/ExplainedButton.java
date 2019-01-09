@@ -62,7 +62,7 @@ class ExplainedButton extends Button
     public ExplainedButton(@LocalizableKey String titleKey, @LocalizableKey String explanationKey, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
         this(buttonWidth, onAction);
-        GUI.addIdClass(Utility.later(this), titleKey);
+        GUI.<ExplainedButton>addIdClass(Utility.<ExplainedButton>later(this), titleKey);
         setAccessibleText(TranslationUtility.getString(titleKey) + "\n" + TranslationUtility.getString(explanationKey));
         setContentDisplay(ContentDisplay.BOTTOM);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
@@ -87,7 +87,7 @@ class ExplainedButton extends Button
         setContentDisplay(ContentDisplay.BOTTOM);
         setText(titleText);
         // Safe because just modifies style classes:
-        GUI.addIdClass(Utility.later(this), titleKey);
+        GUI.<ExplainedButton>addIdClass(Utility.<ExplainedButton>later(this), titleKey);
         setAlignment(Pos.TOP_CENTER);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
         explanation.setMaxWidth(buttonWidth * 0.85);

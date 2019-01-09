@@ -4,15 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.ColumnId;
-import records.data.KnownLengthRecordSet;
-import records.data.RecordSet;
-import records.data.Table;
-import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
+import records.data.*;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -30,6 +22,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 
 import java.io.File;
@@ -60,7 +53,7 @@ public class Check extends Transformation
         try
         {
             theRecordSet = new KnownLengthRecordSet(
-                    ImmutableList.of(rs -> DataType.BOOLEAN.makeCalculatedColumn(rs, new ColumnId("result"), n -> Utility.later(this).getResult()))
+                    ImmutableList.<SimulationFunction<RecordSet, Column>>of(rs -> DataType.BOOLEAN.makeCalculatedColumn(rs, new ColumnId("result"), n -> Utility.later(this).getResult()))
                     , 1
             );
         }
