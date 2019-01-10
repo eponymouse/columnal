@@ -3,6 +3,7 @@ package test;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class PropDAG
         Assert.assertEquals(new HashSet<>(a), new HashSet<>(b));
     }
 
-    @SuppressWarnings({"intern", "deprecation"})
+    @SuppressWarnings("intern")
     private void checkGraphLinear(@From(GenGraph.class) GenGraph.Graph g, List<Object> linear)
     {
         Assert.assertEquals(linear.size(), g.nodes.size());
@@ -50,7 +51,7 @@ public class PropDAG
             for (Object from : g.incoming.getOrDefault(linear.get(i), new ArrayList<>()))
             {
                 // Our index must be beyond that of all incoming nodes:
-                Assert.assertThat(i, Matchers.<Integer>greaterThan(linear.indexOf(from)));
+                MatcherAssert.assertThat(i, Matchers.<Integer>greaterThan(linear.indexOf(from)));
             }
         }
     }

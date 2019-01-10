@@ -37,13 +37,12 @@ import java.util.List;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 13/12/2016.
  */
-@SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 public class PropNumericFunctions
 {

@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.CustomMatcher;
 import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.sosy_lab.common.rationals.Rational;
@@ -171,7 +172,7 @@ public class TestUnit
         test_(src, srcUnit, expected, destUnit);
     }
 
-    @SuppressWarnings({"nullness", "deprecation"})
+    @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
@@ -185,7 +186,7 @@ public class TestUnit
             );
             assertNotNull(instance);
             Object num = instance.getFirst().call(DataTypeUtility.value(new @Value Object[]{null, d(src)}));
-            assertThat(num, numberMatch(d(expected)));
+            MatcherAssert.assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)
         {

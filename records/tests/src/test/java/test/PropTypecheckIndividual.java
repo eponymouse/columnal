@@ -168,7 +168,7 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat, bizarrely
+    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat
     public void propEquals(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
     {
         DataType a = am.dataType;
@@ -207,7 +207,7 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat, bizarrely
+    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat 
     public void testArray(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
     {
         DataType a = am.dataType;

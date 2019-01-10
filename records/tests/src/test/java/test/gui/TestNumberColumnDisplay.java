@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -291,14 +292,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         
     }
 
-    @SuppressWarnings("deprecation")
     private void checkNumericSorted(List<String> numbers)
     {
         for (int i = 1; i < numbers.size(); i++)
         {
             int prev = Integer.valueOf(numbers.get(i - 1));
             int cur = Integer.valueOf(numbers.get(i));
-            assertThat(prev, Matchers.lessThan(cur));
+            MatcherAssert.assertThat(prev, Matchers.lessThan(cur));
         }
     }
 }

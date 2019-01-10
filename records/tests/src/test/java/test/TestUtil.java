@@ -11,6 +11,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
+import javafx.css.Styleable;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -27,6 +28,10 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.*;
@@ -102,6 +107,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1272,6 +1278,30 @@ public class TestUtil
         };
         Platform.runLater(repeat::run);
         Toolkit.getToolkit().enterNestedEventLoop(finish);
+    }
+
+    // Applies Matcher to the result of an extraction function:
+    public static <S, T> Matcher<S> matcherOn(Matcher<T> withExtracted, Function<S, T> extract)
+    {
+        return new BaseMatcher<S>()
+        {
+            @Override
+            public void describeTo(Description description)
+            {
+                withExtracted.describeTo(description);
+            }
+
+            @Override
+            public boolean matches(Object o)
+            {
+                return withExtracted.matches(extract.apply((S)o));
+            }
+        };
+    }
+
+    public static <T extends Styleable> Matcher<T> matcherHasStyleClass(String styleClass)
+    {
+        return TestUtil.<T, List<String>>matcherOn(Matchers.contains(styleClass), (T s) -> s.getStyleClass());
     }
 
     public static interface TestRunnable

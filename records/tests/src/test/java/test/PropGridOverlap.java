@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import log.Log;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -23,7 +24,6 @@ import utility.Utility;
 import java.util.Comparator;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitQuickcheck.class)
 public class PropGridOverlap extends FXApplicationTest
@@ -42,7 +42,6 @@ public class PropGridOverlap extends FXApplicationTest
 
     // For any given pair of tables, if they overlap vertically, checks
     // that they are still in the horizontal order that they were originally
-    @SuppressWarnings("deprecation")
     @OnThread(Tag.FXPlatform)
     private static void checkHorizSorted(ImmutableList<GridArea> sortedByOriginalX)
     {
@@ -55,7 +54,7 @@ public class PropGridOverlap extends FXApplicationTest
                 CellPosition jPos = sortedByOriginalX.get(j).getPosition();
                 if (Utility.rangeOverlaps(0, iPos.rowIndex, sortedByOriginalX.get(i).getBottomRightIncl().rowIndex, jPos.rowIndex, sortedByOriginalX.get(j).getBottomRightIncl().rowIndex))
                 {
-                    assertThat("Comparing " + sortedByOriginalX.get(i) + " to " + sortedByOriginalX.get(j), iPos.columnIndex,
+                    MatcherAssert.assertThat("Comparing " + sortedByOriginalX.get(i) + " to " + sortedByOriginalX.get(j), iPos.columnIndex,
                             Matchers.lessThanOrEqualTo(jPos.columnIndex));
                 }
             }

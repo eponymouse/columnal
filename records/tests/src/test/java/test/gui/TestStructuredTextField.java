@@ -102,12 +102,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 /**
  * Created by neil on 19/06/2017.
  */
-@SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 @Ignore
@@ -799,6 +799,7 @@ public class TestStructuredTextField extends FXApplicationTest
         }
     }
 
+    @SuppressWarnings("deprecation") // Because of assumeThat
     @Property(trials = 20)
     public void propNumber(@From(GenNumberAsString.class) String numAsString, @From(GenNumber.class) Number initial, char c) throws InternalException
     {
@@ -960,6 +961,7 @@ public class TestStructuredTextField extends FXApplicationTest
         type("", "false", false);
     }
 
+    @SuppressWarnings("deprecation") // Because of assumeThat
     @Property(trials=20)
     public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {

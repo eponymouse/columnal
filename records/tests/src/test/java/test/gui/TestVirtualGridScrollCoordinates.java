@@ -47,7 +47,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestVirtualGridScrollCoordinates extends FXApplicationTest
@@ -319,7 +319,6 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         assertEquals(0, TestUtil.fx(() -> topLeft.getLayoutX()), 0.01);
     }
 
-    @SuppressWarnings("deprecation")
     @Property(trials = 5)
     public void scrollXYBy(@From(GenScrollAmounts.class) ScrollAmounts scrollX, @From(GenScrollAmounts.class) ScrollAmounts scrollY)
     {
@@ -365,12 +364,8 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
                 checkOffsetsNegative();
             }
         }
-        
-        
-
     }
 
-    @SuppressWarnings("deprecation")
     private void checkOffsetsNegative()
     {
         double[][] offsetsAndLimits = TestUtil.fx(() -> virtualGrid._test_getOffsetsAndLimits());
@@ -410,7 +405,6 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         testMonotonicScroll(false, false, false);
     }
 
-    @SuppressWarnings("deprecation")
     private void testMonotonicScroll(boolean... scrollDocumentUp)
     {
         final @Nullable AnimationTimer[] timer = new AnimationTimer[1];

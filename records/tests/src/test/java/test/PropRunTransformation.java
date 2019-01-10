@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
@@ -61,7 +62,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * Created by neil on 01/12/2016.
  */
-@SuppressWarnings({"deprecation", "recorded"})
+@SuppressWarnings("recorded")
 @RunWith(JUnitQuickcheck.class)
 public class PropRunTransformation
 {
@@ -218,7 +219,7 @@ public class PropRunTransformation
         summaryRS = summaryStatistics.getData();
         assertEquals(1, summaryRS.getLength());
         assertEquals(1, summaryRS.getColumns().size());
-        assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
+        MatcherAssert.assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
     }
 
     @OnThread(Tag.Simulation)
