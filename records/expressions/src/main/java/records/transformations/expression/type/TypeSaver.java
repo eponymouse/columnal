@@ -104,15 +104,15 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
                                     typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.of(newArg));
                                 }
-                                return Either.<TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, typeExpression));
+                                return Either.<@Recorded TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, typeExpression));
                             }
                         }
-                        return Either.<TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayer, bracketEnd, bracketed));
+                        return Either.<@Recorded TypeExpression, Terminator>left(errorDisplayerRecord.<TypeExpression>recordType(errorDisplayer, bracketEnd, bracketed));
             }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<TypeExpression, Terminator>left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword)));
         }
         else
         {

@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
@@ -18,10 +19,10 @@ import java.util.stream.Stream;
 
 public class UnitDivideExpression extends UnitExpression
 {
-    private final UnitExpression numerator;
-    private final UnitExpression denominator;
+    private final @Recorded UnitExpression numerator;
+    private final @Recorded UnitExpression denominator;
 
-    public UnitDivideExpression(UnitExpression numerator, UnitExpression denominator)
+    public UnitDivideExpression(@Recorded UnitExpression numerator, @Recorded UnitExpression denominator)
     {
         this.numerator = numerator;
         this.denominator = denominator;
@@ -103,6 +104,7 @@ public class UnitDivideExpression extends UnitExpression
         return r.stream();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
     {

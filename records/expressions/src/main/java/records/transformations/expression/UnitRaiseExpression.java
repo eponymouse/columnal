@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
@@ -17,10 +18,10 @@ import java.util.stream.Stream;
 
 public class UnitRaiseExpression extends UnitExpression
 {
-    private final UnitExpression unit;
+    private final @Recorded UnitExpression unit;
     private final int power;
 
-    public UnitRaiseExpression(UnitExpression unit, int power)
+    public UnitRaiseExpression(@Recorded UnitExpression unit, int power)
     {
         this.unit = unit;
         this.power = power;
@@ -82,6 +83,7 @@ public class UnitRaiseExpression extends UnitExpression
         return r.stream();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
     {

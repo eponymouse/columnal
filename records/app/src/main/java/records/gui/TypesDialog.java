@@ -221,9 +221,9 @@ public class TypesDialog extends Dialog<Void>
                 {
                     crossSetting = true;
                     innerValueTypeArgs.setText("");
-                    innerValueTagList.resetItems(getPlainTags(plainTagList).map(plain -> {
+                    innerValueTagList.resetItems(getPlainTags(plainTagList).<Either<@Localized String, TagType<JellyType>>>map(plain -> {
                         return plain.map(p -> new TagType<JellyType>(p, null));
-                    }).collect(Collectors.<Either<String, TagType<JellyType>>>toList()));
+                    }).collect(Collectors.<Either<@Localized String, TagType<JellyType>>>toList()));
                     crossSetting = false;
                 }
             });

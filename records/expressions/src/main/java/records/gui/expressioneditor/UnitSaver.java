@@ -49,12 +49,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
+    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
+    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());

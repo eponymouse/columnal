@@ -93,6 +93,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         return loadUnbracketed(Utility.<UnbracketedUnitContext, UnitParser>parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unitUse().unbracketedUnit()));
     }
 
+    @SuppressWarnings("recorded")
     private static UnitExpression loadUnit(UnitContext ctx)
     {
         if (ctx.unbracketedUnit() != null)
@@ -138,6 +139,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         }
     }
 
+    @SuppressWarnings("recorded")
     private static UnitExpression loadUnbracketed(UnbracketedUnitContext ctx)
     {
         if (ctx.divideBy() != null)

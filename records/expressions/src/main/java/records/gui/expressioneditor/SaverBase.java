@@ -685,7 +685,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 {
                     @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                     errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorDisplayerRecord.getRecorder().<EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Utility.<Pair<BracketedStatus, ImmutableList<@Recorded EXPRESSION>>, QuickFix<@Recorded EXPRESSION, SAVER>>mapList(possibles, e -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
+                    errorDisplayerRecord.getRecorder().<@Recorded EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Utility.<Pair<BracketedStatus, ImmutableList<@Recorded EXPRESSION>>, QuickFix<@Recorded EXPRESSION, SAVER>>mapList(possibles, e -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
                         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                         @Recorded EXPRESSION r = applyBrackets.apply(e.getFirst(), e.getSecond());
                         return r;
@@ -721,7 +721,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 {
                     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                     @NonNull @Recorded EXPRESSION replacementFinal = replacement;
-                    errorDisplayerRecord.getRecorder().<EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION, SAVER>>singletonList(
+                    errorDisplayerRecord.getRecorder().<@Recorded EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION, SAVER>>singletonList(
                         new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
                 }
