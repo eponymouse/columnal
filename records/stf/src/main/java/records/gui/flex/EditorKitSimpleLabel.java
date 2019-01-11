@@ -15,7 +15,7 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
             public Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress src, boolean immediatelySurroundedByRoundBrackets)
             {
                 // Shouldn't be called anyway:
-                return Either.left(new ErrorDetails(StyledString.s(label)));
+                return Either.left(new ErrorDetails(StyledString.s(label), 0));
             }
         }, (t, v) -> {}, () -> {});
     }

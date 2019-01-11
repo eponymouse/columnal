@@ -31,7 +31,7 @@ public class NumberRecogniser extends Recogniser<@Value Number>
         {
             if (beforeDot == null)
             {
-                return error("Expected digits to start a number");
+                return error("Expected digits to start a number", pp.curCharIndex);
             }
             else if (beforeDot.getSecond().src.startsWith(".", beforeDot.getSecond().curCharIndex))
             {
@@ -39,7 +39,7 @@ public class NumberRecogniser extends Recogniser<@Value Number>
 
                 if (afterDot == null)
                 {
-                    return error("Expected digits after decimal point");
+                    return error("Expected digits after decimal point", beforeDot.getSecond().curCharIndex + 1);
                 }
                 
                 return success(Utility.parseNumber(sign + beforeDot.getFirst() + "." + afterDot.getFirst()), afterDot.getSecond());
@@ -51,7 +51,7 @@ public class NumberRecogniser extends Recogniser<@Value Number>
         }
         catch (UserException e)
         {
-            return Either.left(new ErrorDetails(e.getStyledMessage()));
+            return Either.left(new ErrorDetails(e.getStyledMessage(), orig.curCharIndex));
         }
     }
 

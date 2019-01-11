@@ -25,7 +25,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
             ParseProgress pp = parseProgress;
             pp = pp.consumeNext("[");
             if (pp == null)
-                return error("Expected '[' to begin list");
+                return error("Expected '[' to begin list", parseProgress.curCharIndex);
             pp = pp.skipSpaces();
 
             boolean first = true;
@@ -43,9 +43,10 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
                 first = false;
             }
 
+            ParseProgress beforeBracket = pp;
             pp = pp.consumeNext("]");
             if (pp == null)
-                return error("Expected ']' to end list");
+                return error("Expected ']' to end list", beforeBracket.curCharIndex);
 
             return success(new ListExList(list.build()), pp);
         }

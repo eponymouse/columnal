@@ -140,15 +140,15 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
         catch (InternalException e)
         {
             Log.log(e);
-            return Either.left(new ErrorDetails(e.getStyledMessage()));
+            return Either.left(new ErrorDetails(e.getStyledMessage(), orig.curCharIndex));
         }
         catch (UserException e)
         {
-            return Either.left(new ErrorDetails(e.getStyledMessage()));
+            return Either.left(new ErrorDetails(e.getStyledMessage(), orig.curCharIndex));
         }
         catch (NumberFormatException e)
         {
-            return error(e.getLocalizedMessage());
+            return error(e.getLocalizedMessage(), orig.curCharIndex);
         }
     }
 

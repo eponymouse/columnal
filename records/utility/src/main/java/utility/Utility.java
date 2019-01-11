@@ -421,7 +421,7 @@ public class Utility
         }
     }
 
-    public static <T> ImmutableList<T> prependToList(T header, List<T> data)
+    public static <T> ImmutableList<T> prependToList(T header, Collection<T> data)
     {
         ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(data.size() + 1);
         r.add(header);
@@ -641,18 +641,26 @@ public class Utility
         }
     }
 
-    public static <T> T withNumber(Object num, ExFunction<Long, T> withLong, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
+    public static <T> T withNumber(@Value Object num, ExFunction<Long, T> withLong, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
     {
         if (num instanceof BigDecimal)
-            return withBigDecimal.apply((BigDecimal) num);
+            return withBigDecimal.apply(Utility.cast(num, BigDecimal.class));
         else
-            return withLong.apply(((Number)num).longValue());
+            return withLong.apply(Utility.cast(num, Number.class).longValue());
     }
 
-    public static boolean isIntegral(Object o) throws UserException, InternalException
+    public static <T> T withNumberInt(@Value Object num, FunctionInt<Long, T> withLong, FunctionInt<BigDecimal, T> withBigDecimal) throws InternalException
+    {
+        if (num instanceof BigDecimal)
+            return withBigDecimal.apply(Utility.cast(num, BigDecimal.class));
+        else
+            return withLong.apply(Utility.cast(num, Number.class).longValue());
+    }
+
+    public static boolean isIntegral(@Value Object o) throws InternalException
     {
         // From http://stackoverflow.com/a/12748321/412908
-        return withNumber(o, x -> true, bd -> {
+        return withNumberInt(o, x -> true, bd -> {
             return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
         });
     }

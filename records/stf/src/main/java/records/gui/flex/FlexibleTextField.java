@@ -74,9 +74,6 @@ public class FlexibleTextField extends StyleClassedTextArea
 
         this.editorKit = editorKit;
         this.editorKit.setField(this);
-        replace(editorKit.getLatestDocument(isFocused()));
-
-        setEditable(this.editorKit.isEditable());
     }
 
     public @Nullable EditorKit<?> getEditorKit()

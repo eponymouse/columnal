@@ -1281,7 +1281,7 @@ public class TestUtil
     }
 
     // Applies Matcher to the result of an extraction function:
-    public static <S, T> Matcher<S> matcherOn(Matcher<T> withExtracted, Function<S, T> extract)
+    public static <@NonNull S, @NonNull T> Matcher<S> matcherOn(Matcher<T> withExtracted, Function<S, @NonNull T> extract)
     {
         return new BaseMatcher<S>()
         {
@@ -1291,6 +1291,7 @@ public class TestUtil
                 withExtracted.describeTo(description);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public boolean matches(Object o)
             {
@@ -1301,7 +1302,7 @@ public class TestUtil
 
     public static <T extends Styleable> Matcher<T> matcherHasStyleClass(String styleClass)
     {
-        return TestUtil.<T, List<String>>matcherOn(Matchers.contains(styleClass), (T s) -> s.getStyleClass());
+        return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> fx(() -> ImmutableList.copyOf(s.getStyleClass())));
     }
 
     public static interface TestRunnable

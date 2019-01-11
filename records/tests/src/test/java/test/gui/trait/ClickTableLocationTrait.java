@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 public interface ClickTableLocationTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
-    public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
+    public default Node clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
-        withItemInBounds(nodeQuery, virtualGrid, rectangleBounds, (n, p) -> clickOn(p, buttons));
+        return withItemInBounds(nodeQuery, virtualGrid, rectangleBounds, (n, p) -> clickOn(p, buttons));
     }
     
     @OnThread(Tag.Any)
-    public default void withItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, FXPlatformBiConsumer<Node, Point2D> action)
+    public default Node withItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, FXPlatformBiConsumer<Node, Point2D> action)
     {
         Bounds theoretical = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         // We shrink by two pixels in each direction to avoid
@@ -52,5 +52,6 @@ public interface ClickTableLocationTrait extends FxRobotInterface
         Rectangle2D intersect = TestUtil.fx(() -> FXUtility.intersectRect(FXUtility.boundsToRect(targetNN.localToScreen(targetNN.getBoundsInLocal())), FXUtility.boundsToRect(box)));
         Point2D centre = FXUtility.getCentre(intersect);
         TestUtil.fx_(() -> action.consume(targetNN, centre));
+        return targetNN;
     }
 }

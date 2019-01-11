@@ -18,7 +18,7 @@ public class BooleanRecogniser extends Recogniser<@Value Boolean>
         if (pp != null)
             return success(DataTypeUtility.value(false), pp);
         
-        return error("Expected true or false");
+        return error("Expected true or false", orig.curCharIndex);
     }
 
 }

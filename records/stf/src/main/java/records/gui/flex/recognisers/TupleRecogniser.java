@@ -24,7 +24,7 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
         if (!immediatelySurroundedByRoundBrackets)
             pp = pp.consumeNext("(");
         if (pp == null)
-            return error("Expected '(' to begin a tuple");
+            return error("Expected '(' to begin a tuple", orig.curCharIndex);
 
         return next(false, !immediatelySurroundedByRoundBrackets, members.iterator(), pp, ImmutableList.builderWithExpectedSize(members.size()));
     }
@@ -39,16 +39,17 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
             if (expectClosingBracket)
                 pp = pp.consumeNext(")");
             if (pp == null)
-                return error("Expected ')' to end tuple");
+                return error("Expected ')' to end tuple", orig.curCharIndex);
             ImmutableList<SuccessDetails<Object>> all = soFar.build();
             return success(DataTypeUtility.value(all.stream().map(s -> s.value).<@Value Object>toArray(n -> new @Value Object[n])), all.stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
         }
         
         if (expectComma)
         {
+            ParseProgress beforeComma = pp;
             pp = pp.consumeNext(",");
             if (pp == null)
-                return error("Expected ',' to separate tuple items");
+                return error("Expected ',' to separate tuple items", beforeComma.curCharIndex);
         }
         
         return nextMember.next().process(pp, false).<SuccessDetails<Object>>map(s -> s.asObject())

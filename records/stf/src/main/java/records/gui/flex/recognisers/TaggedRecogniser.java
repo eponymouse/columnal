@@ -34,17 +34,17 @@ public class TaggedRecogniser extends Recogniser<@Value TaggedValue>
                 
                 pp = afterTag.consumeNext("(");
                 if (pp == null)
-                    return error("Expected '(' around an inner value");
+                    return error("Expected '(' around an inner value", afterTag.curCharIndex);
                 return inner.process(pp, true).flatMap((SuccessDetails<@Value ?>  succ) -> {
                     ParseProgress afterBracket = succ.parseProgress.consumeNext(")");
                     if (afterBracket == null)
-                        return error("Expected closing ')' after an inner value");
+                        return error("Expected closing ')' after an inner value", succ.parseProgress.curCharIndex);
                     return success(new TaggedValue(iFinal, succ.value), afterBracket);
                 });
                 
             }
         }
         
-        return error("Did not recognise tag name");
+        return error("Did not recognise tag name", parseProgress.curCharIndex);
     }
 }

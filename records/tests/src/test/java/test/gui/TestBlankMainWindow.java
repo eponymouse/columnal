@@ -18,6 +18,8 @@ import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -316,7 +318,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(@When(seed=3599753974898234210L) @From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(dataTypeAndManager.typeManager);
@@ -403,10 +405,14 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             addNewRow();
             TestUtil.sleep(500);
             Either<String, Pair<DataType, @Value Object>> entry;
+            final String invalidChar;
+            final int invalidPos;
             if (r.nextInt(8) != 1)
             {
                 @Value Object value = typeAndValueGen.makeValue();
                 entry = Either.right(new Pair<DataType, @Value Object>(typeAndValueGen.getType(), value));
+                invalidPos = - 1;
+                invalidChar = "";
             }
             else
             {
@@ -414,24 +420,33 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 // Ways to make an error: either use invalid char by itself,
                 // or add an invalid char before or after real value.
                 ImmutableList<String> invalidChars = ImmutableList.of("@", "#", "%");
-                String invalidChar = invalidChars.get(r.nextInt(invalidChars.size()));
+                invalidChar = invalidChars.get(r.nextInt(invalidChars.size()));
                 if (r.nextInt(3) == 1)
                 {
                     // By itself:
                     entry = Either.left(invalidChar);
+                    invalidPos = 0;
                 }
                 else
                 {
                     String content = DataTypeUtility.valueToString(typeAndValueGen.getType(), typeAndValueGen.makeValue(), null, false);
                     if (r.nextBoolean())
+                    {
                         entry = Either.left(invalidChar + content);
+                        invalidPos = 0;
+                    }
                     else
+                    {
                         entry = Either.left(content + invalidChar);
+                        invalidPos = content.length();
+                    }
                 }
             }
 
             values.add(entry.<@Value Object>map(p -> p.getSecond()));
-            enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
+            FlexibleTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
+            if (entry.isLeft())
+                MatcherAssert.assertThat(TestUtil.fx(() -> field.getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getStyle())));
         }
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
@@ -455,15 +470,20 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @OnThread(Tag.Any)
-    private void enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
+    private FlexibleTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
     {
-        for (int i = 0; i < 2; i++)
-            clickOnItemInBounds(lookup(".flexible-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+        FlexibleTextField textField;
+        int i = 0;
+        do
+        {
+            textField = (FlexibleTextField) clickOnItemInBounds(lookup(".flexible-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+        }
+        while (++i < 2);
 
         Node focused = getFocusOwner();
         assertNotNull(focused);
         if (focused == null)
-            return; // To satisfy checker
+            return textField; // To satisfy checker
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof FlexibleTextField);
         push(KeyCode.HOME);
         value.eitherEx(s -> {
@@ -483,6 +503,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
         });
+        return textField;
     }
 
     @OnThread(Tag.Any)

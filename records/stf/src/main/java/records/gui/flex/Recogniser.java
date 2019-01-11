@@ -103,11 +103,13 @@ public abstract class Recogniser<T>
     public static class ErrorDetails
     {
         public final StyledString error;
+        public final int errorPosition;
         //public final ImmutableList<Fix> fixes;
 
-        public ErrorDetails(StyledString error)
+        public ErrorDetails(StyledString error, int errorPosition)
         {
             this.error = error;
+            this.errorPosition = errorPosition;
         }
     }
     
@@ -141,7 +143,7 @@ public abstract class Recogniser<T>
             if (pp.curCharIndex == pp.src.length())
                 return Either.right(this);
             else
-                return Either.left(new ErrorDetails(StyledString.s("Unexpected additional content: " + pp.src.substring(pp.curCharIndex))));
+                return Either.left(new ErrorDetails(StyledString.s("Unexpected additional content: " + pp.src.substring(pp.curCharIndex)), pp.curCharIndex));
         }
     }
     
@@ -161,9 +163,9 @@ public abstract class Recogniser<T>
     
     public abstract Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets);
 
-    protected Either<ErrorDetails, SuccessDetails<T>> error(String msg)
+    protected Either<ErrorDetails, SuccessDetails<T>> error(String msg, int errorPosition)
     {
-        return Either.left(new ErrorDetails(StyledString.s(msg)));
+        return Either.left(new ErrorDetails(StyledString.s(msg), errorPosition));
     }
 
     protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull T value, ParseProgress parseProgress)

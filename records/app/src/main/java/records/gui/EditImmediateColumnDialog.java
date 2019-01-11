@@ -1,7 +1,6 @@
 package records.gui;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -17,19 +16,20 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.expressioneditor.TypeEditor;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
 import records.gui.flex.Recogniser;
 import records.gui.stf.TableDisplayUtility;
-import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
+import utility.ExBiFunction;
+import utility.ExFunction;
 import utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
@@ -37,6 +37,8 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 import utility.gui.TranslationUtility;
+
+import java.util.function.Function;
 
 /**
  * Edits an immediate column, which has a name, type, and default value
@@ -191,14 +193,30 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
-        defaultValue = DataTypeUtility.makeDefaultValue(dataType);
-        return makeEditorKit(TableDisplayUtility.recogniser(dataType));
-        //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
+        try
+        {
+            defaultValue = DataTypeUtility.makeDefaultValue(dataType);
+            // Bit of a hack to work around thread checker:
+            return makeEditorKit(((ExBiFunction<DataType, @Value Object, String>)EditImmediateColumnDialog::defaultAsString).apply(dataType, defaultValue), TableDisplayUtility.recogniser(dataType));
+            //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
+        }
+        catch (UserException e)
+        {
+            // If valueToString throws on makeDefaultValue, it's justifiable
+            // to treat this as an internal error:
+            throw new InternalException("Error loading default value", e);
+        }
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Recogniser<T> recogniser)
+    @OnThread(Tag.Simulation)
+    private static String defaultAsString(DataType dataType, @Value Object defValue) throws UserException, InternalException
     {
-        return new EditorKit<T>("", recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        return DataTypeUtility.valueToString(dataType, defValue, null, false);
+    }
+
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, Recogniser<T> recogniser)
+    {
+        return new EditorKit<T>(initialValue, recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
     }
 /*
     private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
