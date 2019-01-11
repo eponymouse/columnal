@@ -29,7 +29,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
             pp = pp.skipSpaces();
 
             boolean first = true;
-            while (first || pp.src.charAt(pp.curCharIndex) == ',')
+            while (pp.src.charAt(pp.curCharIndex) != ']' && (first || pp.src.charAt(pp.curCharIndex) == ','))
             {
                 if (!first)
                 {
