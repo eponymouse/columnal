@@ -58,7 +58,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 {    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNewType(@When(seed=5885286325250006211L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=-7421178850041104964L) @From(GenRandom.class) Random random) throws Exception
+    public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();

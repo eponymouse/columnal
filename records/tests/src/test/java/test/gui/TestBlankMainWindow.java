@@ -318,7 +318,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@When(seed=3599753974898234210L) @From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(@From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(dataTypeAndManager.typeManager);
@@ -369,7 +369,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@When(seed=-3291684708783208768L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
@@ -395,7 +395,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
-    public void propEnterColumn(@When(seed=2L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen, @When(seed=2L) @From(GenRandom.class) Random r) throws InternalException, UserException, Exception
+    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
