@@ -81,7 +81,13 @@
         <profile>
             <id>quick</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>check</name>
+                    <value>!full</value>
+                </property>
+                <file>
+                    <missing>src/test/java/test/TestUtil.java</missing>
+                </file>
             </activation>
 
             <build>
@@ -119,6 +125,9 @@
             <id>full</id>
 
             <activation>
+                <file>
+                    <missing>src/test/java/test/TestUtil.java</missing>
+                </file>
                 <property>
                     <name>check</name>
                     <value>full</value>
