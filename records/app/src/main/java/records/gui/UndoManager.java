@@ -131,11 +131,13 @@ public class UndoManager
             }
 
             //Log.logStackTrace("Saving!");
+            /*
             System.out.println("State after saving latest:");
             for (SaveDetails detail : details)
             {
                 System.out.println(detail._debug_detailsAndContent());
             }
+            */
         }
     }
 

@@ -120,7 +120,7 @@ public class EditorKit<T>
             field.getContent().setStyleSpans(0, field.getContent().getStyleSpans(0, field.getLength()).mapStyles(ss -> ss.stream().filter(s -> !s.equals(ERROR_CLASS)).collect(ImmutableList.<String>toImmutableList())));
         
         latestValue = recogniser.process(ParseProgress.fromStart(text), false).flatMap(SuccessDetails::requireEnd).mapBoth(err -> {
-            Log.debug("### Entry error: " + err.error.toPlain() + " in: " + text);
+            //Log.debug("### Entry error: " + err.error.toPlain() + " in: " + text);
             if (field != null)
                 field.getContent().setStyleSpans(err.errorPosition, field.getContent().getStyleSpans(err.errorPosition, err.errorPosition + 1).mapStyles(addToSet(ERROR_CLASS)));
             return err.error;
