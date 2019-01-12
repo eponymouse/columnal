@@ -91,18 +91,21 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     @Override
     public final SimulationRunnable insertRows(int index, List<Either<String, T>> itemsErr) throws InternalException
     {
+        int itemsSize = itemsErr.size();
+        mapErrors(i -> i < index ? i : i + itemsSize);
+        
         ArrayList<@Nullable T> items = new ArrayList<>();
-        for (Either<String, T> errOrValue : itemsErr)
+        for (int i = 0; i < itemsErr.size(); i++)
         {
+            Either<String, T> errOrValue = itemsErr.get(i);
+            int iFinal = i;
             items.add(errOrValue.<@Nullable T>either(err -> {
+                setError(index + iFinal, err);
                 return null;
             }, v -> {
                 return v;
-            }));             
+            }));
         }
-        
-        int itemsSize = items.size();
-        mapErrors(i -> i < index ? i : i + itemsSize);
         
         SimulationRunnable revert = _insertRows(index, items);
         return () -> {
