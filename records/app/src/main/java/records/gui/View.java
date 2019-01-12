@@ -116,7 +116,7 @@ public class View extends StackPane
             return;
         
         File dest = diskFile.get();
-        Workers.onWorkerThread("Saving", Priority.SAVE, () ->
+        Workers.onWorkerThread("Saving file", Priority.SAVE, () ->
         {
             FullSaver fetcher = new FullSaver();
             tableManager.save(dest, fetcher);

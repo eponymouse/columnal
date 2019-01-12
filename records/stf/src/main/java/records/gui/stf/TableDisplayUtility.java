@@ -385,7 +385,7 @@ public class TableDisplayUtility
                     @Override
                     public @OnThread(Tag.FXPlatform) void consume(String text, @Nullable @Value T v)
                     {
-                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
+                        Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
                         onModify.run();
                     }
                 };
