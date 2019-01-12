@@ -44,7 +44,7 @@ public class EditorKit<T>
     {
         // Look for non-focused text changes and update our latest value:
         if (field != null && !field.isFocused() && !settingDocument)
-            setLatestValue(field.getText());
+            setLatestValue(field.getText(), false);
     }
 
     public EditorKit(String initialValue, Recogniser<T> recogniser, FXPlatformBiConsumer<String, @Nullable T> onChange, FXPlatformRunnable relinquishFocus)
@@ -54,7 +54,7 @@ public class EditorKit<T>
         this.relinquishFocus = relinquishFocus;
         this.focusedDocument = ReadOnlyStyledDocument.fromString(initialValue, ImmutableList.<String>of(), ImmutableList.<String>of(), StyledText.<Collection<String>>textOps());
         this.unfocusedDocument = new Pair<>(focusedDocument, UnaryOperator.identity());
-        setLatestValue(initialValue);
+        setLatestValue(initialValue, false);
     }
 
     public boolean isEditable()
@@ -101,7 +101,7 @@ public class EditorKit<T>
             // an old unfocusedDocument without the latest changes.  Any unfocused
             // special content will be set later on
             unfocusedDocument = new Pair<>(focusedDocument, UnaryOperator.identity());
-            setLatestValue(text);
+            setLatestValue(text, true);
         }
         else
         {
@@ -113,7 +113,7 @@ public class EditorKit<T>
 
     @RequiresNonNull({"recogniser", "onChange"})
     @EnsuresNonNull("latestValue")
-    private void setLatestValue(@UnknownInitialization(Object.class)EditorKit<T>this, String text)
+    private void setLatestValue(@UnknownInitialization(Object.class)EditorKit<T>this, String text, boolean callListener)
     {
         // Clear existing errors:
         if (field != null)
@@ -127,8 +127,9 @@ public class EditorKit<T>
         }, succ -> {
             // TODO apply styles
             return succ.value;
-        });        
-        onChange.consume(text, latestValue.leftToNull());
+        });
+        if (callListener)
+            onChange.consume(text, latestValue.leftToNull());
     }
 
     private static UnaryOperator<Collection<String>> addToSet(String item)
