@@ -1,16 +1,20 @@
 package records.data;
 
+import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import javafx.application.Platform;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -274,17 +278,34 @@ public abstract class RecordSet
                     return false;
                 for (int i = 0; i < length; i++)
                 {
-                    if (Utility.compareValues(us.getCollapsed(i), them.getCollapsed(i)) != 0)
+                    Either<String, @Value Object> ax = getCollapsedErr(us, i);
+                    Either<String, @Value Object> bx = getCollapsedErr(them, i);
+                    boolean same = ax.eitherEx(aerr -> bx.eitherEx(berr -> aerr.equals(berr), _bv -> false), av -> bx.eitherEx(_ae -> false, bv -> Utility.compareValues(av, bv) == 0));
+                    if (!same)
                         return false;
                 }
             }
         }
         catch (InternalException | UserException e)
         {
+            Log.log(e);
             // Only used for testing anyway:
             return false;
         }
         return true;
+    }
+
+    @OnThread(Tag.Simulation)
+    private Either<String, @Value Object> getCollapsedErr(DataTypeValue dataTypeValue, int index) throws InternalException, UserException
+    {
+        try
+        {
+            return Either.right(dataTypeValue.getCollapsed(index));
+        }
+        catch (InvalidImmediateValueException e)
+        {
+            return Either.left(e.getInvalid());
+        }
     }
 
     @Override
