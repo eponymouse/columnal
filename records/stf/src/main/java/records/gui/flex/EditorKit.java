@@ -150,7 +150,9 @@ public class EditorKit<T>
     public void setUnfocusedDocument(ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc, UnaryOperator<Integer> mapCaretPos)
     {
         unfocusedDocument = new Pair<>(doc, mapCaretPos);
-        if (field != null && !field.isFocused())
+        // Note: only ReadOnlyStyledDocument has implemented equals, so the order
+        // here is actually crucial:
+        if (field != null && !field.isFocused() && !doc.equals(field.getDocument()))
         {
             settingDocument = true;
             field.replace(doc);
