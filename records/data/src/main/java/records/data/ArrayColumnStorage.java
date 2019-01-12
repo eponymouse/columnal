@@ -128,11 +128,13 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     public SimulationRunnable _insertRows(int index, List<@Nullable ListEx> items) throws InternalException
     {
         storage.ensureCapacity(storage.size() + items.size());
+        int curIndex = index;
         for (ListEx item : items)
         {
             if (item == null)
                 item = ListEx.empty();
-            storage.add(index, item);
+            storage.add(curIndex, item);
+            curIndex += 1;
         }
         int count = items.size();
         return () -> _removeRows(index, count);

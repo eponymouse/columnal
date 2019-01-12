@@ -121,15 +121,18 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
         values.ensureCapacity(values.size() + items.size());
+        int curIndex = index;
         for (@Nullable TemporalAccessor item : items)
         {
             if (item == null)
             {
                 @Value TemporalAccessor dummy = dateTimeInfo.getDefaultValue();
-                values.add(index, pool.pool(dummy));
+                values.add(curIndex, pool.pool(dummy));
             }
             else
-                values.add(index, pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
+                values.add(curIndex, pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
+            
+            curIndex += 1;
         }
         int count = items.size();
         return () -> _removeRows(index, count);
