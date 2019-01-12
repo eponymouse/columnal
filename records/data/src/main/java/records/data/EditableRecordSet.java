@@ -125,7 +125,14 @@ public class EditableRecordSet extends RecordSet
                 {
                     int tagIndex = g.get(i);
                     @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
-                    r.add(Either.right(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i))));
+                    try
+                    {
+                        r.add(Either.right(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i))));
+                    }
+                    catch (InvalidImmediateValueException e)
+                    {
+                        r.add(Either.left(e.getInvalid()));
+                    }
                 }
                 return new MemoryTaggedColumn(rs, original.getName(), typeName, typeVars, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
             }
@@ -136,12 +143,19 @@ public class EditableRecordSet extends RecordSet
                 List<Either<String, @Value Object @Value []>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
-                    @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
-                    for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
+                    try
                     {
-                        array[tupleIndex] = types.get(tupleIndex).getCollapsed(index);
+                        @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
+                        for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
+                        {
+                            array[tupleIndex] = types.get(tupleIndex).getCollapsed(index);
+                        }
+                        r.add(Either.right(array));
                     }
-                    r.add(Either.right(array));
+                    catch (InvalidImmediateValueException e)
+                    {
+                        r.add(Either.left(e.getInvalid()));
+                    }
                 }
                 @Value Object @Value [] tupleOfDefaults = DataTypeUtility.value(new Object[types.size()]);
                 for (int i = 0; i < tupleOfDefaults.length; i++)
@@ -157,14 +171,21 @@ public class EditableRecordSet extends RecordSet
                 List<Either<String, ListEx>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
-                    List<Object> array = new ArrayList<>();
-                    @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
-                    for (int indexInArray = 0; indexInArray < details.getFirst(); indexInArray++)
+                    try
                     {
-                        // Need to look for indexInArray, not index, to get full list:
-                        array.add(details.getSecond().getCollapsed(indexInArray));
+                        List<Object> array = new ArrayList<>();
+                        @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
+                        for (int indexInArray = 0; indexInArray < details.getFirst(); indexInArray++)
+                        {
+                            // Need to look for indexInArray, not index, to get full list:
+                            array.add(details.getSecond().getCollapsed(indexInArray));
+                        }
+                        r.add(Either.right(DataTypeUtility.value(array)));
                     }
-                    r.add(Either.right(DataTypeUtility.value(array)));
+                    catch (InvalidImmediateValueException e)
+                    {
+                        r.add(Either.left(e.getInvalid()));
+                    }
                 }
                 return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
             }
