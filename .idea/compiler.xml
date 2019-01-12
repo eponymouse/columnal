@@ -32,13 +32,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/utility/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/utility/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="utility" />
       </profile>
       <profile name="Maven default annotation processors profile" enabled="true">
@@ -53,13 +69,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="gui-utility" />
       </profile>
       <profile name="Annotation profile for data" enabled="true">
@@ -67,13 +99,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/data/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/data/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/data/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/data/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/data/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="data" />
       </profile>
       <profile name="Annotation profile for stf" enabled="true">
@@ -81,13 +129,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/stf/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/stf/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="stf" />
       </profile>
       <profile name="Annotation profile for functions" enabled="true">
@@ -95,13 +159,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/functions/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/functions/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="functions" />
       </profile>
       <profile name="Annotation profile for expressions" enabled="true">
@@ -109,13 +189,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="expressions" />
       </profile>
       <profile name="Annotation profile for tests" enabled="true">
@@ -129,6 +225,15 @@
         <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="tests" />
       </profile>
       <profile name="Annotation profile for records" enabled="true">
@@ -136,13 +241,29 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
+        <option name="funcdocfiles" value="$PROJECT_DIR$/records/app/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/tuple.xml" />
+        <option name="helpfiles" value="$PROJECT_DIR$/records/app/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/app/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/app/../app/src/main/help/edit-unit.xml" />
+        <option name="propfiles" value="$PROJECT_DIR$/records/app/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.identifier.IdentifierChecker" />
+        <processor name="annotation.funcdoc.FuncDocChecker" />
+        <processor name="annotation.help.HelpFileChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
+        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/anns/target/classes" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/2.5.7/checker-qual-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/2.5.7/checker-2.5.7.jar" />
+          <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xerces/xercesImpl/2.8.0/xercesImpl-2.8.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/xalan/xalan/2.7.0/xalan-2.7.0.jar" />
+        </processorPath>
         <module name="app" />
       </profile>
     </annotationProcessing>
@@ -162,5 +283,17 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.7/jdk8-2.5.7.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200" />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="anns" options="" />
+      <module name="app" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/app/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/app/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/app/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/app/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/app/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/app/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/app/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/app/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="data" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/data/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/data/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/data/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/data/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/data/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/data/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/data/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/data/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="expressions" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/expressions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/expressions/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/expressions/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/expressions/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/expressions/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/expressions/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="functions" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/functions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/functions/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/functions/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/functions/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/functions/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/functions/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="gui-utility" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/gui-utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/gui-utility/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="parsers" options="" />
+      <module name="stf" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/stf/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/stf/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/stf/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/stf/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/stf/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/stf/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="tests" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/tests/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="utility" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Apropfiles=$PROJECT_DIR$/records/utility/../app/src/main/resources/transformations_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/expression_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/function_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/newcolumn_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/dataentry_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/main_en.properties:$PROJECT_DIR$/records/utility/../app/src/main/resources/import_en.properties -Ahelpfiles=$PROJECT_DIR$/records/utility/../app/src/main/help/guess-format.xml;$PROJECT_DIR$/records/utility/../app/src/main/help/edit-column.xml;$PROJECT_DIR$/records/utility/../app/src/main/help/edit-unit.xml -Afuncdocfiles=$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/boolean.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/comparison.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/conversion.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/core.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/datetime.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/list.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/listprocess.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/lookup.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/math.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/number.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/operators.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/text.xml;$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/tuple.xml -AconservativeUninferredTypeArguments -Xplugin:threadchecker.TCPlugin -Werror" />
+    </option>
   </component>
 </project>
