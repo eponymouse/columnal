@@ -18,6 +18,7 @@ import utility.TaggedValue;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 30/11/2016.
@@ -60,9 +61,9 @@ public class MemoryTaggedColumn extends EditableColumn
         return new MemoryTaggedColumn(rs, getName(), typeName, typeVars, tags, storage.getShrunk(shrunkLength), defaultValue);
     }
 
-    public void add(TaggedValue taggedValue) throws InternalException
+    public void add(Either<String, TaggedValue> taggedValue) throws InternalException
     {
-        storage.add(taggedValue);
+        storage.addAll(Stream.of(taggedValue));
     }
 
 

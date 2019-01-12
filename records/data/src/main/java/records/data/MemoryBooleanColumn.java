@@ -12,6 +12,7 @@ import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 30/11/2016.
@@ -43,9 +44,9 @@ public class MemoryBooleanColumn extends EditableColumn
         return new MemoryBooleanColumn(rs, getName(), storage.getAllCollapsed(0, shrunkLength), false);
     }
 
-    public void add(boolean b) throws InternalException
+    public void add(Either<String, Boolean> b) throws InternalException
     {
-        storage.add(b);
+        storage.addAll(Stream.of(b));
     }
 
     @Override

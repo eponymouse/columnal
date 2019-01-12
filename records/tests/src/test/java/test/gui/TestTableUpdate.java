@@ -40,6 +40,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -75,8 +76,8 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
             @Initialized final int tableLength = 1 + r.nextInt(20);
             EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                    colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colA.makeValue()), colA.makeValue()),
-                    colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colB.makeValue()), colB.makeValue())
+                    colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                    colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
             ), () -> tableLength);
             dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN, null), origRecordSet));
             // Now add two transformations:

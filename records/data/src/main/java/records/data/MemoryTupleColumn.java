@@ -12,6 +12,7 @@ import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 31/10/2016.
@@ -56,9 +57,9 @@ public class MemoryTupleColumn extends EditableColumn
         return shrunk;
     }
 
-    public void add(Object[] tuple) throws InternalException
+    public void add(Either<String, Object[]> tuple) throws InternalException
     {
-        storage.add(tuple);
+        storage.addAll(Stream.of(tuple));
     }
 
 

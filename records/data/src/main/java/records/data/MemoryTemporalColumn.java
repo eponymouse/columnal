@@ -14,6 +14,7 @@ import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 30/11/2016.
@@ -45,9 +46,9 @@ public class MemoryTemporalColumn extends EditableColumn
         return new MemoryTemporalColumn(rs, getName(), getType().getDateTimeInfo(), storage.getAllCollapsed(0, shrunkLength), defaultValue);
     }
 
-    public void add(TemporalAccessor value) throws InternalException
+    public void add(Either<String, TemporalAccessor> value) throws InternalException
     {
-        storage.add(value);
+        storage.addAll(Stream.of(value));
     }
 
 

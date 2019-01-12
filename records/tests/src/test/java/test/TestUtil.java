@@ -195,6 +195,20 @@ public class TestUtil
         }
     }
 
+    @OnThread(Tag.Any)
+    public static void assertValueListEitherEqual(String prefix, List<Either<String, @Value Object>> a, @Nullable List<Either<String, @Value Object>> b) throws UserException, InternalException
+    {
+        assertNotNull(prefix + " not null", b);
+        if (b != null)
+        {
+            assertEquals(prefix + " list size", a.size(), b.size());
+            for (int i = 0; i < a.size(); i++)
+            {
+                assertValueEitherEqual(prefix, a.get(i), b.get(i));
+            }
+        }
+    }
+
     public static void assertEqualList(List<?> a, List<?> b)
     {
         if (a.size() != b.size())

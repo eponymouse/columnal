@@ -4,11 +4,11 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import log.Log;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -38,10 +38,7 @@ import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.DataParser;
-import records.grammar.DataParser.BoolContext;
-import records.grammar.DataParser.NumberContext;
-import records.grammar.DataParser.StringContext;
-import records.grammar.DataParser.TagContext;
+import records.grammar.DataParser.*;
 import records.grammar.FormatLexer;
 import records.loadsave.OutputBuilder;
 import styled.StyledShowable;
@@ -64,7 +61,6 @@ import utility.Utility.ListExList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -1115,13 +1111,13 @@ public class DataType implements StyledShowable
 
     public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunction<RecordSet, EditableColumn>
     {
-        private final ExBiConsumer<C, V> addToColumn;
-        private final ExFunction<DataParser, V> parseValue;
+        private final ExBiConsumer<C, Either<String, V>> addToColumn;
+        private final ExFunction<DataParser, Either<String, V>> parseValue;
         private final BiFunctionInt<RecordSet, @Value V, C> makeColumn;
         private final @Value V defaultValue;
-        private @Nullable C column;
+        private @MonotonicNonNull C column;
 
-        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, @Value V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
+        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, @Value V, C> makeColumn, ExBiConsumer<C, Either<String, V>> addToColumn, ExFunction<DataParser, Either<String, V>> parseValue) throws UserException, InternalException
         {
             this.makeColumn = makeColumn;
             this.addToColumn = addToColumn;
@@ -1145,49 +1141,49 @@ public class DataType implements StyledShowable
     }
 
     @OnThread(Tag.Simulation)
-    public SimulationFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value, @Value Object defaultValue) throws InternalException, UserException
+    public SimulationFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<Either<String, @Value Object>> value, @Value Object defaultValue) throws InternalException, UserException
     {
         return apply(new DataTypeVisitor<SimulationFunction<RecordSet, EditableColumn>>()
         {
             @SuppressWarnings("value")
-            private <T> List<Either<String, T>> listRight(List<@Value Object> values, FunctionInt<@Value Object, @Value T> applyValue) throws InternalException
+            private <T> List<Either<String, T>> listValue(List<Either<String, @Value Object>> values, FunctionInt<@Value Object, @Value T> applyValue) throws InternalException
             {
-                return Utility.mapListInt(values, x -> Either.<String, T>right(applyValue.apply(x)));
+                return Utility.mapListInt(values, x -> x.<@Value T>mapInt(applyValue));
             }
             
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, listRight(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
+                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, listValue(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
-                return rs -> new MemoryStringColumn(rs, columnId, listRight(value, Utility::valueString), Utility.cast(defaultValue, String.class));
+                return rs -> new MemoryStringColumn(rs, columnId, listValue(value, Utility::valueString), Utility.cast(defaultValue, String.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, listRight(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
+                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, listValue(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
-                return rs -> new MemoryBooleanColumn(rs, columnId, listRight(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
+                return rs -> new MemoryBooleanColumn(rs, columnId, listValue(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, listRight(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
+                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, listValue(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
 
             @SuppressWarnings("value")
@@ -1195,7 +1191,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public SimulationFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, this.<@Value Object[]>listRight(value, (@Value Object t) -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, this.<@Value Object[]>listValue(value, (@Value Object t) -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
             }
 
             @Override
@@ -1205,7 +1201,7 @@ public class DataType implements StyledShowable
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");
                 DataType innerFinal = inner;
-                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, listRight(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
+                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, listValue(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
             }
         });
     }
@@ -1299,176 +1295,183 @@ public class DataType implements StyledShowable
             return null;
         }
     }
-
-    private static @Value ListEx loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    
+    private static <DATA_OR_INVALID, T> @Nullable Either<String, T> tryParse(DataParser p, Function<DataParser, DATA_OR_INVALID> parseOrInvalid, Function<DATA_OR_INVALID, InvalidItemContext> getInvalid, Function<DATA_OR_INVALID, T> getValid)
     {
-        if (tryParse(() -> p.openSquare()) == null)
+        try
+        {
+            DATA_OR_INVALID dataOrInvalid = parseOrInvalid.apply(p);
+            if (dataOrInvalid != null)
+            {
+                InvalidItemContext invalidItemContext = getInvalid.apply(dataOrInvalid);
+                if (invalidItemContext != null)
+                    return Either.left(invalidItemContext.STRING().getText());
+                
+                T t = getValid.apply(dataOrInvalid);
+                if (t != null)
+                    return Either.right(t);
+            }
+            return null;
+        }
+        catch (ParseCancellationException e)
+        {
+            return null;
+        }
+    }
+
+    private static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    {
+        Either<String, OpenSquareContext> openSquare = tryParse(p, DataParser::openSquareOrInvalid, OpenSquareOrInvalidContext::invalidItem, OpenSquareOrInvalidContext::openSquare);
+        if (openSquare == null)
             throw new UserException("Expected array but found: \"" + p.getCurrentToken() + "\"");
-        List<@Value Object> array = new ArrayList<>();
-        boolean seenComma = true;
-        while (tryParse(() -> p.closeSquare()) == null)
-        {
-            if (!seenComma)
+        return openSquare.<@Value ListEx>mapEx(_s -> {
+            List<@Value Object> array = new ArrayList<>();
+            boolean seenComma = true;
+            while (tryParse(() -> p.closeSquare()) == null)
             {
-                throw new UserException("Expected comma but found " + p.getCurrentToken());
+                if (!seenComma)
+                {
+                    throw new UserException("Expected comma but found " + p.getCurrentToken());
+                }
+                array.add(loadSingleItem(innerFinal, p, false).getRight("Invalid nested disallowed"));
+                seenComma = tryParse(() -> p.comma()) != null;
             }
-            array.add(loadSingleItem(innerFinal, p, false));
-            seenComma = tryParse(() -> p.comma()) != null;
-        }
-        return new ListExList(array);
+            return new ListExList(array);
+        });
     }
 
-    private static @Value Object @Value[] loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedInitialOpen) throws UserException, InternalException
+    private static Either<String, @Value Object @Value[]> loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
-        if (!consumedInitialOpen)
-        {
-            if (tryParse(() -> p.openRound()) == null)
-                throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
-        }
-        @Value Object @Value[] tuple = DataTypeUtility.value(new Object[inner.size()]);
-        for (int i = 0; i < tuple.length; i++)
-        {
-            tuple[i] = loadSingleItem(inner.get(i), p, false);
-            if (i < tuple.length - 1)
+        @Nullable Either<String, Object> openRound;
+        if (consumedRoundBrackets)
+            openRound = Either.right("");
+        else
+            openRound = tryParse(p, DataParser::openRoundOrInvalid, OpenRoundOrInvalidContext::invalidItem, OpenRoundOrInvalidContext::openRound);
+        if (openRound == null)
+            throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
+        return openRound.<@Value Object @Value []>mapEx(_o -> {
+            @Value Object @Value [] tuple = DataTypeUtility.value(new Object[inner.size()]);
+            for (int i = 0; i < tuple.length; i++)
             {
-                if (tryParse(() -> p.comma()) == null)
-                    throw new ParseException("comma", p);
+                tuple[i] = loadSingleItem(inner.get(i), p, false).getRight("Invalid nested invalid");
+                if (i < tuple.length - 1)
+                {
+                    if (tryParse(() -> p.comma()) == null)
+                        throw new ParseException("comma", p);
+                }
             }
-        }
-        if (tryParse(() -> p.closeRound()) == null)
-            throw new UserException("Expected tuple end but found: " + p.getCurrentToken());
-        return tuple;
+            if (!consumedRoundBrackets)
+            {
+                if (tryParse(() -> p.closeRound()) == null)
+                    throw new UserException("Expected tuple end but found: " + p.getCurrentToken());
+            }
+            return tuple;
+        });
     }
 
-    private static @Value Boolean loadBool(DataParser p) throws UserException
+    private static Either<String, @Value Boolean> loadBool(DataParser p) throws UserException
     {
-        BoolContext b = tryParse(() -> p.bool());
-        if (b == null)
+        Either<String, BoolContext> boolContext = tryParse(p, DataParser::boolOrInvalid, BoolOrInvalidContext::invalidItem, BoolOrInvalidContext::bool);
+        if (boolContext == null)
             throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
-        return DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true"));
+        return boolContext.<@Value Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
     }
 
-    private static @Value String loadString(DataParser p) throws UserException
+    private static Either<String, @Value String> loadString(DataParser p) throws UserException
     {
-        StringContext string = tryParse(() -> p.string());
-        if (string == null)
+        Either<String, StringContext> stringContext = tryParse(p, DataParser::stringOrInvalid, StringOrInvalidContext::invalidItem, StringOrInvalidContext::string);
+        if (stringContext == null)
             throw new ParseException("string", p);
-        return DataTypeUtility.value(string.STRING().getText());
+        return stringContext.<@Value String>map(string -> DataTypeUtility.value(string.STRING().getText()));
     }
 
-    private static @Value Number loadNumber(DataParser p) throws UserException
+    private static Either<String, @Value Number> loadNumber(DataParser p) throws UserException, InternalException
     {
-        NumberContext number = tryParse(() -> p.number());
-        if (number == null)
+        Either<String, NumberContext> numberContext = tryParse(p, DataParser::numberOrInvalid, NumberOrInvalidContext::invalidItem, NumberOrInvalidContext::number);
+        if (numberContext == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return DataTypeUtility.value(Utility.parseNumber(number.getText().trim()));
+        return numberContext.<@Value Number>mapEx(number -> DataTypeUtility.value(Utility.parseNumber(number.getText().trim())));
     }
 
-    private static TaggedValue loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
+    private static Either<String, TaggedValue> loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
     {
-        TagContext b = tryParse(() -> p.tag());
-        if (b == null)
+        Either<String, TagContext> tagContext = tryParse(p, DataParser::tagOrInvalid, TagOrInvalidContext::invalidItem, TagOrInvalidContext::tag);
+        if (tagContext == null)
             throw new ParseException("tagged value", p);
 
-        String constructor = b.STRING() != null ? b.STRING().getText() : b.UNQUOTED_IDENT().getText();
-        for (int i = 0; i < tags.size(); i++)
-        {
-            TagType<DataType> tag = tags.get(i);
-            if (tag.getName().equals(constructor))
+        return tagContext.mapEx(b -> {
+            String constructor = b.STRING() != null ? b.STRING().getText() : b.UNQUOTED_IDENT().getText();
+            for (int i = 0; i < tags.size(); i++)
             {
-                @Nullable DataType innerType = tag.getInner();
-                if (innerType != null)
+                TagType<DataType> tag = tags.get(i);
+                if (tag.getName().equals(constructor))
                 {
-                    if (tryParse(() -> p.openRound()) == null)
-                        throw new ParseException("Bracketed inner value for " + constructor, p);
-                    @Value Object innerValue = loadSingleItem(innerType, p, true);
-                    if (tryParse(() -> p.closeRound()) == null)
-                        throw new ParseException("Closing tagged value bracket for " + constructor, p);
-                    return new TaggedValue(i, innerValue);
-                }
+                    @Nullable DataType innerType = tag.getInner();
+                    if (innerType != null)
+                    {
+                        if (tryParse(() -> p.openRound()) == null)
+                            throw new ParseException("Bracketed inner value for " + constructor, p);
+                        @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
+                        if (tryParse(() -> p.closeRound()) == null)
+                            throw new ParseException("Closing tagged value bracket for " + constructor, p);
+                        return new TaggedValue(i, innerValue);
+                    }
 
-                return new TaggedValue(i, null);
+                    return new TaggedValue(i, null);
+                }
             }
-        }
-        throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
+            throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
+        });
     }
 
     @OnThread(Tag.Any)
-    public static @Value Object loadSingleItem(DataType type, final DataParser p, boolean consumedInitialOpen) throws InternalException, UserException
+    public static Either<String, @Value Object> loadSingleItem(DataType type, final DataParser p, boolean consumedRoundBrackets) throws InternalException, UserException
     {
-        return type.apply(new DataTypeVisitor<@Value Object>()
+        return type.apply(new DataTypeVisitor<Either<String, @Value Object>>()
         {
             @Override
-            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
+            public Either<String, @Value Object> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return loadNumber(p);
+                return loadNumber(p).<@Value Object>map(n -> n);
             }
 
             @Override
-            public @Value Object text() throws InternalException, UserException
+            public Either<String, @Value Object> text() throws InternalException, UserException
             {
-                return loadString(p);
+                return loadString(p).<@Value Object>map(s -> s);
             }
 
             @Override
-            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Either<String, @Value Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                ParserRuleContext ctx = DataType.<@Nullable ParserRuleContext>tryParse(() -> {
-                    switch (dateTimeInfo.getType())
-                    {
-                        case YEARMONTHDAY:
-                            return p.ymd();
-                        case YEARMONTH:
-                            return p.ym();
-                        case TIMEOFDAY:
-                            return p.localTime();
-                        //case TIMEOFDAYZONED:
-                            //return p.offsetTime();
-                        case DATETIME:
-                            return p.localDateTime();
-                        case DATETIMEZONED:
-                            return p.zonedDateTime();
-                    }
-                    return null;
-                });
-                if (ctx == null)
-                    throw new ParseException(dateTimeInfo.getType().toString(), p);
-                DateTimeFormatter formatter = dateTimeInfo.getStrictFormatter();
-                try
-                {
-                    return DataTypeUtility.value(dateTimeInfo, formatter.parse(ctx.getText().trim()));
-                }
-                catch (DateTimeParseException e)
-                {
-                    throw new UserException("Error loading date time \"" + ctx.getText() + "\", type " + dateTimeInfo.getType(), e);
-                }
+                return dateTimeInfo.parse(p).<@Value Object>map(t -> DataTypeUtility.value(dateTimeInfo, t));
             }
 
             @Override
-            public @Value Object bool() throws InternalException, UserException
+            public Either<String, @Value Object> bool() throws InternalException, UserException
             {
-                return loadBool(p);
+                return loadBool(p).<@Value Object>map(b -> b);
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Either<String, @Value Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return loadTaggedValue(tags, p);
+                return loadTaggedValue(tags, p).<@Value Object>map(t -> t);
             }
 
             @Override
-            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public Either<String, @Value Object> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return loadTuple(inner, p, false);
+                return loadTuple(inner, p, consumedRoundBrackets).<@Value Object>map(t -> t);
             }
 
             @Override
-            public @Value Object array(final @Nullable DataType inner) throws InternalException, UserException
+            public Either<String, @Value Object> array(final @Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot load column with value of type empty array");
 
-                return loadArray(inner, p);
+                return loadArray(inner, p).<@Value Object>map(l -> l);
             }
         });
     }
@@ -1817,37 +1820,44 @@ public class DataType implements StyledShowable
          * Hence this slightly odd double layer.
          * @return
          */
-        public TemporalAccessor parse(DataParser p) throws UserException, InternalException
+        public Either<String, TemporalAccessor> parse(DataParser p) throws UserException, InternalException
         {
-            ParserRuleContext c = tryParse(() -> {
-                switch (type)
-                {
-                    case YEARMONTHDAY:
-                        return p.ymd();
-                    case YEARMONTH:
-                        return p.ym();
-                    case TIMEOFDAY:
-                        return p.localTime();
-                    //case TIMEOFDAYZONED:
-                        //return p.offsetTime();
-                    case DATETIME:
-                        return p.localDateTime();
-                    case DATETIMEZONED:
-                        return p.zonedDateTime();
-                }
-                return null;
-            });
-            if (c == null)
+            Either<String, ParserRuleContext> parsed;
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                    parsed = tryParse(p, DataParser::ymdOrInvalid, YmdOrInvalidContext::invalidItem, YmdOrInvalidContext::ymd);
+                    break;
+                case YEARMONTH:
+                    parsed = tryParse(p, DataParser::ymOrInvalid, YmOrInvalidContext::invalidItem, YmOrInvalidContext::ym);
+                    break;
+                case TIMEOFDAY:
+                    parsed = tryParse(p, DataParser::localTimeOrInvalid, LocalTimeOrInvalidContext::invalidItem, LocalTimeOrInvalidContext::localTime);
+                    break;
+                //case TIMEOFDAYZONED:
+                    //return p.offsetTime();
+                case DATETIME:
+                    parsed = tryParse(p, DataParser::localDateTimeOrInvalid, LocalDateTimeOrInvalidContext::invalidItem, LocalDateTimeOrInvalidContext::localDateTime);
+                    break;
+                case DATETIMEZONED:
+                    parsed = tryParse(p, DataParser::zonedDateTimeOrInvalid, ZonedDateTimeOrInvalidContext::invalidItem, ZonedDateTimeOrInvalidContext::zonedDateTime);
+                    break;
+                default:
+                    throw new InternalException("Unrecognised format: " + type);
+            }
+            if (parsed == null)
                 throw new ParseException("Date value ", p);
-            DateTimeFormatter formatter = getStrictFormatter();
-            try
-            {
-                return fromParsed(formatter.parse(c.getText().trim()));
-            }
-            catch (DateTimeParseException e)
-            {
-                throw new UserException("Problem reading date/time of type " + getType() + " from {" + c.getText() + "}", e);
-            }
+            return parsed.mapEx(c -> {
+                DateTimeFormatter formatter = getStrictFormatter();
+                try
+                {
+                    return fromParsed(formatter.parse(c.getText().trim()));
+                }
+                catch (DateTimeParseException e)
+                {
+                    throw new UserException("Problem reading date/time of type " + getType() + " from {" + c.getText() + "}", e);
+                }
+            });
         }
 
         public static enum DateTimeType

@@ -22,6 +22,8 @@ PLUS : '+';
 MINUS : '-';
 COLON: ':';
 
+INVALID: '@INVALID';
+
 UNQUOTED_IDENT : ~[ \t\n\r"()@+\-/*&|=?:;~$!<>\\,[\]]+ {GrammarUtility.validUnquoted(getText())}?;
 
 

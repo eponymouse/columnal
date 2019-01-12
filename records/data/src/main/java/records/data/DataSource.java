@@ -26,6 +26,7 @@ import records.grammar.MainParser.DataSourceImmediateContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -72,8 +73,8 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                @Value Object defaultValue = Utility.<@Value Object, DataParser>parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
-                columns.add(t.makeImmediateColumn(columnId, defaultValue));
+                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(immed.tableId().getText()), table.display()), recordSet);

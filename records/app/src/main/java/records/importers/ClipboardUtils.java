@@ -25,6 +25,7 @@ import records.grammar.MainParser.IsolatedValuesContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -46,7 +47,7 @@ public class ClipboardUtils
 
     // Returns column-major, i.e. a list of columns
     @OnThread(Tag.FXPlatform)
-    public static Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> loadValuesFromClipboard(TypeManager typeManager)
+    public static Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>> loadValuesFromClipboard(TypeManager typeManager)
     {
         @Nullable Object content = Clipboard.getSystemClipboard().getContent(DATA_FORMAT);
 
@@ -56,7 +57,7 @@ public class ClipboardUtils
         {
             try
             {
-                return Optional.of(Utility.<ImmutableList<Pair<ColumnId,List<@Value Object>>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
+                return Optional.of(Utility.<ImmutableList<Pair<ColumnId,List<Either<String, @Value Object>>>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
             }
             catch (UserException e)
             {
@@ -70,12 +71,12 @@ public class ClipboardUtils
         }
     }
 
-    private static ImmutableList<Pair<ColumnId, List<@Value Object>>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
+    private static ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
     {
         IsolatedValuesContext ctx = main.isolatedValues();
         // TODO check that units, types match
         List<LoadedFormat> format = DataSource.loadFormat(typeManager, ctx.dataFormat(), false);
-        List<Pair<ColumnId, List<@Value Object>>> cols = new ArrayList<>();
+        List<Pair<ColumnId, List<Either<String, @Value Object>>>> cols = new ArrayList<>();
         for (int i = 0; i < format.size(); i++)
         {
             cols.add(new Pair<>(format.get(i).columnId, new ArrayList<>()));

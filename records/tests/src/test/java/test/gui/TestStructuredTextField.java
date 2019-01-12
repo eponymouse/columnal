@@ -281,7 +281,7 @@ public class TestStructuredTextField extends FXApplicationTest
                     tableManager.remove(id);
                 }
                 @SuppressWarnings({"keyfor", "value", "units"})
-                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), DataTypeUtility.makeDefaultValue(dataType))), () -> 1);
+                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<Either<String, @Value Object>>singletonList(Either.right(value)), DataTypeUtility.makeDefaultValue(dataType))), () -> 1);
                 ImmediateDataSource dataSource = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), rs);
                 tableManager.record(dataSource);
             }

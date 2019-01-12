@@ -14,6 +14,7 @@ import records.error.UserException;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExBiFunction;
 import utility.Utility;
 
@@ -68,6 +69,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type) throws InternalException
     {
-        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<@Value Object>makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
+        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> Either.right(makeValue(type))), makeValue(type)).apply(rs);
     }
 }

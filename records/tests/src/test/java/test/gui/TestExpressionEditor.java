@@ -43,7 +43,9 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.Optional;
@@ -132,12 +134,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
-            Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
+            Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
-            List<@Value Object> actual = clip.get().stream().filter((Pair<ColumnId, List<@Value Object>> p) -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
-            TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
+            List<Either<String, @Value Object>> actual = clip.get().stream().filter((Pair<ColumnId, List<Either<String, @Value Object>>> p) -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
+            TestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
 
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:

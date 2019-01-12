@@ -15,6 +15,7 @@ import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 31/10/2016.
@@ -46,9 +47,9 @@ public class MemoryArrayColumn extends EditableColumn
         return shrunk;
     }
 
-    public void add(ListEx listEx) throws InternalException
+    public void add(Either<String, ListEx> listEx) throws InternalException
     {
-        storage.add(listEx);
+        storage.addAll(Stream.of(listEx));
     }
 
 

@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.SimulationFunction;
 
@@ -41,10 +42,10 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
         try
         {
             final @Initialized int length = sourceOfRandomness.nextInt(5000);
-            List<@Value Object> values = new ArrayList<>();
+            List<Either<String, @Value Object>> values = new ArrayList<>();
             for (int i = 0; i < length; i++)
             {
-                values.add(makeValue(type));
+                values.add(Either.right(makeValue(type)));
             }
             final SimulationFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values, makeValue(type));
             @SuppressWarnings({"keyfor", "units"})

@@ -12,6 +12,7 @@ import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 31/10/2016.
@@ -29,9 +30,9 @@ public class MemoryStringColumn extends EditableColumn
         this.storage.addAll(values.stream());
     }
 
-    public void add(String value) throws InternalException
+    public void add(Either<String, String> value) throws InternalException
     {
-        storage.add(value);
+        storage.addAll(Stream.of(value));
     }
 
     @Override

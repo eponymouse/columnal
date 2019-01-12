@@ -18,6 +18,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.grammar.MainLexer;
@@ -55,6 +56,11 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     private synchronized ArrayList<String> cur()
     {
+        if (curLine != null && curLine.stream().mapToInt(String::length).sum() > 100000)
+        {
+            // WTF?
+            int x = 8;
+        }
         if (curLine == null)
             curLine = new ArrayList<>();
         return curLine;
@@ -245,87 +251,111 @@ public class OutputBuilder
     @OnThread(Tag.Simulation)
     public synchronized OutputBuilder data(DataTypeValue type, int index) throws UserException, InternalException
     {
-        cur().add(type.applyGet(new DataTypeVisitorGet<String>()
+        return data(type, index, false);
+    }
+    
+    @OnThread(Tag.Simulation)
+    private synchronized OutputBuilder data(DataTypeValue type, int index, boolean nested) throws UserException, InternalException
+    {
+        int curLength = cur().size();
+        try
         {
-            @Override
-            @OnThread(Tag.Simulation)
-            public String number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            type.applyGet(new DataTypeVisitorGet<UnitType>()
             {
-                @Value @NonNull Number number = g.get(index);
-                if (number instanceof BigDecimal)
-                    return ((BigDecimal)number).toPlainString();
-                else
-                    return number.toString();
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String text(GetValue<@Value String> g) throws InternalException, UserException
-            {
-                return quoted(g.get(index));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-            {
-                TagType<DataTypeValue> t = tagTypes.get(g.get(index));
-                @Nullable DataTypeValue inner = t.getInner();
-                if (inner == null)
-                    return t.getName();
-                else
-                    return t.getName() + "(" + inner.applyGet(this) + ")";
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String bool(GetValue<@Value Boolean> g) throws InternalException, UserException
-            {
-                return g.get(index).toString();
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
-            {
-                return dateTimeInfo.getStrictFormatter().format(g.get(index));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
-            {
-                OutputBuilder b = new OutputBuilder();
-                b.raw("(");
-                boolean first = true;
-                for (DataTypeValue dataTypeValue : types)
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                 {
-                    if (!first)
-                        b.raw(",");
-                    first = false;
-                    b.data(dataTypeValue, index);
+                    @Value @NonNull Number number = g.get(index);
+                    if (number instanceof BigDecimal)
+                        raw(((BigDecimal) number).toPlainString());
+                    else
+                        raw(number.toString());
+                    return UnitType.UNIT;
                 }
-                b.raw(")");
-                return b.toString();
-            }
 
-            @Override
-            @OnThread(Tag.Simulation)
-            public String array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
-            {
-                OutputBuilder b = new OutputBuilder();
-                b.raw("[");
-                @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
-                for (int i = 0; i < details.getFirst(); i++)
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType text(GetValue<@Value String> g) throws InternalException, UserException
                 {
-                    if (i > 0)
-                        b.raw(",");
-                    b.data(details.getSecond(), i);
+                    raw(quoted(g.get(index)));
+                    return UnitType.UNIT;
                 }
-                b.raw("]");
-                return b.toString();
-            }
-        }));
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                {
+                    TagType<DataTypeValue> t = tagTypes.get(g.get(index));
+                    @Nullable DataTypeValue inner = t.getInner();
+                    raw(t.getName());
+                    if (inner != null)
+                    {
+                        raw("(");
+                        data(inner, index, true);
+                        raw(")");
+                    }
+                    return UnitType.UNIT;
+                }
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                {
+                    raw(g.get(index).toString());
+                    return UnitType.UNIT;
+                }
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                {
+                    raw(dateTimeInfo.getStrictFormatter().format(g.get(index)));
+                    return UnitType.UNIT;
+                }
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+                {
+                    raw("(");
+                    boolean first = true;
+                    for (DataTypeValue dataTypeValue : types)
+                    {
+                        if (!first)
+                            raw(",");
+                        first = false;
+                        data(dataTypeValue, index, true);
+                    }
+                    raw(")");
+                    return UnitType.UNIT;
+                }
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public UnitType array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+                {
+                    raw("[");
+                    @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
+                    for (int i = 0; i < details.getFirst(); i++)
+                    {
+                        if (i > 0)
+                            raw(",");
+                        data(details.getSecond(), i, true);
+                    }
+                    raw("]");
+                    return UnitType.UNIT;
+                }
+            });
+        }
+        catch (InvalidImmediateValueException e)
+        {
+            if (nested)
+                throw e;
+            // Remove any added output:
+            cur().subList(curLength, cur().size()).clear();
+            raw("@INVALID \"" + GrammarUtility.escapeChars(e.getInvalid()) + "\"");
+        }
         return this;
     }
 

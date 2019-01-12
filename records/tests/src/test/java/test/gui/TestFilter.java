@@ -35,6 +35,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -100,10 +101,10 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
         assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Filter.class).findFirst().get().getFilterExpression());
                 
-        Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
-        List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());
-        TestUtil.assertValueListEqual("Filtered", expected, Utility.pairListToMap(clip.get()).get(srcColumn.getName()));
+        List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
+        TestUtil.assertValueListEitherEqual("Filtered", expected, Utility.pairListToMap(clip.get()).get(srcColumn.getName()));
     }
 }

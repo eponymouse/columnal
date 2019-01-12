@@ -162,8 +162,8 @@ public class TestFromDoc
                     for (int c = 0; c < columnNames.length; c++)
                     {
                         DataType dataType = typeManager.loadTypeUse(columnTypes[c]);
-                        List<@Value Object> loadedValues = Utility.<String, @Value Object>mapListEx(columnValues.get(c), unparsed -> {
-                            return Utility.<@Value Object, DataParser>parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
+                        List<Either<String, @Value Object>> loadedValues = Utility.<String, Either<String, @Value Object>>mapListEx(columnValues.get(c), unparsed -> {
+                            return Utility.<Either<String, @Value Object>, DataParser>parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
                         });
                         if (length == -1)
@@ -173,7 +173,7 @@ public class TestFromDoc
                             
                         columns.add(dataType.makeImmediateColumn(new ColumnId(columnNames[c]),
                             loadedValues,
-                            loadedValues.get(0)    
+                            loadedValues.get(0).getRight("No error")    
                         ));
                     }
                     

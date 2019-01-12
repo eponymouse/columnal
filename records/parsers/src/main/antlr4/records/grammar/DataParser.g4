@@ -25,6 +25,21 @@ comma: WS? COMMA WS?;
 //bracketedItem : (OPEN_ROUND WS? unbracketedItem WS? CLOSE_ROUND) | tuple;
 //item : dateOrTime | number | bool | string | tagged | array | tuple;
 
+invalidItem : WS? INVALID WS? STRING;
+
+// Invalid is only expected at the outermost level of a data item, not nested:
+numberOrInvalid : number | invalidItem;
+stringOrInvalid : string | invalidItem;
+boolOrInvalid : bool | invalidItem;
+ymdOrInvalid : ymd | invalidItem;
+ymOrInvalid : ym | invalidItem;
+localDateTimeOrInvalid : localDateTime | invalidItem;
+localTimeOrInvalid : localTime | invalidItem;
+zonedDateTimeOrInvalid : zonedDateTime | invalidItem;
+tagOrInvalid : tag | invalidItem;
+openRoundOrInvalid : openRound | invalidItem;
+openSquareOrInvalid : openSquare | invalidItem;
+
 //blank : WS NEWLINE;
 //row : WS? item (WS item)* WS? NEWLINE;
 endRow : WS? NEWLINE;
