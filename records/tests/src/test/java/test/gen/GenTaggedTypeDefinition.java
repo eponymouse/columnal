@@ -41,8 +41,8 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVars;
             if (r.nextInt(3) == 1)
             {
-                // Must use distinct to make sure no duplicates:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, "" + r.nextChar('a', 'z'))).stream().distinct().collect(ImmutableList.toImmutableList());
+                // Must use distinct to make sure no duplicate names:
+                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(name -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, name)).collect(ImmutableList.toImmutableList());
             }
             else
             {
