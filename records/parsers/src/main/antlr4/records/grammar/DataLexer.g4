@@ -24,7 +24,7 @@ COLON: ':';
 
 INVALID: '@INVALID';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+\-/*&|=?:;~$!<>\\,[\]]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+\-/*&|=?:;~$!<>\\,[\]0-9] ~[ \t\n\r"()@+\-/*&|=?:;~$!<>\\,[\]]* {GrammarUtility.validUnquoted(getText())}?;
 
 
 

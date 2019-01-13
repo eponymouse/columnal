@@ -73,7 +73,7 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
                 columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
