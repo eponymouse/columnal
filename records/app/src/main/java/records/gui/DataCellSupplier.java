@@ -198,4 +198,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             currentVersion = new WeakReference<>(columns);
         }
     }
+    
+    public static void startPreload()
+    {
+        // All done in static initialiser, nothing else to do here.
+    }
 }

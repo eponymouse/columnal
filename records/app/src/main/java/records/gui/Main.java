@@ -41,6 +41,8 @@ public class Main extends Application
         FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
         Log.normal("Loaded fonts");
+        
+        DataCellSupplier.startPreload();
 
         ImporterManager.getInstance().registerImporter(new TextImporter());
         // TODO move this to a plugin:
