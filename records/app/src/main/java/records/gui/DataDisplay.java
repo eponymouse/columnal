@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -82,6 +83,7 @@ import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -351,11 +353,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             {
                 this.latestVisibleCells = cells;
                 
-                ImmutableListMultimap<Integer, VersionedSTF> cellsByColumn = cells.stream().collect(
-                        ImmutableListMultimap.<Pair<GridAreaCellPosition, VersionedSTF>, Integer, VersionedSTF>flatteningToImmutableListMultimap(c -> c.getFirst().columnIndex, c -> Stream.of(c.getSecond()))
-                );
+                HashMap<@GridAreaColIndex Integer, ArrayList<VersionedSTF>> cellsByColumn = new HashMap<>();
                 
-                cellsByColumn.asMap().forEach((columnIndexWithinTable, cellsInColumn) -> {
+                for (Pair<GridAreaCellPosition, VersionedSTF> cellInfo : cells)
+                {
+                    cellsByColumn.computeIfAbsent(cellInfo.getFirst().columnIndex, _v -> new ArrayList<>()).add(cellInfo.getSecond());
+                }
+                
+                cellsByColumn.forEach((columnIndexWithinTable, cellsInColumn) -> {
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
                         displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
