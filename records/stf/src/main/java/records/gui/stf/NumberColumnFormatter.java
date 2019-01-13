@@ -24,6 +24,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 /**
@@ -34,6 +35,8 @@ import java.util.function.UnaryOperator;
 class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value Number>.VisibleDetails>
 {
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
+
+    private ArrayList<NumberDetails> recentDetails = new ArrayList<>();
 
     @Override
     public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
@@ -54,6 +57,11 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                 }
             }
         }
+        
+        if (visibleItems.equals(recentDetails))
+            return;
+        
+        recentDetails = visibleItems;
         
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
         int maxLeftLength = visibleItems.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
@@ -165,6 +173,23 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                     new StyledText<>(displayFracPart, Arrays.asList("number-display-frac"))
             ));
             */
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NumberDetails that = (NumberDetails) o;
+            return textField.equals(that.textField) &&
+                    fullFracPart.equals(that.fullFracPart) &&
+                    fullIntegerPart.equals(that.fullIntegerPart);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(textField, fullFracPart, fullIntegerPart);
         }
     }
     
