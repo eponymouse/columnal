@@ -122,7 +122,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
 
             @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell, FXPlatformRunnable scheduleStyleTogether)
             {
                 @Nullable Button item = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
                 if (item == null)

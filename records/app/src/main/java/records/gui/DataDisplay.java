@@ -284,8 +284,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     {
         return new GridCellInfo<VersionedSTF, CellStyle>()
         {
-            private @Nullable Collection<Pair<GridAreaCellPosition, VersionedSTF>> latestVisibleCells;
-
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
@@ -303,7 +301,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             }
 
             @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable VersionedSTF> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable VersionedSTF> getCell, FXPlatformRunnable scheduleStyleTogether)
             {
                 // Blank then queue fetch:
                 VersionedSTF orig = getCell.apply(cellPosition.from(getPosition()));
@@ -325,8 +323,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                             if (cell != null)// && cell == orig)
                             {
                                 cell.setContent(editorKit, displayColumns);
-                                if (latestVisibleCells != null)
-                                    styleTogether(latestVisibleCells);
+                                scheduleStyleTogether.run();
                             }
                         }
                     );
@@ -351,8 +348,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             @Override
             public void styleTogether(Collection<Pair<GridAreaCellPosition, VersionedSTF>> cells)
             {
-                this.latestVisibleCells = cells;
-                
                 HashMap<@GridAreaColIndex Integer, ArrayList<VersionedSTF>> cellsByColumn = new HashMap<>();
                 
                 for (Pair<GridAreaCellPosition, VersionedSTF> cellInfo : cells)

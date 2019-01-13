@@ -431,7 +431,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Label> getCell)
+        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Label> getCell, FXPlatformRunnable scheduleStyleTogether)
         {
             fetches.add(cellPosition);
             Label label = getCell.apply(cellPosition.from(getPosition()));

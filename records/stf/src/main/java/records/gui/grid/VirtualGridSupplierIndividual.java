@@ -9,6 +9,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -16,6 +17,7 @@ import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -52,6 +54,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     private final List<T> spareItems = new ArrayList<>();
     private final Collection<S> possibleStyles;
     private final ViewOrder viewOrder;
+    private @Nullable FXPlatformRunnable cancelStyleAll;
 
     private class ItemDetails<T>
     {
@@ -150,7 +153,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                     gridForItem.getSecond().fetchFor(cell.gridAreaCellPosition, pos -> {
                         ItemDetails<T> item = visibleItems.get(pos);
                         return item == null ? null : item.node;
-                    });
+                    }, this::scheduleStyleAllTogether);
                 }
                 else
                 {
@@ -163,7 +166,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                         gridForItem.getSecond().fetchFor(gridForItemResult.get().getSecond(), pos -> {
                             ItemDetails<T> item = visibleItems.get(pos);
                             return item == null ? null : item.node;
-                        });
+                        }, this::scheduleStyleAllTogether);
                     }
                 }
                 cell.node.setVisible(true);
@@ -182,10 +185,20 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         {
             hideItem(spareCell);
         }
-        
-        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, Pair<GridAreaCellPosition, T>>flatteningToImmutableListMultimap(d -> d.originator.getSecond(), d -> Stream.of(new Pair<>(d.gridAreaCellPosition, d.node)))).asMap());
-        
+
+        scheduleStyleAllTogether();
+
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
+    }
+
+    private void scheduleStyleAllTogether()
+    {
+        if (cancelStyleAll != null)
+            cancelStyleAll.run();
+        cancelStyleAll = FXUtility.runAfterDelay(Duration.millis(500), () -> {
+            styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, Pair<GridAreaCellPosition, T>>flatteningToImmutableListMultimap(d -> d.originator.getSecond(), d -> Stream.of(new Pair<>(d.gridAreaCellPosition, d.node)))).asMap());
+            cancelStyleAll = null;
+        });
     }
 
     protected void styleTogether(ImmutableMap<GRID_AREA_INFO, Collection<Pair<GridAreaCellPosition, T>>> visibleNodes)
@@ -251,7 +264,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         // Takes a position,then sets the content of that cell to match whatever should
         // be shown at that position.  The callback lets you fetch the right cell now or in the
         // future (it may change after this call, if you are thread-hopping you should check again).
-        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable T> getCell);
+        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable T> getCell, FXPlatformRunnable scheduleStyleTogether);
         
         // What styles should currently be applied to all cells?  All style items not
         // in this set (but in the range for S) will be removed.
