@@ -19,4 +19,10 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
             }
         }, (t, v) -> {}, () -> {});
     }
+
+    @Override
+    public boolean isEditable()
+    {
+        return false;
+    }
 }

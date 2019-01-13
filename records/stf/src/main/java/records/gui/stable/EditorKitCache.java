@@ -21,6 +21,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.EditorKit;
@@ -261,7 +262,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         private final @TableDataRowIndex int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError;
+        private @MonotonicNonNull Either<EditorKit<@Value V>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
@@ -278,10 +279,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
         }
 
-        public synchronized void update(String content, @Value V loadedItem)
+        public synchronized void update(String content, @Nullable @Value V loadedItem)
         {
             FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
-                this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
+                this.loadedItemOrError = Either.<EditorKit<@Value V>, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
             });
             updateDisplay();
             //formatVisible(OptionalInt.of(rowIndex));
@@ -292,7 +293,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         {
             if (loadedItemOrError != null)
             {
-                EditorKit<@Value V> editorKit = loadedItemOrError.<EditorKit<@Value V>>either(p -> p.getSecond(), err -> new EditorKitSimpleLabel<>(err));
+                EditorKit<@Value V> editorKit = loadedItemOrError.<EditorKit<@Value V>>either(k -> k, err -> new EditorKitSimpleLabel<>(err));
                 this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, editorKit);
             }
             else
@@ -348,6 +349,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 @Value V val = getValue.getWithProgress(originalIndex, prog);
                 String valAsStr = DataTypeUtility.valueToString(dataType, val, null);
                 Platform.runLater(() -> displayCacheItem.update(valAsStr, val));
+            }
+            catch (InvalidImmediateValueException e)
+            {
+                Platform.runLater(() -> displayCacheItem.update(e.getInvalid(), null));
             }
             catch (UserException | InternalException e)
             {
