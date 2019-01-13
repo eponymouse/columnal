@@ -21,7 +21,7 @@ public class ParseException extends UserException
     @SuppressWarnings("deprecation")
     public ParseException(String expectedItem, Parser p)
     {
-        super("Expected " + expectedItem + " found: {" + p.getCurrentToken().getText() + "} " + (p.getCurrentToken().getType() >= 0 ? p.getTokenNames()[p.getCurrentToken().getType()] : "UNKNOWN") + " " + p.getCurrentToken().getStartIndex());
+        super("Expected " + expectedItem + " found: {" + p.getCurrentToken().getText() + "} at " + p.getCurrentToken().getLine() + ":" + p.getCurrentToken().getCharPositionInLine() + " " +  (p.getCurrentToken().getType() >= 0 ? p.getTokenNames()[p.getCurrentToken().getType()] : "UNKNOWN") + " " + p.getCurrentToken().getStartIndex());
     }
 
     @SuppressWarnings("deprecation")
