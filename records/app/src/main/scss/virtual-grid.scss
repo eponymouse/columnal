@@ -86,6 +86,16 @@
     &:table-drag-source {
         -fx-effect: blur;
     }
+    
+    &:has-error {
+        -fx-background-color: $table-divider, hsb(0, 60%, 80%), $table-cell;
+        -fx-background-insets: 0, 0 1 1 0, 1 2 2 1;    
+    }
+}
+
+.table-data-cell .input-error {
+    -rtfx-underline-color: hsb(0, 80%, 40%);
+    -rtfx-underline-width: 2;
 }
 
 .expand-arrow {

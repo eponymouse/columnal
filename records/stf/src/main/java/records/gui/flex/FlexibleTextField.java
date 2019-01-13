@@ -142,4 +142,9 @@ public class FlexibleTextField extends StyleClassedTextArea
         return overall;
         
     }
+
+    public void setHasError(boolean hasError)
+    {
+        FXUtility.setPseudoclass(this, "has-error", hasError);
+    }
 }

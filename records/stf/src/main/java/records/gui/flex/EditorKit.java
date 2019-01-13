@@ -81,6 +81,8 @@ public class EditorKit<T>
             flexibleTextField.replace(flexibleTextField.isFocused() ? focusedDocument : unfocusedDocument.getFirst());
             flexibleTextField.textProperty().addListener(changeListener);
             flexibleTextField.setEditable(isEditable());
+            // Need to update any error styling, etc:
+            setLatestValue(flexibleTextField.getText(), false);
         }
     }
 
@@ -124,11 +126,19 @@ public class EditorKit<T>
         
         latestValue = recogniser.process(ParseProgress.fromStart(text), false).flatMap(SuccessDetails::requireEnd).mapBoth(err -> {
             //Log.debug("### Entry error: " + err.error.toPlain() + " in: " + text);
-            if (field != null)
-                field.getContent().setStyleSpans(err.errorPosition, field.getContent().getStyleSpans(err.errorPosition, err.errorPosition + 1).mapStyles(addToSet(ERROR_CLASS)));
+            FlexibleTextField theField = this.field;
+            if (theField != null)
+            {
+                theField.getContent().setStyleSpans(err.errorPosition, theField.getContent().getStyleSpans(err.errorPosition, err.errorPosition + 1).mapStyles(addToSet(ERROR_CLASS)));
+                theField.setHasError(true);
+            }
             return err.error;
         }, succ -> {
-            // TODO apply styles
+            if (field != null)
+            {
+                // TODO apply styles
+                field.setHasError(false);
+            }
             return succ.value;
         });
         if (callListener)
