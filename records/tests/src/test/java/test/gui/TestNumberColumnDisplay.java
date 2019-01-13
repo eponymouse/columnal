@@ -202,6 +202,8 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 if (cellBefore != null)
                 {
                     clickOn(cellBefore);
+                    // Wait for batched re-layout:
+                    TestUtil.sleep(1000);
                     assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : cell.getText()));
                 }
             }

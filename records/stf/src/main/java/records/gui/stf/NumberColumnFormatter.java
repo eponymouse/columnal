@@ -58,9 +58,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             }
         }
         
-        if (visibleItems.equals(recentDetails))
-            return;
-        
         recentDetails = visibleItems;
         
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place

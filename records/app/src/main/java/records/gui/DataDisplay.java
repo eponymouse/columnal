@@ -322,6 +322,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
                             {
+                                editorKit.setOnFocusLost(scheduleStyleTogether);
                                 cell.setContent(editorKit, displayColumns);
                                 scheduleStyleTogether.run();
                             }

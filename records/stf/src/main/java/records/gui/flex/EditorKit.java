@@ -39,6 +39,7 @@ public class EditorKit<T>
     private @Nullable FlexibleTextField field;
     private boolean settingDocument = false;
     private ChangeListener<String> changeListener = new TextChangeListener();
+    private @Nullable FXPlatformRunnable onFocusLost;
 
     private void onUnfocusedChange()
     {
@@ -102,6 +103,8 @@ public class EditorKit<T>
             // special content will be set later on
             unfocusedDocument = new Pair<>(focusedDocument, UnaryOperator.identity());
             setLatestValue(text, true);
+            if (onFocusLost != null)
+                onFocusLost.run();
         }
         else
         {
@@ -158,6 +161,11 @@ public class EditorKit<T>
             field.replace(doc);
             settingDocument = false;
         }
+    }
+
+    public void setOnFocusLost(FXPlatformRunnable onFocusLost)
+    {
+        this.onFocusLost = onFocusLost;
     }
 
     private class TextChangeListener implements ChangeListener<String>
