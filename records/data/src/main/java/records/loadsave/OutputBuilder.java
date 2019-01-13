@@ -56,11 +56,6 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     private synchronized ArrayList<String> cur()
     {
-        if (curLine != null && curLine.stream().mapToInt(String::length).sum() > 100000)
-        {
-            // WTF?
-            int x = 8;
-        }
         if (curLine == null)
             curLine = new ArrayList<>();
         return curLine;
