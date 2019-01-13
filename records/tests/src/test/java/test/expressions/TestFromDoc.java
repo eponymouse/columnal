@@ -73,7 +73,7 @@ public class TestFromDoc
         @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
     {
         TypeManager typeManager = typeAndValueGen.getTypeManager();
-        for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
+        for (File file : FileUtils.listFiles(new File("../app/target/classes"), new String[]{"test"}, false))
         {
             //Log.debug("Processing: " + file.getName());
             // Tables are scoped by file:
