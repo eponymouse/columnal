@@ -134,4 +134,12 @@ public class Log
         long millis = System.currentTimeMillis() % 100000L;
         logger.log(Level.DEBUG, String.format("#%03d.%03d: ", millis / 1000L, millis % 1000L) + s);
     }
+
+    public static void debugDuration(String prefix, Runnable runnable)
+    {
+        long start = System.currentTimeMillis();
+        runnable.run();
+        long end = System.currentTimeMillis();
+        debug(prefix + " took " + (end - start) + " milliseconds");
+    }
 }
