@@ -7,13 +7,13 @@ bool : (TRUE | FALSE) WS?;
 string : STRING WS?; // Includes text and dates
 ymd: POSITIVE_INTEGER MINUS POSITIVE_INTEGER MINUS POSITIVE_INTEGER WS?;
 ym: POSITIVE_INTEGER MINUS POSITIVE_INTEGER WS?;
-localDateTime: ymd WS localTime WS?;
+localDateTime: ymd localTime;
 localTime: POSITIVE_INTEGER COLON POSITIVE_INTEGER COLON POSITIVE_INTEGER (DOT POSITIVE_INTEGER)? WS?;
 // UNQUOTED_IDENT because it can be Z:
 offset: (UNQUOTED_IDENT { getCurrentToken().getText().equals("Z"); } | ((PLUS | MINUS) POSITIVE_INTEGER COLON POSITIVE_INTEGER));
 offsetTime: localTime offset;
 zone : UNQUOTED_IDENT ((SLASH | MINUS) UNQUOTED_IDENT ((PLUS | MINUS) POSITIVE_INTEGER)?)*;
-zonedDateTime: localDateTime WS? (offset | zone) WS?;
+zonedDateTime: localDateTime (offset | zone) WS?;
 tag : (UNQUOTED_IDENT | STRING) WS?;
 openRound : OPEN_ROUND WS?;
 closeRound : CLOSE_ROUND WS?;
@@ -44,5 +44,6 @@ openSquareOrInvalid : openSquare | invalidItem;
 //row : WS? item (WS item)* WS? NEWLINE;
 endRow : NEWLINE;
 startRow : WS?;
+whitespace: WS?;
 
 //data : (blank | row)*;
