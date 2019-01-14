@@ -166,17 +166,20 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
         Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
         targetWindow(srcGridNode);
-        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-            visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
-            visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0))));
+        Point2D startDrag = TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+                visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
+                visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0)));
+        moveTo(startDrag);
         drag(MouseButton.PRIMARY);
+        TestUtil.sleep(500);
         CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + trimChoice.trimFromTop, trimChoice.trimFromLeft);
-        dropTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-            visibleBounds.getXCoord(newTopLeft.columnIndex),
-            visibleBounds.getYCoord(newTopLeft.rowIndex)))));
+        Point2D endDrag = TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+                visibleBounds.getXCoord(newTopLeft.columnIndex),
+                visibleBounds.getYCoord(newTopLeft.rowIndex))));
+        dropTo(endDrag);
         TestUtil.sleep(1000);
         checkTrim(importChoicesDialog);
-        assertEquals(trimChoice, TestUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
+        assertEquals("Dragged from " + startDrag + " to " + endDrag, trimChoice, TestUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
     }
 
     @OnThread(Tag.Simulation)
