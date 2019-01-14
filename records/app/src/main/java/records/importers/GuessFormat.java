@@ -502,7 +502,7 @@ public class GuessFormat
         ArrayList<EnumSet<AlphabetItem>> columnAlphabets = new ArrayList<>();
         
         int trimFromTop = 0;
-        for (int row = values.size() < 30 ? (values.size() / 2) : 15; row >= 0; row--)
+        for (int row = values.size() < 16 ? (values.size() / 2) : 8; row >= 0; row--)
         {
             List<String> rowVals = values.get(row);
             if (columnAlphabets.isEmpty())

@@ -71,12 +71,11 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-@Ignore // Flaky at the moment, esp on Windows ?
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@When(seed=-7933145534890491151L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
@@ -114,7 +113,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     
     @Property(trials=4)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@When(seed=8144913248658418151L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
