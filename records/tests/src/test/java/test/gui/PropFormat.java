@@ -19,15 +19,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
+import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.RecordSet;
+import records.data.columntype.CleanDateColumnType;
+import records.data.columntype.NumericColumnType;
+import records.data.columntype.OrBlankColumnType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataTypeUtility;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
+import records.importers.ColumnInfo;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.Import;
@@ -42,18 +52,22 @@ import records.importers.gui.ImporterGUI.PickOrOther;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenFormattedData;
+import test.gen.GenFormattedData.FormatAndData;
 import test.gui.trait.ComboUtilTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationConsumer;
+import utility.TaggedValue;
 import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +79,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static records.data.datatype.DataType.DateTimeInfo.F.*;
 
 /**
  * Created by neil on 29/10/2016.
@@ -73,7 +88,7 @@ import static org.junit.Assert.assertNotNull;
 @OnThread(Tag.Simulation)
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
-    @Property(trials = 25)
+    @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
@@ -248,7 +263,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
             {
                 @Value Object expected = formatAndData.loadedContent.get(i).get(c);
                 @Value Object loaded = rs.getColumns().get(c).getType().getCollapsed(i);
-                assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.textContent.get(i + 1), 0, Utility.compareValues(expected, loaded));
+                assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.textContent.get(i + formatAndData.format.trimChoice.trimFromTop), 0, Utility.compareValues(expected, loaded));
             }
         }
     }
@@ -268,4 +283,35 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         */
     }
 
+    @Test
+    public void testAwkwardDate() throws Exception
+    {
+        ImmutableList<String> textRows = ImmutableList.of("19/10/54", "30/12/34");
+        ImmutableList<List<@Value Object>> target = ImmutableList.of(
+            ImmutableList.of(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1954, 10, 19))),
+            ImmutableList.of(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 12, 30)))
+        );
+        testGuessFormatGUI(new FormatAndData(
+            new FinalTextFormat(new InitialTextFormat(StandardCharsets.UTF_8, ",", null), new TrimChoice(0, 0, 0, 0), ImmutableList.of(new ColumnInfo(new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, DateTimeInfo.m(" ", DAY, MONTH_NUM, YEAR2), LocalDate::from), new ColumnId("A")))),
+                textRows, "<html><body><table><tr><td>" + textRows.stream().collect(Collectors.joining("</td></tr><tr><td>")) + "</table>", target)
+        );
+    }
+
+    @Test
+    public void testNumOrMissing() throws Exception
+    {
+        ImmutableList<String> textRows = ImmutableList.of("1", "3", "NA", "-8910.444", "NA");
+        ImmutableList<List<@Value Object>> target = Utility.mapListI(ImmutableList.of(
+            new TaggedValue(1, DataTypeUtility.value(1)),
+            new TaggedValue(1, DataTypeUtility.value(3)),
+            new TaggedValue(0, null),
+            new TaggedValue(1, DataTypeUtility.value(new BigDecimal ("-8910.444"))),
+            new TaggedValue(0, null)
+                ), ImmutableList::of);
+        
+        testGuessFormatGUI(new FormatAndData(
+                new FinalTextFormat(new InitialTextFormat(StandardCharsets.UTF_8, ",", null), new TrimChoice(0, 0, 0, 0), ImmutableList.of(new ColumnInfo(new OrBlankColumnType(new NumericColumnType(Unit.SCALAR, 0, null, null), "NA"), new ColumnId("A")))),
+                textRows, "<html><body><table><tr><td>" + textRows.stream().collect(Collectors.joining("</td></tr><tr><td>")) + "</table>", target)
+        );
+    }
 }
