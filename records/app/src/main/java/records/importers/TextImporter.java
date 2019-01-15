@@ -193,12 +193,12 @@ public class TextImporter implements Importer
                         return TextFileColumn.<DataType>taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.<Unit, DataType>right(numberType)), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
-                                return Either.<String, TaggedValue>right(new TaggedValue(1, null));
+                                return Either.<String, TaggedValue>right(new TaggedValue(0, null));
                             }
                             else
                             {
                                 return Utility.parseNumberOpt(str).map(n -> {
-                                    return Either.<String, TaggedValue>right(new TaggedValue(0, DataTypeUtility.value(n)));
+                                    return Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n)));
                                 }).orElse(Either.<String, TaggedValue>left(str));
                             }
                         });
@@ -216,7 +216,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType::parse);
                 });
             }
             else

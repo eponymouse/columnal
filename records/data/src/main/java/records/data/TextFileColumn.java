@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
@@ -19,6 +20,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiConsumer;
 import utility.ExFunction;
+import utility.FunctionInt;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
@@ -31,6 +33,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -86,20 +89,11 @@ public final class TextFileColumn extends Column
         return type;
     }
 
-    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
+    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, FunctionInt<String, Either<String, TemporalAccessor>> parse) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns, 
             (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
-            (storage, values) -> storage.addAll(Utility.<String, Either<String, TemporalAccessor>>mapListInt(values, s -> {
-                try
-                {
-                    return Either.right(dateTimeInfo.fromParsed(dateTimeFormatter.parse(s, query)));
-                }
-                catch (RuntimeException e)
-                {
-                    return Either.left(s);
-                }
-            }).stream())
+            (storage, values) -> storage.addAll(Utility.<String, Either<String, TemporalAccessor>>mapListInt(values, parse).stream())
         );
 
     }

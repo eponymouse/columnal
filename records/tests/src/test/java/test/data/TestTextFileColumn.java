@@ -72,10 +72,10 @@ public class TestTextFileColumn
                 @Override
                 public TextFileColumn date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    return TextFileColumn.dateColumn(rs, readState, f.getSeparator(), f.getQuote(), columnName, index, f.getColumnCount(), dateTimeInfo, dateTimeInfo.getStrictFormatter(), t -> {
+                    return TextFileColumn.dateColumn(rs, readState, f.getSeparator(), f.getQuote(), columnName, index, f.getColumnCount(), dateTimeInfo, (String s) -> {
                         try
                         {
-                            return dateTimeInfo.fromParsed(t);
+                            return Either.right(dateTimeInfo.fromParsed(dateTimeInfo.getStrictFormatter().parse(s)));
                         }
                         catch (InternalException e)
                         {
