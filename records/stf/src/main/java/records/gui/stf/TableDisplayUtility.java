@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -355,20 +356,22 @@ public class TableDisplayUtility
     public static class GetValueAndComponent<@Value T>
     {
         private final DataType dataType;
+        private final Class<@UnknownIfValue T> itemClass;
         public final GetValue<@Value T> g;
         public final Recogniser<@Value T> recogniser;
         private final @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter;
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(DataType dataType, GetValue<@Value T> g, Recogniser<@Value T> recogniser)
+        public GetValueAndComponent(DataType dataType, Class<@UnknownIfValue T> itemClass, GetValue<@Value T> g, Recogniser<@Value T> recogniser)
         {
-            this(dataType, g, recogniser, null);
+            this(dataType, itemClass, g, recogniser, null);
         }
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(DataType dataType, GetValue<@Value T> g, Recogniser<@Value T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
+        public GetValueAndComponent(DataType dataType, Class<@UnknownIfValue T> itemClass, GetValue<@Value T> g, Recogniser<@Value T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
         {
             this.dataType = dataType;
+            this.itemClass = itemClass;
             this.g = g;
             this.recogniser = recogniser;
             this.formatter = formatter;
@@ -390,7 +393,7 @@ public class TableDisplayUtility
                     }
                 };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(value.getFirst(), recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(value.getFirst(), (Class<@Value T>)itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
@@ -461,25 +464,25 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(dataTypeValue, g, new NumberRecogniser(), new NumberColumnFormatter());
+                return new GetValueAndComponent<@Value Number>(dataTypeValue, Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value String>(dataTypeValue, g, new StringRecogniser());
+                return new GetValueAndComponent<@Value String>(dataTypeValue, String.class, g, new StringRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value Boolean>(dataTypeValue, g, new BooleanRecogniser());
+                return new GetValueAndComponent<@Value Boolean>(dataTypeValue, Boolean.class, g, new BooleanRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue, g, new TemporalRecogniser(dateTimeInfo.getType()));
+                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue, TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
                 
                 //switch (dateTimeInfo.getType())
                 //{
@@ -511,7 +514,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue, getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue, TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser)))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -554,7 +557,7 @@ public class TableDisplayUtility
                 };
 
 
-                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
+                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
             }
 
             @Override
@@ -566,7 +569,7 @@ public class TableDisplayUtility
 
                 @NonNull DataType innerType = inner;
                 
-                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner)));
+                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, ListEx.class, DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner).recogniser));
                     /*
                 (parents, value) ->
                 {
@@ -665,51 +668,68 @@ public class TableDisplayUtility
     }
     */
     
-    
-    public static Recogniser<@NonNull @Value ?> recogniser(DataType dataType) throws InternalException
-    {   
-        return dataType.apply(new DataTypeVisitorEx<Recogniser<@NonNull @Value ?>, InternalException>()
+    public static class RecogniserAndType<T>
+    {
+        public final Recogniser<T> recogniser;
+        public final Class<T> itemClass;
+
+        RecogniserAndType(Recogniser<T> recogniser, Class<T> itemClass)
         {
-            @Override
-            public Recogniser<@NonNull @Value ?> number(NumberInfo numberInfo) throws InternalException
+            this.recogniser = recogniser;
+            this.itemClass = itemClass;
+        }
+    }
+    
+    
+    public static RecogniserAndType<@NonNull @Value ?> recogniser(DataType dataType) throws InternalException
+    {   
+        return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<@NonNull @Value ?>, InternalException>()
+        {
+            private <T> RecogniserAndType<@NonNull @Value T> r(Recogniser<@NonNull @Value T> recogniser, Class<@UnknownIfValue T> itemClass)
             {
-                return new NumberRecogniser();
+                return new RecogniserAndType<@NonNull @Value T>(recogniser, (Class<@NonNull @Value T>)itemClass);
+            }
+            
+            @Override
+            public RecogniserAndType<@NonNull @Value ?> number(NumberInfo numberInfo) throws InternalException
+            {
+                return r(new NumberRecogniser(), Number.class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> text() throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> text() throws InternalException
             {
-                return new StringRecogniser();
+                return r(new StringRecogniser(), String.class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return new TemporalRecogniser(dateTimeInfo.getType());
+                return r(new TemporalRecogniser(dateTimeInfo.getType()), TemporalAccessor.class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> bool() throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> bool() throws InternalException
             {
-                return new BooleanRecogniser();
+                return r(new BooleanRecogniser(), Boolean.class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tags, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))));
+                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tags, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser))), TaggedValue.class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
             {
-                return new TupleRecogniser(Utility.<DataType, Recogniser<@Value ?>>mapListInt(inner, t -> recogniser(t)));
+                return r(new TupleRecogniser(Utility.<DataType, Recogniser<@Value ?>>mapListInt(inner, t -> recogniser(t).recogniser)), (Class<@Value Object[]>)Object[].class);
             }
 
             @Override
-            public Recogniser<@NonNull @Value ?> array(DataType inner) throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> array(DataType inner) throws InternalException
             {
-                return new ListRecogniser(recogniser(inner));
+                return r(new ListRecogniser(recogniser(inner).recogniser), ListEx.class);
             }
         });
     }

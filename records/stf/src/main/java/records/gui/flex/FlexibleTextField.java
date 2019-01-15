@@ -21,10 +21,17 @@ import utility.gui.FXUtility;
 
 import java.util.Collection;
 
+/**
+ * A text field which can change its behaviour based on a dynamically-switchable
+ * EditorKitInterface object.  Because these fields can be expensive to create,
+ * we re-use them, and swap over the editor kit.  This also means the field is
+ * not bound to a specific contained data type, as it is the EditorKitInterface
+ * object (usually an EditorKit&lt;T&gt; object) which knows which type is held.
+ */
 @OnThread(Tag.FXPlatform)
 public class FlexibleTextField extends StyleClassedTextArea
 {
-    private @MonotonicNonNull EditorKit<?> editorKit;
+    private @MonotonicNonNull EditorKitInterface editorKit;
     
     public FlexibleTextField()
     {
@@ -65,7 +72,7 @@ public class FlexibleTextField extends StyleClassedTextArea
         Nodes.addFallbackInputMap(FXUtility.mouse(this), InputMap.consume(MouseEvent.ANY));
     }
 
-    public <T> void resetContent(EditorKit<T> editorKit)
+    public void resetContent(EditorKitInterface editorKit)
     {
         if (this.editorKit != null)
         {
@@ -76,7 +83,7 @@ public class FlexibleTextField extends StyleClassedTextArea
         this.editorKit.setField(this);
     }
 
-    public @Nullable EditorKit<?> getEditorKit()
+    public @Nullable EditorKitInterface getEditorKit()
     {
         return editorKit;
     }
@@ -146,5 +153,13 @@ public class FlexibleTextField extends StyleClassedTextArea
     public void setHasError(boolean hasError)
     {
         FXUtility.setPseudoclass(this, "has-error", hasError);
+    }
+
+    public <T> @Nullable EditorKit<T> getEditableKit(Class<T> itemClass)
+    {
+        if (editorKit == null)
+            return null;
+        else
+            return editorKit.asEditableKit(itemClass);
     }
 }

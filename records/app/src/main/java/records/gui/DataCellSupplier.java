@@ -12,6 +12,7 @@ import records.data.Column;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.flex.EditorKit;
+import records.gui.flex.EditorKitInterface;
 import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.FlexibleTextField;
 import records.gui.grid.VirtualGridSupplierIndividual;
@@ -158,7 +159,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     {
         super.hideItem(spareCell);
         // Clear EditorKit to avoid keeping it around while spare:
-        spareCell.blank(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+        spareCell.blank(new EditorKitSimpleLabel(TranslationUtility.getString("data.loading")));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -185,14 +186,14 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         }
 
         @OnThread(Tag.FXPlatform)
-        public void blank(EditorKit<?> editorKit)
+        public void blank(EditorKitInterface editorKit)
         {
             super.resetContent(editorKit);
             currentVersion = null;
         }
 
         @OnThread(Tag.FXPlatform)
-        public void setContent(EditorKit<?> editorKit, ImmutableList<ColumnDetails> columns)
+        public void setContent(EditorKitInterface editorKit, ImmutableList<ColumnDetails> columns)
         {
             super.resetContent(editorKit);
             currentVersion = new WeakReference<>(columns);

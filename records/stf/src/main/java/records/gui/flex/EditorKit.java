@@ -27,8 +27,9 @@ import java.util.Collection;
 import java.util.function.UnaryOperator;
 
 @OnThread(Tag.FXPlatform)
-public class EditorKit<T>
+public class EditorKit<T> implements EditorKitInterface
 {
+    private final Class<T> itemClass;
     private final Recogniser<T> recogniser;
     private final FXPlatformBiConsumer<String, @Nullable T> onChange;
     private final FXPlatformRunnable relinquishFocus;
@@ -48,8 +49,9 @@ public class EditorKit<T>
             setLatestValue(field.getText(), false);
     }
 
-    public EditorKit(String initialValue, Recogniser<T> recogniser, FXPlatformBiConsumer<String, @Nullable T> onChange, FXPlatformRunnable relinquishFocus)
+    public EditorKit(String initialValue, Class<T> itemClass, Recogniser<T> recogniser, FXPlatformBiConsumer<String, @Nullable T> onChange, FXPlatformRunnable relinquishFocus)
     {
+        this.itemClass = itemClass;
         this.recogniser = recogniser;
         this.onChange = onChange;
         this.relinquishFocus = relinquishFocus;
@@ -113,6 +115,20 @@ public class EditorKit<T>
             int pos = fieldFinal.getCaretPosition();
             fieldFinal.replace(focusedDocument);
             fieldFinal.moveTo(unfocusedDocument.getSecond().apply(pos));
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked") // It's safe, but can't prove that to compiler
+    public @Nullable <T> EditorKit<T> asEditableKit(Class<T> itemClass)
+    {
+        if (this.itemClass.equals(itemClass))
+        {
+            return (EditorKit<T>)this;
+        }
+        else
+        {
+            return null;
         }
     }
 

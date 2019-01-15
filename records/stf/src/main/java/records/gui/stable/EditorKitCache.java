@@ -23,6 +23,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
+import records.gui.flex.EditorKitInterface;
 import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
@@ -143,7 +144,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         catch (ExecutionException e)
         {
             Log.log(e);
-            setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel<>(e.getLocalizedMessage()));
+            setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(e.getLocalizedMessage()));
         }
         // No need to call formatVisible here as styleTogether
         // will be called after fetches by VirtualGridSupplierIndividual
@@ -293,7 +294,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         {
             if (loadedItemOrError != null)
             {
-                EditorKit<@Value V> editorKit = loadedItemOrError.<EditorKit<@Value V>>either(k -> k, err -> new EditorKitSimpleLabel<>(err));
+                EditorKitInterface editorKit = loadedItemOrError.<EditorKitInterface>either(k -> k, err -> new EditorKitSimpleLabel(err));
                 this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, editorKit);
             }
             else

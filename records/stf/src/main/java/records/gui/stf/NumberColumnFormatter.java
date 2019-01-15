@@ -46,10 +46,10 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         {
             if (visibleCell != null)
             {
-                EditorKit<?> editorKit = visibleCell.getEditorKit();
+                EditorKit<Number> editorKit = visibleCell.getEditableKit(Number.class);
                 if (editorKit != null)
                 {
-                    @Nullable Number value = Utility.castOrNull(editorKit.getLatestValue().<@Nullable Object>either(err -> null, x -> x), Number.class);
+                    @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
                     if (value != null)
                     {
                         visibleItems.add(new NumberDetails(visibleCell, value));
@@ -135,7 +135,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
             //if (!textField.isFocused() && numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
                 //textField.updateFromEditorKit();
-            EditorKit<?> editorKit = textField.getEditorKit();
+            EditorKit<Number> editorKit = textField.getEditableKit(Number.class);
             if (editorKit != null)
                 editorKit.setUnfocusedDocument(FlexibleTextField.doc(ImmutableList.of(
                     new StyledText<>(displayIntegerPart, ImmutableList.of("stf-number-int")),

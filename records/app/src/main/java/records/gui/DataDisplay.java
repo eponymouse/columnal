@@ -50,6 +50,7 @@ import records.data.TableOperations;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
+import records.gui.flex.EditorKit;
 import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -306,7 +307,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 // Blank then queue fetch:
                 VersionedSTF orig = getCell.apply(cellPosition.from(getPosition()));
                 if (orig != null)
-                    orig.blank(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+                    orig.blank(new EditorKitSimpleLabel(TranslationUtility.getString("data.loading")));
                 @SuppressWarnings("units")
                 @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
                 @SuppressWarnings("units")
@@ -322,7 +323,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
                             {
-                                editorKit.setOnFocusLost(scheduleStyleTogether);
+                                if (editorKit instanceof EditorKit)
+                                    ((EditorKit<?>)editorKit).setOnFocusLost(scheduleStyleTogether);
                                 cell.setContent(editorKit, displayColumns);
                                 scheduleStyleTogether.run();
                             }

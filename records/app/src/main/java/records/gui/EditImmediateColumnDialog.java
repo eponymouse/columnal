@@ -23,6 +23,7 @@ import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
 import records.gui.flex.Recogniser;
 import records.gui.stf.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility.RecogniserAndType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
@@ -214,9 +215,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         return DataTypeUtility.valueToString(dataType, defValue, null, false);
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, Recogniser<T> recogniser)
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        EditorKit<T> editorKit = new EditorKit<T>(initialValue, recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        EditorKit<T> editorKit = new EditorKit<T>(initialValue, recogniser.itemClass, recogniser.recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }
