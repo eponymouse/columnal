@@ -32,6 +32,7 @@ import utility.Utility;
 import utility.ValueFunction;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static records.data.datatype.DataType.BOOLEAN;
@@ -307,8 +308,14 @@ public class TypeManager
     @OnThread(Tag.Simulation)
     public String save()
     {
+        return save(t -> true);
+    }
+    
+    @OnThread(Tag.Simulation)
+    public String save(Predicate<TypeId> saveType)
+    {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
-        List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.<TaggedTypeDefinition>toList());
+        List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t) && saveType.test(t.getTaggedTypeName())).collect(Collectors.<TaggedTypeDefinition>toList());
         
         Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
         for (TaggedTypeDefinition taggedTypeDefinition : typesToSave)

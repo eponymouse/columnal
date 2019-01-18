@@ -44,6 +44,7 @@ import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
+import records.error.InvalidImmediateValueException;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
@@ -1317,6 +1318,23 @@ public class TestUtil
     public static <T extends Styleable> Matcher<T> matcherHasStyleClass(String styleClass)
     {
         return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> fx(() -> ImmutableList.copyOf(s.getStyleClass())));
+    }
+
+    public static List<Either<String, @Value Object>> getCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
+    {
+        List<Either<String, @Value Object>> r = new ArrayList<>();
+        for (int i = 0; i < size; i++)
+        {
+            try
+            {
+                r.add(Either.right(type.getCollapsed(i)));
+            }
+            catch (InvalidImmediateValueException e)
+            {
+                r.add(Either.left(e.getInvalid()));
+            }
+        }
+        return r;
     }
 
     public static interface TestRunnable

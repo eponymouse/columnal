@@ -1,9 +1,11 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
@@ -30,6 +32,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
+import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
@@ -57,6 +60,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -744,4 +748,174 @@ public class DataTypeUtility
             return original.substring(start, charStart);
         }
     }
+
+    /**
+     * Returns a predicate that checks whether the unit is featured anywhere
+     * in the given types (incl transitively)
+     */
+    public static Predicate<@UnitIdentifier String> featuresUnit(List<DataType> dataTypes)
+    {
+        // Pre-calculate set of all units:
+        HashSet<@UnitIdentifier String> allUnits = new HashSet<>();
+
+        try
+        {
+            for (DataType dataType : dataTypes)
+            {
+                dataType.apply(new DataTypeVisitorEx<UnitType, InternalException>()
+                {
+                    private void addUnit(Unit unit)
+                    {
+                        allUnits.addAll(unit.getDetails().keySet().stream().map(u -> u.getName()).collect(Collectors.<@UnitIdentifier String>toList()));
+                    }
+
+                    @Override
+                    public UnitType number(NumberInfo numberInfo) throws InternalException, InternalException
+                    {
+                        addUnit(numberInfo.getUnit());
+                        return UnitType.UNIT;
+                    }
+                    
+                    @Override
+                    public UnitType text() throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType bool() throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+                    {
+                        for (Either<Unit, DataType> typeVar : typeVars)
+                        {
+                            typeVar.ifLeft(this::addUnit);
+                        }
+                        for (TagType<DataType> tag : tags)
+                        {
+                            if (tag.getInner() != null)
+                                tag.getInner().apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+                    {
+                        for (DataType t : inner)
+                        {
+                            t.apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType array(DataType inner) throws InternalException, InternalException
+                    {
+                        inner.apply(this);
+                        return UnitType.UNIT;
+                    }
+                });
+            }
+
+            return allUnits::contains;
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            // If in doubt, include all types:
+            return u -> true;
+        }
+    }
+
+    /**
+     * Returns a predicate that checks whether the tagged type is featured anywhere
+     * in the given types (incl transitively)
+     */
+    public static Predicate<TypeId> featuresTaggedType(List<DataType> dataTypes)
+    {
+        // Pre-calculate set of all types:
+        HashSet<TypeId> allTypes = new HashSet<>();
+
+        try
+        {
+            for (DataType dataType : dataTypes)
+            {
+                dataType.apply(new DataTypeVisitorEx<UnitType, InternalException>()
+                {
+                    @Override
+                    public UnitType number(NumberInfo numberInfo) throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType text() throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType bool() throws InternalException, InternalException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+                    {
+                        allTypes.add(typeName);
+                        for (TagType<DataType> tag : tags)
+                        {
+                            if (tag.getInner() != null)
+                                tag.getInner().apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+                    {
+                        for (DataType t : inner)
+                        {
+                            t.apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType array(DataType inner) throws InternalException, InternalException
+                    {
+                        inner.apply(this);
+                        return UnitType.UNIT;
+                    }
+                });
+            }
+
+            return allTypes::contains;
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            // If in doubt, include all types:
+            return u -> true;
+        }
+    }
+
 }

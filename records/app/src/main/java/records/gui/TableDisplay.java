@@ -439,7 +439,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             List<Pair<ColumnId, DataTypeValue>> columns = Utility.mapListEx(displayColumns.subList(firstColumn, lastColumnIncl + 1), c -> new Pair<>(c.getColumnId(), c.getColumnType().fromCollapsed((i, prog) -> c.getColumnHandler().getValue(i))));
 
-            ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), columns, calcRowRange);
+            ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), columns, calcRowRange, null);
         }
         catch (UserException | InternalException e)
         {
@@ -647,7 +647,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             GUI.menu("tableDisplay.menu.showColumns",
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
-            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_("Error copying values", () -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier()))),
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_("Error copying values", () -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier(), null))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
                 File file = FXUtility.getFileSaveAs(parent);
                 if (file != null)

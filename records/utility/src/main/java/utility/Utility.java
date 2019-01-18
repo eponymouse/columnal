@@ -117,7 +117,17 @@ public class Utility
 
     public static <T, R> ImmutableList<R> mapListExI_Index(List<T> list, ExBiFunction<Integer, T, R> func) throws InternalException, UserException
     {
-        ArrayList<R> r = new ArrayList<>();
+        ArrayList<R> r = new ArrayList<>(list.size());
+        for (int i = 0; i < list.size(); i++)
+        {
+            r.add(func.apply(i, list.get(i)));
+        }
+        return ImmutableList.<R>copyOf(r);
+    }
+
+    public static <T, R> ImmutableList<R> mapList_Index(List<T> list, BiFunction<Integer, T, R> func)
+    {
+        ArrayList<R> r = new ArrayList<>(list.size());
         for (int i = 0; i < list.size(); i++)
         {
             r.add(func.apply(i, list.get(i)));

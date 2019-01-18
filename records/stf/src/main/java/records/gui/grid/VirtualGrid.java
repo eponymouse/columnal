@@ -116,6 +116,8 @@ public final class VirtualGrid implements ScrollBindable
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
     private final @Nullable CreateTableButtonSupplier createTableButtonSupplier;
+    // A set of pluggable callbacks:
+    private final @Nullable VirtualGridManager manager;
     
     private final Container container;
     private static final int MAX_EXTRA_ROW_COLS = 12;
@@ -206,14 +208,17 @@ public final class VirtualGrid implements ScrollBindable
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
 
-    public static interface CreateTable
+    public static interface VirtualGridManager
     {
         public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
+
+        public void pasteIntoEmpty(CellPosition target);
     }
     
     @OnThread(Tag.FXPlatform)
-    public VirtualGrid(@Nullable CreateTable createTable, int columnsToRight, int rowsToBottom, String... styleClasses)
+    public VirtualGrid(@Nullable VirtualGridManager virtualGridManager, int columnsToRight, int rowsToBottom, String... styleClasses)
     {
+        this.manager = virtualGridManager;
         this.columnsToRight = columnsToRight;
         this.rowsToBottom = rowsToBottom;
         currentKnownLastRowIncl.set(CellPosition.row(rowsToBottom));
@@ -221,9 +226,9 @@ public final class VirtualGrid implements ScrollBindable
         //    Log.debug("Current rows: " + r);
         //});
         currentColumns.set(CellPosition.col(columnsToRight));
-        if (createTable != null)
+        if (virtualGridManager != null)
         {
-            this.createTableButtonSupplier = new CreateTableButtonSupplier(createTable);
+            this.createTableButtonSupplier = new CreateTableButtonSupplier(virtualGridManager);
             nodeSuppliers.add(createTableButtonSupplier);
         }
         else
@@ -1252,6 +1257,12 @@ public final class VirtualGrid implements ScrollBindable
                             focusedCellPosition.doCopy();
                         e.consume();
                     }),
+                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.V, KeyCombination.SHORTCUT_DOWN)), e -> {
+                        @Nullable CellSelection focusedCellPosition = selection.get();
+                        if (focusedCellPosition != null)
+                            focusedCellPosition.doPaste();
+                        e.consume();
+                    }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.ENTER), EventPattern.keyPressed(KeyCode.SPACE)), e -> {
                         @Nullable CellSelection sel = selection.get();
                         if (sel != null)
@@ -1747,12 +1758,12 @@ public final class VirtualGrid implements ScrollBindable
         private @MonotonicNonNull Button button;
         private @Nullable CellPosition buttonPosition;
         // Button position, last mouse position on screen:
-        private final CreateTable createTable;
+        private final VirtualGridManager virtualGridManager;
         private @Nullable FXPlatformConsumer<Boolean> pendingButtonVisibleListener;
 
-        private CreateTableButtonSupplier(CreateTable createTable)
+        private CreateTableButtonSupplier(VirtualGridManager virtualGridManager)
         {
-            this.createTable = createTable;
+            this.virtualGridManager = virtualGridManager;
         }
 
         @Override
@@ -1766,7 +1777,7 @@ public final class VirtualGrid implements ScrollBindable
                     if (curSel instanceof EmptyCellSelection)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
-                        createTable.createTable(((EmptyCellSelection)curSel).position, lastMousePos[0], FXUtility.mouse(VirtualGrid.this));
+                        virtualGridManager.createTable(((EmptyCellSelection)curSel).position, lastMousePos[0], FXUtility.mouse(VirtualGrid.this));
                     }
                 }, "create-table-grid-button");
                 button.setFocusTraversable(false);
@@ -1822,7 +1833,7 @@ public final class VirtualGrid implements ScrollBindable
             {
                 // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
                 Bounds bounds = getRectangleBoundsScreen(new RectangleBounds(cellPosition, cellPosition));
-                createTable.createTable(cellPosition, FXUtility.getCentre(bounds), FXUtility.mouse(VirtualGrid.this));
+                virtualGridManager.createTable(cellPosition, FXUtility.getCentre(bounds), FXUtility.mouse(VirtualGrid.this));
             }
         }
     }
@@ -1840,6 +1851,13 @@ public final class VirtualGrid implements ScrollBindable
         public void doCopy()
         {
             // Can't copy an empty cell
+        }
+
+        @Override
+        public void doPaste()
+        {
+            if (manager != null)
+                manager.pasteIntoEmpty(position);
         }
 
         @Override

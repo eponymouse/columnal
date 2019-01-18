@@ -144,7 +144,7 @@ public class ErrorableTextField<T>
         return value;
     }
 
-    public Node getNode()
+    public Node getNode(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
     {
         return field;
     }

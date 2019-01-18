@@ -82,7 +82,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
         if (creatingNewTable)
         {
-            tableNameTextField = new TableNameTextField(tableManager, null, true);
+            tableNameTextField = new TableNameTextField(tableManager, null, true, this::focusColumnNameField);
             tableNameTextField.setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
             content.addRow(GUI.labelledGridRow("edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
         }
@@ -137,6 +137,12 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             FXUtility.runAfter(tableNameTextField != null ? tableNameTextField::requestFocusWhenInScene : columnNameTextField::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
+    }
+
+    private void focusColumnNameField(@UnknownInitialization(Object.class) EditImmediateColumnDialog this)
+    {
+        if (columnNameTextField != null)
+            columnNameTextField.requestFocusWhenInScene();
     }
 
     @Override

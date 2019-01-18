@@ -29,6 +29,12 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
+    public void doPaste()
+    {
+        // TODO
+    }
+
+    @Override
     public CellPosition getActivateTarget()
     {
         return selected.getPosition();

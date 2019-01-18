@@ -4,6 +4,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.internal.GeometricDistribution;
+import com.pholser.junit.quickcheck.internal.generator.SimpleGenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -12,6 +14,8 @@ import records.error.UserException;
 import test.gen.GenDataType.DataTypeAndManager;
 import test.gen.GenJellyType.TypeKinds;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+
+import java.util.Random;
 
 /**
  * Created by neil on 05/06/2017.
@@ -69,6 +73,12 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
         this.gs = generationStatus;
 
         return new TypeAndValueGen(generated.dataType, generated.typeManager);
+    }
+    
+    public TypeAndValueGen generate(Random r)
+    {
+        SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
+        return generate(sourceOfRandomness, new SimpleGenerationStatus(new GeometricDistribution(), sourceOfRandomness, 1));
     }
 
     protected Generator<DataTypeAndManager> typeGenerator()

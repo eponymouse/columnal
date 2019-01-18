@@ -1,14 +1,20 @@
 package records.gui;
 
+import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.TableId;
 import records.data.TableManager;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.gui.TranslationUtility;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +26,7 @@ import java.util.stream.Collectors;
 public class TableNameTextField extends ErrorableTextField<TableId>
 {    
     @OnThread(Tag.FXPlatform)
-    public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId, boolean blankAllowed)
+    public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId, boolean blankAllowed, FXPlatformRunnable defocus)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
@@ -53,5 +59,9 @@ public class TableNameTextField extends ErrorableTextField<TableId>
         if (editingId != null)
             setText(editingId.getRaw());
         setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
+
+        Nodes.addInputMap(getNode(), InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+            defocus.run();
+        }));
     }
 }

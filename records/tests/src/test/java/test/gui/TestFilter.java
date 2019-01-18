@@ -17,6 +17,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.TableDisplay;
 import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
+import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Filter;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -40,6 +41,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -101,10 +103,10 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
         assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Filter.class).findFirst().get().getFilterExpression());
                 
-        Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
-        TestUtil.assertValueListEitherEqual("Filtered", expected, Utility.pairListToMap(clip.get()).get(srcColumn.getName()));
+        TestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
     }
 }

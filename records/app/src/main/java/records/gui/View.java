@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -25,22 +26,15 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.CellPosition;
-import records.data.ColumnId;
-import records.data.DataSource;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
+import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.Table;
 import records.data.Table.FullSaver;
-import records.data.TableId;
-import records.data.TableManager;
 import records.data.TableManager.TableManagerListener;
-import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -49,8 +43,11 @@ import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
+import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.importers.ClipboardUtils;
+import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.TransformationManager;
@@ -71,6 +68,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static utility.Utility.mapList_Index;
 
 /**
  * Created by neil on 18/10/2016.
@@ -599,9 +598,40 @@ public class View extends StackPane
             }
         });
         
-        mainPane = new VirtualGrid(// Data table if there are none, or if we ask and they say data
+        VirtualGridManager vgManager = new VirtualGridManager()
+        {
+            @Override
+            public void createTable(CellPosition cellPos, Point2D mousePos, VirtualGrid grid)
+            {
+                // Data table if there are none, or if we ask and they say data
 // Ask what they want
-            (cellPos, mousePos, grid) -> createTable(FXUtility.mouse(this), tableManager, cellPos, mousePos, grid),
+                View.this.createTable(FXUtility.mouse(View.this), tableManager, cellPos, mousePos, grid);
+            }
+
+            @Override
+            public void pasteIntoEmpty(CellPosition target)
+            {
+                @Initialized View thisView = Utility.later(View.this);
+                ClipboardUtils.loadValuesFromClipboard(thisView.getManager().getTypeManager()).ifPresent((ImmutableList<LoadedColumnInfo> content) -> {
+                    if (!content.isEmpty())
+                    {
+                        Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {
+                            FXUtility.alertOnError_("Error pasting table data", () -> {
+                                ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
+                                tableManager.record(data);
+                                Platform.runLater(() -> {
+                                    TableDisplay display = (TableDisplay) data.getDisplay();
+                                    if (display != null)
+                                        thisView.getGrid().select(new EntireTableSelection(display, target.columnIndex));
+                                });
+                            });
+                        });
+                    }
+                });
+            }
+        };
+        
+        mainPane = new VirtualGrid(vgManager,
             10, 20, "main-view-grid");
         expandTableArrowSupplier = new ExpandTableArrowSupplier();
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());

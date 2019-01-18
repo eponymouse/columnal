@@ -580,6 +580,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
+        public void doPaste()
+        {
+            // TODO
+        }
+
+        @Override
         public CellPosition getActivateTarget()
         {
             return pos;
@@ -644,7 +650,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         @OnThread(Tag.FXPlatform)
         public Pane makeCell(VisibleBounds visibleBounds)
         {
-            tableNameField = new TableNameTextField(tableManager, initialTableName, false);
+            tableNameField = new TableNameTextField(tableManager, initialTableName, false, () -> withParent_(g -> g.select(new EntireTableSelection(DataDisplay.this, getPosition().columnIndex))));
             tableNameField.sizeToFit(30.0, 30.0);
             // We have to use PRESSED because if we do CLICKED, the field
             // will already have been focused:

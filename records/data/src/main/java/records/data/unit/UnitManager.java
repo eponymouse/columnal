@@ -25,11 +25,14 @@ import utility.Utility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -385,17 +388,57 @@ public class UnitManager
 
     public String save()
     {
-    return userUnits.entrySet().stream().map((Entry<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> e) -> e.getValue().either(alias -> {
+        return save(u -> true);
+    }
+
+    public String save(Predicate<@UnitIdentifier String> saveUnit)
+    {
+        return save(knownUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
+    }
+
+    public String save(Stream<@UnitIdentifier String> unitsToSaveStream)
+    {
+        List<@UnitIdentifier String> toProcess = new ArrayList<>(unitsToSaveStream.collect(Collectors.<@UnitIdentifier String>toList()));
+        HashSet<@UnitIdentifier String> unitsToSave = new HashSet<>();
+        // Now save any units aliased or used in definition of those units:
+        // Note: toProcess may grow while we execute!
+        for (int i = 0; i < toProcess.size(); i++)
+        {
+            @UnitIdentifier String u = toProcess.get(i);
+            unitsToSave.add(u);
+            Either<@UnitIdentifier String, UnitDeclaration> def = knownUnits.get(u);
+            if (def != null)
+            {
+                def.either_(t -> {
+                    if (!unitsToSave.contains(t))
+                        toProcess.add(t);
+                }, decl -> {
+                    if (decl.getEquivalentTo() != null)
+                    {
+                        for (SingleUnit v : decl.getEquivalentTo().getSecond().getDetails().keySet())
+                        {
+                            if (!unitsToSave.contains(v.getName()))
+                                toProcess.add(v.getName());
+                        }
+                    }
+                });
+            }
+        }
+        
+        return unitsToSave.stream().<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>flatMap(u -> {
+            Either<@UnitIdentifier String, UnitDeclaration> v = userUnits.get(u);
+            return v == null ? Stream.of() : Stream.of(new Pair<>(u, v));
+        }).map((Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> e) -> e.getSecond().either(alias -> {
             OutputBuilder b = new OutputBuilder();
             b.t(UnitParser.ALIAS, UnitParser.VOCABULARY);
-            b.raw(e.getKey());
+            b.raw(e.getFirst());
             b.t(UnitParser.EQUALS, UnitParser.VOCABULARY);
             b.raw(alias);
             return b.toString();
         }, decl -> {
             OutputBuilder b = new OutputBuilder();
             b.t(UnitParser.UNIT, UnitParser.VOCABULARY);
-            b.raw(e.getKey());
+            b.raw(e.getFirst());
             b.s(decl.getDefined().getDescription());
             @Nullable Pair<Rational, Unit> equiv = decl.getEquivalentTo();
             if (equiv != null)

@@ -21,6 +21,9 @@ public interface CellSelection
     // Copy the value of the selection to the clipboard, if that operation makes sense.
     public void doCopy();
 
+    // Paste the value of the clipboard, if that operation makes sense.
+    public void doPaste();
+
     // Which position should we target if they try to activate?
     CellPosition getActivateTarget();
 

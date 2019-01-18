@@ -47,6 +47,13 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
+    public void doPaste()
+    {
+        // TODO paste data over the current cells, offering to extend
+        // the table if needed.
+    }
+
+    @Override
     public CellPosition getActivateTarget()
     {
         return curFocus;

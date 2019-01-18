@@ -17,7 +17,7 @@ import threadchecker.Tag;
 public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
 {
     @OnThread(Tag.Any)
-    public default void triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
+    public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
     {
         keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id));
         
@@ -29,7 +29,7 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
         @SuppressWarnings("nullness")
         Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
         Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
-        showContextMenu(tableHeader, new Point2D(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2));
+        return showContextMenu(tableHeader, new Point2D(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2));
     }
     
     // Matches method in FXApplicationTest:

@@ -27,6 +27,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.View;
 import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
+import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Calculate;
 import records.transformations.expression.*;
 import test.DummyManager;
@@ -48,6 +49,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -134,11 +136,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
-            Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<Either<String, @Value Object>>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
+            Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
-            List<Either<String, @Value Object>> actual = clip.get().stream().filter((Pair<ColumnId, List<Either<String, @Value Object>>> p) -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
+            List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
             TestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
 
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
