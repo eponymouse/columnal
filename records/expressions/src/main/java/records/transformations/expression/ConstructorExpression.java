@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
@@ -134,6 +135,7 @@ public class ConstructorExpression extends NonOperatorExpression
         return tag.either(s -> s, t -> t.getTagInfo().getName());
     }
     
+    @Pure
     public @Nullable TypeId getTypeName()
     {
         return tag.<@Nullable TypeId>either(s -> null, t -> t.getTypeName());

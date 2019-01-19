@@ -73,7 +73,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @OnThread(value = Tag.Any)
     public FxRobot write(String text)
     {
-        Log.normal("Writing: {{{" + text + "}}}");
+        //Log.normal("Writing: {{{" + text + "}}}");
         return super.write(text);
     }
 
@@ -108,7 +108,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             // Focus expression editor:
             push(KeyCode.TAB);
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
-            enterExpression(expressionValue.expression, false, r);
+            enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expressionValue.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             
             // Get rid of popups:
             moveAndDismissPopupsAtPos(point(".ok-button"));

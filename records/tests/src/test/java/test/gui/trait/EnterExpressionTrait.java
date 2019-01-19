@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.*;
@@ -33,7 +34,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     }
     
     @OnThread(Tag.Any)
-    public default void enterExpression(Expression expression, EntryBracketStatus bracketedStatus, Random r) throws InternalException
+    public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r) throws InternalException
     {
         Class<?> c = expression.getClass();
         if (c == TupleExpression.class)
@@ -46,7 +47,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 if (i > 0)
                     write(",");
-                enterExpression(members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+                enterExpression(typeManager, members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
 
             }
             if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
@@ -61,7 +62,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 if (i > 0)
                     write(",");
-                enterExpression(members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+                enterExpression(typeManager, members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
 
             }
             write("]");
@@ -105,9 +106,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (c == CallExpression.class)
         {
             CallExpression call = (CallExpression) expression;
-            enterExpression(call.getFunction(), EntryBracketStatus.SUB_EXPRESSION, r);
+            enterExpression(typeManager, call.getFunction(), EntryBracketStatus.SUB_EXPRESSION, r);
             write("(");
-            enterExpression(call.getParam(), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
+            enterExpression(typeManager, call.getParam(), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
             write(")");
         }
         else if (c == StandardFunction.class)
@@ -125,7 +126,15 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (c == ConstructorExpression.class)
         {
             ConstructorExpression tag = (ConstructorExpression) expression;
-            write(tag.getName(), DELAY);
+            String tagName = tag.getName();
+            boolean multipleTagsOfThatName = 
+                typeManager.getKnownTaggedTypes().values().stream().flatMap(ttd -> ttd.getTags().stream().map(tt -> tt.getName()))
+                    .filter(n -> n.equals(tagName))
+                    .count() > 1;
+            
+            if (multipleTagsOfThatName && tag.getTypeName() != null)
+                write(tag.getTypeName().getRaw() + ":");
+            write(tagName, DELAY);
             push(KeyCode.ENTER);
             if (tag._test_hasInner())
             {
@@ -138,7 +147,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             MatchExpression match = (MatchExpression)expression;
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH), DELAY);
-            enterExpression(match.getExpression(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            enterExpression(typeManager, match.getExpression(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             for (MatchClause matchClause : match.getClauses())
             {
                 write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), DELAY);
@@ -147,16 +156,16 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                     if (i > 0)
                         write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), DELAY);
                     Pattern pattern = matchClause.getPatterns().get(i);
-                    enterExpression(pattern.getPattern(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                    enterExpression(typeManager, pattern.getPattern(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
                         write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), DELAY);
-                        enterExpression(guard, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                        enterExpression(typeManager, guard, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                     }
                 }
                 write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
-                enterExpression(matchClause.getOutcome(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                enterExpression(typeManager, matchClause.getOutcome(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             }
             // To finish whole match expression:
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDMATCH), DELAY);
@@ -165,11 +174,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             IfThenElseExpression ite = (IfThenElseExpression) expression;
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF), DELAY);
-            enterExpression(ite._test_getCondition(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            enterExpression(typeManager, ite._test_getCondition(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
-            enterExpression(ite._test_getThen(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            enterExpression(typeManager, ite._test_getThen(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), DELAY);
-            enterExpression(ite._test_getElse(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            enterExpression(typeManager, ite._test_getElse(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDIF), DELAY);
             
         }
@@ -180,7 +189,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 write("(");
             for (int i = 0; i < n.getChildren().size(); i++)
             {
-                enterExpression(n.getChildren().get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+                enterExpression(typeManager, n.getChildren().get(i), EntryBracketStatus.SUB_EXPRESSION, r);
                 if (i < n.getChildren().size() - 1)
                 {
                     write(n._test_getOperatorEntry(i));
@@ -196,11 +205,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             BinaryOpExpression b = (BinaryOpExpression)expression;
             if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
                 write("(");
-            enterExpression(b.getLHS(), EntryBracketStatus.SUB_EXPRESSION, r);
+            enterExpression(typeManager, b.getLHS(), EntryBracketStatus.SUB_EXPRESSION, r);
             write(b._test_getOperatorEntry());
             if (b._test_getOperatorEntry().equals("-") || b._test_getOperatorEntry().equals("+") || r.nextBoolean())
                 write(" ");
-            enterExpression(b.getRHS(), EntryBracketStatus.SUB_EXPRESSION, r);
+            enterExpression(typeManager, b.getRHS(), EntryBracketStatus.SUB_EXPRESSION, r);
             if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
                 write(")");
         }
@@ -231,7 +240,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             InvalidOperatorExpression invalid = (InvalidOperatorExpression) expression;
             for (Expression e : invalid._test_getItems())
             {
-                enterExpression(e, EntryBracketStatus.SUB_EXPRESSION, r);
+                enterExpression(typeManager, e, EntryBracketStatus.SUB_EXPRESSION, r);
             }
         }
         else if (c == InvalidIdentExpression.class)
