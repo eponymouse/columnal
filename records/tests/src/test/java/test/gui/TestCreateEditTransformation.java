@@ -13,6 +13,7 @@ import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
@@ -35,6 +36,7 @@ import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -55,11 +57,11 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         dest.deleteOnExit();
         MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null));
         
-        ArrayList<ColumnDetails> columns = new ArrayList<>();
+        List<ColumnDetails> columns = new ArrayList<>();
         // First add split variable:
         TypeAndValueGen splitType = genTypeAndValueGen.generate(r);
         mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(splitType.getTypeManager());
-        List<@Value Object> distinctSplitValues = makeDistinctList(splitType);
+        List<@Value Object> distinctSplitValues = makeDistinctSortedList(splitType);
         // Now make random duplication count for each:
         List<Integer> replicationCounts = Utility.mapList(distinctSplitValues, _s -> 1 + r.nextInt(10));
         int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
@@ -84,7 +86,8 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         {
             assertEquals(column.name.getRaw(), totalLength, column.data.size());
         }
-        
+
+        columns = scrambleDataOrder(columns, r);
         
         createDataTable(mainWindowActions, CellPosition.ORIGIN.offsetByRowCols(1, 1), "Src Data", columns);
         
@@ -113,10 +116,10 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         write("Split Col");
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        TestUtil.sleep(200);
+        TestUtil.sleep(3000);
         
         // Should be one column at the moment, with the distinct split values:
-        SummaryStatistics aggTable = (SummaryStatistics)mainWindowActions._test_getTableManager().getAllTables().get(1);
+        SummaryStatistics aggTable = (SummaryStatistics)mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
         String aggId = aggTable.getId().getRaw();
         ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
@@ -124,6 +127,15 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         // Now add the calculations:
         // TODO
+    }
+
+    private List<ColumnDetails> scrambleDataOrder(List<ColumnDetails> columns, Random r)
+    {
+        return Utility.mapList(columns, c -> {
+            List<Either<String, @Value Object>> scrambledData = new ArrayList<>(c.data);
+            Collections.shuffle(scrambledData, r);
+            return new ColumnDetails(c.name, c.dataType, ImmutableList.copyOf(scrambledData));
+        });
     }
 
     public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, String tableName) throws UserException
@@ -137,7 +149,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     }
 
     // Makes a list containing no duplicate values, using the given type.
-    private List<@Value Object> makeDistinctList(TypeAndValueGen splitType) throws UserException, InternalException
+    private List<@Value Object> makeDistinctSortedList(TypeAndValueGen splitType) throws UserException, InternalException
     {
         int targetAmount = 12;
         int attempts = 50;
@@ -153,6 +165,9 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             }
             r.add(newVal);
         }
+
+        Collections.sort(r, DataTypeUtility.getValueComparator());
+        
         return r;
     }
 }

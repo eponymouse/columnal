@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -14,9 +15,9 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
@@ -43,9 +44,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
@@ -72,13 +73,13 @@ public class SummaryStatistics extends Transformation
     private static class JoinedSplit
     {
         private final List<Column> colName = new ArrayList<>();
-        private final List<Object> colValue = new ArrayList<>();
+        private final List<@Value Object> colValue = new ArrayList<>();
 
         public JoinedSplit()
         {
         }
 
-        public JoinedSplit(Column column, Object value, JoinedSplit addTo)
+        public JoinedSplit(Column column, @Value Object value, JoinedSplit addTo)
         {
             colName.add(column);
             colValue.add(value);
@@ -90,7 +91,7 @@ public class SummaryStatistics extends Transformation
         {
             for (int c = 0; c < colName.size(); c++)
             {
-                if (!colName.get(c).getType().getCollapsed(index).equals(colValue.get(c)))
+                if (Utility.compareValues(colName.get(c).getType().getCollapsed(index), colValue.get(c)) != 0)
                     return false;
             }
             return true;
@@ -133,7 +134,7 @@ public class SummaryStatistics extends Transformation
                     int iFinal = i;
                     columns.add(rs -> new Column(rs, colName)
                     {
-                        private Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                        private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                         {
                             return splits.get(index).colValue.get(iFinal);
                         }
@@ -141,8 +142,7 @@ public class SummaryStatistics extends Transformation
                         @Override
                         public DataTypeValue getType() throws InternalException, UserException
                         {
-                            throw new UnimplementedException(); // TODO
-                            //return orig.getType().copy(this::getWithProgress);
+                            return orig.getType().fromCollapsed(this::getWithProgress);
                         }
 
                         @Override
@@ -195,7 +195,7 @@ public class SummaryStatistics extends Transformation
                 @SuppressWarnings("units")
                 public @TableDataRowIndex int getLength() throws UserException
                 {
-                    return summaries.isEmpty() ? 0 : splits.size();
+                    return splitBy.isEmpty() ? 0 : splits.size();
                 }
             };
         }
@@ -211,9 +211,9 @@ public class SummaryStatistics extends Transformation
     private static class SingleSplit
     {
         private Column column;
-        private List<@NonNull Object> values;
+        private List<@NonNull @Value Object> values;
 
-        public SingleSplit(Column column, List<@NonNull Object> values)
+        public SingleSplit(Column column, List<@NonNull @Value Object> values)
         {
             this.column = column;
             this.values = values;
@@ -233,12 +233,23 @@ public class SummaryStatistics extends Transformation
             //    splits.add(new SingleSplit(c, fastDistinct.get()));
             //else
             {
-                HashSet<Object> r = new HashSet<>();
-                for (int i = 0; c.indexValid(i); i++)
+                TreeSet<@Value Object> r = new TreeSet<>(DataTypeUtility.getValueComparator());
+                try
                 {
-                    r.add(c.getType().getCollapsed(i));
+                    for (int i = 0; c.indexValid(i); i++)
+                    {
+                        r.add(c.getType().getCollapsed(i));
+                    }
+                    splits.add(new SingleSplit(c, new ArrayList<>(r)));
                 }
-                splits.add(new SingleSplit(c, new ArrayList<>(r)));
+                catch (RuntimeException e)
+                {
+                    if (e.getCause() instanceof UserException)
+                        throw (UserException)e.getCause();
+                    if (e.getCause() instanceof InternalException)
+                        throw (InternalException) e.getCause();
+                    throw e;
+                }
             }
 
         }
@@ -254,7 +265,7 @@ public class SummaryStatistics extends Transformation
         SingleSplit cur = allDistincts.get(from);
         List<JoinedSplit> rest = crossProduct(allDistincts, from + 1);
         List<JoinedSplit> r = new ArrayList<>();
-        for (Object o : cur.values)
+        for (@Value Object o : cur.values)
         {
             for (JoinedSplit js : rest)
             {

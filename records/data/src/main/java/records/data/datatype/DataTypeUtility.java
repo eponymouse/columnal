@@ -55,6 +55,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalInt;
@@ -662,6 +663,20 @@ public class DataTypeUtility
 
         //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
         throw new UserException("Expected " + dateTimeInfo + " value but found: " + src.snippet());
+    }
+
+    public static Comparator<@Value Object> getValueComparator()
+    {
+        return (Comparator<@Value Object>)(@Value Object a, @Value Object b) -> {
+            try
+            {
+                return Utility.compareValues(a, b);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        };
     }
 
     // Keeps track of a trailing substring of a string.  Saves memory compared to copying

@@ -205,7 +205,7 @@ public class TestUtil
             assertEquals(prefix + " list size", a.size(), b.size());
             for (int i = 0; i < a.size(); i++)
             {
-                assertValueEitherEqual(prefix, a.get(i), b.get(i));
+                assertValueEitherEqual(prefix + " row " + i, a.get(i), b.get(i));
             }
         }
     }
