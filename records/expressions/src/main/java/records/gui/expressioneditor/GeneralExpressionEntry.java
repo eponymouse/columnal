@@ -655,7 +655,9 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                
+
+                // Important to call this before adding brackets:
+                completing = true;
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
                     parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
@@ -665,7 +667,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                     if (moveFocus)
                         parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, false);
                 }
-                completing = true;
+                
                 setPrefixTag(tc.tagInfo.getTypeName());
                 return tc.tagInfo.getTagInfo().getName();
             }
@@ -717,7 +719,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
         {
-            if (!(selectedItem instanceof KeyShortcutCompletion))
+            if (!(selectedItem instanceof KeyShortcutCompletion) && !completing)
             {
                 return selected(currentText, selectedItem, "", false);
             }
