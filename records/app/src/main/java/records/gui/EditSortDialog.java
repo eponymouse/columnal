@@ -198,7 +198,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();
             });
-            Label label = new Label("Type table name or click on column");
+            Label label = new Label("Type column name or click on column");
             label.visibleProperty().bind(columnField.focusedProperty());
             setTop(label);
             setCenter(columnField);
