@@ -1023,6 +1023,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         table.getDetailsForCopy(), filter.getSource(), newExp), null);
             })));    
         }
+        else if (table instanceof SummaryStatistics)
+        {
+            SummaryStatistics aggregate = (SummaryStatistics)table;
+            new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> {
+                FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
+            });
+        }
         // For other tables, do nothing
     }
 

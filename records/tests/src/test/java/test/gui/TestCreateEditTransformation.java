@@ -5,21 +5,22 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
-import com.pholser.junit.quickcheck.internal.GeometricDistribution;
-import com.pholser.junit.quickcheck.internal.generator.SimpleGenerationStatus;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.Table;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
+import records.transformations.SummaryStatistics;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
@@ -30,10 +31,8 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
-import javax.rmi.CORBA.Util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +40,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
@@ -91,21 +89,51 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         createDataTable(mainWindowActions, CellPosition.ORIGIN.offsetByRowCols(1, 1), "Src Data", columns);
         
         // Sanity check the data before proceeding:
-        triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId("Src Data"))
-                .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
-        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
-        assertTrue(clip.isPresent());
+        ImmutableList<LoadedColumnInfo> clip = copyTableData(mainWindowActions, "Src Data");
 
-        ImmutableList<LoadedColumnInfo> get = clip.get();
-        for (int i = 0; i < get.size(); i++)
+        for (int i = 0; i < clip.size(); i++)
         {
-            LoadedColumnInfo copiedColumn = get.get(i);
+            LoadedColumnInfo copiedColumn = clip.get(i);
             assertEquals(copiedColumn.columnName, columns.get(i).name);
             TestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
         }
         
-        // TODO now add the actual aggregate!
+        // Now add the actual aggregate:
+        CellPosition aggTarget = CellPosition.ORIGIN.offsetByRowCols(1, columns.size() + 2);
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), aggTarget);
+        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
+        TestUtil.delay(100);
+        clickOn(".id-new-transform");
+        TestUtil.delay(100);
+        clickOn(".id-transform-aggregate");
+        TestUtil.delay(100);
+        write("Src Data");
+        push(KeyCode.ENTER);
+        TestUtil.sleep(200);
+        write("Split Col");
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn(".ok-button");
+        TestUtil.sleep(200);
+        
+        // Should be one column at the moment, with the distinct split values:
+        SummaryStatistics aggTable = (SummaryStatistics)mainWindowActions._test_getTableManager().getAllTables().get(1);
+        assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
+        String aggId = aggTable.getId().getRaw();
+        ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
+        TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
+        
+        // Now add the calculations:
+        // TODO
+    }
+
+    public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, String tableName) throws UserException
+    {
+        triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId(tableName))
+                .clickOn(".id-tableDisplay-menu-copyValues");
+        TestUtil.sleep(1000);
+        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        assertTrue(clip.isPresent());
+        return clip.get();
     }
 
     // Makes a list containing no duplicate values, using the given type.
