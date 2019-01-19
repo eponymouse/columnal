@@ -253,7 +253,7 @@ public class View extends StackPane
         mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
-    public void enableColumnPickingMode(Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+    public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
     {
         if (pickPaneMouse != null)
             disablePickingMode();
@@ -290,7 +290,8 @@ public class View extends StackPane
         });
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
-        mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+        if (screenPos != null)
+            mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
     
     // If any sources are invalid, they are skipped
