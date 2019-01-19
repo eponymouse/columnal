@@ -246,11 +246,11 @@ public class OutputBuilder
     @OnThread(Tag.Simulation)
     public synchronized OutputBuilder data(DataTypeValue type, int index) throws UserException, InternalException
     {
-        return data(type, index, false);
+        return data(type, index, false, false);
     }
     
     @OnThread(Tag.Simulation)
-    private synchronized OutputBuilder data(DataTypeValue type, int index, boolean nested) throws UserException, InternalException
+    private synchronized OutputBuilder data(DataTypeValue type, int index, boolean nested, boolean alreadyRoundBracketed) throws UserException, InternalException
     {
         int curLength = cur().size();
         try
@@ -287,7 +287,7 @@ public class OutputBuilder
                     if (inner != null)
                     {
                         raw("(");
-                        data(inner, index, true);
+                        data(inner, index, true, true);
                         raw(")");
                     }
                     return UnitType.UNIT;
@@ -313,16 +313,18 @@ public class OutputBuilder
                 @OnThread(Tag.Simulation)
                 public UnitType tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
                 {
-                    raw("(");
+                    if (!alreadyRoundBracketed)
+                        raw("(");
                     boolean first = true;
                     for (DataTypeValue dataTypeValue : types)
                     {
                         if (!first)
                             raw(",");
                         first = false;
-                        data(dataTypeValue, index, true);
+                        data(dataTypeValue, index, true, false);
                     }
-                    raw(")");
+                    if (!alreadyRoundBracketed)
+                        raw(")");
                     return UnitType.UNIT;
                 }
 
@@ -336,7 +338,7 @@ public class OutputBuilder
                     {
                         if (i > 0)
                             raw(",");
-                        data(details.getSecond(), i, true);
+                        data(details.getSecond(), i, true, false);
                     }
                     raw("]");
                     return UnitType.UNIT;
