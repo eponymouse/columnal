@@ -12,7 +12,6 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.jellytype.JellyUnit;
 import records.typeExp.TypeExp;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -37,7 +36,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT

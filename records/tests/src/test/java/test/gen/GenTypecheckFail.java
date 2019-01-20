@@ -16,8 +16,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.LocationInfo;
-import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.Expression.SingleTableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
@@ -47,7 +48,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         super(TypecheckInfo.class);
     }
 
-    public static class TypecheckInfo implements TableLookup
+    public static class TypecheckInfo extends SingleTableLookup implements ColumnLookup
     {
         public final Expression original;
         public final RecordSet recordSet;
@@ -57,20 +58,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
         public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures, TypeManager typeManager, GenExpressionValueForwards gen)
         {
+            super(recordSet);
             this.original = original;
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
             this.typeManager = typeManager;
             this.gen = gen;
-        }
-
-        @Override
-        public @Nullable RecordSet getTable(@Nullable TableId tableId)
-        {
-            if (tableId == null)
-                return recordSet;
-            else
-                return null;
         }
 
         public String getDisplay(Expression expression) throws InternalException, UserException

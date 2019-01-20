@@ -16,7 +16,6 @@ import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -79,7 +78,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
         
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
         if (dataType == null)

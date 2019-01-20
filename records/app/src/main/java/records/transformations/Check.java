@@ -72,13 +72,14 @@ public class Check extends Transformation
         if (type == null)
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable TypeExp checked = checkExpression.checkExpression(new MultipleTableLookup(getManager(), getManager().getSingleTableOrNull(srcTableId)), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+            MultipleTableLookup lookup = new MultipleTableLookup(getId(), getManager(), srcTableId);
+            @Nullable TypeExp checked = checkExpression.checkExpression(lookup, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
                 typeFinal = errors.recordLeftError(getManager().getTypeManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
             if (typeFinal == null)
-                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN)
+                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, lookup, DataType.BOOLEAN)
                 {
                     @Override
                     @OnThread(Tag.Simulation)

@@ -10,7 +10,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.Pair;
 import utility.Utility;
 
@@ -46,7 +45,7 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // And has a special property: the type state is threaded through to the next item.
         for (Expression expression : expressions)

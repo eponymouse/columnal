@@ -4,9 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.antlr.v4.runtime.Parser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,25 +17,28 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.jellytype.JellyType;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.SingleTableLookup;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
-import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import test.DummyManager;
+import test.TestUtil;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenValueSpecifiedType;
@@ -190,14 +191,7 @@ public class TestFromDoc
                     if (typeState == null) // Won't happen
                         return;
                 }
-                TypeExp typeExp = expression.checkExpression(new TableLookup()
-                {
-                    @Override
-                    public @Nullable RecordSet getTable(@Nullable TableId tableId)
-                    {
-                        return tables.get(tableId);
-                    }
-                }, typeState, errors);
+                TypeExp typeExp = expression.checkExpression(TestUtil.dummyColumnLookup() /* TODO */, typeState, errors);
                 if (!typeError)
                 {
                     assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));

@@ -52,6 +52,8 @@ import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.*;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
@@ -1143,10 +1145,27 @@ public class TestUtil
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
-        expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
+        expression.check(TestUtil.dummyColumnLookup(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
         return expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst();
     }
 
+    public static ColumnLookup dummyColumnLookup()
+    {
+        return new ColumnLookup()
+        {
+            @Override
+            public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            {
+                return null;
+            }
+
+            @Override
+            public Stream<ColumnReference> getAvailableColumnReferences()
+            {
+                return Stream.empty();
+            }
+        };
+    }
 
 
     // Used for testing

@@ -3,6 +3,7 @@ package records.transformations;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -26,11 +27,13 @@ import records.grammar.TransformationParser.SummaryContext;
 import records.gui.View;
 import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -68,6 +71,7 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.Any)
     private String error;
     private final @Nullable RecordSet result;
+    private List<JoinedSplit> splits;
 
     @OnThread(Tag.Simulation)
     private static class JoinedSplit
@@ -109,16 +113,18 @@ public class SummaryStatistics extends Transformation
         {
             this.result = null;
             error = "Could not find source table: \"" + srcTableId + "\"";
+            splits = new ArrayList<>();
             return;
         }
         else
             error = "Unknown error with table \"" + getId() + "\"";
 
         @Nullable RecordSet theResult = null;
+        List<JoinedSplit> theSplits = new ArrayList<>();
         try
         {
             RecordSet src = this.src.getData();
-            List<JoinedSplit> splits = calcSplits(src, splitBy);
+            splits = theSplits = calcSplits(src, splitBy);
 
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
 
@@ -157,9 +163,9 @@ public class SummaryStatistics extends Transformation
                 for (int i = 0; i < splitIndexes.length; i++)
                 {
                     // TODO could do this O(#splitBy) not O(#splits) if we design JoinedSplit right
-                    for (int s = 0; s < splits.size(); s++)
+                    for (int s = 0; s < theSplits.size(); s++)
                     {
-                        if (splits.get(s).satisfied(i))
+                        if (theSplits.get(s).satisfied(i))
                         {
                             splitIndexes[i] = s;
                             continue outer;
@@ -169,12 +175,13 @@ public class SummaryStatistics extends Transformation
                 }
             }
 
-            TableLookup tableLookup = new MultipleTableLookup(mgr, this.src);
+            ColumnLookup columnLookup = new AggTableLookup(getManager());
+            
             for (Pair<ColumnId, Expression> e : summaries)
             {
                 Expression expression = e.getSecond();
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp type = expression.checkExpression(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
@@ -206,6 +213,7 @@ public class SummaryStatistics extends Transformation
                 this.error = msg;
         }
         this.result = theResult;
+        this.splits = theSplits;
     }
 
     private static class SingleSplit
@@ -734,5 +742,85 @@ public class SummaryStatistics extends Transformation
         result = 31 * result + summaries.hashCode();
         result = 31 * result + splitBy.hashCode();
         return result;
+    }
+    
+    public class AggTableLookup implements ColumnLookup
+    {
+        private final TableManager tableManager;
+
+        private AggTableLookup(TableManager tableManager)
+        {
+            this.tableManager = tableManager;
+        }
+        
+        @Override
+        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        {
+            boolean grouped = false;
+            if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
+            {
+                // It's us -- may be a grouped or split column
+                grouped = !splitBy.contains(columnId);
+            }
+
+            try
+            {
+                Table table = tableId == null || tableId.equals(getId()) ? SummaryStatistics.this : tableManager.getSingleTableOrNull(tableId);
+                if (table == null)
+                    return null;
+                Column column = table.getData().getColumn(columnId);
+
+                switch (columnReferenceType)
+                {
+                    case CORRESPONDING_ROW:
+                        if (grouped)
+                        {
+                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> {
+                                return new Pair<>(splits.get(i).colValue.size(), column.getType().fromCollapsed((j, prog2) -> splits.get(i).colValue.get(j)));
+                            });
+                        }
+                        return column.getType();
+                    case WHOLE_COLUMN:
+                        return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
+                }
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+            catch (UserException e)
+            {
+                int x = 8;
+            }
+            return null;
+        }
+
+        @Override
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            return
+                tableManager.streamAllTablesAvailableTo(getId())
+                    .flatMap(t -> {
+                        try
+                        {
+                            return t.getData().getColumns().stream()
+                                .flatMap(c -> Arrays.stream(ColumnReferenceType.values())
+                                .map(rt -> new ColumnReference(t.getId(), c.getName(), rt)));
+                        }
+                        catch (UserException e)
+                        {
+                        }
+                        catch (InternalException e)
+                        {
+                            Log.log(e);
+                        }
+                        return Stream.empty();
+                    });
+        }
+    }
+
+    public ColumnLookup getColumnLookup()
+    {
+        return new AggTableLookup(getManager());
     }
 }

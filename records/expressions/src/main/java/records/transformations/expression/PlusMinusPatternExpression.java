@@ -45,7 +45,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // The LHS and RHS must be numbers with matching units.  The result is then that same number
         // LHS needs to be specific number value,

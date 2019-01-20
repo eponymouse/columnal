@@ -11,7 +11,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
-import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -55,7 +54,7 @@ public class EqualExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // The one to be returned, but not used for later operands:
         TypeState retTypeState = typeState;

@@ -12,6 +12,7 @@ import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -47,7 +48,7 @@ public class ColumnReference extends NonOperatorExpression
     }
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
-    private @MonotonicNonNull Column column;
+    private @MonotonicNonNull DataTypeValue column;
     private final ColumnReferenceType referenceType;
 
     public ColumnReference(@Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
@@ -68,23 +69,16 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable RecordSet recordSet = dataLookup.getTable(tableName);
-        if (recordSet == null)
+        @Nullable DataTypeValue col = dataLookup.getColumn(tableName, columnName, referenceType);
+        if (col == null)
         {
-            onError.recordError(this, StyledString.s("Could not find source table " + (tableName == null ? "" : tableName.getRaw())));
+            onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + ":")) + columnName));
             return null;
         }
-        column = recordSet.getColumn(columnName);
-        switch (referenceType)
-        {
-            case CORRESPONDING_ROW:
-                return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column.getType()));
-            case WHOLE_COLUMN:
-                return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, DataType.array(column.getType())));
-        }
-        throw new InternalException("Unknown reference type: " + referenceType);
+        column = col;
+        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, col));
     }
 
     @Override
@@ -96,25 +90,9 @@ public class ColumnReference extends NonOperatorExpression
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return new Pair<>(column.getType().getCollapsed(state.getRowIndex()), state);
+                return new Pair<>(column.getCollapsed(state.getRowIndex()), state);
             case WHOLE_COLUMN:
-                @NonNull Column columnFinal = column;
-                return new Pair<>(DataTypeUtility.value(new ListEx() {
-
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public int size() throws InternalException, UserException
-                    {
-                        return columnFinal.getLength();
-                    }
-
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public @Value Object get(int index) throws UserException, InternalException
-                    {
-                        return columnFinal.getType().getCollapsed(index);
-                    }
-                }), state);
+                return new Pair<>(column.getCollapsed(0), state);
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

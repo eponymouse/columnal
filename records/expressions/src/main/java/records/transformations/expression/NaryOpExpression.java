@@ -45,7 +45,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
         typeState = lambda.getSecond();
@@ -53,7 +53,7 @@ public abstract class NaryOpExpression extends Expression
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    public abstract @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @Override
     public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
@@ -248,7 +248,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());

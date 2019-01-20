@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
@@ -20,6 +21,7 @@ import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -38,7 +40,6 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.ExpressionBase;
@@ -57,6 +58,7 @@ import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -71,11 +73,18 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
-    public static interface TableLookup
+    public static interface ColumnLookup
     {
-        // If you pass null, you get the default table (or null if none)
-        // If no such table is found, null is returned
-        public @Nullable RecordSet getTable(@Nullable TableId tableId);
+        // If you pass null for table, you get the default table (or null if none)
+        // If no such table/column is found, null is returned
+        // If columnReferenceType is CORRESPONDING_ROW, called getCollapsed
+        // with row number should get corresponding value.  If it is
+        // WHOLE_COLUMN then passing 0 to getValue should get whole column as ListEx.
+        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
+
+        // This is really for the editor, but it doesn't rely on any GUI
+        // functionality so can be here:
+        public Stream<ColumnReference> getAvailableColumnReferences();
     }
     
     // PATTERN infects EXPRESSION: any bit of PATTERN in an inner expression
@@ -199,10 +208,10 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems.  Can be either EXPRESSION or PATTERN
-    public abstract @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
     
     // Calls check, but makes sure it is an EXPRESSION
-    public final @Nullable TypeExp checkExpression(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable TypeExp checkExpression(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable CheckedExp check = check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)
@@ -680,24 +689,44 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         */
     }
 
-    public static class SingleTableLookup implements TableLookup
+    public static class SingleTableLookup implements ColumnLookup
     {
-        private final @Nullable Table srcTable;
+        private final @Nullable RecordSet srcTable;
 
-        private SingleTableLookup(Table srcTable)
+        public SingleTableLookup(RecordSet srcTable)
         {
             this.srcTable = srcTable;
         }
 
         @Override
-        public @Nullable RecordSet getTable(@Nullable TableId tableName)
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            if (srcTable == null)
+                return Stream.empty();
+            else
+                return srcTable.getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(c.getName(), rt)));
+        }
+
+        @Override
+        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
                 if (srcTable == null)
                     return null;
-                else if (tableName == null || tableName.equals(srcTable.getId()))
-                    return srcTable.getData();
+                else if (tableId == null) // || tableName.equals(srcTable.getId()))
+                {
+                    Column column = srcTable.getColumn(columnId);
+                    switch (columnReferenceType)
+                    {
+                        case CORRESPONDING_ROW:
+                            return column.getType();
+                        case WHOLE_COLUMN:
+                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
+                        default:
+                            throw new InternalException("Unknown reference type: " + columnReferenceType);
+                    }
+                }
             }
             catch (InternalException | UserException e)
             {
@@ -707,32 +736,71 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
     }
     
-    public static class MultipleTableLookup implements TableLookup
+    public static class MultipleTableLookup implements ColumnLookup
     {
+        private final @Nullable TableId us;
         private final TableManager tableManager;
         private final @Nullable Table srcTable;
+        
 
-        public MultipleTableLookup(TableManager tableManager, @Nullable Table srcTable)
+        public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId)
         {
+            this.us = us;
             this.tableManager = tableManager;
-            this.srcTable = srcTable;
+            this.srcTable = srcTableId == null ? null : tableManager.getSingleTableOrNull(srcTableId);
         }
 
         @Override
-        public @Nullable RecordSet getTable(@Nullable TableId tableId)
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            return tableManager.streamAllTablesAvailableTo(us).flatMap(t -> {
+                try
+                {
+                    return t.getData().getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(t.getId(), c.getName(), rt)));
+                }
+                catch (UserException e)
+                {
+                    return Stream.empty();
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    return Stream.empty();
+                }
+            });
+        }
+
+        @Override
+        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
+                @Nullable RecordSet rs = null;
                 if (tableId == null)
                 {
                     if (srcTable != null)
-                        return srcTable.getData();
+                        rs = srcTable.getData();
                 }
                 else
                 {
                     Table table = tableManager.getSingleTableOrNull(tableId);
                     if (table != null)
-                        return table.getData();
+                        rs = table.getData();
+                }
+                
+                if (rs != null)
+                {
+                    Column column = rs.getColumn(columnId);
+                    switch (columnReferenceType)
+                    {
+                        case CORRESPONDING_ROW:
+                            return column.getType();
+                        case WHOLE_COLUMN:
+                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
+                        default:
+                            throw new InternalException("Unknown reference type: " + columnReferenceType);
+                    }
+                    
                 }
             }
             catch (InternalException | UserException e)

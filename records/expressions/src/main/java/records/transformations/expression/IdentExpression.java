@@ -10,7 +10,6 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
@@ -43,7 +42,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
         if (!GrammarUtility.validIdentifier(text))
@@ -55,7 +54,7 @@ public class IdentExpression extends NonOperatorExpression
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
         {
-            onError.recordError(this, StyledString.s("Incomplete expression or unknown function or variable: \"" + text + "\""));
+            onError.recordError(this, StyledString.s("Incomplete expression or unknown column/function/variable: \"" + text + "\""));
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:

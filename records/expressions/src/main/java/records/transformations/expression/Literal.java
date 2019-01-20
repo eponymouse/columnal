@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public abstract class Literal extends NonOperatorExpression
 {
     @Override
-    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordTypeAndError(this, checkType(typeState, locationInfo), ExpressionKind.EXPRESSION, typeState);
     }

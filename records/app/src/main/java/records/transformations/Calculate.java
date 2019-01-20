@@ -21,8 +21,8 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
@@ -82,7 +82,7 @@ public class Calculate extends Transformation
         try
         {
             RecordSet srcRecordSet = this.src.getData();
-            TableLookup tableLookup = new MultipleTableLookup(mgr, src);
+            ColumnLookup columnLookup = new MultipleTableLookup(getId(), mgr, src.getId());
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
             HashMap<ColumnId, Expression> stillToAdd = new HashMap<>(newColumns);
             for (Column c : srcRecordSet.getColumns())
@@ -109,13 +109,13 @@ public class Calculate extends Transformation
                 }
                 else
                 {
-                    columns.add(makeCalcColumn(mgr, tableLookup, c.getName(), overwrite));
+                    columns.add(makeCalcColumn(mgr, columnLookup, c.getName(), overwrite));
                 }
             }
 
             for (Entry<ColumnId, Expression> newCol : stillToAdd.entrySet())
             {
-                columns.add(makeCalcColumn(mgr, tableLookup, newCol.getKey(), newCol.getValue()));
+                columns.add(makeCalcColumn(mgr, columnLookup, newCol.getKey(), newCol.getValue()));
             }
 
             theResult = new RecordSet(columns)
@@ -142,7 +142,7 @@ public class Calculate extends Transformation
     }
 
     private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Object.class) Calculate this,
-        TableManager mgr, TableLookup tableLookup, ColumnId columnId, Expression expression) throws InternalException
+                                                                 TableManager mgr, ColumnLookup columnLookup, ColumnId columnId, Expression expression) throws InternalException
     {
         try
         {
@@ -167,7 +167,7 @@ public class Calculate extends Transformation
                     return typeExp;
                 }
             };
-            @Nullable TypeExp type = expression.checkExpression(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+            @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)

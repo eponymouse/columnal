@@ -21,14 +21,13 @@ import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
 import records.gui.View;
-import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -84,7 +83,7 @@ public class Filter extends Transformation
             {
                 List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
                 RecordSet data = src.getData();
-                TableLookup tableLookup = new MultipleTableLookup(mgr, src);
+                ColumnLookup columnLookup = new MultipleTableLookup(getId(), mgr, src.getId());
                 for (Column c : data.getColumns())
                 {
                     columns.add(rs -> new Column(rs, c.getName())
@@ -95,7 +94,7 @@ public class Filter extends Transformation
                         {
                             return c.getType().copyReorder((i, prog) ->
                             {
-                                fillIndexMapTo(i, tableLookup, data, prog);
+                                fillIndexMapTo(i, columnLookup, data, prog);
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             });
                         }
@@ -116,7 +115,7 @@ public class Filter extends Transformation
                         if (index < indexMap.filled())
                             return true;
 
-                        Utility.later(Filter.this).fillIndexMapTo(index, tableLookup, data,null);
+                        Utility.later(Filter.this).fillIndexMapTo(index, columnLookup, data,null);
                         return index < indexMap.filled();
                     }
                 };
@@ -131,7 +130,7 @@ public class Filter extends Transformation
         this.recordSet = theRecordSet;
     }
 
-    private void fillIndexMapTo(int index, TableLookup data, RecordSet recordSet, @Nullable ProgressListener prog) throws UserException, InternalException
+    private void fillIndexMapTo(int index, ColumnLookup data, RecordSet recordSet, @Nullable ProgressListener prog) throws UserException, InternalException
     {
         if (type == null)
         {
@@ -146,7 +145,7 @@ public class Filter extends Transformation
                     typeFinal = errors.recordLeftError(getManager().getTypeManager(), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
-                    throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, c -> ColumnAvailability.SINGLE, DataType.BOOLEAN)
+                    throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, DataType.BOOLEAN)
                     {
                         @Override
                         @OnThread(Tag.Simulation)

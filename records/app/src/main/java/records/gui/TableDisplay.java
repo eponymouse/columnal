@@ -88,6 +88,8 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledCSS;
@@ -117,7 +119,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -859,7 +860,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
         // expression may still be null
         
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, c -> ColumnAvailability.SINGLE, null).showAndWait().ifPresent(newDetails -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
@@ -917,7 +918,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, c -> ColumnAvailability.SINGLE, null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -934,7 +935,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), new ColumnId(""), null, c -> agg.getSplitBy().contains(c) ? ColumnAvailability.SINGLE : ColumnAvailability.GROUPED, null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), new ColumnId(""), null, agg.getColumnLookup(), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1041,7 +1042,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             new EditExpressionDialog(parent, 
                 parent.getManager().getSingleTableOrNull(filter.getSource()),
                 filter.getFilterExpression(),
-                c -> ColumnAvailability.SINGLE,
+                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()),
                 DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
                 
@@ -1178,7 +1179,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
-    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, Function<ColumnId, ColumnAvailability> groupedColumns, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toStyledString().withStyle(new Clickable() {
             @Override
@@ -1187,7 +1188,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, srcTable, curExpression, groupedColumns, expectedType).showAndWait().ifPresent(newExp -> {
+                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, expectedType).showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }
@@ -1204,7 +1205,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.groupedColumns, fixer.expectedType)
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.expectedType)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->
@@ -1240,7 +1241,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                             table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
-                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), c -> ColumnAvailability.SINGLE, DataType.BOOLEAN, newExp ->
+                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()), DataType.BOOLEAN, newExp ->
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                             table.getDetailsForCopy(), filter.getSource(), newExp), null))
                 );
@@ -1343,7 +1344,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                             table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                     StyledString.s(" that "),
-                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN, e -> 
+                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), new MultipleTableLookup(check.getId(), parent.getManager(), ((Check) table).getSource()), DataType.BOOLEAN, e -> 
                         parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
                     )
                 );

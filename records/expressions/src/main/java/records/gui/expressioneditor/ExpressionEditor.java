@@ -15,24 +15,18 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
-import records.data.ColumnId;
 import records.data.Table;
-import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.ExpressionLexer;
-import records.grammar.ExpressionParser;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.CheckedExp;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.LocationInfo;
-import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.TypeState;
@@ -45,11 +39,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -57,13 +47,13 @@ import java.util.stream.Stream;
  */
 public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver>
 {
+    public static enum ColumnAvailability { ONLY_ENTIRE, GROUPED, SINGLE }
+    
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
-    // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Check does not, and Aggregate allows grouped.
-    private final Function<ColumnId, ColumnAvailability> groupedColumns;
-    private final TableManager tableManager;
+    private final ColumnLookup columnLookup;
 
 
     private ObjectProperty<@Nullable DataType> latestType = new SimpleObjectProperty<>(null);
@@ -97,18 +87,14 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
 
         try
         {
-            if (tableManager != null)
+            @Nullable CheckedExp dataType = expression.check(columnLookup, new TypeState(getTypeManager().getUnitManager(), getTypeManager()), LocationInfo.UNIT_DEFAULT, saver);
+            if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
             {
-                TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
-                @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, saver);
-                if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
-                {
-                    saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));
-                }
-                latestType.set(dataType == null ? null : saver.recordLeftError(tableManager.getTypeManager(), expression, dataType.typeExp.toConcreteType(tableManager.getTypeManager())));
-                //Log.debug("Latest type: " + dataType);
-                //errorDisplayers.showAllTypes(tableManager.getTypeManager());
+                saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));
             }
+            latestType.set(dataType == null ? null : saver.recordLeftError(getTypeManager(), expression, dataType.typeExp.toConcreteType(getTypeManager())));
+            //Log.debug("Latest type: " + dataType);
+            //errorDisplayers.showAllTypes(tableManager.getTypeManager());
         }
         catch (InternalException | UserException e)
         {
@@ -122,13 +108,10 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return expression;
     }
 
-    public static enum ColumnAvailability { ONLY_ENTIRE, GROUPED, SINGLE }
-    
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, Function<ColumnId, ColumnAvailability> groupedColumns, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ColumnLookup columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(EXPRESSION_OPS, tableManager.getTypeManager(), "expression-editor");
-        this.tableManager = tableManager;
-        this.groupedColumns = groupedColumns;
+        super(EXPRESSION_OPS, typeManager, "expression-editor");
+        this.columnLookup = columnLookup;
         
         
         // TODO respond to dynamic adjustment of table to revalidate column references:
@@ -198,6 +181,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public Stream<ColumnReference> getAvailableColumnReferences()
     {
+        /*
         return tableManager.streamAllTablesAvailableTo(srcTable == null ? null : srcTable.getId()).flatMap(t -> {
             try
             {
@@ -219,6 +203,8 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
                 return Stream.empty();
             }
         });
+        */
+        return columnLookup.getAvailableColumnReferences();
     }
 
     @Override
@@ -260,7 +246,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             {
                 if (tableManager != null)
                 {
-                    TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
+                    ColumnLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
                     @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
                     if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
                     {

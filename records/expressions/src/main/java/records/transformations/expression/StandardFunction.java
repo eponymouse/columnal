@@ -13,7 +13,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
@@ -42,7 +41,7 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = functionDefinition.getType(typeState.getTypeManager());
         return new CheckedExp(onError.recordTypeNN(this, type.getFirst()), typeState, ExpressionKind.EXPRESSION);

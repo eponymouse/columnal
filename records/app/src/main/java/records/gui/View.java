@@ -52,6 +52,7 @@ import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.TransformationManager;
+import records.transformations.expression.Expression.MultipleTableLookup;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -767,7 +768,7 @@ public class View extends StackPane
                     break;
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                        new EditExpressionDialog(thisView, srcTable, null, c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                        new EditExpressionDialog(thisView, srcTable, null, new MultipleTableLookup(null, tableManager, srcTable.getId()), DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                 tableManager.record(check);

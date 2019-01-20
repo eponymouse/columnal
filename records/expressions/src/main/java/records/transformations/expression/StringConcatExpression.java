@@ -11,7 +11,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -46,7 +45,7 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration

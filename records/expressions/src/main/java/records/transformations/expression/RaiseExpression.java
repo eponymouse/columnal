@@ -53,7 +53,7 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         final @NonNull @Recorded TypeExp lhsTypeFinal = lhsType.typeExp;
         final @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;

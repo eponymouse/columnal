@@ -7,16 +7,13 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.loadsave.OutputBuilder;
-import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -44,7 +41,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         onError.recordError(this, StyledString.s(
             text.isEmpty() ? "Expression cannot be blank" :

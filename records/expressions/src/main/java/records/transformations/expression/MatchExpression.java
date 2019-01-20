@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -63,7 +62,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern match type, outcome type
          */
-        public @Nullable Pair<List<TypeExp>, TypeExp> check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<List<TypeExp>, TypeExp> check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             TypeExp[] patternTypes = new TypeExp[patterns.size()];
             TypeState[] rhsStates = new TypeState[patterns.size()];
@@ -191,7 +190,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
-        public @Nullable CheckedExp check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable CheckedExp check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             final @Nullable CheckedExp rhsState = pattern.check(data, state, LocationInfo.UNIT_CONSTRAINED, onError);
             if (rhsState == null)
@@ -349,7 +348,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched

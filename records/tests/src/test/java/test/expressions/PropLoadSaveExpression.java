@@ -80,7 +80,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     private void testNoOpEdit(Expression expression)
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), c -> ColumnAvailability.SINGLE, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make(), e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), TestUtil.dummyColumnLookup(), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make().getTypeManager(), e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
