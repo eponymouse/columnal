@@ -18,6 +18,7 @@ import records.data.datatype.DataType;
 import records.gui.View;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.ExpressionEditor;
+import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -29,6 +30,7 @@ import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
@@ -37,7 +39,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, Function<ColumnId, ColumnAvailability> groupedColumns, @Nullable DataType expectedType)
     {
         super(parent.getWindow(), new DialogPaneWithSideButtons());
         setResizable(true);
@@ -45,7 +47,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         ColumnNameTextField field = new ColumnNameTextField(initialName);
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, perRow, expectedTypeWrapper, parent.getManager(), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, groupedColumns, expectedTypeWrapper, parent.getManager(), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
             {

@@ -14,6 +14,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
@@ -79,7 +80,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     private void testNoOpEdit(Expression expression)
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make(), e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), c -> ColumnAvailability.SINGLE, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make(), e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));

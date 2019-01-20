@@ -55,6 +55,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
+import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.gui.flex.EditorKit;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -116,6 +117,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -857,7 +859,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
         // expression may still be null
         
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, true, null).showAndWait().ifPresent(newDetails -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, c -> ColumnAvailability.SINGLE, null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
@@ -903,12 +905,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 FXUtility.mouse(this).addColumnBefore_Calc(calc, beforeColumn, null);
             };
         }
+        else if (table instanceof SummaryStatistics)
+        {
+            SummaryStatistics agg = (SummaryStatistics) table;
+            return beforeColumn -> {
+                FXUtility.mouse(this).addColumnBefore_Agg(agg, beforeColumn, null);
+            };
+        }
         return null;
     }
     
     private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, true, null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, c -> ColumnAvailability.SINGLE, null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -919,6 +928,23 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
                         calc.getSource(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
                 })
+            );
+        });
+    }
+
+    private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
+    {
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), new ColumnId(""), null, c -> agg.getSplitBy().contains(c) ? ColumnAvailability.SINGLE : ColumnAvailability.GROUPED, null);
+
+        if (topMessageKey != null)
+            dialog.addTopMessage(topMessageKey);
+
+        dialog.showAndWait().ifPresent(p -> {
+            Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
+                    FXUtility.alertOnError_("Error adding column", () -> {
+                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(),
+                                agg.getSource(), Utility.appendToList(agg.getColumnExpressions(), p), agg.getSplitBy()), null);
+                    })
             );
         });
     }
@@ -1015,7 +1041,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             new EditExpressionDialog(parent, 
                 parent.getManager().getSingleTableOrNull(filter.getSource()),
                 filter.getFilterExpression(),
-                true,
+                c -> ColumnAvailability.SINGLE,
                 DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
                 
@@ -1152,7 +1178,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
-    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, boolean perRow, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, Function<ColumnId, ColumnAvailability> groupedColumns, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toStyledString().withStyle(new Clickable() {
             @Override
@@ -1161,7 +1187,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, srcTable, curExpression, perRow, expectedType).showAndWait().ifPresent(newExp -> {
+                    new EditExpressionDialog(parent, srcTable, curExpression, groupedColumns, expectedType).showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }
@@ -1178,7 +1204,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.groupedColumns, fixer.expectedType)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->
@@ -1214,7 +1240,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                             table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
-                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), true, DataType.BOOLEAN, newExp ->
+                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), c -> ColumnAvailability.SINGLE, DataType.BOOLEAN, newExp ->
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                             table.getDetailsForCopy(), filter.getSource(), newExp), null))
                 );
@@ -1317,7 +1343,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                             table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                     StyledString.s(" that "),
-                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), false, DataType.BOOLEAN, e -> 
+                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN, e -> 
                         parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
                     )
                 );

@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -44,8 +45,11 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -57,8 +61,8 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
-    // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Aggregate does not.
-    private final boolean allowsSameRow;
+    // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Check does not, and Aggregate allows grouped.
+    private final Function<ColumnId, ColumnAvailability> groupedColumns;
     private final TableManager tableManager;
 
 
@@ -118,16 +122,13 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return expression;
     }
 
-    public boolean allowsSameRow()
-    {
-        return allowsSameRow;
-    }
-
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public static enum ColumnAvailability { ONLY_ENTIRE, GROUPED, SINGLE }
+    
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, Function<ColumnId, ColumnAvailability> groupedColumns, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS, tableManager.getTypeManager(), "expression-editor");
         this.tableManager = tableManager;
-        this.allowsSameRow = allowsSameRow;
+        this.groupedColumns = groupedColumns;
         
         
         // TODO respond to dynamic adjustment of table to revalidate column references:
@@ -201,16 +202,16 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             try
             {
                 List<Column> columns = t.getData().getColumns();
-                Stream<ColumnReference> wholeColumns = columns.stream().map(c -> new ColumnReference(t.getId(), c.getName(), ColumnReferenceType.WHOLE_COLUMN));
-                // Use reference equality, as tables may share names if we compare them:
-                if (t == srcTable && allowsSameRow)
-                {
-                    return Stream.<ColumnReference>concat(wholeColumns, columns.stream().<ColumnReference>map(c -> new ColumnReference(c.getName(), ColumnReferenceType.CORRESPONDING_ROW)));
-                }
-                else
-                {
-                    return wholeColumns;
-                }
+                return columns.stream().flatMap(c -> {
+                    ArrayList<ColumnReference> refs = new ArrayList<>();
+                    refs.add(new ColumnReference(t.getId(), c.getName(), ColumnReferenceType.WHOLE_COLUMN));
+                    // Use reference equality, as tables may share names if we compare them:
+                    if (t == srcTable && groupedColumns.apply(c.getName()) != ColumnAvailability.ONLY_ENTIRE)
+                    {
+                        refs.add(new ColumnReference(t.getId(), c.getName(), ColumnReferenceType.CORRESPONDING_ROW));
+                    }
+                    return refs.stream();
+                });
             }
             catch (InternalException | UserException e)
             {

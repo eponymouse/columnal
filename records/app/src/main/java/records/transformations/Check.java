@@ -11,6 +11,7 @@ import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
 import records.gui.View;
+import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
@@ -77,7 +78,7 @@ public class Check extends Transformation
                 typeFinal = errors.recordLeftError(getManager().getTypeManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
             if (typeFinal == null)
-                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, true, DataType.BOOLEAN)
+                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN)
                 {
                     @Override
                     @OnThread(Tag.Simulation)

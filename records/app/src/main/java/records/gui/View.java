@@ -40,6 +40,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
+import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
@@ -766,7 +767,7 @@ public class View extends StackPane
                     break;
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                        new EditExpressionDialog(thisView, srcTable, null, false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                        new EditExpressionDialog(thisView, srcTable, null, c -> ColumnAvailability.ONLY_ENTIRE, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                 tableManager.record(check);
