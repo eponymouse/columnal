@@ -140,7 +140,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             assertEquals(column.name.getRaw(), totalLength, column.data.size());
         }
 
-        columns = scrambleDataOrder(columns, r);
+        columns = scrambleDataOrder(columns, replicationCounts, r);
         
         createDataTable(mainWindowActions, CellPosition.ORIGIN.offsetByRowCols(1, 1), "Src Data", columns);
         
@@ -205,7 +205,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             {
                 LoadedColumnInfo calcCol = finalAgg.stream().filter(c -> Objects.equals(c.columnName, calculation.columnName)).findFirst().orElseThrow(() -> new AssertionError("Missing column"));
                 
-                assertEquals(calculation.dataType, calcCol.dataType);
+                assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
                 
                 TestUtil.assertValueListEitherEqual("",
                     calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
@@ -269,7 +269,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 // Minimum:
                 calculations.add(new AggCalculation(name.apply("Min"),
                         new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), groupExp),
-                        DataType.array(columnDetails.dataType),
+                        columnDetails.dataType,
                         perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(DataTypeUtility.getValueComparator()).orElse(null)))
                 ));
                 // TODO more (first, last, max)
@@ -325,11 +325,37 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         });
     }
 
-    private List<ColumnDetails> scrambleDataOrder(List<ColumnDetails> columns, Random r)
+    private List<ColumnDetails> scrambleDataOrder(List<ColumnDetails> columns, List<Integer> groupCounts, Random r)
     {
+        List<List<Integer>> indexesToDrawFrom = new ArrayList<>();
+        int total = 0;
+        for (Integer count : groupCounts)
+        {
+            ArrayList<Integer> sub = new ArrayList<>();
+            for (int i = 0; i < count; i++)
+            {
+                sub.add(total + i);
+            }
+            indexesToDrawFrom.add(sub);
+            total += count;
+        }
+
+        List<Integer> oldIndexes = new ArrayList<>();
+        for (int i = 0; i < total; i++)
+        {
+            int group = r.nextInt(indexesToDrawFrom.size());
+            int j = indexesToDrawFrom.get(group).remove(0);
+            oldIndexes.add(j);
+            if (indexesToDrawFrom.get(group).isEmpty())
+                indexesToDrawFrom.remove(group);
+        }
+        
         return Utility.mapList(columns, c -> {
-            List<Either<String, @Value Object>> scrambledData = new ArrayList<>(c.data);
-            Collections.shuffle(scrambledData, r);
+            List<Either<String, @Value Object>> scrambledData = new ArrayList<>();
+            for (Integer oldIndex : oldIndexes)
+            {
+                scrambledData.add(c.data.get(oldIndex));
+            }
             return new ColumnDetails(c.name, c.dataType, ImmutableList.copyOf(scrambledData));
         });
     }
