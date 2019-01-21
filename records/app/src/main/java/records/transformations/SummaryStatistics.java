@@ -4,17 +4,10 @@ import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.Table;
-import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
+import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -25,14 +18,13 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
 import records.gui.View;
-import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
@@ -40,16 +32,15 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.SimulationFunction;
 import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.BitSet;
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 /**
@@ -70,27 +61,67 @@ public class SummaryStatistics extends Transformation
     private final ImmutableList<ColumnId> splitBy;
     @OnThread(Tag.Any)
     private String error;
-    private final @Nullable RecordSet result;
-    private List<JoinedSplit> splits;
+    private @MonotonicNonNull TransformationRecordSet result;
+    private JoinedSplit splits;
 
+    // A BitSet, with a cached array of int indexes indicating the set bits 
+    public static class Occurrences
+    {
+        private final BitSet bitSet;
+        private int @MonotonicNonNull [] indexes; // The indexes of the set bits
+
+        public Occurrences(BitSet bitSet)
+        {
+            this.bitSet = bitSet;
+        }
+
+        public int[] getIndexes()
+        {
+            if (indexes == null)
+            {
+                indexes = new int[bitSet.cardinality()];
+                int dest = 0;
+                for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i+1))
+                {
+                    indexes[dest++] = i;
+                }
+            }
+            return indexes;
+        }
+    }
+    
     @OnThread(Tag.Simulation)
     private static class JoinedSplit
     {
-        private final List<Column> colName = new ArrayList<>();
-        private final List<@Value Object> colValue = new ArrayList<>();
+        private final ImmutableList<Column> columns;
+        // This list is in sorted order of the value list,
+        // because of the way it is constructed
+        private final ImmutableList<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences;
 
         public JoinedSplit()
         {
+            columns = ImmutableList.of();
+            valuesAndOccurrences = ImmutableList.of();
         }
 
-        public JoinedSplit(Column column, @Value Object value, JoinedSplit addTo)
+        public JoinedSplit(Column column, TreeMap<@Value Object, BitSet> valuesAndOccurrences)
         {
-            colName.add(column);
-            colValue.add(value);
-            colName.addAll(addTo.colName);
-            colValue.addAll(addTo.colValue);
+            this.columns = ImmutableList.of(column);
+            ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valOccBuilder = ImmutableList.builderWithExpectedSize(valuesAndOccurrences.size());
+            valuesAndOccurrences.forEach((@Value Object k, BitSet v) ->
+            {
+                valOccBuilder.add(new Pair<>(ImmutableList.<@Value Object>of(k), new Occurrences(v)));
+            });
+            this.valuesAndOccurrences = valOccBuilder.build();
+        }
+        
+        public JoinedSplit(ImmutableList<Column> columns, ImmutableList<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences)
+        {
+            this.columns = columns;
+            this.valuesAndOccurrences = valuesAndOccurrences;
         }
 
+        /*
         public boolean satisfied(int index) throws InternalException, UserException
         {
             for (int c = 0; c < colName.size(); c++)
@@ -100,6 +131,7 @@ public class SummaryStatistics extends Transformation
             }
             return true;
         }
+        */
     }
 
     public SummaryStatistics(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
@@ -111,25 +143,33 @@ public class SummaryStatistics extends Transformation
         this.splitBy = splitBy;
         if (this.src == null)
         {
-            this.result = null;
             error = "Could not find source table: \"" + srcTableId + "\"";
-            splits = new ArrayList<>();
+            splits = new JoinedSplit();
             return;
         }
         else
             error = "Unknown error with table \"" + getId() + "\"";
 
-        @Nullable RecordSet theResult = null;
-        List<JoinedSplit> theSplits = new ArrayList<>();
+        JoinedSplit theSplits = new JoinedSplit();
         try
         {
             RecordSet src = this.src.getData();
             splits = theSplits = calcSplits(src, splitBy);
+            this.result = new TransformationRecordSet()
+            {
+                @Override
+                public boolean indexValid(int index) throws UserException
+                {
+                    return summaries.isEmpty() ? false : index < splits.valuesAndOccurrences.size();
+                }
 
-            List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
-
-            // Will be zero by default, which we take advantage of:
-            int[] splitIndexes = new int[src.getLength()];
+                @Override
+                @SuppressWarnings("units")
+                public @TableDataRowIndex int getLength() throws UserException
+                {
+                    return splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
+                }
+            };
 
             if (!splitBy.isEmpty())
             {
@@ -137,12 +177,12 @@ public class SummaryStatistics extends Transformation
                 {
                     ColumnId colName = splitBy.get(i);
                     Column orig = src.getColumn(colName);
-                    int iFinal = i;
-                    columns.add(rs -> new Column(rs, colName)
+                    int splitColumnIndex = i;
+                    result.buildColumn(rs -> new Column(rs, colName)
                     {
                         private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                         {
-                            return splits.get(index).colValue.get(iFinal);
+                            return splits.valuesAndOccurrences.get(index).getFirst().get(splitColumnIndex);
                         }
 
                         @Override
@@ -158,25 +198,12 @@ public class SummaryStatistics extends Transformation
                         }
                     });
                 }
-
-                outer:
-                for (int i = 0; i < splitIndexes.length; i++)
-                {
-                    // TODO could do this O(#splitBy) not O(#splits) if we design JoinedSplit right
-                    for (int s = 0; s < theSplits.size(); s++)
-                    {
-                        if (theSplits.get(s).satisfied(i))
-                        {
-                            splitIndexes[i] = s;
-                            continue outer;
-                        }
-                    }
-                    throw new InternalException("Split not found for row " + i + ": " + src.debugGetVals(i));
-                }
             }
 
             ColumnLookup columnLookup = new AggTableLookup(getManager());
             
+            // It's important that our splits and record set are initialised
+            // before trying to calculate these expressions:
             for (Pair<ColumnId, Expression> e : summaries)
             {
                 Expression expression = e.getSecond();
@@ -186,25 +213,9 @@ public class SummaryStatistics extends Transformation
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst()));
+                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(i))).getFirst()));
                 
             }
-
-            theResult = new RecordSet(columns)
-            {
-                @Override
-                public boolean indexValid(int index) throws UserException
-                {
-                    return summaries.isEmpty() ? false : index < splits.size();
-                }
-
-                @Override
-                @SuppressWarnings("units")
-                public @TableDataRowIndex int getLength() throws UserException
-                {
-                    return splitBy.isEmpty() ? 0 : splits.size();
-                }
-            };
         }
         catch (UserException e)
         {
@@ -212,26 +223,25 @@ public class SummaryStatistics extends Transformation
             if (msg != null)
                 this.error = msg;
         }
-        this.result = theResult;
         this.splits = theSplits;
     }
 
     private static class SingleSplit
     {
-        private Column column;
-        private List<@NonNull @Value Object> values;
+        private final Column column;
+        private final TreeMap<@NonNull @Value Object, BitSet> valuesAndOccurrences;
 
-        public SingleSplit(Column column, List<@NonNull @Value Object> values)
+        public SingleSplit(Column column, TreeMap<@NonNull @Value Object, BitSet> valuesAndOccurrences)
         {
             this.column = column;
-            this.values = values;
+            this.valuesAndOccurrences = valuesAndOccurrences;
         }
     }
 
-    private static List<JoinedSplit> calcSplits(RecordSet src, List<ColumnId> splitBy) throws UserException, InternalException
+    private static JoinedSplit calcSplits(RecordSet src, List<ColumnId> splitBy) throws UserException, InternalException
     {
-        // Each item in outer is a column.
-        // Each item in inner is a possible value of that column;
+        // Each item in outer is a column in the set of columns which we are splitting by.
+        // Each item in inner.values is a possible value of that column;
         List<SingleSplit> splits = new ArrayList<>();
         for (ColumnId colName : splitBy)
         {
@@ -241,14 +251,21 @@ public class SummaryStatistics extends Transformation
             //    splits.add(new SingleSplit(c, fastDistinct.get()));
             //else
             {
-                TreeSet<@Value Object> r = new TreeSet<>(DataTypeUtility.getValueComparator());
+                // A bit is set if the value occurred at a particular index:
+                TreeMap<@Value Object, BitSet> r = new TreeMap<>(DataTypeUtility.getValueComparator());
                 try
                 {
                     for (int i = 0; c.indexValid(i); i++)
                     {
-                        r.add(c.getType().getCollapsed(i));
+                        int iFinal = i;
+                        r.compute(c.getType().getCollapsed(i), (k, bs) -> {
+                            if (bs == null)
+                                bs = new BitSet();
+                            bs.set(iFinal);
+                            return bs;
+                        });
                     }
-                    splits.add(new SingleSplit(c, new ArrayList<>(r)));
+                    splits.add(new SingleSplit(c, r));
                 }
                 catch (RuntimeException e)
                 {
@@ -262,25 +279,52 @@ public class SummaryStatistics extends Transformation
 
         }
         // Now form cross-product:
-        return crossProduct(splits, 0);
+        return crossProduct(splits);
     }
 
-    private static List<JoinedSplit> crossProduct(List<SingleSplit> allDistincts, int from)
+    /**
+     * Given a list of columns and their values and index occurrences, calculates the 
+     * set of all combinations that occur at least once.
+     * 
+     * @param allDistincts The list of per-single-column values and occurrences (one entry per column)
+     * @return The list of all joined value combinations of the split columns that actually occur at least once. 
+     */
+    private static JoinedSplit crossProduct(List<SingleSplit> allDistincts)
     {
-        if (from >= allDistincts.size())
-            return Collections.singletonList(new JoinedSplit());
-        // Take next list:
-        SingleSplit cur = allDistincts.get(from);
-        List<JoinedSplit> rest = crossProduct(allDistincts, from + 1);
-        List<JoinedSplit> r = new ArrayList<>();
-        for (@Value Object o : cur.values)
+        if (allDistincts.isEmpty())
         {
-            for (JoinedSplit js : rest)
-            {
-                r.add(new JoinedSplit(cur.column, o, js));
-            }
+            return new JoinedSplit();
         }
-        return r;
+        else if (allDistincts.size() == 1)
+        {
+            // Turn single split into a joined split:
+            SingleSplit single = allDistincts.get(0);
+            return new JoinedSplit(single.column, single.valuesAndOccurrences);
+        }
+        // Take next list:
+        SingleSplit first = allDistincts.get(0);
+        // Recurse to get cross product of the rest:
+        JoinedSplit rest = crossProduct(allDistincts.subList(1, allDistincts.size()));
+        // Don't know size in advance because not all combinations will occur:
+        ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences = ImmutableList.builder();
+        // Important that the first list is outermost, so that
+        // we add all the items with earliest value of first, thus
+        // keeping the result in order of first column foremost,
+        // then going by order of rest.
+        first.valuesAndOccurrences.forEach((firstVal, firstOcc) ->
+        {
+            for (Pair<List<@Value Object>, Occurrences> restPair : rest.valuesAndOccurrences)
+            {
+                // BitSet is mutable, so important to clone:
+                BitSet jointOccurrence = (BitSet)firstOcc.clone();
+                jointOccurrence.and(restPair.getSecond().bitSet);
+                if (!jointOccurrence.isEmpty())
+                {
+                    valuesAndOccurrences.add(new Pair<>(Utility.prependToList(firstVal, restPair.getFirst()), new Occurrences(jointOccurrence)));
+                }
+            }
+        });
+        return new JoinedSplit(Utility.prependToList(first.column, rest.columns), valuesAndOccurrences.build());
     }
 
 
@@ -768,20 +812,39 @@ public class SummaryStatistics extends Transformation
                 Table table = tableId == null || tableId.equals(getId()) ? SummaryStatistics.this : tableManager.getSingleTableOrNull(tableId);
                 if (table == null)
                     return null;
-                Column column = table.getData().getColumn(columnId);
+                Column column = table.getData().getColumnOrNull(columnId);
+                if (column == null && tableId == null)
+                {
+                    // Could be in our source table but not copied forwards to us:
+                    table = tableManager.getSingleTableOrNull(srcTableId);
+                    if (table != null)
+                        column = table.getData().getColumnOrNull(columnId);
+                }
+                
+                if (column == null)
+                    throw new UserException("Could not find column: " + columnId.getRaw());
 
+                @NonNull Column columnFinal = column;
                 switch (columnReferenceType)
                 {
                     case CORRESPONDING_ROW:
                         if (grouped)
                         {
                             return DataTypeValue.arrayV(column.getType(), (i, prog) -> {
-                                return new Pair<>(splits.get(i).colValue.size(), column.getType().fromCollapsed((j, prog2) -> splits.get(i).colValue.get(j)));
+                                Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
+                                return new Pair<Integer, DataTypeValue>(splitInfo.getSecond().getIndexes().length, columnFinal.getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j])));
                             });
                         }
-                        return column.getType();
+                        else
+                        {
+                            // If not grouped, must be in split by
+                            return columnFinal.getType().copyReorder((i, prog) -> {
+                                // Get value at first occurrence:
+                                return splits.valuesAndOccurrences.get(i).getSecond().getIndexes()[0];
+                            });
+                        }
                     case WHOLE_COLUMN:
-                        return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
+                        return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType()));
                 }
             }
             catch (InternalException e)

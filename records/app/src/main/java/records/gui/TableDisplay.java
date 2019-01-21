@@ -1053,11 +1053,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> {
-                FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
-            });
+            editAggregateSplitBy(aggregate);
         }
         // For other tables, do nothing
+    }
+
+    public void editAggregateSplitBy(SummaryStatistics aggregate)
+    {
+        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> {
+            FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
+        });
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1293,17 +1298,26 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 // TODO should we add the calculations here if there are only one or two?
                 
                 List<ColumnId> splitBy = aggregate.getSplitBy();
+                Clickable editSplitBy = new Clickable()
+                {
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        editAggregateSplitBy(aggregate);
+                    }
+                };
                 if (!splitBy.isEmpty())
                 {
                     builder.append(" splitting by ");
-                    // TODO make this an edit link once we've decided how to edit:
-                    builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")));
+                    builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")).withStyle(editSplitBy));
                 }
                 else
                 {
-                    // TODO make this an edit link once we've decided how to edit:
-                    builder.append(" with no splitting.");
+                    builder.append(StyledString.s("for whole table").withStyle(editSplitBy));
+                    builder.append(".");
                 }
+                // TEMP:
+                builder.append(" COLS " + aggregate.getColumnExpressions().stream().map(p -> p.getFirst().getRaw()).collect(Collectors.joining(";")));
                 content = builder.build();
             }
             else if (table instanceof Concatenate)

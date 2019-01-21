@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertTrue;
+
 public interface FocusOwnerTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
@@ -73,4 +75,11 @@ public interface FocusOwnerTrait extends FxRobotInterface
     {
         return targetWindow(TestUtil.fx(() -> getRealFocusedWindow()));
     }
+    
+    default public void checkDialogFocused(String msg)
+    {
+        Window window = getRealFocusedWindow();
+        assertTrue(msg + " " + window + " " + window.getClass(), window.getClass().toString().contains("Dialog"));
+    }
+    
 }

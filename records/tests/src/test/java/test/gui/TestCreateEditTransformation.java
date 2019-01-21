@@ -185,9 +185,11 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             for (AggCalculation calculation : aggColumn.calculations)
             {
                 CellPosition arrowLoc = aggTarget.offsetByRowCols(2, colCount++);
+                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
                 clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
                 // Now enter column name and expression:
                 TestUtil.sleep(500);
+                checkDialogFocused("New column dialog");
                 write(calculation.columnName.getRaw(), 1);
                 push(KeyCode.TAB);
                 enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), calculation.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);

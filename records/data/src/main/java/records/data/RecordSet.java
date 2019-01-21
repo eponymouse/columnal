@@ -44,11 +44,16 @@ import java.util.stream.IntStream;
 public abstract class RecordSet
 {
     @OnThread(Tag.Any)
-    protected final List<Column> columns;
+    protected final ArrayList<Column> columns;
 
     @OnThread(Tag.FXPlatform)
     protected @MonotonicNonNull RecordSetListener listener;
 
+    protected RecordSet()
+    {
+        this.columns = new ArrayList<>();
+    }
+    
     public <C extends Column> RecordSet(List<SimulationFunction<RecordSet, C>> columns) throws InternalException, UserException
     {
         this.columns = new ArrayList<>();
