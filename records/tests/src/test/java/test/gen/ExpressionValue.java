@@ -39,12 +39,6 @@ public class ExpressionValue extends SingleTableLookup implements ColumnLookup
         this.expression = expression;
         this.generator = generator;
     }
-
-    @Override
-    public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
-    {
-        return null;
-    }
     
     @Override
     public String toString()

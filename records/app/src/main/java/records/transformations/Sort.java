@@ -347,7 +347,7 @@ public class Sort extends Transformation
     {
         OutputBuilder b = new OutputBuilder();
         for (Pair<ColumnId, Direction> c : originalSortBy)
-            b.kw(c.getSecond().toString()).id(renames.columnId(srcTableId, c.getFirst())).nl();
+            b.kw(c.getSecond().toString()).id(renames.columnId(srcTableId, c.getFirst()).getSecond()).nl();
         return b.toLines();
     }
 

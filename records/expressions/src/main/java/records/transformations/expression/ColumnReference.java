@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,17 +101,21 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String ideal = renames.columnId(tableName, columnName).getOutput();
+        final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName);
+
+        final @Nullable TableId renamedTableId = renamed.getFirst();
+        String tableColonColumn = (renamedTableId != null ? (renamedTableId.getRaw() + ":") : "") + renamed.getSecond().getRaw();
         
         if (!structured)
-            return ideal;
+        {
+            return tableColonColumn;
+        }
         
         // Sanity check to avoid saving something we can't load:
-        String ident = IdentifierUtility.asExpressionIdentifier(ideal);
-        if (ident != null)
-            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "@column ") + ident;
+        if (IdentifierUtility.asExpressionIdentifier(renamed.getSecond().getRaw()) != null && (renamedTableId == null || IdentifierUtility.asExpressionIdentifier(renamedTableId.getRaw()) != null))
+            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "@column ") + tableColonColumn;
         else
-            return "@unfinished " + OutputBuilder.quoted(ideal);
+            return "@unfinished " + OutputBuilder.quoted(tableColonColumn);
     }
 
     @Override

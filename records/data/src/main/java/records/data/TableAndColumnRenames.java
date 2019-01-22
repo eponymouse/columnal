@@ -37,7 +37,7 @@ public class TableAndColumnRenames
     }
 
     // Note: pass the OLD TableId, not the new one.  If you pass null, the default is used (if set)
-    public ColumnId columnId(@Nullable TableId oldTableId, ColumnId columnId)
+    public Pair<@Nullable TableId, ColumnId> columnId(@Nullable TableId oldTableId, ColumnId columnId)
     {
         @Nullable Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>> info = null;
         if (oldTableId != null)
@@ -46,9 +46,9 @@ public class TableAndColumnRenames
             info = renames.get(defaultTableId);
         
         if (info != null)
-            return info.getSecond().getOrDefault(columnId, columnId);
+            return info.<@Nullable TableId, ColumnId>map(t -> oldTableId != null || t == null ? t : (t.equals(defaultTableId) ? oldTableId : t), c -> c.getOrDefault(columnId, columnId));
         else
-            return columnId;
+            return new Pair<>(oldTableId, columnId);
     }
     
     public static final TableAndColumnRenames EMPTY = new TableAndColumnRenames(ImmutableMap.of());

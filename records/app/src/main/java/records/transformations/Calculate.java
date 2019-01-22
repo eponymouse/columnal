@@ -206,7 +206,7 @@ public class Calculate extends Transformation
     {
         return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getKey()));
+            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getKey()).getSecond());
             b.kw("@EXPRESSION");
             b.raw(entry.getValue().save(true, BracketedStatus.MISC, renames.withDefaultTableId(srcTableId)));
             return b.toString();

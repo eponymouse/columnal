@@ -148,7 +148,7 @@ public class HideColumns extends Transformation
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : hideIds)
-            b.kw("HIDE").id(renames.columnId(getId(), c)).nl();
+            b.kw("HIDE").id(renames.columnId(getId(), c).getSecond()).nl();
         return b.toLines();
     }
 
