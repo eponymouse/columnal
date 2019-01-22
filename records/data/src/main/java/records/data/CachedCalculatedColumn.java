@@ -11,6 +11,7 @@ import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExConsumer;
 import utility.ExFunction;
+import utility.FunctionInt;
 import utility.Pair;
 import utility.Utility;
 
@@ -24,7 +25,7 @@ public class CachedCalculatedColumn<S extends ColumnStorage<?>> extends Calculat
     private final S cache;
     private final ExConsumer<S> addToCache;
 
-    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, ExFunction<BeforeGet<S>, S> cache, ExConsumer<S> addToCache) throws InternalException, UserException
+    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, FunctionInt<BeforeGet<S>, S> cache, ExConsumer<S> addToCache) throws InternalException
     {
         super(recordSet, name);
         this.addToCache = addToCache;

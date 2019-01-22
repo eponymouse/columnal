@@ -45,16 +45,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.BiFunctionInt;
-import utility.Either;
-import utility.ExBiConsumer;
-import utility.ExFunction;
-import utility.FunctionInt;
-import utility.Pair;
-import utility.SimulationFunction;
-import utility.TaggedValue;
-import utility.UnitType;
-import utility.Utility;
+import utility.*;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
@@ -120,9 +111,9 @@ import static records.data.datatype.DataType.DateTimeInfo.F.*;
 public class DataType implements StyledShowable
 {
     @OnThread(Tag.Simulation)
-    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws UserException, InternalException
+    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws InternalException
     {
-        return apply(new DataTypeVisitor<Column>()
+        return apply(new DataTypeVisitorEx<Column, InternalException>()
         {
             private <T> T castTo(Class<T> cls, @Value Object value) throws InternalException
             {
@@ -133,7 +124,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column number(NumberInfo displayInfo) throws InternalException, UserException
+            public Column number(NumberInfo displayInfo) throws InternalException
             {
                 return new CachedCalculatedColumn<NumericColumnStorage>(rs, name, (BeforeGet<NumericColumnStorage> g) -> new NumericColumnStorage(displayInfo, g), cache -> {
                     cache.add(castTo(Number.class, getItem.apply(cache.filled())));
@@ -142,7 +133,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column text() throws InternalException, UserException
+            public Column text() throws InternalException
             {
                 return new CachedCalculatedColumn<StringColumnStorage>(rs, name, (BeforeGet<StringColumnStorage> g) -> new StringColumnStorage(g), cache -> {
                     cache.add(castTo(String.class, getItem.apply(cache.filled())));
@@ -151,7 +142,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Column date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return new CachedCalculatedColumn<TemporalColumnStorage>(rs, name, (BeforeGet<TemporalColumnStorage> g) -> new TemporalColumnStorage(dateTimeInfo, g), cache -> {
                     cache.add(castTo(TemporalAccessor.class, getItem.apply(cache.filled())));
@@ -160,7 +151,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column bool() throws InternalException, UserException
+            public Column bool() throws InternalException
             {
                 return new CachedCalculatedColumn<BooleanColumnStorage>(rs, name, (BeforeGet<BooleanColumnStorage> g) -> new BooleanColumnStorage(g), cache -> {
                     cache.add(castTo(Boolean.class, getItem.apply(cache.filled())));
@@ -169,7 +160,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g), cache -> {
                     cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
@@ -178,7 +169,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public Column tuple(ImmutableList<DataType> inner) throws InternalException
             {
                 return new CachedCalculatedColumn<TupleColumnStorage>(rs, name, (BeforeGet<TupleColumnStorage> g) -> new TupleColumnStorage(inner, g), cache -> {
                     cache.add(castTo(Object[].class, getItem.apply(cache.filled())));
@@ -187,7 +178,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column array(@Nullable DataType inner) throws InternalException, UserException
+            public Column array(@Nullable DataType inner) throws InternalException
             {
                 return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, (BeforeGet<ArrayColumnStorage> g) -> new ArrayColumnStorage(inner, g), cache -> {
                     if (inner != null)
@@ -1109,7 +1100,7 @@ public class DataType implements StyledShowable
         }
     }
 
-    public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunction<RecordSet, EditableColumn>
+    public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunctionInt<RecordSet, EditableColumn>
     {
         private final ExBiConsumer<C, Either<String, V>> addToColumn;
         private final ExFunction<DataParser, Either<String, V>> parseValue;

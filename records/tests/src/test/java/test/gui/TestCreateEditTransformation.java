@@ -34,7 +34,9 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
+import records.transformations.expression.TupleExpression;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -195,6 +197,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), calculation.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                 moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
+                TestUtil.sleep(1000);
             }
         }
 
@@ -207,7 +210,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 
                 assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
                 
-                TestUtil.assertValueListEitherEqual("",
+                TestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
                     calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
                         calcCol.dataValues
                 );
@@ -226,13 +229,13 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(r);
             ImmutableList<Either<String, @Value Object>> sourceData = Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
             ColumnDetails columnDetails = new ColumnDetails(new ColumnId("Source " + i), typeAndValueGen.getType(), sourceData);
-            List<AggCalculation> calculations = makeCalculations(typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts);
+            List<AggCalculation> calculations = makeCalculations(typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
             aggColumns.add(new AggColumns(columnDetails, calculations));
         }
         return aggColumns;
     }
 
-    private List<AggCalculation> makeCalculations(UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts) throws InternalException
+    private List<AggCalculation> makeCalculations(UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
     {
         List<List<Either<String, @Value Object>>> groups = new ArrayList<>();
         int start = 0;
@@ -259,20 +262,47 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             private ArrayList<AggCalculation> usual() throws InternalException
             {
                 ArrayList<AggCalculation> calculations = new ArrayList<>();
-                // Keep group as a list:
                 ColumnReference groupExp = new ColumnReference(columnDetails.name, ColumnReferenceType.WHOLE_COLUMN);
-                calculations.add(new AggCalculation(name.apply("Group"),
-                        groupExp,
-                    DataType.array(columnDetails.dataType),
-                    perGroup.apply(g -> withEithers(g, ListExList::new))
-                ));
-                // Minimum:
-                calculations.add(new AggCalculation(name.apply("Min"),
-                        new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), groupExp),
-                        columnDetails.dataType,
-                        perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(DataTypeUtility.getValueComparator()).orElse(null)))
-                ));
-                // TODO more (first, last, max)
+                if (random.nextBoolean())
+                {
+                    // Keep group as a list:
+                    calculations.add(new AggCalculation(name.apply("Group"),
+                            groupExp,
+                            DataType.array(columnDetails.dataType),
+                            perGroup.apply(g -> withEithers(g, ListExList::new))
+                    ));
+                }
+                if (random.nextBoolean())
+                {
+                    // Minimum:
+                    calculations.add(new AggCalculation(name.apply("Min"),
+                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), groupExp),
+                            columnDetails.dataType,
+                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(DataTypeUtility.getValueComparator()).orElse(null)))
+                    ));
+                }
+                if (random.nextBoolean())
+                {
+                    // Maximum:
+                    calculations.add(new AggCalculation(name.apply("Max"),
+                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum"))), groupExp),
+                            columnDetails.dataType,
+                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().max(DataTypeUtility.getValueComparator()).orElse(null)))
+                    ));
+                }
+                if (random.nextBoolean())
+                {
+                    // First:
+                    calculations.add(new AggCalculation(name.apply("First"),
+                            new CallExpression(
+                                new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "element"))), 
+                                new TupleExpression(ImmutableList.of(groupExp, new NumericLiteral(1, null)))),
+                            columnDetails.dataType,
+                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().findFirst().orElse(null)))
+                    ));
+                }
+                // TODO last, sum, join strings
+                    //#error TODO also try using the split column
                 return calculations;
             }
 

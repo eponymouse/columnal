@@ -3,6 +3,7 @@ package records.data;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.SimulationFunction;
+import utility.SimulationFunctionInt;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ public abstract class TransformationRecordSet extends RecordSet
         super(columns);
     }
 
-    public void buildColumn(SimulationFunction<RecordSet, Column> makeColumn) throws UserException, InternalException
+    public void buildColumn(SimulationFunctionInt<RecordSet, Column> makeColumn) throws InternalException
     {
         columns.add(makeColumn.apply(this));
     }

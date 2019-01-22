@@ -60,9 +60,9 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.Any)
     private final ImmutableList<ColumnId> splitBy;
     @OnThread(Tag.Any)
-    private String error;
-    private @MonotonicNonNull TransformationRecordSet result;
-    private JoinedSplit splits;
+    private final String error;
+    private final @Nullable TransformationRecordSet result;
+    private final JoinedSplit splits;
 
     // A BitSet, with a cached array of int indexes indicating the set bits 
     public static class Occurrences
@@ -141,89 +141,108 @@ public class SummaryStatistics extends Transformation
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.summaries = summaries;
         this.splitBy = splitBy;
-        if (this.src == null)
+        RecordSet src = null;
+        String theError = "Could not find source table: \"" + srcTableId + "\"";
+        try
         {
-            error = "Could not find source table: \"" + srcTableId + "\"";
+            src = this.src != null ? this.src.getData() : null;
+        }
+        catch (UserException e)
+        {
+            theError = "Error with source table: \"" + srcTableId + "\"";
+        }
+        if (this.src == null || src == null)
+        {
+            error = theError;
             splits = new JoinedSplit();
+            result = null;
             return;
         }
-        else
-            error = "Unknown error with table \"" + getId() + "\"";
+        
+        theError = "Unknown error with table \"" + getId() + "\"";
 
         JoinedSplit theSplits = new JoinedSplit();
         try
         {
-            RecordSet src = this.src.getData();
-            splits = theSplits = calcSplits(src, splitBy);
-            this.result = new TransformationRecordSet()
-            {
-                @Override
-                public boolean indexValid(int index) throws UserException
-                {
-                    return summaries.isEmpty() ? false : index < splits.valuesAndOccurrences.size();
-                }
-
-                @Override
-                @SuppressWarnings("units")
-                public @TableDataRowIndex int getLength() throws UserException
-                {
-                    return splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
-                }
-            };
-
-            if (!splitBy.isEmpty())
-            {
-                for (int i = 0; i < splitBy.size(); i++)
-                {
-                    ColumnId colName = splitBy.get(i);
-                    Column orig = src.getColumn(colName);
-                    int splitColumnIndex = i;
-                    result.buildColumn(rs -> new Column(rs, colName)
-                    {
-                        private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-                        {
-                            return splits.valuesAndOccurrences.get(index).getFirst().get(splitColumnIndex);
-                        }
-
-                        @Override
-                        public DataTypeValue getType() throws InternalException, UserException
-                        {
-                            return orig.getType().fromCollapsed(this::getWithProgress);
-                        }
-
-                        @Override
-                        public boolean isAltered()
-                        {
-                            return true;
-                        }
-                    });
-                }
-            }
-
-            ColumnLookup columnLookup = new AggTableLookup(getManager());
-            
-            // It's important that our splits and record set are initialised
-            // before trying to calculate these expressions:
-            for (Pair<ColumnId, Expression> e : summaries)
-            {
-                Expression expression = e.getSecond();
-                ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
-                @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
-                if (type == null || concrete == null)
-                    throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
-                @NonNull DataType typeFinal = concrete;
-                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(i))).getFirst()));
-                
-            }
+            theSplits = calcSplits(src, splitBy);
         }
         catch (UserException e)
         {
-            String msg = e.getLocalizedMessage();
-            if (msg != null)
-                this.error = msg;
+            this.error = e.getLocalizedMessage();
+            this.splits = new JoinedSplit();
+            this.result = null;
+            return;
         }
+        
+        this.error = theError;
         this.splits = theSplits;
+        this.result = new TransformationRecordSet()
+        {
+            @Override
+            public boolean indexValid(int index) throws UserException
+            {
+                return summaries.isEmpty() ? false : index < splits.valuesAndOccurrences.size();
+            }
+
+            @Override
+            @SuppressWarnings("units")
+            public @TableDataRowIndex int getLength() throws UserException
+            {
+                return splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
+            }
+        };
+
+        
+        if (!splitBy.isEmpty())
+        {
+            for (int i = 0; i < splitBy.size(); i++)
+            {
+                Column orig = theSplits.columns.get(i);
+                int splitColumnIndex = i;
+                result.buildColumn(rs -> new Column(rs, orig.getName())
+                {
+                    private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    {
+                        return splits.valuesAndOccurrences.get(index).getFirst().get(splitColumnIndex);
+                    }
+
+                    @Override
+                    public DataTypeValue getType() throws InternalException, UserException
+                    {
+                        return orig.getType().fromCollapsed(this::getWithProgress);
+                    }
+
+                    @Override
+                    public boolean isAltered()
+                    {
+                        return true;
+                    }
+                });
+            }
+        }
+        
+        ColumnLookup columnLookup = new AggTableLookup(getManager());
+            
+        // It's important that our splits and record set are initialised
+        // before trying to calculate these expressions:
+        for (Pair<ColumnId, Expression> e : summaries)
+        {
+            Expression expression = e.getSecond();
+            ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
+            try
+            {
+                @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
+                if (type == null || concrete == null)
+                    throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
+                @NonNull DataType typeFinal = concrete;
+                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(i))).getFirst()));
+            }
+            catch (UserException ex)
+            {
+                result.buildColumn(rs -> new ErrorColumn(rs, getManager().getTypeManager(), e.getFirst(), ex.getStyledMessage()));
+            }
+        }
     }
 
     private static class SingleSplit
@@ -267,13 +286,14 @@ public class SummaryStatistics extends Transformation
                     }
                     splits.add(new SingleSplit(c, r));
                 }
+                // Unwrap exceptions that occur in the comparator:
                 catch (RuntimeException e)
                 {
                     if (e.getCause() instanceof UserException)
                         throw (UserException)e.getCause();
                     if (e.getCause() instanceof InternalException)
                         throw (InternalException) e.getCause();
-                    throw e;
+                    throw new InternalException("Unexpected Runtime exception", e);
                 }
             }
 
@@ -853,7 +873,7 @@ public class SummaryStatistics extends Transformation
             }
             catch (UserException e)
             {
-                int x = 8;
+                // Just give back null:
             }
             return null;
         }
@@ -866,9 +886,10 @@ public class SummaryStatistics extends Transformation
                     .flatMap(t -> {
                         try
                         {
+                            @Nullable TableId tableId = t.getId().equals(getId()) || t.getId().equals(srcTableId) ? null : t.getId();
                             return t.getData().getColumns().stream()
-                                .flatMap(c -> Arrays.stream(ColumnReferenceType.values())
-                                .map(rt -> new ColumnReference(t.getId(), c.getName(), rt)));
+                                .flatMap(c -> (tableId != null ? Stream.of(ColumnReferenceType.WHOLE_COLUMN) : Arrays.stream(ColumnReferenceType.values()))
+                                .map(rt -> new ColumnReference(tableId, c.getName(), rt)));
                         }
                         catch (UserException e)
                         {
@@ -878,7 +899,7 @@ public class SummaryStatistics extends Transformation
                             Log.log(e);
                         }
                         return Stream.empty();
-                    });
+                    }).distinct();
         }
     }
 

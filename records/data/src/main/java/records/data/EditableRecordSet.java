@@ -25,6 +25,7 @@ import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationFunctionInt;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
@@ -303,7 +304,7 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-    public void addColumn(@Nullable ColumnId addBefore, SimulationFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
+    public void addColumn(@Nullable ColumnId addBefore, SimulationFunctionInt<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
     {
         EditableColumn col = makeNewColumn.apply(this);
         col.insertRows(0, getLength());
@@ -312,7 +313,7 @@ public class EditableRecordSet extends RecordSet
         editableColumns.add(targetIndex, col);
         if (columns.stream().map(Column::getName).distinct().count() != columns.size())
         {
-            throw new InternalException("Duplicate column names found");
+            throw new UserException("Duplicate column names found");
         }
         Platform.runLater(() -> {
             if (listener != null)
