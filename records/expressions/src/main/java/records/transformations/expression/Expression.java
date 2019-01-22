@@ -60,6 +60,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
@@ -756,7 +757,11 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             return tableManager.streamAllTablesAvailableTo(us).flatMap(t -> {
                 try
                 {
-                    return t.getData().getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(t.getId(), c.getName(), rt)));
+                    boolean isOurTable = Objects.equals(us, t.getId());
+                    return t.getData().getColumns().stream().flatMap(c -> {
+                        Stream<ColumnReferenceType> possRefTypes = isOurTable ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
+                        return possRefTypes.map(rt -> new ColumnReference(isOurTable ? null : t.getId(), c.getName(), rt));
+                    });
                 }
                 catch (UserException e)
                 {

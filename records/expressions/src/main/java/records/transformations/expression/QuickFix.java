@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
@@ -32,6 +33,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     private final EXPRESSION replacementTarget;
     private final FXPlatformSupplierInt<@UnknownIfRecorded EXPRESSION> makeReplacement;
     private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
+    private @MonotonicNonNull StyledString cachedTitle;
 
     public QuickFix(@LocalizableKey String titleKey, EXPRESSION replacementTarget, FXPlatformSupplierInt<@NonNull @UnknownIfRecorded EXPRESSION> makeReplacement)
     {
@@ -67,6 +69,9 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     @OnThread(Tag.FXPlatform)
     public StyledString getTitle()
     {
+        if (cachedTitle != null)
+            return cachedTitle;
+        
         StyledString replacement;
         try
         {
@@ -77,7 +82,8 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
             Log.log(e);
             replacement = StyledString.s("");
         }
-        return StyledString.concat(title, StyledString.s(" \u21fe "), replacement);
+        cachedTitle = StyledString.concat(title, StyledString.s(" \u21fe "), replacement);
+        return cachedTitle;
     }
     
     @OnThread(Tag.FXPlatform)

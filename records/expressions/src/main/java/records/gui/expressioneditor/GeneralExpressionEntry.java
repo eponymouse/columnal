@@ -14,6 +14,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
+import records.data.TableId;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -1042,12 +1043,21 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
         for (ColumnReference availableColumn : availableColumns)
         {
-            if (availableColumn.getColumnId().getRaw().equals(text) && availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+            TableId tableId = availableColumn.getTableId();
+            String columnIdRaw = availableColumn.getColumnId().getRaw();
+            if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
+                (
+                    (tableId == null && columnIdRaw.equals(text))
+                    || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
+                ))
             {
                 saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
                 return;
             }
-            else if (text.startsWith("@entire ") && availableColumn.getColumnId().getRaw().equals(text.substring("@entire ".length())) && availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
+            else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
+                    text.startsWith("@entire ") &&
+                    ((tableId == null && ("@entire " + columnIdRaw).equals(text))
+                    || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
             {
                 saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
                 return;
