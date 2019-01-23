@@ -98,10 +98,13 @@ public class SummaryStatistics extends Transformation
         // because of the way it is constructed
         private final ImmutableList<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences;
 
-        public JoinedSplit()
+        // Creates an empty split, which has one occurrence at all indexes
+        public JoinedSplit(int length)
         {
             columns = ImmutableList.of();
-            valuesAndOccurrences = ImmutableList.of();
+            BitSet bitSet = new BitSet();
+            bitSet.set(0, length);
+            valuesAndOccurrences = ImmutableList.of(new Pair<List<@Value Object>, Occurrences>(ImmutableList.<@Value Object>of(), new Occurrences(bitSet)));
         }
 
         public JoinedSplit(Column column, TreeMap<@Value Object, BitSet> valuesAndOccurrences)
@@ -142,10 +145,12 @@ public class SummaryStatistics extends Transformation
         this.summaries = summaries;
         this.splitBy = splitBy;
         RecordSet src = null;
+        int srcLength = 0;
         String theError = "Could not find source table: \"" + srcTableId + "\"";
         try
         {
             src = this.src != null ? this.src.getData() : null;
+            srcLength = src == null ? 0 : src.getLength();
         }
         catch (UserException e)
         {
@@ -154,22 +159,22 @@ public class SummaryStatistics extends Transformation
         if (this.src == null || src == null)
         {
             error = theError;
-            splits = new JoinedSplit();
+            splits = new JoinedSplit(srcLength);
             result = null;
             return;
         }
         
         theError = "Unknown error with table \"" + getId() + "\"";
 
-        JoinedSplit theSplits = new JoinedSplit();
+        JoinedSplit theSplits;
         try
         {
-            theSplits = calcSplits(src, splitBy);
+            theSplits = calcSplits(src, srcLength, splitBy);
         }
         catch (UserException e)
         {
             this.error = e.getLocalizedMessage();
-            this.splits = new JoinedSplit();
+            this.splits = new JoinedSplit(srcLength);
             this.result = null;
             return;
         }
@@ -181,14 +186,14 @@ public class SummaryStatistics extends Transformation
             @Override
             public boolean indexValid(int index) throws UserException
             {
-                return summaries.isEmpty() ? false : index < splits.valuesAndOccurrences.size();
+                return index < getLength();
             }
 
             @Override
             @SuppressWarnings("units")
             public @TableDataRowIndex int getLength() throws UserException
             {
-                return splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
+                return summaries.isEmpty() && splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
             }
         };
 
@@ -257,7 +262,7 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    private static JoinedSplit calcSplits(RecordSet src, List<ColumnId> splitBy) throws UserException, InternalException
+    private static JoinedSplit calcSplits(RecordSet src, int srcLength, List<ColumnId> splitBy) throws UserException, InternalException
     {
         // Each item in outer is a column in the set of columns which we are splitting by.
         // Each item in inner.values is a possible value of that column;
@@ -299,7 +304,7 @@ public class SummaryStatistics extends Transformation
 
         }
         // Now form cross-product:
-        return crossProduct(splits);
+        return crossProduct(splits, srcLength);
     }
 
     /**
@@ -309,11 +314,11 @@ public class SummaryStatistics extends Transformation
      * @param allDistincts The list of per-single-column values and occurrences (one entry per column)
      * @return The list of all joined value combinations of the split columns that actually occur at least once. 
      */
-    private static JoinedSplit crossProduct(List<SingleSplit> allDistincts)
+    private static JoinedSplit crossProduct(List<SingleSplit> allDistincts, int srcLength)
     {
         if (allDistincts.isEmpty())
         {
-            return new JoinedSplit();
+            return new JoinedSplit(srcLength);
         }
         else if (allDistincts.size() == 1)
         {
@@ -324,7 +329,7 @@ public class SummaryStatistics extends Transformation
         // Take next list:
         SingleSplit first = allDistincts.get(0);
         // Recurse to get cross product of the rest:
-        JoinedSplit rest = crossProduct(allDistincts.subList(1, allDistincts.size()));
+        JoinedSplit rest = crossProduct(allDistincts.subList(1, allDistincts.size()), srcLength);
         // Don't know size in advance because not all combinations will occur:
         ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences = ImmutableList.builder();
         // Important that the first list is outermost, so that
