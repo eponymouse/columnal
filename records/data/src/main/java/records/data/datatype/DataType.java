@@ -191,12 +191,12 @@ public class DataType implements StyledShowable
         });
     }
 
-    public DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws UserException, InternalException
+    public DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws InternalException
     {
-        return apply(new DataTypeVisitor<DataTypeValue>()
+        return apply(new DataTypeVisitorEx<DataTypeValue, InternalException>()
         {
             @SuppressWarnings("value")
-            private <T> GetValue<@Value T> castTo(Class<T> cls) throws InternalException
+            private <T> GetValue<@Value T> castTo(Class<T> cls)
             {
                 return (i, prog) -> {
                     Object value = get.getWithProgress(i, prog);
@@ -208,38 +208,38 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue number(NumberInfo displayInfo) throws InternalException, UserException
+            public DataTypeValue number(NumberInfo displayInfo) throws InternalException
             {
                 return DataTypeValue.number(displayInfo, castTo(Number.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue text() throws InternalException, UserException
+            public DataTypeValue text() throws InternalException
             {
                 return DataTypeValue.text(castTo(String.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public DataTypeValue date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return DataTypeValue.date(dateTimeInfo, castTo(TemporalAccessor.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue bool() throws InternalException, UserException
+            public DataTypeValue bool() throws InternalException
             {
                 return DataTypeValue.bool(castTo(Boolean.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
-                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tag -> {
+                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListInt(tags, tag -> {
                     @Nullable DataType inner = tag.getInner();
                     return new TagType<>(tag.getName(), inner == null ? null : inner.fromCollapsed(
                         (i, prog) -> {
@@ -255,7 +255,7 @@ public class DataType implements StyledShowable
             @Override
             @OnThread(Tag.Simulation)
             @SuppressWarnings("value")
-            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException
             {
                 List<DataTypeValue> innerValues = new ArrayList<>();
                 for (int type = 0; type < inner.size(); type++)
@@ -271,7 +271,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue array(@Nullable DataType inner) throws InternalException, UserException
+            public DataTypeValue array(@Nullable DataType inner) throws InternalException
             {
                 GetValue<@Value ListEx> getList = castTo(ListEx.class);
                 if (inner == null)
