@@ -19,6 +19,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -44,6 +45,7 @@ import records.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
@@ -122,10 +124,10 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
 
         @Override
-        protected Pair<SortPane, ObjectExpression<Pair<ColumnId, Direction>>> makeCellContent(@Nullable Pair<ColumnId, Direction> initialContent, boolean editImmediately)
+        protected Pair<SortPane, FXPlatformSupplier<Pair<ColumnId, Direction>>> makeCellContent(@Nullable Pair<ColumnId, Direction> initialContent, boolean editImmediately)
         {
             SortPane sortPane = new SortPane(initialContent);
-            return new Pair<>(sortPane, sortPane.currentValue());
+            return new Pair<>(sortPane, sortPane::getCurrentValue);
         }
 
         public void pickColumnIfEditing(Pair<Table, ColumnId> t)
@@ -170,7 +172,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
     @OnThread(Tag.FXPlatform)
     private class SortPane extends BorderPane
     {
-        private final SimpleObjectProperty<Pair<ColumnId, Direction>> currentValue;
         private final TextField columnField;
         private final AutoComplete autoComplete;
         private final DirectionButton button;
@@ -178,7 +179,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
         public SortPane(@Nullable Pair<ColumnId, Direction> initialContent)
         {
-            currentValue = new SimpleObjectProperty<>(initialContent == null ? new Pair<>(new ColumnId(""), Direction.ASCENDING) : initialContent);
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
@@ -265,12 +265,11 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         public void setContent(ColumnId columnId)
         {
             autoComplete.setContentDirect(columnId.getRaw());
-            currentValue.set(new Pair<>(columnId, currentValue.get().getSecond()));
         }
 
-        public ObjectExpression<Pair<ColumnId, Direction>> currentValue()
+        public Pair<ColumnId, Direction> getCurrentValue()
         {
-            return currentValue;
+            return new Pair<>(new ColumnId(columnField.getText()), button.direction);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -304,7 +303,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             public void setDirection(Direction direction)
             {
                 this.direction = direction;
-                currentValue.set(new Pair<>(currentValue.get().getFirst(), direction));
                 icon.setRotate(direction == Direction.ASCENDING ? 0 : 180);
                 topLabel.setText(direction == Direction.ASCENDING ? smallItem : largeItem);
                 bottomLabel.setText(direction == Direction.ASCENDING ? largeItem : smallItem);
@@ -421,7 +419,8 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 }
                 // Will update labels:
                 setDirection(direction);
-                sortList.updateButtonWidths();
+                if (sortList != null)
+                    sortList.updateButtonWidths();
             }
         }
     }

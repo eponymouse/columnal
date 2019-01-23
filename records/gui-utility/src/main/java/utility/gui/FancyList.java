@@ -29,6 +29,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -192,7 +193,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
 
     // For overriding in subclasses:
     @OnThread(Tag.FXPlatform)
-    protected abstract Pair<CELL_CONTENT, ObjectExpression<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
+    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
     {
@@ -305,7 +306,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         protected final SmallDeleteButton deleteButton;
         protected final CELL_CONTENT content;
-        private final ObjectExpression<T> value;
+        private final FXPlatformSupplier<T> value;
         
         public Cell(@Nullable T initialContent, boolean editImmediately)
         {
@@ -380,7 +381,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
             });
             //deleteButton.visibleProperty().bind(deletable);
             setMargin(deleteButton, new Insets(0, 4, 0, 4));
-            Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
+            Pair<CELL_CONTENT, FXPlatformSupplier<T>> pair = makeCellContent(initialContent, editImmediately);
             this.content = pair.getFirst();
             this.value = pair.getSecond();
             setCenter(this.content);

@@ -43,6 +43,7 @@ import records.transformations.expression.type.IdentTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -439,10 +440,10 @@ public class TypesDialog extends Dialog<Void>
 
             @Override
             @OnThread(Tag.FXPlatform)
-            protected Pair<TagValueEdit, ObjectExpression<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
+            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
             {
                 TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
-                return new Pair<>(tagValueEdit, tagValueEdit.currentValue);
+                return new Pair<>(tagValueEdit, tagValueEdit.currentValue::get);
             }
 
         }

@@ -15,6 +15,7 @@ import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
@@ -74,7 +75,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         }
         
         @Override
-        protected Pair<PickTablePane, ObjectExpression<TableId>> makeCellContent(@Nullable TableId original, boolean editImmediately)
+        protected Pair<PickTablePane, FXPlatformSupplier<TableId>> makeCellContent(@Nullable TableId original, boolean editImmediately)
         {
             if (original == null)
                 original = new TableId("");
@@ -95,7 +96,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             {
                 FXUtility.runAfter(() -> pickTablePane.focusEntryField());
             }
-            return new Pair<>(pickTablePane, curValue);
+            return new Pair<>(pickTablePane, curValue::get);
         }
 
         public void pickTableIfEditing(Table t)

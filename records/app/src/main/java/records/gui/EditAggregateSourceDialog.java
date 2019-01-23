@@ -38,6 +38,7 @@ import records.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.UnitType;
 import utility.gui.FXUtility;
@@ -105,10 +106,10 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
         }
 
         @Override
-        protected Pair<ColumnPane, ObjectExpression<ColumnId>> makeCellContent(@Nullable ColumnId initialContent, boolean editImmediately)
+        protected Pair<ColumnPane, FXPlatformSupplier<ColumnId>> makeCellContent(@Nullable ColumnId initialContent, boolean editImmediately)
         {
             ColumnPane columnPane = new ColumnPane(initialContent, editImmediately);
-            return new Pair<>(columnPane, columnPane.currentValue());
+            return new Pair<>(columnPane, columnPane.currentValue()::get);
         }
 
         public void pickColumnIfEditing(Pair<Table, ColumnId> t)
