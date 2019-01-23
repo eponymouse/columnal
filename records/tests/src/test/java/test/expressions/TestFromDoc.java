@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
@@ -24,11 +25,13 @@ import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.jellytype.JellyType;
+import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.SingleTableLookup;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
@@ -61,6 +64,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
@@ -191,7 +195,7 @@ public class TestFromDoc
                     if (typeState == null) // Won't happen
                         return;
                 }
-                TypeExp typeExp = expression.checkExpression(TestUtil.dummyColumnLookup() /* TODO */, typeState, errors);
+                TypeExp typeExp = expression.checkExpression(new DocColumnLookup(tables), typeState, errors);
                 if (!typeError)
                 {
                     assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
@@ -255,6 +259,41 @@ public class TestFromDoc
                     assertTrue(line + " values: " + Utility.listToString(varValues), result);
                 }
             }
+        }
+    }
+
+    private class DocColumnLookup implements ColumnLookup
+    {
+        private final Map<TableId, RecordSet> tables;
+
+        public DocColumnLookup(Map<TableId, RecordSet> tables)
+        {
+            this.tables = tables;
+        }
+
+        @Override
+        @SuppressWarnings("nullness")
+        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        {
+            try
+            {
+                Column column = tables.get(tableId).getColumn(columnId);
+                DataTypeValue type = column.getType();
+                if (columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW)
+                    return type;
+                else
+                    return DataTypeValue.arrayV(type, (i, prog) -> new Pair<>(column.getLength(), type));
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            return tables.entrySet().stream().flatMap(e -> e.getValue().getColumns().stream().map(c -> new ColumnReference(e.getKey(), c.getName(), ColumnReferenceType.WHOLE_COLUMN)));
         }
     }
 }
