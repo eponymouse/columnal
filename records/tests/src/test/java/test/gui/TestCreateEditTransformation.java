@@ -100,8 +100,8 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
     }
     
-    @Property(trials = 4)
-    public void testAggregate(@When(seed=8741518136966126489L) @From(GenRandom.class) Random r) throws Exception
+    @Property(trials = 3)
+    public void testAggregate(@From(GenRandom.class) Random r) throws Exception
     {
         GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen(false);
 
