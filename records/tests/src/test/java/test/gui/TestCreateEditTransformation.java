@@ -61,6 +61,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
@@ -122,7 +123,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 .collect(ImmutableList.<Either<String, @Value Object>>toImmutableList())));
         
         // Then add source column for aggregate calculations (summing etc):
-        List<AggColumns> aggColumns = makeSourceAndCalculations(distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
+        List<AggColumns> aggColumns = makeSourceAndCalculations(splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
         for (AggColumns aggColumn : aggColumns)
         {
             columns.add(r.nextInt(columns.size() + 1), aggColumn.sourceColumn);
@@ -218,7 +219,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
     }
 
-    private List<AggColumns> makeSourceAndCalculations(List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
+    private List<AggColumns> makeSourceAndCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
     {
         int numColumns = r.nextInt(4);
         int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
@@ -229,13 +230,13 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(r);
             ImmutableList<Either<String, @Value Object>> sourceData = Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
             ColumnDetails columnDetails = new ColumnDetails(new ColumnId("Source " + i), typeAndValueGen.getType(), sourceData);
-            List<AggCalculation> calculations = makeCalculations(typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
+            List<AggCalculation> calculations = makeCalculations(splitColumnType, distinctSplitValues, typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
             aggColumns.add(new AggColumns(columnDetails, calculations));
         }
         return aggColumns;
     }
 
-    private List<AggCalculation> makeCalculations(UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
+    private List<AggCalculation> makeCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
     {
         List<List<Either<String, @Value Object>>> groups = new ArrayList<>();
         int start = 0;
@@ -301,8 +302,34 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().findFirst().orElse(null)))
                     ));
                 }
-                // TODO last, sum, join strings
-                    //#error TODO also try using the split column
+                if (columnDetails.dataType.isNumber())
+                {
+                    calculations.add(new AggCalculation(name.apply("Sum"),
+                        new CallExpression(
+                            new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "sum"))),
+                            groupExp),
+                        columnDetails.dataType,
+                        perGroup.apply(g -> withEithers(g, gr -> gr.stream().reduce((a, b) -> Utility.addSubtractNumbers((Number)a, (Number)b, true)).orElse(null)))
+                    ));
+                }
+                if (columnDetails.dataType.isText())
+                {
+                    calculations.add(new AggCalculation(name.apply("Concat"),
+                            new CallExpression(
+                                    new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "join text"))),
+                                    groupExp),
+                            columnDetails.dataType,
+                            perGroup.apply(g -> withEithers(g, gr -> DataTypeUtility.value(gr.stream().map(s -> (String)s).collect(Collectors.joining("")))))
+                    ));
+                }
+                if (random.nextBoolean())
+                {
+                    calculations.add(new AggCalculation(name.apply("Split"),
+                        new ColumnReference(new ColumnId("Split Col"), ColumnReferenceType.CORRESPONDING_ROW),
+                        splitColumnType,
+                            distinctSplitValues.stream().<@Nullable @Value Object>map(x -> x).collect(Collectors.<@Nullable @Value Object>toList())
+                    ));
+                }
                 return calculations;
             }
 

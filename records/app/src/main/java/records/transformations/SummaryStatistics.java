@@ -203,7 +203,7 @@ public class SummaryStatistics extends Transformation
                 {
                     private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
-                        return splits.valuesAndOccurrences.get(index).getFirst().get(splitColumnIndex);
+                        return Utility.getI(Utility.getI(splits.valuesAndOccurrences,index).getFirst(), splitColumnIndex);
                     }
 
                     @Override
@@ -858,10 +858,7 @@ public class SummaryStatistics extends Transformation
                         else
                         {
                             // If not grouped, must be in split by
-                            return columnFinal.getType().copyReorder((i, prog) -> {
-                                // Get value at first occurrence:
-                                return splits.valuesAndOccurrences.get(i).getSecond().getIndexes()[0];
-                            });
+                            return columnFinal.getType();
                         }
                     case WHOLE_COLUMN:
                         return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType()));

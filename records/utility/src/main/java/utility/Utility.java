@@ -1252,6 +1252,14 @@ public class Utility
         return Stream.<T>concat(stream, Stream.<T>of(appendItem));
     }
 
+    // List.get, but throws InternalException if out of bounds
+    public static <T> T getI(List<T> list, int index) throws InternalException
+    {
+        if (index < 0 || index >= list.size())
+            throw new InternalException("List index out of bounds: " + index + " versus " + list.size());
+        return list.get(index);
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);
