@@ -301,6 +301,10 @@ public class DataTypeUtility
         {
             return "\"" + GrammarUtility.escapeChars((String)item) + "\"";
         }
+        else if (item instanceof Number)
+        {
+            return Utility.numberToString((Number)item);
+        }
 
         return item.toString();
     }

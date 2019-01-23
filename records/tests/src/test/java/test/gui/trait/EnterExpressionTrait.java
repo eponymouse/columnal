@@ -96,7 +96,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         }
         else if (Literal.class.isAssignableFrom(c))
         {
-            write(expression.toString(), DELAY);
+            write(((Literal)expression).editString(), DELAY);
         }
         else if (c == ColumnReference.class)
         {
