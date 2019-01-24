@@ -139,13 +139,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                         String curText = TestUtil.fx(() -> cellFinal.getText());
                         if (n < curText.length())
                         {
-                            b = TestUtil.fx(() -> cellFinal.getCharacterBoundsOnScreen(n, n + 1));
+                            b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n));
                             if (b.isPresent())
                                 return new Point2D(b.get().getMinX(), b.get().getMinY() + b.get().getHeight() * 0.5);
                         }
                         else if (n == curText.length())
                         {
-                            b = TestUtil.fx(() -> cellFinal.getCharacterBoundsOnScreen(n - 1, n));
+                            b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n - 1));
                             if (b.isPresent())
                                 return new Point2D(b.get().getMaxX(), b.get().getMinY() + b.get().getHeight() * 0.5);
                         }
@@ -187,7 +187,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     clickOn(clickOnScreenPos);
                     
                     assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual, afterIndex, 
-                        (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
+                        (int)TestUtil.<Integer>fx(() -> cellFinal._test_getCaretPosition())
                     );
                     // Double-check cellText while we're here:
                     

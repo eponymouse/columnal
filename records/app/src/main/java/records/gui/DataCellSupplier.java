@@ -17,6 +17,9 @@ import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.FlexibleTextField;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import records.gui.kit.Document;
+import records.gui.kit.DocumentTextField;
+import records.gui.kit.ReadOnlyDocument;
 import records.gui.stable.ColumnDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -106,12 +109,11 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             if (screenPosition != null)
             {
                 Point2D localPos = stf.screenToLocal(screenPosition);
-                CharacterHit hit = stf.hit(localPos.getX(), localPos.getY());
-                stf.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                stf.moveTo(localPos);
             }
             else
             {
-                stf.selectRange(0, 0);
+                stf.home();
             }
             stf.requestFocus();
         }
@@ -159,7 +161,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     {
         super.hideItem(spareCell);
         // Clear EditorKit to avoid keeping it around while spare:
-        spareCell.blank(new EditorKitSimpleLabel(TranslationUtility.getString("data.loading")));
+        spareCell.blank(new ReadOnlyDocument(TranslationUtility.getString("data.loading")));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -171,7 +173,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
-    public static class VersionedSTF extends FlexibleTextField
+    public static class VersionedSTF extends DocumentTextField
     {
         @OnThread(Tag.FXPlatform)
         private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
@@ -186,16 +188,16 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         }
 
         @OnThread(Tag.FXPlatform)
-        public void blank(EditorKitInterface editorKit)
+        public void blank(Document editorKit)
         {
-            super.resetContent(editorKit);
+            super.setDocument(editorKit);
             currentVersion = null;
         }
 
         @OnThread(Tag.FXPlatform)
-        public void setContent(EditorKitInterface editorKit, ImmutableList<ColumnDetails> columns)
+        public void setContent(Document editorKit, ImmutableList<ColumnDetails> columns)
         {
-            super.resetContent(editorKit);
+            super.setDocument(editorKit);
             currentVersion = new WeakReference<>(columns);
         }
     }

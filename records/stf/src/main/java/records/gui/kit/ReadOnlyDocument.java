@@ -8,6 +8,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ReadOnlyDocument extends Document
@@ -47,5 +48,23 @@ public class ReadOnlyDocument extends Document
     public int getLength()
     {
         return content.stream().mapToInt(p -> p.getSecond().length()).sum();
+    }
+
+    @Override
+    boolean isEditable()
+    {
+        return false;
+    }
+
+    @Override
+    String getText()
+    {
+        return content.stream().map(p -> p.getSecond()).collect(Collectors.joining());
+    }
+
+    @Override
+    boolean hasError()
+    {
+        return false;
     }
 }

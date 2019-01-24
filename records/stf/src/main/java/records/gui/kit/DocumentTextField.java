@@ -13,6 +13,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -28,12 +29,16 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.ResizableRectangle;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
@@ -46,10 +51,14 @@ public class DocumentTextField extends Region implements DocumentListener
     private Document.TrackedPosition caretPosition;
     private Document document;
     private double horizTranslation;
+    private final ResizableRectangle clip;
 
     public DocumentTextField()
     {
+        getStyleClass().add("document-text-field");
         this.document = new ReadOnlyDocument("");
+        this.clip = new ResizableRectangle();
+        setClip(clip);
         textFlow = new TextFlow();
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
@@ -101,7 +110,7 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED)
         {
-            document.replaceText(caretPosition.getPosition(), caretPosition.getPosition(), keyEvent.getCharacter());
+            document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), keyEvent.getCharacter());
         }
         else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED)
         {
@@ -123,15 +132,28 @@ public class DocumentTextField extends Region implements DocumentListener
                 if (!keyEvent.isShiftDown())
                     moveAnchorToCaret();
             }
+            if (keyEvent.getCode() == KeyCode.A && keyEvent.isShortcutDown())
+            {
+                anchorPosition.moveTo(0);
+                caretPosition.moveTo(document.getLength());
+            }
             
-            if (keyEvent.getCode() == KeyCode.BACK_SPACE && caretPosition.getPosition() > 0)
+            if ((keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) && caretPosition.getPosition() != anchorPosition.getPosition())
+            {
+                document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), "");
+            }
+            else if (keyEvent.getCode() == KeyCode.BACK_SPACE && caretPosition.getPosition() > 0)
             {
                 document.replaceText(caretPosition.getPosition() - 1, caretPosition.getPosition(), "");
             }
-            
-            if (keyEvent.getCode() == KeyCode.DELETE && caretPosition.getPosition() < document.getLength())
+            else if (keyEvent.getCode() == KeyCode.DELETE && caretPosition.getPosition() < document.getLength())
             {
                 document.replaceText(caretPosition.getPosition(), caretPosition.getPosition() + 1, "");
+            }
+            
+            if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER)
+            {
+                document.defocus();
             }
         }
     }
@@ -155,6 +177,7 @@ public class DocumentTextField extends Region implements DocumentListener
     public void documentChanged()
     {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
+        FXUtility.setPseudoclass(this, "has-error", document.hasError());
         requestLayout();
     }
 
@@ -175,7 +198,7 @@ public class DocumentTextField extends Region implements DocumentListener
         Bounds caretLocalBounds = caretShape.getBoundsInLocal();
         Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
         
-        Log.debug("Bounds: " + caretBounds + " in " + getWidth() + " trans " + horizTranslation + " whole " + wholeTextWidth);
+        //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + " trans " + horizTranslation + " whole " + wholeTextWidth);
         if (isFocused() && caretBounds.getMinX() - 5 < 0)
         {
             // Caret is off screen to the left:
@@ -192,6 +215,7 @@ public class DocumentTextField extends Region implements DocumentListener
         }
         
         textFlow.resizeRelocate(-horizTranslation, 0, wholeTextWidth, getHeight());
+        clip.resize(getWidth(), getHeight());
         caretShape.setLayoutX(-horizTranslation);
     }
 
@@ -256,5 +280,87 @@ public class DocumentTextField extends Region implements DocumentListener
         @SuppressWarnings("nullness")
         @NonNull TextLayout textLayout = (TextLayout) method.invoke(textFlow);
         return textLayout;
+    }
+
+    public boolean isEditable()
+    {
+        return document.isEditable();
+    }
+    
+    public void home()
+    {
+        caretPosition.moveTo(0);
+    }
+    
+    public void moveTo(Point2D point2D)
+    {
+        try
+        {
+            TextLayout textLayout = getTextLayout();
+            caretPosition.moveTo(textLayout.getHitInfo((float)point2D.getX(), (float)point2D.getY()).getInsertionIndex());
+        }
+        catch (Exception e)
+        {
+            Log.log(e);
+        }
+    }
+    
+    public String getText()
+    {
+        return document.getText();
+    }
+
+    public Optional<Bounds> _test_getCharacterBoundsOnScreen(int charAfter)
+    {
+        try
+        {
+            Path path = new Path(getTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
+            return Optional.of(path.localToScreen(path.getBoundsInLocal()));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Pair<Set<String>, String>> _test_getStyleSpans(int from, int to)
+    {
+        List<Pair<Set<String>, String>> styledSpans = new ArrayList<>(document.getStyledSpans().collect(Collectors.<Pair<Set<String>, String>>toList()));
+        int leftToSkip = from;
+        int leftToRetain = to - from;
+        int index = 0;
+        while (index < styledSpans.size())
+        {
+            if (leftToSkip > styledSpans.get(index).getSecond().length() || leftToRetain <= 0)
+            {
+                styledSpans.remove(index);
+                continue;
+            }
+            else if (leftToSkip > 0)
+            {
+                styledSpans.set(index, styledSpans.get(index).mapSecond(s -> s.substring(leftToSkip)));
+            }
+            if (leftToRetain > 0)
+            {
+                leftToRetain -= styledSpans.get(index).getSecond().length();
+                if (leftToRetain < 0)
+                {
+                    int leftToRetainFinal = leftToRetain;
+                    styledSpans.set(index, styledSpans.get(index).mapSecond(s -> s.substring(0, s.length() + leftToRetainFinal)));
+                    leftToRetain = 0;
+                }
+            }
+            
+            index += 1;
+        }
+        // Mop up any empty spans:
+        for (Iterator<Pair<Set<String>, String>> iterator = styledSpans.iterator(); iterator.hasNext(); )
+        {
+            Pair<Set<String>, String> styledSpan = iterator.next();
+            if (styledSpan.getSecond().isEmpty())
+                iterator.remove();
+        }
+        
+        return styledSpans;
     }
 }

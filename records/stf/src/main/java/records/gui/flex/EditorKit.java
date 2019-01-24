@@ -33,7 +33,7 @@ public class EditorKit<T> implements EditorKitInterface
     private final Recogniser<T> recogniser;
     private final FXPlatformBiConsumer<String, @Nullable T> onChange;
     private final FXPlatformRunnable relinquishFocus;
-    private final String ERROR_CLASS = "input-error";
+    public static final String ERROR_CLASS = "input-error";
     private Either<StyledString, T> latestValue = Either.left(StyledString.s("Loading"));
     private ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> focusedDocument;
     private Pair<ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>>, UnaryOperator<Integer>> unfocusedDocument;

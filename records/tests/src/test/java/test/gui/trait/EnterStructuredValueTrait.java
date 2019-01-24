@@ -22,6 +22,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.flex.FlexibleTextField;
+import records.gui.kit.DocumentTextField;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -176,13 +177,13 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     {
         Window window = TestUtil.fx(() -> getRealFocusedWindow());
         Node node = TestUtil.fx(() -> window.getScene().getFocusOwner());
-        assertTrue("" + node, node instanceof FlexibleTextField);
-        FlexibleTextField field = (FlexibleTextField) node;
+        assertTrue("" + node, node instanceof DocumentTextField);
+        DocumentTextField field = (DocumentTextField) node;
         String content = TestUtil.fx(() -> field.getText());
         ChangeListener<String> logTextChange = (a, oldVal, newVal) -> Log.logStackTrace("Text changed on defocus from : \"" + oldVal + "\" to \"" + newVal + "\"");
         if (checkContentSame)
         {
-            TestUtil.fx_(() -> field.textProperty().addListener(logTextChange));
+            //TestUtil.fx_(() -> field.textProperty().addListener(logTextChange));
         }
         TestUtil.fx_(defocus);
         WaitForAsyncUtils.waitForFxEvents();
@@ -190,7 +191,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         if (checkContentSame)
         {
             assertEquals(content, TestUtil.fx(() -> field.getText()));
-            TestUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
+            //TestUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
         }
     }
 }

@@ -13,6 +13,7 @@ import records.gui.flex.Recogniser;
 import utility.Either;
 import utility.Pair;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -146,7 +147,7 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
         {
             return Either.left(new ErrorDetails(e.getStyledMessage(), orig.curCharIndex));
         }
-        catch (NumberFormatException e)
+        catch (NumberFormatException | DateTimeException e)
         {
             return error(e.getLocalizedMessage(), orig.curCharIndex);
         }

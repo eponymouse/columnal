@@ -42,6 +42,8 @@ import records.gui.flex.recognisers.StringRecogniser;
 import records.gui.flex.recognisers.TaggedRecogniser;
 import records.gui.flex.recognisers.TemporalRecogniser;
 import records.gui.flex.recognisers.TupleRecogniser;
+import records.gui.kit.ReadOnlyDocument;
+import records.gui.kit.RecogniserDocument;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
@@ -115,7 +117,7 @@ public class TableDisplayUtility
                         @Override
                         public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
-                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new records.gui.flex.EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
+                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new ReadOnlyDocument("Error: " + e.getLocalizedMessage()));
                         }
 
                         @Override
@@ -393,7 +395,7 @@ public class TableDisplayUtility
                     }
                 };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(value.getFirst(), (Class<@Value T>)itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                RecogniserDocument<@Value T> editorKit = new RecogniserDocument<>(value.getFirst(), (Class<@Value T>)itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);

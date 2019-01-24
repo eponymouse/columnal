@@ -68,6 +68,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import records.gui.kit.ReadOnlyDocument;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import threadchecker.OnThread;
@@ -307,7 +308,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 // Blank then queue fetch:
                 VersionedSTF orig = getCell.apply(cellPosition.from(getPosition()));
                 if (orig != null)
-                    orig.blank(new EditorKitSimpleLabel(TranslationUtility.getString("data.loading")));
+                    orig.blank(new ReadOnlyDocument(TranslationUtility.getString("data.loading")));
                 @SuppressWarnings("units")
                 @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
                 @SuppressWarnings("units")
@@ -323,8 +324,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
                             {
-                                if (editorKit instanceof EditorKit)
-                                    ((EditorKit<?>)editorKit).setOnFocusLost(scheduleStyleTogether);
+                                // TODO restore styling
+                                //if (editorKit instanceof EditorKit)
+                                    //((EditorKit<?>)editorKit).setOnFocusLost(scheduleStyleTogether);
                                 cell.setContent(editorKit, displayColumns);
                                 scheduleStyleTogether.run();
                             }
@@ -361,7 +363,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 cellsByColumn.forEach((columnIndexWithinTable, cellsInColumn) -> {
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
-                        displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
+                        // TODO restore styling together
+                        //displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
                     }
                 });
             }

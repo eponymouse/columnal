@@ -27,6 +27,9 @@ import records.gui.flex.EditorKitInterface;
 import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
+import records.gui.kit.Document;
+import records.gui.kit.ReadOnlyDocument;
+import records.gui.kit.RecogniserDocument;
 import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -100,7 +103,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public EditorKit<V> makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
+        public RecogniserDocument<V> makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -144,7 +147,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         catch (ExecutionException e)
         {
             Log.log(e);
-            setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(e.getLocalizedMessage()));
+            setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(e.getLocalizedMessage()));
         }
         // No need to call formatVisible here as styleTogether
         // will be called after fetches by VirtualGridSupplierIndividual
@@ -263,7 +266,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         private final @TableDataRowIndex int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull Either<EditorKit<@Value V>, @Localized String> loadedItemOrError;
+        private @MonotonicNonNull Either<RecogniserDocument<@Value V>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
@@ -283,7 +286,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         public synchronized void update(String content, @Nullable @Value V loadedItem)
         {
             FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
-                this.loadedItemOrError = Either.<EditorKit<@Value V>, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
+                this.loadedItemOrError = Either.<RecogniserDocument<@Value V>, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
             });
             updateDisplay();
             //formatVisible(OptionalInt.of(rowIndex));
@@ -294,8 +297,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         {
             if (loadedItemOrError != null)
             {
-                EditorKitInterface editorKit = loadedItemOrError.<EditorKitInterface>either(k -> k, err -> new EditorKitSimpleLabel(err));
-                this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, editorKit);
+                Document document = loadedItemOrError.<Document>either(k -> k, err -> new ReadOnlyDocument(err));
+                this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, document);
             }
             else
             {

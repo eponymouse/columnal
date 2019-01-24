@@ -1,6 +1,7 @@
 package records.gui.kit;
 
 import com.google.common.collect.ImmutableSet;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.kit.Document.TrackedPosition.Bias;
 import utility.FXPlatformRunnable;
@@ -77,5 +78,23 @@ public class DisplayDocument extends Document
     public int getLength()
     {
         return content.length();
+    }
+
+    @Override
+    boolean isEditable()
+    {
+        return true;
+    }
+
+    @Override
+    String getText(@UnknownInitialization(DisplayDocument.class) DisplayDocument this)
+    {
+        return content;
+    }
+
+    @Override
+    boolean hasError()
+    {
+        return false;
     }
 }

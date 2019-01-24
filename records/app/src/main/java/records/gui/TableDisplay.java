@@ -1085,18 +1085,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
-    public static interface ValueLoadSave
-    {
-        @OnThread(Tag.FXPlatform)
-        void fetchEditorKit(CellPosition cellPosition, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit);
-    }
-
-    public interface EditorKitCallback
-    {
-        @OnThread(Tag.FXPlatform)
-        public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
-    }
-
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
     {
         @SuppressWarnings("units")

@@ -22,6 +22,8 @@ import records.gui.expressioneditor.TypeEditor;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
 import records.gui.flex.Recogniser;
+import records.gui.kit.DocumentTextField;
+import records.gui.kit.RecogniserDocument;
 import records.gui.stf.TableDisplayUtility;
 import records.gui.stf.TableDisplayUtility.RecogniserAndType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -94,7 +96,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
-        FlexibleTextField defaultValueField = new FlexibleTextField();
+        DocumentTextField defaultValueField = new DocumentTextField();
         defaultValueField.getStyleClass().add("default-value");
         TypeExpression typeExpression = new InvalidIdentTypeExpression("");
         if (dataType != null)
@@ -175,7 +177,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     }
 
     @OnThread(Tag.FXPlatform)
-    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, FlexibleTextField textField, @Nullable DataType t)
+    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DocumentTextField textField, @Nullable DataType t)
     {
         if (t == null)
             textField.setDisable(true);
@@ -185,7 +187,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             {
                 if (!t.equals(latestType))
                 {
-                    textField.resetContent(makeEditorKit(t));
+                    textField.setDocument(makeEditorKit(t));
                     latestType = t;
                 }
                 textField.setDisable(false);
@@ -198,7 +200,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         }
     }
 
-    private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
+    private RecogniserDocument<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         try
         {
@@ -221,9 +223,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         return DataTypeUtility.valueToString(dataType, defValue, null, false);
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
+    private <@NonNull @Value T extends @NonNull @Value Object> RecogniserDocument<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        EditorKit<T> editorKit = new EditorKit<T>(initialValue, recogniser.itemClass, recogniser.recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }

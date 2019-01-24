@@ -66,6 +66,17 @@ public abstract class Document
     abstract TrackedPosition trackPosition(int pos, Bias bias, @Nullable FXPlatformRunnable onChange);
 
     public abstract int getLength();
+
+    abstract boolean isEditable();
+
+    abstract String getText();
+
+    abstract boolean hasError();
+
+    // Bit weird in Document, but it's easiest that way
+    void defocus()
+    {
+    }
     
     static interface DocumentListener
     {
@@ -77,7 +88,6 @@ public abstract class Document
         listeners.add(listener);
     }
     
-
     final void removeListener(DocumentListener listener)
     {
         listeners.removeAll(ImmutableList.of(listener));

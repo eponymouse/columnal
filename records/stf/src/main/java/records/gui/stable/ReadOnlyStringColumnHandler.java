@@ -6,6 +6,7 @@ import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.gui.flex.EditorKitSimpleLabel;
+import records.gui.kit.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -22,7 +23,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     @Override
     public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
-        fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(s)));
+        fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(s)));
     }
 
     @OnThread(Tag.FXPlatform)

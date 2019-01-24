@@ -40,6 +40,7 @@ import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.flex.FlexibleTextField;
+import records.gui.kit.DocumentTextField;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import test.gen.GenDataType;
@@ -239,7 +240,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
         assertEquals(1, tableManager.getAllTables().get(0).getData().getLength());
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(1, lookup(".flexible-text-field").queryAll().size());
+        assertEquals(1, lookup(".document-text-field").queryAll().size());
         
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);
@@ -248,7 +249,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         // STF will be retained invisible for re-use, so
         // must check visibility:
-        assertEquals(0, lookup(".flexible-text-field").match(Node::isVisible).queryAll().size());
+        assertEquals(0, lookup(".document-text-field").match(Node::isVisible).queryAll().size());
     }
 
     @Property(trials = 5)
@@ -444,9 +445,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
 
             values.add(entry.<@Value Object>map(p -> p.getSecond()));
-            FlexibleTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
+            DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
             if (entry.isLeft())
-                MatcherAssert.assertThat(TestUtil.fx(() -> field.getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getStyle())));
+                MatcherAssert.assertThat(TestUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
         }
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
@@ -470,13 +471,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @OnThread(Tag.Any)
-    private FlexibleTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
+    private DocumentTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
     {
-        FlexibleTextField textField;
+        DocumentTextField textField;
         int i = 0;
         do
         {
-            textField = (FlexibleTextField) clickOnItemInBounds(lookup(".flexible-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+            textField = (DocumentTextField) clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
         }
         while (++i < 2);
 
@@ -484,7 +485,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertNotNull(focused);
         if (focused == null)
             return textField; // To satisfy checker
-        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof FlexibleTextField);
+        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
         push(KeyCode.HOME);
         value.eitherEx(s -> {
             push(TestUtil.ctrlCmd(), KeyCode.A);
