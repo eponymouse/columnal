@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class DynamicTextField extends Region implements DocumentListener
+public class DocumentTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
     private final Path caretShape;
@@ -47,7 +47,7 @@ public class DynamicTextField extends Region implements DocumentListener
     private Document document;
     private double horizTranslation;
 
-    public DynamicTextField()
+    public DocumentTextField()
     {
         this.document = new ReadOnlyDocument("");
         textFlow = new TextFlow();

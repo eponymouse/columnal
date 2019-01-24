@@ -3,7 +3,6 @@ package test.gui.stf;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -14,14 +13,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.gui.kit.DisplayDocument;
-import records.gui.kit.DynamicTextField;
-import records.gui.kit.ReadOnlyDocument;
+import records.gui.kit.DocumentTextField;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenString;
@@ -37,16 +34,15 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestDynamicTextField extends FXApplicationTest
+public class TestDocumentTextField extends FXApplicationTest
 {
-    private final DynamicTextField field = new DynamicTextField();
+    private final DocumentTextField field = new DocumentTextField();
     
     @Property(trials=5, shrink = false)
     public void testBasic(@From(GenString.class) String s, @From(GenRandom.class) Random r)
