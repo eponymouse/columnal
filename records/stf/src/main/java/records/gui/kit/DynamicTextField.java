@@ -1,39 +1,168 @@
 package records.gui.kit;
 
 import com.google.common.collect.ImmutableList;
+import com.sun.javafx.scene.text.HitInfo;
+import com.sun.javafx.scene.text.TextLayout;
+import javafx.event.Event;
+import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Path;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
+import records.gui.kit.Document.DocumentListener;
+import records.gui.kit.Document.TrackedPosition;
+import records.gui.kit.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.gui.FXUtility;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class DynamicTextField extends Region
+public class DynamicTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
-    
+    private final Path caretShape;
+    private Document.TrackedPosition anchorPosition;
+    private Document.TrackedPosition caretPosition;
+    private Document document;
+    private double horizTranslation;
+
     public DynamicTextField()
     {
+        this.document = new ReadOnlyDocument("");
         textFlow = new TextFlow();
-        getChildren().add(textFlow);
+        textFlow.setMouseTransparent(true);
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
+        anchorPosition = caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::updateCaretShape);
+        caretShape = new Path();
+        caretShape.setMouseTransparent(true);
+        caretShape.setManaged(false);
+        caretShape.visibleProperty().bind(focusedProperty());
+        caretShape.getStyleClass().add("dynamic-caret");
+        getChildren().addAll(textFlow, caretShape);
+
+        Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
+            InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
+            InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
+        ));
     }
     
+    private void mouseEvent(MouseEvent mouseEvent)
+    {
+        if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
+            Log.debug("Got mouse event: " + mouseEvent);
+        
+        if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED
+            //|| (mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
+            || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED)
+        {
+            Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
+            requestFocus();
+            // Position the caret at the clicked position:
+            
+            final TextLayout textLayout;
+            try
+            {
+                textLayout = getTextLayout();
+            }
+            catch (Exception e)
+            {
+                Log.log(e);
+                return;
+            }
+            HitInfo hitInfo = textLayout.getHitInfo((float)mouseEvent.getX(), (float)mouseEvent.getY());
+            caretPosition.moveTo(hitInfo.getInsertionIndex());
+            if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED)
+                moveAnchorToCaret();
+        }
+    }
+    
+    private void keyboardEvent(KeyEvent keyEvent)
+    {
+        if (keyEvent.getEventType() == KeyEvent.KEY_TYPED)
+        {
+            document.replaceText(caretPosition.getPosition(), caretPosition.getPosition(), keyEvent.getCharacter());
+        }
+        else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED)
+        {
+            if (keyEvent.getCode() == KeyCode.RIGHT && caretPosition.getPosition() + 1 <= document.getLength())
+            {
+                caretPosition.moveBy(1);
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
+            }
+            if (keyEvent.getCode() == KeyCode.LEFT && caretPosition.getPosition() - 1 >= 0)
+            {
+                caretPosition.moveBy(-1);
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
+            }
+            if (keyEvent.getCode() == KeyCode.HOME)
+            {
+                caretPosition.moveTo(0);
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
+            }
+            
+            if (keyEvent.getCode() == KeyCode.BACK_SPACE && caretPosition.getPosition() > 0)
+            {
+                document.replaceText(caretPosition.getPosition() - 1, caretPosition.getPosition(), "");
+            }
+            
+            if (keyEvent.getCode() == KeyCode.DELETE && caretPosition.getPosition() < document.getLength())
+            {
+                document.replaceText(caretPosition.getPosition(), caretPosition.getPosition() + 1, "");
+            }
+        }
+    }
+
+    private void moveAnchorToCaret()
+    {
+        anchorPosition = document.trackPosition(caretPosition.getPosition(), Bias.FORWARD, this::updateCaretShape);
+        //Log.logStackTrace("Anchor now " + anchorPosition.getPosition());
+    }
+
     public void setDocument(Document document)
     {
+        this.document.removeListener(this);
+        this.document = document;
+        this.document.addListener(this);
+        caretPosition = this.document.trackPosition(0, Bias.FORWARD, this::updateCaretShape);
+        moveAnchorToCaret();
+        documentChanged();
+    }
+
+    public void documentChanged()
+    {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
+        requestLayout();
     }
 
     private static List<Text> makeTextNodes(Stream<Pair<Set<String>, String>> styledSpans)
     {
         return styledSpans.map(ss -> {
             Text text = new Text(ss.getSecond());
+            text.setMouseTransparent(true);
             text.getStyleClass().addAll(ss.getFirst());
             return text;
         }).collect(ImmutableList.<Text>toImmutableList());
@@ -42,6 +171,90 @@ public class DynamicTextField extends Region
     @Override
     protected void layoutChildren()
     {
-        textFlow.resizeRelocate(0, 0, textFlow.prefWidth(-1), getHeight());
+        double wholeTextWidth = textFlow.prefWidth(-1);
+        Bounds caretLocalBounds = caretShape.getBoundsInLocal();
+        Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
+        
+        Log.debug("Bounds: " + caretBounds + " in " + getWidth() + " trans " + horizTranslation + " whole " + wholeTextWidth);
+        if (isFocused() && caretBounds.getMinX() - 5 < 0)
+        {
+            // Caret is off screen to the left:
+            horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
+        }
+        else if (isFocused() && caretBounds.getMaxX() > getWidth() - 5)
+        {
+            // Caret is off screen to the right:
+            horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
+        }
+        else if (!isFocused())
+        {
+            horizTranslation = 0;
+        }
+        
+        textFlow.resizeRelocate(-horizTranslation, 0, wholeTextWidth, getHeight());
+        caretShape.setLayoutX(-horizTranslation);
+    }
+
+    private void updateCaretShape()
+    {
+        try
+        {
+            caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
+        }
+        catch (Exception e)
+        {
+            caretShape.getElements().clear();
+        }
+        requestLayout();
+    }
+
+    public int _test_getAnchorPosition()
+    {
+        return anchorPosition.getPosition();
+    }
+
+    public int _test_getCaretPosition()
+    {
+        return caretPosition.getPosition();
+    }
+
+    @Override
+    protected double computePrefHeight(double width)
+    {
+        return textFlow.prefHeight(-1);
+    }
+
+    @Override
+    protected double computePrefWidth(double height)
+    {
+        return 300;
+    }
+
+    @SuppressWarnings("nullness")
+    public Optional<Point2D> _test_getClickPosFor(int targetPos)
+    {
+        try
+        {
+            TextLayout textLayout = getTextLayout();
+            Point2D p = FXUtility.getCentre(new Path(textLayout.getCaretShape(targetPos, true, 1.0f, 0)).getBoundsInLocal());
+            if (getBoundsInLocal().contains(p))
+                return Optional.of(p);
+            else
+                return Optional.empty();
+        }
+        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NullPointerException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public TextLayout getTextLayout() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
+    {
+        // TODO stop using reflection in Java 9, just call the methods directly
+        Method method = textFlow.getClass().getDeclaredMethod("getTextLayout");
+        method.setAccessible(true);
+        @SuppressWarnings("nullness")
+        @NonNull TextLayout textLayout = (TextLayout) method.invoke(textFlow);
+        return textLayout;
     }
 }
