@@ -67,4 +67,9 @@ public class ReadOnlyDocument extends Document
     {
         return false;
     }
+
+    @Override
+    void focusChanged(boolean focused)
+    {
+    }
 }

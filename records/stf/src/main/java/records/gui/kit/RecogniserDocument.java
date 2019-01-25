@@ -38,23 +38,27 @@ public final class RecogniserDocument<V> extends DisplayDocument
     }
 
     @Override
-    void replaceText(int startPosIncl, int endPosExcl, String text)
+    void focusChanged(boolean focused)
     {
-        super.replaceText(startPosIncl, endPosExcl, text);
-        recognise();
+        super.focusChanged(focused);
+        if (!focused)
+            recognise();
     }
 
     @EnsuresNonNull("latestValue")
     @RequiresNonNull({"recogniser", "saveChange"})
     private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this)
     {
-        latestValue = recogniser.process(ParseProgress.fromStart(getText()), false);
+        String text = getText();
+        latestValue = recogniser.process(ParseProgress.fromStart(text), false)
+                        .flatMap(SuccessDetails::requireEnd);
         latestValue.ifLeft(err -> {
             curErrorPosition = OptionalInt.of(err.errorPosition);
+            saveChange.consume(text, null);
         });
         latestValue.ifRight(x -> {
             curErrorPosition = OptionalInt.empty();
-            saveChange.consume(getText(), x.value);
+            saveChange.consume(text, x.value);
         });
     }
 

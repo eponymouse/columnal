@@ -70,9 +70,11 @@ public abstract class Document
     abstract boolean isEditable();
 
     abstract String getText();
-
+    
     abstract boolean hasError();
 
+    abstract void focusChanged(boolean focused);
+    
     // Bit weird in Document, but it's easiest that way
     void defocus()
     {

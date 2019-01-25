@@ -18,8 +18,11 @@ import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.wellbehaved.event.InputHandler;
+import org.fxmisc.wellbehaved.event.InputHandler.Result;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.gui.kit.Document.DocumentListener;
@@ -56,6 +59,7 @@ public class DocumentTextField extends Region implements DocumentListener
     public DocumentTextField()
     {
         getStyleClass().add("document-text-field");
+        setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");
         this.clip = new ResizableRectangle();
         setClip(clip);
@@ -74,6 +78,9 @@ public class DocumentTextField extends Region implements DocumentListener
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
             InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
         ));
+        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            document.focusChanged(focused);
+        });
     }
     
     private void mouseEvent(MouseEvent mouseEvent)
@@ -110,7 +117,28 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED)
         {
-            document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), keyEvent.getCharacter());
+            // Borrowed from TextInputControlBehavior:
+            // Sometimes we get events with no key character, in which case
+            // we need to bail.
+            String character = keyEvent.getCharacter();
+            if (character.length() == 0)
+                return;
+
+            // Filter out control keys except control+Alt on PC or Alt on Mac
+            if (keyEvent.isControlDown() || keyEvent.isAltDown() || (SystemUtils.IS_OS_MAC && keyEvent.isMetaDown()))
+            {
+                if (!((keyEvent.isControlDown() || SystemUtils.IS_OS_MAC) && keyEvent.isAltDown()))
+                    return;
+            }
+
+            // Ignore characters in the control range and the ASCII delete
+            // character as well as meta key presses
+            if (character.charAt(0) > 0x1F
+                && character.charAt(0) != 0x7F
+                && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
+            {
+                document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), character);
+            }
         }
         else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED)
         {
@@ -151,7 +179,7 @@ public class DocumentTextField extends Region implements DocumentListener
                 document.replaceText(caretPosition.getPosition(), caretPosition.getPosition() + 1, "");
             }
             
-            if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER)
+            if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.TAB)
             {
                 document.defocus();
             }

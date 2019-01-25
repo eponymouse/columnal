@@ -97,4 +97,9 @@ public class DisplayDocument extends Document
     {
         return false;
     }
+
+    @Override
+    void focusChanged(boolean focused)
+    {
+    }
 }
