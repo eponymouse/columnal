@@ -75,7 +75,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             for (int t = 0; t < numTables; t++)
             {
                 // Bias towards small:
-                final @Initialized int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
+                final @Initialized int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 400);
 
                 int numColumns = r.nextInt(1, 12);
                 List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
