@@ -177,6 +177,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     {
         @OnThread(Tag.FXPlatform)
         private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
+        
+        public VersionedSTF()
+        {
+            super();
+            setFocusTraversable(false);
+        }
 
         @OnThread(Tag.FXPlatform)
         public boolean isUsingColumns(ImmutableList<ColumnDetails> columns)
