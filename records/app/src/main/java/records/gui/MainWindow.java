@@ -61,6 +61,8 @@ public class MainWindow
         // What file are we saving to in this main window?
         @OnThread(Tag.FXPlatform)
         public File _test_getCurFile();
+
+        public int _test_getSaveCount();
     }
 
     // If src is null, make new
@@ -205,6 +207,12 @@ public class MainWindow
             public File _test_getCurFile()
             {
                 return v.getSaveFile();
+            }
+
+            @Override
+            public int _test_getSaveCount()
+            {
+                return v.test_getSaveCount();
             }
         };
     }

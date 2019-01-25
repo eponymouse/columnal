@@ -108,13 +108,16 @@ public class View extends StackPane
 
     // We start in readOnly mode, and enable writing later if everything goes well:
     private boolean readOnly = true;
-    
+    private int saveCount = 0;
+
     private void save(boolean keepPrevForUndo)
     {
-        //Log.logStackTrace("Save requested, R/O: " + readOnly);
+        // Log.logStackTrace("Save requested, R/O: " + readOnly);
         
         if (readOnly)
             return;
+        
+        saveCount += 1;
         
         File dest = diskFile.get();
         Workers.onWorkerThread("Saving file", Priority.SAVE, () ->
@@ -398,6 +401,11 @@ public class View extends StackPane
     public void gotoRowDialog()
     {
         getGrid().gotoRow(getWindow());
+    }
+
+    public int test_getSaveCount()
+    {
+        return saveCount;
     }
 
     /* TODO
@@ -784,7 +792,6 @@ public class View extends StackPane
     public void enableWriting()
     {
         readOnly = false;
-        save(true);
     }
 
     @OnThread(Tag.FXPlatform)

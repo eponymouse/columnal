@@ -170,6 +170,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
         TestUtil.sleep(2000);
+        assertEquals(0, mainWindowActions._test_getSaveCount());
 
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         TestUtil.fx_(windowToUse::requestFocus);
