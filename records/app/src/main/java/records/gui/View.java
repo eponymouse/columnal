@@ -792,6 +792,17 @@ public class View extends StackPane
     public void enableWriting()
     {
         readOnly = false;
+        File dest = diskFile.get();
+        Workers.onWorkerThread("Backing up file for undo", Priority.SAVE, () ->
+        {
+            Instant now = Instant.now();
+            // This will do backup for undo, but also for
+            // files being replaced, in extreme cases:
+            if (dest.exists())
+            {
+                undoManager.backupForUndo(dest, now);
+            }
+        });     
     }
 
     @OnThread(Tag.FXPlatform)
