@@ -314,6 +314,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
             
             dataHistory.add(latest);
+            TestUtil.sleep(500);
         }
     }
 

@@ -26,6 +26,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private final FXPlatformBiConsumer<String, @Nullable V> saveChange;
     private final FXPlatformRunnable relinquishFocus;
     private OptionalInt curErrorPosition = OptionalInt.empty();
+    private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
 
     public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformRunnable relinquishFocus)
@@ -34,7 +35,8 @@ public final class RecogniserDocument<V> extends DisplayDocument
         this.recogniser = recogniser;
         this.saveChange = saveChange;
         this.relinquishFocus = relinquishFocus;
-        recognise();
+        recognise(false);
+        valueOnFocusGain = initialContent;
     }
 
     @Override
@@ -42,23 +44,27 @@ public final class RecogniserDocument<V> extends DisplayDocument
     {
         super.focusChanged(focused);
         if (!focused)
-            recognise();
+            recognise(!getText().equals(valueOnFocusGain));
+        else
+            valueOnFocusGain = getText();
     }
 
     @EnsuresNonNull("latestValue")
     @RequiresNonNull({"recogniser", "saveChange"})
-    private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this)
+    private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save)
     {
         String text = getText();
         latestValue = recogniser.process(ParseProgress.fromStart(text), false)
                         .flatMap(SuccessDetails::requireEnd);
         latestValue.ifLeft(err -> {
             curErrorPosition = OptionalInt.of(err.errorPosition);
-            saveChange.consume(text, null);
+            if (save)
+                saveChange.consume(text, null);
         });
         latestValue.ifRight(x -> {
             curErrorPosition = OptionalInt.empty();
-            saveChange.consume(text, x.value);
+            if (save)
+                saveChange.consume(text, x.value);
         });
     }
 
