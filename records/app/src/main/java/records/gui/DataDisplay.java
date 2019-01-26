@@ -647,6 +647,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         public Pane makeCell(VisibleBounds visibleBounds)
         {
             tableNameField = new TableNameTextField(tableManager, initialTableName, false, () -> withParent_(g -> g.select(new EntireTableSelection(DataDisplay.this, getPosition().columnIndex))));
+            tableNameField.getNode().setFocusTraversable(false);
             tableNameField.sizeToFit(30.0, 30.0);
             // We have to use PRESSED because if we do CLICKED, the field
             // will already have been focused:

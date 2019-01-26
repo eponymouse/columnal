@@ -241,7 +241,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, lookup(".document-text-field").queryAll().size());
         
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-        TestUtil.sleep(1000);
+        TestUtil.sleep(2000);
         assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
