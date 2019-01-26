@@ -11,9 +11,6 @@ import javafx.scene.layout.BorderPane;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.StyledText;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.Column.ProgressListener;
@@ -63,7 +60,6 @@ import utility.gui.GUI;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -315,18 +311,6 @@ public class TableDisplayUtility
             }
         }));
         */
-    }
-
-    // package-visible
-    @SafeVarargs
-    static StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> docFromSegments(StyledText<Collection<String>>... segments)
-    {
-        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment((StyledText<Collection<String>>)segments[0], Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.<Collection<String>>textOps());
-        for (int i = 1; i < segments.length; i++)
-        {
-            doc = doc.concat(ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(segments[i], Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.<Collection<String>>textOps()));
-        }
-        return doc;
     }
 
     @SuppressWarnings("units")

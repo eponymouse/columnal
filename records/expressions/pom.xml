@@ -73,12 +73,6 @@
             <version>0.5.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.fxmisc.richtext</groupId>
-            <artifactId>richtextfx</artifactId>
-            <version>0.7-M5</version>
-        </dependency>
-
         <!-- XOM for parsing XML help files: -->
         <dependency>
             <groupId>com.io7m.xom</groupId>

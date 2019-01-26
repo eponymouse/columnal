@@ -370,26 +370,6 @@ class PopOver
     void setContentNode(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, Node content);
     ReadOnlyObjectProperty<Scene> sceneProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
 }
-package org.fxmisc.richtext;
-class StyleClassedTextArea
-{
-    String getText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    void setText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, String s);
-    int getLength(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    StyledDocument<Collection<String>, StyledText<String>, Collection<String>> getDocument(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    void replaceText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, String s);
-    ObjectProperty<IndexRange> selectionProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    void selectRange(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, int a, int b);
-    IndexRange getSelection(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    ObservableValue<String> textProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    ObservableValue<Integer> caretPositionProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    int getCaretPosition(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
-    void moveTo(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, int newPos);
-}
-class GenericStyledArea<PS, SEG, S>
-{
-    void replace(@UnknownInitialization(org.fxmisc.richtext.GenericStyledArea.class) GenericStyledArea<PS, SEG, S> this, StyledDocument<PS, SEG, S> doc);
-}
 package javafx.embed.swing;
 class SwingFXUtils
 {
