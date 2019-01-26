@@ -39,7 +39,7 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-public interface ScrollToTrait extends FxRobotInterface
+public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
 {
     // Scrolls until the entire node is on screen
     @OnThread(Tag.Any)
@@ -142,7 +142,7 @@ public interface ScrollToTrait extends FxRobotInterface
         TestUtil.sleep(300);
 
         Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
-        assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
+        assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner(), TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
     }
 
     @OnThread(Tag.Any)
