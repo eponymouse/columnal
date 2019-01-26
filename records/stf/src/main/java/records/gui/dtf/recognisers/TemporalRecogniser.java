@@ -1,15 +1,12 @@
-package records.gui.flex.recognisers;
+package records.gui.dtf.recognisers;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.flex.Recogniser;
+import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
 
@@ -20,12 +17,7 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
-import java.time.temporal.TemporalQuery;
-import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

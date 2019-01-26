@@ -1,9 +1,8 @@
-package records.gui.kit;
+package records.gui.dtf;
 
 import com.google.common.collect.ImmutableList;
-import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.kit.Document.TrackedPosition.Bias;
+import records.gui.dtf.Document.TrackedPosition.Bias;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 

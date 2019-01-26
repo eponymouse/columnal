@@ -2,9 +2,7 @@ package records.gui.stable;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
-import records.gui.flex.EditorKit;
-import records.gui.flex.EditorKitInterface;
-import records.gui.kit.Document;
+import records.gui.dtf.Document;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

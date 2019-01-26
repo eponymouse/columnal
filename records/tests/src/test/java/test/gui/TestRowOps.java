@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -23,9 +22,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.RowLabelSupplier;
+import records.gui.dtf.DocumentTextField;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
-import records.gui.flex.FlexibleTextField;
 import records.transformations.Calculate;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
@@ -48,18 +47,14 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait, ClickTableLocationTrait
@@ -329,7 +324,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((FlexibleTextField)rowCells.get(iFinal)).getText()));
+            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((DocumentTextField)rowCells.get(iFinal))._test_getGraphicalText()));
         }
     }
 

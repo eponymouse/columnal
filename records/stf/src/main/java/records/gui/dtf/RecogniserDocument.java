@@ -1,4 +1,4 @@
-package records.gui.kit;
+package records.gui.dtf;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -6,11 +6,9 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.gui.flex.EditorKit;
-import records.gui.flex.Recogniser;
-import records.gui.flex.Recogniser.ErrorDetails;
-import records.gui.flex.Recogniser.ParseProgress;
-import records.gui.flex.Recogniser.SuccessDetails;
+import records.gui.dtf.Recogniser.ErrorDetails;
+import records.gui.dtf.Recogniser.ParseProgress;
+import records.gui.dtf.Recogniser.SuccessDetails;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformRunnable;
@@ -98,7 +96,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         {
             return ImmutableList.<Pair<Set<String>, String>>of(
                     new Pair<Set<String>, String>(ImmutableSet.of(), text.substring(0, curErrorPosition.getAsInt())),
-                    new Pair<Set<String>, String>(ImmutableSet.of(EditorKit.ERROR_CLASS), text.substring(curErrorPosition.getAsInt(), curErrorPosition.getAsInt() + 1)),
+                    new Pair<Set<String>, String>(ImmutableSet.of("input-error"), text.substring(curErrorPosition.getAsInt(), curErrorPosition.getAsInt() + 1)),
                     new Pair<Set<String>, String>(ImmutableSet.of(), text.substring(curErrorPosition.getAsInt() + 1))
             ).stream();
         }

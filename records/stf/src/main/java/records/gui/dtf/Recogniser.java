@@ -1,4 +1,4 @@
-package records.gui.flex;
+package records.gui.dtf;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

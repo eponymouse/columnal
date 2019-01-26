@@ -1,8 +1,8 @@
-package records.gui.flex.recognisers;
+package records.gui.dtf.recognisers;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import records.gui.flex.Recogniser;
+import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;

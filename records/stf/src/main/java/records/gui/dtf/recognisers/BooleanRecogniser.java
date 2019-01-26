@@ -1,9 +1,9 @@
-package records.gui.flex.recognisers;
+package records.gui.dtf.recognisers;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
-import records.gui.flex.Recogniser;
+import records.gui.dtf.Recogniser;
 import utility.Either;
 
 public class BooleanRecogniser extends Recogniser<@Value Boolean>

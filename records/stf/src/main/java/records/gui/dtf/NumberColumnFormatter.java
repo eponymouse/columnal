@@ -1,4 +1,4 @@
-package records.gui.kit;
+package records.gui.dtf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -6,18 +6,8 @@ import com.google.common.collect.ImmutableSet;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
-import log.Log;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.StyledText;
-import records.gui.flex.EditorKit;
-import records.gui.flex.FlexibleTextField;
-import records.gui.kit.DocumentTextField;
-import records.gui.kit.RecogniserDocument;
 import records.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -28,7 +18,6 @@ import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.function.UnaryOperator;
 
 /**
  * One per column.

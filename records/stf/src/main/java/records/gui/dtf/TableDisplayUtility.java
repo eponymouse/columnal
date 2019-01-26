@@ -1,4 +1,4 @@
-package records.gui.kit;
+package records.gui.dtf;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
@@ -23,38 +23,39 @@ import records.data.Table.Display;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.flex.FlexibleTextField;
-import records.gui.flex.Recogniser;
-import records.gui.flex.recognisers.BooleanRecogniser;
-import records.gui.flex.recognisers.ListRecogniser;
-import records.gui.flex.recognisers.NumberRecogniser;
-import records.gui.flex.recognisers.StringRecogniser;
-import records.gui.flex.recognisers.TaggedRecogniser;
-import records.gui.flex.recognisers.TemporalRecogniser;
-import records.gui.flex.recognisers.TupleRecogniser;
-import records.gui.kit.DocumentTextField;
-import records.gui.kit.ReadOnlyDocument;
-import records.gui.kit.RecogniserDocument;
+import records.gui.dtf.recognisers.BooleanRecogniser;
+import records.gui.dtf.recognisers.ListRecogniser;
+import records.gui.dtf.recognisers.NumberRecogniser;
+import records.gui.dtf.recognisers.StringRecogniser;
+import records.gui.dtf.recognisers.TaggedRecogniser;
+import records.gui.dtf.recognisers.TemporalRecogniser;
+import records.gui.dtf.recognisers.TupleRecogniser;
+import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
-import records.gui.stable.ColumnDetails;
-import records.gui.flex.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.*;
+import utility.Either;
+import utility.FXPlatformBiConsumer;
+import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
+import utility.Pair;
+import utility.TaggedValue;
+import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -594,13 +595,6 @@ public class TableDisplayUtility
                 */
             }
         });
-    }
-
-    
-    private static interface EditorKitMaker<V>
-    {
-        @OnThread(Tag.FXPlatform)
-        public EditorKit<V> make(V value, FXPlatformConsumer<V> storeValue, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
     }
 
     /**

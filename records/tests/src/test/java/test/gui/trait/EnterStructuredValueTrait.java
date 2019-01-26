@@ -21,8 +21,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.flex.FlexibleTextField;
-import records.gui.kit.DocumentTextField;
+import records.gui.dtf.DocumentTextField;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -38,9 +37,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {

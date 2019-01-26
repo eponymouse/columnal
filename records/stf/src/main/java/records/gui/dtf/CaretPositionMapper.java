@@ -1,4 +1,4 @@
-package records.gui.kit;
+package records.gui.dtf;
 
 public interface CaretPositionMapper
 {

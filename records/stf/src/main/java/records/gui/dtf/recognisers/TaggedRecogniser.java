@@ -1,10 +1,10 @@
-package records.gui.flex.recognisers;
+package records.gui.dtf.recognisers;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
-import records.gui.flex.Recogniser;
+import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
