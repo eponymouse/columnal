@@ -48,6 +48,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -158,8 +159,8 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
             // selection isn't all going to fit)
             //Log.debug("Grid bounds on screen: " + gridScreenBounds + " sel bounds " + selScreenBounds);
             // Incidental check that the grid node should not be massive:
-            MatcherAssert.assertThat(prefix, gridScreenBounds.getWidth(), Matchers.lessThan(2000.0));
-            MatcherAssert.assertThat(prefix, gridScreenBounds.getHeight(), Matchers.lessThan(2000.0));
+            assertThat(prefix, gridScreenBounds.getWidth(), Matchers.lessThan(2000.0));
+            assertThat(prefix, gridScreenBounds.getHeight(), Matchers.lessThan(2000.0));
             assertTrue(prefix, gridScreenBounds.intersects(selScreenBounds));
         }
     }
@@ -170,7 +171,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
         TestUtil.sleep(2000);
-        assertEquals(0, mainWindowActions._test_getSaveCount());
+        assertThat(mainWindowActions._test_getSaveCount(), Matchers.lessThanOrEqualTo(1));
 
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         TestUtil.fx_(windowToUse::requestFocus);
