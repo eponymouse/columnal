@@ -1,6 +1,7 @@
 package records.gui;
 
 import javafx.scene.input.KeyCode;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -12,6 +13,7 @@ import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import javax.swing.*;
@@ -63,5 +65,10 @@ public class TableNameTextField extends ErrorableTextField<TableId>
         Nodes.addInputMap(getNode(), InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
             defocus.run();
         }));
+
+        FXUtility.addChangeListenerPlatformNN(getNode().focusedProperty(), f -> {
+            if (f)
+                Log.logStackTrace("Table name field gained focus");
+        });
     }
 }
