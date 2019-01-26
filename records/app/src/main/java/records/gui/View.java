@@ -793,16 +793,23 @@ public class View extends StackPane
     {
         readOnly = false;
         File dest = diskFile.get();
-        Workers.onWorkerThread("Backing up file for undo", Priority.SAVE, () ->
+        if (!dest.exists() || dest.length() == 0L)
         {
-            Instant now = Instant.now();
-            // This will do backup for undo, but also for
-            // files being replaced, in extreme cases:
-            if (dest.exists())
+            save(true);
+        }
+        else
+        {
+            Workers.onWorkerThread("Backing up file for undo", Priority.SAVE, () ->
             {
-                undoManager.backupForUndo(dest, now);
-            }
-        });     
+                Instant now = Instant.now();
+                // This will do backup for undo, but also for
+                // files being replaced, in extreme cases:
+                if (dest.exists())
+                {
+                    undoManager.backupForUndo(dest, now);
+                }
+            });
+        }
     }
 
     @OnThread(Tag.FXPlatform)
