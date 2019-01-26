@@ -26,7 +26,7 @@ public class ReadOnlyDocument extends Document
     }
 
     @Override
-    Stream<Pair<Set<String>, String>> getStyledSpans()
+    Stream<Pair<Set<String>, String>> getStyledSpans(boolean focused)
     {
         return content.stream();
     }

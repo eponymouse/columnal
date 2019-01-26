@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import javafx.event.Event;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -25,6 +27,7 @@ import org.fxmisc.wellbehaved.event.InputHandler;
 import org.fxmisc.wellbehaved.event.InputHandler.Result;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+import records.data.datatype.DataType.DateTimeInfo.F;
 import records.gui.kit.Document.DocumentListener;
 import records.gui.kit.Document.TrackedPosition;
 import records.gui.kit.Document.TrackedPosition.Bias;
@@ -65,7 +68,7 @@ public class DocumentTextField extends Region implements DocumentListener
         setClip(clip);
         textFlow = new TextFlow();
         textFlow.setMouseTransparent(true);
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
         anchorPosition = caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::updateCaretShape);
         caretShape = new Path();
         caretShape.setMouseTransparent(true);
@@ -80,20 +83,21 @@ public class DocumentTextField extends Region implements DocumentListener
         ));
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             document.focusChanged(focused);
+            if (focused)
+                FXUtility.mouse(this).refreshDocument(focused);
         });
     }
     
     private void mouseEvent(MouseEvent mouseEvent)
     {
-        if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
-            Log.debug("Got mouse event: " + mouseEvent);
+        //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
+        //    Log.debug("Got mouse event: " + mouseEvent);
         
         if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED
             //|| (mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
             || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED)
         {
             Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
-            requestFocus();
             // Position the caret at the clicked position:
             
             final TextLayout textLayout;
@@ -107,7 +111,10 @@ public class DocumentTextField extends Region implements DocumentListener
                 return;
             }
             HitInfo hitInfo = textLayout.getHitInfo((float)mouseEvent.getX(), (float)mouseEvent.getY());
-            caretPosition.moveTo(hitInfo.getInsertionIndex());
+            // Focusing may change content so important to hit-test first:
+            requestFocus();
+            // And important to map caret pos after change:
+            caretPosition.moveTo(document.mapCaretPos(hitInfo.getInsertionIndex()));
             if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED)
                 moveAnchorToCaret();
         }
@@ -204,7 +211,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public void documentChanged()
     {
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans()));
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
         requestLayout();
     }
@@ -325,7 +332,8 @@ public class DocumentTextField extends Region implements DocumentListener
         try
         {
             TextLayout textLayout = getTextLayout();
-            caretPosition.moveTo(textLayout.getHitInfo((float)point2D.getX(), (float)point2D.getY()).getInsertionIndex());
+            int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
+            caretPosition.moveTo(isFocused() ? index : document.mapCaretPos(index));
         }
         catch (Exception e)
         {
@@ -333,9 +341,9 @@ public class DocumentTextField extends Region implements DocumentListener
         }
     }
     
-    public String getText()
+    public String _test_getGraphicalText()
     {
-        return document.getText();
+        return textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
     }
 
     public Optional<Bounds> _test_getCharacterBoundsOnScreen(int charAfter)
@@ -343,7 +351,11 @@ public class DocumentTextField extends Region implements DocumentListener
         try
         {
             Path path = new Path(getTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
-            return Optional.of(path.localToScreen(path.getBoundsInLocal()));
+            Bounds actualBounds = localToScreen(path.getBoundsInLocal());
+            Rectangle2D clipped = FXUtility.intersectRect(
+                    FXUtility.boundsToRect(actualBounds),
+                    FXUtility.boundsToRect(localToScreen(getBoundsInLocal())));
+            return Optional.of(new BoundingBox(clipped.getMinX(), clipped.getMinY(), clipped.getWidth(), clipped.getHeight()));
         }
         catch (Exception e)
         {
@@ -351,9 +363,14 @@ public class DocumentTextField extends Region implements DocumentListener
         }
     }
 
+    public List<Pair<Set<String>, String>> _test_getStyleSpans()
+    {
+        return document.getStyledSpans(isFocused()).collect(Collectors.<Pair<Set<String>, String>>toList());
+    }
+
     public List<Pair<Set<String>, String>> _test_getStyleSpans(int from, int to)
     {
-        List<Pair<Set<String>, String>> styledSpans = new ArrayList<>(document.getStyledSpans().collect(Collectors.<Pair<Set<String>, String>>toList()));
+        List<Pair<Set<String>, String>> styledSpans = new ArrayList<>(document.getStyledSpans(isFocused()).collect(Collectors.<Pair<Set<String>, String>>toList()));
         int leftToSkip = from;
         int leftToRetain = to - from;
         int index = 0;
@@ -390,5 +407,20 @@ public class DocumentTextField extends Region implements DocumentListener
         }
         
         return styledSpans;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> @Nullable RecogniserDocument<T> getRecogniserDocument(Class<T> itemClass)
+    {
+        if (document instanceof RecogniserDocument<?> && ((RecogniserDocument<?>)document).getItemClass().equals(itemClass))
+            return (RecogniserDocument<T>)document;
+        else
+            return null;
+    }
+
+    public void refreshDocument(boolean focused)
+    {
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
+        requestLayout();
     }
 }

@@ -7,6 +7,7 @@ import records.data.RecordSet.RecordSetListener;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.flex.FlexibleTextField;
+import records.gui.kit.DocumentTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -44,5 +45,5 @@ public interface ColumnHandler extends RecordSetListener
     @OnThread(Tag.Simulation)
     public @Value Object getValue(int index) throws InternalException, UserException;
 
-    void styleTogether(Collection<? extends FlexibleTextField> cellsInColumn, double columnSize);
+    void styleTogether(Collection<? extends DocumentTextField> cellsInColumn, double columnSize);
 }

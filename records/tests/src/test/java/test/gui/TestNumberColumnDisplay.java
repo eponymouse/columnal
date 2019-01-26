@@ -28,6 +28,7 @@ import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataCellSupplier;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
@@ -46,6 +47,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
@@ -88,7 +90,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     cells.add(cell);
                 }
                 if (cell != null)
-                    return cell.getText();
+                    return getText(cell);
                 else
                     return null;
             });
@@ -108,7 +110,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 TestUtil.sleep(400);
                 push(KeyCode.ENTER);
                 VersionedSTF cellFinal = cell;
-                cellText = TestUtil.fx(() -> cellFinal.getText());
+                cellText = TestUtil.fx(() -> getText(cellFinal));
             }
             else
                 cellText = null;
@@ -128,7 +130,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 if (cell != null)
                 {
                     @NonNull VersionedSTF cellFinal = cell;
-                    // Click twice to edit:
+                    // Click twice to edit, so click once now:
                     clickOn(cell);
                     TestUtil.sleep(400);
                     String gui = expectedGUI.get(i);
@@ -136,7 +138,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
                         Optional<Bounds> b;
-                        String curText = TestUtil.fx(() -> cellFinal.getText());
+                        String curText = TestUtil.fx(() -> getText(cellFinal));
                         if (n < curText.length())
                         {
                             b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n));
@@ -186,12 +188,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     }
                     clickOn(clickOnScreenPos);
                     
+                    assertTrue("Clicked on: " + clickOnScreenPos, TestUtil.fx(() -> cellFinal.isFocused()));
                     assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual, afterIndex, 
                         (int)TestUtil.<Integer>fx(() -> cellFinal._test_getCaretPosition())
                     );
                     // Double-check cellText while we're here:
                     
-                    cellText = TestUtil.fx(() -> cellFinal.getText());
+                    cellText = TestUtil.fx(() -> getText(cellFinal));
                 } else
                     cellText = null;
                 assertEquals("Row " + i, actual, cellText);
@@ -204,13 +207,19 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     clickOn(cellBefore);
                     // Wait for batched re-layout:
                     TestUtil.sleep(1000);
-                    assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : cell.getText()));
+                    assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
                 }
             }
         }
 
     }
-    
+
+    @OnThread(Tag.FXPlatform)
+    private String getText(VersionedSTF cell)
+    {
+        return cell._test_getGraphicalText();
+    }
+
     @Test
     public void testUnaltered() throws Exception
     {
@@ -280,7 +289,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         ), values.size()));
         
         Supplier<List<String>> getCurShowing = () ->
-                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(0)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> s.getText())).collect(ImmutableList.toImmutableList());
+                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(0)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> getText(s))).collect(ImmutableList.toImmutableList());
         
         checkNumericSorted(getCurShowing.get());
 

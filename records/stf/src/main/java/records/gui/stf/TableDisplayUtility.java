@@ -42,6 +42,7 @@ import records.gui.flex.recognisers.StringRecogniser;
 import records.gui.flex.recognisers.TaggedRecogniser;
 import records.gui.flex.recognisers.TemporalRecogniser;
 import records.gui.flex.recognisers.TupleRecogniser;
+import records.gui.kit.DocumentTextField;
 import records.gui.kit.ReadOnlyDocument;
 import records.gui.kit.RecogniserDocument;
 import records.gui.stable.ColumnHandler;
@@ -139,7 +140,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void styleTogether(Collection<? extends FlexibleTextField> cellsInColumn, double columnSize)
+                        public void styleTogether(Collection<? extends DocumentTextField> cellsInColumn, double columnSize)
                         {
                         }
                     });

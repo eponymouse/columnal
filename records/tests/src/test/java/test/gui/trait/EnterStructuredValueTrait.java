@@ -179,7 +179,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         Node node = TestUtil.fx(() -> window.getScene().getFocusOwner());
         assertTrue("" + node, node instanceof DocumentTextField);
         DocumentTextField field = (DocumentTextField) node;
-        String content = TestUtil.fx(() -> field.getText());
+        String content = TestUtil.fx(() -> field._test_getGraphicalText());
         ChangeListener<String> logTextChange = (a, oldVal, newVal) -> Log.logStackTrace("Text changed on defocus from : \"" + oldVal + "\" to \"" + newVal + "\"");
         if (checkContentSame)
         {
@@ -190,7 +190,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         assertNotEquals(node, TestUtil.fx(() -> window.getScene().getFocusOwner()));
         if (checkContentSame)
         {
-            assertEquals(content, TestUtil.fx(() -> field.getText()));
+            assertEquals(content, TestUtil.fx(() -> field._test_getGraphicalText()));
             //TestUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
         }
     }

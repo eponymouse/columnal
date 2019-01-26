@@ -143,7 +143,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     {
         @OnThread(Tag.FXPlatform) @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
         if (cell != null)
-            return cell.getText().replace(", ", ",");
+            return cell._test_getGraphicalText().replace(", ", ",");
         else
             return null;
     }

@@ -57,7 +57,7 @@ public abstract class Document
     }
     
     // Package-protected
-    abstract Stream<Pair<Set<String>, String>> getStyledSpans();
+    abstract Stream<Pair<Set<String>, String>> getStyledSpans(boolean focused);
 
     // Package-protected
     abstract void replaceText(int startPosIncl, int endPosExcl, String text);
@@ -78,6 +78,11 @@ public abstract class Document
     // Bit weird in Document, but it's easiest that way
     void defocus()
     {
+    }
+
+    int mapCaretPos(int pos)
+    {
+        return pos;
     }
     
     static interface DocumentListener

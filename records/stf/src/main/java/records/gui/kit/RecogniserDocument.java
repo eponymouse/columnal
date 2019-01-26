@@ -11,6 +11,7 @@ import records.gui.flex.Recogniser;
 import records.gui.flex.Recogniser.ErrorDetails;
 import records.gui.flex.Recogniser.ParseProgress;
 import records.gui.flex.Recogniser.SuccessDetails;
+import records.gui.stf.CaretPositionMapper;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformRunnable;
@@ -25,13 +26,17 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private final Recogniser<V> recogniser;
     private final FXPlatformBiConsumer<String, @Nullable V> saveChange;
     private final FXPlatformRunnable relinquishFocus;
+    private final Class<V> itemClass;
     private OptionalInt curErrorPosition = OptionalInt.empty();
     private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
+    private @Nullable FXPlatformRunnable onFocusLost;
+    private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
     public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformRunnable relinquishFocus)
     {
         super(initialContent);
+        this.itemClass = valueClass;
         this.recogniser = recogniser;
         this.saveChange = saveChange;
         this.relinquishFocus = relinquishFocus;
@@ -44,13 +49,19 @@ public final class RecogniserDocument<V> extends DisplayDocument
     {
         super.focusChanged(focused);
         if (!focused)
+        {
             recognise(!getText().equals(valueOnFocusGain));
+            if (onFocusLost != null)
+                onFocusLost.run();
+        }
         else
+        {
             valueOnFocusGain = getText();
+        }
     }
 
-    @EnsuresNonNull("latestValue")
-    @RequiresNonNull({"recogniser", "saveChange"})
+    @EnsuresNonNull({"latestValue", "unfocusedDocument"})
+    @RequiresNonNull({"recogniser", "saveChange", "curErrorPosition"})
     private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save)
     {
         String text = getText();
@@ -66,19 +77,32 @@ public final class RecogniserDocument<V> extends DisplayDocument
             if (save)
                 saveChange.consume(text, x.value);
         });
+        this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, text).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
     }
 
     @Override
-    Stream<Pair<Set<String>, String>> getStyledSpans()
+    Stream<Pair<Set<String>, String>> getStyledSpans(boolean focused)
+    {
+        if (!focused && unfocusedDocument != null)
+            return unfocusedDocument.getFirst().stream();
+            
+        return makeStyledSpans(curErrorPosition, getText());
+    }
+
+    private static Stream<Pair<Set<String>, String>> makeStyledSpans(OptionalInt curErrorPosition, String text)
     {
         if (!curErrorPosition.isPresent())
-            return super.getStyledSpans();
-        
-        return ImmutableList.<Pair<Set<String>, String>>of(
-            new Pair<Set<String>, String>(ImmutableSet.of(), getText().substring(0, curErrorPosition.getAsInt())),
-            new Pair<Set<String>, String>(ImmutableSet.of(EditorKit.ERROR_CLASS), getText().substring(curErrorPosition.getAsInt(), curErrorPosition.getAsInt() + 1)),
-            new Pair<Set<String>, String>(ImmutableSet.of(), getText().substring(curErrorPosition.getAsInt() + 1))
-        ).stream();
+        {
+            return Stream.of(new Pair<>(ImmutableSet.of(), text));
+        }
+        else
+        {
+            return ImmutableList.<Pair<Set<String>, String>>of(
+                    new Pair<Set<String>, String>(ImmutableSet.of(), text.substring(0, curErrorPosition.getAsInt())),
+                    new Pair<Set<String>, String>(ImmutableSet.of(EditorKit.ERROR_CLASS), text.substring(curErrorPosition.getAsInt(), curErrorPosition.getAsInt() + 1)),
+                    new Pair<Set<String>, String>(ImmutableSet.of(), text.substring(curErrorPosition.getAsInt() + 1))
+            ).stream();
+        }
     }
 
     @Override
@@ -96,5 +120,30 @@ public final class RecogniserDocument<V> extends DisplayDocument
     public Either<ErrorDetails, V> getLatestValue()
     {
         return latestValue.map(x -> x.value);
+    }
+
+    // Note: this is not a list of listeners, there's only one.
+    public void setOnFocusLost(FXPlatformRunnable onFocusLost)
+    {
+        this.onFocusLost = onFocusLost;
+    }
+
+    public Class<V> getItemClass()
+    {
+        return itemClass;
+    }
+
+    public void setUnfocusedDocument(ImmutableList<Pair<Set<String>, String>> unfocusedDocument, CaretPositionMapper positionMapper)
+    {
+        this.unfocusedDocument = new Pair<>(unfocusedDocument, positionMapper);
+    }
+
+    @Override
+    int mapCaretPos(int pos)
+    {
+        if (unfocusedDocument != null)
+            return unfocusedDocument.getSecond().mapCaretPosition(pos);
+        else
+            return pos;
     }
 }

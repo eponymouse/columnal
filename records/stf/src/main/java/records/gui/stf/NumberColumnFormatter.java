@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
@@ -15,6 +16,8 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.StyledText;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
+import records.gui.kit.DocumentTextField;
+import records.gui.kit.RecogniserDocument;
 import records.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,11 +45,11 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
     {
         final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
-        for (FlexibleTextField visibleCell : vis.visibleCells)
+        for (DocumentTextField visibleCell : vis.visibleCells)
         {
             if (visibleCell != null)
             {
-                EditorKit<Number> editorKit = visibleCell.getEditableKit(Number.class);
+                RecogniserDocument<Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
                 if (editorKit != null)
                 {
                     @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
@@ -112,14 +115,14 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     
     private class NumberDetails
     {
-        private final FlexibleTextField textField;
+        private final DocumentTextField textField;
         private final String fullFracPart;
         private final String fullIntegerPart;
         private String displayFracPart;
         private String displayIntegerPart;
         private boolean displayDotVisible;
 
-        public NumberDetails(FlexibleTextField textField, Number n)
+        public NumberDetails(DocumentTextField textField, Number n)
         {
             this.textField = textField;
             fullIntegerPart = Utility.getIntegerPart(n).toString();
@@ -135,13 +138,14 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
             //if (!textField.isFocused() && numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
                 //textField.updateFromEditorKit();
-            EditorKit<Number> editorKit = textField.getEditableKit(Number.class);
+            RecogniserDocument<Number> editorKit = textField.getRecogniserDocument(Number.class);
             if (editorKit != null)
-                editorKit.setUnfocusedDocument(FlexibleTextField.doc(ImmutableList.of(
-                    new StyledText<>(displayIntegerPart, ImmutableList.of("stf-number-int")),
-                    new StyledText<>(displayDotVisible ? "." : "", ImmutableList.of("stf-number-dot")),
-                    new StyledText<>(displayFracPart, ImmutableList.of("stf-number-frac"))
-                )), n -> {
+            {
+                editorKit.setUnfocusedDocument(ImmutableList.of(
+                        new Pair<>(ImmutableSet.of("stf-number-int"), displayIntegerPart),
+                        new Pair<>(ImmutableSet.of("stf-number-dot"), displayDotVisible ? "." : ""),
+                        new Pair<>(ImmutableSet.of("stf-number-frac"), displayFracPart)
+                ), n -> {
                     // Clicking the left always stays left most:
                     if (n == 0)
                         return 0;
@@ -157,7 +161,9 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                             return fullIntegerPart.length() + (fullFracPart.isEmpty() ? 0 : 1) + (n - (prevInt + prevDot));
                     }
                 });
-            
+                
+                textField.refreshDocument(textField.isFocused());
+            }
             
             /*
             List<String> dotStyle = new ArrayList<>();

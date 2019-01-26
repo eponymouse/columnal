@@ -28,6 +28,7 @@ import records.gui.flex.EditorKitSimpleLabel;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
 import records.gui.kit.Document;
+import records.gui.kit.DocumentTextField;
 import records.gui.kit.ReadOnlyDocument;
 import records.gui.kit.RecogniserDocument;
 import records.gui.stf.TableDisplayUtility.GetDataPosition;
@@ -116,10 +117,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     @OnThread(Tag.FXPlatform)
     public class VisibleDetails
     {
-        public final ImmutableList<FlexibleTextField> visibleCells; // First one is firstVisibleRowIndex.
+        public final ImmutableList<DocumentTextField> visibleCells; // First one is firstVisibleRowIndex.
         public final double width;
 
-        private VisibleDetails(double width, Collection<? extends FlexibleTextField> visibleFields)
+        private VisibleDetails(double width, Collection<? extends DocumentTextField> visibleFields)
         {
             this.width = width;
             visibleCells = ImmutableList.copyOf(visibleFields);
@@ -160,7 +161,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     }
 
     @Override
-    public void styleTogether(Collection<? extends FlexibleTextField> cellsInColumn, double columnSize)
+    public void styleTogether(Collection<? extends DocumentTextField> cellsInColumn, double columnSize)
     {
         latestWidth = columnSize;
         formatVisible(cellsInColumn, OptionalInt.empty());
@@ -191,7 +192,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         return null;
     }*/
 
-    protected final void formatVisible(Collection<? extends FlexibleTextField> cellsInColumn, OptionalInt rowIndexUpdated)
+    protected final void formatVisible(Collection<? extends DocumentTextField> cellsInColumn, OptionalInt rowIndexUpdated)
     {
         @TableDataRowIndex int firstVisibleRowIndexIncl = getDataPosition.getFirstVisibleRowIncl();
         @TableDataRowIndex int lastVisibleRowIndexIncl = getDataPosition.getLastVisibleRowIncl();

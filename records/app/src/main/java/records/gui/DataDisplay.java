@@ -69,6 +69,7 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.kit.ReadOnlyDocument;
+import records.gui.kit.RecogniserDocument;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import threadchecker.OnThread;
@@ -319,15 +320,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         rowIndexWithinTable,
                         b -> {},
                         c -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits))),
-                        (rowIndex, colIndex, editorKit) -> {
+                        (rowIndex, colIndex, doc) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
                             {
-                                // TODO restore styling
-                                //if (editorKit instanceof EditorKit)
-                                    //((EditorKit<?>)editorKit).setOnFocusLost(scheduleStyleTogether);
-                                cell.setContent(editorKit, displayColumns);
+                                if (doc instanceof RecogniserDocument)
+                                    ((RecogniserDocument<?>)doc).setOnFocusLost(scheduleStyleTogether);
+                                cell.setContent(doc, displayColumns);
                                 scheduleStyleTogether.run();
                             }
                         }
@@ -363,8 +363,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 cellsByColumn.forEach((columnIndexWithinTable, cellsInColumn) -> {
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
-                        // TODO restore styling together
-                        //displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
+                        displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
                     }
                 });
             }
