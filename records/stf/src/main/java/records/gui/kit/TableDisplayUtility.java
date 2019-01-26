@@ -1,4 +1,4 @@
-package records.gui.stf;
+package records.gui.kit;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
@@ -333,12 +333,6 @@ public class TableDisplayUtility
     public static @TableDataColIndex int displayCol(int col)
     {
         return col;
-    }
-
-    public static interface ComponentMaker<T>
-    {
-        @OnThread(Tag.FXPlatform)
-        public Component<T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
     }
 
     /**

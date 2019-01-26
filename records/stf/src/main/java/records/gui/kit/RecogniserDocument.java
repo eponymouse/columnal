@@ -11,7 +11,6 @@ import records.gui.flex.Recogniser;
 import records.gui.flex.Recogniser.ErrorDetails;
 import records.gui.flex.Recogniser.ParseProgress;
 import records.gui.flex.Recogniser.SuccessDetails;
-import records.gui.stf.CaretPositionMapper;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformRunnable;

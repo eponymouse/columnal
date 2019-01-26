@@ -19,20 +19,16 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.expressioneditor.TypeEditor;
-import records.gui.flex.EditorKit;
-import records.gui.flex.FlexibleTextField;
-import records.gui.flex.Recogniser;
 import records.gui.kit.DocumentTextField;
 import records.gui.kit.RecogniserDocument;
-import records.gui.stf.TableDisplayUtility;
-import records.gui.stf.TableDisplayUtility.RecogniserAndType;
+import records.gui.kit.TableDisplayUtility;
+import records.gui.kit.TableDisplayUtility.RecogniserAndType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiFunction;
-import utility.ExFunction;
 import utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
@@ -40,8 +36,6 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 import utility.gui.TranslationUtility;
-
-import java.util.function.Function;
 
 /**
  * Edits an immediate column, which has a name, type, and default value

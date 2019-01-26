@@ -1,4 +1,4 @@
-package records.gui.stf;
+package records.gui.kit;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
