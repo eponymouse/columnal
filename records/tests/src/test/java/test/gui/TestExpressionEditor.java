@@ -382,6 +382,36 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
 
     @Test
+    public void testDateYMLiteral() throws Exception
+    {
+        testSimple("dateym{2001-04}");
+    }
+
+    @Test
+    public void testTimeLiteral() throws Exception
+    {
+        testSimple("time{12:00}");
+    }
+
+    @Test
+    public void testTimeLiteral2() throws Exception
+    {
+        testSimple("time{12:00:01.325252666}");
+    }
+
+    @Test
+    public void testDateTimeLiteral() throws Exception
+    {
+        testSimple("datetime{2001-04-06 22:44:45}");
+    }
+
+    @Test
+    public void testDateTimeZonedLiteral() throws Exception
+    {
+        testSimple("datetimezoned{2001-04-06 22:44:45.667 Europe/London}");
+    }
+
+    @Test
     public void testEmpties() throws Exception
     {
         testSimple("(\"\"=\"\") & ([] <> [])");

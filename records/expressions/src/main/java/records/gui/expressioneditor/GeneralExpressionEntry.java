@@ -175,6 +175,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
         r.add(new NestedLiteralCompletion("type{", () -> new TypeLiteralNode(parent, null)));
         r.add(new NestedLiteralCompletion("date{", () -> new TemporalLiteralNode(parent, DateTimeType.YEARMONTHDAY, null)));
+        r.add(new NestedLiteralCompletion("dateym{", () -> new TemporalLiteralNode(parent, DateTimeType.YEARMONTH, null)));
         r.add(new NestedLiteralCompletion("time{", () -> new TemporalLiteralNode(parent, DateTimeType.TIMEOFDAY, null)));
         r.add(new NestedLiteralCompletion("datetime{", () -> new TemporalLiteralNode(parent, DateTimeType.DATETIME, null)));
         r.add(new NestedLiteralCompletion("datetimezoned{", () -> new TemporalLiteralNode(parent, DateTimeType.DATETIMEZONED, null)));
