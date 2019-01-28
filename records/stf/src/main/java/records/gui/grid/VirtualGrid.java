@@ -2031,7 +2031,7 @@ public final class VirtualGrid implements ScrollBindable
                 .filter(s -> proximity < s.pixelThreshold)
                 .max(Comparator.comparing(s -> s.pixelSpeed))
                 .orElse(NONE);
-            Log.debug("Calculated " + nss + " from " + proximity);
+            //Log.debug("Calculated " + nss + " from " + proximity);
             return nss;
         }
     }
