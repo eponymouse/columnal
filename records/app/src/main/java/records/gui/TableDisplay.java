@@ -13,6 +13,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
@@ -60,6 +61,7 @@ import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
+import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -1215,7 +1217,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    private class TableHat extends FloatingItem<Node>
+    private class TableHat extends FloatingItem<BorderPane>
     {
         private final StyledString content;
         private BoundingBox latestBounds = new BoundingBox(0, 0, 0, 0);
@@ -1432,13 +1434,17 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             // The first time we are ever added, we will make a cell here and discard it,
             // but there's no good way round this:
-            Node item = getNode() != null ? getNode() : makeCell(visibleBounds);
+            BorderPane item = getNode() != null ? getNode() : makeCell(visibleBounds);
             
             double x = visibleBounds.getXCoord(getPosition().columnIndex);
             double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
             x += 30;
             width -= 40;
             width = Math.max(width, 250.0);
+            // For some reason, BorderPane doesn't subtract insets from
+            // prefWidth, so we must do it:
+            Insets insets = item.getInsets();
+            width -= insets.getLeft() + insets.getRight();
 
             double prefHeight = item.prefHeight(width);
             double y = Math.max(visibleBounds.getYCoord(getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
@@ -1452,7 +1458,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public Node makeCell(VisibleBounds visibleBounds)
+        public BorderPane makeCell(VisibleBounds visibleBounds)
         {
             TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
             textFlow.getStyleClass().add("table-hat-text-flow");
