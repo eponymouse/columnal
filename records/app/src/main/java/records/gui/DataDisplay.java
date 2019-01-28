@@ -68,6 +68,7 @@ import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
+import records.gui.table.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

@@ -103,120 +103,122 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     @Property(trials = 3)
     public void testAggregate(@From(GenRandom.class) Random r) throws Exception
     {
-        GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen(false);
+        TestUtil.printSeedOnFail(() -> {
+            GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen(false);
 
-        File dest = File.createTempFile("blank", "rec");
-        dest.deleteOnExit();
-        MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null));
-        
-        List<ColumnDetails> columns = new ArrayList<>();
-        // First add split variable:
-        TypeAndValueGen splitType = genTypeAndValueGen.generate(r);
-        mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(splitType.getTypeManager());
-        List<@Value Object> distinctSplitValues = makeDistinctSortedList(splitType);
-        // Now make random duplication count for each:
-        List<Integer> replicationCounts = Utility.mapList(distinctSplitValues, _s -> 1 + r.nextInt(10));
-        int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
-        columns.add(new ColumnDetails(new ColumnId("Split Col"), splitType.getType(),
-            IntStream.range(0, distinctSplitValues.size()).mapToObj(i -> i)
-                .<Either<String, @Value Object>>flatMap(i -> Utility.<Either<String, @Value Object>>replicate(replicationCounts.get(i), Either.right(distinctSplitValues.get(i))).stream())
-                .collect(ImmutableList.<Either<String, @Value Object>>toImmutableList())));
-        
-        // Then add source column for aggregate calculations (summing etc):
-        List<AggColumns> aggColumns = makeSourceAndCalculations(splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
-        for (AggColumns aggColumn : aggColumns)
-        {
-            columns.add(r.nextInt(columns.size() + 1), aggColumn.sourceColumn);
-        } 
+            File dest = File.createTempFile("blank", "rec");
+            dest.deleteOnExit();
+            MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null));
 
-        // Add some extra columns with errors just to complicate things:
-        int numExtraColumns = r.nextInt(4);
-        for (int i = 0; i < numExtraColumns; i++)
-        {
-            TypeAndValueGen extraType = genTypeAndValueGen.generate(r);
-            mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(extraType.getTypeManager());
-            columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId("Extra " + i), extraType.getType(), Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, @Value Object>left("@") : Either.<String, @Value Object>right(extraType.makeValue()))));
-        }
+            List<ColumnDetails> columns = new ArrayList<>();
+            // First add split variable:
+            TypeAndValueGen splitType = genTypeAndValueGen.generate(r);
+            mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(splitType.getTypeManager());
+            List<@Value Object> distinctSplitValues = makeDistinctSortedList(splitType);
+            // Now make random duplication count for each:
+            List<Integer> replicationCounts = Utility.mapList(distinctSplitValues, _s -> 1 + r.nextInt(10));
+            int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
+            columns.add(new ColumnDetails(new ColumnId("Split Col"), splitType.getType(),
+                    IntStream.range(0, distinctSplitValues.size()).mapToObj(i -> i)
+                            .<Either<String, @Value Object>>flatMap(i -> Utility.<Either<String, @Value Object>>replicate(replicationCounts.get(i), Either.right(distinctSplitValues.get(i))).stream())
+                            .collect(ImmutableList.<Either<String, @Value Object>>toImmutableList())));
 
-        for (ColumnDetails column : columns)
-        {
-            assertEquals(column.name.getRaw(), totalLength, column.data.size());
-        }
-
-        columns = scrambleDataOrder(columns, replicationCounts, r);
-        
-        createDataTable(mainWindowActions, CellPosition.ORIGIN.offsetByRowCols(1, 1), "Src Data", columns);
-        
-        // Sanity check the data before proceeding:
-        ImmutableList<LoadedColumnInfo> clip = copyTableData(mainWindowActions, "Src Data");
-
-        for (int i = 0; i < clip.size(); i++)
-        {
-            LoadedColumnInfo copiedColumn = clip.get(i);
-            assertEquals(copiedColumn.columnName, columns.get(i).name);
-            TestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
-        }
-        
-        // Now add the actual aggregate:
-        CellPosition aggTarget = CellPosition.ORIGIN.offsetByRowCols(1, columns.size() + 2);
-        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), aggTarget);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
-        TestUtil.delay(100);
-        clickOn(".id-new-transform");
-        TestUtil.delay(100);
-        clickOn(".id-transform-aggregate");
-        TestUtil.delay(100);
-        write("Src Data");
-        push(KeyCode.ENTER);
-        TestUtil.sleep(200);
-        write("Split Col");
-        moveAndDismissPopupsAtPos(point(".ok-button"));
-        clickOn(".ok-button");
-        TestUtil.sleep(3000);
-        
-        // Should be one column at the moment, with the distinct split values:
-        SummaryStatistics aggTable = (SummaryStatistics)mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
-        assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
-        String aggId = aggTable.getId().getRaw();
-        ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
-        TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
-        
-        // Now add the calculations:
-        int colCount = initialAgg.size();
-        for (AggColumns aggColumn : aggColumns)
-        {
-            for (AggCalculation calculation : aggColumn.calculations)
+            // Then add source column for aggregate calculations (summing etc):
+            List<AggColumns> aggColumns = makeSourceAndCalculations(splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
+            for (AggColumns aggColumn : aggColumns)
             {
-                CellPosition arrowLoc = aggTarget.offsetByRowCols(2, colCount++);
-                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
-                clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
-                // Now enter column name and expression:
-                TestUtil.sleep(500);
-                checkDialogFocused("New column dialog");
-                write(calculation.columnName.getRaw(), 1);
-                push(KeyCode.TAB);
-                enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), calculation.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-                moveAndDismissPopupsAtPos(point(".ok-button"));
-                clickOn(".ok-button");
-                TestUtil.sleep(1000);
+                columns.add(r.nextInt(columns.size() + 1), aggColumn.sourceColumn);
             }
-        }
 
-        ImmutableList<LoadedColumnInfo> finalAgg = copyTableData(mainWindowActions, aggId);
-        for (AggColumns aggColumn : aggColumns)
-        {
-            for (AggCalculation calculation : aggColumn.calculations)
+            // Add some extra columns with errors just to complicate things:
+            int numExtraColumns = r.nextInt(4);
+            for (int i = 0; i < numExtraColumns; i++)
             {
-                LoadedColumnInfo calcCol = finalAgg.stream().filter(c -> Objects.equals(c.columnName, calculation.columnName)).findFirst().orElseThrow(() -> new AssertionError("Missing column"));
-                
-                assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
-                
-                TestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
-                    calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
-                        calcCol.dataValues
-                );
+                TypeAndValueGen extraType = genTypeAndValueGen.generate(r);
+                mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(extraType.getTypeManager());
+                columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId("Extra " + i), extraType.getType(), Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, @Value Object>left("@") : Either.<String, @Value Object>right(extraType.makeValue()))));
             }
-        }
+
+            for (ColumnDetails column : columns)
+            {
+                assertEquals(column.name.getRaw(), totalLength, column.data.size());
+            }
+
+            columns = scrambleDataOrder(columns, replicationCounts, r);
+
+            createDataTable(mainWindowActions, CellPosition.ORIGIN.offsetByRowCols(1, 1), "Src Data", columns);
+
+            // Sanity check the data before proceeding:
+            ImmutableList<LoadedColumnInfo> clip = copyTableData(mainWindowActions, "Src Data");
+
+            for (int i = 0; i < clip.size(); i++)
+            {
+                LoadedColumnInfo copiedColumn = clip.get(i);
+                assertEquals(copiedColumn.columnName, columns.get(i).name);
+                TestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
+            }
+
+            // Now add the actual aggregate:
+            CellPosition aggTarget = CellPosition.ORIGIN.offsetByRowCols(1, columns.size() + 2);
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), aggTarget);
+            clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
+            TestUtil.delay(100);
+            clickOn(".id-new-transform");
+            TestUtil.delay(100);
+            clickOn(".id-transform-aggregate");
+            TestUtil.delay(100);
+            write("Src Data");
+            push(KeyCode.ENTER);
+            TestUtil.sleep(200);
+            write("Split Col");
+            moveAndDismissPopupsAtPos(point(".ok-button"));
+            clickOn(".ok-button");
+            TestUtil.sleep(3000);
+
+            // Should be one column at the moment, with the distinct split values:
+            SummaryStatistics aggTable = (SummaryStatistics) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
+            assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
+            String aggId = aggTable.getId().getRaw();
+            ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
+            TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
+
+            // Now add the calculations:
+            int colCount = initialAgg.size();
+            for (AggColumns aggColumn : aggColumns)
+            {
+                for (AggCalculation calculation : aggColumn.calculations)
+                {
+                    CellPosition arrowLoc = aggTarget.offsetByRowCols(2, colCount++);
+                    keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
+                    clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
+                    // Now enter column name and expression:
+                    TestUtil.sleep(500);
+                    checkDialogFocused("New column dialog");
+                    write(calculation.columnName.getRaw(), 1);
+                    push(KeyCode.TAB);
+                    enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), calculation.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                    moveAndDismissPopupsAtPos(point(".ok-button"));
+                    clickOn(".ok-button");
+                    TestUtil.sleep(1000);
+                }
+            }
+
+            ImmutableList<LoadedColumnInfo> finalAgg = copyTableData(mainWindowActions, aggId);
+            for (AggColumns aggColumn : aggColumns)
+            {
+                for (AggCalculation calculation : aggColumn.calculations)
+                {
+                    LoadedColumnInfo calcCol = finalAgg.stream().filter(c -> Objects.equals(c.columnName, calculation.columnName)).findFirst().orElseThrow(() -> new AssertionError("Missing column"));
+
+                    assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
+
+                    TestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
+                            calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
+                            calcCol.dataValues
+                    );
+                }
+            }
+        });
     }
 
     private List<AggColumns> makeSourceAndCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException

@@ -12,6 +12,7 @@ import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import records.gui.table.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;

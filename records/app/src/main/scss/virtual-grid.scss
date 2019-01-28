@@ -187,12 +187,11 @@
 .table-hat {
     -fx-background-radius: 5;
     -fx-background-insets: 0, 1;
-    -fx-padding: 4;
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
 }
 .table-hat-text-flow {
     -fx-font-size: 90%;
-    .styled-text {
+    .styled-text, .table-hat-collapse {
         /* Without this the font rendering on text is awful at small size on Mac: */
         -fx-font-smoothing-type: lcd;
         
@@ -201,6 +200,14 @@
         &.styled-text-clickable {
              -fx-underline: true;
         }
+    }
+}
+.table-hat-collapse {
+    -fx-cursor: hand;
+    
+    -fx-fill: $table-row-label-text-color;
+    &:hover {
+        -fx-fill: derive($table-row-label-text-color, 30%);
     }
 }
 

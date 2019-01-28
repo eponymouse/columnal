@@ -28,7 +28,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
     private final View parent;
     private final ImmutableSet<Table> excludeTables;
 
-    protected TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
+    public TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
     {
         super(parent.getWindow());
         initModality(Modality.NONE);

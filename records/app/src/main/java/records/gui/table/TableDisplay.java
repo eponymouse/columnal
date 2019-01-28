@@ -1,4 +1,4 @@
-package records.gui;
+package records.gui.table;
 
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
@@ -13,23 +13,17 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -56,6 +50,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
+import records.gui.*;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
@@ -75,13 +70,7 @@ import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
-import records.transformations.Check;
-import records.transformations.Concatenate;
-import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Filter;
-import records.transformations.HideColumns;
-import records.transformations.HideColumnsPanel;
-import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
@@ -94,8 +83,6 @@ import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledCSS;
 import styled.StyledString;
-import styled.StyledString.Builder;
-import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -103,7 +90,6 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.ResizableRectangle;
-import utility.gui.TranslationUtility;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -120,7 +106,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A specialisation of DataDisplay that links it to an actual Table.
@@ -354,12 +339,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (table.getOperations().appendRows != null ? 1 : 0);
     }
 
-    private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
+    private int internal_getColumnCount(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         return (displayColumns == null ? 0 : displayColumns.size()) + (showAddColumnArrow(table) ? 1 : 0);
     }
 
-    private boolean showAddColumnArrow(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
+    private boolean showAddColumnArrow(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         return addColumnOperation(table) != null &&
             columnDisplay.get().getFirst() != Display.COLLAPSED;
@@ -513,8 +498,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Hat:
         if (table instanceof Transformation)
         {
-            tableHat = new TableHat((Transformation)table);
-            supplierFloating.addItem(tableHat);
+            @UnknownInitialization(DataDisplay.class) TableDisplay us = this;
+            @SuppressWarnings("initialization") // Don't understand why we need this here
+            @Initialized TableHat hat = new TableHat(us, parent, (Transformation) table);
+            this.tableHat = hat;
+            supplierFloating.addItem(this.tableHat);
         }
         else
         {
@@ -836,7 +824,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     Calculate calc = (Calculate) table;
                     // Allow editing of any column:
                     return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
-                        FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, c);
+                        editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
                 else if (table instanceof ImmediateDataSource)
@@ -851,7 +839,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    public void editColumn_Calc(Calculate calc, ColumnId columnId) throws InternalException, UserException
+    public void editColumn_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, ColumnId columnId) throws InternalException, UserException
     {
         // Start with the existing value.
         Expression expression = calc.getCalculatedColumns().get(columnId);
@@ -890,7 +878,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     // If beforeColumn is null, add at end
     @OnThread(Tag.FXPlatform)
-    private @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
+    private @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         if (table instanceof ImmediateDataSource)
         {
@@ -903,7 +891,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             Calculate calc = (Calculate) table;
             return beforeColumn -> {
-                FXUtility.mouse(this).addColumnBefore_Calc(calc, beforeColumn, null);
+                addColumnBefore_Calc(FXUtility.mouse(this).parent, calc, beforeColumn, null);
             };
         }
         else if (table instanceof SummaryStatistics)
@@ -916,7 +904,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return null;
     }
     
-    private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
+    void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
         EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null);
         
@@ -1034,7 +1022,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         if (table instanceof Calculate)
         {
-            addColumnBefore_Calc((Calculate)table, null, "transform.calculate.addInitial");
+            addColumnBefore_Calc(parent, (Calculate)table, null, "transform.calculate.addInitial");
         }
         else if (table instanceof Filter)
         {
@@ -1053,36 +1041,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            editAggregateSplitBy(aggregate);
+            editAggregateSplitBy(parent, aggregate);
         }
         // For other tables, do nothing
     }
 
-    public void editAggregateSplitBy(SummaryStatistics aggregate)
+    public void editAggregateSplitBy(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, SummaryStatistics aggregate)
     {
         new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> {
             FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
         });
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
-    {
-        private final HideColumnsPanel hideColumnsPanel;
-
-        public CustomColumnDisplayDialog(TableManager mgr, TableId tableId, ImmutableList<ColumnId> initialHidden)
-        {
-            this.hideColumnsPanel = new HideColumnsPanel(mgr, tableId, initialHidden);
-            getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
-            getDialogPane().setContent(hideColumnsPanel.getNode());
-            getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-            setResultConverter(bt -> {
-                if (bt == ButtonType.OK)
-                    return hideColumnsPanel.getHiddenColumns();
-                else
-                    return null;
-            });
-        }
     }
 
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
@@ -1095,55 +1063,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             return new RowRange(0, recordSet == null ? 0 :recordSet.getLength() - 1);
         }
     }
-    
-    private static abstract class Clickable extends Style<Clickable>
-    {
-        private final @LocalizableKey String tooltipKey;
-        private final String[] extraStyleClasses;
 
-        public Clickable()
-        {
-            this("click.to.change");
-        }
-        
-        public Clickable(@LocalizableKey String tooltipKey, String... styleClasses)
-        {
-            super(Clickable.class);
-            this.tooltipKey = tooltipKey;
-            this.extraStyleClasses = styleClasses;
-        }
-
-        @OnThread(Tag.FXPlatform)
-        protected abstract void onClick(MouseButton mouseButton, Point2D screenPoint);
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        protected void style(Text t)
-        {
-            t.getStyleClass().add("styled-text-clickable");
-            t.getStyleClass().addAll(extraStyleClasses);
-            t.setOnMouseClicked(e -> {
-                onClick(e.getButton(), new Point2D(e.getScreenX(), e.getScreenY()));
-            });
-            Tooltip tooltip = new Tooltip(TranslationUtility.getString(tooltipKey));
-            Tooltip.install(t, tooltip);
-        }
-
-        @Override
-        protected Clickable combine(Clickable with)
-        {
-            // Cannot combine, so make arbitrary choice:
-            return this;
-        }
-
-        @Override
-        protected boolean equalsStyle(Clickable item)
-        {
-            return false;
-        }
-    }
-    
-    private StyledString editSourceLink(Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
+    StyledString editSourceLink(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
     {
         // If this becomes broken/unbroken, we should get re-run:
         @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
@@ -1172,7 +1093,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
-    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    StyledString editExpressionLink(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toStyledString().withStyle(new Clickable() {
             @Override
@@ -1215,276 +1136,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         return recordSet == null ? ImmutableList.of() : ImmutableList.copyOf(recordSet.getColumns());
     }
-
-    @OnThread(Tag.FXPlatform)
-    private class TableHat extends FloatingItem<BorderPane>
+    
+    void relayoutGrid()
     {
-        private final StyledString content;
-        private BoundingBox latestBounds = new BoundingBox(0, 0, 0, 0);
-
-        public TableHat(Transformation table)
-        {
-            super(ViewOrder.POPUP);
-            if (table instanceof Filter)
-            {
-                Filter filter = (Filter)table;
-                content = StyledString.concat(
-                    StyledString.s("Filter "),
-                    editSourceLink(filter, filter.getSource(), newSource -> 
-                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
-                            table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
-                    StyledString.s(", keeping rows where: "),
-                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()), DataType.BOOLEAN, newExp ->
-                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                            table.getDetailsForCopy(), filter.getSource(), newExp), null))
-                );
-            }
-            else if (table instanceof Sort)
-            {
-                Sort sort = (Sort)table;
-                StyledString sourceText = sort.getSortBy().isEmpty() ?
-                    StyledString.s("original order") :
-                    sort.getSortBy().stream().map(c -> StyledString.concat(c.getFirst().toStyledString(), c.getSecond().toStyledString())).collect(StyledString.joining(", "));
-                sourceText = sourceText.withStyle(new Clickable()
-                {
-                    @Override
-                    @OnThread(Tag.FXPlatform)
-                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-                    {
-                        if (mouseButton == MouseButton.PRIMARY)
-                        {
-                            new EditSortDialog(parent, screenPoint,
-                                parent.getManager().getSingleTableOrNull(sort.getSource()),
-                                sort,
-                                sort.getSortBy()).showAndWait().ifPresent(newSort -> {
-                                    Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
-                                        parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
-                                    ));
-                            });
-                        }
-                    }
-                });
-                content = StyledString.concat(
-                    StyledString.s("Sort "),
-                    editSourceLink(sort, sort.getSource(), newSource ->
-                            parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
-                                    table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
-                    StyledString.s(" by "),
-                    sourceText
-                );
-            }
-            else if (table instanceof SummaryStatistics)
-            {
-                SummaryStatistics aggregate = (SummaryStatistics)table;
-                StyledString.Builder builder = new StyledString.Builder();
-                builder.append("Aggregate ");
-                builder.append(
-                    editSourceLink(aggregate, aggregate.getSource(), newSource ->
-                            parent.getManager().edit(table.getId(), () -> new SummaryStatistics(parent.getManager(),
-                                    table.getDetailsForCopy(), newSource, aggregate.getColumnExpressions(), aggregate.getSplitBy()), null))
-                );
-                // TODO should we add the calculations here if there are only one or two?
-                
-                List<ColumnId> splitBy = aggregate.getSplitBy();
-                Clickable editSplitBy = new Clickable()
-                {
-                    @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                    {
-                        editAggregateSplitBy(aggregate);
-                    }
-                };
-                if (!splitBy.isEmpty())
-                {
-                    builder.append(" splitting by ");
-                    builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")).withStyle(editSplitBy));
-                }
-                else
-                {
-                    builder.append(StyledString.s("for whole table").withStyle(editSplitBy));
-                    builder.append(".");
-                }
-                // TEMP:
-                builder.append(" COLS " + aggregate.getColumnExpressions().stream().map(p -> p.getFirst().getRaw()).collect(Collectors.joining(";")));
-                content = builder.build();
-            }
-            else if (table instanceof Concatenate)
-            {
-                Concatenate concatenate = (Concatenate)table;
-                @OnThread(Tag.Any) Stream<TableId> sources = concatenate.getPrimarySources();
-                StyledString sourceText = sources.map(t -> t.toStyledString()).collect(StyledString.joining(", "));
-                if (sourceText.toPlain().isEmpty())
-                {
-                    sourceText = StyledString.s("no tables");
-                }
-                content = StyledString.concat(
-                    StyledString.s("Concatenate "),
-                    sourceText.withStyle(
-                        new Clickable("click.to.change") {
-                            @Override
-                            @OnThread(Tag.FXPlatform)
-                            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-                            {
-                                if (mouseButton == MouseButton.PRIMARY)
-                                {
-                                    new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
-                                        Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                                            parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
-                                    })));
-                                }
-                            }
-                        }
-                    )    
-                );
-            }
-            else if (table instanceof Check)
-            {
-                Check check = (Check)table;
-                content = StyledString.concat(
-                    StyledString.s("Check "),
-                    editSourceLink(check, check.getSource(), newSource ->
-                        parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
-                            table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
-                    StyledString.s(" that "),
-                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), new MultipleTableLookup(check.getId(), parent.getManager(), ((Check) table).getSource()), DataType.BOOLEAN, e -> 
-                        parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
-                    )
-                );
-            }
-            else if (table instanceof Calculate)
-            {
-                Calculate calc = (Calculate)table;
-                StyledString.Builder builder = new Builder();
-                builder.append("From ");
-                builder.append(editSourceLink(calc, calc.getSource(), newSource -> 
-                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(),
-                        table.getDetailsForCopy(), newSource, calc.getCalculatedColumns()), null)));
-                builder.append(" calculate ");
-                if (calc.getCalculatedColumns().isEmpty())
-                {
-                    builder.append("<none>");
-                }
-                else
-                {
-                    // Mention max three columns
-                    Stream<StyledString> threeEditLinks = calc.getCalculatedColumns().keySet().stream().limit(3).map(c -> c.toStyledString().withStyle(new Clickable()
-                    {
-                        @Override
-                        protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                        {
-                            FXUtility.alertOnErrorFX_("Error editing column", () -> editColumn_Calc(calc, c));
-                        }
-                    }).withStyle(new StyledCSS("edit-calculate-column")));
-                    if (calc.getCalculatedColumns().keySet().size() > 3)
-                        threeEditLinks = Stream.<StyledString>concat(threeEditLinks, Stream.<StyledString>of(StyledString.s("...")));
-                    builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.<StyledString>toList())));
-                }
-                builder.append(" ");
-                builder.append(StyledString.s("(add new)").withStyle(new Clickable() {
-                    @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                    {
-                        if (mouseButton == MouseButton.PRIMARY)
-                        {
-                            addColumnBefore_Calc(calc, null, null);
-                        }
-                    }
-                }));
-                content = builder.build();
-            }
-            else if (table instanceof HideColumns)
-            {
-                HideColumns hide = (HideColumns) table;
-                
-                Clickable edit = new Clickable()
-                {
-                    @OnThread(Tag.FXPlatform)
-                    @Override
-                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-                    {
-                        new HideColumnsDialog(parent.getWindow(), parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
-                            Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
-                                    FXUtility.alertOnError_("Error hiding column", () -> {
-                                        parent.getManager().edit(hide.getId(), makeTrans, null);
-                                    })
-                            );
-                        });
-                    }
-                };
-                
-                content = StyledString.concat(
-                        StyledString.s("From "),
-                        editSourceLink(hide, hide.getSource(), newSource ->
-                                parent.getManager().edit(table.getId(), () -> new HideColumns(parent.getManager(),
-                                        table.getDetailsForCopy(), newSource, hide.getHiddenColumns()), null)),
-                        StyledString.s(", drop columns: "),
-                        hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
-                        StyledString.s(" "),
-                        StyledString.s("(edit)").withStyle(edit)
-                );
-            }
-            else
-            {
-                content = StyledString.s("");
-            }
-        }
-
-        @Override
-        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-        {
-            // The first time we are ever added, we will make a cell here and discard it,
-            // but there's no good way round this:
-            BorderPane item = getNode() != null ? getNode() : makeCell(visibleBounds);
-            
-            double x = visibleBounds.getXCoord(getPosition().columnIndex);
-            double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
-            x += 30;
-            width -= 40;
-            width = Math.max(width, 250.0);
-            // For some reason, BorderPane doesn't subtract insets from
-            // prefWidth, so we must do it:
-            Insets insets = item.getInsets();
-            width -= insets.getLeft() + insets.getRight();
-
-            double prefHeight = item.prefHeight(width);
-            double y = Math.max(visibleBounds.getYCoord(getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
-            latestBounds = new BoundingBox(
-                x,
-                y,
-                width,
-                prefHeight
-            );
-            return Optional.of(latestBounds);
-        }
-
-        @Override
-        public BorderPane makeCell(VisibleBounds visibleBounds)
-        {
-            TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
-            textFlow.getStyleClass().add("table-hat-text-flow");
-            BorderPane borderPane = new BorderPane(textFlow, null, null, null, null);
-            borderPane.getStyleClass().add("table-hat");
-            return borderPane;
-        }
-
-        @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-        {
-            Node node = getNode();
-            if (node != null)
-            {
-                Bounds screenBounds = node.localToScreen(node.getBoundsInLocal());
-                return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
-            }
-            return null;
-        }
-
-        @Override
-        public void keyboardActivate(CellPosition cellPosition)
-        {
-            // Hat can't be triggered via keyboard
-            // (Though maybe we should allow this somehow?s
-        }
+        withParent_(VirtualGrid::positionOrAreaChanged);
     }
 
     /**

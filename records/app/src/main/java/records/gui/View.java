@@ -1,6 +1,5 @@
 package records.gui;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -40,13 +39,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
-import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.importers.manager.ImporterManager;
@@ -70,8 +69,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static utility.Utility.mapList_Index;
 
 /**
  * Created by neil on 18/10/2016.
@@ -695,7 +692,7 @@ public class View extends StackPane
     }
 
     // Can't be a View without an actual window
-    Window getWindow()
+    public Window getWindow()
     {
         @SuppressWarnings("nullness")
         @NonNull Scene scene = getScene();
