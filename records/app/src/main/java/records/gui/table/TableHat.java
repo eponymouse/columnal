@@ -12,6 +12,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -288,25 +289,62 @@ class TableHat extends FloatingItem<TableHatDisplay>
         // but there's no good way round this:
         TableHatDisplay item = getNode() != null ? getNode() : makeCell(visibleBounds);
         
-        double x = visibleBounds.getXCoord(tableDisplay.getPosition().columnIndex);
-        double width = visibleBounds.getXCoordAfter(tableDisplay.getBottomRightIncl().columnIndex) - x;
-        x += 30;
-        width -= 40;
-        width = Math.max(width, 250.0);
-        // For some reason, BorderPane doesn't subtract insets from
-        // prefWidth, so we must do it:
-        Insets insets = item.getInsets();
-        width -= insets.getLeft() + insets.getRight();
-
-        double prefHeight = item.prefHeight(width);
-        double y = Math.max(visibleBounds.getYCoord(tableDisplay.getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
+        // We have N possibilities:
+        //  - One is that the table header can be fully above the table
+        //    In this case, the preferred width will be at most the table width
+        //    minus a little bit, and the required height to show all text.
+        //  If the table header can't be above the table, we will have to overlap
+        //  - One possibility is we overlap the header, starting to the right of
+        //    the table name.  However, if this overlaps the column names,
+        //    we prefer the last option:
+        //  - We overlap almost all of the table name if it will help us reveal
+        //    the column names.
         
-        //Log.debug("Item " + collapsedContent.toPlain() + " positioned at " + x + ", " + y + " [" + width + " x " + prefHeight + "]");
+        final double INDENT = 20;
+        
+        double tableX = visibleBounds.getXCoord(tableDisplay.getPosition().columnIndex);
+        double tableY = visibleBounds.getYCoord(tableDisplay.getPosition().rowIndex);
+        double columnTopY = visibleBounds.getYCoordAfter(tableDisplay.getPosition().rowIndex);
+        double wholeTableWidth = visibleBounds.getXCoordAfter(tableDisplay.getBottomRightIncl().columnIndex) - tableX;
+
+        double idealWidth = item.prefWidth(-1);
+        double idealWidthAbove = Math.min(wholeTableWidth - INDENT, idealWidth);
+        double heightAbove = item.prefHeight(idealWidthAbove);
+        
+        if (tableY - heightAbove >= -2)
+        {
+            // Just about fit without overlapping table header; do it!
+            return Optional.of(new BoundingBox(
+                tableX + INDENT,
+                Math.max(0, tableY - heightAbove - 5),
+                idealWidthAbove,
+                heightAbove    
+            ));
+        }
+        
+        // Now try the overlapping options.  First, try overlapping the table name:
+        double tableNameWidth = tableDisplay.getTableNameWidth();
+        double widthWithoutOverlappingTableName = Math.min(wholeTableWidth - INDENT - tableNameWidth, idealWidth);
+        double heightWithoutOverlappingTableName = item.prefHeight(widthWithoutOverlappingTableName);
+        
+        if (columnTopY - heightWithoutOverlappingTableName >= 0)
+        {
+            // Just about fit without overlapping column names; do it!
+            return Optional.of(new BoundingBox(
+                    tableX + INDENT + tableNameWidth,
+                    2,
+                    widthWithoutOverlappingTableName,
+                    heightWithoutOverlappingTableName
+            ));
+        }
+        
+        // Running out of options, overlap table name and hope we don't overlap
+        // the column names too badly:
         return Optional.of(new BoundingBox(
-            x,
-            y,
-            width,
-            prefHeight
+            tableX + INDENT,
+            2,
+            idealWidthAbove,
+            heightAbove
         ));
     }
 
@@ -318,6 +356,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
 
     private void toggleCollapse(TableHatDisplay display)
     {
+        //org.scenicview.ScenicView.show(display.getScene());
         collapsed = !collapsed;
         FXUtility.setPseudoclass(display, "collapsed", collapsed);
         display.textFlow.getChildren().setAll((collapsed ? collapsedContent : content).toGUI().toArray(new Node[0]));
@@ -325,7 +364,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         display.collapseTip.setText(collapsed ? "Show detail" : "Hide detail");
         display.textFlow.getChildren().add(display.collapse);
         display.requestLayout();
-        tableDisplay.relayoutGrid();
+        FXUtility.runAfterDelay(Duration.millis(100), () -> tableDisplay.relayoutGrid());
     }
 
     @Override
@@ -378,31 +417,25 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     e.consume();
                 }
             });
-            // Re-layout once styles applied:
-            /*
-            FXUtility.addChangeListenerPlatformNN(borderPane.insetsProperty(), _insets -> {
-                FXUtility.runAfter(() -> tableDisplay.relayoutGrid());
-            });
-            */
         }
 
         @Override
         protected void layoutChildren()
         {
-            textFlow.resizeRelocate(INSET, INSET, getWidth() - INSET * 2, getHeight() - INSET * 2);
+            FXUtility.resizeRelocate(textFlow, INSET, INSET, getWidth() - INSET * 2, getHeight() - INSET * 2);
             //closeButton.relocate(getWidth() - closeButton.prefWidth(-1)  - 2, 2);
         }
 
         @Override
         protected double computePrefWidth(double height)
         {
-            return textFlow.prefWidth(height == -1 ? -1 : height - INSET * 2) + INSET * 2;
+            return textFlow.prefWidth(height == -1 ? -1 : (height - INSET * 2)) + INSET * 2;
         }
 
         @Override
         protected double computePrefHeight(double width)
         {
-            return textFlow.prefHeight(width == -1 ? -1 : width - INSET * 2) + INSET * 2;
+            return textFlow.prefHeight(width == -1 ? -1 : (width - INSET * 2)) + INSET * 2;
         }
 
         @Override

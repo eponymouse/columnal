@@ -409,6 +409,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         return null;
     }
 
+    public double getTableNameWidth()
+    {
+        if (tableHeaderItem == null || tableHeaderItem.tableNameField == null)
+            return 0;
+        else
+            return tableHeaderItem.tableNameField.getNode().getLayoutBounds().getWidth();
+    }
+
     public static class HeaderRows
     {
         private final boolean showingTableNameRow;
