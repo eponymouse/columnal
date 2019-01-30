@@ -742,14 +742,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 e.consume();
             });
             borderPane.setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.PRIMARY)
+                if (e.getButton() == MouseButton.PRIMARY && e.isStillSincePress())
                 {
                     withParent_(p -> {
                         @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
                         p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
                     });
                 }
-                else if (e.getButton() == MouseButton.MIDDLE)
+                else if (e.getButton() == MouseButton.MIDDLE && e.isStillSincePress())
                 {
                     headerMiddleClicked();
                 }
