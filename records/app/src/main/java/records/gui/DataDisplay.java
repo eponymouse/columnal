@@ -715,6 +715,24 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 e.consume();
             });
             borderPane.setOnMouseDragged(e -> {
+                // Sometimes drag-detected arrives very late, so
+                // we also create overlays in dragged if needed:
+                if (overlays.isEmpty())
+                {
+                    Bounds originalBoundsOnScreen = borderPane.localToScreen(borderPane.getBoundsInLocal());
+                    // Important that snapped is first, to match later cast:
+                    overlays.add(new MoveDestinationSnapped(getPosition(), originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
+                    overlays.add(new MoveDestinationFree(visibleBounds, originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
+                    overlays.forEach(o -> floatingItems.addItem(o));
+                    ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
+                    newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyles.get());
+                    CellStyle blurStyle = CellStyle.TABLE_DRAG_SOURCE;
+                    newStyles.add(blurStyle);
+                    FXUtility.mouse(DataDisplay.this).cellStyles.set(newStyles.build());
+                    blurStyle.applyStyle(borderPane, true);
+                    FXUtility.mouse(DataDisplay.this).updateParent();
+                    withParent_(g -> g.setNudgeScroll(true));
+                }
                 if (!overlays.isEmpty())
                 {
                     overlays.forEach(o -> o.mouseMovedToScreenPos(e.getScreenX(), e.getScreenY()));
