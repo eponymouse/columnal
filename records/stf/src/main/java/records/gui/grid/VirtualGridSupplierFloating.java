@@ -19,6 +19,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -93,7 +94,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     @Override
     protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
-        return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition, screenPos))).findFirst().orElse(null);
+        return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition, screenPos))).min(Comparator.comparing(s -> s.ordinal())).orElse(null);
     }
 
     @Override
