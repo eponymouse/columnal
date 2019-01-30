@@ -1182,7 +1182,7 @@ public final class VirtualGrid implements ScrollBindable
                     // If it's the end of a drag, don't steal the event because we
                     // are looking at drag end location, not drag start, so our calculations
                     // are invalid:
-                    if (!clickable && (mouseEvent.getEventType() != MouseEvent.MOUSE_RELEASED || mouseEvent.isStillSincePress()))
+                    if (!clickable && ((mouseEvent.getEventType() != MouseEvent.DRAG_DETECTED && mouseEvent.getEventType() != MouseEvent.MOUSE_RELEASED) || mouseEvent.isStillSincePress()))
                         mouseEvent.consume();
                 }
             };
