@@ -8,25 +8,16 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.EditableColumn;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
-import records.data.MemoryBooleanColumn;
-import records.data.MemoryNumericColumn;
-import records.data.RecordSet;
-import records.data.Table;
+import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableId;
-import records.data.TableManager;
 import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
@@ -34,16 +25,19 @@ import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
+import records.gui.table.TableDisplay;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenColumnId;
+import test.gen.GenRandom;
 import test.gen.GenTableId;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterColumnDetailsTrait;
+import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -53,6 +47,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,12 +59,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait
+public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -79,8 +73,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Any)
     private @NonNull TableManager tableManager;
     
-    private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(1), CellPosition.col(2));
-    private final CellPosition transformTopLeft = new CellPosition(CellPosition.row(3), CellPosition.col(6));
+    private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(2));
+    private final CellPosition transformTopLeft = new CellPosition(CellPosition.row(4), CellPosition.col(8));
     private final int originalRows = 3;
     private final int originalColumns = 2;
     @OnThread(Tag.Any)
@@ -263,5 +257,39 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
             TestUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
+    }
+    
+    @Property(trials = 10)
+    @OnThread(Tag.Simulation)
+    public void testTableDrag(@From(GenRandom.class) Random r)
+    {
+        // Pick a table:
+        Table table = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
+        @SuppressWarnings("nullness")
+        @NonNull TableDisplay tableDisplay = (TableDisplay)table.getDisplay();
+        
+        CellPosition original = tableDisplay.getPosition();
+        keyboardMoveTo(virtualGrid, original.offsetByRowCols(-1, -1));
+        CellPosition dest = original.offsetByRowCols(r.nextInt(5) - 2, r.nextInt(5) - 2);
+        
+        Rectangle2D start = FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original)));
+        Rectangle2D end = FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest)));
+        
+        Point2D dragFrom = new Point2D(Math.round(start.getMinX() + 2), Math.round(start.getMinY() + 2));
+        Point2D dragTo = new Point2D(Math.round(end.getMinX() + 2),  Math.round(end.getMinY() + 2));
+        //TestUtil.debugEventRecipient_(this, dragFrom, MouseEvent.DRAG_DETECTED, () -> {
+            drag(dragFrom);
+            dropTo(dragTo);
+        //});
+        
+        
+        sleep(1000);
+        
+        // Check table actually moved:
+        assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, tableDisplay.getPosition());
+        TextField tableNameTextField = (TextField)withItemInBounds(lookup(".table-name-text-field"), virtualGrid, new RectangleBounds(dest, dest), (n, p) -> {});
+        assertNotNull(tableNameTextField);
+        assertEquals(table.getId().getRaw(), tableNameTextField.getText());
+        // TODO check drag overlays
     }
 }

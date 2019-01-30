@@ -12,6 +12,11 @@ import com.sun.javafx.PlatformUtil;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
 import javafx.css.Styleable;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -19,6 +24,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import log.Log;
@@ -1354,6 +1360,38 @@ public class TestUtil
             }
         }
         return r;
+    }
+
+    // Adds event filters on all nodes under the target location,
+    // and tracks which if any receive the given event type
+    // while executing during.
+    @OnThread(Tag.Any)
+    public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, @Nullable Point2D target, EventType<E> eventType, Runnable during)
+    {
+        Set<Node> allNodes = robot.lookup(n -> {
+            Bounds screen = n.localToScreen(n.getBoundsInLocal());
+            return target == null || screen.contains(target);
+        }).queryAll();
+
+        List<Pair<Node, EventType<?>>> received = new ArrayList<>();
+        Map<Node, EventHandler<E>> listeners = new HashMap<>(); 
+        for (Node node : allNodes)
+        {
+            EventHandler<E> eventHandler = e -> {
+                received.add(new Pair<>(node, e.getEventType()));
+            };
+            fx_(() -> node.addEventFilter(eventType, eventHandler));
+            listeners.put(node, eventHandler);
+        }
+        
+        during.run();
+
+        listeners.forEach((n, l) ->
+        {
+            fx_(() -> n.removeEventFilter(eventType, l));
+        });
+        
+        Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
     }
 
     public static interface TestRunnable
