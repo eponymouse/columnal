@@ -6,26 +6,33 @@ import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import records.data.CellPosition;
 import records.data.TableId;
 import records.data.TableManager;
 import records.error.UserException;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
+public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait, ClickTableLocationTrait
 {
     @OnThread(Tag.Any)
     public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
     {
-        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id));
+        return triggerTableHeaderContextMenu(virtualGrid, TestUtil.tablePosition(tableManager, id));
+    }
+    
+    @OnThread(Tag.Any)
+    public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, CellPosition position) throws UserException
+    {
+        keyboardMoveTo(virtualGrid, position);
         
-        Node tableNameField = lookup(".table-display-table-title .table-name-text-field")
-            .match(t -> TestUtil.fx(() -> ((TextField) t).getText().equals(id.getRaw())))
-            .query();
+        Node tableNameField = withItemInBounds(lookup(".table-display-table-title .table-name-text-field"),
+            virtualGrid, new RectangleBounds(position, position), (n, p) -> {});
         if (tableNameField == null)
-            throw new RuntimeException("Could not find table name field for " + id);
+            throw new RuntimeException("Could not find table name field for " + position);
         @SuppressWarnings("nullness")
         Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
         Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));

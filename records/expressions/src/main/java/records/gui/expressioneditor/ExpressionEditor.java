@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -301,5 +302,10 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     protected @Nullable LoadableExpression<Expression, ExpressionSaver> parse(String src) throws InternalException, UserException
     {
         return Expression.parse(null, src, getTypeManager());
+    }
+
+    public ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> _test_getAllChildren()
+    {
+        return getAllChildren();
     }
 }
