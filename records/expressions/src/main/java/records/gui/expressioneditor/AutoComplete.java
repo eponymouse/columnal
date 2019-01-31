@@ -258,8 +258,8 @@ public class AutoComplete<C extends Completion>
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
             Log.debug("Checking alphabet: [[" + text + "]]");
-            String withoutLast = new String(codepoints, 0, codepoints.length - 1);
-            int last = codepoints[codepoints.length - 1];
+            String withoutLast = codepoints.length == 0 ? "" : new String(codepoints, 0, codepoints.length - 1);
+            int last = codepoints.length == 0 ? 0 : codepoints[codepoints.length - 1];
             ImmutableList<C> completionWithoutLast = ImmutableList.of();
             try
             {
