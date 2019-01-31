@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.expressionEditor;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;

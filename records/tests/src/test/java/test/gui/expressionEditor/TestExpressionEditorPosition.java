@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.expressionEditor;
 
 import javafx.scene.Node;
 import javafx.scene.control.TextField;

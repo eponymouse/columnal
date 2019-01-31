@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

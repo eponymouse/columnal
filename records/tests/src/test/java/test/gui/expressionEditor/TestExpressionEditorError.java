@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.expressionEditor;
 
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.Label;
