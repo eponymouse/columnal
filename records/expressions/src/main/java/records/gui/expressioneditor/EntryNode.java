@@ -123,8 +123,10 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
     {
         if (focusPending)
         {
-            focus(Focus.RIGHT);
+            // Important to clear first, to prevent an infinite loop
+            // when this method can be re-entrant:
             focusPending = false;
+            focus(Focus.RIGHT);
         }
     }
 
