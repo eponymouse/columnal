@@ -190,3 +190,8 @@
     -fx-text-fill: black;
     -fx-label-padding: 3;
 }
+
+.styled-text.expression-error {
+    -fx-strikethrough: true;
+    -fx-fill: darkred !important;
+}

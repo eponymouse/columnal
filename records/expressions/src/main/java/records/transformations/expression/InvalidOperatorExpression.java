@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -10,6 +11,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import styled.StyledString;
+import styled.StyledString.Builder;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -106,7 +109,40 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.s("TODO");
+        Builder r = StyledString.builder();
+
+        for (Expression item : items)
+        {
+            r.append(item.toStyledString());
+        }
+        
+        class ErrorStyle extends Style<ErrorStyle>
+        {
+            protected ErrorStyle()
+            {
+                super(ErrorStyle.class);
+            }
+
+            @Override
+            protected @OnThread(Tag.FXPlatform) void style(Text t)
+            {
+                t.getStyleClass().add("expression-error");
+            }
+
+            @Override
+            protected ErrorStyle combine(ErrorStyle with)
+            {
+                return this;
+            }
+
+            @Override
+            protected boolean equalsStyle(ErrorStyle item)
+            {
+                return item instanceof ErrorStyle;
+            }
+        }
+        
+        return r.build(StyledString.s(" ")).withStyle(new ErrorStyle());
     }
 
     @Override
