@@ -302,6 +302,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
         
         final double INDENT = 20;
         
+        double veryTopY = visibleBounds.getYCoord(CellPosition.row(0));
+        
         double tableX = visibleBounds.getXCoord(tableDisplay.getPosition().columnIndex);
         double tableY = visibleBounds.getYCoord(tableDisplay.getPosition().rowIndex);
         double columnTopY = visibleBounds.getYCoordAfter(tableDisplay.getPosition().rowIndex);
@@ -311,12 +313,12 @@ class TableHat extends FloatingItem<TableHatDisplay>
         double idealWidthAbove = Math.min(wholeTableWidth - INDENT, idealWidth);
         double heightAbove = item.prefHeight(idealWidthAbove);
         
-        if (tableY - heightAbove >= -2)
+        if (tableY - heightAbove >= veryTopY - 2)
         {
             // Just about fit without overlapping table header; do it!
             return Optional.of(new BoundingBox(
                 tableX + INDENT,
-                Math.max(0, tableY - heightAbove - 5),
+                Math.max(veryTopY, tableY - heightAbove - 5),
                 idealWidthAbove,
                 heightAbove    
             ));
@@ -327,12 +329,12 @@ class TableHat extends FloatingItem<TableHatDisplay>
         double widthWithoutOverlappingTableName = Math.min(wholeTableWidth - INDENT - tableNameWidth, idealWidth);
         double heightWithoutOverlappingTableName = item.prefHeight(widthWithoutOverlappingTableName);
         
-        if (columnTopY - heightWithoutOverlappingTableName >= 0)
+        if (columnTopY - heightWithoutOverlappingTableName >= veryTopY)
         {
             // Just about fit without overlapping column names; do it!
             return Optional.of(new BoundingBox(
                     tableX + INDENT + tableNameWidth,
-                    2,
+                    veryTopY + 2,
                     widthWithoutOverlappingTableName,
                     heightWithoutOverlappingTableName
             ));
@@ -342,7 +344,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         // the column names too badly:
         return Optional.of(new BoundingBox(
             tableX + INDENT,
-            2,
+            veryTopY + 2,
             idealWidthAbove,
             heightAbove
         ));
