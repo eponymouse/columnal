@@ -183,7 +183,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
         if (availableForFocus())
         {
             textField.requestFocus();
-            textField.end();
+            textField.positionCaret(textField.getLength());
             textField.deletePreviousChar();
             return true;
         }
@@ -196,7 +196,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
         if (availableForFocus())
         {
             textField.requestFocus();
-            textField.home();
+            textField.positionCaret(0);
             textField.deleteNextChar();
             return true;
         }
