@@ -1,10 +1,13 @@
 package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
@@ -30,6 +33,7 @@ import test.gui.trait.EnterExpressionTrait;
 import test.gui.util.FXApplicationTest;
 
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -87,24 +91,73 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 2)
     public void testRetypeInfix(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 2, "+", r);
+        testBackspaceRetype("1 + 2", 2, 1, "+", r);
+    }
+
+    @Property(trials = 2)
+    public void testRetypeInfix2(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("1 <= 2", 2, 2, "<=", r);
     }
 
     @Property(trials = 2)
     public void testRetypeLeadingOperand(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 1, "1", r);
+        testBackspaceRetype("1 + 2", 1, 1, "1", r);
+    }
+
+    @Property(trials = 2)
+    public void testRetypeLeadingOperand2(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("1234 + 5678", 1, 4, "1234", r);
     }
 
     @Property(trials = 2)
     public void testRetypeTrailingOperand(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 3, "2", r);
+        testBackspaceRetype("1 + 2", 3, 1, "2", r);
+    }
+
+    @Property(trials = 2)
+    public void testRetypeTrailingOperand2(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("123 + 456", 3, 3,"456", r);
     }
     
     // TODO more retype tests
+
+    @Property(trials = 2)
+    public void testPasteSeveral(@From(GenRandom.class) Random r) throws Exception
+    {
+        testPaste("12", 0, 1, "+3+4-", "1+3+4-2", r);
+    }
+
+    private void testPaste(String original, int slotIndex, int subIndex, String paste, String expected, Random r) throws Exception
+    {
+        DummyManager dummyManager = new DummyManager();
+        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
+        ExpressionEditor expressionEditor = enter(originalExp, r);
+
+        ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
+
+        TestUtil.fx_(() -> {
+            children.get(slotIndex).focus(Focus.LEFT);
+            Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, paste));
+        });
+        for (int i = 0; i < subIndex; i++)
+        {
+            push(KeyCode.RIGHT);
+        }
+        push(KeyCode.SHORTCUT, KeyCode.V);
+
+        Expression after = TestUtil.fx(() -> expressionEditor.save());
+
+        assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager()), after);
+
+        clickOn(".cancel-button");
+    }
     
-    private void testBackspaceRetype(String original, int deleteBefore, String retype, Random r) throws Exception
+    private void testBackspaceRetype(String original, int deleteBefore, int deleteCount, String retype, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
@@ -121,7 +174,10 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         else
             TestUtil.fx_(() -> children.get(deleteBefore).focus(Focus.LEFT));
 
-        push(KeyCode.BACK_SPACE);
+        for (int i = 0; i < deleteCount; i++)
+        {
+            push(KeyCode.BACK_SPACE);
+        }
         write(retype);
 
         Expression after = TestUtil.fx(() -> expressionEditor.save());
@@ -147,6 +203,9 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
 
+        if (deleteBefore > children.size())
+            throw new RuntimeException("Target " + deleteBefore + " out of bounds: " + children.stream().map(c -> "  " + c.toString()).collect(Collectors.joining("\n")));
+        
         if (deleteBefore == children.size())
         {
             TestUtil.fx_(() -> expressionEditor.focus(Focus.RIGHT));
