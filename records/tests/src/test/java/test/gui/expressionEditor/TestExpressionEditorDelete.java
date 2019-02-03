@@ -97,7 +97,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 2)
     public void testRetypeInfix2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 <= 2", 2, 2, "<=", r);
+        testBackspaceRetype("1 <= 2", 2, 1, "<=", r);
     }
 
     @Property(trials = 2)

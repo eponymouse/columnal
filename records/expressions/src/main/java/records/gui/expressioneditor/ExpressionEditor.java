@@ -35,6 +35,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -209,7 +210,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
+    protected void parentFocusRightOfThis(Either<Focus, Integer> position, boolean becauseOfTab)
     {
         if (!children.get(children.size() - 1).isBlank())
             addOperandToRight(children.get(children.size() - 1), "");

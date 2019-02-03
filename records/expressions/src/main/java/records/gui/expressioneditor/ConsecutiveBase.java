@@ -35,6 +35,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -187,6 +188,25 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     // Make sure to call if you override
     protected void selfChanged()
     {
+        // Merge any non-blank consecutive fields:
+        FXUtility.runAfter(() -> {
+            for (int i = 1; i < children.size(); i++)
+            {
+                ConsecutiveChild<EXPRESSION, SAVER> prev = children.get(i - 1);
+                ConsecutiveChild<EXPRESSION, SAVER> cur = children.get(i);
+
+                if (!prev.isBlank() && !cur.isBlank())
+                {
+                    if (prev.mergeFromRight(cur))
+                    {
+                        children.remove(i);
+                        i -= 1; // Check this child again, in case of chained merges
+                        continue;
+                    }
+                }
+            }
+        });
+        
         removeBlanksLater();
         for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
@@ -256,7 +276,18 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             children.add(addIndex, focusWhenShown(makeBlankChild(true)));
         }
     }
-    
+
+    @Override
+    public void focus(int position)
+    {
+        // Empty shouldn't happen, but better to fix than complain:
+        if (children.isEmpty())
+        {
+            children.add(makeBlankChild(false));
+        }
+        children.get(0).focus(position);
+    }
+
     protected void replaceSubExpression(EXPRESSION target, EXPRESSION replacement)
     {
         if (mostRecentSave != null)
@@ -439,7 +470,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusRightOf(EEDisplayNode child, Focus side, boolean becauseOfTab)
+    public void focusRightOf(EEDisplayNode child, Either<Focus, Integer> position, boolean becauseOfTab)
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
@@ -450,8 +481,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             {
                 if (leavingBlank)
                 {
-                    if (children.get(index + 1).availableForFocus())
-                        children.get(index + 1).focus(side);
+                    ConsecutiveChild<@NonNull EXPRESSION, SAVER> right = children.get(index + 1);
+                    if (right.availableForFocus())
+                    {
+                        position.either_(right::focus, right::focus);
+                    }
                     else
                         children.add(index + 2, focusWhenShown(makeBlankChild(true)));
                 }
@@ -461,14 +495,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             else
             {
                 if (leavingBlank)
-                    parentFocusRightOfThis(side, becauseOfTab);
+                    parentFocusRightOfThis(position, becauseOfTab);
                 else
                     children.add(index + 1, focusWhenShown(makeBlankChild(true)));
             }
         });
     }
 
-    protected abstract void parentFocusRightOfThis(Focus side, boolean becauseOfTab);
+    protected abstract void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab);
 
     protected static <T extends EEDisplayNode> T focusWhenShown(T node)
     {

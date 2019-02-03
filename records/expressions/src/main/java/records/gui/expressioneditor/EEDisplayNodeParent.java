@@ -6,6 +6,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
+import utility.Either;
 import utility.Pair;
 
 import java.util.List;
@@ -25,7 +26,12 @@ public interface EEDisplayNodeParent
     /**
      * Focus the child to the right of the given child.
      */
-    void focusRightOf(EEDisplayNode child, Focus side, boolean becauseOfTab);
+    void focusRightOf(EEDisplayNode child, Either<Focus, Integer> position, boolean becauseOfTab);
+
+    default void focusRightOf(EEDisplayNode child, Focus side, boolean becauseOfTab)
+    {
+        focusRightOf(child, Either.left(side), becauseOfTab);
+    }
 
     /**
      * Focus the child to the left of the given child.

@@ -18,6 +18,8 @@ public @Interned interface EEDisplayNode
 
     public void focus(Focus side);
 
+    public void focus(int position);
+
     /**
      * Is focus in this operand (or one of its children)?
      */

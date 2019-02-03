@@ -171,12 +171,12 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
     private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         @Override
-        protected @Nullable String selected(String currentText, AutoComplete.@Nullable Completion c, String rest, boolean moveFocus)
+        protected @Nullable String selected(String currentText, AutoComplete.@Nullable Completion c, String rest, OptionalInt positionCaret)
         {
             @Nullable String newText = null;
             if (c == endCompletion)
             {
-                parent.parentFocusRightOfThis(Focus.LEFT, false);
+                parent.parentFocusRightOfThis(Either.left(Focus.LEFT), false);
                 return "";
             }
             
@@ -217,10 +217,10 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
 
             completing = newText != null;
             // Must do this while completing so that we're not marked as blank:
-            if (moveFocus)
+            if (positionCaret.isPresent())
             {
                 if (rest.isEmpty())
-                    parent.focusRightOf(UnitEntry.this, Focus.LEFT, false);
+                    parent.focusRightOf(UnitEntry.this, Either.right(positionCaret.getAsInt()), false);
                 else
                     parent.addOperandToRight(UnitEntry.this, rest);
             }

@@ -7,6 +7,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
+import utility.Either;
 
 import java.util.stream.Stream;
 
@@ -45,6 +46,12 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     @Override
+    public void focus(int position)
+    {
+        getInnerDisplayNode().focus(position);
+    }
+
+    @Override
     public boolean isFocused()
     {
         return getInnerDisplayNode().isFocused();
@@ -69,9 +76,9 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side, boolean becauseOfTab)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Either<Focus, Integer> position, boolean becauseOfTab)
     {
-        consecParent.focusRightOf(this, side, becauseOfTab);
+        consecParent.focusRightOf(this, position, becauseOfTab);
     }
 
     @Override

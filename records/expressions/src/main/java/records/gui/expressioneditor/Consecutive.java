@@ -6,6 +6,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledShowable;
+import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -49,9 +50,9 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
+    protected void parentFocusRightOfThis(Either<Focus, Integer> position, boolean becauseOfTab)
     {
-        parent.focusRightOf(this, side, becauseOfTab);
+        parent.focusRightOf(this, position, becauseOfTab);
     }
 
     @Override

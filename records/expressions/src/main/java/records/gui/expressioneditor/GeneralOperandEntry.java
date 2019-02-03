@@ -6,6 +6,7 @@ import com.sun.javafx.scene.text.HitInfo;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -212,7 +213,16 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     @Override
     public void setText(String initialContent)
     {
-        textField.setText(initialContent);
+        if (autoComplete != null)
+        {
+            autoComplete.withProspectiveCaret(initialContent.length(), () ->
+                textField.setText(initialContent)
+            );
+        }
+        else
+        {
+            textField.setText(initialContent);
+        }
         textField.positionCaret(textField.getLength());
     }
 
@@ -226,5 +236,29 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     public boolean closesBracket(BracketBalanceType bracketBalanceType)
     {
         return (bracketBalanceType == BracketBalanceType.ROUND && textField.getText().equals(")")) || (bracketBalanceType == BracketBalanceType.SQUARE && textField.getText().equals("]"));
+    }
+
+    @Override
+    public boolean mergeFromRight(ConsecutiveChild<EXPRESSION, SAVER> right)
+    {
+        if (!right.getClass().equals(getClass()))
+            return false;
+
+        GeneralOperandEntry<EXPRESSION, SAVER> rightCast = (GeneralOperandEntry<EXPRESSION, SAVER>) right;
+        
+        if (textField.isEditable() && rightCast.textField.isEditable()
+            && autoComplete != null && autoComplete.matchingAlphabets(textField.getText().trim(), rightCast.textField.getText().trim()))
+        {
+            Log.debug("Merging from right: " + textField.getText() + " and " + rightCast.textField.getText());
+            int origLength = textField.getText().trim().length();
+            textField.setText(textField.getText().trim() + rightCast.textField.getText().trim());
+            if (rightCast.textField.isFocused())
+            {
+                textField.requestFocus();
+                textField.positionCaret(origLength);
+            }
+            return true;
+        }
+        return false;
     }
 }

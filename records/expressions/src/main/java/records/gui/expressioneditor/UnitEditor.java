@@ -19,6 +19,7 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -81,7 +82,7 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
+    protected void parentFocusRightOfThis(Either<Focus, Integer> position, boolean becauseOfTab)
     {
 
     }

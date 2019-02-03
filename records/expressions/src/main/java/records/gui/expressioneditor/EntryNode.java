@@ -11,6 +11,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -162,6 +163,23 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
             else
             {
                 textField.positionCaret(textField.getLength());
+            }
+        }
+    }
+
+    @Override
+    public void focus(int position)
+    {
+        if (textField.isEditable())
+        {
+            if (position <= textField.getLength())
+            {
+                textField.requestFocus();
+                textField.positionCaret(position);
+            }
+            else
+            {
+                parent.focusRightOf(this, Either.right(position - textField.getLength()), false);
             }
         }
     }

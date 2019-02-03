@@ -46,6 +46,7 @@ import utility.gui.FancyList;
 import utility.gui.LightDialog;
 
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
@@ -200,7 +201,7 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
                 }
 
                 @Override
-                public String nonAlphabetCharacter(String textBefore, @Nullable ColumnCompletion selectedItem, String textAfter)
+                public String nonAlphabetCharacter(String textBefore, @Nullable ColumnCompletion selectedItem, String textAfter, OptionalInt positionCaret)
                 {
                     return textBefore + textAfter; // Shouldn't happen as not using alphabets
                 }

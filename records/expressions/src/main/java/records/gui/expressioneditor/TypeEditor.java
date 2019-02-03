@@ -15,6 +15,7 @@ import records.error.UserException;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -65,7 +66,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
+    protected void parentFocusRightOfThis(Either<Focus, Integer> position, boolean becauseOfTab)
     {
 
     }

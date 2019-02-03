@@ -108,4 +108,12 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER exten
     }
 
     public ImmutableList<ErrorInfo> getErrors();
+
+    // If possible, merge the content from right into this one and return true.
+    // If not possible, return false.  Merging happens when an operator or keyword
+    // is deleted, which leaves two consecutive plain fieldss
+    default boolean mergeFromRight(ConsecutiveChild<EXPRESSION, SAVER> right)
+    {
+        return false;
+    }
 }

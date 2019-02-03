@@ -43,6 +43,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,9 +70,11 @@ public class AutoComplete<C extends Completion>
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
     private final CompletionListener<C> onSelect;
+    private final AlphabetCheck alphabetCheck;
     private @Nullable AutoCompleteWindow window;
     
     private boolean settingContentDirectly = false;
+    private OptionalInt prospectiveCaret = OptionalInt.empty();
 
     public static enum WhitespacePolicy
     {
@@ -122,6 +126,7 @@ public class AutoComplete<C extends Completion>
     {
         this.textField = textField;
         this.onSelect = onSelect;
+        this.alphabetCheck = inNextAlphabet;
         
 
         textField.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
@@ -258,45 +263,52 @@ public class AutoComplete<C extends Completion>
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
             Log.debug("Checking alphabet: [[" + text + "]]");
-            String withoutLast = codepoints.length == 0 ? "" : new String(codepoints, 0, codepoints.length - 1);
-            int last = codepoints.length == 0 ? 0 : codepoints[codepoints.length - 1];
-            ImmutableList<C> completionWithoutLast = ImmutableList.of();
-            try
+            for (int codepointIndex = 0; codepointIndex < codepoints.length; codepointIndex++)
             {
-                completionWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
-            }
-            catch (InternalException | UserException e)
-            {
-                Log.log(e);
-            }
-            if (codepoints.length >= 1 && 
-                (inNextAlphabet.differentAlphabet(withoutLast, last)
-                    || (completionWithoutLast.stream().allMatch(c -> !c.features(withoutLast, last))
-                            && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(withoutLast) == ShowStatus.DIRECT_MATCH))
-                ))
-            {
+                String prefix = new String(codepoints, 0, codepointIndex);
+                int cur = codepoints[codepointIndex];
+                String suffix = new String(codepoints, codepointIndex + 1, codepoints.length - codepointIndex - 1);
+
+                ImmutableList<C> completionWithoutLast = ImmutableList.of();
                 try
                 {
-                    if (!available.stream().anyMatch(c -> c.features(withoutLast, last)))
-                    {
-                        // No completions feature the character and it is in the following alphabet, so
-                        // complete the top one (if any are available) and move character to next slot
-                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
-                        @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(withoutLast).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
-                        @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, Utility.codePointToString(last));
-                        if (newContent == null)
-                            newContent = withoutLast;
-                        if (newContent != null)
-                        {
-                            change.setText(newContent);
-                            change.setRange(0, textField.getLength());
-                        }
-                        return change;
-                    }
+                    completionWithoutLast = calculateCompletions.apply(prefix, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
                 }
-                catch (UserException | InternalException e)
+                catch (InternalException | UserException e)
                 {
                     Log.log(e);
+                }
+                if (codepoints.length >= 1 &&
+                        (inNextAlphabet.differentAlphabet(prefix, cur)
+                                || (completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
+                                && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix) == ShowStatus.DIRECT_MATCH))
+                        ))
+                {
+                    try
+                    {
+                        if (!available.stream().anyMatch(c -> c.features(prefix, cur)))
+                        {
+                            // No completions feature the character and it is in the following alphabet, so
+                            // complete the top one (if any are available) and move character to next slot
+                            List<C> completionsWithoutLast = calculateCompletions.apply(prefix, CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
+                            @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(prefix).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
+                            int caretPos = prospectiveCaret.orElse(textField.getCaretPosition());
+                            OptionalInt position = caretPos >= prefix.length() && textField.isFocused() ? OptionalInt.of(prefix.length() - caretPos) : OptionalInt.empty();
+                            @Nullable String newContent = onSelect.nonAlphabetCharacter(prefix, completion, Utility.codePointToString(cur) + suffix, position);
+                            if (newContent == null)
+                                newContent = prefix;
+                            if (newContent != null)
+                            {
+                                change.setText(newContent);
+                                change.setRange(0, textField.getLength());
+                            }
+                            return change;
+                        }
+                    }
+                    catch (UserException | InternalException e)
+                    {
+                        Log.log(e);
+                    }
                 }
             }
             // Trim after alphabet check:
@@ -440,6 +452,21 @@ public class AutoComplete<C extends Completion>
             }
         }
         return null;
+    }
+
+
+    public boolean matchingAlphabets(String lhs, String rhs)
+    {
+        return lhs.isEmpty() || rhs.isEmpty() || 
+            !alphabetCheck.differentAlphabet(lhs, rhs.codePoints().findFirst().orElse(0));
+    }
+
+
+    public void withProspectiveCaret(int caret, FXPlatformRunnable action)
+    {
+        prospectiveCaret = OptionalInt.of(caret);
+        action.run();
+        prospectiveCaret = OptionalInt.empty();
     }
 
     public abstract static @Interned class Completion
@@ -695,7 +722,9 @@ public class AutoComplete<C extends Completion>
 
         // Moving on because non alphabet character entered
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter);
+        // positionCaret is blank for no focus change, or an index
+        // of how many characters after the current to move the focus to.
+        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter, OptionalInt positionCaret);
 
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
@@ -719,28 +748,28 @@ public class AutoComplete<C extends Completion>
         @Override
         public @Nullable String doubleClick(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "", isFocused());
+            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
 
         @Override
-        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter)
+        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter, OptionalInt positionCaret)
         {
-            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter, isFocused());
+            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter, positionCaret);
         }
 
         @Override
         public @Nullable String keyboardSelect(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "", isFocused());
+            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
 
         @Override
         public @Nullable String exactCompletion(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "", isFocused());
+            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
 
-        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest, boolean moveFocus);
+        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest, OptionalInt positionCaret);
         
         protected abstract boolean isFocused();
     }

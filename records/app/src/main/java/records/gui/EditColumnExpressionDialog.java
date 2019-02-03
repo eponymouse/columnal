@@ -21,6 +21,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
@@ -47,7 +48,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
         expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookup, expectedTypeWrapper, parent.getManager().getTypeManager(), e -> {curValue = e;}) {
             @Override
-            protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
+            protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
                 @Nullable Node button = getDialogPane().lookupButton(ButtonType.OK);
                 if (button != null && becauseOfTab)

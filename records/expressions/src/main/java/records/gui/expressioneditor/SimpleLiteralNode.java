@@ -16,6 +16,7 @@ import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import styled.StyledString;
+import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -23,6 +24,7 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 public abstract class SimpleLiteralNode extends EntryNode<Expression, ExpressionSaver> implements ConsecutiveChild<Expression, ExpressionSaver>
@@ -62,10 +64,10 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             }
 
             @Override
-            protected String selected(String currentText, @Nullable EndCompletion c, String rest, boolean moveFocus)
+            protected String selected(String currentText, @Nullable EndCompletion c, String rest, OptionalInt moveFocus)
             {
-                if (moveFocus)
-                    parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT, false);
+                if (moveFocus.isPresent())
+                    parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Either.right(moveFocus.getAsInt()), false);
                 return currentText;
             }
 

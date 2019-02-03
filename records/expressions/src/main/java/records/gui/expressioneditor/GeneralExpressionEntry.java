@@ -39,6 +39,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
@@ -51,6 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -581,7 +583,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         @Override
-        protected String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
+        protected String selected(String currentText, @Interned @Nullable Completion c, String rest, OptionalInt positionCaret)
         {
             //Log.normalStackTrace("Selected " + currentText, 4);
             savePrefix = null;
@@ -633,7 +635,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 if (bracketBalanceType != null && parent.balancedBrackets(bracketBalanceType) && followedByClose)
                 {
                     newText = "";
-                    moveFocus = true;
+                    positionCaret = OptionalInt.of(0);
                     completing = false;
                 }
                 else
@@ -666,8 +668,8 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 }
                 else
                 {
-                    if (moveFocus)
-                        parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, false);
+                    if (positionCaret.isPresent())
+                        parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
                 }
                 
                 setPrefixTag(tc.tagInfo.getTypeName());
@@ -706,10 +708,10 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             }
 
             // Must do this while completing so that we're not marked as blank:
-            if (moveFocus)
+            if (positionCaret.isPresent())
             {
                 if (rest.isEmpty())
-                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, false);
+                    parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
                 else
                     parent.addOperandToRight(GeneralExpressionEntry.this, rest);
             }
@@ -723,7 +725,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         {
             if (!(selectedItem instanceof KeyShortcutCompletion) && !completing)
             {
-                return selected(currentText, selectedItem, "", false);
+                return selected(currentText, selectedItem, "", OptionalInt.empty());
             }
             return currentText;
         }

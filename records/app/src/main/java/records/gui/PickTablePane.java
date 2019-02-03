@@ -29,6 +29,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
@@ -85,7 +86,7 @@ public class PickTablePane extends BorderPane
             }
 
             @Override
-            public String nonAlphabetCharacter(String textBefore, @Nullable TableCompletion selectedItem, String textAfter)
+            public String nonAlphabetCharacter(String textBefore, @Nullable TableCompletion selectedItem, String textAfter, OptionalInt positionCaret)
             {
                 return textBefore + textAfter; // Shouldn't happen as not using alphabets
             }

@@ -27,11 +27,13 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
 import records.transformations.expression.type.IdentTypeExpression;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> implements EEDisplayNodeParent
@@ -101,17 +103,17 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
         return new SimpleCompletionListener<Completion>()
         {
             @Override
-            protected @Nullable String selected(String currentText, @Nullable Completion typeCompletion, String rest, boolean moveFocus)
+            protected @Nullable String selected(String currentText, @Nullable Completion typeCompletion, String rest, OptionalInt positionCaret)
             {
                 @Nullable String keep = null;
 
                 if (typeCompletion == endCompletion)
                 {
-                    if (moveFocus)
+                    if (positionCaret.isPresent())
                     {
-                        parent.parentFocusRightOfThis(Focus.LEFT, false);
+                        parent.parentFocusRightOfThis(Either.right(positionCaret.getAsInt()), false);
                         // Don't move focus again:
-                        moveFocus = false;
+                        positionCaret = OptionalInt.empty();
                     }
                     keep = "";
                 }
@@ -137,7 +139,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                     if ((typeCompletion == endBracketCompletion && parent.balancedBrackets(BracketBalanceType.ROUND)) || (typeCompletion == endListCompletion && parent.balancedBrackets(BracketBalanceType.SQUARE)))
                     {
                         keep = "";
-                        moveFocus = true;
+                        positionCaret = OptionalInt.of(0);
                         completing = false;
                     }
                     else
@@ -164,10 +166,10 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                 }
 
                 // Must do this while completing so that we're not marked as blank:
-                if (moveFocus)
+                if (positionCaret.isPresent())
                 {
                     if (rest.isEmpty())
-                        parent.focusRightOf(TypeEntry.this, Focus.LEFT, false);
+                        parent.focusRightOf(TypeEntry.this, Either.right(positionCaret.getAsInt()), false);
                     else
                         parent.addOperandToRight(TypeEntry.this, rest);
                 }
@@ -195,10 +197,10 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side, boolean becauseOfTab)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Either<Focus, Integer> position, boolean becauseOfTab)
     {
         // Child is bound to be units:
-        parent.focusRightOf(this, side, becauseOfTab);
+        parent.focusRightOf(this, position, becauseOfTab);
     }
 
     @Override
