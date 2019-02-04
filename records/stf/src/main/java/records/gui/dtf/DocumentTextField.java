@@ -201,6 +201,8 @@ public class DocumentTextField extends Region implements DocumentListener
         documentChanged();
     }
 
+    @Override
+    @OnThread(Tag.FXPlatform)
     public void documentChanged()
     {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
@@ -219,6 +221,7 @@ public class DocumentTextField extends Region implements DocumentListener
     }
 
     @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
         double wholeTextWidth = textFlow.prefWidth(-1);
@@ -270,12 +273,14 @@ public class DocumentTextField extends Region implements DocumentListener
     }
 
     @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
         return textFlow.prefHeight(-1);
     }
 
     @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefWidth(double height)
     {
         return 300;

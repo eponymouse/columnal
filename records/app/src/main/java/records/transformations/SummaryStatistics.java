@@ -817,6 +817,7 @@ public class SummaryStatistics extends Transformation
     {
         private final TableManager tableManager;
 
+        @OnThread(Tag.Any)
         private AggTableLookup(TableManager tableManager)
         {
             this.tableManager = tableManager;
@@ -905,6 +906,7 @@ public class SummaryStatistics extends Transformation
         }
     }
 
+    @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
         return new AggTableLookup(getManager());

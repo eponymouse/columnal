@@ -71,7 +71,7 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
@@ -149,7 +149,7 @@ public class TableDisplayUtility
         return r.build();
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
         return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
@@ -383,7 +383,7 @@ public class TableDisplayUtility
     }
 
     // public for testing:
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
         return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), getTablePos, onModify);
@@ -438,7 +438,7 @@ public class TableDisplayUtility
         });
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue) throws InternalException
     {
         return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()

@@ -1048,9 +1048,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public void editAggregateSplitBy(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, SummaryStatistics aggregate)
     {
-        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> {
+        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
             FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
-        });
+        }));
     }
 
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>

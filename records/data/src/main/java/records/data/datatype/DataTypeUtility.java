@@ -669,6 +669,7 @@ public class DataTypeUtility
         throw new UserException("Expected " + dateTimeInfo + " value but found: " + src.snippet());
     }
 
+    @OnThread(Tag.Simulation)
     public static Comparator<@Value Object> getValueComparator()
     {
         return (Comparator<@Value Object>)(@Value Object a, @Value Object b) -> {
@@ -785,7 +786,7 @@ public class DataTypeUtility
                 {
                     private void addUnit(Unit unit)
                     {
-                        allUnits.addAll(unit.getDetails().keySet().stream().map(u -> u.getName()).collect(Collectors.<@UnitIdentifier String>toList()));
+                        allUnits.addAll(unit.getDetails().keySet().stream().<@UnitIdentifier String>map(u -> u.getName()).collect(Collectors.<@UnitIdentifier String>toList()));
                     }
 
                     @Override

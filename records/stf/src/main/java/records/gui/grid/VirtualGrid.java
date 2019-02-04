@@ -210,8 +210,10 @@ public final class VirtualGrid implements ScrollBindable
 
     public static interface VirtualGridManager
     {
+        @OnThread(Tag.FXPlatform)
         public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
 
+        @OnThread(Tag.FXPlatform)
         public void pasteIntoEmpty(CellPosition target);
     }
     

@@ -400,6 +400,7 @@ public class View extends StackPane
         getGrid().gotoRow(getWindow());
     }
 
+    @OnThread(Tag.FXPlatform)
     public int test_getSaveCount()
     {
         return saveCount;
@@ -609,6 +610,7 @@ public class View extends StackPane
         VirtualGridManager vgManager = new VirtualGridManager()
         {
             @Override
+            @OnThread(Tag.FXPlatform)
             public void createTable(CellPosition cellPos, Point2D mousePos, VirtualGrid grid)
             {
                 // Data table if there are none, or if we ask and they say data
@@ -617,6 +619,7 @@ public class View extends StackPane
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public void pasteIntoEmpty(CellPosition target)
             {
                 @Initialized View thisView = Utility.later(View.this);

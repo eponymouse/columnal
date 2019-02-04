@@ -210,6 +210,7 @@ public class MainWindow
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public int _test_getSaveCount()
             {
                 return v.test_getSaveCount();

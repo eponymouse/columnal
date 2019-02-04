@@ -3,6 +3,8 @@ package records.gui.dtf;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.dtf.Document.TrackedPosition.Bias;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 
@@ -86,6 +88,7 @@ public abstract class Document
     
     static interface DocumentListener
     {
+        @OnThread(Tag.FXPlatform)
         public void documentChanged();
     }
     

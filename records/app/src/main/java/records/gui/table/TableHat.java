@@ -388,6 +388,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         // (Though maybe we should allow this somehow?s
     }
     
+    @OnThread(Tag.FXPlatform)
     class TableHatDisplay extends Region
     {
         private static final double INSET = 4.0;
@@ -422,6 +423,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
             FXUtility.resizeRelocate(textFlow, INSET, INSET, getWidth() - INSET * 2, getHeight() - INSET * 2);
@@ -429,18 +431,21 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefWidth(double height)
         {
             return textFlow.prefWidth(height == -1 ? -1 : (height - INSET * 2)) + INSET * 2;
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefHeight(double width)
         {
             return textFlow.prefHeight(width == -1 ? -1 : (width - INSET * 2)) + INSET * 2;
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public Orientation getContentBias()
         {
             return textFlow.getContentBias();
