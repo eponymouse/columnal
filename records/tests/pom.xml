@@ -43,10 +43,9 @@
 
         <dependency>
             <groupId>org.bluej</groupId>
-            <artifactId>threadchecker-tags</artifactId>
+            <artifactId>threadchecker</artifactId>
             <version>0.1</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/threadchecker.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
 
 

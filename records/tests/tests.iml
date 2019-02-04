@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+<module type="JAVA_MODULE" version="4">
+  <component name="ExternalSystem" externalSystem="Maven" />
   <component name="MavenAnnotationProcessors">
     <modules>
       <module name="anns" />
@@ -86,15 +87,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.5.7" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: org.bluej:threadchecker-tags:0.1">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/threadchecker.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="Maven: org.bluej:threadchecker:0.1" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-library:1.3" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="module-library">
