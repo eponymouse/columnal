@@ -221,7 +221,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     private static enum ExpressionAlphabet implements Alphabet
     {
         WORD(c -> Character.isAlphabetic(c) || c == ' ' || c == '$' /*for declarations */),
-        DIGIT(Character::isDigit),
+        DIGIT_OR_DOT(c -> Character.isDigit(c) || c == '.'),
         BRACKET(Alphabet.containsCodepoint("(){}[]")),
         QUOTE(Alphabet.containsCodepoint("\"")),
         OPERATOR(OPERATOR_ALPHABET::contains);
