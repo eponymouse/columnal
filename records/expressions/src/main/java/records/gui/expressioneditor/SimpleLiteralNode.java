@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -219,7 +220,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         @Override
         public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText.get() + ending, null);
+            return new CompletionContent(Bindings.createStringBinding(() -> currentText.get() + ending, currentText), null);
         }
 
         @Override
@@ -235,6 +236,12 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         public boolean features(String curInput, int character)
         {
             return !Utility.containsCodepoint(ending, character);
+        }
+
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            return true;
         }
     }
 }
