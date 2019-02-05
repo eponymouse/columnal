@@ -42,6 +42,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Collections;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -80,6 +81,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     }
 
     @Override
+    @OnThread(Tag.FXPlatform)
     public @Recorded Expression save()
     {
         ExpressionSaver saver = new ExpressionSaver(this, true);
@@ -213,7 +215,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     protected void parentFocusRightOfThis(Either<Focus, Integer> position, boolean becauseOfTab)
     {
         if (!children.get(children.size() - 1).isBlank())
-            addOperandToRight(children.get(children.size() - 1), "");
+            addOperandToRight(children.get(children.size() - 1), "", OptionalInt.of(0));
     }
 
     @Override

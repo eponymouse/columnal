@@ -31,7 +31,6 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
@@ -52,12 +51,10 @@ import utility.gui.GUI;
 import utility.gui.Instruction;
 import utility.gui.TranslationUtility;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -263,7 +260,7 @@ public class AutoComplete<C extends Completion>
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
             Log.debug("Checking alphabet: [[" + text + "]]");
-            for (int codepointIndex = 0; codepointIndex < codepoints.length; codepointIndex++)
+            for (int codepointIndex = 1; codepointIndex < codepoints.length; codepointIndex++)
             {
                 String prefix = new String(codepoints, 0, codepointIndex);
                 int cur = codepoints[codepointIndex];
@@ -292,8 +289,8 @@ public class AutoComplete<C extends Completion>
                             // complete the top one (if any are available) and move character to next slot
                             List<C> completionsWithoutLast = calculateCompletions.apply(prefix, CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
                             @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(prefix).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
-                            int caretPos = prospectiveCaret.orElse(textField.getCaretPosition());
-                            OptionalInt position = caretPos >= prefix.length() && textField.isFocused() ? OptionalInt.of(prefix.length() - caretPos) : OptionalInt.empty();
+                            int caretPos = prospectiveCaret.orElse(change.getCaretPosition());
+                            OptionalInt position = caretPos > prefix.length() && textField.isFocused() ? OptionalInt.of(caretPos - prefix.length()) : OptionalInt.empty();
                             @Nullable String newContent = onSelect.nonAlphabetCharacter(prefix, completion, Utility.codePointToString(cur) + suffix, position);
                             if (newContent == null)
                                 newContent = prefix;
@@ -467,6 +464,9 @@ public class AutoComplete<C extends Completion>
         prospectiveCaret = OptionalInt.of(caret);
         action.run();
         prospectiveCaret = OptionalInt.empty();
+        // If we've lost focus, don't override caret position:
+        if (textField.isFocused())
+            textField.positionCaret(caret);
     }
 
     public abstract static @Interned class Completion
@@ -500,7 +500,7 @@ public class AutoComplete<C extends Completion>
          * Given a property with the latest text, what graphical node and text property
          * should we show for the item?
          */
-        public abstract CompletionContent getDisplay(ObservableStringValue currentText);
+        public abstract CompletionContent makeDisplay(ObservableStringValue currentText);
 
         /**
          * How should we sort this item?  For functions, leave off brackets.
@@ -509,7 +509,7 @@ public class AutoComplete<C extends Completion>
          */
         public String getDisplaySortKey(String text)
         {
-            return getDisplay(new ReadOnlyStringWrapper(text)).completion.get();
+            return makeDisplay(new ReadOnlyStringWrapper(text)).completion.get();
         }
 
         public static enum ShowStatus
@@ -591,7 +591,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent("" + shortcuts[0], TranslationUtility.getString(titleKey));
         }
@@ -632,7 +632,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(completion, description);
         }
@@ -706,7 +706,7 @@ public class AutoComplete<C extends Completion>
             }
             else
             {
-                CompletionContent cc = item.getDisplay(textField.textProperty());
+                CompletionContent cc = item.makeDisplay(textField.textProperty());
                 setGraphic(GUI.labelRaw(cc.description, "completion-cell-description"));
                 textProperty().bind(cc.completion);
             }
@@ -810,8 +810,9 @@ public class AutoComplete<C extends Completion>
         }
     }
     
+    // public for testing purposes only
     @OnThread(Tag.FXPlatform)
-    private class AutoCompleteWindow extends PopupControl
+    public class AutoCompleteWindow extends PopupControl
     {
         private final ListView<C> completions;
         private final BorderPane container;
@@ -1004,6 +1005,16 @@ public class AutoComplete<C extends Completion>
                 this.completions.getItems().clear();
             }
             return this.completions.getItems();
+        }
+        
+        @OnThread(Tag.FXPlatform)
+        public @Nullable String _test_getSelectedContent()
+        {
+            C selected = completions.getSelectionModel().getSelectedItem();
+            if (selected != null)
+                return selected.makeDisplay(new ReadOnlyStringWrapper(textField.getText())).completion.get();
+            else
+                return null;
         }
 
         private class AutoCompleteSkin implements Skin<AutoCompleteWindow>

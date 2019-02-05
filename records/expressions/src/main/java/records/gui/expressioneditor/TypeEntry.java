@@ -166,12 +166,13 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                 }
 
                 // Must do this while completing so that we're not marked as blank:
-                if (positionCaret.isPresent())
+                if (positionCaret.isPresent() && rest.isEmpty())
                 {
-                    if (rest.isEmpty())
-                        parent.focusRightOf(TypeEntry.this, Either.right(positionCaret.getAsInt()), false);
-                    else
-                        parent.addOperandToRight(TypeEntry.this, rest);
+                    parent.focusRightOf(TypeEntry.this, Either.right(positionCaret.getAsInt()), false);
+                }
+                else if (!rest.isEmpty())
+                {
+                    parent.addOperandToRight(TypeEntry.this, rest, positionCaret);
                 }
                 return keep;
             }

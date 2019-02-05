@@ -139,7 +139,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
     private static class NumericLiteralCompletion extends Completion
     {
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(currentText, null);
         }
@@ -217,12 +217,13 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
 
             completing = newText != null;
             // Must do this while completing so that we're not marked as blank:
-            if (positionCaret.isPresent())
+            if (positionCaret.isPresent() && rest.isEmpty())
             {
-                if (rest.isEmpty())
-                    parent.focusRightOf(UnitEntry.this, Either.right(positionCaret.getAsInt()), false);
-                else
-                    parent.addOperandToRight(UnitEntry.this, rest);
+                parent.focusRightOf(UnitEntry.this, Either.right(positionCaret.getAsInt()), false);
+            }
+            else if (!rest.isEmpty())
+            {
+                parent.addOperandToRight(UnitEntry.this, rest, positionCaret);
             }
             return newText;
         }

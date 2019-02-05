@@ -95,6 +95,8 @@ public class GrammarUtility
     
     public static boolean validIdentifier(String s)
     {
+        if (s.isEmpty())
+            return false;
         int[] codepoints = s.codePoints().toArray();
         if (!Character.isLetter(codepoints[0]))
             return false;

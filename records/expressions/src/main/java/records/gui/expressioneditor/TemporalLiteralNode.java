@@ -61,12 +61,6 @@ public final class TemporalLiteralNode extends SimpleLiteralNode
     }
 
     @Override
-    public void setText(String initialContent)
-    {
-        textField.setText(initialContent);
-    }
-
-    @Override
     public void showType(String type)
     {
 

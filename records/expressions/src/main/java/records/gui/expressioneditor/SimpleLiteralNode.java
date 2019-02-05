@@ -199,6 +199,14 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         return false;
     }
 
+    @Override
+    public void setText(String initialContent, int caretPos)
+    {
+        autoComplete.withProspectiveCaret(caretPos, () -> 
+            textField.setText(initialContent)
+        );
+    }
+
     protected class EndCompletion extends Completion
     {
         private final String ending;
@@ -209,7 +217,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         }
         
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(currentText.get() + ending, null);
         }

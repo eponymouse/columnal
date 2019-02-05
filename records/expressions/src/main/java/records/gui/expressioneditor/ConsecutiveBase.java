@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -379,6 +380,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
     }
 
+    @OnThread(Tag.FXPlatform)
     protected final void save(SAVER saver)
     {
         clearAllErrors();
@@ -438,15 +440,17 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
-    public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SAVER> rightOf, String initialContent)
+    public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SAVER> rightOf, String initialContent, OptionalInt caretPos)
     {
         // if coming from blank, must create blank
         withChildIndex(rightOf, index -> {
-            @NonNull final EntryNode<EXPRESSION, SAVER> child;
-            children.add(index + 1, focusWhenShown(child = makeBlankChild(false)));
+            @NonNull final EntryNode<EXPRESSION, SAVER> child = makeBlankChild(false);
+            if (caretPos.isPresent())
+                focusWhenShown(child);
+            children.add(index + 1, child);
             // Set content after, in case it triggers
             // completion and moves slot:
-            child.setText(initialContent);
+            child.setText(initialContent, caretPos.orElse(0));
         });
     }
 

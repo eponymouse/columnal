@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -24,6 +25,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
@@ -216,6 +218,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
         r.add(stringCompletion);
         r.add(new NumericLiteralCompletion());
+        r.add(new PhantomIdentCompletion());
 
         // TODO: use type and completion status to prioritise and to filter
         /*
@@ -289,7 +292,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
 
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(fullText, getDescription());
         }
@@ -350,7 +353,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(function.getName() + "(...)", function.getMiniDescription());
         }
@@ -402,7 +405,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     private class NumericLiteralCompletion extends Completion
     {
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(currentText, null);
         }
@@ -442,6 +445,27 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                     possible = "0123456789._";
             }
             return Utility.containsCodepoint(possible, character);
+        }
+    }
+    
+    private class PhantomIdentCompletion extends Completion
+    {
+        @Override
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(Bindings.createStringBinding(() -> currentText.get().trim(), currentText), null);
+        }
+
+        @Override
+        public ShowStatus shouldShow(String input)
+        {
+            return GrammarUtility.validIdentifier(input.trim()) ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
+        }
+
+        @Override
+        public boolean features(String curInput, int character)
+        {
+            return GrammarUtility.validIdentifier(curInput.trim() + Utility.codePointToString(character));
         }
     }
 
@@ -530,7 +554,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]", null);
         }
@@ -689,7 +713,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             {
                 newText = currentText;
             }
-            else if (c == null || c instanceof SimpleCompletion)
+            else if (c == null || c instanceof SimpleCompletion || c instanceof PhantomIdentCompletion)
             {
                 if (c instanceof SimpleCompletion)
                 {
@@ -708,13 +732,15 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             }
 
             // Must do this while completing so that we're not marked as blank:
-            if (positionCaret.isPresent())
+            if (positionCaret.isPresent() && rest.isEmpty())
             {
-                if (rest.isEmpty())
-                    parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
-                else
-                    parent.addOperandToRight(GeneralExpressionEntry.this, rest);
+                parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
             }
+            else if (!rest.isEmpty())
+            {
+                parent.addOperandToRight(GeneralExpressionEntry.this, rest, positionCaret);
+            }
+            
             if (newText == null)
                 completing = false;
             return newText;
@@ -794,7 +820,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     private static class VarDeclCompletion extends Completion
     {
         @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(currentText, TranslationUtility.getString("expression.autocomplete.variable"));
         }

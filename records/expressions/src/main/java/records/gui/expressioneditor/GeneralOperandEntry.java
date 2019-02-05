@@ -211,19 +211,19 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     }
 
     @Override
-    public void setText(String initialContent)
+    public void setText(String initialContent, int caretPos)
     {
         if (autoComplete != null)
         {
-            autoComplete.withProspectiveCaret(initialContent.length(), () ->
+            autoComplete.withProspectiveCaret(caretPos, () ->
                 textField.setText(initialContent)
             );
         }
         else
         {
             textField.setText(initialContent);
+            textField.positionCaret(caretPos);
         }
-        textField.positionCaret(textField.getLength());
     }
 
     @Override

@@ -30,6 +30,7 @@ import test.gen.GenRandom;
 import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterExpressionTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.util.FXApplicationTest;
 
 import java.util.Random;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestExpressionEditorDelete extends FXApplicationTest
-    implements ClickTableLocationTrait, EnterExpressionTrait, ClickOnTableHeaderTrait
+    implements ClickTableLocationTrait, EnterExpressionTrait, ClickOnTableHeaderTrait, PopupTrait
 {
     @SuppressWarnings("nullness")
     private MainWindowActions mainWindowActions;
@@ -189,9 +190,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
     private void testDeleteBackspace(String original, int deleteAfter, int deleteBefore, String expectedStr, Random r) throws Exception
     {
+        assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         testBackspace(original, deleteBefore, expectedStr, r);
+        assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOn(".id-tableDisplay-menu-delete");
+        TestUtil.sleep(300);
+        assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         testDelete(original, deleteAfter, expectedStr, r);
     }
 
@@ -199,7 +204,10 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     {
         DummyManager dummyManager = new DummyManager();
         Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager());
-        ExpressionEditor expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager()), r);
+        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
+        ExpressionEditor expressionEditor = enter(originalExp, r);
+        
+        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor.save()));
 
         ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
 
@@ -223,7 +231,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         assertEquals(expectedExp, after);
         
-        clickOn(".cancel-button");
+        moveAndDismissPopupsAtPos(point(".cancel-button"));
+        clickOn();
     }
 
     private void testDelete(String original, int deleteAfter, String expectedStr, Random r) throws Exception

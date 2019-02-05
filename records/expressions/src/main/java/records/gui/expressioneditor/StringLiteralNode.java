@@ -47,11 +47,4 @@ public final class StringLiteralNode extends SimpleLiteralNode
     {
         return false;
     }
-
-    @Override
-    public void setText(String initialContent)
-    {
-        textField.setText(initialContent);
-        textField.positionCaret(textField.getLength());
-    }
 }

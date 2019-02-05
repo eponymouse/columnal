@@ -54,7 +54,7 @@ public class IdentExpression extends NonOperatorExpression
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
         {
-            onError.recordError(this, StyledString.s("Incomplete expression or unknown column/function/variable: \"" + text + "\""));
+            onError.recordError(this, StyledString.s("Unknown column/function/variable: \"" + text + "\""));
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:

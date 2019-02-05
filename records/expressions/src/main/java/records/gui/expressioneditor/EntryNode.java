@@ -197,7 +197,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
     }
 
     // Should also trigger completions if applicable
-    public abstract void setText(String initialContent);
+    public abstract void setText(String initialContent, int caretPos);
 
     @Override
     public void bindDisable(BooleanExpression disabledProperty)

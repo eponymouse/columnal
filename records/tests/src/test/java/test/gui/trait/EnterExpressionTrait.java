@@ -2,20 +2,32 @@ package test.gui.trait;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import org.testfx.api.FxToolkit;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
+import records.gui.expressioneditor.AutoComplete;
+import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.transformations.expression.*;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("recorded")
@@ -114,9 +126,22 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (c == StandardFunction.class)
         {
             StandardFunction function = (StandardFunction) expression;
-            write(function.getName(), DELAY);
+            String name = function.getName();
             if (r.nextBoolean())
             {
+                write(name, DELAY);
+                if (r.nextBoolean())
+                {
+                    push(KeyCode.ENTER);
+                    // Get rid of brackets; if in a call expression, we will add them again:
+                    push(KeyCode.BACK_SPACE);
+                    push(KeyCode.DELETE);
+                }
+            }
+            else
+            {
+                write(name.substring(0, 1 + r.nextInt(name.length() - 1)));
+                scrollAutoCompleteToOption(name + "(...)");
                 push(KeyCode.ENTER);
                 // Get rid of brackets; if in a call expression, we will add them again:
                 push(KeyCode.BACK_SPACE);
@@ -217,12 +242,14 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             write("$" + ((VarDeclExpression)expression).getName(), DELAY);
             // Have to manually move on because it won't auto-complete:
-            push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
+            push(KeyCode.ENTER);
         }
         else if (c == IdentExpression.class)
         {
-            write(((IdentExpression)expression).getText(), DELAY);
-            push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
+            String ident = ((IdentExpression) expression).getText();
+            write(ident, DELAY);
+            scrollAutoCompleteToOption(ident);
+            push(KeyCode.ENTER);
         }
         else if (c == TypeLiteralExpression.class)
         {
@@ -254,5 +281,37 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         }
         // TODO add randomness to entry methods (e.g. selection from auto-complete
         // TODO check position of auto-complete
+    }
+
+    @OnThread(Tag.Any)
+    default void scrollAutoCompleteToOption(String content)
+    {
+        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof AutoComplete.AutoCompleteWindow).collect(Collectors.toList());
+        assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
+        
+        AutoCompleteWindow autoComplete = ((AutoCompleteWindow)window(w -> w instanceof AutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
+        
+        // Move to top:
+        String prev = "\u0000";
+        while (!Objects.equals(prev, autoComplete._test_getSelectedContent()))
+        {
+            prev = autoComplete._test_getSelectedContent();
+            push(KeyCode.PAGE_UP);
+        }
+        
+        List<String> all = new ArrayList<>();
+        
+        // Now scroll down until we find it, or reach end:
+        prev = "\u0000";
+        while (!Objects.equals(prev, autoComplete._test_getSelectedContent())
+                && !Objects.equals(content, autoComplete._test_getSelectedContent()))
+        {
+            prev = autoComplete._test_getSelectedContent();
+            if (prev != null)
+                all.add(prev);
+            push(KeyCode.DOWN);
+        }
+        
+        assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, autoComplete._test_getSelectedContent());
     }
 }
