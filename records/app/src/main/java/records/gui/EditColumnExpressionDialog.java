@@ -40,7 +40,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
 
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
     {
-        super(parent.getWindow(), new DialogPaneWithSideButtons());
+        super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
         ColumnNameTextField field = new ColumnNameTextField(initialName);

@@ -15,6 +15,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
@@ -56,6 +57,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Workers.Priority;
+import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 
 import javax.swing.filechooser.FileSystemView;
@@ -74,7 +76,7 @@ import java.util.stream.Stream;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends StackPane
+public class View extends StackPane implements DimmableParent
 {
     private static final double DEFAULT_SPACE = 150.0;
 
@@ -695,7 +697,7 @@ public class View extends StackPane
     }
 
     // Can't be a View without an actual window
-    public Window getWindow()
+    private Window getWindow()
     {
         @SuppressWarnings("nullness")
         @NonNull Scene scene = getScene();
@@ -721,6 +723,23 @@ public class View extends StackPane
         return dataCellSupplier;
     }
 
+    @Override
+    public Window dimWhileShowing(@UnknownInitialization(Dialog.class) Dialog<?> dialog)
+    {
+        Effect dim = new ColorAdjust(0.0, 0.0, -0.2, 0.0);
+        FXUtility.addChangeListenerPlatformNN(dialog.showingProperty(), show -> {
+            if (show)
+            {
+                getGrid().setEffectOnNonOverlays(dim);
+            }
+            else
+            {
+                getGrid().setEffectOnNonOverlays(null);
+            }
+        });
+        return getWindow();
+    }
+
     private static void createTable(View thisView, TableManager tableManager, CellPosition cellPosition, Point2D mouseScreenPos, VirtualGrid virtualGrid)
     {
         // Ask what they want
@@ -728,7 +747,7 @@ public class View extends StackPane
         blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
         virtualGrid.setEffectOnNonOverlays(blur);
         Window window = thisView.getWindow();
-        Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(window, !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
+        Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(thisView, !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
 
         if (choice.isPresent())
         {
@@ -737,7 +756,7 @@ public class View extends StackPane
             switch (choice.get().getSecond())
             {
                 case DATA:
-                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A"), null, true).showAndWait();
+                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), new ColumnId("A"), null, true).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error creating first column", () -> {
@@ -754,7 +773,7 @@ public class View extends StackPane
                     ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, record);
                     break;
                 case TRANSFORM:
-                    new PickTransformationDialog(window).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
+                    new PickTransformationDialog(thisView).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
                         @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
                             new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
                         if (makeTrans != null)

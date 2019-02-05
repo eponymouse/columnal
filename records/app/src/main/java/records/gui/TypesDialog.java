@@ -48,6 +48,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DimmableParent;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
@@ -64,11 +65,11 @@ public class TypesDialog extends Dialog<Void>
 {
     private final TypeManager typeManager;
 
-    public TypesDialog(Window owner, TypeManager typeManager)
+    public TypesDialog(DimmableParent owner, TypeManager typeManager)
     {
         this.typeManager = typeManager;
         initModality(Modality.WINDOW_MODAL);
-        initOwner(owner);
+        initOwner(owner.dimWhileShowing(this));
         setTitle(TranslationUtility.getString("types.title"));
         setResizable(true);
         getDialogPane().getStylesheets().addAll(

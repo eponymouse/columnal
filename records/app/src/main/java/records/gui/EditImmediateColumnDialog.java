@@ -30,6 +30,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiFunction;
 import utility.Utility;
+import utility.gui.DimmableParent;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -69,7 +70,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private @Nullable @Value Object defaultValue;
     
     @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
+    public EditImmediateColumnDialog(DimmableParent parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
     {
         super(parent, true);
 

@@ -40,9 +40,9 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public abstract class LightDialog<R> extends Dialog<R>
 {
-    protected LightDialog(Window parent, @Nullable DialogPane customDialogPane)
+    protected LightDialog(DimmableParent parent, @Nullable DialogPane customDialogPane)
     {
-        initOwner(parent);
+        initOwner(parent.dimWhileShowing(this));
         initStyle(StageStyle.TRANSPARENT);
         initModality(Modality.WINDOW_MODAL);
         
@@ -191,7 +191,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         }
     }
 
-    protected LightDialog(Window parent)
+    protected LightDialog(DimmableParent parent)
     {
         this(parent, null);
     }

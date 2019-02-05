@@ -25,7 +25,7 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
     private final ErrorLabel errorLabel = new ErrorLabel();
     private @Nullable R result;
 
-    public ErrorableLightDialog(Window parent, boolean buttonsToSide)
+    public ErrorableLightDialog(DimmableParent parent, boolean buttonsToSide)
     {
         super(parent, buttonsToSide ? new DialogPaneWithSideButtons() : null);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);

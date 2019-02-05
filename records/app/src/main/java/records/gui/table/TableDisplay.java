@@ -862,7 +862,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public void editColumn_IDS(ImmediateDataSource data, ColumnId columnId, @Nullable DataType type)
     {
         // TODO apply the type and default value.
-        new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
+        new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
                     parent.getManager().edit(data.getId(), null, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))))
@@ -940,7 +940,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
     {
-        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName(), null, false).showAndWait();
+        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), table.proposeNewColumnName(), null, false).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
             FXUtility.alertOnError_("Error adding column", () ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))

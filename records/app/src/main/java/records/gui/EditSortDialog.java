@@ -66,7 +66,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
     public EditSortDialog(View parent, Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
-        super(parent.getWindow());
+        super(parent);
         setResizable(true);
         initModality(Modality.NONE);
         possibleTables = srcTable == null ? ImmutableList.of(destTable) : ImmutableList.of(srcTable, destTable);

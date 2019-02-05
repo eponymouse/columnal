@@ -30,7 +30,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
 
     public TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
     {
-        super(parent.getWindow());
+        super(parent);
         initModality(Modality.NONE);
         setResizable(true);
         this.parent = parent;

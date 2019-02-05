@@ -41,6 +41,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DimmableParent;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -59,12 +60,12 @@ public class UnitsDialog extends Dialog<Void>
     private final UnitManager unitManager;
     private final TypeManager typeManager;
 
-    public UnitsDialog(Window owner, TypeManager typeManager)
+    public UnitsDialog(DimmableParent owner, TypeManager typeManager)
     {
         this.typeManager = typeManager;
         this.unitManager = typeManager.getUnitManager();
         initModality(Modality.WINDOW_MODAL);
-        initOwner(owner);
+        initOwner(owner.dimWhileShowing(this));
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),

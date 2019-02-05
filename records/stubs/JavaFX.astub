@@ -124,6 +124,8 @@ class Dialog<R>
     void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, String s);
     void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     
+    ReadOnlyBooleanProperty showingProperty(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
+    
     double getX(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     double getY(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     double getWidth(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);

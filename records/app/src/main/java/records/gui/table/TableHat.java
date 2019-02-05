@@ -251,7 +251,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 @Override
                 protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                 {
-                    new HideColumnsDialog(parent.getWindow(), parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
+                    new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
                         Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error hiding column", () -> {
                                     parent.getManager().edit(hide.getId(), makeTrans, null);

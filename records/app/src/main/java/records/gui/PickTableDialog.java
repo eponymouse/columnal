@@ -19,7 +19,7 @@ public class PickTableDialog extends LightDialog<Table>
     public PickTableDialog(View view, @Nullable Table destTable, Point2D lastScreenPos)
     {
         // We want the cancel button to appear to the right, because otherwise the auto complete hides it:
-        super(view.getWindow(), new DialogPaneWithSideButtons());
+        super(view, new DialogPaneWithSideButtons());
         initModality(Modality.NONE);
 
 

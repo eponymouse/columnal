@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationSupplier;
+import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;
 
@@ -29,7 +30,7 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
     private static final double WIDTH = BUTTON_WIDTH * 4 + 3 * 10;
     private static final double HEIGHT = BUTTON_HEIGHT * 2 + 3 * 10;
 
-    public PickTransformationDialog(Window parent)
+    public PickTransformationDialog(DimmableParent parent)
     {
         super(parent);
         setResizable(true);

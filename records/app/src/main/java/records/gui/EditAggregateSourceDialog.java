@@ -57,7 +57,7 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
 
     public EditAggregateSourceDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, ImmutableList<ColumnId> originalSplitBy)
     {
-        super(parent.getWindow());
+        super(parent);
         setResizable(true);
         initModality(Modality.NONE);
         this.srcTable = srcTable;

@@ -109,11 +109,11 @@ public class MainWindow
                 GUI.menuItem("menu.view.goto.row", () -> v.gotoRowDialog()),
                 new SeparatorMenuItem(),
                 GUI.menuItem("menu.view.types", () -> {
-                    new TypesDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait();
+                    new TypesDialog(v, v.getManager().getTypeManager()).showAndWait();
                     v.modified();
                 }),
                 GUI.menuItem("menu.view.units", () -> {
-                    new UnitsDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait();
+                    new UnitsDialog(v, v.getManager().getTypeManager()).showAndWait();
                     v.modified();
                 }),
                 GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())

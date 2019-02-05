@@ -26,7 +26,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
 
     public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
     {
-        super(parent.getWindow(), new DialogPaneWithSideButtons());
+        super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
         expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), columnLookup, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), e -> {curValue = e;});

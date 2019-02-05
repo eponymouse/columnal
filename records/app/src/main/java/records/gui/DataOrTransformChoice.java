@@ -14,6 +14,7 @@ import records.gui.DataOrTransformChoice.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
@@ -29,7 +30,7 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
     private static final double WIDTH = 380;
     private static final double HEIGHT = 260;
 
-    public DataOrTransformChoice(Window parent, boolean transformIsValid)
+    public DataOrTransformChoice(DimmableParent parent, boolean transformIsValid)
     {
         super(parent);
         

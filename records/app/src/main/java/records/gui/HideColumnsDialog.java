@@ -10,6 +10,7 @@ import records.transformations.HideColumns;
 import records.transformations.HideColumnsPanel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.DimmableParent;
 import utility.gui.LightDialog;
 
 /**
@@ -18,7 +19,7 @@ import utility.gui.LightDialog;
 @OnThread(Tag.FXPlatform)
 public class HideColumnsDialog extends LightDialog<TableMaker>
 {
-    public HideColumnsDialog(Window parent, TableManager tableManager, HideColumns hideColumns)
+    public HideColumnsDialog(DimmableParent parent, TableManager tableManager, HideColumns hideColumns)
     {
         super(parent);
 
