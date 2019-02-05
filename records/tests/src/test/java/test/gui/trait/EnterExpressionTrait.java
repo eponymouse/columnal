@@ -132,6 +132,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 write(name, DELAY);
                 if (r.nextBoolean())
                 {
+                    scrollAutoCompleteToOption(name + "(...)");
                     push(KeyCode.ENTER);
                     // Get rid of brackets; if in a call expression, we will add them again:
                     push(KeyCode.BACK_SPACE);
