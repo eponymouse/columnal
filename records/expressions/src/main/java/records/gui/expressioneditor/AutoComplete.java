@@ -251,7 +251,7 @@ public class AutoComplete<C extends Completion>
 
             // Show if not already showing:
             Pair<Double, Double> pos = calculatePosition();
-            if (!isShowing() && pos != null)
+            if (textField.isFocused() && !isShowing() && pos != null)
             {
                 FXUtility.keyboard(this).show(textField, pos.getFirst(), pos.getSecond());
             }
