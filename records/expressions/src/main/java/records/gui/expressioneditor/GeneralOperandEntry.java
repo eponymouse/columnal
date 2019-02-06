@@ -250,6 +250,8 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
             && autoComplete != null && autoComplete.matchingAlphabets(textField.getText().trim(), rightCast.textField.getText().trim()))
         {
             Log.debug("Merging from right: " + textField.getText() + " and " + rightCast.textField.getText());
+            if (textField.getText().contains("(") && rightCast.textField.getText().contains(")"))
+                throw new RuntimeException("Infinite loop! " + parent.getEditor().save().toString());
             int origLength = textField.getText().trim().length();
             textField.setText(textField.getText().trim() + rightCast.textField.getText().trim());
             if (rightCast.textField.isFocused())
