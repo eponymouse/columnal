@@ -5,7 +5,7 @@ Some items must share a namespace, others can do, and/or maybe disambiguate.  Po
 
  - Standard function names
  - User-defined variables
- - Tag type names
+ - Tagged-type names
  - Individual tag names
  - Table names
  - Column names
@@ -19,11 +19,12 @@ Prohibited characters:
  - Identifiers must be (Unicode) alphabetic, followed by alphanumeric or underscore or space (with above caveats).
 
 Unlikely/unproblematic clashes:
- - Tag type names are only in expressions as scope for individual tag names, so they are not a problem, as long as they don't clash with each other.
+ - Tagged-type names are only in expressions as scope for individual tag names, so they are not a problem, as long as they don't clash with each other.
  - Individual tag names must be unique in that type, but multiple types can have the same tag name, as you can use the type name to disambiguate.
  - Column names in a given table must be unique.  Table names must be unique.
  
-Strategies:
- - Tags must be selected from autocomplete to be valid, so they can be allowed to clash.  Same for table names, column names, functions.
- - Variable declaration in let is explicit, only question is in pattern match.  Require explicit prefix, like @var something or $something.
- 
+Solution:
+ - Functions, tags, columns are saved explicitly scoped
+ - They can clash with each other, and local vars
+ - So make local vars always have a $ prefix
+ - We know at load-time if functions/tags/columns clash, so scope if needed

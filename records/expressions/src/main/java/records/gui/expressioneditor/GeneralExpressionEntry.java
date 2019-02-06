@@ -20,6 +20,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.error.UserException;
@@ -52,6 +53,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -107,8 +109,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    private @Nullable Pair<String, Function<String, Expression>> savePrefix;
-    
     private final ArrayList<ColumnReference> availableColumns = new ArrayList<>();
     
     
@@ -131,7 +131,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
             if (!completing)
             {
-                savePrefix = null;
                 prefix.setText("");
             }
             completing = false;
@@ -610,7 +609,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         protected String selected(String currentText, @Interned @Nullable Completion c, String rest, OptionalInt positionCaret)
         {
             //Log.normalStackTrace("Selected " + currentText, 4);
-            savePrefix = null;
             prefix.setText("");
             completing = true;
             
@@ -677,7 +675,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 FunctionCompletion fc = (FunctionCompletion)c;
                 completing = true;
                 parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
-                setPrefixFunction(fc.function);
                 return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
@@ -696,13 +693,11 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                         parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
                 }
                 
-                setPrefixTag(tc.tagInfo.getTypeName());
                 return tc.tagInfo.getTagInfo().getName();
             }
             else if (c instanceof ColumnCompletion)
             {
                 ColumnCompletion cc = (ColumnCompletion)c;
-                setPrefixColumn(cc.columnReference);
                 newText = cc.fullText;
             }
             else if (c == varDeclCompletion)
@@ -922,62 +917,17 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
     public static SingleLoader<Expression, ExpressionSaver> load(ColumnReference columnReference)
     {
-        return p -> {
-            GeneralExpressionEntry gee = new GeneralExpressionEntry((columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnReference.getColumnId().getRaw(), p);
-            gee.setPrefixColumn(columnReference);
-            return gee;
-        };
-    }
-    
-    private void setPrefixColumn(ColumnReference columnReference)
-    {
-        savePrefix = new Pair<>(columnReference.getTableId() == null ? "" : (columnReference.getTableId().getRaw() + ":"), r -> new ColumnReference(columnReference.getTableId(), new ColumnId(r), columnReference.getReferenceType()));
+        return p -> new GeneralExpressionEntry((columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnReference.getColumnId().getRaw(), p);
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(ConstructorExpression constructorExpression)
     {
-        return p -> {
-            GeneralExpressionEntry gee = new GeneralExpressionEntry(constructorExpression.getName(), p);
-            @Nullable TypeId typeName = constructorExpression.getTypeName();
-            if (typeName != null)
-            {
-                gee.setPrefixTag(typeName);
-            }
-            return gee;
-        };
-    }
-    
-    private void setPrefixTag(TypeId typeName)
-    {
-        savePrefix = new Pair<>(typeName.getRaw() + ":", r -> new ConstructorExpression(getParent().getEditor().getTypeManager(), typeName.getRaw(), r));
-        typeLabel.setText(savePrefix.getFirst());
+        return p -> new GeneralExpressionEntry(constructorExpression.getName(), p);
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(StandardFunction standardFunction)
     {
-        return p -> {
-            GeneralExpressionEntry gee = new GeneralExpressionEntry(standardFunction.getName(), p);
-            gee.setPrefixFunction(standardFunction.getFunction());
-            return gee;
-        };
-    }
-    
-    private void setPrefixFunction(FunctionDefinition standardFunction)
-    {
-        savePrefix = new Pair<>(standardFunction.getNamespace() + ":", r -> {
-            try
-            {
-                FunctionDefinition functionDefinition = FunctionList.lookup(getParent().getEditor().getTypeManager().getUnitManager(), standardFunction.getNamespace() + ":" + r);
-                if (functionDefinition != null)
-                    return new StandardFunction(functionDefinition);
-            }
-            catch (InternalException e)
-            {
-                Log.log(e);
-            }
-            return InvalidIdentExpression.identOrUnfinished(r);
-        });
-        typeLabel.setText(savePrefix.getFirst());
+        return p -> new GeneralExpressionEntry(standardFunction.getName(), p);
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(Op value)
@@ -1069,29 +1019,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 return;
             }
         }
-
-        for (ColumnReference availableColumn : availableColumns)
-        {
-            TableId tableId = availableColumn.getTableId();
-            String columnIdRaw = availableColumn.getColumnId().getRaw();
-            if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
-                (
-                    (tableId == null && columnIdRaw.equals(text))
-                    || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
-                ))
-            {
-                saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
-                return;
-            }
-            else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
-                    text.startsWith("@entire ") &&
-                    ((tableId == null && ("@entire " + columnIdRaw).equals(text))
-                    || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
-            {
-                saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
-                return;
-            }
-        }
                 
         Optional<@Value Number> number = Utility.parseNumberOpt(text);
         if (number.isPresent())
@@ -1108,10 +1035,62 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
         else
         {
-            if (savePrefix != null)
-                saver.saveOperand(savePrefix.getSecond().apply(text), this, this, this::afterSave);
-            else
-                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), this, this, this::afterSave);
+            for (ColumnReference availableColumn : availableColumns)
+            {
+                TableId tableId = availableColumn.getTableId();
+                String columnIdRaw = availableColumn.getColumnId().getRaw();
+                if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
+                        (
+                                (tableId == null && columnIdRaw.equals(text))
+                                        || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
+                        ))
+                {
+                    saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
+                    return;
+                }
+                else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
+                        text.startsWith("@entire ") &&
+                        ((tableId == null && ("@entire " + columnIdRaw).equals(text))
+                                || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
+                {
+                    saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
+                    return;
+                }
+            }
+
+            ImmutableList<FunctionDefinition> allFunctions = ImmutableList.of();
+            TypeManager typeManager = parent.getEditor().getTypeManager();
+            try
+            {
+                allFunctions = FunctionList.getAllFunctions(typeManager.getUnitManager());
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+
+            for (FunctionDefinition function : allFunctions)
+            {
+                if (function.getName().equals(text))
+                {
+                    saver.saveOperand(new StandardFunction(function), this, this, this::afterSave);
+                    return;
+                }
+            }
+
+            for (TaggedTypeDefinition taggedType : typeManager.getKnownTaggedTypes().values())
+            {
+                for (TagType<JellyType> tag : taggedType.getTags())
+                {
+                    if (tag.getName().equals(text))
+                    {
+                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), text), this, this, this::afterSave);
+                        return;
+                    }
+                }
+            }
+
+            saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), this, this, this::afterSave);
         }
         
     }
