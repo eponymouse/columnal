@@ -78,7 +78,7 @@ public interface FocusOwnerTrait extends FxRobotInterface
     
     default public void checkDialogFocused(String msg)
     {
-        Window window = getRealFocusedWindow();
+        Window window = fxGetRealFocusedWindow();
         assertTrue(msg + " " + window + " " + window.getClass(), window.getClass().toString().contains("Dialog"));
     }
     

@@ -16,6 +16,7 @@ import log.Log;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import records.gui.dtf.DisplayDocument;
 import records.gui.dtf.DocumentTextField;
@@ -42,7 +43,14 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class TestDocumentTextField extends FXApplicationTest
 {
-    private final DocumentTextField field = new DocumentTextField();
+    @SuppressWarnings("nullness")
+    private DocumentTextField field;
+    
+    @Before
+    public void makeField()
+    {
+        field = TestUtil.fx(() -> new DocumentTextField());
+    }
     
     @Property(trials=5, shrink = false)
     public void testBasic(@From(GenString.class) String s, @From(GenRandom.class) Random r)
@@ -59,26 +67,26 @@ public class TestDocumentTextField extends FXApplicationTest
             windowToUse.sizeToScene();
             field.setDocument(new DisplayDocument(sFinal));
         });
-        assertThat(field.getWidth(), Matchers.greaterThanOrEqualTo(100.0));
-        assertThat(field.getHeight(), Matchers.greaterThanOrEqualTo(10.0));
+        assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
+        assertThat(TestUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
         
         String unfocused = getText();
         // While unfocused, could be truncated for efficiency:
         assertThat(s, Matchers.startsWith(unfocused));
         
         clickOn(field);
-        assertTrue(field.isFocused());
+        assertTrue(TestUtil.fx(() -> field.isFocused()));
         String focused = getText();
         // Once focused, should have complete text:
         assertEquals(s, focused);
         
         push(KeyCode.HOME);
-        assertEquals(0, field._test_getCaretPosition());
+        assertEquals((Integer)0, TestUtil.<Integer>fx(() -> field._test_getCaretPosition()));
         int moveRightTo = s.isEmpty() ? 0 : r.nextInt(Math.min(s.length(), 25));
         for (int i = 0; i < moveRightTo; i++)
         {
             push(KeyCode.RIGHT);
-            assertEquals(i + 1, field._test_getCaretPosition());
+            assertEquals(Integer.valueOf(i + 1), TestUtil.<Integer>fx(() -> field._test_getCaretPosition()));
         }
         
         write("a z");

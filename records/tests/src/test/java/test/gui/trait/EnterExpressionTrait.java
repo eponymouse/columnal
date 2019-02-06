@@ -5,6 +5,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.Test;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.api.FxToolkit;
 import records.data.datatype.TypeManager;
@@ -294,9 +295,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         
         // Move to top:
         String prev = "\u0000";
-        while (!Objects.equals(prev, autoComplete._test_getSelectedContent()))
+        while (!Objects.equals(prev, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = autoComplete._test_getSelectedContent();
+            prev = TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
             push(KeyCode.PAGE_UP);
         }
         
@@ -304,15 +305,15 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         
         // Now scroll down until we find it, or reach end:
         prev = "\u0000";
-        while (!Objects.equals(prev, autoComplete._test_getSelectedContent())
-                && !Objects.equals(content, autoComplete._test_getSelectedContent()))
+        while (!Objects.equals(prev, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()))
+                && !Objects.equals(content, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = autoComplete._test_getSelectedContent();
+            prev = TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
             if (prev != null)
                 all.add(prev);
             push(KeyCode.DOWN);
         }
         
-        assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, autoComplete._test_getSelectedContent());
+        assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()));
     }
 }

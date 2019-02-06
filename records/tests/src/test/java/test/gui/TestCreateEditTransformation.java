@@ -56,6 +56,7 @@ import utility.Utility.ListExList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -93,6 +94,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         private final ColumnDetails sourceColumn;
         private final List<AggCalculation> calculations;
 
+        @OnThread(Tag.Any)
         private AggColumns(ColumnDetails sourceColumn, List<AggCalculation> calculations)
         {
             this.sourceColumn = sourceColumn;
@@ -238,6 +240,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         return aggColumns;
     }
 
+    @OnThread(Tag.Simulation)
     private List<AggCalculation> makeCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
     {
         List<List<Either<String, @Value Object>>> groups = new ArrayList<>();
@@ -259,6 +262,8 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
 
         Function<String, ColumnId> name = s -> new ColumnId(columnDetails.name.getRaw() + " " + s);
+
+        Comparator<@Value Object> valueComparator = DataTypeUtility.getValueComparator();
         
         return columnDetails.dataType.apply(new DataTypeVisitorEx<List<AggCalculation>, InternalException>()
         {
@@ -281,7 +286,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("Min"),
                             new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), groupExp),
                             columnDetails.dataType,
-                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(DataTypeUtility.getValueComparator()).orElse(null)))
+                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(valueComparator).orElse(null)))
                     ));
                 }
                 if (random.nextBoolean())
@@ -290,7 +295,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("Max"),
                             new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum"))), groupExp),
                             columnDetails.dataType,
-                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().max(DataTypeUtility.getValueComparator()).orElse(null)))
+                            perGroup.apply(g -> withEithers(g, gr -> gr.stream().max(valueComparator).orElse(null)))
                     ));
                 }
                 if (random.nextBoolean())

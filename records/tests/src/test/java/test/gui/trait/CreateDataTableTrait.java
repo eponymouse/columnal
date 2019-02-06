@@ -22,6 +22,8 @@ import records.importers.ClipboardUtils.RowRange;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
 import test.TestUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -49,6 +51,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         }
     }
     
+    @OnThread(Tag.Simulation)
     public default void createDataTable(MainWindowActions mainWindowActions, CellPosition targetPos, String tableName, List<ColumnDetails> columns) throws Exception
     {
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();

@@ -266,14 +266,14 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Pick a table:
         Table table = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
         @SuppressWarnings("nullness")
-        @NonNull TableDisplay tableDisplay = (TableDisplay)table.getDisplay();
+        @NonNull TableDisplay tableDisplay = (TableDisplay)TestUtil.fx(() -> table.getDisplay());
         
-        CellPosition original = tableDisplay.getPosition();
+        CellPosition original = TestUtil.fx(() -> tableDisplay.getPosition());
         keyboardMoveTo(virtualGrid, original.offsetByRowCols(-1, -1));
         CellPosition dest = original.offsetByRowCols(r.nextInt(5) - 2, r.nextInt(5) - 2);
         
-        Rectangle2D start = FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original)));
-        Rectangle2D end = FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest)));
+        Rectangle2D start = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
+        Rectangle2D end = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
         
         Point2D dragFrom = new Point2D(Math.round(start.getMinX() + 2), Math.round(start.getMinY() + 2));
         Point2D dragTo = new Point2D(Math.round(end.getMinX() + 2),  Math.round(end.getMinY() + 2));
@@ -286,10 +286,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         sleep(1000);
         
         // Check table actually moved:
-        assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, tableDisplay.getPosition());
+        assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, TestUtil.fx(() -> tableDisplay.getPosition()));
         TextField tableNameTextField = (TextField)withItemInBounds(lookup(".table-name-text-field"), virtualGrid, new RectangleBounds(dest, dest), (n, p) -> {});
         assertNotNull(tableNameTextField);
-        assertEquals(table.getId().getRaw(), tableNameTextField.getText());
+        assertEquals(table.getId().getRaw(), TestUtil.fx(() -> tableNameTextField.getText()));
         // TODO check drag overlays
     }
 }

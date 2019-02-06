@@ -1345,6 +1345,7 @@ public class TestUtil
         return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> fx(() -> ImmutableList.copyOf(s.getStyleClass())));
     }
 
+    @OnThread(Tag.Simulation)
     public static List<Either<String, @Value Object>> getCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
     {
         List<Either<String, @Value Object>> r = new ArrayList<>();
@@ -1369,7 +1370,7 @@ public class TestUtil
     public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, @Nullable Point2D target, EventType<E> eventType, Runnable during)
     {
         Set<Node> allNodes = robot.lookup(n -> {
-            Bounds screen = n.localToScreen(n.getBoundsInLocal());
+            Bounds screen = fx(() -> n.localToScreen(n.getBoundsInLocal()));
             return target == null || screen.contains(target);
         }).queryAll();
 

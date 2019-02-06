@@ -32,6 +32,8 @@ import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterExpressionTrait;
 import test.gui.trait.PopupTrait;
 import test.gui.util.FXApplicationTest;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -39,10 +41,12 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
+@OnThread(Tag.Simulation)
 public class TestExpressionEditorDelete extends FXApplicationTest
     implements ClickTableLocationTrait, EnterExpressionTrait, ClickOnTableHeaderTrait, PopupTrait
 {
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     private MainWindowActions mainWindowActions;
     private final CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
 
