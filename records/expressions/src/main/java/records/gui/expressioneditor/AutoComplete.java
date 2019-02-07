@@ -99,7 +99,7 @@ public class AutoComplete<C extends Completion>
          * @param newCodepoint The new codepoint.
          * @return
          */
-        public boolean differentAlphabet(String existing, int newCodepoint);
+        public boolean requiresNewSlot(String existing, int newCodepoint);
     }
 
     /**
@@ -276,7 +276,7 @@ public class AutoComplete<C extends Completion>
                     Log.log(e);
                 }
                 if (codepoints.length >= 1 &&
-                        (inNextAlphabet.differentAlphabet(prefix, cur)
+                        (inNextAlphabet.requiresNewSlot(prefix, cur)
                                 || (completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
                                 && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix) == ShowStatus.DIRECT_MATCH))
                         ))
@@ -455,7 +455,7 @@ public class AutoComplete<C extends Completion>
     public boolean matchingAlphabets(String lhs, String rhs)
     {
         return lhs.isEmpty() || rhs.isEmpty() || 
-            !alphabetCheck.differentAlphabet(lhs, rhs.codePoints().findFirst().orElse(0));
+            !alphabetCheck.requiresNewSlot(lhs, rhs.codePoints().findFirst().orElse(0));
     }
 
 

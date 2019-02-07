@@ -213,12 +213,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testSimple(String expressionSrc) throws Exception
     {
-        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function)", ""));
+        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function|apply)", ""));
     }
     
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
-        DummyManager dummyManager = new DummyManager();
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager());
         
         testEntry(new ExpressionValue(
@@ -427,6 +427,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testNestedTupleType() throws Exception
     {
         testSimple("@call @function asType(type{((Number, Boolean), Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
+    }
+
+    @Test
+    public void testMaybeType() throws Exception
+    {
+        testSimple("@call @function asType(type{[((Text, @apply Maybe(Boolean)), @apply Maybe(@apply Maybe(Date)))]}, @call @function from text(\"[]\"))");
     }
     
     @Test

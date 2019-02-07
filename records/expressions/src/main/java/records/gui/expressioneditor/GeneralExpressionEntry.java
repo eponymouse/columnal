@@ -14,12 +14,10 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.ColumnId;
 import records.data.TableId;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
@@ -44,7 +42,6 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.ExFunction;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -53,11 +50,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -121,7 +116,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         varDeclCompletion = new VarDeclCompletion();
         
 
-        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::requiresNewSlot);
 
         updateNodes();
         updateGraphics();

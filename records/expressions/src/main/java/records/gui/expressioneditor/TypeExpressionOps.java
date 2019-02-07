@@ -135,15 +135,21 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 
-    public static boolean differentAlphabet(String current, int newCodepoint)
+    public static boolean requiresNewSlot(String current, int newCodepoint)
     {
-        return OperandOps.alphabetDiffers(Arrays.asList(TypeAlphabet.values()), current, newCodepoint);
+        return OperandOps.requiresNewSlot(Arrays.asList(TypeAlphabet.values()), current, newCodepoint);
     }
 
     private static enum TypeAlphabet implements Alphabet
     {
         WORD(c -> Character.isAlphabetic(c) || c == ' '),
-        BRACKET(Alphabet.containsCodepoint("(){}[]")),
+        BRACKET(Alphabet.containsCodepoint("(){}[]")) {
+            @Override
+            public boolean requiresNewSlot(String current, int nextCodepoint)
+            {
+                return true;
+            }
+        },
         OPERATOR(Alphabet.containsCodepoint(","));
 
         private Predicate<Integer> match;
@@ -158,5 +164,13 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
         {
             return match.test(codepoint);
         }
+
+        @Override
+        public boolean requiresNewSlot(String current, int nextCodepoint)
+        {
+            return false;
+        }
+
+
     }
 }

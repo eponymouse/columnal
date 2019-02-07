@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.TypeId;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
@@ -26,7 +25,6 @@ import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
-import records.transformations.expression.type.IdentTypeExpression;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -83,7 +81,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                 .<Completion>map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), null))
         ).collect(ImmutableList.<Completion>toImmutableList());
         
-        this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::requiresNewSlot);
 
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {

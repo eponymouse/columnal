@@ -127,16 +127,22 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 
-    public static boolean differentAlphabet(String current, int newCodepoint)
+    public static boolean requiresNewSlot(String current, int newCodepoint)
     {
-        return OperandOps.alphabetDiffers(Arrays.asList(UnitAlphabet.values()), current, newCodepoint);
+        return OperandOps.requiresNewSlot(Arrays.asList(UnitAlphabet.values()), current, newCodepoint);
     }
     
     private static enum UnitAlphabet implements Alphabet
     {
         WORD(c -> Character.isAlphabetic(c) || Character.getType(c) == Character.CURRENCY_SYMBOL || c == ' '),
         DIGIT(Character::isDigit),
-        BRACKET(Alphabet.containsCodepoint("(){}")),
+        BRACKET(Alphabet.containsCodepoint("(){}")) {
+            @Override
+            public boolean requiresNewSlot(String current, int nextCodepoint)
+            {
+                return true;
+            }
+        },
         OPERATOR(OPERATOR_ALPHABET::contains);
         
         private Predicate<Integer> match;
@@ -151,5 +157,13 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
         {
             return match.test(codepoint);
         }
+
+        @Override
+        public boolean requiresNewSlot(String current, int nextCodepoint)
+        {
+            return false;
+        }
+
+
     }
 }

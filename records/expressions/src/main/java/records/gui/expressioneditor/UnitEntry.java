@@ -3,7 +3,6 @@ package records.gui.expressioneditor;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
@@ -12,14 +11,12 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.EndCompletion;
-import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.Either;
@@ -29,7 +26,6 @@ import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
 
@@ -46,7 +42,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
         super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, Stream<Completion>> getSuggestions = this::getSuggestions;
-        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.DISALLOW, UnitExpressionOps::requiresNewSlot);
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
             completing = false;

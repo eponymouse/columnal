@@ -198,7 +198,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 
-    public static boolean differentAlphabet(String current, int newCodepoint)
+    public static boolean requiresNewSlot(String current, int newCodepoint)
     {
         // Very special case: @entire can be followed by any identifier
         if (current.startsWith("@entire "))
@@ -215,14 +215,20 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
             return false;
         }
         
-        return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), current, newCodepoint);
+        return OperandOps.requiresNewSlot(Arrays.asList(ExpressionAlphabet.values()), current, newCodepoint);
     }
 
     private static enum ExpressionAlphabet implements Alphabet
     {
         WORD(c -> Character.isAlphabetic(c) || c == ' ' || c == '$' /*for declarations */),
         DIGIT_OR_DOT(c -> Character.isDigit(c) || c == '.'),
-        BRACKET(Alphabet.containsCodepoint("(){}[]")),
+        BRACKET(Alphabet.containsCodepoint("(){}[]")) {
+            @Override
+            public boolean requiresNewSlot(String current, int nextCodepoint)
+            {
+                return true;
+            }
+        },
         QUOTE(Alphabet.containsCodepoint("\"")),
         OPERATOR(OPERATOR_ALPHABET::contains);
 
@@ -238,5 +244,13 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
         {
             return match.test(codepoint);
         }
+
+        @Override
+        public boolean requiresNewSlot(String current, int nextCodepoint)
+        {
+            return false;
+        }
+
+
     }
 }

@@ -218,16 +218,23 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SAVER extends Cli
     {
         public boolean test(int codepoint);
         
+        public boolean requiresNewSlot(String current, int nextCodepoint);
+        
         public static Predicate<Integer> containsCodepoint(String codepoints)
         {
             return a -> codepoints.codePoints().anyMatch(b -> a == b);
         }    
     }
-    
-    public static boolean alphabetDiffers(List<Alphabet> alphabets, String current, int nextCodepoint)
+
+    /**
+     * Checks if given the list of alphabets, and a string of current content,
+     * the given codepoint would end up in its own slot if typed next.
+     */
+    public static boolean requiresNewSlot(List<Alphabet> alphabets, String current, int nextCodepoint)
     {
         @Nullable Alphabet curAlphabet = alphabets.stream().filter(a -> !current.isEmpty() && a.test(current.codePointAt(0))).findFirst().orElse(null);
         @Nullable Alphabet nextAlphabet = alphabets.stream().filter(a -> a.test(nextCodepoint)).findFirst().orElse(null);
-        return !current.isEmpty() && !Objects.equals(curAlphabet, nextAlphabet);
+        return !current.isEmpty() && (!Objects.equals(curAlphabet, nextAlphabet)
+            || (curAlphabet != null && curAlphabet.requiresNewSlot(current, nextCodepoint)));
     }
 }
