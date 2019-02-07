@@ -50,6 +50,12 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     }
 
     @Override
+    public Stream<ConsecutiveChild<?, ?>> _test_getAllChildren()
+    {
+        return unit._test_getAllChildren();
+    }
+
+    @Override
     public void save(TypeSaver saver)
     {
         saver.saveOperand(new UnitLiteralTypeExpression(unit.save(saver.isShowingErrors())), this, this, c -> {});

@@ -129,6 +129,24 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         testBackspaceRetype("123 + 456", 3, 3,"456", r);
     }
     
+    @Property(trials = 2)
+    public void testRetypeListTypeContent(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("type{[Text]}", 2, 4, "Text", r);
+    }
+
+    @Property(trials = 2)
+    public void testRetypeParameter(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("@call @function sum([2])", 5, 3, "[2]", r);
+    }
+
+    @Property(trials = 2)
+    public void testRetypeParameter2(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("@call @function sum([])", 4, 2, "[]", r);
+    }
+    
     // TODO more retype tests
 
     @Property(trials = 2)
@@ -143,7 +161,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
         ExpressionEditor expressionEditor = enter(originalExp, r);
 
-        ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
+        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
 
         TestUtil.fx_(() -> {
             children.get(slotIndex).focus(Focus.LEFT);
@@ -168,7 +186,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
         ExpressionEditor expressionEditor = enter(originalExp, r);
 
-        ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
+        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
 
         if (deleteBefore == children.size())
         {
@@ -213,7 +231,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         
         assertEquals(originalExp, TestUtil.fx(() -> expressionEditor.save()));
 
-        ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
+        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
 
         if (deleteBefore > children.size())
             throw new RuntimeException("Target " + deleteBefore + " out of bounds: " + children.stream().map(c -> "  " + c.toString()).collect(Collectors.joining("\n")));
@@ -245,7 +263,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager());
         ExpressionEditor expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager()), r);
 
-        ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren());
+        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
 
         if (deleteAfter == -1)
         {

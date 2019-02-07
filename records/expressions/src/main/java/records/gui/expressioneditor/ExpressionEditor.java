@@ -306,9 +306,4 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     {
         return Expression.parse(null, src, getTypeManager());
     }
-
-    public ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> _test_getAllChildren()
-    {
-        return getAllChildren();
-    }
 }

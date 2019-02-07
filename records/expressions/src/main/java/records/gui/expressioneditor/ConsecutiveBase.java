@@ -1031,4 +1031,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();
     public static final OperandOps<TypeExpression, TypeSaver> TYPE_OPS = new TypeExpressionOps();
+
+    public Stream<ConsecutiveChild<?, ?>> _test_getAllChildren()
+    {
+        return getAllChildren().stream().<ConsecutiveChild<?, ?>>flatMap(c ->
+                c instanceof TreeLiteralNode
+                        ? ((TreeLiteralNode)c)._test_getAllChildren()
+                        : Stream.of(c));
+    }
 }

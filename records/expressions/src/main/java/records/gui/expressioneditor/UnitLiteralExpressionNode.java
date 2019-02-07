@@ -145,4 +145,10 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     {
         return unit.isSelectionFocused();
     }
+
+    @Override
+    public Stream<ConsecutiveChild<?, ?>> _test_getAllChildren()
+    {
+        return unit._test_getAllChildren();
+    }
 }

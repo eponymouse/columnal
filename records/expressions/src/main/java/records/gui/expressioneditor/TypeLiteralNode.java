@@ -205,4 +205,10 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     {
         return type.isSelectionFocused();
     }
+
+    @Override
+    public Stream<ConsecutiveChild<?, ?>> _test_getAllChildren()
+    {
+        return type._test_getAllChildren();
+    }
 }

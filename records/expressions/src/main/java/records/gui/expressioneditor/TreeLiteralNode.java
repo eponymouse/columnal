@@ -155,4 +155,6 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     {
         // We are rich node so we don't set prompts
     }
+
+    public abstract Stream<ConsecutiveChild<?, ?>> _test_getAllChildren();
 }
