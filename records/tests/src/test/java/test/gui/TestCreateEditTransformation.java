@@ -6,9 +6,15 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -27,6 +33,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.expressioneditor.AutoComplete;
+import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -173,7 +181,32 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             write("Src Data");
             push(KeyCode.ENTER);
             TestUtil.sleep(200);
-            write("Split Col");
+            if (r.nextBoolean())
+            {
+                write("Split Col");
+            }
+            else
+            {
+                write("Spl");
+                push(KeyCode.ENTER);
+                TextField field = getFocusOwner(TextField.class);
+                assertEquals("Split Col", field.getText());
+                assertEquals("Split Col".length(), field.getCaretPosition());
+                MatcherAssert.assertThat(listWindows(), Matchers.everyItem(new BaseMatcher<Window>()
+                {
+                    @Override
+                    public boolean matches(Object o)
+                    {
+                        return !(o instanceof AutoComplete.AutoCompleteWindow) || !((Window)o).isShowing();
+                    }
+
+                    @Override
+                    public void describeTo(Description description)
+                    {
+                        description.appendText("Found showing auto-complete window");
+                    }
+                }));
+            }
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             TestUtil.sleep(3000);
