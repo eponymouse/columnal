@@ -220,7 +220,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 
     private static enum ExpressionAlphabet implements Alphabet
     {
-        WORD(c -> Character.isAlphabetic(c) || c == ' ' || c == '$' /*for declarations */),
+        WORD(c -> Character.isAlphabetic(c) || c == ' ' || c == '$' /*for declarations */ || c == ':' /* for scoping */),
         DIGIT_OR_DOT(c -> Character.isDigit(c) || c == '.'),
         BRACKET(Alphabet.containsCodepoint("(){}[]")) {
             @Override

@@ -104,7 +104,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    private final ArrayList<ColumnReference> availableColumns = new ArrayList<>();
+    private final ImmutableList<ColumnReference> availableColumns;
     
     
     GeneralExpressionEntry(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
@@ -114,7 +114,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
         varDeclCompletion = new VarDeclCompletion();
-        
+        availableColumns = parent.getEditor().getAvailableColumnReferences().collect(ImmutableList.<ColumnReference>toImmutableList());
 
         this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::requiresNewSlot);
 
@@ -159,7 +159,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         return Utility.streamNullable(container);
     }
 
-    @RequiresNonNull({"unitCompletion", "stringCompletion", "varDeclCompletion", "parent"})
+    @RequiresNonNull({"unitCompletion", "stringCompletion", "varDeclCompletion", "parent", "availableColumns"})
     private Stream<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -181,10 +181,8 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         addAllFunctions(r);
         r.add(new SimpleCompletion("true", null));
         r.add(new SimpleCompletion("false", null));
-        availableColumns.clear();
-        for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
+        for (ColumnReference column : availableColumns)
         {
-            availableColumns.add(column);
             r.add(new ColumnCompletion(column));
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
@@ -678,17 +676,13 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
                 // Important to call this before adding brackets:
                 completing = true;
-                if (tc.tagInfo.getTagInfo().getInner() != null)
+                if (tc.tagInfo.getTagInfo().getInner() != null && rest.isEmpty())
                 {
                     parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
-                }
-                else
-                {
-                    if (positionCaret.isPresent())
-                        parent.focusRightOf(GeneralExpressionEntry.this, Either.right(positionCaret.getAsInt()), false);
+                    return tc.tagInfo.getTagInfo().getName();
                 }
                 
-                return tc.tagInfo.getTagInfo().getName();
+                newText = tc.tagInfo.getTagInfo().getName();
             }
             else if (c instanceof ColumnCompletion)
             {
@@ -1077,9 +1071,9 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             {
                 for (TagType<JellyType> tag : taggedType.getTags())
                 {
-                    if (tag.getName().equals(text))
+                    if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + ":" + tag.getName()))
                     {
-                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), text), this, this, this::afterSave);
+                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), this, this, this::afterSave);
                         return;
                     }
                 }

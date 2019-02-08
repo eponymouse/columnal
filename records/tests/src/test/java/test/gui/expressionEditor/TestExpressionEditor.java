@@ -112,25 +112,33 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expressionValue.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
             
-            // Get rid of popups:
-            moveAndDismissPopupsAtPos(point(".ok-button"));
-            clickOn(MouseButton.PRIMARY);
-            // Now close dialog, and check for equality;
-            View view = correctTargetWindow().lookup(".view").query();
-            if (view == null)
+            // We check this twice, once for original entry, once for no-op edit:
+            for (int i = 0; i < 2; i++)
             {
-                assertNotNull(view);
-                return;
+                // Get rid of popups:
+                moveAndDismissPopupsAtPos(point(".ok-button"));
+                clickOn(MouseButton.PRIMARY);
+                // Now close dialog, and check for equality;
+                View view = correctTargetWindow().lookup(".view").query();
+                if (view == null)
+                {
+                    assertNotNull(view);
+                    return;
+                }
+                TestUtil.sleep(500);
+                assertNull(lookup(".ok-button").tryQuery().orElse(null));
+                Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
+    
+                // Check expressions match:
+                Expression expression = calculate.getCalculatedColumns().values().iterator().next();
+                assertEquals("Loop " + i, expressionValue.expression, expression);
+                // Just in case equals is wrong, check String comparison:
+                assertEquals("Loop " + i, expressionValue.expression.toString(), expression.toString());
+    
+                // Check that a no-op edit gives same expression:
+                if (i == 0)
+                    clickOn("DestCol");
             }
-            TestUtil.sleep(500);
-            assertNull(lookup(".ok-button").tryQuery().orElse(null));
-            Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
-
-            // Check expressions match:
-            Expression expression = calculate.getCalculatedColumns().values().iterator().next();
-            assertEquals(expressionValue.expression, expression);
-            // Just in case equals is wrong, check String comparison:
-            assertEquals(expressionValue.expression.toString(), expression.toString());
 
             // Now check values match:
             showContextMenu(".table-display-table-title.transformation-table-title")
@@ -142,7 +150,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
             List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
             TestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
-
+            
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
             TestUtil.sleep(2000);
@@ -221,6 +229,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager());
         
+        // Check once using structured entry:
         testEntry(new ExpressionValue(
             DataType.BOOLEAN, // Type is unused here
             ImmutableList.of(),
@@ -230,7 +239,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             null
         ), new Random(0));
         
-        
+        // And once using plain text entry:
         assertEquals(expression, plainEntry(plainEntry));
     }
 
@@ -415,6 +424,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testEmpties() throws Exception
     {
         testSimple("(\"\"=\"\") & ([] <> [])");
+    }
+    
+    @Test
+    public void testOverlappingTagNames() throws Exception
+    {
+        testSimple("@call @function first(@match (@if (@tag A:Single = @tag A:Single) @then @call @function from text to(type{B}, \"Single\") @else @tag B:Single @endif) @case @tag B:Single @given @call @function from text to(type{Boolean}, \"true\") @then @call @function from text to(type{(Nested, Number {cm})}, \"(A(Single),-2147483648)\") @endmatch)");
     }
     
     @Test

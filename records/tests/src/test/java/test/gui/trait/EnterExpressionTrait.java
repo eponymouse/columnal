@@ -162,12 +162,15 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             if (multipleTagsOfThatName && tag.getTypeName() != null)
                 write(tag.getTypeName().getRaw() + ":");
             write(tagName, DELAY);
-            push(KeyCode.ENTER);
-            if (tag._test_hasInner())
+            if (r.nextBoolean())
             {
-                // Get rid of brackets; if in a call expression, we will add them again:
-                push(KeyCode.BACK_SPACE);
-                push(KeyCode.DELETE);
+                push(KeyCode.ENTER);
+                if (tag._test_hasInner())
+                {
+                    // Get rid of brackets; if in a call expression, we will add them again:
+                    push(KeyCode.BACK_SPACE);
+                    push(KeyCode.DELETE);
+                }
             }
         }
         else if (c == MatchExpression.class)
