@@ -256,8 +256,9 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
             textField.setText(textField.getText().trim() + rightCast.textField.getText().trim());
             if (rightCast.textField.isFocused())
             {
+                int rightPos = rightCast.textField.getCaretPosition();
                 textField.requestFocus();
-                textField.positionCaret(origLength);
+                textField.positionCaret(origLength + rightPos);
             }
             return true;
         }
