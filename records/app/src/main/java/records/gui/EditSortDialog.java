@@ -53,6 +53,7 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
 
+import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,7 +61,7 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Direction>>>
 {
-    private final ImmutableList<Table> possibleTables;
+    private final @Nullable Table srcTable;
     private final @Nullable RecordSet dataWithColumns;
     private final SortList sortList;
 
@@ -69,7 +70,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         super(parent);
         setResizable(true);
         initModality(Modality.NONE);
-        possibleTables = srcTable == null ? ImmutableList.of(destTable) : ImmutableList.of(srcTable, destTable);
+        this.srcTable = srcTable;
         @Nullable RecordSet d = null;
         try
         {
@@ -101,7 +102,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         });
         setOnShowing(e -> {
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
-            parent.enableColumnPickingMode(lastScreenPos, p -> possibleTables.contains(p.getFirst()), t -> {
+            parent.enableColumnPickingMode(lastScreenPos, p -> Objects.equals(srcTable, p.getFirst()) || Objects.equals(destTable, p.getFirst()),t -> {
                 sortList.pickColumnIfEditing(t);
             });
         });
@@ -183,7 +184,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
-                (s, q) -> possibleTables.stream().flatMap(t -> {
+                (s, q) -> Utility.streamNullable(srcTable).flatMap(t -> {
                     try
                     {
                         return t.getData().getColumns().stream();
