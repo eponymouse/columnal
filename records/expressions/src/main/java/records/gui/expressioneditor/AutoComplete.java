@@ -870,6 +870,8 @@ public class AutoComplete<C extends Completion>
                     @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
                     if (newContent != null)
                         setContentDirect(newContent, true);
+                    hide();
+                    instruction.hide();
                 }
             });
 
