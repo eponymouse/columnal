@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.QuickFix;
@@ -20,7 +21,7 @@ public interface ErrorDisplayer<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     
     public void showType(String type);
 
-    public boolean isShowingError();
+    public boolean isShowingError(@UnknownInitialization(Object.class) ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT> this);
     
     public void cleanup();
 

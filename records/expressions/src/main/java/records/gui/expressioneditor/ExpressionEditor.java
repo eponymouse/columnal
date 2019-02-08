@@ -285,6 +285,10 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<Expression, ExpressionSaver> child)
     {
+        // If we're non-blank and no error, no need to show until they type:
+        if (!child.isBlank() && !child.isShowingError())
+            return false;
+        
         // We show immediately if we are preceded by an operator:
         int index = Utility.indexOfRef(this.children, child);
         if (index == 0)
