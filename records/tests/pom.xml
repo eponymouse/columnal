@@ -308,7 +308,7 @@
                                     <additionalClasspathElement>${project.basedir}/target/java-extensions/jfxrt.jar</additionalClasspathElement>
                                 </additionalClasspathElements>
                                 <!-- -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999  -->
-                                <argLine>-Xmx3G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1200-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
+                                <argLine>-Xmx2G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1200-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
                             </configuration>
                         </plugin>
                     </plugins>
