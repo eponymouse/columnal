@@ -154,10 +154,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             ConstructorExpression tag = (ConstructorExpression) expression;
             String tagName = tag.getName();
-            boolean multipleTagsOfThatName = 
-                typeManager.getKnownTaggedTypes().values().stream().flatMap(ttd -> ttd.getTags().stream().map(tt -> tt.getName()))
-                    .filter(n -> n.equals(tagName))
-                    .count() > 1;
+            boolean multipleTagsOfThatName = typeManager.ambiguousTagName(tagName);
             
             if (multipleTagsOfThatName && tag.getTypeName() != null)
                 write(tag.getTypeName().getRaw() + ":");

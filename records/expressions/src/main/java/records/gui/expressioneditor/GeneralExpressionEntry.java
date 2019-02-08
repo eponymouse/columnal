@@ -656,11 +656,13 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 else
                 {
                     newText = content;
+                    textField.setEditable(false);
                 }
             }
             else if (c instanceof OperatorCompletion)
             {
                 newText = ((OperatorCompletion) c).operator.getContent();
+                textField.setEditable(false);
             }
             else if (c instanceof FunctionCompletion)
             {
@@ -676,13 +678,20 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
                 // Important to call this before adding brackets:
                 completing = true;
+
+                String tagName = tc.tagInfo.getTagInfo().getName();
+                if (parent.getEditor().getTypeManager().ambiguousTagName(tagName))
+                    newText = tc.tagInfo.getTypeName().getRaw() + ":" + tagName;
+                else
+                    newText = tagName;
+                
                 if (tc.tagInfo.getTagInfo().getInner() != null && rest.isEmpty())
                 {
                     parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
-                    return tc.tagInfo.getTagInfo().getName();
+                    return newText;
                 }
                 
-                newText = tc.tagInfo.getTagInfo().getName();
+                
             }
             else if (c instanceof ColumnCompletion)
             {
@@ -752,7 +761,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             return GeneralExpressionEntry.this.isFocused();
         }
     }
-    
+
     private static boolean isRoundBracket(ConsecutiveChild<Expression, ExpressionSaver> item)
     {
         return item instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)item).textField.getText().equals(Keyword.OPEN_ROUND.getContent());
@@ -911,7 +920,10 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
     public static SingleLoader<Expression, ExpressionSaver> load(ConstructorExpression constructorExpression)
     {
-        return p -> new GeneralExpressionEntry(constructorExpression.getName(), p);
+        return p -> new GeneralExpressionEntry(
+            p.getEditor().getTypeManager().ambiguousTagName(constructorExpression.getName()) && constructorExpression.getTypeName() != null
+                ? constructorExpression.getTypeName().getRaw() + ":" + constructorExpression.getName()
+                : constructorExpression.getName(), p);
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(StandardFunction standardFunction)
@@ -979,7 +991,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     public void save(ExpressionSaver saver)
     {
         String text = textField.getText().trim();
-        textField.setEditable(true);
         setPseudoClass(GeneralPseudoclass.STANDARD);
         
         if (text.isEmpty())
@@ -1008,6 +1019,8 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 return;
             }
         }
+
+        textField.setEditable(true);
                 
         Optional<@Value Number> number = Utility.parseNumberOpt(text);
         if (number.isPresent())

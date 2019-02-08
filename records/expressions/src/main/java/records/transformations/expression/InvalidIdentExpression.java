@@ -32,7 +32,6 @@ import java.util.stream.Stream;
  */
 public class InvalidIdentExpression extends NonOperatorExpression
 {
-    // TODO add resolver listener
     private final String text;
 
     public InvalidIdentExpression(String text)

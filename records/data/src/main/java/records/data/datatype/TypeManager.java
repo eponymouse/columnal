@@ -421,6 +421,12 @@ public class TypeManager
         allKnownTypes.putAll(builtInTypes);
     }
 
+    public boolean ambiguousTagName(String tagName)
+    {
+        return getKnownTaggedTypes().values().stream().flatMap(t -> t.getTags().stream().map(tt -> tt.getName()))
+            .filter(n -> n.equals(tagName)).count() > 1;
+    }
+
     public static class TagInfo
     {
         public final TaggedTypeDefinition wholeType;

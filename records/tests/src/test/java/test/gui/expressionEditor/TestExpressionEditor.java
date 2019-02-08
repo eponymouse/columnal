@@ -23,6 +23,7 @@ import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.Transformation;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.View;
 import records.gui.grid.RectangleBounds;
@@ -163,10 +164,10 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         }
     }
 
-    public @Nullable Expression plainEntry(String expressionSrc) throws Exception
+    public @Nullable Expression plainEntry(String expressionSrc, TypeManager typeManager) throws Exception
     {
         TestUtil.fx_(() -> {windowToUse = new Stage();});
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of(), 0));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new KnownLengthRecordSet(ImmutableList.of(), 0));
         try
         {
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
@@ -221,7 +222,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testSimple(String expressionSrc) throws Exception
     {
-        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function|apply)", ""));
+        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function|apply|tag)", ""));
     }
     
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
@@ -240,7 +241,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         ), new Random(0));
         
         // And once using plain text entry:
-        assertEquals(expression, plainEntry(plainEntry));
+        assertEquals(expression, plainEntry(plainEntry, dummyManager.getTypeManager()));
     }
 
     @Test
