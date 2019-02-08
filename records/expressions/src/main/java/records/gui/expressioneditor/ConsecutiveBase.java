@@ -437,9 +437,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return open == 0;
     }
 
-
-    public static enum OperatorOutcome { KEEP, BLANK }
-    
     public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SAVER> rightOf, String initialContent, OptionalInt caretPos)
     {
         // if coming from blank, must create blank
@@ -480,28 +477,20 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         // all our children have EXPRESSION as inner type:
         withChildIndex(child, index ->
         {
-            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SAVER>) child).isBlank();
             if (index + 1 < children.size())
             {
-                if (leavingBlank)
-                {
-                    ConsecutiveChild<@NonNull EXPRESSION, SAVER> right = children.get(index + 1);
-                    if (right.availableForFocus())
-                    {
-                        position.either_(right::focus, right::focus);
-                    }
-                    else
-                        children.add(index + 2, focusWhenShown(makeBlankChild(true)));
-                }
+                ConsecutiveChild<@NonNull EXPRESSION, SAVER> right = children.get(index + 1);
+                ConsecutiveChild<@NonNull EXPRESSION, SAVER> rightOfRight = index + 2 < children.size() ? children.get(index + 2) : null;
+                if (right.availableForFocus())
+                    position.either_(right::focus, right::focus);
+                else if (rightOfRight != null && rightOfRight.availableForFocus())
+                    position.either_(rightOfRight::focus, rightOfRight::focus);
                 else
-                    children.add(index + 1, focusWhenShown(makeBlankChild(true)));
+                    children.add(index + 1, focusWhenShown(makeBlankChild(false)));
             }
             else
             {
-                if (leavingBlank)
-                    parentFocusRightOfThis(position, becauseOfTab);
-                else
-                    children.add(index + 1, focusWhenShown(makeBlankChild(true)));
+                parentFocusRightOfThis(position, becauseOfTab);
             }
         });
     }
@@ -528,38 +517,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             
             if (index > 0)
             {
-                if (leavingBlank)
-                {
-                    if (children.get(index - 1).availableForFocus())
-                        children.get(index - 1).focus(Focus.RIGHT);
-                    else
-                        children.add(index - 1, focusWhenShown(makeBlankChild(true)));
-                }
-                else
-                    children.add(index, focusWhenShown(makeBlankChild(true)));
+                if (children.get(index - 1).availableForFocus())
+                    children.get(index - 1).focus(Focus.RIGHT);
+                else if (index - 2 >= 0 && children.get(index - 2).availableForFocus())
+                    children.get(index - 2).focus(Focus.RIGHT);
+                else // Add blank between non-focusable items, or at beginning: 
+                    children.add(index - 1, focusWhenShown(makeBlankChild(true)));
             }
             else
             {
-                // index is zero.  If we are blank then we do go to parent's left
-                // If we aren't blank, we make a new blank before us:
-                if (leavingBlank)
-                    parentFocusLeftOfThis();
-                else
-                {
-                    addBlankAtLeft();
-                }
+                // index is zero, we are already at left
+                parentFocusLeftOfThis();
             }
         });
-    }
-
-    private void addBlankAtLeft()
-    {
-        Log.debug("Adding blank at left");
-        atomicEdit.set(true);
-        EntryNode<@NonNull EXPRESSION, SAVER> blankOperand = makeBlankChild(true);
-        blankOperand.focusWhenShown();
-        children.add(0, blankOperand);
-        atomicEdit.set(false);
     }
 
     protected abstract void parentFocusLeftOfThis();
@@ -831,18 +801,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
     */
-
-    /**
-     * Focuses a blank slot on the left of the expression, either an existing
-     * blank, or a new specially created blank
-     */
-    public void focusBlankAtLeft()
-    {
-        if (children.get(0).isBlank())
-            children.get(0).focus(Focus.LEFT);
-        else
-            addBlankAtLeft();
-    }
 
     protected void unmaskErrors()
     {
