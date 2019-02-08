@@ -149,7 +149,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             else
             {
-                builder.append(StyledString.s("for whole table").withStyle(editSplitBy));
+                builder.append(StyledString.s(" across whole table").withStyle(editSplitBy));
                 builder.append(".");
             }
             content = builder.build();

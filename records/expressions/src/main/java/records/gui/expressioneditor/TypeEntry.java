@@ -88,7 +88,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
             completing = false;
             parent.changed(this);
         });
-        autoComplete.setContentDirect(initialContent);
+        autoComplete.setContentDirect(initialContent, false);
     }
 
     private Stream<Completion> calculateCompletions(String s, CompletionQuery completionQuery)

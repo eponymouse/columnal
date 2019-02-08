@@ -237,7 +237,7 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
 
         public void setContent(ColumnId columnId)
         {
-            autoComplete.setContentDirect(columnId.getRaw());
+            autoComplete.setContentDirect(columnId.getRaw(), true);
             currentValue.set(columnId);
         }
 

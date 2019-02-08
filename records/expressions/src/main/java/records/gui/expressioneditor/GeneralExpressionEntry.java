@@ -132,7 +132,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             updateGraphics();
             parent.changed(GeneralExpressionEntry.this);
         });
-        autoComplete.setContentDirect(initialValue);
+        autoComplete.setContentDirect(initialValue, false);
         initialContentEntered.set(true);
     }
 

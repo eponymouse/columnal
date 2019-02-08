@@ -164,7 +164,7 @@ public class AutoComplete<C extends Completion>
                         //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
                         @Nullable String newContent = onSelect.focusLeaving(textField.getText(), completion);
                         if (newContent != null)
-                            FXUtility.keyboard(this).setContentDirect(newContent);
+                            FXUtility.keyboard(this).setContentDirect(newContent, true);
                     }
                     hide();
                 }
@@ -408,10 +408,12 @@ public class AutoComplete<C extends Completion>
         return window != null && window.isShowing();
     }
 
-    public void setContentDirect(String s)
+    public void setContentDirect(String s, boolean moveCaretToEnd)
     {
         settingContentDirectly = true;
         textField.setText(s);
+        if (moveCaretToEnd)
+            textField.positionCaret(s.length());
         settingContentDirectly = false;
     }
 
@@ -867,7 +869,7 @@ public class AutoComplete<C extends Completion>
                 {
                     @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
                     if (newContent != null)
-                        setContentDirect(newContent);
+                        setContentDirect(newContent, true);
                 }
             });
 
@@ -957,7 +959,7 @@ public class AutoComplete<C extends Completion>
                     e.consume();
                     @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
                     if (newContent != null)
-                        setContentDirect(newContent);
+                        setContentDirect(newContent, true);
                     hide();
                     instruction.hide();
                 }

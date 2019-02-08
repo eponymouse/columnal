@@ -48,7 +48,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
             completing = false;
             parent.changed(this);
         });
-        autoComplete.setContentDirect(initialContent);
+        autoComplete.setContentDirect(initialContent, false);
     }
 
     private Stream<Completion> getSuggestions(String current, CompletionQuery completionQuery)

@@ -123,7 +123,7 @@ public class PickTablePane extends BorderPane
 
     public void setContent(@Nullable Table table)
     {
-        autoComplete.setContentDirect(table == null ? "" : table.getId().getRaw());
+        autoComplete.setContentDirect(table == null ? "" : table.getId().getRaw(), true);
         if (table != null)
             setResultAndClose.consume(table);
     }

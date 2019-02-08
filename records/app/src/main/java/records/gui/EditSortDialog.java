@@ -265,7 +265,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
         public void setContent(ColumnId columnId)
         {
-            autoComplete.setContentDirect(columnId.getRaw());
+            autoComplete.setContentDirect(columnId.getRaw(), true);
         }
 
         public Pair<ColumnId, Direction> getCurrentValue()
