@@ -20,6 +20,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -126,7 +127,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                             .collect(ImmutableList.<Either<String, @Value Object>>toImmutableList())));
 
             // Then add source column for aggregate calculations (summing etc):
-            List<AggColumns> aggColumns = makeSourceAndCalculations(splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
+            List<AggColumns> aggColumns = makeSourceAndCalculations(mainWindowActions._test_getTableManager().getTypeManager(), splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
             for (AggColumns aggColumn : aggColumns)
             {
                 columns.add(r.nextInt(columns.size() + 1), aggColumn.sourceColumn);
@@ -223,7 +224,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         });
     }
 
-    private List<AggColumns> makeSourceAndCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
+    private List<AggColumns> makeSourceAndCalculations(TypeManager copyTypesTo, DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
     {
         int numColumns = r.nextInt(4);
         int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
@@ -232,6 +233,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         for (int i = 0; i < numColumns; i++)
         {
             TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(r);
+            copyTypesTo._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
             ImmutableList<Either<String, @Value Object>> sourceData = Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
             ColumnDetails columnDetails = new ColumnDetails(new ColumnId("Source " + i), typeAndValueGen.getType(), sourceData);
             List<AggCalculation> calculations = makeCalculations(splitColumnType, distinctSplitValues, typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
