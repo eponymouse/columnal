@@ -827,6 +827,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
+                else if (table instanceof SummaryStatistics)
+                {
+                    SummaryStatistics summaryStatistics = (SummaryStatistics) table;
+                    for (Pair<ColumnId, Expression> columnExpression : summaryStatistics.getColumnExpressions())
+                    {
+                        if (columnExpression.getFirst().equals(c))
+                        {
+                            return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
+                                editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, summaryStatistics, c);
+                            });
+                        }
+                    }
+                    return null;
+                }
                 else if (table instanceof ImmediateDataSource)
                 {
                     ImmediateDataSource data = (ImmediateDataSource) table;
@@ -858,6 +872,37 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
+    @OnThread(Tag.FXPlatform)
+    public void editColumn_Agg(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, SummaryStatistics agg, ColumnId columnId) throws InternalException, UserException
+    {
+        // Start with the existing value.
+        ImmutableList<Pair<ColumnId, Expression>> oldColumns = agg.getColumnExpressions();
+        Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
+        if (expression != null)
+        {
+            new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), columnId, expression, agg.getColumnLookup(), null).showAndWait().ifPresent(newDetails -> {
+                ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
+                boolean added = false;
+                for (Pair<ColumnId, Expression> oldColumn : oldColumns)
+                {
+                    if (oldColumn.getFirst().equals(columnId) && !added)
+                    {
+                        newColumns.add(newDetails);
+                    }
+                    else
+                    {
+                        newColumns.add(oldColumn);
+                    }
+                }
+                Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
+                    FXUtility.alertOnError_("Error saving column", () ->
+                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSource(), newColumns.build(), agg.getSplitBy()), null)
+                    );
+                });
+            });
+        }
+    }
+        
     @OnThread(Tag.FXPlatform)
     public void editColumn_IDS(ImmediateDataSource data, ColumnId columnId, @Nullable DataType type)
     {
