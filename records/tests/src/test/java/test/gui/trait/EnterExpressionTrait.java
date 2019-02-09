@@ -121,8 +121,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             CallExpression call = (CallExpression) expression;
             enterExpression(typeManager, call.getFunction(), EntryBracketStatus.SUB_EXPRESSION, r);
             write("(");
+            // Delete closing bracket:
+            push(KeyCode.DELETE);
             enterExpression(typeManager, call.getParam(), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
             write(")");
+            
         }
         else if (c == StandardFunction.class)
         {
