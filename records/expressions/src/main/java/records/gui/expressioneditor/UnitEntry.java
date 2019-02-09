@@ -185,6 +185,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
                 }
                 else
                 {
+                    textField.setEditable(false);
                     newText = content;
                 }
             }
