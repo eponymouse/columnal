@@ -142,7 +142,8 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     {
         Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> {
             Window window = getRealFocusedWindow();
-            return window.toString() + (window instanceof Stage ? " " + ((Stage)window).getTitle() : "");
+            Node focusNode = window.getScene().getFocusOwner();
+            return window.toString() + (window instanceof Stage ? " " + ((Stage)window).getTitle() : "") + " @ " + focusNode;
         }));
         Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
         text.chars().forEach(c -> {
