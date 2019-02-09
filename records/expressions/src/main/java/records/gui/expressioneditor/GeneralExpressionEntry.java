@@ -973,12 +973,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
     }
 
-    @Override
-    public boolean availableForFocus()
-    {
-        return textField.isEditable();
-    }
-
     private void setPseudoClass(GeneralPseudoclass selected)
     {
         for (GeneralPseudoclass pseudoclass : GeneralPseudoclass.values())

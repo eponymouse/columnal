@@ -237,6 +237,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     {
         return (bracketBalanceType == BracketBalanceType.ROUND && textField.getText().equals(")")) || (bracketBalanceType == BracketBalanceType.SQUARE && textField.getText().equals("]"));
     }
+    
+    @Override
+    public boolean availableForFocus()
+    {
+        return textField.isEditable();
+    }
 
     @Override
     public boolean mergeFromRight(ConsecutiveChild<EXPRESSION, SAVER> right)
