@@ -79,7 +79,13 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
                 setError(values.size(), err);
                 return dateTimeInfo.getDefaultValue();
             }, v -> v);
-            this.values.add(pool.pool(DataTypeUtility.value(dateTimeInfo, t)));
+            @Value TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, t);
+            if (value == null)
+            {
+                setError(values.size(), t.toString());
+                value = dateTimeInfo.getDefaultValue();
+            }
+            this.values.add(pool.pool(value));
         }
     }
 
@@ -124,13 +130,14 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         int curIndex = index;
         for (@Nullable TemporalAccessor item : items)
         {
-            if (item == null)
+            @Value TemporalAccessor itemValue = item == null ? null : DataTypeUtility.value(dateTimeInfo, item);
+            if (itemValue == null)
             {
                 @Value TemporalAccessor dummy = dateTimeInfo.getDefaultValue();
                 values.add(curIndex, pool.pool(dummy));
             }
             else
-                values.add(curIndex, pool.pool(DataTypeUtility.value(dateTimeInfo, item)));
+                values.add(curIndex, pool.pool(itemValue));
             
             curIndex += 1;
         }

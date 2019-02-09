@@ -104,7 +104,10 @@ public class ImporterUtility
             }
             else if (columnType instanceof CleanDateColumnType)
             {
-                columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, Either<String, TemporalAccessor>>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
+                columns.add(rs -> {
+                    DateTimeInfo dateTimeInfo = ((CleanDateColumnType) columnType).getDateTimeInfo();
+                    return new MemoryTemporalColumn(rs, columnInfo.title, dateTimeInfo, Utility.<String, Either<String, TemporalAccessor>>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), dateTimeInfo.getDefaultValue());
+                });
             }
             else if (columnType instanceof BoolColumnType)
             {

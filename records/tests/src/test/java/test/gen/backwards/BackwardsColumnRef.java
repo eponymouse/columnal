@@ -65,7 +65,7 @@ public class BackwardsColumnRef extends BackwardsProvider
                 @OnThread(Tag.Simulation)
                 public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList(Either.right((Temporal)value)), DateTimeInfo.DEFAULT_VALUE);
+                    return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList(Either.right((Temporal)value)), dateTimeInfo.getDefaultValue());
                 }
 
                 @Override

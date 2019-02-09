@@ -25,10 +25,10 @@ public class MemoryTemporalColumn extends EditableColumn
     @OnThread(Tag.Any)
     private final @Value TemporalAccessor defaultValue;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Either<String, TemporalAccessor>> list, TemporalAccessor defaultValue) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Either<String, TemporalAccessor>> list, @Value TemporalAccessor defaultValue) throws InternalException
     {
         super(rs, title);
-        this.defaultValue = DataTypeUtility.value(dateTimeInfo, defaultValue);
+        this.defaultValue = defaultValue;
         this.storage = new TemporalColumnStorage(dateTimeInfo);
         this.storage.addAll(list.stream());
     }

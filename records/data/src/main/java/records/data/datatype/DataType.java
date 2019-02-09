@@ -1435,7 +1435,7 @@ public class DataType implements StyledShowable
             @Override
             public Either<String, @Value Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return dateTimeInfo.parse(p).<@Value Object>map(t -> DataTypeUtility.value(dateTimeInfo, t));
+                return dateTimeInfo.parse(p).<@Value Object>map((@Value TemporalAccessor t) -> t);
             }
 
             @Override
@@ -1811,7 +1811,7 @@ public class DataType implements StyledShowable
          * Hence this slightly odd double layer.
          * @return
          */
-        public Either<String, TemporalAccessor> parse(DataParser p) throws UserException, InternalException
+        public Either<String, @Value TemporalAccessor> parse(DataParser p) throws UserException, InternalException
         {
             Either<String, ParserRuleContext> parsed;
             switch (type)
@@ -1838,7 +1838,7 @@ public class DataType implements StyledShowable
             }
             if (parsed == null)
                 throw new ParseException("Date value ", p);
-            return parsed.mapEx(c -> {
+            return parsed.<@Value TemporalAccessor>mapEx(c -> {
                 DateTimeFormatter formatter = getStrictFormatter();
                 try
                 {
@@ -1969,22 +1969,12 @@ public class DataType implements StyledShowable
 
         public @Value TemporalAccessor fromParsed(TemporalAccessor t) throws InternalException
         {
-            switch (type)
-            {
-                case YEARMONTHDAY:
-                    return DataTypeUtility.value(this, LocalDate.from(t));
-                case YEARMONTH:
-                    return DataTypeUtility.value(this, YearMonth.from(t));
-                case TIMEOFDAY:
-                    return DataTypeUtility.value(this, LocalTime.from(t));
-                //case TIMEOFDAYZONED:
-                //    return DataTypeUtility.value(this, OffsetTime.from(t));
-                case DATETIME:
-                    return DataTypeUtility.value(this, LocalDateTime.from(t));
-                case DATETIMEZONED:
-                    return DataTypeUtility.value(this, ZonedDateTime.from(t));
-            }
-            throw new InternalException("Unknown type: " + type);
+            @Value TemporalAccessor r = DataTypeUtility.value(this, t);
+            if (r != null)
+                return r;
+            else
+                throw new InternalException("Error loading date: " + t);
+            
         }
 
         public DateTimeType getType()

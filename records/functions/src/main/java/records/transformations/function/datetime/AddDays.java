@@ -20,6 +20,7 @@ import utility.ValueFunction;
 import java.time.DateTimeException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalUnit;
 
 public class AddDays extends FunctionDefinition
@@ -44,7 +45,11 @@ public class AddDays extends FunctionDefinition
                     throw new UserException("Cannot add " + rhs.toString() + " days; number must be an integer (whole number)");
                 try
                 {
-                    return DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), lhs.plus(rhs.longValue(), ChronoUnit.DAYS));
+                    @Value TemporalAccessor value = DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), lhs.plus(rhs.longValue(), ChronoUnit.DAYS));
+                    if (value != null)
+                        return value;
+                    else
+                        throw new InternalException("Internal rrror adding " + rhs.longValue() + " days to " + lhs.toString());
                 }
                 catch (ArithmeticException | DateTimeException e)
                 {

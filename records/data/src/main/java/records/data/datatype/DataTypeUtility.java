@@ -43,6 +43,7 @@ import utility.Workers.Priority;
 
 import java.math.BigDecimal;
 import java.text.ParsePosition;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -226,25 +227,46 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
+    public static @Value LocalDate valueDate(LocalDate t)
     {
-        switch (dest.getType())
+        return t;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value LocalTime valueTime(LocalTime t)
+    {
+        return t;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ZonedDateTime valueZonedDateTime(ZonedDateTime t)
+    {
+        return t;
+    }
+    
+    @SuppressWarnings("valuetype")
+    public static @Nullable @Value TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
+    {
+        try
         {
-            case YEARMONTHDAY:
-                if (t instanceof LocalDate)
-                    return t;
-                else
-                    return LocalDate.from(t);
-            case YEARMONTH:
-                if (t instanceof YearMonth)
-                    return t;
-                else
-                    return YearMonth.from(t);
-            case TIMEOFDAY:
-                if (t instanceof LocalTime)
-                    return t;
-                else
-                    return LocalTime.from(t);
+
+            switch (dest.getType())
+            {
+                case YEARMONTHDAY:
+                    if (t instanceof LocalDate)
+                        return t;
+                    else
+                        return LocalDate.from(t);
+                case YEARMONTH:
+                    if (t instanceof YearMonth)
+                        return t;
+                    else
+                        return YearMonth.from(t);
+                case TIMEOFDAY:
+                    if (t instanceof LocalTime)
+                        return t;
+                    else
+                        return LocalTime.from(t);
             /*
             case TIMEOFDAYZONED:
                 if (t instanceof OffsetTime)
@@ -252,18 +274,22 @@ public class DataTypeUtility
                 else
                     return OffsetTime.from(t);
             */
-            case DATETIME:
-                if (t instanceof LocalDateTime)
-                    return t;
-                else
-                    return LocalDateTime.from(t);
-            case DATETIMEZONED:
-                if (t instanceof ZonedDateTime)
-                    return t;
-                else
-                    return ZonedDateTime.from(t);
+                case DATETIME:
+                    if (t instanceof LocalDateTime)
+                        return t;
+                    else
+                        return LocalDateTime.from(t);
+                case DATETIMEZONED:
+                    if (t instanceof ZonedDateTime)
+                        return t;
+                    else
+                        return ZonedDateTime.from(t);
+            }
         }
-        return t;
+        catch (DateTimeException e)
+        {
+        }
+        return null;
     }
 
     @SuppressWarnings("valuetype")
@@ -621,8 +647,12 @@ public class DataTypeUtility
             {
                 ParsePosition position = new ParsePosition(src.charStart);
                 TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
-                possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), value(dateTimeInfo, temporalAccessor)));
-                possibleFormatters.add(formatter);
+                @Value TemporalAccessor value = value(dateTimeInfo, temporalAccessor);
+                if (value != null)
+                {
+                    possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), value));
+                    possibleFormatters.add(formatter);
+                }
             }
             catch (DateTimeParseException e)
             {
@@ -632,7 +662,9 @@ public class DataTypeUtility
         if (possibles.size() == 1)
         {
             src.charStart = possibles.get(0).getFirst();
-            return value(dateTimeInfo, possibles.get(0).getSecond());
+            @Nullable @Value TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
+            if (value != null)
+                return value;
         }
         else if (possibles.size() > 1)
         {
@@ -644,7 +676,9 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
                 src.charStart = chosen.getFirst();
-                return value(dateTimeInfo, chosen.getSecond());
+                @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                if (value != null)
+                    return value;
             }
             // If all the values of longest length are the same, that's fine:
             HashSet<Pair<Integer, TemporalAccessor>> distinctValues = new HashSet<>(
@@ -654,7 +688,9 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
                 src.charStart = chosen.getFirst();
-                return value(dateTimeInfo, chosen.getSecond());
+                @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                if (value != null)
+                    return value;
             }
             
             // Otherwise, throw because it's too ambiguous:

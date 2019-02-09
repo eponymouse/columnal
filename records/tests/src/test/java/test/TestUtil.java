@@ -621,14 +621,14 @@ public class TestUtil
     {
         // Usually, generate dates in sensible range (1900->2050)
         if (r.nextInt(4) != 0)
-            return (LocalDate) DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_CLOSE_DATE.toEpochDay(), MAX_CLOSE_DATE.toEpochDay())));
+            return DataTypeUtility.valueDate(LocalDate.ofEpochDay(r.nextLong(MIN_CLOSE_DATE.toEpochDay(), MAX_CLOSE_DATE.toEpochDay())));
         else
-            return (LocalDate) DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
+            return DataTypeUtility.valueDate(LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
-        LocalTime localTime = (LocalTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
+        LocalTime localTime = (LocalTime) DataTypeUtility.valueTime(new LocalTimeGenerator().generate(r, gs));
         // Produce half the dates without partial seconds (and perhaps seconds set to zero): common case
         if (r.nextBoolean())
         {
@@ -648,7 +648,7 @@ public class TestUtil
 
     public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
-        return (ZonedDateTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.of(generateDateTime(r, gs), r.nextBoolean() ? generateZone(r, gs) : generateZoneOffset(r, gs)));
+        return DataTypeUtility.valueZonedDateTime(ZonedDateTime.of(generateDateTime(r, gs), r.nextBoolean() ? generateZone(r, gs) : generateZoneOffset(r, gs)));
     }
 
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)
