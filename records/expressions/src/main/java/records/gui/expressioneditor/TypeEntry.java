@@ -115,23 +115,13 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                     }
                     keep = "";
                 }
-                else if (typeCompletion == listCompletion)
-                {
-                    parent.replace(TypeEntry.this, loadBrackets(Keyword.OPEN_SQUARE, rest, Keyword.CLOSE_SQUARE));
-                    return null;
-                }
-                else if (typeCompletion == bracketCompletion)
-                {
-                    parent.replace(TypeEntry.this, loadBrackets(Keyword.OPEN_ROUND, rest, Keyword.CLOSE_ROUND));
-                    return null;
-                }
                 else if (typeCompletion == unitBracketCompletion)
                 {
                     SingleLoader<TypeExpression, TypeSaver> load = p -> new UnitLiteralTypeNode(p, new InvalidSingleUnitExpression(rest));
                     parent.replace(TypeEntry.this, Stream.of(load.focusWhenShown()));
                     return null;
                 }
-                else if (typeCompletion == endBracketCompletion || typeCompletion == endListCompletion)
+                else if (typeCompletion == endBracketCompletion || typeCompletion == endListCompletion || typeCompletion == bracketCompletion || typeCompletion == listCompletion)
                 {
                     // TODO check operator to right is actually a bracket
                     if ((typeCompletion == endBracketCompletion && parent.balancedBrackets(BracketBalanceType.ROUND)) || (typeCompletion == endListCompletion && parent.balancedBrackets(BracketBalanceType.SQUARE)))
@@ -143,7 +133,8 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
                     else
                     {
                         completing = true;
-                        keep = typeCompletion == endBracketCompletion ? ")" : "]";
+                        textField.setEditable(false);
+                        keep = ((TypeCompletion)typeCompletion).getCompletion();
                     } 
                 }
                 /*
@@ -241,6 +232,11 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
         {
             // Leading space will make it sort to top:
             return (showAtTop ? " " : "") + super.getDisplaySortKey(text);
+        }
+        
+        public String getCompletion()
+        {
+            return completion;
         }
     }
 
@@ -371,22 +367,6 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     public static SingleLoader<TypeExpression, TypeSaver> load(Keyword value)
     {
         return load(value.getContent());
-    }
-
-    @Override
-    public boolean availableForFocus()
-    {
-        for (Keyword keyword : Keyword.values())
-        {
-            if (keyword.getContent().equals(textField.getText()))
-                return false;
-        }
-        for (Operator operator : Operator.values())
-        {
-            if (operator.getContent().equals(textField.getText()))
-                return false;
-        }
-        return true;
     }
 
     public static enum Keyword
