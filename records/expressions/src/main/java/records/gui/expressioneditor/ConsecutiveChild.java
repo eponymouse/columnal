@@ -116,4 +116,9 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER exten
     {
         return false;
     }
+
+    default boolean isImplicitlyBracketed()
+    {
+        return false;
+    }
 }

@@ -157,4 +157,10 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     public abstract Stream<ConsecutiveChild<?, ?>> _test_getAllChildren();
+
+    @Override
+    public boolean isImplicitlyBracketed()
+    {
+        return true;
+    }
 }

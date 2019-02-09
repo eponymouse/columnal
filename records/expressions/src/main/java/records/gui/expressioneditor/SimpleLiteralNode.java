@@ -209,6 +209,12 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         );
     }
 
+    @Override
+    public boolean isImplicitlyBracketed()
+    {
+        return true;
+    }
+
     protected class EndCompletion extends Completion
     {
         private final String ending;

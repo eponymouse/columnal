@@ -490,7 +490,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             }
             else
             {
-                parentFocusRightOfThis(position, becauseOfTab);
+                if (child.availableForFocus() && !children.get(index).isImplicitlyBracketed())
+                    parentFocusRightOfThis(position, becauseOfTab);
+                else
+                    children.add(index + 1, focusWhenShown(makeBlankChild(true)));
             }
         });
     }
