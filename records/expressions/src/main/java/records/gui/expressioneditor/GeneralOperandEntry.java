@@ -253,6 +253,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
         GeneralOperandEntry<EXPRESSION, SAVER> rightCast = (GeneralOperandEntry<EXPRESSION, SAVER>) right;
         
         if (textField.isEditable() && rightCast.textField.isEditable()
+            && !isImplicitlyBracketed() && !right.isImplicitlyBracketed() 
             && autoComplete != null && autoComplete.matchingAlphabets(textField.getText().trim(), rightCast.textField.getText().trim()))
         {
             Log.debug("Merging from right: " + textField.getText() + " and " + rightCast.textField.getText());
