@@ -103,6 +103,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         container.getStyleClass().add("entry");
         this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
     }
 
     @Override
