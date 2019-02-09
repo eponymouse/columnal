@@ -112,9 +112,9 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     @Override
-    public boolean isShowingError()
+    public boolean isShowingError(@UnknownInitialization(Object.class) TreeLiteralNode<EXPRESSION, SAVER> this)
     {
-        return consecParent.isShowingError();
+        return consecParent == null ? false : consecParent.isShowingError();
     }
 
     @Override

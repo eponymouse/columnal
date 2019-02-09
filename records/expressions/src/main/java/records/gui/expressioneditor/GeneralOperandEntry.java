@@ -133,9 +133,9 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     }
 
     @Override
-    public boolean isShowingError()
+    public boolean isShowingError(@UnknownInitialization(Object.class) GeneralOperandEntry<EXPRESSION, SAVER> this)
     {
-        return expressionInfoDisplay.isShowingError();
+        return expressionInfoDisplay == null ? false : expressionInfoDisplay.isShowingError();
     }
 
     protected static <T extends EEDisplayNode> T focusWhenShown(T node)

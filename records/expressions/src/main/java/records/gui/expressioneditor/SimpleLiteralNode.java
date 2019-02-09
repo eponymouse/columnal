@@ -112,9 +112,9 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
 
     @Override
-    public boolean isShowingError()
+    public boolean isShowingError(@UnknownInitialization(Object.class) SimpleLiteralNode this)
     {
-        return expressionInfoDisplay.isShowingError();
+        return expressionInfoDisplay == null ? false : expressionInfoDisplay.isShowingError();
     }
 
     @Override
