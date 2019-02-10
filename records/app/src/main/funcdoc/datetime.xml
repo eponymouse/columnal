@@ -11,7 +11,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Date</forany>
-            <lhs>@match @call @function to text(x) @case $y ; "-" ; $m ; "-" ; $d @then @call @function date(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
+            <lhs>@match @call @function to text(x) @case _y ; "-" ; _m ; "-" ; _d @then @call @function date(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -32,7 +32,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Time</forany>
-            <lhs>@match @call @function to text(x) @case $h ; ":" ; $m ; ":" ; $s @then @call @function time(@call @function from text(h), @call @function from text(m), @call @function from text(s)) @endmatch</lhs>
+            <lhs>@match @call @function to text(x) @case _h ; ":" ; _m ; ":" ; _s @then @call @function time(@call @function from text(h), @call @function from text(m), @call @function from text(s)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>

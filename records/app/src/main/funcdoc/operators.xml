@@ -39,7 +39,7 @@
             <output>"abc"</output>
         </example>
         <example>
-            <input>@match "T-2000" @case "T-" ; $y @then @call @function from text(y) @endmatch</input>
+            <input>@match "T-2000" @case "T-" ; _y @then @call @function from text(y) @endmatch</input>
             <output>2000</output>
         </example>
     </naryOperatorGroup>
@@ -128,12 +128,12 @@
         </example>
         <example>
             <description>Check if a pair has two numbers, with the second being one higher than the first</description>
-            <input>(2, 4) = ($x, (x + 1))</input>
+            <input>(2, 4) = (_x, (x + 1))</input>
             <output>false</output>
         </example>
         <example>
             <description>Check if a list has two values, and they are the same</description>
-            <input>["Bye", "Bye"] = [$s, s]</input>
+            <input>["Bye", "Bye"] = [_s, s]</input>
             <output>true</output>
         </example>
         
