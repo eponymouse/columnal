@@ -480,11 +480,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             if (index + 1 < children.size())
             {
                 ConsecutiveChild<@NonNull EXPRESSION, SAVER> right = children.get(index + 1);
-                ConsecutiveChild<@NonNull EXPRESSION, SAVER> rightOfRight = index + 2 < children.size() ? children.get(index + 2) : null;
                 if (right.availableForFocus())
                     position.either_(right::focus, right::focus);
-                else if (rightOfRight != null && rightOfRight.availableForFocus())
-                    position.either_(rightOfRight::focus, rightOfRight::focus);
                 else
                     children.add(index + 1, focusWhenShown(makeBlankChild(false)));
             }
@@ -522,10 +519,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             {
                 if (children.get(index - 1).availableForFocus())
                     children.get(index - 1).focus(Focus.RIGHT);
-                else if (index - 2 >= 0 && children.get(index - 2).availableForFocus())
-                    children.get(index - 2).focus(Focus.RIGHT);
                 else // Add blank between non-focusable items, or at beginning: 
-                    children.add(index - 1, focusWhenShown(makeBlankChild(true)));
+                    children.add(index, focusWhenShown(makeBlankChild(true)));
             }
             else
             {
