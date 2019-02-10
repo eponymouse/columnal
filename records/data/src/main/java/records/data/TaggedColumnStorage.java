@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 05/11/2016.
  */
-public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> implements ColumnStorage<TaggedValue>
+public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> implements ColumnStorage<@Value TaggedValue>
 {
     // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
