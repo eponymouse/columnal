@@ -822,7 +822,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         public ShowStatus shouldShow(String input)
         {
-            return input.startsWith("$") && (input.length() == "$".length() || Character.isLetter(input.codePointAt("$".length())))
+            return input.startsWith("_") && (input.length() == "_".length() || Character.isLetter(input.codePointAt("_".length())))
                 ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
         }
 
@@ -836,11 +836,6 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         public boolean features(String curInput, int character)
         {
             return (curInput.length() >= 1 && (Character.isDigit(character) || character == ' ')) || Character.isLetter(character);
-        }
-
-        public String getVarName(String currentText)
-        {
-            return StringUtils.removeStart(currentText, "$");
         }
     }
     
@@ -948,7 +943,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
      */
     public static enum Keyword
     {
-        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING(ExpressionLexer.ANY), QUEST("?"),
+        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), QUEST("?"),
         IF(ExpressionLexer.IF), THEN(ExpressionLexer.THEN), ELSE(ExpressionLexer.ELSE), ENDIF(ExpressionLexer.ENDIF),
         MATCH(ExpressionLexer.MATCH),
         CASE(ExpressionLexer.CASE),
@@ -1022,9 +1017,12 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         {
             saver.saveOperand(new NumericLiteral(number.get(), null), this, this, this::afterSave);
         }
-        else if (text.startsWith("$"))
+        else if (text.startsWith("_"))
         {
-            saver.saveOperand(new VarDeclExpression(text.substring(1)), this, this, this::afterSave);
+            if (text.equals("_"))
+                saver.saveOperand(new MatchAnythingExpression(), this, this, this::afterSave);
+            else
+                saver.saveOperand(new VarDeclExpression(text.substring(1)), this, this, this::afterSave);
         }
         else if (text.equals("true") || text.equals("false"))
         {

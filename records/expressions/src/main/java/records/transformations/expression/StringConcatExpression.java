@@ -61,7 +61,7 @@ public class StringConcatExpression extends NaryOpExpression
             {
                 if (lastWasVariable)
                 {
-                    onError.recordError(expression, Either.left(StyledString.s("Cannot have two variables/@anything next to each other in text pattern match; how can we know where one match stops and the next begins?")));
+                    onError.recordError(expression, Either.left(StyledString.s("Cannot have two variables/match-any next to each other in text pattern match; how can we know where one match stops and the next begins?")));
                     return null;
                 }
                 else

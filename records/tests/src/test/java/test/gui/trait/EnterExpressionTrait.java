@@ -245,7 +245,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         }
         else if (c == VarDeclExpression.class)
         {
-            write("$" + ((VarDeclExpression)expression).getName(), DELAY);
+            write("_" + ((VarDeclExpression)expression).getName(), DELAY);
             // Have to manually move on because it won't auto-complete:
             push(KeyCode.ENTER);
         }
@@ -265,7 +265,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         }
         else if (c == MatchAnythingExpression.class)
         {
-            write("@anything", DELAY);
+            write("_", DELAY);
         }
         else if (c == InvalidOperatorExpression.class)
         {

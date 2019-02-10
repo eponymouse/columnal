@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -22,9 +23,9 @@ import java.util.stream.Stream;
  */
 public class VarDeclExpression extends NonOperatorExpression
 {
-    private final String varName;
+    private final @ExpressionIdentifier String varName;
 
-    public VarDeclExpression(String varName)
+    public VarDeclExpression(@ExpressionIdentifier String varName)
     {
         this.varName = varName;
     }
@@ -67,7 +68,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "$" + varName;
+        return "_" + varName;
     }
 
     @Override
@@ -79,7 +80,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load("$" + varName));
+        return Stream.of(GeneralExpressionEntry.load("_" + varName));
     }
 
     @Override

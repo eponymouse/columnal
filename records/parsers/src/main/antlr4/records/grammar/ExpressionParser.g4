@@ -16,7 +16,7 @@ unfinished : UNFINISHED STRING;
 
 varRef  : ident;
 
-any : ANY;
+any : VAR;
 
 implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
 customLiteralExpression : CUSTOM_LITERAL;
@@ -59,7 +59,7 @@ callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression | expression (
 tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (compoundExpression | (expression (COMMA expression)*))? CLOSE_SQUARE;
 
-newVariable : NEWVAR ident;
+newVariable : VAR ident;
 typeName : ident;
 constructorName : ident;
 pattern : topLevelExpression (CASEGUARD topLevelExpression)?;

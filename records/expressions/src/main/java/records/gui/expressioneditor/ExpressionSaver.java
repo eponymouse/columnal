@@ -58,11 +58,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         Supplier<ImmutableList<@Recorded Expression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, errorDisplayer, new InvalidIdentExpression(keyword.getContent())));
         
-        if (keyword == Keyword.ANYTHING)
-        {
-            saveOperand(new MatchAnythingExpression(), errorDisplayer, errorDisplayer, withContext);
-        }
-        else if (keyword == Keyword.QUEST)
+        if (keyword == Keyword.QUEST)
         {
             saveOperand(new ImplicitLambdaArg(), errorDisplayer, errorDisplayer, withContext);
         }

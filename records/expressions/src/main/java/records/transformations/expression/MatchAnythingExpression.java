@@ -33,7 +33,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     @Override
     public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Calling getValue on \"@anything\" pattern (should only call matchAsPattern)");
+        throw new InternalException("Calling getValue on \"_\" pattern (should only call matchAsPattern)");
     }
 
     @Override
@@ -52,19 +52,19 @@ public class MatchAnythingExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@anything";
+        return "_";
     }
 
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.s("@anything");
+        return StyledString.s("_");
     }
 
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(Keyword.ANYTHING));
+        return Stream.of(GeneralExpressionEntry.load("_"));
     }
 
     @Override
