@@ -199,7 +199,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<Expression>>asList(
             () -> genDepth(false, r, depth, gs),
-            () -> new VarDeclExpression(TestUtil.generateVarName(r).trim()),
+            () -> new VarDeclExpression(TestUtil.generateVarName(r)),
             () ->
             {
                 try
