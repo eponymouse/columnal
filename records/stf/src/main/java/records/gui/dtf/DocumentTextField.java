@@ -8,6 +8,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -45,6 +46,7 @@ public class DocumentTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
     private final Path caretShape;
+    private final Tooltip tooltip;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
@@ -68,6 +70,8 @@ public class DocumentTextField extends Region implements DocumentListener
         caretShape.visibleProperty().bind(focusedProperty());
         caretShape.getStyleClass().add("dynamic-caret");
         getChildren().addAll(textFlow, caretShape);
+        tooltip = new Tooltip();
+        Tooltip.install(this, tooltip);
 
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
@@ -205,6 +209,7 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(Tag.FXPlatform)
     public void documentChanged()
     {
+        tooltip.setText(document.getText());
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
         requestLayout();
