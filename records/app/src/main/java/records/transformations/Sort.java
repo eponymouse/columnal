@@ -16,6 +16,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -215,6 +216,7 @@ public class Sort extends Transformation
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
+            boolean foundLowest = false;
             @Value Object @Nullable [] lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
@@ -224,16 +226,17 @@ public class Sort extends Transformation
             for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder == null ? -1 : stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                @Value Object[] cur = getItem(src - 1);
-                if (lowest == null || compareFixedSet(cur, lowest, justDirections) < 0)
+                @Value Object @Nullable[] cur = getItem(src - 1);
+                if (!foundLowest || compareFixedSet(cur, lowest, justDirections) < 0)
                 {
+                    foundLowest = true;
                     lowest = cur;
                     lowestIndex = src;
                     pointerToLowestIndex = prevSrc;
                 }
                 prevSrc = src;
             }
-            if (lowest != null && stillToOrder != null)
+            if (foundLowest && stillToOrder != null)
             {
                 // Make the pointer behind lowest point to entry after lowest:
                 stillToOrder[pointerToLowestIndex] = stillToOrder[lowestIndex];
@@ -256,8 +259,15 @@ public class Sort extends Transformation
     // All arrays must be same length.
     // Returns -1 if a is before b, given the directions.
     // e.g. compareFixedSet({0}, {1}, DESCENDING) will return positive number, because 0 is after 1 when descending
-    private static int compareFixedSet(@Value Object[] a, @Value Object[] b, Direction[] justDirections) throws UserException, InternalException
+    private static int compareFixedSet(@Value Object @Nullable[] a, @Value Object @Nullable[] b, Direction[] justDirections) throws UserException, InternalException
     {
+        if (a == null && b == null)
+            return 0;
+        else if (a == null)
+            return -1;
+        else if (b == null)
+            return 1;
+        
         for (int i = 0; i < a.length; i++)
         {
             int cmp = Utility.compareValues(a[i], b[i]);
@@ -270,7 +280,7 @@ public class Sort extends Transformation
     }
 
     @Pure
-    private @Value Object[] getItem(int srcIndex) throws UserException, InternalException
+    private @Value Object @Nullable[] getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
@@ -278,7 +288,16 @@ public class Sort extends Transformation
         for (int i = 0; i < sortBy.size(); i++)
         {
             Pair<Column, Direction> c = sortBy.get(i);
-            r[i] = c.getFirst().getType().getCollapsed(srcIndex);
+            try
+            {
+                r[i] = c.getFirst().getType().getCollapsed(srcIndex);
+            }
+            catch (InternalException | UserException e)
+            {
+                if (e instanceof InternalException)
+                    Log.log(e);
+                return null;
+            }
         }
         return r;
     }
