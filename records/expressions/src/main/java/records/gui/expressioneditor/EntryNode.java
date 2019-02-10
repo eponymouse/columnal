@@ -65,7 +65,6 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
                         {
                             TextField textField = (TextField) focused;
                             textField.replaceSelection(Utility.codePointToString(c));
-                            textField.positionCaret(textField.getCaretPosition() + 1);
                         }
                     });
                 }
