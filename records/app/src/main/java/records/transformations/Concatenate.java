@@ -81,6 +81,7 @@ public class Concatenate extends Transformation
     @OnThread(Tag.Any)
     private final @Nullable RecordSet recordSet;
             
+    @OnThread(Tag.Any)
     private final boolean includeMarkerColumn;
 
     public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, IncompleteColumnHandling incompleteColumnHandling, boolean includeMarkerColumn) throws InternalException
@@ -351,6 +352,7 @@ public class Concatenate extends Transformation
         return incompleteColumnHandling;
     }
 
+    @OnThread(Tag.Any)
     public boolean isIncludeMarkerColumn()
     {
         return includeMarkerColumn;

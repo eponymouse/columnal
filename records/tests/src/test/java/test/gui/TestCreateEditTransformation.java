@@ -190,8 +190,8 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 write("Spl");
                 push(KeyCode.ENTER);
                 TextField field = getFocusOwner(TextField.class);
-                assertEquals("Split Col", field.getText());
-                assertEquals("Split Col".length(), field.getCaretPosition());
+                assertEquals("Split Col", TestUtil.fx(() -> field.getText()));
+                assertEquals((Integer)"Split Col".length(), TestUtil.<Integer>fx(() -> field.getCaretPosition()));
                 MatcherAssert.assertThat(listWindows(), Matchers.everyItem(new BaseMatcher<Window>()
                 {
                     @Override
