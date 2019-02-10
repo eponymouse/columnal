@@ -69,16 +69,7 @@
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: one.util:streamex:0.6.3" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: com.microsoft:z3:0.1">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/com.microsoft.z3.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="Maven: org.bluej:threadchecker:0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.bluej:threadchecker:0.1" level="project" />
     <orderEntry type="module-library">
       <library name="Maven: com.fxexperience:scenic-view:8.7.0">
         <CLASSES>

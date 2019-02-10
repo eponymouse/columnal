@@ -129,6 +129,7 @@
             <version>0.6.3</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>com.microsoft</groupId>
             <artifactId>z3</artifactId>
@@ -136,12 +137,13 @@
             <scope>system</scope>
             <systemPath>${basedir}/../lib/com.microsoft.z3.jar</systemPath>
         </dependency>
+        -->
 
         <dependency>
             <groupId>org.bluej</groupId>
             <artifactId>threadchecker</artifactId>
             <version>0.1</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
