@@ -31,7 +31,8 @@ concatIncompleteKW : {_input.LT(1).getText().equals("@INCOMPLETE")}? ATOM;
 concatOmit : {_input.LT(1).getText().equals("OMIT")}? ATOM;
 concatWrapMaybe : {_input.LT(1).getText().equals("WRAPMAYBE")}? ATOM;
 concatDefault : {_input.LT(1).getText().equals("DEFAULT")}? ATOM;
-concatMissing : concatIncompleteKW (concatOmit | concatWrapMaybe | concatDefault);
+concatIncludeSource : {_input.LT(1).getText().equals("SOURCE")}? ATOM;
+concatMissing : concatIncompleteKW (concatOmit | concatWrapMaybe | concatDefault) concatIncludeSource?;
 
 /* Transform: */
 

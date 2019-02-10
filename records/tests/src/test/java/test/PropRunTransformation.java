@@ -169,7 +169,7 @@ public class PropRunTransformation
 
         srcTable.mgr.record(invertedFilter);
         
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT);
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, r.nextBoolean());
 
         // Check that the same set of rows is present:
         assertEquals(TestUtil.getRowFreq(srcTable.data().getData()), TestUtil.getRowFreq(concatFilters.getData()));
@@ -241,7 +241,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data().getId());
-            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT);
+            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT, false);
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:

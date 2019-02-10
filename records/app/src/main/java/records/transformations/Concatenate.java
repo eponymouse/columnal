@@ -22,10 +22,12 @@ import records.data.datatype.DataTypeValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DataParser;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.ConcatMissingContext;
 import records.gui.View;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -78,12 +80,15 @@ public class Concatenate extends Transformation
     private @Nullable String error = null;
     @OnThread(Tag.Any)
     private final @Nullable RecordSet recordSet;
+            
+    private final boolean includeMarkerColumn;
 
-    public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, IncompleteColumnHandling incompleteColumnHandling) throws InternalException
+    public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, IncompleteColumnHandling incompleteColumnHandling, boolean includeMarkerColumn) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.sources = sources;
         this.incompleteColumnHandling = incompleteColumnHandling;
+        this.includeMarkerColumn = includeMarkerColumn;
 
         KnownLengthRecordSet rs = null;
         List<Table> tables = Collections.emptyList();
@@ -162,7 +167,7 @@ public class Concatenate extends Transformation
             }
 
             List<Table> tablesFinal = tables;
-            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, ColumnDetails>, SimulationFunction<RecordSet, Column>>mapList(new ArrayList<>(ourColumns.entrySet()), (Entry<ColumnId, ColumnDetails> colDetails) -> new SimulationFunction<RecordSet, Column>()
+            ArrayList<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>(Utility.<Entry<ColumnId, ColumnDetails>, SimulationFunction<RecordSet, Column>>mapList(new ArrayList<>(ourColumns.entrySet()), (Entry<ColumnId, ColumnDetails> colDetails) -> new SimulationFunction<RecordSet, Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -215,7 +220,37 @@ public class Concatenate extends Transformation
                         }
                     };
                 }
-            }), totalLength);
+            }));
+            
+            if (includeMarkerColumn)
+            {
+                // TODO guard against duplicate Source column name
+                columns.add(0, recordSet -> new Column(recordSet, new ColumnId("Source"))
+                {
+                    @Override
+                    public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                    {
+                        return DataTypeValue.text((concatenatedRow, prog) -> {
+                            for (int srcTableIndex = 0; srcTableIndex < ends.size(); srcTableIndex++)
+                            {
+                                if (concatenatedRow < ends.get(srcTableIndex))
+                                {
+                                    return DataTypeUtility.value(sources.get(srcTableIndex).getRaw());
+                                }
+                            }
+                            throw new InternalException("Attempting to access beyond end of concatenated tables: index" + (concatenatedRow + 1) + " but only length " + ends.get(ends.size() - 1));
+                        });
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Any) boolean isAltered()
+                    {
+                        return true;
+                    }
+                });
+            }
+            
+            rs = new KnownLengthRecordSet(columns, totalLength);
 
 
         }
@@ -250,7 +285,7 @@ public class Concatenate extends Transformation
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return ImmutableList.of("@INCOMPLETE " + incompleteColumnHandling.toString());
+        return ImmutableList.of("@INCOMPLETE " + incompleteColumnHandling.toString() + (includeMarkerColumn ? " SOURCE " : ""));
     }
 
     @Override
@@ -301,14 +336,24 @@ public class Concatenate extends Transformation
                 incompleteColumnHandling = IncompleteColumnHandling.WRAPMAYBE;
             else
                 incompleteColumnHandling = IncompleteColumnHandling.DEFAULT;
-            return new Concatenate(mgr, initialLoadDetails, ImmutableList.copyOf(source), incompleteColumnHandling);
+            return new Concatenate(mgr, initialLoadDetails, ImmutableList.copyOf(source), incompleteColumnHandling, ctx.concatIncludeSource() != null);
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
-            return () -> new Concatenate(mgr, new InitialLoadDetails(null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT);
+            return () -> new Concatenate(mgr, new InitialLoadDetails(null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT, true);
         }
+    }
+
+    public IncompleteColumnHandling getIncompleteColumnHandling()
+    {
+        return incompleteColumnHandling;
+    }
+
+    public boolean isIncludeMarkerColumn()
+    {
+        return includeMarkerColumn;
     }
 
     @Override

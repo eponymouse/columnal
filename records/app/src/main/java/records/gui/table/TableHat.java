@@ -176,12 +176,29 @@ class TableHat extends FloatingItem<TableHatDisplay>
                             {
                                 new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
                                     Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
+                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, concatenate.getIncompleteColumnHandling(), concatenate.isIncludeMarkerColumn()), null);
                                 })));
                             }
                         }
                     }
-                )    
+                ),
+                StyledString.s(" "),
+                StyledString.s(
+                    concatenate.isIncludeMarkerColumn()
+                    ? "with source column"
+                    : "without source column"
+                ).withStyle(new Clickable("click.to.toggle") {
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        if (mouseButton == MouseButton.PRIMARY)
+                        {
+                            Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
+                                parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), concatenate.getIncompleteColumnHandling(), !concatenate.isIncludeMarkerColumn()), null);
+                            }));
+                        }
+                    }
+                })
             );
         }
         else if (table instanceof Check)
