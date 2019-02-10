@@ -115,9 +115,9 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             });
             
             
-            // Now we are at end, go backwards using left.  As we go,
-            // reconstitute content in the textfields we visit
-            // which should match the original text.
+            // We check that if we go all-left then all-right, we reach a termination point
+            // in each case (as opposed to looping forever somewhere in the middle)
+            
             Pair<TextField, Integer> curPosition = getPosition();
             Pair<TextField, Integer> oldPosition = null;
             int maxRemaining = 3 * content.length() + 5;

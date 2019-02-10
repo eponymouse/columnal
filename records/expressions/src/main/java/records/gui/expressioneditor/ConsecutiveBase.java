@@ -480,10 +480,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             if (index + 1 < children.size())
             {
                 ConsecutiveChild<@NonNull EXPRESSION, SAVER> right = children.get(index + 1);
+                ConsecutiveChild<@NonNull EXPRESSION, SAVER> rightOfRight = index + 2 < children.size() ? children.get(index + 1) : null;
                 if (right.availableForFocus())
                     position.either_(right::focus, right::focus);
+                else if (rightOfRight != null && rightOfRight.availableForFocus())
+                    rightOfRight.focus(Focus.LEFT); // What if caret position takes us beyond this?  Is this possible?
                 else
-                    children.add(index + 1, focusWhenShown(makeBlankChild(false)));
+                    children.add(index + 2, focusWhenShown(makeBlankChild(false)));
             }
             else
             {
@@ -508,19 +511,21 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void focusLeftOf(EEDisplayNode child)
     {
         withChildIndex(child, index ->
-        {   
-            // There's two cases:
-            //   A) If we are leaving a blank, we try to focus the item to the left.
-            //      If that isn't focusable, we add a blank to its left.
-            //   B) If we are leaving a non-blank, we add a blank to its left.
-            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SAVER>) child).isBlank();
-            
+        {
             if (index > 0)
             {
+                // If the child before us can be focused, focus it.
+                // If not, it must be a bracket or similar.  There's two options:
+                //    - The child before that is non-existent or unfocusable.  Add a blank and focus it.
+                //    - The child before that can be focused.  Focus it
+                
                 if (children.get(index - 1).availableForFocus())
                     children.get(index - 1).focus(Focus.RIGHT);
-                else // Add blank between non-focusable items, or at beginning: 
-                    children.add(index, focusWhenShown(makeBlankChild(true)));
+                else if (index - 2 >= 0 && children.get(index - 1).availableForFocus())
+                    children.get(index - 2).focus(Focus.RIGHT);
+                else
+                    // Add blank before left non-focusable item:
+                    children.add(index - 1, focusWhenShown(makeBlankChild(false)));
             }
             else
             {
