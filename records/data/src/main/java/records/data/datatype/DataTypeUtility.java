@@ -767,7 +767,7 @@ public class DataTypeUtility
         public void skipSpaces()
         {
             // Don't try and get clever recurse to call tryRead, because it calls us!
-            while (charStart < original.length() && original.charAt(charStart) == ' ')
+            while (charStart < original.length() && Character.isSpaceChar(original.charAt(charStart)))
                 charStart += 1;
         }
 
