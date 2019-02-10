@@ -88,6 +88,7 @@ public class FromString
     {
         @Value String src = Utility.cast(arg, String.class);
         StringView stringView = new StringView(src);
+        stringView.skipSpaces();
         @Value Object value = convertFromString(type, stringView);
         stringView.skipSpaces();
         if (stringView.charStart < src.length())
