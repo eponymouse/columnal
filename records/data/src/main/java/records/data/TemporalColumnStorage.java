@@ -61,10 +61,8 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         return values.size();
     }
 
-    public @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
-        if (beforeGet != null)
-            beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= filled())
             throw new UserException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);
@@ -104,6 +102,13 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         {
             dataType = DataTypeValue.date(dateTimeInfo, new GetValueOrError<@Value TemporalAccessor>()
             {
+                @Override
+                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+                {
+                    if (beforeGet != null)
+                        beforeGet.beforeGet(TemporalColumnStorage.this, index, progressListener);
+                }
+
                 @Override
                 public @Value TemporalAccessor _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {

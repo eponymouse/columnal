@@ -389,9 +389,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     @NonNull
     private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
-        // Must do this before checking range in case it adds more data:
-        if (beforeGet != null)
-            beforeGet.beforeGet(this, index, progressListener);
         checkRange(index);
 
 
@@ -458,6 +455,13 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         {
             dataType = DataTypeValue.number(displayInfo, new GetValueOrError<@Value Number>()
             {
+                @Override
+                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                {
+                    if (beforeGet != null)
+                        beforeGet.beforeGet(NumericColumnStorage.this, index, progressListener);
+                }
+
                 @Override
                 public @Value Number _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {

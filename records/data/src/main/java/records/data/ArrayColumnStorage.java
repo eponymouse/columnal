@@ -55,8 +55,6 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
                 @Override
                 public Pair<Integer, DataTypeValue> _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
-                    if (beforeGet != null)
-                        beforeGet.beforeGet(Utility.later(ArrayColumnStorage.this), i, prog);
                     try
                     {
                         ListEx list = storage.get(i);
@@ -66,6 +64,13 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
                     {
                         throw new InternalException("Incorrect type in array storage", e);
                     }
+                }
+
+                @Override
+                public void _beforeGet(int i, @Nullable ProgressListener prog) throws InternalException, UserException
+                {
+                    if (beforeGet != null)
+                        beforeGet.beforeGet(Utility.later(ArrayColumnStorage.this), i, prog);
                 }
 
                 @Override

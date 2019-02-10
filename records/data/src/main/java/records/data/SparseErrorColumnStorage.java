@@ -138,12 +138,17 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         @Override
         public final V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
         {
+            // Must do this first in case it finds an error:
+            _beforeGet(index, progressListener);
             String err = getError(index);
             if (err != null)
                 throw new InvalidImmediateValueException(StyledString.s("Invalid value: " + err), err);
             else
                 return _getWithProgress(index, progressListener);
         }
+
+        @OnThread(Tag.Simulation)
+        protected abstract void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException;
 
         @Override
         @OnThread(Tag.Simulation)
@@ -153,6 +158,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
                 v -> {errorEntries.remove(index); _set(index, v);});
         }
 
+        @OnThread(Tag.Simulation)
         protected abstract @NonNull V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
 
         @OnThread(Tag.Simulation)

@@ -51,10 +51,8 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         return values.size();
     }
     
-    public @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
-        if (beforeGet != null)
-            beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= values.size())
             throw new UserException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);
@@ -86,6 +84,14 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         {
             dataType = DataTypeValue.text(new GetValueOrError<@Value String>()
             {
+                @Override
+                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+                {
+                    if (beforeGet != null)
+                        beforeGet.beforeGet(StringColumnStorage.this, index, progressListener);
+
+                }
+
                 @Override
                 public @Value String _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {

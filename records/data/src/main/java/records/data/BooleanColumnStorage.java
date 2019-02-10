@@ -39,6 +39,13 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
         this.type = DataTypeValue.bool(new GetValueOrError<@Value Boolean>()
         {
             @Override
+            protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+            {
+                if (beforeGet != null)
+                    beforeGet.beforeGet(Utility.later(BooleanColumnStorage.this), index, progressListener);
+            }
+
+            @Override
             public @Value Boolean _getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
             {
                 return BooleanColumnStorage.this.getWithProgress(i, progressListener);
@@ -60,8 +67,6 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
 
     private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        if (beforeGet != null)
-            beforeGet.beforeGet(this, i, progressListener);
         if (i < 0 || i >= filled())
             throw new UserException("Attempting to access invalid element: " + i + " of " + filled());
         return DataTypeUtility.value(data.get(i));
