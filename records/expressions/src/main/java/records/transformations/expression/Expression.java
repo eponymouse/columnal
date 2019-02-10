@@ -553,10 +553,10 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                         @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
                         patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                     }
-                    return me.new MatchClause(patterns.build(), visitExpression(matchClauseContext.expression()));
+                    return me.new MatchClause(patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression()));
                 });
             }
-            return new MatchExpression(visitExpression(ctx.expression()), clauses);
+            return new MatchExpression(visitTopLevelExpression(ctx.topLevelExpression()), clauses);
         }
 
         @Override
