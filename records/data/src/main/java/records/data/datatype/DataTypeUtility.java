@@ -724,6 +724,14 @@ public class DataTypeUtility
     // the substrings over and over.  The data is immutable, the position is mutable.
     public static class StringView
     {
+        private static final ImmutableList<Integer> whiteSpaceCategories = ImmutableList.of(
+            (int)Character.SPACE_SEPARATOR,
+            (int)Character.LINE_SEPARATOR,
+            (int)Character.PARAGRAPH_SEPARATOR,
+            // Not really whitespace but contains \t and \n so we want to skip:
+            (int)Character.CONTROL
+        );
+        
         public final String original;
         public int charStart;
         
@@ -767,7 +775,7 @@ public class DataTypeUtility
         public void skipSpaces()
         {
             // Don't try and get clever recurse to call tryRead, because it calls us!
-            while (charStart < original.length() && Character.isSpaceChar(original.charAt(charStart)))
+            while (charStart < original.length() && whiteSpaceCategories.contains(Character.getType(original.charAt(charStart))))
                 charStart += 1;
         }
 
