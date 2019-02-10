@@ -662,7 +662,8 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             else if (c instanceof OperatorCompletion)
             {
                 newText = ((OperatorCompletion) c).operator.getContent();
-                textField.setEditable(false);
+                if (positionCaret.isPresent())
+                    textField.setEditable(false);
             }
             else if (c instanceof FunctionCompletion)
             {
