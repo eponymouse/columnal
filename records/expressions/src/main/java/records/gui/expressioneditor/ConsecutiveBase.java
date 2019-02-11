@@ -486,7 +486,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                 else if (rightOfRight != null && rightOfRight.availableForFocus())
                     rightOfRight.focus(Focus.LEFT); // What if caret position takes us beyond this?  Is this possible?
                 else
-                    children.add(index + 2, focusWhenShown(makeBlankChild(false)));
+                    children.add(children.get(index).isBlank() ? index + 2 : index + 1, focusWhenShown(makeBlankChild(false)));
             }
             else
             {
@@ -524,8 +524,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                 else if (index - 2 >= 0 && children.get(index - 1).availableForFocus())
                     children.get(index - 2).focus(Focus.RIGHT);
                 else
-                    // Add blank before left non-focusable item:
-                    children.add(index - 1, focusWhenShown(makeBlankChild(false)));
+                    // Add blank before us if we are non-blank, otherwise
+                    // before left non-focusable neighbour:
+                    children.add(children.get(index).isBlank() ? index - 1 : index, focusWhenShown(makeBlankChild(false)));
             }
             else
             {
