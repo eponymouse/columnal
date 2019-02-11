@@ -201,14 +201,16 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     public static boolean requiresNewSlot(String current, int newCodepoint)
     {
         // Very special case: @entire can be followed by any identifier
-        if (current.startsWith("@entire "))
-            current = current.substring("@entire ".length());
-        
+        if (current.startsWith("@entire"))
+        {
+            current = current.substring("@entire".length()).trim();
+        }
         // Special case: @ can only be followed by letters:
-        if (current.startsWith("@"))
+        else if (current.startsWith("@"))
         {
             return !Character.isLetter(newCodepoint);
         }
+        
         // Identifiers can have numbers after first char:
         if (current.codePoints().limit(1).anyMatch(ExpressionAlphabet.WORD::test) && Character.isDigit(newCodepoint))
         {
