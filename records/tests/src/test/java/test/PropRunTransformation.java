@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
@@ -46,10 +47,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.junit.Assert.assertEquals;
@@ -111,13 +114,14 @@ public class PropRunTransformation
     {
         // Pick a column to filter on:
         List<Column> columns = srcTable.data().getData().getColumns();
-        Column target = columns.get(r.nextInt(columns.size()));
+        int targetColumnIndex = r.nextInt(columns.size());
+        Column target = columns.get(targetColumnIndex);
 
         assumeTrue(target.getLength() > 0);
 
         // Pick a random value:
-        int targetIndex = r.nextInt(target.getLength());
-        @Value Object targetValue = target.getType().getCollapsed(targetIndex);
+        int targetRowIndex = r.nextInt(target.getLength());
+        @Value Object targetValue = target.getType().getCollapsed(targetRowIndex);
 
         ComparisonOperator op;
         Predicate<Integer> check;
@@ -146,7 +150,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
+                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
@@ -159,7 +163,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
+                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
 
         // Lengths should equal original:
@@ -168,11 +172,34 @@ public class PropRunTransformation
         assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
 
         srcTable.mgr.record(invertedFilter);
-        
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, r.nextBoolean());
+
+        boolean includeSourceColumn = r.nextBoolean();
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, includeSourceColumn);
+
+        List<ColumnId> srcColNames = srcTable.data().getData().getColumnIds();
+        if (includeSourceColumn)
+            srcColNames = Utility.prependToList(new ColumnId("Source"), srcColNames);
+        // Should be same column names in same order, modulo the extra Source column:
+        assertEquals(srcColNames, concatFilters.getData().getColumnIds());;
 
         // Check that the same set of rows is present:
-        assertEquals(TestUtil.getRowFreq(srcTable.data().getData()), TestUtil.getRowFreq(concatFilters.getData()));
+        Stream<List<@Value Object>> srcWithSrc = TestUtil.streamFlattened(srcTable.data().getData()).<List<@Value Object>>map(p -> {
+            if (!includeSourceColumn)
+                return p.getSecond();
+            else
+                return TestUtil.<List<@Value Object>>checkedToRuntime(() -> {
+                    boolean matchesFilter = check.test(Utility.compareValues(p.getSecond().get(targetColumnIndex), targetValue));
+                    return Utility.prependToList(DataTypeUtility.value(matchesFilter ? filter.getId().getRaw() : invertedFilter.getId().getRaw()), p.getSecond());
+                });
+        });
+        ImmutableList<Entry<List<@Value Object>, Long>> srcData = TestUtil.getRowFreq(srcWithSrc).entrySet().stream().collect(ImmutableList.toImmutableList());
+        ImmutableList<Entry<List<@Value Object>, Long>> destData = TestUtil.getRowFreq(concatFilters.getData()).entrySet().stream().collect(ImmutableList.toImmutableList());
+        assertEquals(srcData.size(), destData.size());
+        for (int i = 0; i < srcData.size(); i++)
+        {
+            TestUtil.assertValueListEqual("Row " + i, srcData.get(i).getKey(), destData.get(i).getKey());
+            assertEquals("Row " + i, srcData.get(i).getValue(), destData.get(i).getValue());
+        }
     }
 
     private ComparisonOperator invert(ComparisonOperator op)
@@ -233,7 +260,7 @@ public class PropRunTransformation
 
     @Property
     @OnThread(Tag.Simulation)
-    public void testConcatSelf(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    public void testConcatSelf(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original, boolean includeSource) throws InternalException, UserException
     {
         List<TableId> ids = new ArrayList<>();
         @TableDataRowIndex int originalLength = original.data().getData().getLength();
@@ -241,7 +268,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data().getId());
-            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT, false);
+            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT, includeSource);
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:

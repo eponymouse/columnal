@@ -175,9 +175,9 @@ public class TestUtil
             {
                 @NonNull @Value Object aNN = a;
                 @NonNull @Value Object bNN = b;
-                CompletableFuture<Integer> f = new CompletableFuture<>();
-                Workers.onWorkerThread("Comparison", Priority.FETCH, () -> checkedToRuntime(() -> f.complete(Utility.compareValues(aNN, bNN))));
-                int compare = f.get();
+                CompletableFuture<Either<Throwable,  Integer>> f = new CompletableFuture<>();
+                Workers.onWorkerThread("Comparison", Priority.FETCH, () -> f.complete(exceptionToEither(() -> Utility.compareValues(aNN, bNN))));
+                int compare = f.get().either(e -> {throw new RuntimeException(e);}, x -> x);
                 if (compare != 0)
                 {
                     fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
@@ -327,20 +327,20 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static StreamEx<List<@Value Object>> streamFlattened(RecordSet src)
+    public static StreamEx<Pair<Integer, List<@Value Object>>> streamFlattened(RecordSet src)
     {
-        return new StreamEx.Emitter<List<@Value Object>>()
+        return new StreamEx.Emitter<Pair<Integer, List<@Value Object>>>()
         {
             int nextIndex = 0;
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Nullable Emitter<List<@Value Object>> next(Consumer<? super List<Object>> consumer)
+            public @Nullable Emitter<Pair<Integer, List<@Value Object>>> next(Consumer<? super Pair<Integer, List<Object>>> consumer)
             {
                 try
                 {
                     if (src.indexValid(nextIndex))
                     {
-                        List<@Value Object> collapsed = src.getColumns().stream().sorted(Comparator.comparing(Column::getName)).map(c ->
+                        List<@Value Object> collapsed = src.getColumns().stream()/*.sorted(Comparator.comparing(Column::getName))*/.map(c ->
                         {
                             try
                             {
@@ -351,7 +351,7 @@ public class TestUtil
                                 throw new RuntimeException(e);
                             }
                         }).collect(Collectors.toList());
-                        consumer.accept(collapsed);
+                        consumer.accept(new Pair<>(nextIndex, collapsed));
                         nextIndex += 1;
                         return this;
                     }
@@ -404,9 +404,16 @@ public class TestUtil
     @SuppressWarnings("nullness")
     public static Map<List<@Value Object>, Long> getRowFreq(RecordSet src)
     {
+        return getRowFreq(streamFlattened(src).<List<@Value Object>>map(p -> p.getSecond()));
+    }
+
+    @OnThread(Tag.Simulation)
+    @SuppressWarnings("nullness")
+    public static Map<List<@Value Object>, Long> getRowFreq(Stream<List<@Value Object>> src)
+    {
         SortedMap<List<@Value Object>, Long> r = new TreeMap<>((Comparator<List<@Value Object>>)(List<@Value Object> a, List<@Value Object> b) -> {
             if (a.size() != b.size())
-                return b.size() - a.size();
+                return Integer.compare(a.size(), b.size());
             for (int i = 0; i < a.size(); i++)
             {
                 try
@@ -422,7 +429,7 @@ public class TestUtil
             }
             return 0;
         });
-        streamFlattened(src).forEach(new Consumer<List<@Value Object>>()
+        src.forEach(new Consumer<List<@Value Object>>()
         {
             @Override
             public void accept(List<@Value Object> row)
@@ -869,6 +876,18 @@ public class TestUtil
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> Either<Throwable, T> exceptionToEither(ExSupplier<T> supplier)
+    {
+        try
+        {
+            return Either.right(supplier.get());
+        }
+        catch (Throwable e)
+        {
+            return Either.left(e);
         }
     }
 
