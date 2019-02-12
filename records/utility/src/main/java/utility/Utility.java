@@ -35,6 +35,7 @@ import javafx.application.Platform;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -1258,6 +1259,29 @@ public class Utility
         if (index < 0 || index >= list.size())
             throw new InternalException("List index out of bounds: " + index + " versus " + list.size());
         return list.get(index);
+    }
+
+    // Creates a live mirror of the given list.  Do not use
+    // if the original will change (and you don't want to reflect the change)
+    // or if you do not want to keep the original in memory,
+    // or if you want to access the returned list multiple times and
+    // not have to re-run the mapping.
+    public static <S, T> List<T> mappedList(List<S> original, Function<S, T> mapping)
+    {
+        return new AbstractList<T>()
+        {
+            @Override
+            public T get(int index)
+            {
+                return mapping.apply(original.get(index));
+            }
+
+            @Override
+            public int size()
+            {
+                return original.size();
+            }
+        };
     }
 
     public interface WrappedCharSequence extends CharSequence

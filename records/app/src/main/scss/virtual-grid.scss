@@ -87,6 +87,11 @@
         -fx-effect: blur;
     }
     
+    &:expanded {
+        -fx-background-radius: 0 5 5 5;
+        -fx-opacity: 0.95;
+    }
+    
     &:has-error {
         -fx-background-color: $table-divider, hsb(0, 60%, 80%), $table-cell;
         -fx-background-insets: 0, 0 1 1 0, 1 2 2 1;    

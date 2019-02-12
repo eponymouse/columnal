@@ -76,6 +76,9 @@ public abstract class VirtualGridSupplier<T extends Node>
         // so you can fight against it if you want to be properly pinned.
         public Pair<DoubleExpression, DoubleExpression> add(Node node, ViewOrder viewOrder);
         
+        // Change the view order.  Note you cannot change from/to OVERLAY_ACTIVE
+        public void changeViewOrder(Node node, ViewOrder viewOrder);
+        
         // Returns the same pair so you can remove listeners if needed
         public Pair<DoubleExpression, DoubleExpression> remove(Node node);
     }

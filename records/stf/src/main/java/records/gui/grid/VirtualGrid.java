@@ -1073,7 +1073,12 @@ public final class VirtualGrid implements ScrollBindable
     private class Container extends Region implements ContainerChildren
     {
         private final Rectangle clip;
-        private List<ViewOrder> viewOrders = new ArrayList<>();
+        // A list, the same length as the children of this region,
+        // which details the view order.  Because children are sorted
+        // by view order, this list will always be sorted by view order
+        // as well.  It will have lots of adjacent duplicates, as most 
+        // adjacent children share the same view order.
+        private ArrayList<ViewOrder> viewOrders = new ArrayList<>();
 
         // For when in nudge scrolling mode:
         private NudgeScrollSpeed nudgeScrollLeft = NudgeScrollSpeed.NONE;
@@ -1483,6 +1488,37 @@ public final class VirtualGrid implements ScrollBindable
                 viewOrders.add(insertionIndex, viewOrder);
             }
             return new Pair<>(translateXProperty(), translateYProperty());
+        }
+
+        @Override
+        public void changeViewOrder(Node node, ViewOrder viewOrder)
+        {
+            int index = getChildren().indexOf(node);
+            if (viewOrders.get(index) != viewOrder)
+            {
+                // So, here's the challenge.  We want to swap two items, but
+                // in a way that doesn't remove either from the list.  The only
+                // way to do this with ObservableList is to use setAll.
+                // But the sorting must be done by comparing view orders.
+                viewOrders.set(index, viewOrder);
+                
+                List<Pair<ViewOrder, Node>> toSort = new ArrayList<>(getChildren().size());
+                for (int i = 0; i < getChildren().size(); i++)
+                {
+                    Node child = getChildren().get(i);
+                    if (child == node)
+                        toSort.add(new Pair<>(viewOrder, child));
+                    else
+                        toSort.add(new Pair<>(viewOrders.get(i), child));
+                }
+                
+                toSort.sort(Comparator.comparing(Pair::getFirst));
+                getChildren().setAll(Utility.mappedList(toSort, Pair::getSecond));
+                for (int i = 0; i < viewOrders.size(); i++)
+                {
+                    viewOrders.set(i, toSort.get(i).getFirst());
+                }
+            }
         }
 
         @Override

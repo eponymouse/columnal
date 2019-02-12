@@ -1,9 +1,12 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.effect.GaussianBlur;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
@@ -11,6 +14,7 @@ import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.dtf.Document;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.ReadOnlyDocument;
+import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
@@ -25,55 +29,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
-    private static ArrayBlockingQueue<VersionedSTF> newItems = new ArrayBlockingQueue<>(500);
-    
-    static {
-        for (int i = 0; i < 3; i++)
-        {
-            Thread t = new Thread("STF creator" + i)
-            {
-                @Override
-                @OnThread(value = Tag.FX, ignoreParent = true)
-                public void run()
-                {
-                    while (true)
-                    {
-                        try
-                        {
-                            newItems.put(new VersionedSTF());
-                        }
-                        catch (InterruptedException e)
-                        {
-                            // So what?  Go round again.
-                        }
-                    }
-                }
-            };
-            t.setDaemon(true);
-            t.start();
-        }
-    }
-    
     public DataCellSupplier()
     {
-        super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
+        super(Arrays.asList(CellStyle.values()));
     }
     
     @Override
     protected VersionedSTF makeNewItem()
     {
-        VersionedSTF stf = null;
-        while (stf == null)
-        {
-            try
-            {
-                stf = newItems.take();
-            }
-            catch (InterruptedException e)
-            {
-                // Just go again
-            }
-        } 
+        VersionedSTF stf = new VersionedSTF();
         stf.getStyleClass().add("table-data-cell");
         return stf;
     }
@@ -163,6 +127,29 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         return getItemAt(position);
     }
 
+    @Override
+    protected void sizeAndLocateCell(double x, double y, @AbsColIndex int columnIndex, @AbsRowIndex int rowIndex, VersionedSTF cell, VisibleBounds visibleBounds)
+    {
+        if (cell.isExpanded())
+        {
+            double width = visibleBounds.getXCoordAfter(columnIndex + CellPosition.col(1)) - x;
+            double rowHeight = visibleBounds.getYCoordAfter(rowIndex + CellPosition.row(1)) - y;
+            FXUtility.resizeRelocate(cell, x, y, width, rowHeight);
+            cell.setCoreSize(visibleBounds.getXCoordAfter(columnIndex) - x, visibleBounds.getYCoordAfter(rowIndex) - y);
+        }
+        else
+            super.sizeAndLocateCell(x, y, columnIndex, rowIndex, cell, visibleBounds);
+    }
+
+    @Override
+    protected ViewOrder viewOrderFor(VersionedSTF node)
+    {
+        if (node.isExpanded())
+            return ViewOrder.POPUP;
+        else
+            return super.viewOrderFor(node);
+    }
+    
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details

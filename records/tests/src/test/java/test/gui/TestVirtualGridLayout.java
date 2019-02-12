@@ -359,7 +359,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     {
         protected SimpleCellSupplier()
         {
-            super(ViewOrder.STANDARD_CELLS, ImmutableList.of());
+            super(ImmutableList.of());
         }
 
         @Override

@@ -27,6 +27,7 @@ import records.gui.dtf.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 
@@ -46,12 +47,14 @@ public class DocumentTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
     private final Path caretShape;
-    private final Tooltip tooltip;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
     private double horizTranslation;
     private final ResizableRectangle clip;
+    private boolean expanded;
+    private double coreWidth;
+    private double coreHeight;
 
     public DocumentTextField()
     {
@@ -70,9 +73,7 @@ public class DocumentTextField extends Region implements DocumentListener
         caretShape.visibleProperty().bind(focusedProperty());
         caretShape.getStyleClass().add("dynamic-caret");
         getChildren().addAll(textFlow, caretShape);
-        tooltip = new Tooltip();
-        Tooltip.install(this, tooltip);
-
+        
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
             InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
@@ -81,11 +82,15 @@ public class DocumentTextField extends Region implements DocumentListener
             document.focusChanged(focused);
             if (focused)
                 FXUtility.mouse(this).refreshDocument(focused);
+            Utility.later(this).setExpanded(focused);
         });
     }
     
     private void mouseEvent(MouseEvent mouseEvent)
     {
+        if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED && (mouseEvent.getX() >= coreWidth || mouseEvent.getY() >= coreHeight))
+            return; // Don't process events in our expanded region
+        
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
         //    Log.debug("Got mouse event: " + mouseEvent);
         
@@ -209,7 +214,6 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(Tag.FXPlatform)
     public void documentChanged()
     {
-        tooltip.setText(document.getText());
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
         requestLayout();
@@ -229,6 +233,17 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
+        if (expanded)
+        {
+            textFlow.setPrefWidth(getWidth());
+        }
+        else
+        {
+            textFlow.setPrefWidth(USE_COMPUTED_SIZE);
+            coreWidth = getWidth();
+            coreHeight = getHeight();
+        }
+        
         double wholeTextWidth = textFlow.prefWidth(-1);
         Bounds caretLocalBounds = caretShape.getBoundsInLocal();
         Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
@@ -424,5 +439,24 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
         requestLayout();
+    }
+    
+    public void setExpanded(boolean expanded)
+    {
+        FXUtility.setPseudoclass(this, "expanded", expanded);
+        this.expanded = expanded;
+        this.coreWidth = getWidth();
+        this.coreHeight = getHeight();
+    }
+
+    public boolean isExpanded()
+    {
+        return expanded;
+    }
+
+    public void setCoreSize(double coreWidth, double coreHeight)
+    {
+        this.coreWidth = coreWidth;
+        this.coreHeight = coreHeight;
     }
 }

@@ -53,7 +53,6 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     // All items that are in the parent container, but invisible:
     private final List<T> spareItems = new ArrayList<>();
     private final Collection<S> possibleStyles;
-    private final ViewOrder viewOrder;
     private @Nullable FXPlatformRunnable cancelStyleAll;
 
     private class ItemDetails<T>
@@ -80,9 +79,8 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         }
     }
 
-    protected VirtualGridSupplierIndividual(ViewOrder viewOrder, Collection<S> styleValues)
+    protected VirtualGridSupplierIndividual(Collection<S> styleValues)
     {
-        this.viewOrder = viewOrder;
         this.possibleStyles = styleValues;
     }
     
@@ -117,7 +115,6 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         for (@AbsRowIndex int rowIndex = visibleBounds.firstRowIncl; rowIndex <= visibleBounds.lastRowIncl; rowIndex++)
         {
             final double y = visibleBounds.getYCoord(rowIndex);
-            double rowHeight = visibleBounds.getYCoordAfter(rowIndex) - y;
             for (@AbsColIndex int columnIndex = visibleBounds.firstColumnIncl; columnIndex <= visibleBounds.lastColumnIncl; columnIndex++)
             {
                 final double x = visibleBounds.getXCoord(columnIndex);
@@ -141,11 +138,12 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                     {
                         newCell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.getSecond().styleForAllCells());
                         resetForReuse(newCell.getFirst());
+                        containerChildren.changeViewOrder(newCell.getFirst(), viewOrderFor(newCell.getFirst()));
                     }
                     else
                     {
                         newCell = withStyle(makeNewItem(), gridForItem.getSecond().styleForAllCells());
-                        containerChildren.add(newCell.getFirst(), viewOrder);
+                        containerChildren.add(newCell.getFirst(), viewOrderFor(newCell.getFirst()));
                     }
                     cell = new ItemDetails<>(newCell.getFirst(), newCell.getSecond(), gridForItem, gridForItemResult.get().getSecond());
 
@@ -157,6 +155,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                 }
                 else
                 {
+                    containerChildren.changeViewOrder(cell.node, viewOrderFor(cell.node));
                     cell.styleUpdater.listenTo(gridForItem.getSecond().styleForAllCells());
                     if (cell.originator.getFirst() != gridForItem.getFirst() 
                         || !cell.gridAreaCellPosition.equals(gridForItemResult.get().getSecond())
@@ -170,8 +169,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                     }
                 }
                 cell.node.setVisible(true);
-                double nextX = visibleBounds.getXCoordAfter(columnIndex);
-                FXUtility.resizeRelocate(cell.node, x, y, nextX - x, rowHeight);
+                sizeAndLocateCell(x, y, columnIndex, rowIndex, cell.node, visibleBounds);
             }
         }
 
@@ -189,6 +187,18 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         scheduleStyleAllTogether();
 
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
+    }
+
+    protected void sizeAndLocateCell(double x, double y, @AbsColIndex int columnIndex, @AbsRowIndex int rowIndex, T cell, VisibleBounds visibleBounds)
+    {
+        double width = visibleBounds.getXCoordAfter(columnIndex) - x;
+        double rowHeight = visibleBounds.getYCoordAfter(rowIndex) - y;
+        FXUtility.resizeRelocate(cell, x, y, width, rowHeight);
+    }
+
+    protected ViewOrder viewOrderFor(T node)
+    {
+        return ViewOrder.STANDARD_CELLS;
     }
 
     private void scheduleStyleAllTogether()

@@ -64,6 +64,8 @@ class Node
     void setFocusTraversable(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
     BooleanProperty focusedProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
     @Pure boolean isFocused(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    
+    BooleanProperty hoverProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
     void setPickOnBounds(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
     Bounds getBoundsInLocal(@UnknownInitialization(javafx.scene.Node.class) Node this);
