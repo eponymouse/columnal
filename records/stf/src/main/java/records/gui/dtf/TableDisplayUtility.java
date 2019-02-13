@@ -366,16 +366,24 @@ public class TableDisplayUtility
                 FXPlatformBiConsumer<String, @Nullable @Value T> saveChange = (String s, @Value T v) -> {};
                 if (isEditable)
                     saveChange = new FXPlatformBiConsumer<String, @Nullable @Value T>()
-                {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void consume(String text, @Nullable @Value T v)
                     {
-                        Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
-                        onModify.run();
-                    }
-                };
+                        @Override
+                        public @OnThread(Tag.FXPlatform) void consume(String text, @Nullable @Value T v)
+                        {
+                            Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
+                            onModify.run();
+                        }
+                    };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                RecogniserDocument<@Value T> editorKit = new RecogniserDocument<>(value.getFirst(), (Class<@Value T>)itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                Document editorKit;
+                if (isEditable)
+                {
+                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                }
+                else
+                {
+                    editorKit = new ReadOnlyDocument(value.getFirst());
+                }
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);

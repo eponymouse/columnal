@@ -60,7 +60,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
     {
         @Nullable VersionedSTF stf = getItemAt(cellPosition);
-        if (stf != null && stf.isEditable())
+        if (stf != null)
         {
             if (screenPosition != null)
             {

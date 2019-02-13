@@ -165,7 +165,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     private void keyboardEvent(KeyEvent keyEvent)
     {
-        if (keyEvent.getEventType() == KeyEvent.KEY_TYPED)
+        if (keyEvent.getEventType() == KeyEvent.KEY_TYPED && isEditable())
         {
             // Borrowed from TextInputControlBehavior:
             // Sometimes we get events with no key character, in which case

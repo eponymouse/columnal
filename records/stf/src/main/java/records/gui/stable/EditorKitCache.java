@@ -97,7 +97,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public RecogniserDocument<V> makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
+        public Document makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -260,7 +260,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         private final @TableDataRowIndex int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull Either<RecogniserDocument<@Value V>, @Localized String> loadedItemOrError;
+        private @MonotonicNonNull Either<Document, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
@@ -280,7 +280,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         public synchronized void update(String content, @Nullable @Value V loadedItem)
         {
             FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
-                this.loadedItemOrError = Either.<RecogniserDocument<@Value V>, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
+                this.loadedItemOrError = Either.<Document, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
             });
             updateDisplay();
             //formatVisible(OptionalInt.of(rowIndex));
