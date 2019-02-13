@@ -196,6 +196,11 @@
     -fx-fill: darkred !important;
 }
 
-.document-text-field > .document-caret {
-    -fx-stroke: red;
+.document-text-field {
+    & > .document-caret {
+        -fx-stroke: red;
+    }
+    & > .fade-overlay {
+        -fx-fill: transparent;
+    }
 }

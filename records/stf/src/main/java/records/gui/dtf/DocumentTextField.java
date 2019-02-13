@@ -53,10 +53,16 @@ public class DocumentTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
     private final Path caretShape;
+    private final ResizableRectangle fadeOverlay;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
+    // Always positive, the amount of offset from the left edge back
+    // to the real start of the content.
     private double horizTranslation;
+    // Always positive, the amount of offset from the top edge up
+    // to the real start of the content.
+    private double vertTranslation;
     private final ResizableRectangle clip;
     private boolean expanded;
     private double coreWidth;
@@ -78,7 +84,10 @@ public class DocumentTextField extends Region implements DocumentListener
         caretShape.setMouseTransparent(true);
         caretShape.setManaged(false);
         caretShape.getStyleClass().add("document-caret");
-        getChildren().addAll(textFlow, caretShape);
+        fadeOverlay = new ResizableRectangle();
+        fadeOverlay.setMouseTransparent(true);
+        fadeOverlay.getStyleClass().add("fade-overlay");
+        getChildren().addAll(textFlow, caretShape, fadeOverlay);
         
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
@@ -151,7 +160,7 @@ public class DocumentTextField extends Region implements DocumentListener
             Log.log(e);
             textLayout = null;
         }
-        return textLayout == null ? null: textLayout.getHitInfo((float)x, (float)y);
+        return textLayout == null ? null: textLayout.getHitInfo((float)(x + horizTranslation), (float)(y + vertTranslation));
     }
 
     private void keyboardEvent(KeyEvent keyEvent)
@@ -197,23 +206,27 @@ public class DocumentTextField extends Region implements DocumentListener
             }
             if (keyEvent.getCode() == KeyCode.UP)
             {
-                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.TOP).orElse(null);
-                if (p != null)
+                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.TOP).getFirst();
+                HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
+                if (hitInfo != null)
                 {
-                    HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
-                    if (hitInfo != null)
+                    if (hitInfo.getInsertionIndex() == caretPosition.getPosition())
+                    {
+                        // We must be on the top line; move to the beginning:
+                        caretPosition.moveTo(0);
+                    }
+                    else
+                    {
                         caretPosition.moveTo(hitInfo.getInsertionIndex());
+                    }
                 }
             }
             if (keyEvent.getCode() == KeyCode.DOWN)
             {
-                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM).orElse(null);
-                if (p != null)
-                {
-                    HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
-                    if (hitInfo != null)
-                        caretPosition.moveTo(hitInfo.getInsertionIndex());
-                }
+                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM).getFirst();
+                HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
+                if (hitInfo != null)
+                    caretPosition.moveTo(hitInfo.getInsertionIndex());
             }
             
             if (keyEvent.getCode() == KeyCode.HOME)
@@ -299,6 +312,7 @@ public class DocumentTextField extends Region implements DocumentListener
         }
         
         double wholeTextWidth = textFlow.prefWidth(-1);
+        double wholeTextHeight = textFlow.prefHeight(getWidth());
         Bounds caretLocalBounds = caretShape.getBoundsInLocal();
         Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
         
@@ -318,9 +332,40 @@ public class DocumentTextField extends Region implements DocumentListener
             horizTranslation = 0;
         }
         
-        textFlow.resizeRelocate(-horizTranslation, 0, wholeTextWidth, getHeight());
-        clip.resize(getWidth(), getHeight());
+        if (isFocused() && caretBounds.getMinY() - 5 < 0)
+        {
+            // Caret is off screen to the top:
+            vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
+        }
+        else if (isFocused() && caretBounds.getMaxY() > getHeight() - 5)
+        {
+            // Caret is off screen to the bottom:
+            vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
+        }
+        else if (!isFocused())
+        {
+            vertTranslation = 0;
+        }
+
+        if (isExpanded())
+        {
+            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, getWidth(), wholeTextHeight);
+        }
+        else
+        {
+            // We avoid needlessly making TextFlows which are thousands of pixels
+            // wide by restricting to our own width plus some.
+            // (We don't use our own width because this causes text wrapping
+            // of long words, but we actually want to see those truncated)
+            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
+        }
+        //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
+        FXUtility.setPseudoclass(fadeOverlay, "more-above", vertTranslation > 8);
+        FXUtility.setPseudoclass(fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
+        fadeOverlay.resize(getWidth(), getHeight());
+        clip.resizeRelocate(horizTranslation, vertTranslation, getWidth(), getHeight());
         caretShape.setLayoutX(-horizTranslation);
+        caretShape.setLayoutY(-vertTranslation);
     }
 
     private void updateCaretShape()
@@ -364,15 +409,23 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public Optional<Point2D> _test_getClickPosFor(int targetPos)
     {
-        return getClickPosFor(targetPos, VPos.CENTER);
+        Pair<Point2D, Boolean> clickPos = getClickPosFor(targetPos, VPos.CENTER);
+        return clickPos.getSecond() ? Optional.of(clickPos.getFirst()) : Optional.empty();
     }
-    
-    private Optional<Point2D> getClickPosFor(int targetPos, VPos vPos)
+
+    /**
+     * Gets the click position of the target caret position, in DocumentTextField coordinates.
+     * 
+     * @param targetPos The target caret pos (like a character index)
+     * @param vPos The vertical position within the caret: top of it, middle of it, bottom of it?
+     * @return The click position, plus a boolean indicating whether or not it is in bounds.
+     */
+    private Pair<Point2D, Boolean> getClickPosFor(int targetPos, VPos vPos)
     {
         try
         {
             TextLayout textLayout = getTextLayout();
-            Bounds bounds = new Path(textLayout.getCaretShape(targetPos, true, 1.0f, 0)).getBoundsInLocal();
+            Bounds bounds = new Path(textLayout.getCaretShape(targetPos, true, 1.0f - (float)horizTranslation, (float)-vertTranslation)).getBoundsInLocal();
             Point2D p;
             switch (vPos)
             {
@@ -387,10 +440,7 @@ public class DocumentTextField extends Region implements DocumentListener
                     p = FXUtility.getCentre(bounds);
                     break;
             }
-            if (getBoundsInLocal().contains(p))
-                return Optional.of(p);
-            else
-                return Optional.empty();
+            return new Pair<>(p, getBoundsInLocal().contains(p));
         }
         catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NullPointerException e)
         {
@@ -521,6 +571,7 @@ public class DocumentTextField extends Region implements DocumentListener
         this.expanded = expanded;
         this.coreWidth = getWidth();
         this.coreHeight = getHeight();
+        requestLayout();
     }
 
     public boolean isExpanded()

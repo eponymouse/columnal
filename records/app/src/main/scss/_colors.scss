@@ -1,12 +1,12 @@
 /* Functions */
 @function grey($amount) {
-    @return hsb(0, 0%, $amount)
+    @return rgb($amount, $amount, $amount)
 }
 @function greya($amount, $alpha) {
-    @return hsba(0, 0%, $amount, $alpha)
+    @return rgba($amount, $amount, $amount, $alpha)
 }
 @function gray($amount) {
-    @return hsb(0, 0%, $amount)
+    @return rgb($amount, $amount, $amount)
 }
 
 /* General: */
