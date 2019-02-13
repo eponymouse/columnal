@@ -200,7 +200,14 @@
     & > .document-caret {
         -fx-stroke: red;
     }
+    & .document-selection {
+        -fx-fill: $focus-color;
+        -fx-stroke: null;
+    }
     & > .fade-overlay {
         -fx-fill: transparent;
+    }
+    & > .document-text-flow > .document-text {
+        -fx-fill: black;
     }
 }

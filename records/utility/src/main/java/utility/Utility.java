@@ -31,6 +31,7 @@ import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -462,6 +463,19 @@ public class Utility
                 builder.put(entry);
         }
         builder.put(key, value);
+        return builder.build();
+    }
+
+    public static <T> ImmutableSet<T> appendToSet(Set<T> data, T item)
+    {
+        ImmutableSet.Builder<T> builder = ImmutableSet.builderWithExpectedSize(data.size() + 1);
+        for (T existing : data)
+        {
+            // Can't add twice with builder:
+            if (!Objects.equals(existing, item))
+                builder.add(existing);
+        }
+        builder.add(item);
         return builder.build();
     }
 

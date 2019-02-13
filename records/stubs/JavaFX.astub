@@ -235,6 +235,11 @@ class Tooltip
 {
     public static void install(@UnknownInitialization(javafx.scene.Node.class) Node node, Tooltip t);
 }
+package javafx.scene.shape;
+class Shape
+{
+    void setStroke(@Nullable Paint value);
+}
 
 package javafx.scene.effect;
 class DropShadow

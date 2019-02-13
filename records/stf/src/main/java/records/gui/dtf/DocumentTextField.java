@@ -7,24 +7,37 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
+import javafx.scene.effect.BlendMode;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.gui.dtf.Document.DocumentListener;
@@ -53,7 +66,10 @@ public class DocumentTextField extends Region implements DocumentListener
 {
     private final TextFlow textFlow;
     private final Path caretShape;
+    private final Path selectionShape;
     private final ResizableRectangle fadeOverlay;
+    private final Path inverter;
+    private final Pane selectionPane;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
@@ -68,26 +84,51 @@ public class DocumentTextField extends Region implements DocumentListener
     private double coreWidth;
     private double coreHeight;
     private final Animation caretBlink;
+    private boolean updateCaretShapeQueued;
+    private final Pane inverterPane;
 
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");
+        anchorPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
+        caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
         this.clip = new ResizableRectangle();
         textFlow = new TextFlow();
+        textFlow.getStyleClass().add("document-text-flow");
         textFlow.setClip(clip);
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
-        anchorPosition = caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::updateCaretShape);
         caretShape = new Path();
         caretShape.setMouseTransparent(true);
         caretShape.setManaged(false);
         caretShape.getStyleClass().add("document-caret");
+        caretShape.setVisible(false);
+        selectionShape = new Path();
+        selectionShape.setMouseTransparent(true);
+        selectionShape.setManaged(false);
+        selectionShape.getStyleClass().add("document-selection");
+        Pane selBlack = new Pane();
+        selBlack.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+        selectionPane = new StackPane(selBlack, selectionShape);
+        selectionPane.setBlendMode(BlendMode.LIGHTEN);
+        inverter = new Path();
+        inverter.setMouseTransparent(true);
+        //inverter.setManaged(false);
+        inverter.setFill(Color.WHITE);
+        inverter.setStroke(null);
+        Pane black = new Pane();
+        black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+        inverterPane = new Pane(black,inverter);
+        //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+        inverterPane.setBlendMode(BlendMode.DIFFERENCE);
+        
+        selectionShape.visibleProperty().bind(focusedProperty());
         fadeOverlay = new ResizableRectangle();
         fadeOverlay.setMouseTransparent(true);
         fadeOverlay.getStyleClass().add("fade-overlay");
-        getChildren().addAll(textFlow, caretShape, fadeOverlay);
+        getChildren().addAll(textFlow, inverterPane, selectionPane, caretShape, fadeOverlay);
         
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
@@ -104,8 +145,12 @@ public class DocumentTextField extends Region implements DocumentListener
         
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             document.focusChanged(focused);
-            if (focused)
-                FXUtility.mouse(this).refreshDocument(focused);
+            if (!focused)
+            {
+                caretPosition.moveTo(0);
+                anchorPosition.moveTo(0);
+            }
+            FXUtility.mouse(this).refreshDocument(focused);
             if (onExpand != null)
             {
                 Utility.later(this).setExpanded(focused);
@@ -143,7 +188,7 @@ public class DocumentTextField extends Region implements DocumentListener
             requestFocus();
             // And important to map caret pos after change:
             caretPosition.moveTo(document.mapCaretPos(hitInfo.getInsertionIndex()));
-            if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED)
+            if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED && !mouseEvent.isShiftDown())
                 moveAnchorToCaret();
         }
     }
@@ -188,6 +233,7 @@ public class DocumentTextField extends Region implements DocumentListener
                 && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
             {
                 document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), character);
+                moveAnchorToCaret();
             }
         }
         else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED)
@@ -220,6 +266,8 @@ public class DocumentTextField extends Region implements DocumentListener
                         caretPosition.moveTo(hitInfo.getInsertionIndex());
                     }
                 }
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
             }
             if (keyEvent.getCode() == KeyCode.DOWN)
             {
@@ -227,6 +275,8 @@ public class DocumentTextField extends Region implements DocumentListener
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
                 if (hitInfo != null)
                     caretPosition.moveTo(hitInfo.getInsertionIndex());
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
             }
             
             if (keyEvent.getCode() == KeyCode.HOME)
@@ -263,7 +313,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     private void moveAnchorToCaret()
     {
-        anchorPosition = document.trackPosition(caretPosition.getPosition(), Bias.FORWARD, this::updateCaretShape);
+        anchorPosition.moveTo(caretPosition.getPosition());
         //Log.logStackTrace("Anchor now " + anchorPosition.getPosition());
     }
 
@@ -272,7 +322,8 @@ public class DocumentTextField extends Region implements DocumentListener
         this.document.removeListener(this);
         this.document = document;
         this.document.addListener(this);
-        caretPosition = this.document.trackPosition(0, Bias.FORWARD, this::updateCaretShape);
+        caretPosition = this.document.trackPosition(0, Bias.FORWARD, this::queueUpdateCaretShape);
+        anchorPosition = this.document.trackPosition(0, Bias.FORWARD, this::queueUpdateCaretShape);
         moveAnchorToCaret();
         documentChanged();
     }
@@ -290,6 +341,7 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         return styledSpans.map(ss -> {
             Text text = new Text(ss.getSecond());
+            text.getStyleClass().add("document-text");
             text.setMouseTransparent(true);
             text.getStyleClass().addAll(ss.getFirst());
             return text;
@@ -366,20 +418,41 @@ public class DocumentTextField extends Region implements DocumentListener
         clip.resizeRelocate(horizTranslation, vertTranslation, getWidth(), getHeight());
         caretShape.setLayoutX(-horizTranslation);
         caretShape.setLayoutY(-vertTranslation);
+        selectionShape.setLayoutX(-horizTranslation);
+        selectionShape.setLayoutY(-vertTranslation);
+        inverter.setLayoutX(-horizTranslation);
+        inverter.setLayoutY(-vertTranslation);
+        inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+    }
+    
+    private void queueUpdateCaretShape()
+    {
+        if (!updateCaretShapeQueued)
+        {
+            FXUtility.runAfter(this::updateCaretShape);
+        }
+        updateCaretShapeQueued = true;
     }
 
     private void updateCaretShape()
     {
+        updateCaretShapeQueued = false;
         try
         {
+            selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
+            inverter.getElements().setAll(selectionShape.getElements());
             caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
             if (isFocused())
                 caretBlink.playFromStart();
         }
         catch (Exception e)
         {
+            selectionShape.getElements().clear();
+            inverter.getElements().clear();
             caretShape.getElements().clear();
         }
+        // Caret may have moved off-screen, which is detected and corrected in the layout:
         requestLayout();
     }
 
@@ -448,7 +521,7 @@ public class DocumentTextField extends Region implements DocumentListener
         }
     }
 
-    public TextLayout getTextLayout() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
+    private TextLayout getTextLayout() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
     {
         // TODO stop using reflection in Java 9, just call the methods directly
         Method method = textFlow.getClass().getDeclaredMethod("getTextLayout");
@@ -475,6 +548,7 @@ public class DocumentTextField extends Region implements DocumentListener
             TextLayout textLayout = getTextLayout();
             int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
             caretPosition.moveTo(isFocused() ? index : document.mapCaretPos(index));
+            moveAnchorToCaret();
         }
         catch (Exception e)
         {
