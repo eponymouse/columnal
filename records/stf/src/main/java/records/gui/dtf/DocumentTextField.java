@@ -3,6 +3,10 @@ package records.gui.dtf;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -16,6 +20,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -56,6 +61,7 @@ public class DocumentTextField extends Region implements DocumentListener
     private boolean expanded;
     private double coreWidth;
     private double coreHeight;
+    private final Animation caretBlink;
 
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
@@ -71,7 +77,6 @@ public class DocumentTextField extends Region implements DocumentListener
         caretShape = new Path();
         caretShape.setMouseTransparent(true);
         caretShape.setManaged(false);
-        caretShape.visibleProperty().bind(focusedProperty());
         caretShape.getStyleClass().add("document-caret");
         getChildren().addAll(textFlow, caretShape);
         
@@ -79,6 +84,15 @@ public class DocumentTextField extends Region implements DocumentListener
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
             InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
         ));
+
+        caretBlink = new Timeline(
+            new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
+            new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
+            new KeyFrame(Duration.seconds(1.6), new KeyValue(caretShape.visibleProperty(), true))
+        );
+        caretBlink.setCycleCount(Animation.INDEFINITE);
+        
+        
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             document.focusChanged(focused);
             if (focused)
@@ -87,6 +101,13 @@ public class DocumentTextField extends Region implements DocumentListener
             {
                 Utility.later(this).setExpanded(focused);
                 onExpand.run();
+            }
+            if (focused)
+                caretBlink.playFromStart();
+            else
+            {
+                caretBlink.stop();
+                caretShape.setVisible(false);
             }
         });
     }
@@ -307,6 +328,8 @@ public class DocumentTextField extends Region implements DocumentListener
         try
         {
             caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
+            if (isFocused())
+                caretBlink.playFromStart();
         }
         catch (Exception e)
         {
