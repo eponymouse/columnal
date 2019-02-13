@@ -40,7 +40,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * @param rowBounds The row bounds (vertical) of the current visible items (including any needed for scrolling)
      * @param columnBounds The column bounds (horizontal) of the current visible items (including any needed for scrolling)
      */
-    protected abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds);
+    protected abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid);
 
     protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {

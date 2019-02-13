@@ -195,3 +195,7 @@
     -fx-strikethrough: true;
     -fx-fill: darkred !important;
 }
+
+.document-text-field .document-caret {
+    -fx-fill: red;
+}

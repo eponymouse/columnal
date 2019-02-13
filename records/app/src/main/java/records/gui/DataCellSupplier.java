@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.effect.GaussianBlur;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
@@ -20,12 +19,12 @@ import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
@@ -35,9 +34,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
     
     @Override
-    protected VersionedSTF makeNewItem()
+    protected VersionedSTF makeNewItem(VirtualGrid virtualGrid)
     {
-        VersionedSTF stf = new VersionedSTF();
+        VersionedSTF stf = new VersionedSTF(virtualGrid::positionOrAreaChanged);
         stf.getStyleClass().add("table-data-cell");
         return stf;
     }
@@ -83,7 +82,11 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             @Override
             public void applyStyle(Node item, boolean on)
             {
-                item.setEffect(on ? new GaussianBlur() : null);
+                // Don't override unrelated effects:
+                if (!on && item.getEffect() instanceof GaussianBlur)
+                    item.setEffect(null);
+                else if (on && item.getEffect() == null)
+                    item.setEffect(new GaussianBlur());
             }
         },
         HOVERING_EXPAND_DOWN
@@ -132,8 +135,8 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     {
         if (cell.isExpanded())
         {
-            double width = visibleBounds.getXCoordAfter(columnIndex + CellPosition.col(1)) - x;
-            double rowHeight = visibleBounds.getYCoordAfter(rowIndex + CellPosition.row(1)) - y;
+            double width = 350; //visibleBounds.getXCoordAfter(columnIndex + CellPosition.col(1)) - x;
+            double rowHeight = 110; // visibleBounds.getYCoordAfter(rowIndex + CellPosition.row(1)) - y;
             FXUtility.resizeRelocate(cell, x, y, width, rowHeight);
             cell.setCoreSize(visibleBounds.getXCoordAfter(columnIndex) - x, visibleBounds.getYCoordAfter(rowIndex) - y);
         }
@@ -158,9 +161,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         @OnThread(Tag.FXPlatform)
         private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
         
-        public VersionedSTF()
+        public VersionedSTF(FXPlatformRunnable redoLayout)
         {
-            super();
+            super(redoLayout);
             setFocusTraversable(false);
         }
 

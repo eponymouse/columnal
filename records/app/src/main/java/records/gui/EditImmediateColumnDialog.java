@@ -91,7 +91,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
-        DocumentTextField defaultValueField = new DocumentTextField();
+        DocumentTextField defaultValueField = new DocumentTextField(null);
         defaultValueField.getStyleClass().add("default-value");
         TypeExpression typeExpression = new InvalidIdentTypeExpression("");
         if (dataType != null)

@@ -26,6 +26,7 @@ import records.gui.dtf.Document.DocumentListener;
 import records.gui.dtf.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -56,7 +57,7 @@ public class DocumentTextField extends Region implements DocumentListener
     private double coreWidth;
     private double coreHeight;
 
-    public DocumentTextField()
+    public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
@@ -71,7 +72,7 @@ public class DocumentTextField extends Region implements DocumentListener
         caretShape.setMouseTransparent(true);
         caretShape.setManaged(false);
         caretShape.visibleProperty().bind(focusedProperty());
-        caretShape.getStyleClass().add("dynamic-caret");
+        caretShape.getStyleClass().add("document-caret");
         getChildren().addAll(textFlow, caretShape);
         
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
@@ -82,7 +83,11 @@ public class DocumentTextField extends Region implements DocumentListener
             document.focusChanged(focused);
             if (focused)
                 FXUtility.mouse(this).refreshDocument(focused);
-            Utility.later(this).setExpanded(focused);
+            if (onExpand != null)
+            {
+                Utility.later(this).setExpanded(focused);
+                onExpand.run();
+            }
         });
     }
     
@@ -487,7 +492,7 @@ public class DocumentTextField extends Region implements DocumentListener
         requestLayout();
     }
     
-    public void setExpanded(boolean expanded)
+    private void setExpanded(boolean expanded)
     {
         FXUtility.setPseudoclass(this, "expanded", expanded);
         this.expanded = expanded;

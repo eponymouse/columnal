@@ -1097,8 +1097,8 @@ public final class VirtualGrid implements ScrollBindable
             clip = new Rectangle();
             //setClip(clip);
 
-            FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> {updateHBar(); redoLayout();});
-            FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {updateVBar(); redoLayout();});
+            FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> {updateHBar(); Utility.later(this).redoLayout();});
+            FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {updateVBar(); Utility.later(this).redoLayout();});
 
             /* 
              * The logic for mouse events is as follows.
@@ -1168,7 +1168,7 @@ public final class VirtualGrid implements ScrollBindable
                     }
                     
                     mouseEvent.consume();
-                    redoLayout();
+                    FXUtility.mouse(this).redoLayout();
                 }
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
@@ -1235,7 +1235,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (!focused)
                 {
                     select(null);
-                    redoLayout();
+                    FXUtility.mouse(this).redoLayout();
                 }
             });
 
@@ -1347,13 +1347,13 @@ public final class VirtualGrid implements ScrollBindable
 
         // Note: the returned bounds are only valid until the next scroll or redoLayout
         // Use immediately and then forget them!
-        private VisibleBounds redoLayout(@UnknownInitialization(Region.class) Container this)
+        private VisibleBounds redoLayout()
         {
             VisibleBounds bounds = getVisibleBoundDetails();
 
             for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
             {
-                nodeSupplier.layoutItems(FXUtility.mouse(this), bounds);
+                nodeSupplier.layoutItems(this, bounds, VirtualGrid.this);
             }
             //Log.debug("Children: " + getChildren().size());
             
@@ -1805,7 +1805,7 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+        protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
         {
             if (button == null)
             {

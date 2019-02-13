@@ -86,7 +86,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     
     // package-visible
     @Override
-    final protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    final protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, ItemDetails<T>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -142,7 +142,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                     }
                     else
                     {
-                        newCell = withStyle(makeNewItem(), gridForItem.getSecond().styleForAllCells());
+                        newCell = withStyle(makeNewItem(virtualGrid), gridForItem.getSecond().styleForAllCells());
                         containerChildren.add(newCell.getFirst(), viewOrderFor(newCell.getFirst()));
                     }
                     cell = new ItemDetails<>(newCell.getFirst(), newCell.getSecond(), gridForItem, gridForItemResult.get().getSecond());
@@ -224,7 +224,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     }
 
     // Make a new cell.
-    protected abstract T makeNewItem();
+    protected abstract T makeNewItem(VirtualGrid virtualGrid);
 
     // Can be over-ridden by subclasses.
     protected void resetForReuse(T cell)

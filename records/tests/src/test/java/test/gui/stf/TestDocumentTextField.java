@@ -49,7 +49,7 @@ public class TestDocumentTextField extends FXApplicationTest
     @Before
     public void makeField()
     {
-        field = TestUtil.fx(() -> new DocumentTextField());
+        field = TestUtil.fx(() -> new DocumentTextField(null));
     }
     
     @Property(trials=5, shrink = false)
@@ -206,7 +206,7 @@ public class TestDocumentTextField extends FXApplicationTest
         clickOn(field);
         push(KeyCode.HOME);
         Bounds fieldBounds = TestUtil.fx(() -> field.localToScreen(field.getBoundsInLocal()));
-        Node caret = lookup(".dynamic-caret").query();
+        Node caret = lookup(".document-caret").query();
         List<Rectangle2D> allBounds = new ArrayList<>();
         for (int i = 0; i < 50; i++)
         {

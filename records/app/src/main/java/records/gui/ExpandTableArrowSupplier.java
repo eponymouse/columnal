@@ -10,6 +10,7 @@ import records.data.CellPosition;
 import records.data.TableOperations.AppendRows;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridAreaCellPosition;
+import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.table.TableDisplay;
@@ -40,7 +41,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     }
     
     @Override
-    protected Button makeNewItem()
+    protected Button makeNewItem(VirtualGrid virtualGrid)
     {
         Button button = new Button();
         // By default buttons have quite constrained sizes.  Let them take on any size that the grid specifies:

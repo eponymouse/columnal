@@ -336,7 +336,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         private int layoutCount = -100;
 
         @Override
-        protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+        protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
         {
             layoutCount += 1;
             if (layoutCount > 0)
@@ -363,7 +363,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        protected Label makeNewItem()
+        protected Label makeNewItem(VirtualGrid virtualGrid)
         {
             Label label = new Label("X");
             label.getStyleClass().add("simple-cell");

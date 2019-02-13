@@ -52,7 +52,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     // For displaying the border/shadow overlays without repeating code:
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
-    private final VirtualGrid virtualGrid;
     private double minRowTranslateX = 0.0;
     private @MonotonicNonNull DoubleExpression containerTranslateX;
     // Used to make sure we don't queue up multiple requests for a relayout:
@@ -193,12 +192,11 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     
     public RowLabelSupplier(VirtualGrid virtualGrid)
     {
-        this.virtualGrid = virtualGrid;
         this.virtualGridSupplierFloating = virtualGrid.getFloatingSupplier();
     }
 
     @Override
-    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {        
         for (@KeyFor("currentRowLabels") DataDisplay dataDisplay : currentRowLabels.keySet())
         {

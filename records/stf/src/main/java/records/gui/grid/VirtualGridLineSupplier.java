@@ -23,7 +23,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Integer, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {
         double lowestX = visibleBounds.getXCoord(visibleBounds.firstColumnIncl);
         double highestX = visibleBounds.getXCoordAfter(visibleBounds.lastColumnIncl);
