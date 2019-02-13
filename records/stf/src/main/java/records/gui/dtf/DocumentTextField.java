@@ -8,7 +8,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.control.Tooltip;
+import javafx.geometry.VPos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -62,8 +62,8 @@ public class DocumentTextField extends Region implements DocumentListener
         setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");
         this.clip = new ResizableRectangle();
-        setClip(clip);
         textFlow = new TextFlow();
+        textFlow.setClip(clip);
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
         anchorPosition = caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::updateCaretShape);
@@ -100,18 +100,10 @@ public class DocumentTextField extends Region implements DocumentListener
         {
             Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
             // Position the caret at the clicked position:
-            
-            final TextLayout textLayout;
-            try
-            {
-                textLayout = getTextLayout();
-            }
-            catch (Exception e)
-            {
-                Log.log(e);
+
+            HitInfo hitInfo = hitTest(mouseEvent.getX(), mouseEvent.getY());
+            if (hitInfo == null)
                 return;
-            }
-            HitInfo hitInfo = textLayout.getHitInfo((float)mouseEvent.getX(), (float)mouseEvent.getY());
             // Focusing may change content so important to hit-test first:
             requestFocus();
             // And important to map caret pos after change:
@@ -120,7 +112,22 @@ public class DocumentTextField extends Region implements DocumentListener
                 moveAnchorToCaret();
         }
     }
-    
+
+    private @Nullable HitInfo hitTest(double x, double y)
+    {
+        TextLayout textLayout;
+        try
+        {
+            textLayout = getTextLayout();
+        }
+        catch (Exception e)
+        {
+            Log.log(e);
+            textLayout = null;
+        }
+        return textLayout == null ? null: textLayout.getHitInfo((float)x, (float)y);
+    }
+
     private void keyboardEvent(KeyEvent keyEvent)
     {
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED)
@@ -162,6 +169,27 @@ public class DocumentTextField extends Region implements DocumentListener
                 if (!keyEvent.isShiftDown())
                     moveAnchorToCaret();
             }
+            if (keyEvent.getCode() == KeyCode.UP)
+            {
+                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.TOP).orElse(null);
+                if (p != null)
+                {
+                    HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
+                    if (hitInfo != null)
+                        caretPosition.moveTo(hitInfo.getInsertionIndex());
+                }
+            }
+            if (keyEvent.getCode() == KeyCode.DOWN)
+            {
+                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM).orElse(null);
+                if (p != null)
+                {
+                    HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
+                    if (hitInfo != null)
+                        caretPosition.moveTo(hitInfo.getInsertionIndex());
+                }
+            }
+            
             if (keyEvent.getCode() == KeyCode.HOME)
             {
                 caretPosition.moveTo(0);
@@ -306,13 +334,31 @@ public class DocumentTextField extends Region implements DocumentListener
         return 300;
     }
 
-    @SuppressWarnings("nullness")
     public Optional<Point2D> _test_getClickPosFor(int targetPos)
+    {
+        return getClickPosFor(targetPos, VPos.CENTER);
+    }
+    
+    private Optional<Point2D> getClickPosFor(int targetPos, VPos vPos)
     {
         try
         {
             TextLayout textLayout = getTextLayout();
-            Point2D p = FXUtility.getCentre(new Path(textLayout.getCaretShape(targetPos, true, 1.0f, 0)).getBoundsInLocal());
+            Bounds bounds = new Path(textLayout.getCaretShape(targetPos, true, 1.0f, 0)).getBoundsInLocal();
+            Point2D p;
+            switch (vPos)
+            {
+                case TOP:
+                    p = new Point2D((bounds.getMinX() + bounds.getMaxX()) / 2.0, bounds.getMinY());
+                    break;
+                case BOTTOM:
+                    p = new Point2D((bounds.getMinX() + bounds.getMaxX()) / 2.0, bounds.getMaxY());
+                    break;
+                case CENTER:
+                default:
+                    p = FXUtility.getCentre(bounds);
+                    break;
+            }
             if (getBoundsInLocal().contains(p))
                 return Optional.of(p);
             else
