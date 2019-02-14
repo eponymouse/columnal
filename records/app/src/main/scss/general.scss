@@ -197,17 +197,17 @@
 }
 
 .document-text-field {
-    & > .document-caret {
+    .document-caret {
         -fx-stroke: red;
     }
-    & .document-selection {
+    .document-selection {
         -fx-fill: $focus-color;
         -fx-stroke: null;
     }
-    & > .fade-overlay {
+    .fade-overlay {
         -fx-fill: transparent;
     }
-    & > .document-text-flow > .document-text {
+    .document-text-flow > .document-text {
         -fx-fill: black;
     }
 }

@@ -138,7 +138,6 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             double width = 350; //visibleBounds.getXCoordAfter(columnIndex + CellPosition.col(1)) - x;
             double rowHeight = 110; // visibleBounds.getYCoordAfter(rowIndex + CellPosition.row(1)) - y;
             FXUtility.resizeRelocate(cell, x, y, width, rowHeight);
-            cell.setCoreSize(visibleBounds.getXCoordAfter(columnIndex) - x, visibleBounds.getYCoordAfter(rowIndex) - y);
         }
         else
             super.sizeAndLocateCell(x, y, columnIndex, rowIndex, cell, visibleBounds);

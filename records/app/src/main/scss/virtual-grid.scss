@@ -94,13 +94,13 @@
         -fx-background-radius: 0 5 5 5;
         -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 12.0, 0.7, 1.0, 1.0);
         
-        & > .fade-overlay:more-above {
+        .fade-overlay:more-above {
             -fx-fill: linear-gradient(to bottom, $table-cell 0%, fade-out($table-cell, 0.4) 10%, fade-out($table-cell, 1) 20%, fade-out($table-cell, 1) 100%);
         }
-        & > .fade-overlay:more-below {
+        .fade-overlay:more-below {
             -fx-fill: linear-gradient(to bottom, fade-out($table-cell, 1) 0%, fade-out($table-cell, 1) 80%, fade-out($table-cell, 0.4) 90%, $table-cell 100%);
         }
-        & > .fade-overlay:more-above:more-below {
+        .fade-overlay:more-above:more-below {
             -fx-fill: linear-gradient(to bottom, $table-cell 0%, fade-out($table-cell, 0.4) 10%, fade-out($table-cell, 1) 20%, fade-out($table-cell, 1) 80%, fade-out($table-cell, 0.4) 90%, $table-cell 100%);
         }
                 

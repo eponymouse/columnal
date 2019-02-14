@@ -64,12 +64,7 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class DocumentTextField extends Region implements DocumentListener
 {
-    private final TextFlow textFlow;
-    private final Path caretShape;
-    private final Path selectionShape;
-    private final ResizableRectangle fadeOverlay;
-    private final Path inverter;
-    private final Pane selectionPane;
+    private final DisplayContent displayContent;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
@@ -79,56 +74,19 @@ public class DocumentTextField extends Region implements DocumentListener
     // Always positive, the amount of offset from the top edge up
     // to the real start of the content.
     private double vertTranslation;
-    private final ResizableRectangle clip;
     private boolean expanded;
-    private double coreWidth;
-    private double coreHeight;
     private final Animation caretBlink;
     private boolean updateCaretShapeQueued;
-    private final Pane inverterPane;
-
+    
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");
+        this.displayContent = new DisplayContent(document);
+        getChildren().setAll(displayContent);
         anchorPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
         caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
-        this.clip = new ResizableRectangle();
-        textFlow = new TextFlow();
-        textFlow.getStyleClass().add("document-text-flow");
-        textFlow.setClip(clip);
-        textFlow.setMouseTransparent(true);
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
-        caretShape = new Path();
-        caretShape.setMouseTransparent(true);
-        caretShape.setManaged(false);
-        caretShape.getStyleClass().add("document-caret");
-        caretShape.setVisible(false);
-        selectionShape = new Path();
-        selectionShape.setMouseTransparent(true);
-        selectionShape.setManaged(false);
-        selectionShape.getStyleClass().add("document-selection");
-        Pane selBlack = new Pane();
-        selBlack.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-        selectionPane = new StackPane(selBlack, selectionShape);
-        selectionPane.setBlendMode(BlendMode.LIGHTEN);
-        inverter = new Path();
-        inverter.setMouseTransparent(true);
-        //inverter.setManaged(false);
-        inverter.setFill(Color.WHITE);
-        inverter.setStroke(null);
-        Pane black = new Pane();
-        black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-        inverterPane = new Pane(black,inverter);
-        //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-        inverterPane.setBlendMode(BlendMode.DIFFERENCE);
-        
-        selectionShape.visibleProperty().bind(focusedProperty());
-        fadeOverlay = new ResizableRectangle();
-        fadeOverlay.setMouseTransparent(true);
-        fadeOverlay.getStyleClass().add("fade-overlay");
-        getChildren().addAll(textFlow, inverterPane, selectionPane, caretShape, fadeOverlay);
         
         Nodes.addInputMap(FXUtility.mouse(this), InputMap.<Event>sequence(
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
@@ -136,9 +94,9 @@ public class DocumentTextField extends Region implements DocumentListener
         ));
 
         caretBlink = new Timeline(
-            new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
-            new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
-            new KeyFrame(Duration.seconds(1.6), new KeyValue(caretShape.visibleProperty(), true))
+            new KeyFrame(Duration.seconds(0), new KeyValue(displayContent.caretShape.visibleProperty(), true)),
+            new KeyFrame(Duration.seconds(0.8), new KeyValue(displayContent.caretShape.visibleProperty(), false)),
+            new KeyFrame(Duration.seconds(1.6), e -> Utility.later(this).updateCaretShape(), new KeyValue(displayContent.caretShape.visibleProperty(), true))
         );
         caretBlink.setCycleCount(Animation.INDEFINITE);
         
@@ -157,20 +115,19 @@ public class DocumentTextField extends Region implements DocumentListener
                 onExpand.run();
             }
             if (focused)
+            {
                 caretBlink.playFromStart();
+            }
             else
             {
                 caretBlink.stop();
-                caretShape.setVisible(false);
+                displayContent.caretShape.setVisible(false);
             }
         });
     }
     
     private void mouseEvent(MouseEvent mouseEvent)
     {
-        if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED && (mouseEvent.getX() >= coreWidth || mouseEvent.getY() >= coreHeight))
-            return; // Don't process events in our expanded region
-        
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
         //    Log.debug("Got mouse event: " + mouseEvent);
         
@@ -332,9 +289,9 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(Tag.FXPlatform)
     public void documentChanged()
     {
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
+        displayContent.textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
-        requestLayout();
+        displayContent.requestLayout();
     }
 
     private static List<Text> makeTextNodes(Stream<Pair<Set<String>, String>> styledSpans)
@@ -347,83 +304,12 @@ public class DocumentTextField extends Region implements DocumentListener
             return text;
         }).collect(ImmutableList.<Text>toImmutableList());
     }
-
+    
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
-        if (expanded)
-        {
-            textFlow.setPrefWidth(getWidth());
-        }
-        else
-        {
-            textFlow.setPrefWidth(USE_COMPUTED_SIZE);
-            coreWidth = getWidth();
-            coreHeight = getHeight();
-        }
-        
-        double wholeTextWidth = textFlow.prefWidth(-1);
-        double wholeTextHeight = textFlow.prefHeight(getWidth());
-        Bounds caretLocalBounds = caretShape.getBoundsInLocal();
-        Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
-        
-        //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + " trans " + horizTranslation + " whole " + wholeTextWidth);
-        if (isFocused() && caretBounds.getMinX() - 5 < 0)
-        {
-            // Caret is off screen to the left:
-            horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
-        }
-        else if (isFocused() && caretBounds.getMaxX() > getWidth() - 5)
-        {
-            // Caret is off screen to the right:
-            horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
-        }
-        else if (!isFocused())
-        {
-            horizTranslation = 0;
-        }
-        
-        if (isFocused() && caretBounds.getMinY() - 5 < 0)
-        {
-            // Caret is off screen to the top:
-            vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
-        }
-        else if (isFocused() && caretBounds.getMaxY() > getHeight() - 5)
-        {
-            // Caret is off screen to the bottom:
-            vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
-        }
-        else if (!isFocused())
-        {
-            vertTranslation = 0;
-        }
-
-        if (isExpanded())
-        {
-            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, getWidth(), wholeTextHeight);
-        }
-        else
-        {
-            // We avoid needlessly making TextFlows which are thousands of pixels
-            // wide by restricting to our own width plus some.
-            // (We don't use our own width because this causes text wrapping
-            // of long words, but we actually want to see those truncated)
-            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
-        }
-        //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
-        FXUtility.setPseudoclass(fadeOverlay, "more-above", vertTranslation > 8);
-        FXUtility.setPseudoclass(fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
-        fadeOverlay.resize(getWidth(), getHeight());
-        clip.resizeRelocate(horizTranslation, vertTranslation, getWidth(), getHeight());
-        caretShape.setLayoutX(-horizTranslation);
-        caretShape.setLayoutY(-vertTranslation);
-        selectionShape.setLayoutX(-horizTranslation);
-        selectionShape.setLayoutY(-vertTranslation);
-        inverter.setLayoutX(-horizTranslation);
-        inverter.setLayoutY(-vertTranslation);
-        inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
-        selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        displayContent.resizeRelocate(0, 0, getWidth(), getHeight());
     }
     
     private void queueUpdateCaretShape()
@@ -431,8 +317,8 @@ public class DocumentTextField extends Region implements DocumentListener
         if (!updateCaretShapeQueued)
         {
             FXUtility.runAfter(this::updateCaretShape);
+            updateCaretShapeQueued = true;
         }
-        updateCaretShapeQueued = true;
     }
 
     private void updateCaretShape()
@@ -440,20 +326,20 @@ public class DocumentTextField extends Region implements DocumentListener
         updateCaretShapeQueued = false;
         try
         {
-            selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
-            inverter.getElements().setAll(selectionShape.getElements());
-            caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
+            displayContent.selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
+            displayContent.inverter.getElements().setAll(displayContent.selectionShape.getElements());
+            displayContent.caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
             if (isFocused())
                 caretBlink.playFromStart();
         }
         catch (Exception e)
         {
-            selectionShape.getElements().clear();
-            inverter.getElements().clear();
-            caretShape.getElements().clear();
+            displayContent.selectionShape.getElements().clear();
+            displayContent.inverter.getElements().clear();
+            displayContent.caretShape.getElements().clear();
         }
         // Caret may have moved off-screen, which is detected and corrected in the layout:
-        requestLayout();
+        displayContent.requestLayout();
     }
 
     public int _test_getAnchorPosition()
@@ -470,7 +356,7 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
-        return textFlow.prefHeight(-1);
+        return displayContent.textFlow.prefHeight(-1);
     }
 
     @Override
@@ -524,10 +410,10 @@ public class DocumentTextField extends Region implements DocumentListener
     private TextLayout getTextLayout() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
     {
         // TODO stop using reflection in Java 9, just call the methods directly
-        Method method = textFlow.getClass().getDeclaredMethod("getTextLayout");
+        Method method = displayContent.textFlow.getClass().getDeclaredMethod("getTextLayout");
         method.setAccessible(true);
         @SuppressWarnings("nullness")
-        @NonNull TextLayout textLayout = (TextLayout) method.invoke(textFlow);
+        @NonNull TextLayout textLayout = (TextLayout) method.invoke(displayContent.textFlow);
         return textLayout;
     }
 
@@ -558,7 +444,7 @@ public class DocumentTextField extends Region implements DocumentListener
     
     public String _test_getGraphicalText()
     {
-        return textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
+        return displayContent.textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
     }
 
     public Optional<Bounds> _test_getCharacterBoundsOnScreen(int charAfter)
@@ -635,27 +521,158 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public void refreshDocument(boolean focused)
     {
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
-        requestLayout();
+        displayContent.textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
+        displayContent.requestLayout();
     }
     
     private void setExpanded(boolean expanded)
     {
         FXUtility.setPseudoclass(this, "expanded", expanded);
         this.expanded = expanded;
-        this.coreWidth = getWidth();
-        this.coreHeight = getHeight();
-        requestLayout();
+        displayContent.requestLayout();
     }
 
     public boolean isExpanded()
     {
         return expanded;
     }
-
-    public void setCoreSize(double coreWidth, double coreHeight)
+    
+    private class DisplayContent extends Region
     {
-        this.coreWidth = coreWidth;
-        this.coreHeight = coreHeight;
+        private final TextFlow textFlow;
+        private final Path caretShape;
+        private final Path selectionShape;
+        private final ResizableRectangle fadeOverlay;
+        private final Path inverter;
+        private final Pane selectionPane;
+        private final Pane inverterPane;
+        
+        public DisplayContent(Document document)
+        {
+            ResizableRectangle clip = new ResizableRectangle();
+            clip.widthProperty().bind(widthProperty());
+            clip.heightProperty().bind(heightProperty());
+            setClip(clip);
+            setMouseTransparent(true);
+            textFlow = new TextFlow();
+            textFlow.getStyleClass().add("document-text-flow");
+            textFlow.setMouseTransparent(true);
+            textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
+            caretShape = new Path();
+            caretShape.setMouseTransparent(true);
+            caretShape.setManaged(false);
+            caretShape.getStyleClass().add("document-caret");
+            caretShape.setVisible(false);
+            selectionShape = new Path();
+            selectionShape.setMouseTransparent(true);
+            //selectionShape.setManaged(false);
+            selectionShape.getStyleClass().add("document-selection");
+            // The whole issue of the selection text inverting is quite screwed up.
+            // The obvious thing to do is to apply CSS styling to the selected text to
+            // make it white.  But doing this causes some slight (one pixel) display
+            // changes that look really terrible and draw the eye as you select the text.
+            // The movements aren't even in the selected part, they can be several lines down!
+            // So we must invert the text without altering the TextFlow at all.
+            // This can be done using JavaFX's blending modes, but it takes a lot of
+            // intricate effort to do this while also applying a coloured selection background.
+            // This implementation works, and that is good enough, despite it seeming over-the-top.
+            selectionPane = new Pane(selectionShape);
+            selectionPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+            selectionPane.setBlendMode(BlendMode.LIGHTEN);
+            inverter = new Path();
+            inverter.setMouseTransparent(true);
+            //inverter.setManaged(false);
+            inverter.setFill(Color.WHITE);
+            inverter.setStroke(null);
+            Pane black = new Pane();
+            black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+            inverterPane = new Pane(black,inverter);
+            //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+            inverterPane.setBlendMode(BlendMode.DIFFERENCE);
+
+            selectionShape.visibleProperty().bind(DocumentTextField.this.focusedProperty());
+            fadeOverlay = new ResizableRectangle();
+            fadeOverlay.setMouseTransparent(true);
+            fadeOverlay.getStyleClass().add("fade-overlay");
+            getChildren().setAll(textFlow, inverterPane, selectionPane, caretShape, fadeOverlay);
+
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        protected void layoutChildren()
+        {
+            if (expanded)
+            {
+                textFlow.setPrefWidth(getWidth());
+            }
+            else
+            {
+                textFlow.setPrefWidth(USE_COMPUTED_SIZE);
+            }
+
+            double wholeTextWidth = textFlow.prefWidth(-1);
+            double wholeTextHeight = textFlow.prefHeight(getWidth());
+            Bounds caretLocalBounds = caretShape.getBoundsInLocal();
+            Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
+
+            //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
+            boolean focused = DocumentTextField.this.isFocused();
+            if (focused && caretBounds.getMinX() - 5 < 0)
+            {
+                // Caret is off screen to the left:
+                horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
+            }
+            else if (focused && caretBounds.getMaxX() > getWidth() - 5)
+            {
+                // Caret is off screen to the right:
+                horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
+            }
+            else if (!focused)
+            {
+                horizTranslation = 0;
+            }
+
+            if (focused && caretBounds.getMinY() - 5 < 0)
+            {
+                // Caret is off screen to the top:
+                vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
+            }
+            else if (focused && caretBounds.getMaxY() > getHeight() - 5)
+            {
+                // Caret is off screen to the bottom:
+                vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
+            }
+            else if (!focused)
+            {
+                vertTranslation = 0;
+            }
+
+            if (isExpanded())
+            {
+                textFlow.resizeRelocate(-horizTranslation, -vertTranslation, getWidth(), wholeTextHeight);
+            }
+            else
+            {
+                // We avoid needlessly making TextFlows which are thousands of pixels
+                // wide by restricting to our own width plus some.
+                // (We don't use our own width because this causes text wrapping
+                // of long words, but we actually want to see those truncated)
+                textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
+            }
+            //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
+            FXUtility.setPseudoclass(fadeOverlay, "more-above", vertTranslation > 8);
+            FXUtility.setPseudoclass(fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
+            fadeOverlay.resize(getWidth(), getHeight());
+            caretShape.setLayoutX(-horizTranslation);
+            caretShape.setLayoutY(-vertTranslation);
+            selectionShape.setLayoutX(-horizTranslation);
+            selectionShape.setLayoutY(-vertTranslation);
+            inverter.setLayoutX(-horizTranslation);
+            inverter.setLayoutY(-vertTranslation);
+            inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
+            selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        }
+
     }
 }
