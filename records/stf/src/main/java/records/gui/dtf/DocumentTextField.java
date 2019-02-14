@@ -558,7 +558,7 @@ public class DocumentTextField extends Region implements DocumentListener
                 caretBlink = new Timeline(
                         new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
                         new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
-                        new KeyFrame(Duration.seconds(1.6), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
+                        new KeyFrame(Duration.seconds(1.2), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
                 );
                 caretBlink.setCycleCount(Animation.INDEFINITE);
 
