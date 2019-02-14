@@ -75,8 +75,6 @@ public class DocumentTextField extends Region implements DocumentListener
     // to the real start of the content.
     private double vertTranslation;
     private boolean expanded;
-    private final Animation caretBlink;
-    private boolean updateCaretShapeQueued;
     
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
@@ -92,14 +90,6 @@ public class DocumentTextField extends Region implements DocumentListener
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
             InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
         ));
-
-        caretBlink = new Timeline(
-            new KeyFrame(Duration.seconds(0), new KeyValue(displayContent.caretShape.visibleProperty(), true)),
-            new KeyFrame(Duration.seconds(0.8), new KeyValue(displayContent.caretShape.visibleProperty(), false)),
-            new KeyFrame(Duration.seconds(1.6), e -> Utility.later(this).updateCaretShape(), new KeyValue(displayContent.caretShape.visibleProperty(), true))
-        );
-        caretBlink.setCycleCount(Animation.INDEFINITE);
-        
         
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             document.focusChanged(focused);
@@ -114,15 +104,8 @@ public class DocumentTextField extends Region implements DocumentListener
                 Utility.later(this).setExpanded(focused);
                 onExpand.run();
             }
-            if (focused)
-            {
-                caretBlink.playFromStart();
-            }
-            else
-            {
-                caretBlink.stop();
-                displayContent.caretShape.setVisible(false);
-            }
+            
+            displayContent.focusChanged(focused);
         });
     }
     
@@ -284,6 +267,12 @@ public class DocumentTextField extends Region implements DocumentListener
         moveAnchorToCaret();
         documentChanged();
     }
+    
+    private void queueUpdateCaretShape()
+    {
+        if (displayContent.caretAndSelectionNodes != null)
+            displayContent.caretAndSelectionNodes.queueUpdateCaretShape();
+    }
 
     @Override
     @OnThread(Tag.FXPlatform)
@@ -310,36 +299,6 @@ public class DocumentTextField extends Region implements DocumentListener
     protected void layoutChildren()
     {
         displayContent.resizeRelocate(0, 0, getWidth(), getHeight());
-    }
-    
-    private void queueUpdateCaretShape()
-    {
-        if (!updateCaretShapeQueued)
-        {
-            FXUtility.runAfter(this::updateCaretShape);
-            updateCaretShapeQueued = true;
-        }
-    }
-
-    private void updateCaretShape()
-    {
-        updateCaretShapeQueued = false;
-        try
-        {
-            displayContent.selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
-            displayContent.inverter.getElements().setAll(displayContent.selectionShape.getElements());
-            displayContent.caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
-            if (isFocused())
-                caretBlink.playFromStart();
-        }
-        catch (Exception e)
-        {
-            displayContent.selectionShape.getElements().clear();
-            displayContent.inverter.getElements().clear();
-            displayContent.caretShape.getElements().clear();
-        }
-        // Caret may have moved off-screen, which is detected and corrected in the layout:
-        displayContent.requestLayout();
     }
 
     public int _test_getAnchorPosition()
@@ -540,12 +499,119 @@ public class DocumentTextField extends Region implements DocumentListener
     private class DisplayContent extends Region
     {
         private final TextFlow textFlow;
-        private final Path caretShape;
-        private final Path selectionShape;
-        private final ResizableRectangle fadeOverlay;
-        private final Path inverter;
-        private final Pane selectionPane;
-        private final Pane inverterPane;
+
+        // We only need these when we are focused, and only one field
+        // can ever be focused at once.  So these are null while
+        // they are unneeded (while we are unfocused)
+        private class CaretAndSelectionNodes
+        {
+            private final Path caretShape;
+            private final Path selectionShape;
+            private final ResizableRectangle fadeOverlay;
+            private final Path inverter;
+            private final Pane selectionPane;
+            private final Pane inverterPane;
+
+            private final Animation caretBlink;
+            private boolean updateCaretShapeQueued;
+
+
+            public CaretAndSelectionNodes()
+            {
+                caretShape = new Path();
+                caretShape.setMouseTransparent(true);
+                caretShape.setManaged(false);
+                caretShape.getStyleClass().add("document-caret");
+                caretShape.setVisible(false);
+                selectionShape = new Path();
+                selectionShape.setMouseTransparent(true);
+                //selectionShape.setManaged(false);
+                selectionShape.getStyleClass().add("document-selection");
+                // The whole issue of the selection text inverting is quite screwed up.
+                // The obvious thing to do is to apply CSS styling to the selected text to
+                // make it white.  But doing this causes some slight (one pixel) display
+                // changes that look really terrible and draw the eye as you select the text.
+                // The movements aren't even in the selected part, they can be several lines down!
+                // So we must invert the text without altering the TextFlow at all.
+                // This can be done using JavaFX's blending modes, but it takes a lot of
+                // intricate effort to do this while also applying a coloured selection background.
+                // This implementation works, and that is good enough, despite it seeming over-the-top.
+                selectionPane = new Pane(selectionShape);
+                selectionPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+                selectionPane.setBlendMode(BlendMode.LIGHTEN);
+                inverter = new Path();
+                inverter.setMouseTransparent(true);
+                //inverter.setManaged(false);
+                inverter.setFill(Color.WHITE);
+                inverter.setStroke(null);
+                Pane black = new Pane();
+                black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+                inverterPane = new Pane(black,inverter);
+                //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+                inverterPane.setBlendMode(BlendMode.DIFFERENCE);
+
+                selectionShape.visibleProperty().bind(DocumentTextField.this.focusedProperty());
+                fadeOverlay = new ResizableRectangle();
+                fadeOverlay.setMouseTransparent(true);
+                fadeOverlay.getStyleClass().add("fade-overlay");
+
+                caretBlink = new Timeline(
+                        new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
+                        new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
+                        new KeyFrame(Duration.seconds(1.6), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
+                );
+                caretBlink.setCycleCount(Animation.INDEFINITE);
+
+            }
+
+            public void focusChanged(boolean focused)
+            {
+                if (focused)
+                {
+                    caretBlink.playFromStart();
+                    queueUpdateCaretShape();
+                }
+                else
+                {
+                    caretBlink.stop();
+                    updateCaretShapeQueued = false;
+                }
+            }
+
+            private void queueUpdateCaretShape()
+            {
+                if (!updateCaretShapeQueued)
+                {
+                    FXUtility.runAfter(this::updateCaretShape);
+                    updateCaretShapeQueued = true;
+                }
+            }
+
+            private void updateCaretShape()
+            {
+                if (!updateCaretShapeQueued)
+                    return; // We may be a stale call just after losing focus
+                
+                updateCaretShapeQueued = false;
+                try
+                {
+                    selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
+                    inverter.getElements().setAll(selectionShape.getElements());
+                    caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
+                    if (isFocused())
+                        caretBlink.playFromStart();
+                }
+                catch (Exception e)
+                {
+                    selectionShape.getElements().clear();
+                    inverter.getElements().clear();
+                    caretShape.getElements().clear();
+                }
+                // Caret may have moved off-screen, which is detected and corrected in the layout:
+                displayContent.requestLayout();
+            }
+        }
+        private @Nullable CaretAndSelectionNodes caretAndSelectionNodes;
         
         public DisplayContent(Document document)
         {
@@ -558,43 +624,8 @@ public class DocumentTextField extends Region implements DocumentListener
             textFlow.getStyleClass().add("document-text-flow");
             textFlow.setMouseTransparent(true);
             textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
-            caretShape = new Path();
-            caretShape.setMouseTransparent(true);
-            caretShape.setManaged(false);
-            caretShape.getStyleClass().add("document-caret");
-            caretShape.setVisible(false);
-            selectionShape = new Path();
-            selectionShape.setMouseTransparent(true);
-            //selectionShape.setManaged(false);
-            selectionShape.getStyleClass().add("document-selection");
-            // The whole issue of the selection text inverting is quite screwed up.
-            // The obvious thing to do is to apply CSS styling to the selected text to
-            // make it white.  But doing this causes some slight (one pixel) display
-            // changes that look really terrible and draw the eye as you select the text.
-            // The movements aren't even in the selected part, they can be several lines down!
-            // So we must invert the text without altering the TextFlow at all.
-            // This can be done using JavaFX's blending modes, but it takes a lot of
-            // intricate effort to do this while also applying a coloured selection background.
-            // This implementation works, and that is good enough, despite it seeming over-the-top.
-            selectionPane = new Pane(selectionShape);
-            selectionPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-            selectionPane.setBlendMode(BlendMode.LIGHTEN);
-            inverter = new Path();
-            inverter.setMouseTransparent(true);
-            //inverter.setManaged(false);
-            inverter.setFill(Color.WHITE);
-            inverter.setStroke(null);
-            Pane black = new Pane();
-            black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-            inverterPane = new Pane(black,inverter);
-            //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-            inverterPane.setBlendMode(BlendMode.DIFFERENCE);
-
-            selectionShape.visibleProperty().bind(DocumentTextField.this.focusedProperty());
-            fadeOverlay = new ResizableRectangle();
-            fadeOverlay.setMouseTransparent(true);
-            fadeOverlay.getStyleClass().add("fade-overlay");
-            getChildren().setAll(textFlow, inverterPane, selectionPane, caretShape, fadeOverlay);
+            
+            getChildren().setAll(textFlow);
 
         }
 
@@ -613,39 +644,45 @@ public class DocumentTextField extends Region implements DocumentListener
 
             double wholeTextWidth = textFlow.prefWidth(-1);
             double wholeTextHeight = textFlow.prefHeight(getWidth());
-            Bounds caretLocalBounds = caretShape.getBoundsInLocal();
-            Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
 
-            //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
-            boolean focused = DocumentTextField.this.isFocused();
-            if (focused && caretBounds.getMinX() - 5 < 0)
+            CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
+            if (cs != null)
             {
-                // Caret is off screen to the left:
-                horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
-            }
-            else if (focused && caretBounds.getMaxX() > getWidth() - 5)
-            {
-                // Caret is off screen to the right:
-                horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
-            }
-            else if (!focused)
-            {
-                horizTranslation = 0;
-            }
+                Path caretShape = cs.caretShape;
+                Bounds caretLocalBounds = caretShape.getBoundsInLocal();
+                Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
 
-            if (focused && caretBounds.getMinY() - 5 < 0)
-            {
-                // Caret is off screen to the top:
-                vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
-            }
-            else if (focused && caretBounds.getMaxY() > getHeight() - 5)
-            {
-                // Caret is off screen to the bottom:
-                vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
-            }
-            else if (!focused)
-            {
-                vertTranslation = 0;
+                //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
+                boolean focused = DocumentTextField.this.isFocused();
+                if (focused && caretBounds.getMinX() - 5 < 0)
+                {
+                    // Caret is off screen to the left:
+                    horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
+                }
+                else if (focused && caretBounds.getMaxX() > getWidth() - 5)
+                {
+                    // Caret is off screen to the right:
+                    horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
+                }
+                else if (!focused)
+                {
+                    horizTranslation = 0;
+                }
+
+                if (focused && caretBounds.getMinY() - 5 < 0)
+                {
+                    // Caret is off screen to the top:
+                    vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
+                }
+                else if (focused && caretBounds.getMaxY() > getHeight() - 5)
+                {
+                    // Caret is off screen to the bottom:
+                    vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
+                }
+                else if (!focused)
+                {
+                    vertTranslation = 0;
+                }
             }
 
             if (isExpanded())
@@ -661,18 +698,40 @@ public class DocumentTextField extends Region implements DocumentListener
                 textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
             }
             //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
-            FXUtility.setPseudoclass(fadeOverlay, "more-above", vertTranslation > 8);
-            FXUtility.setPseudoclass(fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
-            fadeOverlay.resize(getWidth(), getHeight());
-            caretShape.setLayoutX(-horizTranslation);
-            caretShape.setLayoutY(-vertTranslation);
-            selectionShape.setLayoutX(-horizTranslation);
-            selectionShape.setLayoutY(-vertTranslation);
-            inverter.setLayoutX(-horizTranslation);
-            inverter.setLayoutY(-vertTranslation);
-            inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
-            selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+            if (cs != null)
+            {
+                FXUtility.setPseudoclass(cs.fadeOverlay, "more-above", vertTranslation > 8);
+                FXUtility.setPseudoclass(cs.fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
+                cs.fadeOverlay.resize(getWidth(), getHeight());
+                cs.caretShape.setLayoutX(-horizTranslation);
+                cs.caretShape.setLayoutY(-vertTranslation);
+                cs.selectionShape.setLayoutX(-horizTranslation);
+                cs.selectionShape.setLayoutY(-vertTranslation);
+                cs.inverter.setLayoutX(-horizTranslation);
+                cs.inverter.setLayoutY(-vertTranslation);
+                cs.inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
+                cs.selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+            }
         }
 
+        public void focusChanged(boolean focused)
+        {
+            if (focused)
+            {
+                if (caretAndSelectionNodes == null)
+                    caretAndSelectionNodes = new CaretAndSelectionNodes();
+                CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
+                getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.fadeOverlay);
+                cs.focusChanged(true);
+                
+            }
+            else
+            {
+                if (caretAndSelectionNodes != null)
+                    caretAndSelectionNodes.focusChanged(false);
+                caretAndSelectionNodes = null;
+                getChildren().setAll(textFlow);
+            }
+        }
     }
 }
