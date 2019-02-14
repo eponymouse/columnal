@@ -544,10 +544,8 @@ public class DocumentTextField extends Region implements DocumentListener
                 //inverter.setManaged(false);
                 inverter.setFill(Color.WHITE);
                 inverter.setStroke(null);
-                Pane black = new Pane();
-                black.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-                inverterPane = new Pane(black,inverter);
-                //inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+                inverterPane = new Pane(inverter);
+                inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
                 inverterPane.setBlendMode(BlendMode.DIFFERENCE);
 
                 selectionShape.visibleProperty().bind(DocumentTextField.this.focusedProperty());
