@@ -640,7 +640,9 @@ public class DocumentTextField extends Region implements DocumentListener
                 textFlow.setPrefWidth(USE_COMPUTED_SIZE);
             }
 
-            double wholeTextWidth = textFlow.prefWidth(-1);
+            // 10 is fudge factor; if you set exactly its desired width,
+            // it can sometimes wrap the text anyway.
+            double wholeTextWidth = textFlow.prefWidth(-1) + 10;
             double wholeTextHeight = textFlow.prefHeight(getWidth());
 
             CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
