@@ -730,6 +730,8 @@ public class DocumentTextField extends Region implements DocumentListener
                 if (caretAndSelectionNodes != null)
                     caretAndSelectionNodes.focusChanged(false);
                 caretAndSelectionNodes = null;
+                horizTranslation = 0;
+                vertTranslation = 0;
                 getChildren().setAll(textFlow);
             }
         }
