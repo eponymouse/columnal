@@ -13,20 +13,24 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationRunnable;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
 {
+    // Is this an original data source (true), or storage for
+    // calculated values (false)
+    private final boolean isImmediateData;
     private HashMap<Integer, String> errorEntries = new HashMap<>();
-    
+
+    protected SparseErrorColumnStorage(boolean isImmediateData)
+    {
+        this.isImmediateData = isImmediateData;
+    }
+
     protected final @Nullable String getError(int row)
     {
         return errorEntries.get(row);
@@ -142,7 +146,12 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
             _beforeGet(index, progressListener);
             String err = getError(index);
             if (err != null)
-                throw new InvalidImmediateValueException(StyledString.s("Invalid value: " + err), err);
+            {
+                if (isImmediateData)
+                    throw new InvalidImmediateValueException(StyledString.s("Invalid value: " + err), err);
+                else
+                    throw new UserException(err);
+            }
             else
                 return _getWithProgress(index, progressListener);
         }

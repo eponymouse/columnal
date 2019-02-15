@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 public class ReadOnlyDocument extends Document
 {
+    private final boolean error;
     private ImmutableList<Pair<Set<String>, String>> content;
 
     /*public ReadOnlyDocument(ImmutableList<Pair<Set<String>, String>> content)
@@ -20,9 +21,15 @@ public class ReadOnlyDocument extends Document
         this.content = content;
     }*/
 
-    public ReadOnlyDocument(String content)
+    public ReadOnlyDocument(String content, boolean error)
     {
         this.content = ImmutableList.of(new Pair<>(ImmutableSet.of(), content));
+        this.error = error;
+    }
+
+    public ReadOnlyDocument(String content)
+    {
+        this(content, false);
     }
 
     @Override
@@ -65,7 +72,7 @@ public class ReadOnlyDocument extends Document
     @Override
     boolean hasError()
     {
-        return false;
+        return error;
     }
 
     @Override

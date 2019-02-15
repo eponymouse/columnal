@@ -29,7 +29,7 @@ public class MemoryTemporalColumn extends EditableColumn
     {
         super(rs, title);
         this.defaultValue = defaultValue;
-        this.storage = new TemporalColumnStorage(dateTimeInfo);
+        this.storage = new TemporalColumnStorage(dateTimeInfo, true);
         this.storage.addAll(list.stream());
     }
 

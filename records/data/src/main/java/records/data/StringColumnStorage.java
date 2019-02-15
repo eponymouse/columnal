@@ -6,7 +6,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -17,7 +16,6 @@ import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -34,15 +32,16 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public StringColumnStorage(@Nullable BeforeGet<StringColumnStorage> beforeGet)
+    public StringColumnStorage(@Nullable BeforeGet<StringColumnStorage> beforeGet, boolean isImmediateData)
     {
+        super(isImmediateData);
         values = new ArrayList<>();
         this.beforeGet = beforeGet;
     }
 
-    public StringColumnStorage()
+    public StringColumnStorage(boolean isImmediateData)
     {
-        this(null);
+        this(null, isImmediateData);
     }
 
     @Override

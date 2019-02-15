@@ -29,7 +29,7 @@ public class MemoryArrayColumn extends EditableColumn
     {
         super(recordSet, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
-        this.storage = new ArrayColumnStorage(inner, null);
+        this.storage = new ArrayColumnStorage(inner, null, true);
         this.storage.addAll(values.stream());
     }
 

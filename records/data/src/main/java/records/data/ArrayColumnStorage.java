@@ -5,14 +5,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExBiConsumer;
 import utility.Pair;
 import utility.SimulationRunnable;
 import utility.Utility;
@@ -43,8 +40,9 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     private final DataTypeValue type;
 
     // Constructor for array version
-    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable BeforeGet<ArrayColumnStorage> beforeGet) throws InternalException
+    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable BeforeGet<ArrayColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
+        super(isImmediateData);
         if (innerToCopy == null)
             this.type = DataTypeValue.arrayV();
         else

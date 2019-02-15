@@ -115,7 +115,7 @@ public class TableDisplayUtility
                         @Override
                         public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
-                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new ReadOnlyDocument("Error: " + e.getLocalizedMessage()));
+                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new ReadOnlyDocument("Error: " + e.getLocalizedMessage(), true));
                         }
 
                         @Override

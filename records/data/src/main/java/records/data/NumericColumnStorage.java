@@ -11,10 +11,7 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.error.FetchException;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -91,18 +88,19 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     private final NumberInfo displayInfo;
     private final @Nullable BeforeGet<NumericColumnStorage> beforeGet;
 
-    public NumericColumnStorage(NumberInfo displayInfo)
+    public NumericColumnStorage(NumberInfo displayInfo, boolean isImmediateData)
     {
-        this(displayInfo, null);
+        this(displayInfo, null, isImmediateData);
     }
 
-    public NumericColumnStorage()
+    public NumericColumnStorage(boolean isImmediateData)
     {
-        this(NumberInfo.DEFAULT, null);
+        this(NumberInfo.DEFAULT, null, isImmediateData);
     }
 
-    public NumericColumnStorage(NumberInfo displayInfo, @Nullable BeforeGet<NumericColumnStorage> beforeGet)
+    public NumericColumnStorage(NumberInfo displayInfo, @Nullable BeforeGet<NumericColumnStorage> beforeGet, boolean isImmediateData)
     {
+        super(isImmediateData);
         this.displayInfo = displayInfo;
         this.beforeGet = beforeGet;
     }

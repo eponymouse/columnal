@@ -2,17 +2,12 @@ package records.data;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -21,15 +16,11 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
 import utility.Utility;
 
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
@@ -49,9 +40,10 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
-        tagStore = new NumericColumnStorage();
+        super(isImmediateData);
+        tagStore = new NumericColumnStorage(isImmediateData);
         tagTypes = new ArrayList<>();
         for (int i = 0; i < copyTagTypes.size(); i++)
         {
@@ -59,7 +51,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             DataType inner = tagType.getInner();
             if (inner != null)
             {
-                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
+                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null, isImmediateData);
                 tagTypes.add(new TagType<>(tagType.getName(), result));
             }
             else
@@ -101,9 +93,9 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
         });
     }
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, boolean isImmediateData) throws InternalException
     {
-        this(typeName, typeVars, copyTagTypes, null);
+        this(typeName, typeVars, copyTagTypes, null, isImmediateData);
     }
     
     @OnThread(Tag.Any)

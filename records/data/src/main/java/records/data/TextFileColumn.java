@@ -92,7 +92,7 @@ public final class TextFileColumn extends Column
     public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, FunctionInt<String, Either<String, TemporalAccessor>> parse) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns, 
-            (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
+            (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill, true),
             (storage, values) -> storage.addAll(Utility.<String, Either<String, TemporalAccessor>>mapListInt(values, parse).stream())
         );
 
@@ -101,7 +101,7 @@ public final class TextFileColumn extends Column
     public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns, 
-            (BeforeGet<NumericColumnStorage> fill) -> new NumericColumnStorage(numberInfo, fill),
+            (BeforeGet<NumericColumnStorage> fill) -> new NumericColumnStorage(numberInfo, fill, true),
             (storage, values) ->
             {
                 for (String value : values)
@@ -118,7 +118,7 @@ public final class TextFileColumn extends Column
     public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns,
-            (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
+            (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill, true),
             (storage, values) -> storage.addAll(values.stream().map(x -> Either.<String, String>right(x)))
         );
     }
@@ -126,7 +126,7 @@ public final class TextFileColumn extends Column
     public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, Either<String, TaggedValue>> parseValue) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, quote, columnName, columnIndex, totalColumns,
-            (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, typeVars, tagTypes, fill),
+            (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, typeVars, tagTypes, fill, true),
             (storage, values) -> {
                 storage.addAll(Utility.mapListEx(values, parseValue).stream());
             }

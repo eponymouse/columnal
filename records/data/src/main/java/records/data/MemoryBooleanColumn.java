@@ -27,7 +27,7 @@ public class MemoryBooleanColumn extends EditableColumn
     {
         super(rs, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
-        this.storage = new BooleanColumnStorage();
+        this.storage = new BooleanColumnStorage(true);
         this.storage.addAll(list.stream());
     }
 

@@ -3,21 +3,17 @@ package records.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExBiConsumer;
 import utility.SimulationRunnable;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Stream;
@@ -33,8 +29,9 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     private final DataTypeValue type;
     private final @Nullable BeforeGet<BooleanColumnStorage> beforeGet;
 
-    public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
+    public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet, boolean isImmediateData)
     {
+        super(isImmediateData);
         this.beforeGet = beforeGet;
         this.type = DataTypeValue.bool(new GetValueOrError<@Value Boolean>()
         {
@@ -59,9 +56,9 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
         });
     }
 
-    public BooleanColumnStorage()
+    public BooleanColumnStorage(boolean isImmediateData)
     {
-        this(null);
+        this(null, isImmediateData);
     }
 
 

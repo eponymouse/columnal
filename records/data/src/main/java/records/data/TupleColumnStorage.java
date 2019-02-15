@@ -6,7 +6,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
-import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -28,17 +27,18 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
     @OnThread(Tag.Any)
     private final DataTypeValue type;
 
-    public TupleColumnStorage(List<DataType> innerToCopy) throws InternalException
+    public TupleColumnStorage(List<DataType> innerToCopy, boolean isImmediateData) throws InternalException
     {
-        this(innerToCopy, null);
+        this(innerToCopy, null, isImmediateData);
     }
 
-    public TupleColumnStorage(List<DataType> innerToCopy, @Nullable BeforeGet<?> beforeGet) throws InternalException
+    public TupleColumnStorage(List<DataType> innerToCopy, @Nullable BeforeGet<?> beforeGet, boolean isImmediateData) throws InternalException
     {
+        super(isImmediateData);
         ArrayList<ColumnStorage<?>> buildList = new ArrayList<>();
         for (DataType anInnerToCopy : innerToCopy)
         {
-            buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy, beforeGet));
+            buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy, beforeGet, isImmediateData));
         }
         storage = ImmutableList.copyOf(buildList);
         type = DataTypeValue.tupleV(Utility.<ColumnStorage<?>, DataTypeValue>mapList(storage, s -> s.getType()));

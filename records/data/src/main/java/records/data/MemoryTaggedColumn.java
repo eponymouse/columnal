@@ -36,7 +36,7 @@ public class MemoryTaggedColumn extends EditableColumn
         this.typeName = typeName;
         this.typeVars = typeVars;
         this.defaultValue = defaultValue;
-        this.storage = new TaggedColumnStorage(typeName, typeVars, tags);
+        this.storage = new TaggedColumnStorage(typeName, typeVars, tags, true);
         this.storage.addAll(values.stream());
     }
 

@@ -141,7 +141,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         catch (ExecutionException e)
         {
             Log.log(e);
-            setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(e.getLocalizedMessage()));
+            setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(e.getLocalizedMessage(), true));
         }
         // No need to call formatVisible here as styleTogether
         // will be called after fetches by VirtualGridSupplierIndividual
@@ -291,7 +291,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         {
             if (loadedItemOrError != null)
             {
-                Document document = loadedItemOrError.<Document>either(k -> k, err -> new ReadOnlyDocument(err));
+                Document document = loadedItemOrError.<Document>either(k -> k, err -> new ReadOnlyDocument(err, true));
                 this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, document);
             }
             else

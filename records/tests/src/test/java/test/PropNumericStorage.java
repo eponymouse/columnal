@@ -36,7 +36,7 @@ public class PropNumericStorage
     @OnThread(Tag.Simulation)
     public void testNumbersFromString(@From(GenNumbersAsString.class) List<String> input) throws IOException, InternalException, UserException
     {
-        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
+        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (String s : input)
             storage.addRead(s);
 
@@ -57,7 +57,7 @@ public class PropNumericStorage
     @OnThread(Tag.Simulation)
     public void testNumbers(@From(GenNumbers.class) List<@Value Number> input) throws IOException, InternalException, UserException
     {
-        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
+        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (Number n : input)
             storage.add(n);
 
@@ -85,7 +85,7 @@ public class PropNumericStorage
     @OnThread(Tag.Simulation)
     private void testSet(List<@Value Number> input, int index, @Value Number n) throws InternalException, UserException
     {
-        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
+        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (Number orig : input)
             storage.add(orig);
 

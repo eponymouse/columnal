@@ -128,7 +128,7 @@ public class DataTypeUtility
 
     @OnThread(Tag.Simulation)
     @SuppressWarnings("unchecked")
-    public static ColumnStorage<?> makeColumnStorage(final DataType inner, ColumnStorage.@Nullable BeforeGet<?> beforeGet) throws InternalException
+    public static ColumnStorage<?> makeColumnStorage(final DataType inner, ColumnStorage.@Nullable BeforeGet<?> beforeGet, boolean isImmediateData) throws InternalException
     {
         return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
         {
@@ -136,49 +136,49 @@ public class DataTypeUtility
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
             {
-                return new NumericColumnStorage(displayInfo, (BeforeGet<NumericColumnStorage>)beforeGet);
+                return new NumericColumnStorage(displayInfo, (BeforeGet<NumericColumnStorage>)beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> bool() throws InternalException
             {
-                return new BooleanColumnStorage((BeforeGet<BooleanColumnStorage>)beforeGet);
+                return new BooleanColumnStorage((BeforeGet<BooleanColumnStorage>)beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> text() throws InternalException
             {
-                return new StringColumnStorage((BeforeGet<StringColumnStorage>)beforeGet);
+                return new StringColumnStorage((BeforeGet<StringColumnStorage>)beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return new TemporalColumnStorage(dateTimeInfo, (BeforeGet<TemporalColumnStorage>)beforeGet);
+                return new TemporalColumnStorage(dateTimeInfo, (BeforeGet<TemporalColumnStorage>)beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return new TaggedColumnStorage(typeName, typeVars, tags, (BeforeGet<TaggedColumnStorage>)beforeGet);
+                return new TaggedColumnStorage(typeName, typeVars, tags, (BeforeGet<TaggedColumnStorage>)beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> tuple(ImmutableList<DataType> innerTypes) throws InternalException
             {
-                return new TupleColumnStorage(innerTypes, beforeGet);
+                return new TupleColumnStorage(innerTypes, beforeGet, isImmediateData);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
             {
-                return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet);
+                return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet, isImmediateData);
             }
         });
     }

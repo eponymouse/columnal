@@ -26,7 +26,7 @@ public class MemoryStringColumn extends EditableColumn
     {
         super(recordSet, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
-        this.storage = new StringColumnStorage();
+        this.storage = new StringColumnStorage(true);
         this.storage.addAll(values.stream());
     }
 

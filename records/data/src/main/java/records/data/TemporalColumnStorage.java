@@ -2,15 +2,12 @@ package records.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,9 +16,6 @@ import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,13 +36,14 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
     private DataTypeValue dataType;
     private final @Nullable BeforeGet<TemporalColumnStorage> beforeGet;
 
-    public TemporalColumnStorage(DateTimeInfo dateTimeInfo) throws InternalException
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, boolean isImmediateData) throws InternalException
     {
-        this(dateTimeInfo, null);
+        this(dateTimeInfo, null, isImmediateData);
     }
 
-    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable BeforeGet<TemporalColumnStorage> beforeGet) throws InternalException
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable BeforeGet<TemporalColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
+        super(isImmediateData);
         this.values = new ArrayList<>();
         this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator(true));
         this.dateTimeInfo = dateTimeInfo;

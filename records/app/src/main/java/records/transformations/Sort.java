@@ -203,7 +203,7 @@ public class Sort extends Transformation
                 this.sortByError = msg;
         }
         this.result = theResult;
-        this.sortMap = new NumericColumnStorage(NumberInfo.DEFAULT);
+        this.sortMap = new NumericColumnStorage(NumberInfo.DEFAULT, false);
         this.sortBy = theSortBy != null ? ImmutableList.copyOf(theSortBy) : null;
     }
 

@@ -126,7 +126,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column number(NumberInfo displayInfo) throws InternalException
             {
-                return new CachedCalculatedColumn<Number, NumericColumnStorage>(rs, name, (BeforeGet<NumericColumnStorage> g) -> new NumericColumnStorage(displayInfo, g), i -> {
+                return new CachedCalculatedColumn<Number, NumericColumnStorage>(rs, name, (BeforeGet<NumericColumnStorage> g) -> new NumericColumnStorage(displayInfo, g, false), i -> {
                     return castTo(Number.class, getItem.apply(i));
                 });
             }
@@ -135,7 +135,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column text() throws InternalException
             {
-                return new CachedCalculatedColumn<String, StringColumnStorage>(rs, name, (BeforeGet<StringColumnStorage> g) -> new StringColumnStorage(g), i -> {
+                return new CachedCalculatedColumn<String, StringColumnStorage>(rs, name, (BeforeGet<StringColumnStorage> g) -> new StringColumnStorage(g, false), i -> {
                     return castTo(String.class, getItem.apply(i));
                 });
             }
@@ -144,7 +144,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return new CachedCalculatedColumn<TemporalAccessor, TemporalColumnStorage>(rs, name, (BeforeGet<TemporalColumnStorage> g) -> new TemporalColumnStorage(dateTimeInfo, g), i -> {
+                return new CachedCalculatedColumn<TemporalAccessor, TemporalColumnStorage>(rs, name, (BeforeGet<TemporalColumnStorage> g) -> new TemporalColumnStorage(dateTimeInfo, g, false), i -> {
                     return castTo(TemporalAccessor.class, getItem.apply(i));
                 });
             }
@@ -153,7 +153,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column bool() throws InternalException
             {
-                return new CachedCalculatedColumn<Boolean, BooleanColumnStorage>(rs, name, (BeforeGet<BooleanColumnStorage> g) -> new BooleanColumnStorage(g), i -> {
+                return new CachedCalculatedColumn<Boolean, BooleanColumnStorage>(rs, name, (BeforeGet<BooleanColumnStorage> g) -> new BooleanColumnStorage(g, false), i -> {
                     return castTo(Boolean.class, getItem.apply(i));
                 });
             }
@@ -162,7 +162,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return new CachedCalculatedColumn<TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g), i -> {
+                return new CachedCalculatedColumn<TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g, false), i -> {
                     return castTo(TaggedValue.class, getItem.apply(i));
                 });
             }
@@ -171,7 +171,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column tuple(ImmutableList<DataType> inner) throws InternalException
             {
-                return new CachedCalculatedColumn<Object[], TupleColumnStorage>(rs, name, (BeforeGet<TupleColumnStorage> g) -> new TupleColumnStorage(inner, g), i -> {
+                return new CachedCalculatedColumn<Object[], TupleColumnStorage>(rs, name, (BeforeGet<TupleColumnStorage> g) -> new TupleColumnStorage(inner, g, false), i -> {
                     return castTo(Object[].class, getItem.apply(i));
                 });
             }
@@ -180,7 +180,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column array(DataType inner) throws InternalException
             {
-                return new CachedCalculatedColumn<ListEx, ArrayColumnStorage>(rs, name, (BeforeGet<ArrayColumnStorage> g) -> new ArrayColumnStorage(inner, g), i -> {
+                return new CachedCalculatedColumn<ListEx, ArrayColumnStorage>(rs, name, (BeforeGet<ArrayColumnStorage> g) -> new ArrayColumnStorage(inner, g, false), i -> {
                     return castTo(ListEx.class, getItem.apply(i));
                 });
             }

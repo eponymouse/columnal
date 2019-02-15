@@ -28,7 +28,7 @@ public class MemoryNumericColumn extends EditableColumn
     {
         super(rs, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);
-        storage = new NumericColumnStorage(numberInfo);
+        storage = new NumericColumnStorage(numberInfo, true);
     }
 
     public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, Number defaultValue) throws InternalException

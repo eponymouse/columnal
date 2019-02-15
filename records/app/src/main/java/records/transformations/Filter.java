@@ -72,7 +72,7 @@ public class Filter extends Transformation
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
-        this.indexMap = new NumericColumnStorage();
+        this.indexMap = new NumericColumnStorage(false);
         this.filterExpression = filterExpression;
         this.error = "Unknown error";
 
