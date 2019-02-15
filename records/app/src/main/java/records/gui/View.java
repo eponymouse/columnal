@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.FullSaver;
+import records.data.Table.TableDisplayBase;
 import records.data.TableManager.TableManagerListener;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -170,9 +171,10 @@ public class View extends StackPane implements DimmableParent
         {
             save(true);
             //overlays.remove(t); // Listener removes them from display
-            TableDisplay display = (TableDisplay) t.getDisplay();
-            if (display != null)
+            TableDisplayBase displayBase = t.getDisplay();
+            if (displayBase != null && displayBase instanceof TableDisplay)
             {
+                TableDisplay display = (TableDisplay) displayBase;
                 // Call this first so that the nodes are actually removed when we call removeGridArea:
                 display.cleanupFloatingItems();
                 dataCellSupplier.removeGrid(display);
@@ -638,9 +640,12 @@ public class View extends StackPane implements DimmableParent
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
                                 tableManager.record(data);
                                 Platform.runLater(() -> {
-                                    TableDisplay display = (TableDisplay) data.getDisplay();
-                                    if (display != null)
-                                        thisView.getGrid().select(new EntireTableSelection(display, target.columnIndex));
+                                    if (data.getDisplay() instanceof TableDisplay)
+                                    {
+                                        TableDisplay display = (TableDisplay) data.getDisplay();
+                                        if (display != null)
+                                            thisView.getGrid().select(new EntireTableSelection(display, target.columnIndex));
+                                    }
                                 });
                             });
                         });
@@ -695,10 +700,10 @@ public class View extends StackPane implements DimmableParent
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)
     {
         @Nullable Table table = tableManager.getSingleTableOrNull(tableId);
-        if (table == null)
-            return null;
-        else
+        if (table != null && table.getDisplay() instanceof TableDisplay)
             return (TableDisplay)table.getDisplay();
+        else
+            return null;        
     }
 
     // Can't be a View without an actual window
@@ -789,9 +794,12 @@ public class View extends StackPane implements DimmableParent
                                     Transformation transformation = makeTransFinal.get();
                                     tableManager.record(transformation);
                                     Platform.runLater(() -> {
-                                        TableDisplay display = (TableDisplay) transformation.getDisplay();
-                                        if (display != null)
-                                            display.editAfterCreation();
+                                        if (transformation.getDisplay() instanceof TableDisplay)
+                                        {
+                                            TableDisplay display = (TableDisplay) transformation.getDisplay();
+                                            if (display != null)
+                                                display.editAfterCreation();
+                                        }
                                     });
                                 });
                             });
@@ -906,7 +914,7 @@ public class View extends StackPane implements DimmableParent
             List<Result> r = new ArrayList<>();
             // Tables:
             r.addAll(Utility.mapList(getAllTables(), t -> new Result(t.getId().getRaw(), () -> {
-                TableDisplay tableDisplay = (TableDisplay) t.getDisplay();
+                //TableDisplay tableDisplay = t.getDisplay();
             })));
 
             return r;

@@ -1126,7 +1126,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing table", () -> changeSrcTableId.consume(t.getId())));
                     });
                 }
-                else if (mouseButton == MouseButton.MIDDLE && srcTable != null)
+                else if (mouseButton == MouseButton.MIDDLE && srcTable != null && srcTable.getDisplay() instanceof TableDisplay)
                 {
                     TableDisplay target = (TableDisplay) srcTable.getDisplay();
                     withParent_(p -> {
