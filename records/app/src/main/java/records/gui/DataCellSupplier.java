@@ -25,6 +25,7 @@ import utility.gui.TranslationUtility;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
@@ -48,6 +49,18 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             return ItemState.EDITING;
         else
             return ItemState.NOT_CLICKABLE;
+    }
+
+    @Override
+    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    {
+        // Override here to check for expanded cell
+        Optional<VersionedSTF> expanded = findItems(node -> node.isExpanded()).findFirst();
+        if (expanded.isPresent() && expanded.get().localToScreen(expanded.get().getBoundsInLocal()).contains(screenPos))
+        {
+            return ItemState.EDITING;
+        }
+        return super.getItemState(cellPosition, screenPos);
     }
 
     @Override

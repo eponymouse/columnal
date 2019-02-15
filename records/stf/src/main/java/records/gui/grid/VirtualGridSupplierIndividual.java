@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -338,11 +339,16 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     }
 
     @Override
-    protected final @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         @Nullable T item = getItemAt(cellPosition);
         return item == null ? null : getItemState(item, screenPos);
     }
 
     protected abstract ItemState getItemState(T item, Point2D screenPos);
+    
+    protected Stream<T> findItems(Predicate<T> findIf)
+    {
+        return visibleItems.values().stream().map(d -> d.node).filter(findIf);
+    }
 }
