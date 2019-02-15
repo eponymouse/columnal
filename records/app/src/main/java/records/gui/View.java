@@ -408,6 +408,11 @@ public class View extends StackPane implements DimmableParent
         return saveCount;
     }
 
+    public boolean isReadOnly()
+    {
+        return readOnly;
+    }
+
     /* TODO
     private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {

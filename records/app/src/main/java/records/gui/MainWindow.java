@@ -2,10 +2,13 @@ package records.gui;
 
 import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -142,8 +145,20 @@ public class MainWindow
             }
         });
         */
+        
+        TextFlow banner = new TextFlow() {
+            @Override
+            protected double computeMaxHeight(double width)
+            {
+                return super.computePrefHeight(width);
+            }
+        };
+        banner.getStyleClass().add("banner-message");
+        StackPane.setAlignment(banner, Pos.TOP_CENTER);
+        banner.setVisible(false);
+        updateBanner(v, banner, true);
 
-        BorderPane root = new BorderPane(new StackPane(v, emptyMessage), menuBar, null, null, null);
+        BorderPane root = new BorderPane(new StackPane(v, emptyMessage, banner), menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
@@ -153,15 +168,22 @@ public class MainWindow
         if (src != null)
         {
             @NonNull Pair<File, String> srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading " + srcFinal.getFirst().getName(), err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> {
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading " + srcFinal.getFirst().getName(), err -> {
+                updateBanner(v, banner, false);
+                return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
+            }, () -> {
                 v.getManager().loadAll(srcFinal.getSecond());
-                Platform.runLater(() -> v.enableWriting());
+                Platform.runLater(() -> {
+                    v.enableWriting();
+                    updateBanner(v, banner, false);
+                });
             }));
         }
         else
         {
             // Enable writing mode
             v.enableWriting();
+            updateBanner(v, banner, false);
         }
 
         stage.show();
@@ -217,17 +239,48 @@ public class MainWindow
             }
         };
     }
-/*
-    private static void chooseAndImportFile(View v, Stage stage)
+
+    private static void updateBanner(View v, TextFlow banner, boolean loading)
     {
-        ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> recordTable(v, ds));
+        if (loading)
+        {
+            Text text = new Text(
+                "Loading..."
+            );
+            text.getStyleClass().add("banner-message-text");
+            FXUtility.setPseudoclass(banner, "error", false);
+            banner.getChildren().setAll(text);
+            banner.setVisible(true);
+        }
+        else if (v.isReadOnly())
+        {
+            Text text = new Text(
+                    "This file is open for reading only, due to a loading error.  Changes will not be saved."
+            );
+            text.getStyleClass().add("banner-message-text");
+            FXUtility.setPseudoclass(banner, "error", true);
+            banner.getChildren().setAll(text);
+            banner.setVisible(true);
+        }
+        else
+        {
+            FXUtility.setPseudoclass(banner, "error", false);
+            banner.getChildren().clear();
+            banner.setVisible(false);
+        }
     }
 
-    private static void chooseAndImportURL(View v, Stage stage)
-    {
-        ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> recordTable(v, ds));
-    }
-*/
+    /*
+        private static void chooseAndImportFile(View v, Stage stage)
+        {
+            ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> recordTable(v, ds));
+        }
+    
+        private static void chooseAndImportURL(View v, Stage stage)
+        {
+            ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> recordTable(v, ds));
+        }
+    */
     @OnThread(Tag.Any)
     private static void recordTable(View v, DataSource ds)
     {

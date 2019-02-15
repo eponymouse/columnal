@@ -421,7 +421,7 @@ public class Utility
         {
             R r = withParser.apply(parser);
             if (!del.errors.isEmpty())
-                throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
+                throw new UserException("Parse errors while loading \"" + (input.length() < 80 ? input : (input.substring(0, 80) + "\u2026"))  + "\":\n" + del.errors.stream().collect(Collectors.joining("\n")));
             return r;
         }
         catch (ParseCancellationException e)

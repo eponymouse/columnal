@@ -87,3 +87,17 @@
 .view {
     -fx-background-color: $table-empty-background;
 }
+.banner-message {
+    -fx-background-color: beige;
+    .banner-message-text {
+        -fx-fill: black;
+    }
+    &:error {
+        -fx-background-color: darkred;
+        .banner-message-text {
+            -fx-fill: white;
+        }
+    }
+    -fx-padding: 6 10 6 10;
+    
+}
