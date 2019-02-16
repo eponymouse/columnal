@@ -415,7 +415,11 @@ public class TableManager
             {
                 Set<Table> tables = usedIds.get(tableId);
                 if (tables != null)
+                {
                     tables.removeIf(t -> t == removedFinal);
+                    if (tables.isEmpty())
+                        usedIds.remove(tableId);
+                }
             }
             listener.removeTable(removed, remainingCount);
             if (then != null)

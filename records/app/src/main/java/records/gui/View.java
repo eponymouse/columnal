@@ -185,6 +185,14 @@ public class View extends StackPane implements DimmableParent
                 // This goes last because it will redo layout:
                 mainPane.removeGridArea(display);
             }
+            else if (displayBase != null && displayBase instanceof CheckDisplay)
+            {
+                CheckDisplay checkDisplay = (CheckDisplay) displayBase;
+                checkDisplay.cleanupFloatingItems(getGrid().getFloatingSupplier());
+                mainPane.removeSelectionListener(checkDisplay);
+                // This goes last because it will redo layout:
+                mainPane.removeGridArea(checkDisplay);
+            }
             emptyListener.consume(remainingCount == 0 ? ContentState.EMPTY_NO_SEL : ContentState.NON_EMPTY);
         });
     }
