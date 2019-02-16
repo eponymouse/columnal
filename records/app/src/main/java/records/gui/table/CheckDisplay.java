@@ -5,6 +5,9 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -24,8 +27,12 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
+import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplier.ItemState;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -33,6 +40,7 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -46,12 +54,46 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final TableHat tableHat;
     private final TableBorderOverlay tableBorderOverlay;
+    private final FloatingItem<Label> resultFloatingItem;
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
         super(new TableHeaderItemParams(parent.getManager(), check.getId(), check, floatingSupplier), floatingSupplier);
         this.check = check;
         mostRecentBounds = new AtomicReference<>(getPosition());
+        
+        this.resultFloatingItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS) {
+
+            @Override
+            protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+            {
+                CellPosition titlePos = getPosition();
+                double left = visibleBounds.getXCoord(titlePos.columnIndex);
+                double right = visibleBounds.getXCoordAfter(titlePos.columnIndex);
+                double top = visibleBounds.getYCoord(titlePos.rowIndex + CellPosition.row(1));
+                double bottom = visibleBounds.getYCoordAfter(titlePos.rowIndex + CellPosition.row(1));
+                return Optional.of(new BoundingBox(left, top, right - left, bottom - top));
+            }
+
+            @Override
+            protected Label makeCell(VisibleBounds visibleBounds)
+            {
+                return new Label("Result");
+            }
+
+            @Override
+            public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+            {
+                return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? ItemState.DIRECTLY_CLICKABLE : ItemState.NOT_CLICKABLE;
+            }
+
+            @Override
+            public void keyboardActivate(CellPosition cellPosition)
+            {
+
+            }
+        };
+        floatingSupplier.addItem(resultFloatingItem);
 
         // Border overlay.  Note this makes use of calculations based on hat and row label border,
         // so it is important that we add this after them (since floating supplier iterates in order of addition):
@@ -72,6 +114,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     public void cleanupFloatingItems(VirtualGridSupplierFloating floating)
     {
         super.cleanupFloatingItems(floating);
+        floating.removeItem(tableBorderOverlay);
+        floating.removeItem(tableHat);
+        floating.removeItem(resultFloatingItem);
         
     }
 
