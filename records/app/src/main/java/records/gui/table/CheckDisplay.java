@@ -5,11 +5,16 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,6 +26,8 @@ import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.View;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -39,6 +46,9 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,6 +65,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final TableHat tableHat;
     private final TableBorderOverlay tableBorderOverlay;
     private final FloatingItem<Label> resultFloatingItem;
+    private final StringProperty resultContent = new SimpleStringProperty("");
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -78,13 +89,18 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @Override
             protected Label makeCell(VisibleBounds visibleBounds)
             {
-                return new Label("Result");
+                Label label = new Label("");
+                label.textProperty().bind(resultContent);
+                Tooltip tooltip = new Tooltip();
+                tooltip.textProperty().bind(resultContent);
+                Tooltip.install(label, tooltip);
+                return label;
             }
 
             @Override
             public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
             {
-                return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? ItemState.DIRECTLY_CLICKABLE : ItemState.NOT_CLICKABLE;
+                return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
             }
 
             @Override
@@ -104,6 +120,22 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         @Initialized TableHat hat = new TableHat(this, parent, check);
         this.tableHat = hat;
         floatingSupplier.addItem(this.tableHat);
+
+        Workers.onWorkerThread("Loading check result", Priority.FETCH, () -> {
+            try
+            {
+                boolean pass = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
+                Platform.runLater(() -> {
+                    resultContent.set(pass ? "Pass" : "Fail");
+                });
+            }
+            catch (UserException | InternalException e)
+            {
+                Platform.runLater(() -> {
+                    resultContent.set("ERR:" + e.getLocalizedMessage());
+                });
+            }
+        });
 
         // Must be done as last item:
         @Initialized CheckDisplay usInit = this;
