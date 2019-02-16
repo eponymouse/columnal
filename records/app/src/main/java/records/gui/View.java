@@ -47,6 +47,7 @@ import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.table.CheckDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -176,7 +177,7 @@ public class View extends StackPane implements DimmableParent
             {
                 TableDisplay display = (TableDisplay) displayBase;
                 // Call this first so that the nodes are actually removed when we call removeGridArea:
-                display.cleanupFloatingItems();
+                display.cleanupFloatingItems(getGrid().getFloatingSupplier());
                 dataCellSupplier.removeGrid(display);
                 mainPane.removeSelectionListener(display);
                 expandTableArrowSupplier.removeGrid(display);
@@ -596,8 +597,18 @@ public class View extends StackPane implements DimmableParent
                 {
                     thisView.emptyListener.consume(ContentState.NON_EMPTY);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
-                    TableDisplay tableDisplay = new TableDisplay(thisView, floatingSupplier, transformation);
-                    thisView.addDisplay(tableDisplay);
+                    if (transformation instanceof Check)
+                    {
+                        CheckDisplay checkDisplay = new CheckDisplay(thisView, floatingSupplier, (Check)transformation);
+                        thisView.mainPane.addGridAreas(ImmutableList.of(checkDisplay));
+                        thisView.mainPane.addSelectionListener(checkDisplay);
+
+                    }
+                    else
+                    {
+                        TableDisplay tableDisplay = new TableDisplay(thisView, floatingSupplier, transformation);
+                        thisView.addDisplay(tableDisplay);
+                    }
 
                     List<TableDisplay> sourceDisplays = new ArrayList<>();
                     for (TableId t : transformation.getSources())

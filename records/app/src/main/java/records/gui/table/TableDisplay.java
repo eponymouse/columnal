@@ -102,6 +102,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
@@ -132,6 +133,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final TableErrorDisplay tableErrorDisplay;
     private boolean currentKnownRowsIsFinal = false;
 
+    private TableId curTableId;
+
     private final FXPlatformRunnable onModify;
 
     @OnThread(Tag.Any)
@@ -141,9 +144,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
-    public void cleanupFloatingItems()
+    public void cleanupFloatingItems(VirtualGridSupplierFloating floatingItems)
     {
-        super.cleanupFloatingItems();
+        super.cleanupFloatingItems(floatingItems);
         if (tableHat != null)
             floatingItems.removeItem(tableHat);
         floatingItems.removeItem(tableErrorDisplay);
@@ -202,7 +205,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
-    private CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    protected CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
@@ -334,7 +337,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
     }
 
-    private int internal_getCurrentKnownRows(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
+    @Override
+    @SuppressWarnings("units")
+    protected @TableDataRowIndex int getCurrentKnownRows()
     {
         return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (table.getOperations().appendRows != null ? 1 : 0);
     }
@@ -356,7 +361,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         if (columnDisplay.get().getFirst() == Display.COLLAPSED)
             return getPosition();
         else
-            return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, Math.max(0, internal_getColumnCount(table) - 1));
+            return getPosition().offsetByRowCols(getCurrentKnownRows() - 1, Math.max(0, internal_getColumnCount(table) - 1));
     }
 
     // The last data row in grid area terms, not including any append buttons
@@ -399,7 +404,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
-    protected void doCopy(@Nullable RectangleBounds bounds)
+    protected boolean isShowingRowLabels()
+    {
+        return true;
+    }
+
+    @Override
+    public void doCopy(@Nullable RectangleBounds bounds)
     {
         Log.debug("Copying from " + bounds);
         int firstColumn = bounds == null ? 0 : Math.max(0, bounds.topLeftIncl.columnIndex - getPosition().columnIndex);
@@ -468,13 +479,34 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return TableDisplay.this.getPosition().columnIndex + displayColumns.size() - 1;
     }
     */
+    
+    @Override
+    protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
+    {
+        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        if (renameTable == null)
+            return null;
+        @NonNull RenameTable renameTableFinal = renameTable;
+        
+        return newTableId -> {
+            if (Objects.equals(newTableId, curTableId))
+                return; // Ignore if hasn't actually changed
+
+            if (newTableId != null)
+                Workers.onWorkerThread("Renaming table", Priority.SAVE, () -> renameTableFinal.renameTable(newTableId));
+
+            if (newTableId != null)
+                curTableId = newTableId;
+        };
+    }
 
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, VirtualGridSupplierFloating supplierFloating, Table table)
     {
-        super(parent.getManager(), table.getId(), renameTableSim(table), supplierFloating);
+        super(parent.getManager(), table, supplierFloating);
         this.parent = parent;
         this.table = table;
+        this.curTableId = table.getId();
         @Nullable RecordSet recordSet = null;
         try
         {
@@ -853,7 +885,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    public void editColumn_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, ColumnId columnId) throws InternalException, UserException
+    public static void editColumn_Calc(View parent, Calculate calc, ColumnId columnId) throws InternalException, UserException
     {
         // Start with the existing value.
         Expression expression = calc.getCalculatedColumns().get(columnId);
@@ -1091,7 +1123,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // For other tables, do nothing
     }
 
-    public void editAggregateSplitBy(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, SummaryStatistics aggregate)
+    public static void editAggregateSplitBy(View parent, SummaryStatistics aggregate)
     {
         new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
             FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
@@ -1109,52 +1141,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
-    StyledString editSourceLink(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
-    {
-        // If this becomes broken/unbroken, we should get re-run:
-        @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
-        String[] styleClasses = srcTable == null ?
-                new String[] { "broken-link" } : new String[0];
-        return srcTableId.toStyledString().withStyle(new Clickable("source.link.tooltip", styleClasses) {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-            {
-                if (mouseButton == MouseButton.PRIMARY)
-                {
-                    new PickTableDialog(parent, destTable, screenPoint).showAndWait().ifPresent(t -> {
-                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing table", () -> changeSrcTableId.consume(t.getId())));
-                    });
-                }
-                else if (mouseButton == MouseButton.MIDDLE && srcTable != null && srcTable.getDisplay() instanceof TableDisplay)
-                {
-                    TableDisplay target = (TableDisplay) srcTable.getDisplay();
-                    withParent_(p -> {
-                        if (target != null)
-                            p.select(new EntireTableSelection(target, target.getPosition().columnIndex));
-                    });
-                }
-            }
-        });
-    }
-
-    StyledString editExpressionLink(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
-    {
-        return curExpression.toStyledString().withStyle(new Clickable() {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-            {
-                if (mouseButton == MouseButton.PRIMARY)
-                {
-                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, expectedType).showAndWait().ifPresent(newExp -> {
-                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
-                    });
-                }
-            }
-        }).withStyle(new StyledCSS("edit-expression-link"));
-    }
-    
     private StyledString fixExpressionLink(EditableExpression fixer)
     {
         return StyledString.styled("Edit expression", new Clickable() {
@@ -1182,139 +1168,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return recordSet == null ? ImmutableList.of() : ImmutableList.copyOf(recordSet.getColumns());
     }
     
-    void relayoutGrid()
+    @Override
+    public String getSortKey()
     {
-        withParent_(VirtualGrid::positionOrAreaChanged);
-    }
-
-    /**
-     * The table border overlay.  It is a floating overlay because otherwise the drop shadow
-     * doesn't work properly.
-     */
-    @OnThread(Tag.FXPlatform)
-    private class TableBorderOverlay extends RectangleOverlayItem implements ChangeListener<Number>
-    {
-        private @MonotonicNonNull VisibleBounds lastVisibleBounds;
-        
-        public TableBorderOverlay()
-        {
-            super(ViewOrder.TABLE_BORDER);
-        }
-
-        @Override
-        protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
-        {
-            // We don't use clampVisible because otherwise calculating the clip is too hard
-            // So we just use a big rectangle the size of the entire table.  I don't think this
-            // causes performance issues, but something to check if there are issues later on.
-            CellPosition topLeft = getPosition();
-            double left = visibleBounds.getXCoord(topLeft.columnIndex);
-            double top = visibleBounds.getYCoord(topLeft.rowIndex);
-            int columnCount = internal_getColumnCount(table);
-            CellPosition bottomRight;
-            if (columnCount == 0)
-                bottomRight = topLeft;
-            else
-                bottomRight = topLeft.offsetByRowCols(internal_getCurrentKnownRows(table) - 1, columnCount - 1);
-            // Take one pixel off so that we are on top of the right/bottom divider inset
-            // rather than showing it just inside the rectangle (which looks weird)
-            double right = visibleBounds.getXCoordAfter(bottomRight.columnIndex) - 1;
-            double bottom = visibleBounds.getYCoordAfter(bottomRight.rowIndex) - 1;
-
-            return Optional.of(Either.<BoundingBox, RectangleBounds>left(new BoundingBox(
-                    left, top, right - left, bottom - top
-            )));
-        }
-
-        @Override
-        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
-        {
-            r.getStyleClass().add("table-border-overlay");
-            calcClip(r, visibleBounds);
-            this.lastVisibleBounds = visibleBounds;
-            r.layoutXProperty().addListener(this);
-            r.layoutYProperty().addListener(this);
-        }
-
-        @Override
-        public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
-        {
-            super.adjustForContainerTranslation(item, translateXY, adding);
-            if (adding)
-                translateXY.getSecond().addListener(this);
-            else
-                translateXY.getSecond().removeListener(this);
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
-        {
-            if (lastVisibleBounds != null)
-                updateClip(lastVisibleBounds);
-        }
-
-        @Override
-        protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
-        {
-            lastVisibleBounds = visibleBounds;
-            updateClip(visibleBounds);
-        }
-
-        private void updateClip(VisibleBounds visibleBounds)
-        {
-            if (getNode() != null)
-                calcClip(getNode(), visibleBounds);
-        }
-
-        @OnThread(Tag.FXPlatform)
-        private void calcClip(Rectangle r, VisibleBounds visibleBounds)
-        {
-            Shape originalClip = Shape.subtract(
-                new Rectangle(-20, -20, r.getWidth() + 40, r.getHeight() + 40),
-                new Rectangle(0, 0, r.getWidth(), r.getHeight())
-            );
-            // We adjust clip if we have tables touching us:
-            Shape clip = withParent(p -> {
-                Shape curClip = originalClip;
-                for (BoundingBox neighbour : p.getTouchingRectangles(TableDisplay.this))
-                {
-                    curClip = Shape.subtract(curClip, new Rectangle(neighbour.getMinX(), neighbour.getMinY(), neighbour.getWidth(), neighbour.getHeight()));
-                }
-                return curClip;
-            }).orElse(originalClip);
-            boolean rowLabelsShowing = true; //withParent(p -> p.selectionIncludes(TableDisplay.this)).orElse(false);
-            if (rowLabelsShowing)
-            {
-                @SuppressWarnings("units")
-                @TableDataRowIndex int rowZero = 0;
-                @SuppressWarnings("units")
-                @TableDataColIndex int columnZero = 0;
-                // We know where row labels will be, so easy to construct the rectangle:
-                CellPosition topLeftData = getDataPosition(rowZero, columnZero);
-                @SuppressWarnings("units")
-                @TableDataRowIndex int oneRow = 1;
-                CellPosition bottomRightData = getDataPosition(currentKnownRows - oneRow, columnZero);
-                double rowStartY = visibleBounds.getYCoord(topLeftData.rowIndex);
-                double rowEndY = visibleBounds.getYCoordAfter(bottomRightData.rowIndex);
-                Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - visibleBounds.getYCoord(getPosition().rowIndex), 20, rowEndY - rowStartY);
-                //Log.debug("Rows: " + currentKnownRows + " label bounds: " + rowLabelBounds + " subtracting from " + r);
-                clip = Shape.subtract(clip, rowLabelBounds);
-            }
-
-            r.setClip(clip);
-            /* // Debug code to help see what clip looks like:
-            if (getPosition().columnIndex == CellPosition.col(1))
-            {
-                // Hack to clone shape:
-                Shape s = Shape.union(clip, clip);
-                Scene scene = new Scene(new Group(s));
-                ClipboardContent clipboardContent = new ClipboardContent();
-                clipboardContent.putImage(s.snapshot(null, null));
-                Clipboard.getSystemClipboard().setContent(clipboardContent);
-            }
-            */
-        }
+        // At least makes it consistent when ordering jumbled up tables during tests:
+        return curTableId.getRaw();
     }
 
     @OnThread(Tag.FXPlatform)

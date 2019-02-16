@@ -42,6 +42,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.DataItemPosition;
+import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
@@ -68,6 +69,7 @@ import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
+import records.gui.table.HeadedDisplay;
 import records.gui.table.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -95,12 +97,10 @@ import java.util.Optional;
  * RecordSet.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class DataDisplay extends GridArea implements SelectionListener
+public abstract class DataDisplay extends HeadedDisplay
 {    
     protected final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem<Label>> columnHeaderItems = new ArrayList<>();
-    private @Nullable TableHeaderItem tableHeaderItem;
-    private TableId curTableId;
 
     protected @TableDataRowIndex int currentKnownRows; 
     
@@ -114,9 +114,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
     private final HeaderRows headerRows;
 
-    private DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems, HeaderRows headerRows)
+    private DataDisplay(@Nullable TableHeaderItemParams tableHeaderItemParams, VirtualGridSupplierFloating floatingItems, HeaderRows headerRows)
     {
-        this.curTableId = initialTableName;
+        super(tableHeaderItemParams, floatingItems);
         this.floatingItems = floatingItems;
         this.headerRows = headerRows;
 
@@ -151,20 +151,13 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     // Version without table header
     protected DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems, boolean showColumnNames, boolean showColumnTypes)
     {
-        this(initialTableName, floatingItems, new HeaderRows(false, showColumnNames, showColumnTypes));
+        this(null, floatingItems, new HeaderRows(false, showColumnNames, showColumnTypes));
     }
 
-                        // Version with full table header
-    protected DataDisplay(TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
+    // Version with full table header
+    protected DataDisplay(TableManager tableManager, Table table, VirtualGridSupplierFloating floatingItems)
     {
-        this(initialTableName, floatingItems, new HeaderRows(true, true, true));
-        tableHeaderItem = new TableHeaderItem(tableManager, initialTableName, renameTable, floatingItems);
-        this.floatingItems.addItem(tableHeaderItem);
-    }
-
-    protected @Nullable ContextMenu getTableHeaderContextMenu()
-    {
-        return null;
+        this(new TableHeaderItemParams(tableManager, table.getId(), table, floatingItems), floatingItems, new HeaderRows(true, true, true));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -229,13 +222,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
     {
         return cellStyles;
-    }
-
-    @Override
-    public String getSortKey()
-    {
-        // At least makes it consistent when ordering jumbled up tables during tests:
-        return curTableId.getRaw();
     }
 
     @SuppressWarnings("units")
@@ -365,15 +351,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         };
     }
 
-    public void cleanupFloatingItems()
+    @Override
+    public void cleanupFloatingItems(VirtualGridSupplierFloating floatingItems)
     {
         for (FloatingItem<Label> columnHeaderItem : columnHeaderItems)
         {
             floatingItems.removeItem(columnHeaderItem);
         }
-        if (tableHeaderItem != null)
-            floatingItems.removeItem(tableHeaderItem);
-        
+        super.cleanupFloatingItems(floatingItems);        
     }
 
     @Override
@@ -409,14 +394,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         return null;
     }
 
-    public double getTableNameWidth()
-    {
-        if (tableHeaderItem == null || tableHeaderItem.tableNameField == null)
-            return 0;
-        else
-            return tableHeaderItem.tableNameField.getNode().getLayoutBounds().getWidth();
-    }
-
     public static class HeaderRows
     {
         private final boolean showingTableNameRow;
@@ -431,93 +408,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
     }
 
-    // A destination overlay corresponding exactly to the table position and original size
-    @OnThread(Tag.FXPlatform)
-    private class MoveDestinationFree extends MoveDestination
-    {
-        private final double width;
-        private final double height;
-
-        public MoveDestinationFree(VisibleBounds visibleBounds, Bounds originalBoundsOnScreen, double screenX, double screenY)
-        {
-            super(originalBoundsOnScreen, screenX, screenY);
-            this.width = originalBoundsOnScreen.getWidth();
-            // The height is only of the header, so we must calculate ourselves:
-            this.height = visibleBounds.getYCoordAfter(getBottomRightIncl().rowIndex) - visibleBounds.getYCoord(getPosition().rowIndex);
-        }
-
-        @Override
-        protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
-        {
-            Point2D effectiveScreenTopLeft = lastMousePosScreen.subtract(offsetFromTopLeftOfSource);
-            Point2D topLeft = visibleBounds.screenToLayout(effectiveScreenTopLeft);
-            return Optional.of(Either.<BoundingBox, RectangleBounds>left(new BoundingBox(topLeft.getX(), topLeft.getY(), width, height)));
-        }
-
-        @Override
-        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
-        {
-            r.getStyleClass().add("move-table-dest-overlay-free");
-        }
-    }
     
-    private abstract static class MoveDestination extends RectangleOverlayItem
-    {
-        protected final Point2D offsetFromTopLeftOfSource;
-        protected Point2D lastMousePosScreen;
-        
-        protected MoveDestination(Bounds originalBoundsOnScreen, double screenX, double screenY)
-        {
-            super(ViewOrder.OVERLAY_ACTIVE);
-            this.lastMousePosScreen = new Point2D(screenX, screenY);
-            this.offsetFromTopLeftOfSource = new Point2D(screenX - originalBoundsOnScreen.getMinX(), screenY - originalBoundsOnScreen.getMinY());
-        }
-
-        public void mouseMovedToScreenPos(double screenX, double screenY)
-        {
-            lastMousePosScreen = new Point2D(screenX, screenY);
-        }
-    }
-
-    // A destination overlay corresponding to the final snapped position and size
-    private class MoveDestinationSnapped extends MoveDestination
-    {
-        private CellPosition destPosition;
-        
-
-        private MoveDestinationSnapped(CellPosition curPosition, Bounds originalBoundsOnScreen, double screenX, double screenY)
-        {
-            super(originalBoundsOnScreen, screenX, screenY);
-            this.destPosition = curPosition;
-        }
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
-        {
-            Optional<CellPosition> pos = visibleBounds.getNearestTopLeftToScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource), HPos.CENTER, VPos.CENTER);
-            if (pos.isPresent())
-            {
-                destPosition = pos.get(); 
-                return Optional.of(Either.<BoundingBox, RectangleBounds>right(new RectangleBounds(
-                    destPosition,
-                    destPosition.offsetByRowCols(getBottomRightIncl().rowIndex - getPosition().rowIndex, getBottomRightIncl().columnIndex - getPosition().columnIndex)
-                )));
-            }
-            return Optional.empty();
-        }
-
-        @Override
-        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
-        {
-            r.getStyleClass().add("move-table-dest-overlay-snapped");
-        }
-
-        public CellPosition getDestinationPosition()
-        {
-            return destPosition;
-        }
-    }
 
     private class SingleCellSelection implements CellSelection
     {
@@ -597,228 +488,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
     }
 
-    /**
-     * Copies the given region to clipboard, if possible.
-     * 
-     * @param dataBounds The bounds of the data region.  May extend beyond the actual data display
-     *                   portion.  If null, copy all data, including that which is not loaded yet.
-     */
-    protected abstract void doCopy(@Nullable RectangleBounds dataBounds);
-
-    private class TableHeaderItem extends FloatingItem<Pane>
-    {
-        private @Nullable final TableManager tableManager;
-        private final TableId initialTableName;
-        private @Nullable final FXPlatformConsumer<TableId> renameTable;
-        private final VirtualGridSupplierFloating floatingItems;
-        private @MonotonicNonNull ErrorableTextField<TableId> tableNameField;
-        private @MonotonicNonNull BorderPane borderPane;
-
-        public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
-        {
-            super(ViewOrder.STANDARD_CELLS);
-            this.tableManager = tableManager;
-            this.initialTableName = initialTableName;
-            this.renameTable = renameTable;
-            this.floatingItems = floatingItems;
-        }
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-        {
-            double x = visibleBounds.getXCoord(getPosition().columnIndex);
-            double y = visibleBounds.getYCoord(getPosition().rowIndex);
-            double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
-            // Only one row tall:
-            double height = visibleBounds.getYCoordAfter(getPosition().rowIndex) - y;
-            return Optional.of(new BoundingBox(
-                x,
-                y,
-                width,
-                height
-            ));
-        }
-
-        @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-        {
-            if (cellPosition.rowIndex == getPosition().rowIndex
-                && getPosition().columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex <= getBottomRightIncl().columnIndex)
-            {
-                return tableNameField != null && tableNameField.isFocused() ? ItemState.EDITING : ItemState.DIRECTLY_CLICKABLE;
-            }
-            return null;
-        }
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public Pane makeCell(VisibleBounds visibleBounds)
-        {
-            tableNameField = new TableNameTextField(tableManager, initialTableName, false, () -> withParent_(g -> g.select(new EntireTableSelection(DataDisplay.this, getPosition().columnIndex))));
-            tableNameField.getNode().setFocusTraversable(false);
-            tableNameField.sizeToFit(30.0, 30.0);
-            // We have to use PRESSED because if we do CLICKED, the field
-            // will already have been focused:
-            tableNameField.getNode().addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-                // Middle click may actually do something (like paste) when
-                // focused, so only steal it when unfocused:
-                if (e.getButton() == MouseButton.MIDDLE && tableNameField != null && !tableNameField.isFocused())
-                {
-                    headerMiddleClicked();
-                    e.consume();
-                }
-            });
-            if (renameTable == null)
-            {
-                tableNameField.setEditable(false);
-            }
-            else
-            {
-                @NonNull FXPlatformConsumer<TableId> renameTableFinal = renameTable;
-                tableNameField.addOnFocusLoss(newTableId -> {
-                    if (Objects.equals(newTableId, curTableId))
-                        return; // Ignore if hasn't actually changed
-                    
-                    if (newTableId != null)
-                        renameTableFinal.consume(newTableId);
-
-                    @Nullable TableId newVal = tableNameField == null ? null : tableNameField.valueProperty().getValue();
-                    if (newVal != null)
-                      curTableId = newVal;
-                });
-            }
-            final BorderPane borderPane = new BorderPane(tableNameField.getNode());
-            this.borderPane = borderPane;
-            borderPane.getStyleClass().add("table-display-table-title");
-            borderPane.getStyleClass().addAll(getExtraTitleStyleClasses());
-            BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
-            BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
-            ArrayList<MoveDestination> overlays = new ArrayList<>();
-            borderPane.setOnDragDetected(e -> {
-                if (overlays.isEmpty())
-                {
-                    Bounds originalBoundsOnScreen = borderPane.localToScreen(borderPane.getBoundsInLocal());
-                    // Important that snapped is first, to match later cast:
-                    overlays.add(new MoveDestinationSnapped(getPosition(), originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
-                    overlays.add(new MoveDestinationFree(visibleBounds, originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
-                    overlays.forEach(o -> floatingItems.addItem(o));
-                    ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
-                    newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyles.get());
-                    CellStyle blurStyle = CellStyle.TABLE_DRAG_SOURCE;
-                    newStyles.add(blurStyle);
-                    FXUtility.mouse(DataDisplay.this).cellStyles.set(newStyles.build());
-                    blurStyle.applyStyle(borderPane, true);
-                    FXUtility.mouse(DataDisplay.this).updateParent();
-                    withParent_(g -> g.setNudgeScroll(true));
-                }
-                e.consume();
-            });
-            borderPane.setOnMouseDragged(e -> {
-                // Sometimes drag-detected arrives very late, so
-                // we also create overlays in dragged if needed:
-                if (overlays.isEmpty())
-                {
-                    Bounds originalBoundsOnScreen = borderPane.localToScreen(borderPane.getBoundsInLocal());
-                    // Important that snapped is first, to match later cast:
-                    overlays.add(new MoveDestinationSnapped(getPosition(), originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
-                    overlays.add(new MoveDestinationFree(visibleBounds, originalBoundsOnScreen, e.getScreenX(), e.getScreenY()));
-                    overlays.forEach(o -> floatingItems.addItem(o));
-                    ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
-                    newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyles.get());
-                    CellStyle blurStyle = CellStyle.TABLE_DRAG_SOURCE;
-                    newStyles.add(blurStyle);
-                    FXUtility.mouse(DataDisplay.this).cellStyles.set(newStyles.build());
-                    blurStyle.applyStyle(borderPane, true);
-                    FXUtility.mouse(DataDisplay.this).updateParent();
-                    withParent_(g -> g.setNudgeScroll(true));
-                }
-                if (!overlays.isEmpty())
-                {
-                    overlays.forEach(o -> o.mouseMovedToScreenPos(e.getScreenX(), e.getScreenY()));
-                    FXUtility.mouse(DataDisplay.this).updateParent();
-                }
-                e.consume();
-            });
-            borderPane.setOnMouseReleased(e -> {
-                if (!overlays.isEmpty())
-                {
-                    CellPosition dest = ((MoveDestinationSnapped)overlays.get(0)).getDestinationPosition();
-                    overlays.forEach(o -> floatingItems.removeItem(o));
-                    FXUtility.mouse(DataDisplay.this).cellStyles.set(
-                        FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.<CellStyle>toImmutableList())
-                    );
-                    CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
-                    // setPosition calls updateParent()
-                    withParent_(p -> {
-                        FXUtility.mouse(DataDisplay.this).setPosition(dest);
-                        p.setNudgeScroll(false);
-                    });
-                    tableDraggedToNewPosition();
-                    overlays.clear();
-                }
-                e.consume();
-            });
-            borderPane.setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.PRIMARY && e.isStillSincePress())
-                {
-                    withParent_(p -> {
-                        @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
-                        p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
-                    });
-                }
-                else if (e.getButton() == MouseButton.MIDDLE && e.isStillSincePress())
-                {
-                    headerMiddleClicked();
-                }
-                e.consume();
-            });
-            borderPane.setOnContextMenuRequested(e -> {
-                @Nullable ContextMenu contextMenu = FXUtility.mouse(DataDisplay.this).getTableHeaderContextMenu();
-                if (contextMenu != null)
-                    contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
-            });
-            return borderPane;
-        }
-
-        @Override
-        public void keyboardActivate(CellPosition cellPosition)
-        {
-            boolean correctRow = getPosition().rowIndex == cellPosition.rowIndex;
-            boolean correctColumn = getPosition().columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex <= getBottomRightIncl().columnIndex;
-            
-            if (correctRow && correctColumn)
-            {
-                @Nullable ContextMenu contextMenu = FXUtility.mouse(DataDisplay.this).getTableHeaderContextMenu();
-                if (contextMenu != null && borderPane != null)
-                    contextMenu.show(borderPane, Side.BOTTOM, 0, 0);
-            }
-        }
-
-        @OnThread(Tag.FXPlatform)
-        public void setSelected(boolean selected)
-        {
-            if (getNode() != null)
-                FXUtility.setPseudoclass(getNode(), "table-selected", selected);
-        }
-    }
-
-    // For overridding by subclasses
-    protected void headerMiddleClicked()
-    {
-        
-    }
     
-    // For overriding in child classes
-    protected void tableDraggedToNewPosition()
-    {
-    }
-
-    protected ImmutableList<String> getExtraTitleStyleClasses()
-    {
-        return ImmutableList.of();
-    }
-
     @Override
     @OnThread(Tag.FXPlatform)
     public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
@@ -1058,6 +728,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         Tooltip.install(editable, new Tooltip(TranslationUtility.getString("click.to.change")));
     }
     
+    @Override
     public void gotoRow(Window parent, @AbsColIndex int currentCol)
     {
         new GotoRowDialog(parent).showAndWait().ifPresent(row -> {
@@ -1066,6 +737,27 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 g.select(getSelectionForSingleCell(p));
             });
         });
+    }
+
+    @Override
+    protected void setTableDragSource(boolean on, BorderPane borderPane)
+    {
+        if (on)
+        {
+            ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
+            newStyles.addAll(cellStyles.get());
+            CellStyle blurStyle = CellStyle.TABLE_DRAG_SOURCE;
+            newStyles.add(blurStyle);
+            cellStyles.set(newStyles.build());
+            blurStyle.applyStyle(borderPane, true);
+        }
+        else
+        {
+            cellStyles.set(
+                cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.<CellStyle>toImmutableList())
+            );
+            CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
+        }
     }
 
     @OnThread(Tag.FXPlatform)

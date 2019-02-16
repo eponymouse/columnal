@@ -35,6 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.Table.Display;
 import records.data.TableId;
 import records.data.TableOperations;
@@ -60,6 +61,7 @@ import records.importers.GuessFormat.TrimChoice;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -345,6 +347,18 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
+        protected boolean isShowingRowLabels()
+        {
+            return true;
+        }
+
+        @Override
+        public String getSortKey()
+        {
+            return "";
+        }
+
+        @Override
         public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
         {
             RecordSet recordSet = recordSetProperty.get();
@@ -378,7 +392,25 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        protected void doCopy(@Nullable RectangleBounds rectangleBounds)
+        protected @TableDataRowIndex int getCurrentKnownRows()
+        {
+            return currentKnownRows;
+        }
+
+        @Override
+        protected CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+        {
+            return getPosition().offsetByRowCols(2 + rowIndex, columnIndex);
+        }
+
+        @Override
+        protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
+        {
+            return null;
+        }
+
+        @Override
+        public void doCopy(@Nullable RectangleBounds rectangleBounds)
         {
             // We don't currently support copy on this table
         }
@@ -590,9 +622,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        public void cleanupFloatingItems()
+        public void cleanupFloatingItems(VirtualGridSupplierFloating floatingItems)
         {
-            super.cleanupFloatingItems();
+            super.cleanupFloatingItems(floatingItems);
             withParent_(p -> p.getFloatingSupplier().removeItem(selectionRectangle));
         }
 

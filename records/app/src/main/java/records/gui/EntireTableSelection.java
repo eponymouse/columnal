@@ -7,16 +7,17 @@ import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
+import records.gui.table.HeadedDisplay;
 import utility.Either;
 
 public class EntireTableSelection implements CellSelection
 {
-    private final DataDisplay selected;
+    private final HeadedDisplay selected;
     // Although we select the whole table, if they move out up/down, we stay
     // in the column they entered from:
     private final @AbsColIndex int column;
 
-    public EntireTableSelection(DataDisplay selected, @AbsColIndex int column)
+    public EntireTableSelection(HeadedDisplay selected, @AbsColIndex int column)
     {
         this.selected = selected;
         this.column = column;

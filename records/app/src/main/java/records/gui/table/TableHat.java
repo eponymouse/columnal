@@ -18,12 +18,16 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.Table;
 import records.data.TableId;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.gui.DataDisplay;
+import records.gui.EditExpressionDialog;
 import records.gui.EditSortDialog;
+import records.gui.EntireTableSelection;
 import records.gui.HideColumnsDialog;
+import records.gui.PickTableDialog;
 import records.gui.TableListDialog;
 import records.gui.View;
 import records.gui.grid.VirtualGridSupplier.ItemState;
@@ -39,12 +43,15 @@ import records.transformations.Filter;
 import records.transformations.HideColumns;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
+import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import styled.StyledCSS;
 import styled.StyledString;
 import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -62,12 +69,12 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 class TableHat extends FloatingItem<TableHatDisplay>
 {
-    private TableDisplay tableDisplay;
+    private HeadedDisplay tableDisplay;
     private final StyledString content;
     private final StyledString collapsedContent;
     private boolean collapsed = false;
     
-    public TableHat(@UnknownInitialization(DataDisplay.class) TableDisplay tableDisplay, View parent, Transformation table)
+    public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, Transformation table)
     {
         super(ViewOrder.POPUP);
         if (table instanceof Filter)
@@ -76,11 +83,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
             content = StyledString.concat(
                 collapsedContent = StyledString.s("Filter"),
                 StyledString.s(" "),
-                tableDisplay.editSourceLink(parent, filter, filter.getSource(), newSource -> 
+                editSourceLink(parent, filter, filter.getSource(), newSource -> 
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                         table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                 StyledString.s(", keeping rows where: "),
-                tableDisplay.editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()), DataType.BOOLEAN, newExp ->
+                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()), DataType.BOOLEAN, newExp ->
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                         table.getDetailsForCopy(), filter.getSource(), newExp), null))
             );
@@ -113,7 +120,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             content = StyledString.concat(
                 collapsedContent = StyledString.s("Sort"),
                 StyledString.s(" "),
-                tableDisplay.editSourceLink(parent, sort, sort.getSource(), newSource ->
+                editSourceLink(parent, sort, sort.getSource(), newSource ->
                         parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
                                 table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
                 StyledString.s(" by "),
@@ -127,7 +134,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             builder.append(collapsedContent = StyledString.s("Aggregate"));
             builder.append(" ");
             builder.append(
-                tableDisplay.editSourceLink(parent, aggregate, aggregate.getSource(), newSource ->
+                editSourceLink(parent, aggregate, aggregate.getSource(), newSource ->
                         parent.getManager().edit(table.getId(), () -> new SummaryStatistics(parent.getManager(),
                                 table.getDetailsForCopy(), newSource, aggregate.getColumnExpressions(), aggregate.getSplitBy()), null))
             );
@@ -139,7 +146,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 @Override
                 protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                 {
-                    tableDisplay.editAggregateSplitBy(parent, aggregate);
+                    TableDisplay.editAggregateSplitBy(parent, aggregate);
                 }
             };
             if (!splitBy.isEmpty())
@@ -207,11 +214,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
             content = StyledString.concat(
                 collapsedContent = StyledString.s("Check"),
                 StyledString.s(" "),
-                tableDisplay.editSourceLink(parent, check, check.getSource(), newSource ->
+                editSourceLink(parent, check, check.getSource(), newSource ->
                     parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                         table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                 StyledString.s(" that "),
-                tableDisplay.editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), new MultipleTableLookup(check.getId(), parent.getManager(), ((Check) table).getSource()), DataType.BOOLEAN, e -> 
+                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), new MultipleTableLookup(check.getId(), parent.getManager(), ((Check) table).getSource()), DataType.BOOLEAN, e -> 
                     parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
                 )
             );
@@ -222,7 +229,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             collapsedContent = StyledString.s("Calculate");
             StyledString.Builder builder = new Builder();
             builder.append("From ");
-            builder.append(tableDisplay.editSourceLink(parent, calc, calc.getSource(), newSource -> 
+            builder.append(editSourceLink(parent, calc, calc.getSource(), newSource -> 
                 parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(),
                     table.getDetailsForCopy(), newSource, calc.getCalculatedColumns()), null)));
             builder.append(" calculate ");
@@ -238,13 +245,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     @Override
                     protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        FXUtility.alertOnErrorFX_("Error editing column", () -> tableDisplay.editColumn_Calc(parent, calc, c));
+                        FXUtility.alertOnErrorFX_("Error editing column", () -> TableDisplay.editColumn_Calc(parent, calc, c));
                     }
                 }).withStyle(new StyledCSS("edit-calculate-column")));
                 if (calc.getCalculatedColumns().keySet().size() > 3)
                     threeEditLinks = Stream.<StyledString>concat(threeEditLinks, Stream.<StyledString>of(StyledString.s("...")));
                 builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.<StyledString>toList())));
             }
+            /*
             builder.append(" ");
             builder.append(StyledString.s("(add new)").withStyle(new Clickable() {
                 @Override
@@ -256,6 +264,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     }
                 }
             }));
+            */
             content = builder.build();
         }
         else if (table instanceof HideColumns)
@@ -281,7 +290,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             collapsedContent = StyledString.s("Drop columns");
             content = StyledString.concat(
                     StyledString.s("From "),
-                    tableDisplay.editSourceLink(parent, hide, hide.getSource(), newSource ->
+                    editSourceLink(parent, hide, hide.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new HideColumns(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, hide.getHiddenColumns()), null)),
                     StyledString.s(", drop columns: "),
@@ -402,9 +411,54 @@ class TableHat extends FloatingItem<TableHatDisplay>
     public void keyboardActivate(CellPosition cellPosition)
     {
         // Hat can't be triggered via keyboard
-        // (Though maybe we should allow this somehow?s
+        // (Though maybe we should allow this somehow?)
     }
-    
+
+    private static StyledString editSourceLink(View parent, Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
+    {
+        // If this becomes broken/unbroken, we should get re-run:
+        @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
+        String[] styleClasses = srcTable == null ?
+                new String[] { "broken-link" } : new String[0];
+        return srcTableId.toStyledString().withStyle(new Clickable("source.link.tooltip", styleClasses) {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new PickTableDialog(parent, destTable, screenPoint).showAndWait().ifPresent(t -> {
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing table", () -> changeSrcTableId.consume(t.getId())));
+                    });
+                }
+                else if (mouseButton == MouseButton.MIDDLE && srcTable != null && srcTable.getDisplay() instanceof TableDisplay)
+                {
+                    TableDisplay target = (TableDisplay) srcTable.getDisplay();
+                    if (target != null)
+                        parent.getGrid().select(new EntireTableSelection(target, target.getPosition().columnIndex));
+                }
+            }
+        });
+    }
+
+    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    {
+        return curExpression.toStyledString().withStyle(new Clickable() {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, expectedType).showAndWait().ifPresent(newExp -> {
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
+                    });
+                }
+            }
+        }).withStyle(new StyledCSS("edit-expression-link"));
+    }
+
+
     @OnThread(Tag.FXPlatform)
     class TableHatDisplay extends Region
     {
