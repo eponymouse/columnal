@@ -12,7 +12,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 public class TypeOf extends FunctionDefinition
 {

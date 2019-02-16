@@ -13,10 +13,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 public class MapFunction extends FunctionDefinition
 {

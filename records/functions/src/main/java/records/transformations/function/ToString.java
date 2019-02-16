@@ -22,7 +22,7 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.time.temporal.TemporalAccessor;
 

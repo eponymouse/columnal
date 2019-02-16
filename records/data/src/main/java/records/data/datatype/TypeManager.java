@@ -29,7 +29,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.*;
 import java.util.function.Predicate;

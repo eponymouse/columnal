@@ -2,6 +2,7 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
+import records.data.ValueFunction;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
@@ -12,7 +13,6 @@ import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
 
 /**
  * Created by neil on 17/01/2017.

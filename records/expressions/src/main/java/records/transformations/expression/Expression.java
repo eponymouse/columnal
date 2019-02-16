@@ -15,6 +15,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -862,5 +863,16 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             buildContent.run();
             builder.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         }
+    }
+
+    /**
+     * If this is a boolean expression, can we pinpoint why it
+     * came back with its result?  If so, return the non-null
+     * list of cell locations from this method.
+     * @return
+     */
+    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    {
+        return null;
     }
 }

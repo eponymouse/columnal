@@ -8,7 +8,7 @@ import records.error.UserException;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.List;

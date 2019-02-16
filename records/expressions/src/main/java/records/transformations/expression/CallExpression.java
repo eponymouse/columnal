@@ -5,6 +5,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -24,7 +25,7 @@ import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.TaggedValue;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.Collections;
 import java.util.Random;
@@ -38,6 +39,7 @@ public class CallExpression extends Expression
 {
     private final Expression function;
     private final Expression param;
+    private @Nullable ValueFunction functionValue;
 
     public CallExpression(Expression function, @Recorded Expression arg)
     {
@@ -158,8 +160,20 @@ public class CallExpression extends Expression
     public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
-            
+        
+        if (state.recordBooleanExplanation())
+        {
+            this.functionValue = functionValue;
+            this.functionValue.setRecordBooleanExplanation(true);
+        }
+
         return new Pair<>(functionValue.call(param.getValue(state).getFirst()), state);
+    }
+
+    @Override
+    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    {
+        return functionValue == null ? null : functionValue.getBooleanExplanation();
     }
 
     @Override

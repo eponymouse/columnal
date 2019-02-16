@@ -7,7 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 public class StringMid //extends FunctionDefinition
 {

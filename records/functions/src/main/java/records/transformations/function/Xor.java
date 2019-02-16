@@ -10,7 +10,7 @@ import records.error.UserException;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 public class Xor extends FunctionDefinition
 {

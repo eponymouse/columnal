@@ -16,14 +16,11 @@ import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.function.IntSupplier;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class LookupFunctions
 {

@@ -6,7 +6,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -18,13 +17,11 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

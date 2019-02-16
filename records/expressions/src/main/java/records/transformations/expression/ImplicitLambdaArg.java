@@ -21,7 +21,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;

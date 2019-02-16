@@ -11,7 +11,7 @@ import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 /**
  * Created by neil on 14/01/2017.

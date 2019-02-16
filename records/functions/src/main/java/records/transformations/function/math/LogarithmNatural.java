@@ -10,13 +10,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.ValueFunction1;
-import records.transformations.function.ValueFunction2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.math.BigDecimal;
 import java.math.MathContext;

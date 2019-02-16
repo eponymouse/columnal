@@ -24,7 +24,7 @@ import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.util.Arrays;
 import java.util.HashMap;

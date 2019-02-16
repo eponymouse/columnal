@@ -14,7 +14,7 @@ import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 // Foldr, by another name.
 public class Combine extends FunctionDefinition

@@ -17,7 +17,7 @@ import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 import java.time.DateTimeException;
 import java.time.format.DateTimeFormatter;

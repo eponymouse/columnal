@@ -10,7 +10,7 @@ import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 public class Min extends FunctionDefinition
 {

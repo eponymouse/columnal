@@ -11,7 +11,7 @@ import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 /**
  * Created by neil on 22/01/2017.

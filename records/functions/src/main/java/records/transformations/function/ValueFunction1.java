@@ -6,7 +6,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-import utility.ValueFunction;
+import records.data.ValueFunction;
 
 /**
  * A helper extension for ValueFunction which does the casting
