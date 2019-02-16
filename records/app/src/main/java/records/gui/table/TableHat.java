@@ -218,7 +218,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                         table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                 StyledString.s(" that "),
-                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), new MultipleTableLookup(check.getId(), parent.getManager(), ((Check) table).getSource()), DataType.BOOLEAN, e -> 
+                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), check.getColumnLookup(), DataType.BOOLEAN, e -> 
                     parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
                 )
             );

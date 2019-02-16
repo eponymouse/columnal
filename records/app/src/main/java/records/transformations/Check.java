@@ -2,10 +2,12 @@ package records.transformations;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
@@ -14,15 +16,19 @@ import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -72,7 +78,7 @@ public class Check extends Transformation
         if (type == null)
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            MultipleTableLookup lookup = new MultipleTableLookup(getId(), getManager(), srcTableId);
+            ColumnLookup lookup = getColumnLookup();
             @Nullable TypeExp checked = checkExpression.checkExpression(lookup, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
@@ -92,6 +98,88 @@ public class Check extends Transformation
             type = typeFinal;
         }
         return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
+    }
+
+    public ColumnLookup getColumnLookup()
+    {
+        return new ColumnLookup()
+        {
+            @Override
+            public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            {
+                try
+                {
+                    Column column = null;
+                    Table srcTable = getManager().getSingleTableOrNull(srcTableId);
+                    if (tableId == null)
+                    {
+                        if (srcTable != null)
+                        {
+                            column = srcTable.getData().getColumnOrNull(columnId);
+                        }
+                    }
+                    else
+                    {
+                        Table table = getManager().getSingleTableOrNull(tableId);
+                        if (table != null)
+                        {
+                            column = table.getData().getColumnOrNull(columnId);
+                        }
+                    }
+                    if (column == null)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        switch (columnReferenceType)
+                        {
+                            case CORRESPONDING_ROW:
+                                return column.getType();
+                            case WHOLE_COLUMN:
+                                Column columnFinal = column;
+                                return DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType()));
+                            default:
+                                throw new InternalException("Unknown reference type: " + columnReferenceType);
+                        }
+                    }
+                }
+                catch (InternalException | UserException e)
+                {
+                    Log.log(e);
+                }
+                return null;
+            }
+
+            @Override
+            public Stream<ColumnReference> getAvailableColumnReferences()
+            {
+                return getManager().streamAllTables().flatMap(t -> {
+                    try
+                    {
+                        Stream.Builder<ColumnReference> columns = Stream.builder();
+                        if (t.getId().equals(srcTableId))
+                        {
+                            for (Column column : t.getData().getColumns())
+                            {
+                                columns.add(new ColumnReference(column.getName(), ColumnReferenceType.WHOLE_COLUMN));
+                            }
+                        }
+
+                        for (Column column : t.getData().getColumns())
+                        {
+                            columns.add(new ColumnReference(t.getId(), column.getName(), ColumnReferenceType.WHOLE_COLUMN));
+                        }
+                        return columns.build();
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        Log.log(e);
+                        return Stream.of();
+                    }
+                });
+            }
+        };
     }
 
     @Override
