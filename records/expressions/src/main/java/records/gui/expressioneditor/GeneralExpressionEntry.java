@@ -272,14 +272,26 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     {
         private final ColumnReference columnReference;
         private final String fullText;
+        private final ImmutableList<String> stems;
 
         public ColumnCompletion(ColumnReference columnReference)
         {
             this.columnReference = columnReference;
+            String content = "";
+            ImmutableList.Builder<String> stemBuilder = ImmutableList.builder();
             if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
-                fullText = "@entire " + columnReference.getColumnId().getRaw();
-            else
-                fullText = columnReference.getColumnId().getRaw();
+                content += "@entire ";
+            if (columnReference.getTableId() != null)
+            {
+                content += columnReference.getTableId().getRaw() + ":";
+                stemBuilder.add(columnReference.getTableId().getRaw() + ":" + columnReference.getColumnId().getRaw());
+            }
+            content += columnReference.getColumnId().getRaw();
+            stemBuilder.add(columnReference.getColumnId().getRaw());
+            if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
+                stemBuilder.add(content);
+            fullText = content;
+            stems = stemBuilder.build();
         }
 
 
@@ -317,7 +329,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         public ShowStatus shouldShow(String input)
         {
             ShowStatus fallback = ShowStatus.NO_MATCH;
-            for (String possible : ImmutableList.of(fullText)) // TODO also support scoped name?
+            for (String possible : stems)
             {
                 if (possible.equals(input))
                     return ShowStatus.DIRECT_MATCH;
@@ -330,7 +342,12 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         public boolean features(String curInput, int character)
         {
-            return Utility.containsCodepoint(fullText, character);
+            for (String possible : stems)
+            {
+                if (possible.startsWith(curInput) && Utility.containsCodepoint(possible.substring(curInput.length()), character))
+                    return true;
+            }
+            return false;
         }
     }
 
