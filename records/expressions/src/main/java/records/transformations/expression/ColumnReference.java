@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
@@ -49,8 +50,10 @@ public class ColumnReference extends NonOperatorExpression
     }
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
-    private @MonotonicNonNull DataTypeValue column;
     private final ColumnReferenceType referenceType;
+    
+    private @MonotonicNonNull DataTypeValue column;
+    private @MonotonicNonNull TableId resolvedTableName;
 
     public ColumnReference(@Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
     {
@@ -72,14 +75,15 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable DataTypeValue col = dataLookup.getColumn(tableName, columnName, referenceType);
+        @Nullable Pair<TableId, DataTypeValue> col = dataLookup.getColumn(tableName, columnName, referenceType);
         if (col == null)
         {
             onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + ":")) + columnName));
             return null;
         }
-        column = col;
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, col));
+        resolvedTableName = col.getFirst();
+        column = col.getSecond();
+        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column));
     }
 
     @Override
@@ -194,6 +198,13 @@ public class ColumnReference extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    public @Nullable ExplanationLocation getElementLocation(int index)
+    {
+        if (resolvedTableName != null)
+            return new ExplanationLocation(resolvedTableName, columnName, index);
+        return null;
     }
 }
 

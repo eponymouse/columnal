@@ -37,7 +37,10 @@ public class GetElement extends FunctionDefinition
         @Override
         public @Value Object call() throws UserException, InternalException
         {
-            @UserIndex int userIndex = DataTypeUtility.userIndex(intArg(1));
+            @Value int zeroBasedIndex = intArg(1);
+            @UserIndex int userIndex = DataTypeUtility.userIndex(zeroBasedIndex);
+            if (recordBooleanExplanation)
+                booleanExplanation = withArgLoc(0, loc -> loc.getListElementLocation(zeroBasedIndex));
             return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
         }
     }

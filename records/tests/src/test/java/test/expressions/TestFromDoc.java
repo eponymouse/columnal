@@ -31,8 +31,6 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.SingleTableLookup;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
 import records.typeExp.MutVar;
@@ -41,7 +39,6 @@ import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenValueSpecifiedType;
@@ -273,16 +270,16 @@ public class TestFromDoc
 
         @Override
         @SuppressWarnings("nullness")
-        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
                 Column column = tables.get(tableId).getColumn(columnId);
                 DataTypeValue type = column.getType();
                 if (columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW)
-                    return type;
+                    return new Pair<>(tableId, type);
                 else
-                    return DataTypeValue.arrayV(type, (i, prog) -> new Pair<>(column.getLength(), type));
+                    return new Pair<>(tableId, DataTypeValue.arrayV(type, (i, prog) -> new Pair<>(column.getLength(), type)));
             }
             catch (Exception e)
             {

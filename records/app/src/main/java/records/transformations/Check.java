@@ -105,17 +105,18 @@ public class Check extends Transformation
         return new ColumnLookup()
         {
             @Override
-            public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 try
                 {
-                    Column column = null;
+                    Pair<TableId, Column> column = null;
                     Table srcTable = getManager().getSingleTableOrNull(srcTableId);
                     if (tableId == null)
                     {
                         if (srcTable != null)
                         {
-                            column = srcTable.getData().getColumnOrNull(columnId);
+                            Column col = srcTable.getData().getColumnOrNull(columnId);
+                            column = col == null ? null : new Pair<>(srcTable.getId(), col);
                         }
                     }
                     else
@@ -123,7 +124,8 @@ public class Check extends Transformation
                         Table table = getManager().getSingleTableOrNull(tableId);
                         if (table != null)
                         {
-                            column = table.getData().getColumnOrNull(columnId);
+                            Column col = table.getData().getColumnOrNull(columnId);
+                            column = col == null ? null : new Pair<>(table.getId(), col);
                         }
                     }
                     if (column == null)
@@ -135,10 +137,10 @@ public class Check extends Transformation
                         switch (columnReferenceType)
                         {
                             case CORRESPONDING_ROW:
-                                return column.getType();
+                                return new Pair<>(column.getFirst(), column.getSecond().getType());
                             case WHOLE_COLUMN:
-                                Column columnFinal = column;
-                                return DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType()));
+                                Column columnFinal = column.getSecond();
+                                return new Pair<>(column.getFirst(), DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType())));
                             default:
                                 throw new InternalException("Unknown reference type: " + columnReferenceType);
                         }

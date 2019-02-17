@@ -7,6 +7,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ExplanationLocation;
 import records.data.TableAndColumnRenames;
+import records.data.ValueFunction.ArgumentLocation;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -175,20 +176,64 @@ public class CallExpression extends Expression
     public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
-        
+
+        @Value Object[] paramValues = new Object[arguments.size()];
+        ArgumentLocation[] paramLocations;
         if (state.recordBooleanExplanation())
         {
             this.functionValue = functionValue;
             this.functionValue.setRecordBooleanExplanation(true);
-        }
-        
-        @Value Object[] paramValues = new Object[arguments.size()];
-        for (int i = 0; i < arguments.size(); i++)
-        {
-            paramValues[i] = arguments.get(i).getValue(state).getFirst();
-        }
+            
+            paramLocations = new ArgumentLocation[arguments.size()];
+            for (int i = 0; i < arguments.size(); i++)
+            {
+                @Recorded Expression arg = arguments.get(i);
+                paramValues[i] = arg.getValue(state).getFirst();
+                if (arg instanceof ColumnReference)
+                {
+                    paramLocations[i] = new ArgumentLocation()
+                    {
+                        @Override
+                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation()
+                        {
+                            return arg.getBooleanExplanation();
+                        }
 
-        return new Pair<>(functionValue.call(paramValues), state);
+                        @Override
+                        public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
+                        {
+                            ExplanationLocation location = ((ColumnReference) arg).getElementLocation(index);
+                            if (location == null)
+                                return null;
+                            else
+                                return ImmutableList.of(location);
+                        }
+                    };
+                }
+                else
+                {
+                    paramLocations[i] = new ArgumentLocation()
+                    {
+                        @Override
+                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation()
+                        {
+                            return arg.getBooleanExplanation();
+                        }
+
+                        @Override
+                        public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
+                        {
+                            return null;
+                        }
+                    };
+                }
+            }
+        }
+        else
+        {
+            paramLocations = null;
+        }
+        return new Pair<>(functionValue.call(paramValues, paramLocations), state);
     }
 
     @Override

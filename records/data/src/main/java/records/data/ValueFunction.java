@@ -10,12 +10,15 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.function.Function;
+
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
 public abstract class ValueFunction
 {
     protected boolean recordBooleanExplanation = false;
-    protected @Nullable ExplanationLocation booleanExplanation;
+    protected @Nullable ImmutableList<ExplanationLocation> booleanExplanation;
     private @Value Object @Nullable [] curArgs;
+    private ArgumentLocation @Nullable[] curLocs;
 
     @OnThread(Tag.Simulation)
     protected abstract @Value Object call() throws InternalException, UserException;
@@ -24,6 +27,14 @@ public abstract class ValueFunction
     public final @Value Object call(@Value Object[] args) throws InternalException, UserException
     {
         this.curArgs = args;
+        return call();
+    }
+
+    @OnThread(Tag.Simulation)
+    public final @Value Object call(@Value Object[] args, ArgumentLocation @Nullable[] argumentLocations) throws InternalException, UserException
+    {
+        this.curArgs = args;
+        this.curLocs = argumentLocations;
         return call();
     }
 
@@ -48,11 +59,23 @@ public abstract class ValueFunction
     
     public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
     {
-        return booleanExplanation == null ? null : ImmutableList.of(booleanExplanation);
+        return booleanExplanation;
     }
 
     public void setRecordBooleanExplanation(boolean record)
     {
         recordBooleanExplanation = record;
+    }
+    
+    protected @Nullable ImmutableList<ExplanationLocation> withArgLoc(int argIndex, Function<ArgumentLocation, @Nullable ImmutableList<ExplanationLocation>> fetch)
+    {
+        return curLocs == null ? null : fetch.apply(curLocs[argIndex]);
+    }
+    
+    public static interface ArgumentLocation
+    {
+        @Nullable ImmutableList<ExplanationLocation> getValueLocation();
+        
+        @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index);
     }
 }

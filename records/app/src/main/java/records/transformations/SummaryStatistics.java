@@ -824,7 +824,7 @@ public class SummaryStatistics extends Transformation
         }
         
         @Override
-        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             boolean grouped = false;
             if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
@@ -842,9 +842,12 @@ public class SummaryStatistics extends Transformation
                 if (column == null && tableId == null)
                 {
                     // Could be in our source table but not copied forwards to us:
-                    table = tableManager.getSingleTableOrNull(srcTableId);
-                    if (table != null)
-                        column = table.getData().getColumnOrNull(columnId);
+                    Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
+                    if (srcTable != null)
+                    {
+                        column = srcTable.getData().getColumnOrNull(columnId);
+                        table = srcTable;
+                    }
                 }
                 
                 if (column == null)
@@ -856,18 +859,18 @@ public class SummaryStatistics extends Transformation
                     case CORRESPONDING_ROW:
                         if (grouped)
                         {
-                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> {
+                            return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> {
                                 Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
                                 return new Pair<Integer, DataTypeValue>(splitInfo.getSecond().getIndexes().length, columnFinal.getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j])));
-                            });
+                            }));
                         }
                         else
                         {
                             // If not grouped, must be in split by
-                            return columnFinal.getType();
+                            return new Pair<>(table.getId(), columnFinal.getType());
                         }
                     case WHOLE_COLUMN:
-                        return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType()));
+                        return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType())));
                 }
             }
             catch (InternalException e)

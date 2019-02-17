@@ -2,16 +2,12 @@ package test.gen;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.Expression.SingleTableLookup;
+import test.TestUtil.SingleTableLookup;
 
 import java.util.List;
 

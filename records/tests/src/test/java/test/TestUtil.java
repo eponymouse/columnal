@@ -1169,7 +1169,7 @@ public class TestUtil
         return new ColumnLookup()
         {
             @Override
-            public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 return null;
             }
@@ -1461,6 +1461,53 @@ public class TestUtil
         {
             this.mgr = mgr;
             this.expression = expression;
+        }
+    }
+
+    public static class SingleTableLookup implements ColumnLookup
+    {
+        private final @Nullable RecordSet srcTable;
+
+        public SingleTableLookup(RecordSet srcTable)
+        {
+            this.srcTable = srcTable;
+        }
+
+        @Override
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            if (srcTable == null)
+                return Stream.empty();
+            else
+                return srcTable.getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(c.getName(), rt)));
+        }
+
+        @Override
+        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        {
+            try
+            {
+                if (srcTable == null)
+                    return null;
+                else if (tableId == null) // || tableName.equals(srcTable.getId()))
+                {
+                    Column column = srcTable.getColumn(columnId);
+                    switch (columnReferenceType)
+                    {
+                        case CORRESPONDING_ROW:
+                            return new Pair<>(new TableId("SingleTableLookup"), column.getType());
+                        case WHOLE_COLUMN:
+                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType())));
+                        default:
+                            throw new InternalException("Unknown reference type: " + columnReferenceType);
+                    }
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+            }
+            return null;
         }
     }
 }

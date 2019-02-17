@@ -40,9 +40,23 @@ public abstract class AnyAllNone
             {
                 @Value Boolean result = Utility.cast(processElement.call(new @Value Object [] {list.get(i)}), Boolean.class);
                 if (result && returnIfTrueFound != null)
+                {
+                    if (recordBooleanExplanation)
+                    {
+                        int iFinal = i;
+                        booleanExplanation = withArgLoc(0, a -> a.getListElementLocation(iFinal));
+                    }
                     return returnIfTrueFound;
+                }
                 else if (!result && returnIfFalseFound != null)
+                {
+                    if (recordBooleanExplanation)
+                    {
+                        int iFinal = i;
+                        booleanExplanation = withArgLoc(0, a -> a.getListElementLocation(iFinal));
+                    }
                     return returnIfFalseFound;
+                }
             }
             return returnAtEnd;
         }

@@ -82,7 +82,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         // If columnReferenceType is CORRESPONDING_ROW, called getCollapsed
         // with row number should get corresponding value.  If it is
         // WHOLE_COLUMN then passing 0 to getValue should get whole column as ListEx.
-        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
+        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
 
         // This is really for the editor, but it doesn't rely on any GUI
         // functionality so can be here:
@@ -691,53 +691,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         */
     }
 
-    public static class SingleTableLookup implements ColumnLookup
-    {
-        private final @Nullable RecordSet srcTable;
-
-        public SingleTableLookup(RecordSet srcTable)
-        {
-            this.srcTable = srcTable;
-        }
-
-        @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
-        {
-            if (srcTable == null)
-                return Stream.empty();
-            else
-                return srcTable.getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(c.getName(), rt)));
-        }
-
-        @Override
-        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
-        {
-            try
-            {
-                if (srcTable == null)
-                    return null;
-                else if (tableId == null) // || tableName.equals(srcTable.getId()))
-                {
-                    Column column = srcTable.getColumn(columnId);
-                    switch (columnReferenceType)
-                    {
-                        case CORRESPONDING_ROW:
-                            return column.getType();
-                        case WHOLE_COLUMN:
-                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
-                        default:
-                            throw new InternalException("Unknown reference type: " + columnReferenceType);
-                    }
-                }
-            }
-            catch (InternalException | UserException e)
-            {
-                Log.log(e);
-            }
-            return null;
-        }
-    }
-    
     public static class MultipleTableLookup implements ColumnLookup
     {
         private final @Nullable TableId us;
@@ -777,32 +730,32 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
-        public @Nullable DataTypeValue getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
-                @Nullable RecordSet rs = null;
+                @Nullable Pair<TableId, RecordSet> rs = null;
                 if (tableId == null)
                 {
                     if (srcTable != null)
-                        rs = srcTable.getData();
+                        rs = new Pair<>(srcTable.getId(), srcTable.getData());
                 }
                 else
                 {
                     Table table = tableManager.getSingleTableOrNull(tableId);
                     if (table != null)
-                        rs = table.getData();
+                        rs = new Pair<>(table.getId(), table.getData());
                 }
                 
                 if (rs != null)
                 {
-                    Column column = rs.getColumn(columnId);
+                    Column column = rs.getSecond().getColumn(columnId);
                     switch (columnReferenceType)
                     {
                         case CORRESPONDING_ROW:
-                            return column.getType();
+                            return new Pair<>(rs.getFirst(), column.getType());
                         case WHOLE_COLUMN:
-                            return DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType()));
+                            return new Pair<>(rs.getFirst(), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType())));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }

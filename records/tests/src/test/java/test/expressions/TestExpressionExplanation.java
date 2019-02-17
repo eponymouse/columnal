@@ -76,8 +76,8 @@ public class TestExpressionExplanation
     @Test
     public void testExplainedAll() throws Exception
     {
-        testExplanation("@call @function all(@entire T1:all false, (? = true))", l("T1", "all false", 1, 2, 3, 4));
-        testExplanation("@call @function all(@entire T1:all true, @function not)", l("T1", "all true", 1, 2, 3, 4));
+        testExplanation("@call @function all(@entire T1:all false, (? = true))", l("T1", "all false", 0));
+        testExplanation("@call @function all(@entire T1:all true, @function not)", l("T1", "all true", 0));
     }
 
     private ImmutableList<ExplanationLocation> l(String tableName, String columnName, int... rowIndexes)
@@ -95,7 +95,13 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager.getUnitManager(), typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty()));
+        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty()) {
+            @Override
+            public boolean recordBooleanExplanation()
+            {
+                return true;
+            }
+        });
         
         // Now explanation should be available:
         ImmutableList<ExplanationLocation> actual = expression.getBooleanExplanation();
