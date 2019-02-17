@@ -162,7 +162,7 @@ public class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return new CachedCalculatedColumn<TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g, false), i -> {
+                return new CachedCalculatedColumn<@Value TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g, false), i -> {
                     return castTo(TaggedValue.class, getItem.apply(i));
                 });
             }
@@ -281,9 +281,9 @@ public class DataType implements StyledShowable
         });
     }
     
-    public static DataType function(DataType argType, DataType resultType)
+    public static DataType function(ImmutableList<DataType> argType, DataType resultType)
     {
-        return new DataType(Kind.FUNCTION, null, null, null, ImmutableList.of(argType, resultType));
+        return new DataType(Kind.FUNCTION, null, null, null, Utility.<DataType>concatI(argType, ImmutableList.<DataType>of(resultType)));
     }
 
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
@@ -369,7 +369,7 @@ public class DataType implements StyledShowable
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         R array(DataType inner) throws InternalException, E;
         
-        default R function(DataType argType, DataType resultType) throws InternalException, E
+        default R function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, E
         {
             throw new InternalException("Functions are unsupported, plain data values expected");
         };
@@ -453,7 +453,7 @@ public class DataType implements StyledShowable
             case TUPLE:
                 return visitor.tuple(memberType);
             case FUNCTION:
-                return visitor.function(memberType.get(0), memberType.get(1));
+                return visitor.function(memberType.subList(0, memberType.size() - 1), memberType.get(memberType.size() - 1));
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -645,9 +645,9 @@ public class DataType implements StyledShowable
             }
 
             @Override
-            public String function(DataType argType, DataType resultType) throws InternalException, UserException
+            public String function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, UserException
             {
-                return argType.toDisplay(drillIntoTagged) + " -> " + resultType.toDisplay(drillIntoTagged);
+                return "(" + Utility.mapListExI(argTypes, a -> a.toDisplay(drillIntoTagged)).stream().collect(Collectors.joining(", ")) + ") -> " + resultType.toDisplay(drillIntoTagged);
             }
         });
     }

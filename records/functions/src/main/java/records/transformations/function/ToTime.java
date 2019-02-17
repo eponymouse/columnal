@@ -67,12 +67,11 @@ public class ToTime extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
-            int hour = DataTypeUtility.requireInteger(paramList[0]);
-            int minute = DataTypeUtility.requireInteger(paramList[1]);
-            Number second = (Number)paramList[2];
+            int hour = DataTypeUtility.requireInteger(arg(0));
+            int minute = DataTypeUtility.requireInteger(arg(1));
+            Number second = arg(2, Number.class);
             return LocalTime.of(hour, minute, DataTypeUtility.requireInteger(DataTypeUtility.value(Utility.getIntegerPart(second))), Utility.getFracPart(second, 9).intValue());
         }
     }

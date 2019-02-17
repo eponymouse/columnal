@@ -31,9 +31,9 @@ public class Mean extends SingleNumericSummaryFunction
         return new ValueFunction()
         {
             @Override
-            public @Value Object call(@Value Object param) throws UserException, InternalException
+            public @Value Object call() throws UserException, InternalException
             {
-                ListEx list = Utility.valueList(param);
+                ListEx list = arg(0, ListEx.class);
                 int size = list.size();
                 if (size == 0)
                     throw new UserException("Cannot calculate average of empty list");

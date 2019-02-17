@@ -496,11 +496,11 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         {
             Expression function = visitCallTarget(ctx.callTarget());
             
-            @NonNull Expression args;
+            ImmutableList<@NonNull Expression> args;
             if (ctx.topLevelExpression() != null)
-                args = visitTopLevelExpression(ctx.topLevelExpression());
+                args = ImmutableList.of(visitTopLevelExpression(ctx.topLevelExpression()));
             else
-                args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
+                args = Utility.<ExpressionContext, Expression>mapListI(ctx.expression(), e -> visitExpression(e));
             
             return new CallExpression(function, args);
         }

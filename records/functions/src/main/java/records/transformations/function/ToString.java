@@ -53,9 +53,9 @@ public class ToString extends FunctionDefinition
         }
         
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            return DataTypeUtility.value(convertToString(type, param));
+            return DataTypeUtility.value(convertToString(type, arg(0)));
         }
 
         @OnThread(Tag.Simulation)

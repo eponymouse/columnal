@@ -35,11 +35,10 @@ public class AddDays extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+            public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
             {
-                @Value Object[] args = Utility.castTuple(arg, 2);
-                @Value Temporal lhs = Utility.cast(args[0], Temporal.class);
-                @Value Number rhs = Utility.cast(args[1], Number.class);
+                @Value Temporal lhs = arg(0, Temporal.class);
+                @Value Number rhs = arg(1, Number.class);
                 if (!Utility.isIntegral(rhs))
                     throw new UserException("Cannot add " + rhs.toString() + " days; number must be an integer (whole number)");
                 try

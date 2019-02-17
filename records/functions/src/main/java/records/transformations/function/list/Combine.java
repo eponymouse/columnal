@@ -33,14 +33,13 @@ public class Combine extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
         {
-            @Value Object @Value [] args = Utility.castTuple(arg, 2);
-            ListEx list = Utility.cast(args[0], ListEx.class);
+            ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)
                 throw new UserException("Called combine with empty list");
             @Value Object acc = list.get(0);
-            ValueFunction function = Utility.cast(args[1], ValueFunction.class);
+            ValueFunction function = arg(1, ValueFunction.class);
             for (int i = 1; i < list.size(); i++)
             {
                 acc = function.call(DataTypeUtility.value(new @Value Object[] {acc, list.get(i)}));

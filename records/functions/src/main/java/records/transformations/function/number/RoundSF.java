@@ -32,12 +32,11 @@ public class RoundSF extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @Value Object call(@Value Object param) throws UserException, InternalException
+            public @Value Object call() throws UserException, InternalException
             {
-                @Value Object[] args = Utility.castTuple(param, 2);
                 // From https://stackoverflow.com/questions/7572309/any-neat-way-to-limit-significant-figures-with-bigdecimal
-                BigDecimal bd = Utility.toBigDecimal(Utility.cast(args[0], Number.class));
-                int newScale = DataTypeUtility.requireInteger(args[1])-bd.precision()+bd.scale();
+                BigDecimal bd = Utility.toBigDecimal(arg(0, Number.class));
+                int newScale = intArg(1)-bd.precision()+bd.scale();
                 
                 bd = bd.setScale(newScale, RoundingMode.HALF_UP);
                 return DataTypeUtility.value(bd);

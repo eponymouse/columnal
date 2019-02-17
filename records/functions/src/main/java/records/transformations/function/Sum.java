@@ -34,12 +34,12 @@ public class Sum extends SingleNumericSummaryFunction
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
             // If there are non-integers this will get widened.  And if not, it will stay Integer
             // which will be faster:
             @Value Number total = DataTypeUtility.value(Integer.valueOf(0));
-            ListEx list = Utility.valueList(param);
+            ListEx list = arg(0, ListEx.class);
             int size = list.size();
             for (int i = 0; i < size; i++)
             {

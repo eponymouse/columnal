@@ -27,17 +27,15 @@ public class StringReplaceAll extends FunctionDefinition
 
     private static class Instance extends ValueFunction
     {
-
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] params = Utility.castTuple(param, 3);
-            @Value String target = Utility.cast(params[0], String.class);
-            @Value String whole = Utility.cast(params[2], String.class);
+            @Value String target = arg(0, String.class);
+            @Value String whole = arg(2, String.class);
             // Java does act on replacing empty string, but we don't:
             if (target.isEmpty())
                 return whole;
-            return DataTypeUtility.value(whole.replace(target, Utility.cast(params[1], String.class)));
+            return DataTypeUtility.value(whole.replace(target, arg(1, String.class)));
         }
     }
 }

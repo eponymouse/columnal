@@ -116,7 +116,7 @@ public abstract class JellyType
         else if (ctx.tuple() != null)
             return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)), ctx.tuple().TUPLE_MORE() == null);
         else if (ctx.functionType() != null)
-            return new JellyTypeFunction(load(ctx.functionType().type(0), mgr), load(ctx.functionType().type(1), mgr));
+            return new JellyTypeFunction(Utility.mapListExI(ctx.functionType().tuple().type(), t -> load(t, mgr)), load(ctx.functionType().type(), mgr));
         throw new InternalException("Unrecognised case: " + ctx);
     }
 
@@ -201,7 +201,7 @@ public abstract class JellyType
         // If null, array is empty and thus of unknown type
         R array(JellyType inner) throws InternalException, E;
 
-        R function(JellyType argType, JellyType resultType) throws InternalException, E;
+        R function(ImmutableList<JellyType> argTypes, JellyType resultType) throws InternalException, E;
         
         R ident(String name) throws InternalException, E;
     }
@@ -266,9 +266,9 @@ public abstract class JellyType
             }
 
             @Override
-            public JellyType function(DataType argType, DataType resultType) throws InternalException, InternalException
+            public JellyType function(ImmutableList<DataType> argType, DataType resultType) throws InternalException, InternalException
             {
-                return new JellyTypeFunction(fromConcrete(argType), fromConcrete(resultType));
+                return new JellyTypeFunction(Utility.mapListInt(argType, a -> fromConcrete(a)), fromConcrete(resultType));
             }
         });
     }

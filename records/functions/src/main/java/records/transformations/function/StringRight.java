@@ -26,11 +26,10 @@ public class StringRight //extends FunctionDefinition
     {
 
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object @Value [] params = Utility.castTuple(param, 2);
-            @Value String src = Utility.cast(params[0], String.class);
-            int codePointCount = Utility.cast(params[1], Integer.class);
+            @Value String src = arg(0, String.class);
+            int codePointCount = intArg(1);
             if (codePointCount < 0)
                 throw new UserException("Invalid count when calling right function: " + codePointCount);
             try

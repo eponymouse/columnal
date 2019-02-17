@@ -319,7 +319,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     // Minimum:
                     calculations.add(new AggCalculation(name.apply("Min"),
-                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), groupExp),
+                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(valueComparator).orElse(null)))
                     ));
@@ -328,7 +328,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     // Maximum:
                     calculations.add(new AggCalculation(name.apply("Max"),
-                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum"))), groupExp),
+                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum"))), ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().max(valueComparator).orElse(null)))
                     ));
@@ -339,7 +339,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("First"),
                             new CallExpression(
                                 new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "element"))), 
-                                new TupleExpression(ImmutableList.of(groupExp, new NumericLiteral(1, null)))),
+                                ImmutableList.of(groupExp, new NumericLiteral(1, null))),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().findFirst().orElse(null)))
                     ));
@@ -349,7 +349,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("Sum"),
                         new CallExpression(
                             new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "sum"))),
-                            groupExp),
+                            ImmutableList.of(groupExp)),
                         columnDetails.dataType,
                         perGroup.apply(g -> withEithers(g, gr -> gr.stream().reduce((a, b) -> Utility.addSubtractNumbers((Number)a, (Number)b, true)).orElse(null)))
                     ));
@@ -359,7 +359,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("Concat"),
                             new CallExpression(
                                     new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "join text"))),
-                                    groupExp),
+                                    ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> DataTypeUtility.value(gr.stream().map(s -> (String)s).collect(Collectors.joining("")))))
                     ));

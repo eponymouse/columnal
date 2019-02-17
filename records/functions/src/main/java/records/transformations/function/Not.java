@@ -28,9 +28,9 @@ public class Not extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            return DataTypeUtility.value(!Utility.cast(param, Boolean.class));
+            return DataTypeUtility.value(!arg(0, Boolean.class));
         }
     }
 }

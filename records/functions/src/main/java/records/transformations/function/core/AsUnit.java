@@ -50,7 +50,7 @@ public class AsUnit extends FunctionDefinition
             return new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                 {
                     throw e;
                 }
@@ -68,9 +68,9 @@ public class AsUnit extends FunctionDefinition
         }
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
         {
-            @Value Number src = Utility.cast(Utility.castTuple(arg, 2)[1], Number.class);
+            @Value Number src = arg(1, Number.class);
             return Utility.multiplyNumbers(src, scaleFactor);
         }
     }

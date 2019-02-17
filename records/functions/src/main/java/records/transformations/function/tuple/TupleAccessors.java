@@ -34,15 +34,9 @@ public class TupleAccessors
                     {
                         @Override
                         @SuppressWarnings("value") // Because we can't use castTuple
-                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            // We don't use castTuple here as we don't know the size
-                            // in advance:
-                            Object[] tuple = Utility.cast(arg, Object[].class);
-                            if (zeroBased < tuple.length)
-                                return tuple[zeroBased];
-                            // Shouldn't be possible after type check:
-                            throw new InternalException("Trying to apply " + names.get(zeroBased) + " to tuple of size " + tuple.length);
+                            return arg(zeroBased);
                         }
                     };
                 }

@@ -25,10 +25,9 @@ public class StringWithin //extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] params = Utility.castTuple(param, 2);
-            return DataTypeUtility.value(Utility.cast(params[1], String.class).contains(Utility.cast(params[0], String.class)));
+            return DataTypeUtility.value(arg(1, String.class).contains(arg(0, String.class)));
         }
     }
 }

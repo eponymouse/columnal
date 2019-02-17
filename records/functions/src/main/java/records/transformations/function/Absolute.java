@@ -30,9 +30,9 @@ public class Absolute extends SingleNumericInOutFunction
         return new ValueFunction()
         {
             @Override
-            public @Value Object call(@Value Object param) throws UserException, InternalException
+            public @Value Object call() throws UserException, InternalException
             {
-                return DataTypeUtility.value(Utility.<Number>withNumber(param, l -> {
+                return DataTypeUtility.value(Utility.<Number>withNumber(arg(0), l -> {
                     if (l == Long.MIN_VALUE)
                         return BigDecimal.valueOf(l).negate();
                     else

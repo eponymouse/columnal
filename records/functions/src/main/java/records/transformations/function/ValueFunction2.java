@@ -25,12 +25,9 @@ public abstract class ValueFunction2<A, B> extends ValueFunction
 
     @Override
     @OnThread(Tag.Simulation)
-    public final @Value Object call(@Value Object arg) throws InternalException, UserException
+    public final @Value Object call() throws InternalException, UserException
     {
-        @Value Object[] args = Utility.castTuple(arg, 2);
-        @Value A a = Utility.cast(args[0], classA);
-        @Value B b = Utility.cast(args[1], classB);
-        return call2(a, b);
+        return call2(arg(0, classA), arg(1, classB));
     }
 
     @OnThread(Tag.Simulation)

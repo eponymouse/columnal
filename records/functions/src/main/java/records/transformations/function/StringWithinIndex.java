@@ -30,11 +30,10 @@ public class StringWithinIndex //extends FunctionDefinition
     {
 
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] params = Utility.castTuple(param, 2);
-            @Value String big = Utility.cast(params[1], String.class);
-            @Value String small = Utility.cast(params[0], String.class);
+            @Value String big = arg(1, String.class);
+            @Value String small = arg(0, String.class);
             return DataTypeUtility.value(new ListEx()
             {
                 private final List<Integer> charIndexes = new ArrayList<>();

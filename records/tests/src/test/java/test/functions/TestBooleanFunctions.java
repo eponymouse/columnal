@@ -1,6 +1,7 @@
 package test.functions;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.data.datatype.DataType;
@@ -40,7 +41,7 @@ public class TestBooleanFunctions
     public void testNot() throws UserException, InternalException
     {
         FunctionDefinition function = new Not();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.BOOLEAN);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");
@@ -49,8 +50,8 @@ public class TestBooleanFunctions
         {
             assertEquals(DataType.BOOLEAN, checked.getSecond());
             // Not too hard to exhaustively test this one:
-            assertEquals(true, (Boolean) checked.getFirst().call(DataTypeUtility.value(false)));
-            assertEquals(false, (Boolean) checked.getFirst().call(DataTypeUtility.value(true)));
+            assertEquals(true, (Boolean) checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(false)}));
+            assertEquals(false, (Boolean) checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(true)}));
         }
     }
 
@@ -59,7 +60,7 @@ public class TestBooleanFunctions
     public void testXor() throws InternalException, UserException
     {
         FunctionDefinition function = new Xor();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN, DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");

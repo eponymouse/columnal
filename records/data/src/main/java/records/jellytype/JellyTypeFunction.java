@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -13,52 +14,58 @@ import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import utility.Either;
+import utility.Utility;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 
 class JellyTypeFunction extends JellyType
 {
-    private final JellyType param;
+    private final ImmutableList<JellyType> params;
     private final JellyType result;
 
-    JellyTypeFunction(JellyType param, JellyType result)
+    JellyTypeFunction(ImmutableList<JellyType> params, JellyType result)
     {
-        this.param = param;
+        this.params = params;
         this.result = result;
     }
 
     @Override
     public TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
-        return TypeExp.function(null, param.makeTypeExp(typeVariables), result.makeTypeExp(typeVariables));
+        return TypeExp.function(null, Utility.mapListInt(params, p -> p.makeTypeExp(typeVariables)), result.makeTypeExp(typeVariables));
     }
 
     @Override
     public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
     {
-        return DataType.function(param.makeDataType(typeVariables, mgr), param.makeDataType(typeVariables, mgr));
+        return DataType.function(Utility.mapListExI(params, p -> p.makeDataType(typeVariables, mgr)), result.makeDataType(typeVariables, mgr));
     }
 
     @Override
     public void forNestedTagged(Consumer<TypeId> nestedTagged)
     {
-        param.forNestedTagged(nestedTagged);
+        params.forEach(p -> p.forNestedTagged(nestedTagged));
         result.forNestedTagged(nestedTagged);
     }
 
     @Override
     public <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E
     {
-        return visitor.function(param, result);
+        return visitor.function(params, result);
     }
 
     @Override
     public void save(OutputBuilder output)
     {
-        output.raw("(");
-        param.save(output);
-        output.raw(" -> ");
+        output.raw("((");
+        for (int i = 0; i < params.size(); i++)
+        {
+            params.get(i).save(output);
+            if (i > 0)
+                output.raw(", ");
+        }
+        output.raw(") -> ");
         result.save(output);
         output.raw(")");
     }
@@ -69,7 +76,7 @@ class JellyTypeFunction extends JellyType
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JellyTypeFunction that = (JellyTypeFunction) o;
-        return Objects.equals(param, that.param) &&
+        return Objects.equals(params, that.params) &&
             Objects.equals(result, that.result);
     }
 
@@ -77,6 +84,6 @@ class JellyTypeFunction extends JellyType
     public int hashCode()
     {
 
-        return Objects.hash(param, result);
+        return Objects.hash(params, result);
     }
 }

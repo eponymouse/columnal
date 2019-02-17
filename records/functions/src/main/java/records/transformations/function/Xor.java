@@ -27,12 +27,10 @@ public class Xor extends FunctionDefinition
 
     private static class Instance extends ValueFunction
     {
-
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] params = Utility.castTuple(param, 2);
-            return DataTypeUtility.value(Utility.cast(params[0], Boolean.class) ^ Utility.cast(params[1], Boolean.class));
+            return DataTypeUtility.value(arg(0, Boolean.class) ^ arg(1, Boolean.class));
         }
     }
 }

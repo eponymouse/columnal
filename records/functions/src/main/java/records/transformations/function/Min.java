@@ -28,9 +28,9 @@ public class Min extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value ListEx list = Utility.cast(param, ListEx.class);
+            @Value ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)
             {
                 throw new UserException("Cannot take minimum of empty list");

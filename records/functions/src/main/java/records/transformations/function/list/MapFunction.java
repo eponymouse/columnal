@@ -37,7 +37,7 @@ public class MapFunction extends FunctionDefinition
                 for (int i = 0; i < list.size(); i++)
                 {
                     @Value Object x = list.get(i);
-                    items.add(f.call(x));
+                    items.add(f.call(new @Value Object[] {x}));
                 }
                 
                 return new ListExList(items.build());

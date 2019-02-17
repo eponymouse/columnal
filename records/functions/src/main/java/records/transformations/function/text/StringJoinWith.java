@@ -30,12 +30,10 @@ public class StringJoinWith extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] args = Utility.castTuple(param, 2);
-            
-            @Value ListEx textList = Utility.cast(args[0], ListEx.class);
-            String separator = Utility.cast(args[1], String.class);
+            @Value ListEx textList = arg(0, ListEx.class);
+            String separator = arg(1, String.class);
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < textList.size(); i++)
             {

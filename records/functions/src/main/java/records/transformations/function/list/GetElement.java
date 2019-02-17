@@ -13,6 +13,7 @@ import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 /**
  * Created by neil on 17/01/2017.
@@ -34,11 +35,10 @@ public class GetElement extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object params) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] paramList = Utility.valueTuple(params, 2);
-            @UserIndex int userIndex = DataTypeUtility.userIndex(paramList[1]);
-            return Utility.getAtIndex(Utility.valueList(paramList[0]), userIndex);
+            @UserIndex int userIndex = DataTypeUtility.userIndex(intArg(1));
+            return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
         }
     }
 }

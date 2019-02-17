@@ -152,20 +152,20 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            public @Value Object function(DataType argType, DataType resultType) throws InternalException, UserException
+            public @Value Object function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, UserException
             {
-                if (resultType.equals(DataType.BOOLEAN))
+                if (resultType.equals(DataType.BOOLEAN) && argTypes.size() == 1)
                 {
-                    return DataTypeUtility.value(argType.apply(new DataTypeVisitor<ValueFunction>()
+                    return DataTypeUtility.value(argTypes.get(0).apply(new DataTypeVisitor<ValueFunction>()
                     {
                         private <T> ValueFunction f(Class<T> type, SimulationFunction<@Value T, Boolean> predicate)
                         {
                             return new ValueFunction()
                             {
                                 @Override
-                                public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                                 {
-                                    return DataTypeUtility.value(predicate.apply(Utility.cast(arg, type)));
+                                    return DataTypeUtility.value(predicate.apply(arg(0, type)));
                                 }
                             };
                         }
@@ -216,7 +216,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                         {
                             // Choose once outside function invocation:
                             ValueFunction innerFunc = inner.get(0).apply(this);
-                            return f(Object[].class, o -> Utility.cast(innerFunc.call(o[0]), Boolean.class));
+                            return f(Object[].class, o -> Utility.cast(innerFunc.call(new @Value Object[] {o[0]}), Boolean.class));
                         }
 
                         @Override

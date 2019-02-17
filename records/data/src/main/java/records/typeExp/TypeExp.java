@@ -240,7 +240,7 @@ public abstract class TypeExp implements StyledShowable
             else
             {
                 TypeExp innerTypeExp = tagType.getInner().makeTypeExp(ImmutableMap.copyOf(typeVarsByName));
-                tagTypes.add(TypeCons.function(src, innerTypeExp, overallType));
+                tagTypes.add(TypeCons.function(src, ImmutableList.of(innerTypeExp), overallType));
             }
         }
         
@@ -269,9 +269,9 @@ public abstract class TypeExp implements StyledShowable
         return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(Either.<UnitExp, TypeExp>right(inner)), ALL_TYPE_CLASSES);
     }
     
-    public static TypeExp function(@Nullable ExpressionBase src, TypeExp paramType, TypeExp returnType)
+    public static TypeExp function(@Nullable ExpressionBase src, ImmutableList<TypeExp> paramTypes, TypeExp returnType)
     {
-        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.<UnitExp, TypeExp>right(paramType), Either.<UnitExp, TypeExp>right(returnType)), ImmutableSet.of());
+        return new TypeCons(src, TypeExp.CONS_FUNCTION, Utility.<Either<UnitExp, TypeExp>>concatI(Utility.<TypeExp, Either<UnitExp, TypeExp>>mapListI(paramTypes, p -> Either.<UnitExp, TypeExp>right(p)), ImmutableList.<Either<UnitExp, TypeExp>>of(Either.<UnitExp, TypeExp>right(returnType))), ImmutableSet.of());
     }
 
     public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType) throws InternalException
@@ -323,9 +323,9 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
-            public TypeExp function(DataType argType, DataType resultType) throws InternalException, InternalException
+            public TypeExp function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.<UnitExp, TypeExp>right(fromDataType(null, argType)), Either.<UnitExp, TypeExp>right(fromDataType(null, resultType))), ImmutableSet.of());
+                return new TypeCons(src, CONS_FUNCTION, Utility.<Either<UnitExp, TypeExp>>concatI(Utility.<DataType, Either<UnitExp, TypeExp>>mapListInt(argTypes, (DataType a) -> Either.<UnitExp, TypeExp>right(fromDataType(null, a))), ImmutableList.<Either<UnitExp, TypeExp>>of(Either.<UnitExp, TypeExp>right(fromDataType(null, resultType)))), ImmutableSet.of());
             }
         });
     }
@@ -355,11 +355,12 @@ public abstract class TypeExp implements StyledShowable
         return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_FUNCTION);
     }
     
-    public static @Nullable TypeExp getFunctionArg(TypeExp functionTypeExp)
+    public static @Nullable ImmutableList<TypeExp> getFunctionArg(TypeExp functionTypeExp)
     {
         if (isFunction(functionTypeExp))
         {
-            return ((TypeCons)functionTypeExp).operands.get(0).<@Nullable TypeExp>either(u -> null, t -> t);
+            ImmutableList<Either<UnitExp, TypeExp>> operands = ((TypeCons) functionTypeExp).operands;
+            return Either.<UnitExp, TypeExp, Either<UnitExp, TypeExp>>mapM(operands.subList(0, operands.size() - 1), Function.<Either<UnitExp, TypeExp>>identity()).<@Nullable ImmutableList<TypeExp>>either(u -> null, t -> t);
         }
         return null;
     }

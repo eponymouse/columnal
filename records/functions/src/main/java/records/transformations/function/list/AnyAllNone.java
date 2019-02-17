@@ -32,14 +32,13 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object @Value[] args = Utility.castTuple(param, 2);
-            ListEx list = Utility.cast(args[0], ListEx.class);
-            ValueFunction processElement = Utility.cast(args[1], ValueFunction.class);
+            ListEx list = arg(0, ListEx.class);
+            ValueFunction processElement = arg(1, ValueFunction.class);
             for (int i = 0; i < list.size(); i++)
             {
-                @Value Boolean result = Utility.cast(processElement.call(list.get(i)), Boolean.class);
+                @Value Boolean result = Utility.cast(processElement.call(new @Value Object [] {list.get(i)}), Boolean.class);
                 if (result && returnIfTrueFound != null)
                     return returnIfTrueFound;
                 else if (!result && returnIfFalseFound != null)

@@ -29,9 +29,9 @@ public class Single extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            ListEx list = Utility.cast(param, ListEx.class);
+            ListEx list = arg(0, ListEx.class);
             if (list.size() == 1)
                 return list.get(0);
             else

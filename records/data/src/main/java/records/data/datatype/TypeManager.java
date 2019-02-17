@@ -190,7 +190,7 @@ public class TypeManager
         }
         else if (type.functionType() != null)
         {
-            return DataType.function(loadTypeUse(type.functionType().type(0)), loadTypeUse(type.functionType().type(1)));
+            return DataType.function(Utility.mapListExI(type.functionType().tuple().type(), t -> loadTypeUse(t)), loadTypeUse(type.functionType().type()));
         }
         else if (type.type() != null)
         {
@@ -478,9 +478,9 @@ public class TypeManager
                 return DataTypeUtility.value(new ValueFunction()
                 {
                     @Override
-                    public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                    public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                     {
-                        return new TaggedValue(tagIndex, arg);
+                        return new TaggedValue(tagIndex, arg(0));
                     }
                 });
         }

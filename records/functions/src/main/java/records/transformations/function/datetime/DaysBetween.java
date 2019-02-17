@@ -31,11 +31,10 @@ public class DaysBetween extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+            public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
             {
-                @Value Object[] args = Utility.castTuple(arg, 2);
-                @Value Temporal lhs = Utility.cast(args[0], Temporal.class);
-                @Value Temporal rhs = Utility.cast(args[1], Temporal.class);
+                @Value Temporal lhs = arg(0, Temporal.class);
+                @Value Temporal rhs = arg(1, Temporal.class);
                 return DataTypeUtility.value(ChronoUnit.DAYS.between(lhs, rhs));
             }
         };

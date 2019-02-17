@@ -1,6 +1,7 @@
 package test;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.CustomMatcher;
@@ -178,7 +179,7 @@ public class TestUnit
         try
         {
             @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(new AsUnit(),
-                DataType.tuple(
+                ImmutableList.of(
                     DummyManager.make().getTypeManager().unitGADTFor(mgr.loadUse(destUnit)),
                     DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))
                 )

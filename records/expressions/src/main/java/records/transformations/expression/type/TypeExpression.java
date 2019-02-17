@@ -167,7 +167,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression function(JellyType argType, JellyType resultType) throws InternalException, InternalException
+            public TypeExpression function(ImmutableList<JellyType> argType, JellyType resultType) throws InternalException, InternalException
             {
                 throw new UnimplementedException();
             }

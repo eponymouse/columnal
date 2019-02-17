@@ -122,12 +122,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         if (!lambdaArgs.isEmpty())
         {
             ImmutableList<TypeExp> argTypes = Utility.mapListI(lambdaArgs, arg -> new MutVar(arg));
-            TypeExp argType;
-            if (argTypes.size() == 1)
-                argType = argTypes.get(0);
-            else
-                argType = new TupleTypeExp(src, argTypes, true);
-            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> errorAndTypeRecorder.recordTypeNN(src, TypeExp.function(src, argType, t)), typeState.addImplicitLambdas(lambdaArgs, argTypes));
+            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> errorAndTypeRecorder.recordTypeNN(src, TypeExp.function(src, argTypes, t)), typeState.addImplicitLambdas(lambdaArgs, argTypes));
         }
         else
         {
@@ -161,9 +156,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
             return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                 {
-                    EvaluateState argState = state.add(lambdaArgs.get(0).getVarName(), arg);
+                    EvaluateState argState = state.add(lambdaArgs.get(0).getVarName(), arg(0));
                     return body.apply(argState);
                 }
             });
@@ -174,13 +169,12 @@ public class ImplicitLambdaArg extends NonOperatorExpression
             return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                 {
                     EvaluateState argState = state;
-                    @Value Object[] tupleArg = Utility.castTuple(arg, lambdaArgs.size());
                     for (int i = 0; i < lambdaArgs.size(); i++)
                     {
-                        argState = argState.add(lambdaArgs.get(i).getVarName(), tupleArg[i]);
+                        argState = argState.add(lambdaArgs.get(i).getVarName(), arg(i));
                     }
                     return body.apply(argState);
                 }

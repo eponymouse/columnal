@@ -1,6 +1,7 @@
 package test.functions;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -208,9 +209,9 @@ public class PropDateFunctions
     {
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, srcType);
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(srcType));
             assertNotNull(instance);
-            return instance.getFirst().call(src);
+            return instance.getFirst().call(new @Value Object[] {src});
         }
         catch (RuntimeException e)
         {

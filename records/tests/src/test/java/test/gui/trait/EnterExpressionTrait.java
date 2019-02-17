@@ -123,7 +123,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             write("(");
             // Delete closing bracket:
             push(KeyCode.DELETE);
-            enterExpression(typeManager, call.getParam(), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
+            enterExpression(typeManager, new TupleExpression(call.getParams()), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
             write(")");
             
         }

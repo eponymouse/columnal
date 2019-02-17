@@ -30,9 +30,9 @@ public class AsType extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
         {
-            return Utility.castTuple(arg, 2)[1];
+            return arg(1);
         }
     }
 }

@@ -67,9 +67,9 @@ public abstract class ToTemporalFunction
         }
 
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            String src = Utility.preprocessDate(Utility.cast(param, String.class));
+            String src = Utility.preprocessDate(arg(0, String.class));
 
             for (int i = 0; i < usedFormats.size(); i++)
             {
@@ -150,11 +150,11 @@ public abstract class ToTemporalFunction
             return new ValueFunction()
             {
                 @Override
-                public @Value Object call (@Value Object param) throws UserException
+                public @Value Object call() throws UserException, InternalException
                 {
                     try
                     {
-                        return fromTemporal((TemporalAccessor) param);
+                        return fromTemporal(arg(0, TemporalAccessor.class));
                     }
                     catch (DateTimeException e)
                     {

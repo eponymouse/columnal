@@ -73,7 +73,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     // Shouldn't ever be null:
                     if (callTarget != null)
                     {
-                        return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed)));
+                        return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed instanceof TupleExpression ? ((TupleExpression)bracketed).getMembers() : ImmutableList.of(bracketed))));
                     }
                 }
                 return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));

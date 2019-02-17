@@ -444,7 +444,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public String function(DataType argType, DataType resultType) throws InternalException, UserException
+            public String function(ImmutableList<DataType> argType, DataType resultType) throws InternalException, UserException
             {
                 return "<function>";
             }

@@ -1072,21 +1072,21 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, DataType paramType) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes) throws InternalException, UserException
     {
-        return typeCheckFunction(function, paramType, null);
+        return typeCheckFunction(function, paramTypes, null);
     }
 
     // Returns the function and the return type of the function
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : TestUtil.managerWithTestTypes().getFirst().getTypeManager();
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromDataType(null, paramType), returnTypeVar), functionType.getFirst()));
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, Utility.mapListInt(paramTypes, p -> TypeExp.fromDataType(null, p)), returnTypeVar), functionType.getFirst()));
         if (paramTypeExp == null)
             return null;
         
@@ -1113,7 +1113,7 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
@@ -1124,7 +1124,7 @@ public class TestUtil
         if (null == unifiedReturn)
             return null;
         @SuppressWarnings("nullness") // For null src
-        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromDataType(null, paramType), returnTypeVar), functionType.getFirst()));
+        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, Utility.mapListInt(paramTypes, p -> TypeExp.fromDataType(null, p)), returnTypeVar), functionType.getFirst()));
         if (funcTypeExp == null)
             return null;
             
@@ -1196,7 +1196,7 @@ public class TestUtil
         }
         else
         {
-            r = new CallExpression(constructorExpression, arg);
+            r = new CallExpression(constructorExpression, ImmutableList.of(arg));
         }
         
         if (!canAddAsType)
@@ -1212,7 +1212,7 @@ public class TestUtil
                 FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
                 if (asType == null)
                     throw new RuntimeException("Could not find asType");
-                return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r)));
+                return new CallExpression(new StandardFunction(asType),ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r));
             }
         }
         return r;
@@ -1270,9 +1270,9 @@ public class TestUtil
                 }
     
                 @Override
-                public Boolean function(JellyType argType, JellyType resultType) throws InternalException
+                public Boolean function(ImmutableList<JellyType> argTypes, JellyType resultType) throws InternalException
                 {
-                    return containsTypeVar(argType, var) || containsTypeVar(resultType, var);
+                    return argTypes.stream().anyMatch(a -> containsTypeVar(a, var)) || containsTypeVar(resultType, var);
                 }
     
                 @Override

@@ -143,7 +143,7 @@ class JellyTypePrimitive extends JellyType
             }
 
             @Override
-            public R function(DataType argType, DataType resultType) throws InternalException, E
+            public R function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, E
             {
                 return _throw();
             }

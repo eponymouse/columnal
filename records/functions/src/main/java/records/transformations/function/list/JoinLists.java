@@ -32,9 +32,9 @@ public class JoinLists extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
         {
-            ListEx listOfLists = Utility.cast(arg, ListEx.class);
+            ListEx listOfLists = arg(0, ListEx.class);
             return DataTypeUtility.value(new ListEx()
             {
                 private int cachedSize = -1;

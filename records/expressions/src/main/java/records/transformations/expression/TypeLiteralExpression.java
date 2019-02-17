@@ -66,15 +66,15 @@ public class TypeLiteralExpression extends NonOperatorExpression
             throw new InternalException("Missing asType function");
         if (expression instanceof CallExpression
             && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
-            && ((CallExpression) expression).getParam() instanceof TupleExpression)
+            )
         {
-            expression = ((TupleExpression) ((CallExpression) expression).getParam()).getMembers().get(1);
+            expression = ((CallExpression) expression).getParams().get(1);
         }
 
-        return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
+        return new CallExpression(new StandardFunction(asType), ImmutableList.of(
             new TypeLiteralExpression(fixTo),
             expression
-        )));
+        ));
     }
         
     @Override

@@ -42,7 +42,7 @@ public class KeepFunction extends FunctionDefinition
                 for (int i = 0; i < list.size(); i++)
                 {
                     @Value Object x = list.get(i);
-                    if (Utility.cast(keep.call(x), Boolean.class))
+                    if (Utility.cast(keep.call(new @Value Object[] {x}), Boolean.class))
                         items.add(x);
                 }
                 

@@ -32,13 +32,12 @@ public class InList extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
         {
-            @Value Object[] args = Utility.castTuple(arg, 2);
-            ListEx list = Utility.cast(args[1], ListEx.class);
+            ListEx list = Utility.cast(arg(1), ListEx.class);
             for (int i = 0; i < list.size(); i++)
             {
-                if (Utility.compareValues(list.get(i), args[0]) == 0)
+                if (Utility.compareValues(list.get(i), arg(0)) == 0)
                     return DataTypeUtility.value(true);
             }
             return DataTypeUtility.value(false);

@@ -12,6 +12,7 @@ import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import records.data.ValueFunction;
+import utility.Utility.ListEx;
 
 /**
  * Created by neil on 14/01/2017.
@@ -40,9 +41,9 @@ public class Count extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            return DataTypeUtility.value(Utility.valueList(param).size());
+            return DataTypeUtility.value(arg(0, ListEx.class).size());
         }
     }
 }

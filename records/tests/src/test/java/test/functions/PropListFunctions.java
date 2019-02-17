@@ -1,6 +1,7 @@
 package test.functions;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -45,8 +46,8 @@ public class PropListFunctions
 
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
-        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, src.type);
-        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, src.type);
+        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
+        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, ImmutableList.of(src.type));
 
         if (minChecked == null || maxChecked == null)
         {
@@ -56,8 +57,8 @@ public class PropListFunctions
         {
             @NonNull Pair<ValueFunction, DataType> minFinal = minChecked;
             @NonNull Pair<ValueFunction, DataType> maxFinal = maxChecked;
-            TestUtil.assertUserException(() -> minFinal.getFirst().call(DataTypeUtility.value(src.list)));
-            TestUtil.assertUserException(() -> maxFinal.getFirst().call(DataTypeUtility.value(src.list)));
+            TestUtil.assertUserException(() -> minFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
+            TestUtil.assertUserException(() -> maxFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
         }
         else
         {
@@ -74,8 +75,8 @@ public class PropListFunctions
 
             assertEquals(src.type.getMemberType().get(0), minChecked.getSecond());
             assertEquals(src.type.getMemberType().get(0), maxChecked.getSecond());
-            @Value Object minActual = minChecked.getFirst().call(DataTypeUtility.value(src.list));
-            @Value Object maxActual = maxChecked.getFirst().call(DataTypeUtility.value(src.list));
+            @Value Object minActual = minChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
+            @Value Object maxActual = maxChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             TestUtil.assertValueEqual("", expectedMin, minActual);
             TestUtil.assertValueEqual("", expectedMax, maxActual);
         }
@@ -87,7 +88,7 @@ public class PropListFunctions
     public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         Count function = new Count();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, src.type);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(src.type));
         if (checked == null)
         {
             fail("Type check failure");
@@ -95,7 +96,7 @@ public class PropListFunctions
         else
         {
             assertEquals(DataType.NUMBER, checked.getSecond());
-            @Value Object actual = checked.getFirst().call(DataTypeUtility.value(src.list));
+            @Value Object actual = checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             assertEquals(src.list.size(), actual);
         }
     }
@@ -108,7 +109,7 @@ public class PropListFunctions
         @Nullable Pair<ValueFunction, DataType> checked = null;
         try
         {
-            checked = TestUtil.typeCheckFunction(function, DataType.tuple(src.type, DataType.NUMBER));
+            checked = TestUtil.typeCheckFunction(function, ImmutableList.of(src.type, DataType.NUMBER));
         }
         catch (Exception e)
         {

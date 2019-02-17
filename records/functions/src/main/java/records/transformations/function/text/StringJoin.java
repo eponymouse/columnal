@@ -30,9 +30,9 @@ public class StringJoin extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value ListEx textList = Utility.cast(param, ListEx.class);
+            @Value ListEx textList = arg(0, ListEx.class);
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < textList.size(); i++)
             {

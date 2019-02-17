@@ -1,6 +1,7 @@
 package test.functions;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -126,13 +127,13 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            @Value Object num = instance.getFirst().call(DataTypeUtility.value(src));
+            @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(src)});
             return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)
@@ -152,13 +153,13 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit))))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            @Value Object num = instance.getFirst().call(DataTypeUtility.value(src));
+            @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(src)});
             return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)

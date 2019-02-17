@@ -68,11 +68,10 @@ public class ToDate extends ToTemporalFunction
     private class FromYearMonth_Day extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
-            YearMonth ym = (YearMonth) paramList[0];
-            int day = DataTypeUtility.requireInteger(paramList[1]);
+            YearMonth ym = arg(0, YearMonth.class);
+            int day = intArg(1);
             try
             {
                 return LocalDate.of(ym.getYear(), ym.getMonth(), day);
@@ -87,12 +86,11 @@ public class ToDate extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
-            int year = DataTypeUtility.requireInteger(paramList[0]);
-            int month = DataTypeUtility.requireInteger(paramList[1]);
-            int day = DataTypeUtility.requireInteger(paramList[2]);
+            int year = intArg(0);
+            int month = intArg(1);
+            int day = intArg(2);
             try
             {
                 return LocalDate.of(year, month, day);

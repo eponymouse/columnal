@@ -35,16 +35,15 @@ public class LookupFunctions
                     return DataTypeUtility.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            @Value Object[] args = Utility.castTuple(arg, 3);
-                            ListEx listA = Utility.cast(args[0], ListEx.class);
-                            ListEx listB = Utility.cast(args[2], ListEx.class);
+                            ListEx listA = arg(0, ListEx.class);
+                            ListEx listB = arg(2, ListEx.class);
                             
                             if (listA.size() != listB.size())
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
                             
-                            int index = getSingleItem(lookupIndexes(listA, args[1]), paramTypes.apply("a").getRight("Variable a should be type but was unit"), args[1]);
+                            int index = getSingleItem(lookupIndexes(listA, arg(1)), paramTypes.apply("a").getRight("Variable a should be type but was unit"), arg(1));
                             return listB.get(index);
                         }
                     });
@@ -58,16 +57,15 @@ public class LookupFunctions
                     return DataTypeUtility.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            @Value Object[] args = Utility.castTuple(arg, 3);
-                            ListEx listA = Utility.cast(args[0], ListEx.class);
-                            ListEx listB = Utility.cast(args[2], ListEx.class);
+                            ListEx listA = arg(0, ListEx.class);
+                            ListEx listB = arg(2, ListEx.class);
 
                             if (listA.size() != listB.size())
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
 
-                            List<Integer> indexes = getAllItems(lookupIndexes(listA, args[1]));
+                            List<Integer> indexes = getAllItems(lookupIndexes(listA, arg(1)));
                             return DataTypeUtility.value(new ListEx()
                             {
                                 @Override

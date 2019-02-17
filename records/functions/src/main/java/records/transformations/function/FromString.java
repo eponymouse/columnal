@@ -47,9 +47,9 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            return convertEntireString(arg, type);
+                            return convertEntireString(arg(0), type);
                         }
                     };
                 }
@@ -65,10 +65,9 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            @Value Object[] args = Utility.castTuple(arg, 2);
-                            return convertEntireString(args[1], type);
+                            return convertEntireString(arg(1), type);
                         }
                     };
                 }

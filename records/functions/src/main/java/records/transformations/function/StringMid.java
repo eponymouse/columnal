@@ -25,14 +25,13 @@ public class StringMid //extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call() throws UserException, InternalException
         {
-            @Value Object @Value [] params = Utility.castTuple(param, 3);
-            String src = Utility.cast(params[0], String.class);
-            int codePointStart = Utility.cast(params[1], Integer.class);
+            String src = arg(0, String.class);
+            int codePointStart = intArg(1);
             if (codePointStart <= 0)
                 throw new UserException("Invalid count when calling middle function: " + codePointStart);
-            int codePointCount = Utility.cast(params[2], Integer.class);
+            int codePointCount = intArg(2);
             if (codePointCount < 0)
                 throw new UserException("Invalid count when calling middle function: " + codePointCount);
             try

@@ -27,9 +27,11 @@ import utility.TaggedValue;
 import utility.Utility;
 import records.data.ValueFunction;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -37,14 +39,14 @@ import java.util.stream.Stream;
  */
 public class CallExpression extends Expression
 {
-    private final Expression function;
-    private final Expression param;
+    private final @Recorded Expression function;
+    private final ImmutableList<@Recorded Expression> arguments;
     private @Nullable ValueFunction functionValue;
 
-    public CallExpression(Expression function, @Recorded Expression arg)
+    public CallExpression(@Recorded Expression function, ImmutableList<@Recorded Expression> args)
     {
         this.function = function;
-        this.param = arg;
+        this.arguments = args;
     }
     
     // Used for testing, and for creating quick recipe functions:
@@ -52,7 +54,7 @@ public class CallExpression extends Expression
     @SuppressWarnings("recorded")
     public CallExpression(UnitManager mgr, String functionName, Expression... args)
     {
-        this(nonNullLookup(mgr, functionName), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
+        this(nonNullLookup(mgr, functionName), ImmutableList.copyOf(args));
     }
 
     private static Expression nonNullLookup(UnitManager mgr, String functionName)
@@ -73,9 +75,16 @@ public class CallExpression extends Expression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp paramType = param.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
-        if (paramType == null)
-            return null;
+        ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
+        for (Expression argument : arguments)
+        {
+            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+            if (checkedExp == null)
+                return null;
+            state = checkedExp.typeState;
+            paramTypesBuilder.add(checkedExp);
+        }
+        ImmutableList<CheckedExp> paramTypes = paramTypesBuilder.build();
         @Nullable CheckedExp functionType = function.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
         if (functionType == null)
             return null;
@@ -86,14 +95,18 @@ public class CallExpression extends Expression
             return null;
         }
         // Param can only be a pattern if the function is a constructor expression:
-        if (functionType.expressionKind == ExpressionKind.PATTERN && !(function instanceof ConstructorExpression))
+        for (CheckedExp paramType : paramTypes)
         {
-            onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
-            return null;
+            if (paramType.expressionKind == ExpressionKind.PATTERN && !(function instanceof ConstructorExpression))
+            {
+                onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
+                return null;
+            }
         }
         
         TypeExp returnType = new MutVar(this);
-        TypeExp actualCallType = TypeExp.function(this, paramType.typeExp, returnType);
+        
+        TypeExp actualCallType = TypeExp.function(this, Utility.<CheckedExp, TypeExp>mapListI(paramTypes, p -> p.typeExp), returnType);
         
         Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
         @Nullable TypeExp checked = onError.recordError(this, temp);
@@ -101,11 +114,12 @@ public class CallExpression extends Expression
         {
             // Check after unification attempted, because that will have constrained
             // to list if possible (and not, if not)
-            @Nullable TypeExp functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
-            boolean takesList = functionArgTypeExp != null && TypeExp.isList(functionArgTypeExp);
+            @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
+            boolean takesList = functionArgTypeExp != null && functionArgTypeExp.size() == 1 && TypeExp.isList(functionArgTypeExp.get(0));
             if (takesList)
             {
-                TypeExp prunedParam = paramType.typeExp.prune();
+                Expression param = arguments.get(0);
+                TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
                 if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
                 {
@@ -114,7 +128,7 @@ public class CallExpression extends Expression
                     onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                         new QuickFix<>("fix.wholeColumn", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                            CallExpression newCall = new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
+                            CallExpression newCall = new CallExpression(function, ImmutableList.of(new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN)));
                             return newCall;
                         }
                         )
@@ -127,7 +141,7 @@ public class CallExpression extends Expression
                     onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                             new QuickFix<>("fix.squareBracketAs", this, () -> {
                                 @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                                CallExpression newCall = new CallExpression(function, replacementParam);
+                                CallExpression newCall = new CallExpression(function, ImmutableList.of(replacementParam));
                                 return newCall;
                             })
                     ));
@@ -142,7 +156,7 @@ public class CallExpression extends Expression
                     onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
                         new QuickFix<>("fix.singleItemList", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                            CallExpression newCall = new CallExpression(function, replacementParam);
+                            CallExpression newCall = new CallExpression(function, ImmutableList.of(replacementParam));
                             return newCall;
                         })
                     ));
@@ -153,7 +167,8 @@ public class CallExpression extends Expression
             
             return null;
         }
-        return onError.recordType(this, paramType.expressionKind, paramType.typeState, returnType);
+        
+        return onError.recordType(this, ExpressionKind.EXPRESSION, state, returnType);
     }
 
     @Override
@@ -166,8 +181,14 @@ public class CallExpression extends Expression
             this.functionValue = functionValue;
             this.functionValue.setRecordBooleanExplanation(true);
         }
+        
+        @Value Object[] paramValues = new Object[arguments.size()];
+        for (int i = 0; i < arguments.size(); i++)
+        {
+            paramValues[i] = arguments.get(i).getValue(state).getFirst();
+        }
 
-        return new Pair<>(functionValue.call(param.getValue(state).getFirst()), state);
+        return new Pair<>(functionValue.call(paramValues), state);
     }
 
     @Override
@@ -189,7 +210,27 @@ public class CallExpression extends Expression
             @Nullable @Value Object inner = taggedValue.getInner();
             if (inner == null)
                 throw new InternalException("Matching missing value against tag with inner pattern");
-            return param.matchAsPattern(inner, state);
+            if (value instanceof Object[])
+            {
+                @Value Object[] tuple = Utility.castTuple(value, arguments.size());
+                EvaluateState curState = state;
+                for (int i = 0; i < arguments.size(); i++)
+                {
+                    Expression argument = arguments.get(i);
+                    curState = argument.matchAsPattern(tuple[i], curState);
+                    if (curState == null)
+                        return null;
+                }
+                return curState;
+            }
+            else if (arguments.size() == 1)
+            {
+                return arguments.get(0).matchAsPattern(inner, state);
+            }
+            else
+            {
+                throw new InternalException("Matching tag argument (size > 1) against non-tuple");
+            }
         }
         
         return super.matchAsPattern(value, state);
@@ -198,19 +239,19 @@ public class CallExpression extends Expression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return param.allColumnReferences();
+        return arguments.stream().flatMap(a -> a.allColumnReferences());
     }
 
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (structured ? "@call " : "") + function.save(structured, BracketedStatus.MISC, renames) + "(" + param.save(structured, BracketedStatus.DIRECT_ROUND_BRACKETED, renames) + ")";
+        return (structured ? "@call " : "") + function.save(structured, BracketedStatus.MISC, renames) + "(" + arguments.stream().map(a -> a.save(structured, BracketedStatus.DIRECT_ROUND_BRACKETED, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.concat(function.toDisplay(BracketedStatus.MISC), StyledString.s("("), param.toDisplay(BracketedStatus.DIRECT_ROUND_BRACKETED), StyledString.s(")"));
+        return StyledString.concat(function.toDisplay(BracketedStatus.MISC), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.DIRECT_ROUND_BRACKETED)).collect(StyledString.joining(", ")), StyledString.s(")"));
     }
 
     @Override
@@ -218,7 +259,7 @@ public class CallExpression extends Expression
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         r.addAll(function.loadAsConsecutive(BracketedStatus.MISC));
-        roundBracket(BracketedStatus.MISC, true, r, () -> r.addAll(param.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
+        roundBracket(BracketedStatus.MISC, true, r, () -> r.addAll(new TupleExpression(arguments).loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
         return r.stream();
     }
 
@@ -242,18 +283,23 @@ public class CallExpression extends Expression
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(
-            function._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), param))),
-            param._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
-        );
+        //return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(
+            return function._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), arguments)));
+            //param._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
+        //);
     }
 
     @SuppressWarnings("recorded")
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
-        Expression badParam = param._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
-        return badParam == null ? null : new CallExpression(function, badParam);
+        int paramIndex = r.nextInt(arguments.size());
+        Expression badParam = arguments.get(paramIndex)._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
+        if (badParam == null)
+            return null;
+        ArrayList<Expression> badCopy = new ArrayList<>(arguments);
+        badCopy.set(paramIndex, badParam);
+        return badParam == null ? null : new CallExpression(function, ImmutableList.copyOf(badCopy));
     }
 
     @Override
@@ -265,14 +311,14 @@ public class CallExpression extends Expression
         CallExpression that = (CallExpression) o;
 
         if (!function.equals(that.function)) return false;
-        return param.equals(that.param);
+        return arguments.equals(that.arguments);
     }
 
     @Override
     public int hashCode()
     {
         int result = function.hashCode();
-        result = 31 * result + param.hashCode();
+        result = 31 * result + arguments.hashCode();
         return result;
     }
 
@@ -281,9 +327,9 @@ public class CallExpression extends Expression
         return function;
     }
 
-    public Expression getParam()
+    public ImmutableList<@Recorded Expression> getParams()
     {
-        return param;
+        return arguments;
     }
 
     @Override
@@ -293,6 +339,6 @@ public class CallExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new CallExpression(function.replaceSubExpression(toReplace, replaceWith), param.replaceSubExpression(toReplace, replaceWith));
+            return new CallExpression(function.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(arguments, a -> a.replaceSubExpression(toReplace, replaceWith)));
     }
 }
