@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
@@ -36,6 +37,8 @@ import java.util.stream.Stream;
 public abstract class NaryOpExpression extends Expression
 {
     protected final ImmutableList<@Recorded Expression> expressions;
+    
+    protected @Nullable ImmutableList<ExplanationLocation> booleanExplanation;
 
     public NaryOpExpression(List<@Recorded Expression> expressions)
     {
@@ -302,5 +305,11 @@ public abstract class NaryOpExpression extends Expression
         }
         
         return allValid ? target : null;
+    }
+
+    @Override
+    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    {
+        return booleanExplanation;
     }
 }

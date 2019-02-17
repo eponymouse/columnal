@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -148,7 +149,18 @@ public class EqualExpression extends NaryOpExpression
         {
             @Value Object rhsVal = expressions.get(i).getValue(state).getFirst();
             if (0 != Utility.compareValues(first, rhsVal))
+            {
+                if (state.recordBooleanExplanation())
+                {
+                    @Nullable ImmutableList<ExplanationLocation> aExpl = expressions.get(i - 1).getBooleanExplanation();
+                    @Nullable ImmutableList<ExplanationLocation> bExpl = expressions.get(i).getBooleanExplanation();
+                    if (aExpl != null || bExpl != null)
+                    {
+                        booleanExplanation = Utility.concatI(aExpl == null ? ImmutableList.<ExplanationLocation>of() : aExpl, bExpl == null ? ImmutableList.<ExplanationLocation>of() : bExpl);
+                    }
+                }
                 return new Pair<>(DataTypeUtility.value(false), state);
+            }
         }
 
         return new Pair<>(DataTypeUtility.value(true), state);

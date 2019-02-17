@@ -64,7 +64,11 @@ public class OrExpression extends NaryOpExpression
         {
             Boolean b = Utility.cast(expression.getValue(state).getFirst(), Boolean.class);
             if (b == true)
+            {
+                if (state.recordBooleanExplanation())
+                    booleanExplanation = expression.getBooleanExplanation();
                 return new Pair<>(DataTypeUtility.value(true), state);
+            }
         }
         return new Pair<>(DataTypeUtility.value(false), state);
     }

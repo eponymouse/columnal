@@ -75,7 +75,11 @@ public class AndExpression extends NaryOpExpression
             Pair<@Value Object, EvaluateState> valState = expression.getValue(state);
             Boolean b = Utility.cast(valState.getFirst(), Boolean.class);
             if (b == false)
+            {
+                if (state.recordBooleanExplanation())
+                    booleanExplanation = expression.getBooleanExplanation();           
                 return new Pair<>(DataTypeUtility.value(false), origState);
+            }
             state = valState.getSecond();
         }
         return new Pair<>(DataTypeUtility.value(true), state);
