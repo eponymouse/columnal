@@ -190,7 +190,7 @@ public class TypeManager
         }
         else if (type.functionType() != null)
         {
-            return DataType.function(Utility.mapListExI(type.functionType().tuple().type(), t -> loadTypeUse(t)), loadTypeUse(type.functionType().type()));
+            return DataType.function(Utility.mapListExI(type.functionType().functionArgs().type(), t -> loadTypeUse(t)), loadTypeUse(type.functionType().type()));
         }
         else if (type.type() != null)
         {

@@ -116,7 +116,7 @@ public abstract class JellyType
         else if (ctx.tuple() != null)
             return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)), ctx.tuple().TUPLE_MORE() == null);
         else if (ctx.functionType() != null)
-            return new JellyTypeFunction(Utility.mapListExI(ctx.functionType().tuple().type(), t -> load(t, mgr)), load(ctx.functionType().type(), mgr));
+            return new JellyTypeFunction(Utility.mapListExI(ctx.functionType().functionArgs().type(), t -> load(t, mgr)), load(ctx.functionType().type(), mgr));
         throw new InternalException("Unrecognised case: " + ctx);
     }
 
