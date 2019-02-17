@@ -25,6 +25,9 @@ import java.util.Optional;
  */
 public class NotEqualExpression extends BinaryOpExpression
 {
+    // null means no pattern, true means left is pattern, false means right.
+    private @Nullable Boolean patternIsLeft;
+    
     public NotEqualExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
@@ -52,6 +55,8 @@ public class NotEqualExpression extends BinaryOpExpression
             return null;
         }
         boolean oneIsPattern = lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN;
+        if (oneIsPattern)
+            patternIsLeft = Boolean.valueOf(lhsType.expressionKind == ExpressionKind.PATTERN); 
         // If one is pattern, only apply restrictions to the pattern side.  Otherwise if both expressions, apply to both:
         lhsType.requireEquatable(oneIsPattern);
         rhsType.requireEquatable(oneIsPattern);
@@ -69,9 +74,26 @@ public class NotEqualExpression extends BinaryOpExpression
     @OnThread(Tag.Simulation)
     public Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object lhsVal = lhs.getValue(state).getFirst();
-        @Value Object rhsVal = rhs.getValue(state).getFirst();
-        return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal)), state);
+        if (patternIsLeft != null)
+        {
+            boolean left = patternIsLeft;
+            // Get value from the non-pattern:
+            @Value Object val = left ? rhs.getValue(state).getFirst() : lhs.getValue(state).getFirst();
+            @Nullable EvaluateState result;
+            if (left)
+                result = lhs.matchAsPattern(val, state);
+            else
+                result = rhs.matchAsPattern(val, state);
+            // We are not-equals, so looking for failure,
+            // and we don't affect the state:
+            return new Pair<>(DataTypeUtility.value(result == null), state);
+        }
+        else
+        {
+            @Value Object lhsVal = lhs.getValue(state).getFirst();
+            @Value Object rhsVal = rhs.getValue(state).getFirst();
+            return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal)), state);
+        }
     }
 
     @Override
