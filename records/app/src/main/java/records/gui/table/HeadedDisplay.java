@@ -62,6 +62,7 @@ import java.util.Optional;
 /**
  * A display that can have an editable name at the top
  */
+@OnThread(Tag.FXPlatform)
 public abstract class HeadedDisplay extends GridArea implements SelectionListener
 {
     protected final @Nullable TableHeaderItem tableHeaderItem;

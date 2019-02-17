@@ -36,7 +36,7 @@ public class TupleAccessors
                         @SuppressWarnings("value") // Because we can't use castTuple
                         public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
                         {
-                            return arg(zeroBased);
+                            return arg(0, Object[].class)[zeroBased];
                         }
                     };
                 }

@@ -169,7 +169,7 @@ public class MainWindow
         {
             @NonNull Pair<File, String> srcFinal = src;
             Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading " + srcFinal.getFirst().getName(), err -> {
-                updateBanner(v, banner, false);
+                Platform.runLater(() -> updateBanner(v, banner, false));
                 return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
             }, () -> {
                 v.getManager().loadAll(srcFinal.getSecond());

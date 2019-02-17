@@ -201,6 +201,7 @@ public class ColumnReference extends NonOperatorExpression
         return this == toReplace ? replaceWith : this;
     }
 
+    @OnThread(Tag.Simulation)
     public @Nullable ExplanationLocation getElementLocation(int index)
     {
         if (resolvedTableName != null)

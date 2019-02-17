@@ -11,15 +11,15 @@
             <p>Gets the first item from the tuple.</p>
         </description>
         <example>
-            <inputArg>(1, 2)</inputArg>
+            <inputArg>((1, 2))</inputArg>
             <output>1</output>
         </example>
         <example>
-            <inputArg>("a", "b", "c", "d")</inputArg>
+            <inputArg>(("a", "b", "c", "d"))</inputArg>
             <output>"a"</output>
         </example>
         <example>
-            <inputArg>(true, 3, 7)</inputArg>
+            <inputArg>((true, 3, 7))</inputArg>
             <output>true</output>
         </example>
     </function>
@@ -33,15 +33,15 @@
             <p>Gets the second item from the tuple.</p>
         </description>
         <example>
-            <inputArg>(1, 2)</inputArg>
+            <inputArg>((1, 2))</inputArg>
             <output>2</output>
         </example>
         <example>
-            <inputArg>("a", "b", "c", "d")</inputArg>
+            <inputArg>(("a", "b", "c", "d"))</inputArg>
             <output>"b"</output>
         </example>
         <example>
-            <inputArg>(true, 3, 7)</inputArg>
+            <inputArg>((true, 3, 7))</inputArg>
             <output>3</output>
         </example>
     </function>
@@ -56,7 +56,7 @@
             <p>Gets the third item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"c"</output>
         </example>
     </function>
@@ -72,7 +72,7 @@
             <p>Gets the fourth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"d"</output>
         </example>
     </function>
@@ -94,7 +94,7 @@
             <p>Gets the fifth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"e"</output>
         </example>
     </function>
@@ -112,7 +112,7 @@
             <p>Gets the sixth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"f"</output>
         </example>
     </function>
@@ -131,7 +131,7 @@
             <p>Gets the seventh item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"g"</output>
         </example>
     </function>
@@ -151,7 +151,7 @@
             <p>Gets the eighth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"h"</output>
         </example>
     </function>
@@ -172,7 +172,7 @@
             <p>Gets the ninth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"i"</output>
         </example>
     </function>
@@ -194,7 +194,7 @@
             <p>Gets the tenth item from the tuple.</p>
         </description>
         <example>
-            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <inputArg>(("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"))</inputArg>
             <output>"j"</output>
         </example>
     </function>

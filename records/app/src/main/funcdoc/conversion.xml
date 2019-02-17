@@ -39,7 +39,8 @@
     <function name="from text to">
         <typeArg>t</typeArg>
         <typeConstraint>Readable t</typeConstraint>
-        <argType>(@apply Type(@typevar t), Text)</argType>
+        <argType>@apply Type(@typevar t)</argType>
+        <argType>Text</argType>
         <returnType>@typevar t</returnType>
         <description>
             <p>Converts a value from text, specifying the target type.</p>

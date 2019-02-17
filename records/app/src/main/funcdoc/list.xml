@@ -52,7 +52,8 @@
     <function name="in list">
         <typeArg>t</typeArg>
         <typeConstraint>Comparable t</typeConstraint>
-        <argType>(@typevar t, [@typevar t])</argType>
+        <argType>@typevar t</argType>
+        <argType>[@typevar t]</argType>
         <returnType>Boolean</returnType>
         <description>
             <p>Checks if the item is in the list.</p>

@@ -29,7 +29,8 @@
     </function>
     <function name="round decimal">
         <unitArg>u</unitArg>
-        <argType>(Number{@unitvar u}, Number)</argType>
+        <argType>Number{@unitvar u}</argType>
+        <argType>Number</argType>
         <returnType>Number{@unitvar u}</returnType>
         <description>
             <p>Rounds the number to the given number of decimal places (digits after the decimal point).</p>
@@ -42,7 +43,8 @@
     </function>
     <function name="round significant">
         <unitArg>u</unitArg>
-        <argType>(Number{@unitvar u}, Number)</argType>
+        <argType>Number{@unitvar u}</argType>
+        <argType>Number</argType>
         <returnType>Number{@unitvar u}</returnType>
         <description>
             <p>Rounds the number to the given number of significant figures (digits at the beginning of the number).</p>

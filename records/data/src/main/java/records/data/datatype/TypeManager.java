@@ -469,6 +469,7 @@ public class TypeManager
             return wholeType.getTags().get(tagIndex);
         }
         
+        @OnThread(Tag.Simulation)
         public @Value Object makeValue()
         {
             TagType<?> tag = getTagInfo();

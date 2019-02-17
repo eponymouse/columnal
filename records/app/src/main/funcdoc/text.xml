@@ -24,7 +24,9 @@
     </function>
     
     <function name="replace all">
-        <argType>(Text, Text, Text)</argType>
+        <argType>Text</argType>
+        <argType>Text</argType>
+        <argType>Text</argType>
         <returnType>Text</returnType>
         <description>
             <p>Replaces all occurrences of the first text with the second text, within the third text</p>
@@ -76,7 +78,8 @@
     </function>
 
     <function name="join text with">
-        <argType>([Text], Text)</argType>
+        <argType>[Text]</argType>
+        <argType>Text</argType>
         <returnType>Text</returnType>
         <description>
             <p>Joins a list of text values together as one text item, inserting a separator between each.</p>

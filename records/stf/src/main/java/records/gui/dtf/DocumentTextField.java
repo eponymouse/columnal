@@ -714,6 +714,7 @@ public class DocumentTextField extends Region implements DocumentListener
             }
         }
 
+        @OnThread(value = Tag.FXPlatform)
         public void focusChanged(boolean focused)
         {
             if (focused)

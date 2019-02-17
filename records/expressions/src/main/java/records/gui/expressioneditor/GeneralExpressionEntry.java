@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
@@ -1039,7 +1040,11 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             if (text.equals("_"))
                 saver.saveOperand(new MatchAnythingExpression(), this, this, this::afterSave);
             else
-                saver.saveOperand(new VarDeclExpression(text.substring(1)), this, this, this::afterSave);
+            {
+                @SuppressWarnings("identifier")
+                @ExpressionIdentifier String minusLeadingUnderscore = text.substring(1);
+                saver.saveOperand(new VarDeclExpression(minusLeadingUnderscore), this, this, this::afterSave);
+            }
         }
         else if (text.equals("true") || text.equals("false"))
         {

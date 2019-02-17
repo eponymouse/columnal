@@ -19,6 +19,11 @@ public abstract class ValueFunction
     protected @Nullable ImmutableList<ExplanationLocation> booleanExplanation;
     private @Value Object @Nullable [] curArgs;
     private ArgumentLocation @Nullable[] curLocs;
+    
+    @OnThread(Tag.Any)
+    protected ValueFunction()
+    {
+    }
 
     @OnThread(Tag.Simulation)
     protected abstract @Value Object call() throws InternalException, UserException;

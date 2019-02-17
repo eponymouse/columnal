@@ -3,7 +3,9 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="datetime">
     <function name="date">
-        <argType>(Number{year}, Number{month}, Number{day})</argType>
+        <argType>Number{year}</argType>
+        <argType>Number{month}</argType>
+        <argType>Number{day}</argType>
         <returnType>Date</returnType>
         <description>
             <p>Creates a date from the given year, month and day.</p>
@@ -25,7 +27,9 @@
     </function>
 
     <function name="time">
-        <argType>(Number{hour}, Number{min}, Number{s})</argType>
+        <argType>Number{hour}</argType>
+        <argType>Number{min}</argType>
+        <argType>Number{s}</argType>
         <returnType>Time</returnType>
         <description>
             <p>Creates a time-of-day (or clock time) from the given hours, minutes and seconds.</p>
@@ -105,7 +109,8 @@
     </function>
 
     <function name="dateym">
-        <argType>(Number{year}, Number{month})</argType>
+        <argType>Number{year}</argType>
+        <argType>Number{month}</argType>
         <returnType>DateYM</returnType>
         <description>
             <p>Creates a year-month value from the given year and month.</p>
@@ -133,7 +138,8 @@
     </function>
 
     <function name="datetime">
-        <argType>(Date, Time)</argType>
+        <argType>Date</argType>
+        <argType>Time</argType>
         <returnType>DateTime</returnType>
         <description>
             <p>Creates a DateTime from the given Date and Time.</p>
@@ -145,7 +151,9 @@
     </function>
     
     <function name="datetimezoned">
-        <argType>(Date, Time, Text)</argType>
+        <argType>Date</argType>
+        <argType>Time</argType>
+        <argType>Text</argType>
         <returnType>DateTimeZoned</returnType>
         <description>
             <p>Creates a datetime with a time zone from the given Date, Time and time zone.</p>
@@ -158,7 +166,8 @@
     </function>
     
     <function name="days between">
-        <argType>(Date, Date)</argType>
+        <argType>Date</argType>
+        <argType>Date</argType>
         <returnType>Number{day}</returnType>
         <description>
             <p>Calculates the number of days between two dates.</p>
@@ -177,7 +186,8 @@
     </function>
     
     <function name="add days">
-        <argType>(Date, Number{day})</argType>
+        <argType>Date</argType>
+        <argType>Number{day}</argType>
         <returnType>Date</returnType>
         <description>
             <p>Adds the given number of the days to the date.</p>
@@ -199,7 +209,8 @@
     </function>
     
     <function name="seconds between">
-        <argType>(Time, Time)</argType>
+        <argType>Time</argType>
+        <argType>Time</argType>
         <returnType>Number{s}</returnType>
         <description>
             <p>Calculates the number of seconds between two times.</p>

@@ -6,7 +6,9 @@
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeConstraint>Equatable a</typeConstraint>
-        <argType>([@typevar a], @typevar a, [@typevar b])</argType>
+        <argType>[@typevar a]</argType>
+        <argType>@typevar a</argType>
+        <argType>[@typevar b]</argType>
         <returnType>@typevar b</returnType>
         <description>
             <p>Given a list, finds a matching item, and returns the corresponding value from the other list.</p>
@@ -47,7 +49,9 @@
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeConstraint>Equatable a</typeConstraint>
-        <argType>([@typevar a], @typevar a, [@typevar b])</argType>
+        <argType>[@typevar a]</argType>
+        <argType>@typevar a</argType>
+        <argType>[@typevar b]</argType>
         <returnType>[@typevar b]</returnType>
         <description>
             <p>Given two lists, finds all the items with a matching value in left list, and returns the right list values for each.</p>

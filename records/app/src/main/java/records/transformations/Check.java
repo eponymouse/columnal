@@ -100,6 +100,7 @@ public class Check extends Transformation
         return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
     }
 
+    @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
         return new ColumnLookup()

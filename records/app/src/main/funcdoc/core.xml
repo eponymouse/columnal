@@ -4,7 +4,8 @@
                        namespace="core">
     <function name="asType">
         <typeArg>t</typeArg>
-        <argType>(@apply Type(@typevar t), @typevar t)</argType>
+        <argType>@apply Type(@typevar t)</argType>
+        <argType>@typevar t</argType>
         <returnType>@typevar t</returnType>
         <description>
             <p>Clarifies the type of a value.</p>
@@ -35,7 +36,7 @@
             <output>type{[(Boolean, Number)]}</output>
         </example>
         <example>
-            <inputArg>(time{00:00}, 21{s})</inputArg>
+            <inputArg>((time{00:00}, 21{s}))</inputArg>
             <output>type{(Time, Number{s})}</output>
         </example>
     </function>
@@ -43,7 +44,8 @@
     <function name="asUnit">
         <unitArg>u</unitArg>
         <unitArg>v</unitArg>
-        <argType>(@apply Unit(@unitvar u), Number{@unitvar v})</argType>
+        <argType>@apply Unit(@unitvar u)</argType>
+        <argType>Number{@unitvar v}</argType>
         <returnType>Number{@unitvar u}</returnType>
         <description>
             <p>Converts a number from one unit to another (if possible).</p>

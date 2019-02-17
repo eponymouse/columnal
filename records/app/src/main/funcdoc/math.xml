@@ -4,7 +4,8 @@
                        namespace="math">
     <function name="log">
         <unitArg>u</unitArg>
-        <argType>(Number{@unitvar u}, Number)</argType>
+        <argType>Number{@unitvar u}</argType>
+        <argType>Number</argType>
         <returnType>Number</returnType>
         <description>
             <p>Takes the logarithm of the first number, using the second number as the base.</p>

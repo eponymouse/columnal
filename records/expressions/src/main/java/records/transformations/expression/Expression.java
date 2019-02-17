@@ -596,7 +596,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitNewVariable(ExpressionParser.NewVariableContext ctx)
         {
-            return new VarDeclExpression(ctx.ident().getText());
+            return new VarDeclExpression(IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override
@@ -824,6 +824,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      * list of cell locations from this method.
      * @return
      */
+    @OnThread(Tag.Simulation)
     public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
     {
         return null;

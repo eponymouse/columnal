@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Display of a Check transformation.  Has two cells: a title
  * above a cell showing the result.
  */
+@OnThread(Tag.FXPlatform)
 public final class CheckDisplay extends HeadedDisplay implements TableDisplayBase, SelectionListener
 {
     private final Check check;

@@ -33,7 +33,8 @@
         </example>
     </function>
     <function name="xor">
-        <argType>(Boolean, Boolean)</argType>
+        <argType>Boolean</argType>
+        <argType>Boolean</argType>
         <returnType>Boolean</returnType>
         <description>
             <p>Returns the exclusive-or of the two items: returns true if exactly one of the items is true, but false if both are true.</p>

@@ -66,7 +66,7 @@
             <span class="function-name-header"><xsl:value-of select="@name"/></span>
             <span class="function-name-type"><xsl:value-of select="@name"/></span>
             <span class="function-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
-                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression" select="argType"/></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
+                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="argType" separator =","/></xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
                     name="processType"><xsl:with-param name="type" select="returnType"/></xsl:call-template>
             </span>
             <div class="description"><xsl:copy-of select="description"/></div>

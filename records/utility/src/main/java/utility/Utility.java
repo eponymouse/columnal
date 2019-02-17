@@ -297,8 +297,8 @@ public class Utility
         }
         else if (ax instanceof TaggedValue)
         {
-            TaggedValue at = (TaggedValue) ax;
-            TaggedValue bt = (TaggedValue) bx;
+            TaggedValue at = cast(ax, TaggedValue.class);
+            TaggedValue bt = cast(bx, TaggedValue.class);
             cmp = Integer.compare(at.getTagIndex(), bt.getTagIndex());
             if (cmp != 0)
                 return cmp;
@@ -310,8 +310,8 @@ public class Utility
         }
         else if (ax instanceof Object[])
         {
-            @Value Object[] ao = (@Value Object[]) ax;
-            @Value Object[] bo = (@Value Object[]) bx;
+            @Value Object[] ao = (@Value Object[])cast(ax, Object[].class);
+            @Value Object[] bo = (@Value Object[])cast(bx, Object[].class);
             if (ao.length != bo.length)
                 throw new InternalException("Trying to compare tuples of different size");
             for (int i = 0; i < ao.length; i++)

@@ -1,9 +1,12 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Objects;
 
+@OnThread(Tag.Any)
 public class ExplanationLocation
 {
     public final TableId tableId;

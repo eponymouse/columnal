@@ -178,6 +178,11 @@ public class CallExpression extends Expression
         ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
 
         @Value Object[] paramValues = new Object[arguments.size()];
+        for (int i = 0; i < arguments.size(); i++)
+        {
+            @Recorded Expression arg = arguments.get(i);
+            paramValues[i] = arg.getValue(state).getFirst();
+        }
         ArgumentLocation[] paramLocations;
         if (state.recordBooleanExplanation())
         {
@@ -188,7 +193,6 @@ public class CallExpression extends Expression
             for (int i = 0; i < arguments.size(); i++)
             {
                 @Recorded Expression arg = arguments.get(i);
-                paramValues[i] = arg.getValue(state).getFirst();
                 if (arg instanceof ColumnReference)
                 {
                     paramLocations[i] = new ArgumentLocation()
