@@ -21,7 +21,9 @@ import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
+import utility.Utility.EpsilonType;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,7 +54,7 @@ public class PropRunExpression
             {
                 @Value Object actualValue = src.expression.getValue(new EvaluateState(dummyManager.getTypeManager(), OptionalInt.of(row))).getFirst();
                 assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
-                    Utility.compareValues(src.value.get(row), actualValue, new BigDecimal("0.000000001")) == 0);
+                    Utility.compareValues(src.value.get(row), actualValue, new Pair<>(EpsilonType.RELATIVE, new BigDecimal("0.000000001"))) == 0);
             }
         }
         catch (ArithmeticException | InternalException | UserException | ClassCastException e)

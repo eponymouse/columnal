@@ -14,6 +14,7 @@ import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.EpsilonType;
 
 /**
  * This is a pattern match item, value +- tolerance.
@@ -28,7 +29,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     @Override
     protected String saveOp()
     {
-        return "+-";
+        return "\u00B1";
     }
 
     @Override
@@ -70,7 +71,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     @Override
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        boolean match = Utility.compareNumbers(value, lhs.getValue(state).getFirst(), Utility.toBigDecimal(Utility.cast(rhs.getValue(state).getFirst(), Number.class))) == 0;
+        boolean match = Utility.compareNumbers(value, lhs.getValue(state).getFirst(), new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhs.getValue(state).getFirst(), Number.class)))) == 0;
         return match ? state : null;
     }
 

@@ -232,7 +232,7 @@ public class Utility
      */
     @Pure
     @OnThread(Tag.Simulation)
-    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable BigDecimal epsilon) throws InternalException, UserException
+    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -253,7 +253,7 @@ public class Utility
 
     @Pure
     @OnThread(Tag.Simulation)
-    public static int compareLists(ListEx a, ListEx b, @Nullable BigDecimal epsilon) throws InternalException, UserException
+    public static int compareLists(ListEx a, ListEx b, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -279,7 +279,7 @@ public class Utility
     }
 
     @OnThread(Tag.Simulation)
-    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable BigDecimal epsilon) throws InternalException, UserException
+    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         int cmp;
         if (ax instanceof Number)
@@ -1580,11 +1580,13 @@ public class Utility
     {
         return compareNumbers(a, b, null);
     }
+    
+    public static enum EpsilonType { ABSOLUTE, RELATIVE };
 
     // Params passed as Object to avoid double cast
-    public static int compareNumbers(final Object a, final Object b, @Nullable BigDecimal epsilon)
+    public static int compareNumbers(final Object a, final Object b, @Nullable Pair<EpsilonType, BigDecimal> epsilon)
     {
-        if (a instanceof BigDecimal || b instanceof BigDecimal)
+        if (a instanceof BigDecimal || b instanceof BigDecimal || epsilon != null)
         {
             // Compare as BigDecimals:
             BigDecimal da, db;
@@ -1602,11 +1604,18 @@ public class Utility
             {
                 try
                 {
-                    if (da.equals(db) || (!da.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(da, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon) == -1)
-                        || (!db.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(db, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon) == -1))
-                        return 0;
-                    else
-                        return da.compareTo(db);
+                    if (epsilon.getFirst() == EpsilonType.RELATIVE)
+                    {
+                        if (da.equals(db) || (!da.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(da, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) == -1)
+                                || (!db.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(db, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) == -1))
+                            return 0;
+                    }
+                    else if (epsilon.getFirst() == EpsilonType.ABSOLUTE)
+                    {
+                        if (da.subtract(db, MathContext.DECIMAL128).abs().compareTo(epsilon.getSecond()) <= 0)
+                            return 0;
+                    }
+                    return da.compareTo(db);
                 }
                 catch (ArithmeticException e)
                 {
