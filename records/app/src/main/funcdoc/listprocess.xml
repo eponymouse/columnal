@@ -4,7 +4,8 @@
                        namespace="listprocess">
     <function name="any">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], ((@typevar t) -&gt; Boolean))</argType>
+        <argType>[@typevar t]</argType>
+        <argType>(@typevar t) -&gt; Boolean</argType>
         <returnType>Boolean</returnType>
         <description>
             <p>Returns true if the given function returns true for any item in the list.</p>
@@ -25,7 +26,8 @@
     </function>
     <function name="all">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], ((@typevar t) -&gt; Boolean))</argType>
+        <argType>[@typevar t]</argType>
+        <argType>(@typevar t) -&gt; Boolean</argType>
         <returnType>Boolean</returnType>
         <description>
             <p>Returns true if the given function returns true for all items in the list.</p>
@@ -46,7 +48,8 @@
     </function>
     <function name="none">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], ((@typevar) t -&gt; Boolean))</argType>
+        <argType>[@typevar t]</argType>
+        <argType>(@typevar t) -&gt; Boolean</argType>
         <returnType>Boolean</returnType>
         <description>
             <p>Returns true if the given function returns true for no items in the list.</p>
@@ -68,7 +71,8 @@
     
     <function name="combine">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], ((@typevar t, @typevar t) -&gt; @typevar t))</argType>
+        <argType>[@typevar t]</argType>
+        <argType>(@typevar t, @typevar t) -&gt; @typevar t</argType>
         <returnType>@typevar t</returnType>
         <description>
             <p>Collapses the list into a single item by combining the elements using the given function.</p>
@@ -94,7 +98,8 @@
     
     <function name="keep">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], ((@typevar t) -&gt; Boolean))</argType>
+        <argType>[@typevar t]</argType>
+        <argType>(@typevar t) -&gt; Boolean</argType>
         <returnType>[@typevar t]</returnType>
         <description>
             <p>Returns a new list containing all the items in the list for which the function returns true.</p>
@@ -119,7 +124,8 @@
     <function name="apply each">
         <typeArg>before</typeArg>
         <typeArg>after</typeArg>
-        <argType>([@typevar before], ((@typevar before) -&gt; @typevar after))</argType>
+        <argType>[@typevar before]</argType>
+        <argType>(@typevar before) -&gt; @typevar after</argType>
         <returnType>[@typevar after]</returnType>
         <description>
             <p>Applies the function to each item in the list, and returns the resulting items.</p>

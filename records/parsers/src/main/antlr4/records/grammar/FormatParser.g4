@@ -8,12 +8,12 @@ date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | TIMEOFDAYZONED | DATETIME | DATETI
 tuple : OPEN_BRACKET type (COMMA type)+ (COMMA TUPLE_MORE)? CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 functionArgs : OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET;
-functionType : OPEN_BRACKET functionArgs ARROW type CLOSE_BRACKET;
+functionType : functionArgs ARROW type;
 type : unbracketedType | bracketedType;
-unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident | TYPEVAR ident; 
+unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident | TYPEVAR ident | functionType; 
 taggedDecl : TAGGED tagDeclParam* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagDeclParam : TYPEVAR ident | UNITVAR ident;
-bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple | functionType;
+bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple;
 tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNIT CLOSE_BRACKET | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
 applyRef : APPLY ident tagRefParam+; // First ident is name, rest are type params
 

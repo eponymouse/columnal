@@ -103,7 +103,7 @@
                 <xs:element name="unitArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="typeArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="typeConstraint" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element name="argType" type="xs:string"/>
+                <xs:element name="argType" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
                 <xs:element name="returnType" type="xs:string"/>
                 <!-- TODO add mini as mandatory here -->
                 <xs:element ref="description"/>

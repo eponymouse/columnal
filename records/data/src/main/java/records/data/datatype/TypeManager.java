@@ -188,10 +188,6 @@ public class TypeManager
         {
             return DataType.tuple(Utility.mapListEx(type.tuple().type(), t -> loadTypeUse(t)));
         }
-        else if (type.functionType() != null)
-        {
-            return DataType.function(Utility.mapListExI(type.functionType().functionArgs().type(), t -> loadTypeUse(t)), loadTypeUse(type.functionType().type()));
-        }
         else if (type.type() != null)
         {
             return loadTypeUse(type.type());
@@ -262,6 +258,10 @@ public class TypeManager
         else if (type.array() != null)
         {
             return DataType.array(loadTypeUse(type.array().type()));
+        }
+        else if (type.functionType() != null)
+        {
+            return DataType.function(Utility.mapListExI(type.functionType().functionArgs().type(), t -> loadTypeUse(t)), loadTypeUse(type.functionType().type()));
         }
         else if (type.ident() != null && type.TYPEVAR() == null)
         {

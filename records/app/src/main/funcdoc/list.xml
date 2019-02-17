@@ -25,7 +25,8 @@
     
     <function name="element">
         <typeArg>t</typeArg>
-        <argType>([@typevar t], Number)</argType>
+        <argType>[@typevar t]</argType>
+        <argType>Number</argType>
         <returnType>@typevar t</returnType>
         <description>
             <p>Gets the list element at the given position (first position is 1).</p>

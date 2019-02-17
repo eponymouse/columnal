@@ -115,8 +115,6 @@ public abstract class JellyType
             return load(ctx.type(), mgr);
         else if (ctx.tuple() != null)
             return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)), ctx.tuple().TUPLE_MORE() == null);
-        else if (ctx.functionType() != null)
-            return new JellyTypeFunction(Utility.mapListExI(ctx.functionType().functionArgs().type(), t -> load(t, mgr)), load(ctx.functionType().type(), mgr));
         throw new InternalException("Unrecognised case: " + ctx);
     }
 
@@ -158,6 +156,9 @@ public abstract class JellyType
             @ExpressionIdentifier String name = ctx.ident().getText();
             return new JellyTypeIdent(name);
         }
+        else if (ctx.functionType() != null)
+            return new JellyTypeFunction(Utility.mapListExI(ctx.functionType().functionArgs().type(), t -> load(t, mgr)), load(ctx.functionType().type(), mgr));
+
         throw new InternalException("Unrecognised case: " + ctx.getText());
     }
 
