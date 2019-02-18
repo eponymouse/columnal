@@ -53,6 +53,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
+import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import threadchecker.OnThread;
@@ -829,7 +830,7 @@ public class View extends StackPane implements DimmableParent
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                         new EditExpressionDialog(thisView, srcTable, null, new MultipleTableLookup(null, tableManager, srcTable.getId()), DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
-                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
+                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), CheckType.STANDALONE /*TODO*/, checkExpression);
                                 tableManager.record(check);
                             }));
                         });

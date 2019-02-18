@@ -12,8 +12,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.CheckContext;
+import records.grammar.TransformationParser.CheckTypeContext;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
@@ -52,15 +57,17 @@ public class Check extends Transformation
     private final TableId srcTableId;
     private final @Nullable RecordSet recordSet;
     private final String error;
-    //private final CheckType checkType;
+    @OnThread(Tag.Any)
+    private final CheckType checkType;
     @OnThread(Tag.Any)
     private final Expression checkExpression;
     private @MonotonicNonNull DataType type;
     
-    public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression checkExpression) throws InternalException
+    public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, CheckType checkType, Expression checkExpression) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
+        this.checkType = checkType;
         this.checkExpression = checkExpression;
         RecordSet theRecordSet = null;
         String theError = "Unknown error";
@@ -98,7 +105,7 @@ public class Check extends Transformation
                     @OnThread(Tag.Simulation)
                     public Table replaceExpression(Expression changed) throws InternalException
                     {
-                        return new Check(getManager(), getDetailsForCopy(), Check.this.srcTableId, changed);
+                        return new Check(getManager(), getDetailsForCopy(), Check.this.srcTableId, checkType, changed);
                     }
                 });
 
@@ -110,6 +117,12 @@ public class Check extends Transformation
     @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
+        return getColumnLookup(getManager(), srcTableId);
+    }
+
+    @OnThread(Tag.Any)
+    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId)
+    {
         return new ColumnLookup()
         {
             @Override
@@ -118,7 +131,7 @@ public class Check extends Transformation
                 try
                 {
                     Pair<TableId, Column> column = null;
-                    Table srcTable = getManager().getSingleTableOrNull(srcTableId);
+                    Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
                     if (tableId == null)
                     {
                         if (srcTable != null)
@@ -129,7 +142,7 @@ public class Check extends Transformation
                     }
                     else
                     {
-                        Table table = getManager().getSingleTableOrNull(tableId);
+                        Table table = tableManager.getSingleTableOrNull(tableId);
                         if (table != null)
                         {
                             Column col = table.getData().getColumnOrNull(columnId);
@@ -164,7 +177,7 @@ public class Check extends Transformation
             @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
-                return getManager().streamAllTables().flatMap(t -> {
+                return tableManager.streamAllTables().flatMap(t -> {
                     try
                     {
                         Stream.Builder<ColumnReference> columns = Stream.builder();
@@ -236,7 +249,29 @@ public class Check extends Transformation
     @OnThread(Tag.Any)
     protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Collections.singletonList(PREFIX + " " + checkExpression.save(true, BracketedStatus.MISC, renames));
+        final String checkTypeStr;
+        switch (checkType)
+        {
+            case ALL_ROWS:
+                checkTypeStr = "ALLROWS";
+                break;
+            case ANY_ROW:
+                checkTypeStr = "ANYROWS";
+                break;
+            case NO_ROWS:
+                checkTypeStr = "NOROWS";
+                break;
+            case STANDALONE:
+            default: // To satisfy compiler
+                checkTypeStr = "STANDALONE";
+                break;
+        }
+        return Collections.singletonList(PREFIX + " " + checkTypeStr + " " + checkExpression.save(true, BracketedStatus.MISC, renames));
+    }
+    
+    public CheckType getCheckType()
+    {
+        return checkType;
     }
 
     @Override
@@ -263,13 +298,26 @@ public class Check extends Transformation
         @Override
         protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            return new Check(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+            CheckContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::check);
+
+            CheckTypeContext checkTypeContext = loaded.checkType();
+            CheckType checkType;
+            if (checkTypeContext.checkAllRows() != null)
+                checkType = CheckType.ALL_ROWS;
+            else if (checkTypeContext.checkAnyRows() != null)
+                checkType = CheckType.ANY_ROW;
+            else if (checkTypeContext.checkNoRows() != null)
+                checkType = CheckType.NO_ROWS;
+            else
+                checkType = CheckType.STANDALONE;
+            
+            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
         }
 
         @Override
         public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Check(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), new BooleanLiteral(true));
+            return new Check(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
         }
     }
 }

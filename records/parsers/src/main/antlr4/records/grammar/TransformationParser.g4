@@ -39,3 +39,12 @@ concatMissing : concatIncompleteKW (concatOmit | concatWrapMaybe | concatDefault
 transformCalculate : {_input.LT(1).getText().equals("CALCULATE")}? ATOM;
 transformItem : transformCalculate column=item expression;
 transform : transformItem*;
+
+/* Check: */
+
+checkStandalone : {_input.LT(1).getText().equals("STANDALONE")}? ATOM;
+checkAllRows : {_input.LT(1).getText().equals("ALLROWS")}? ATOM;
+checkNoRows : {_input.LT(1).getText().equals("NOROWS")}? ATOM;
+checkAnyRows : {_input.LT(1).getText().equals("ANYROWS")}? ATOM;
+checkType : checkStandalone | checkAllRows | checkNoRows | checkAnyRows;
+check : checkType expression;

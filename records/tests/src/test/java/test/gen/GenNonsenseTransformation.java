@@ -15,6 +15,7 @@ import java.util.List;
 public class GenNonsenseTransformation extends Generator<Transformation_Mgr>
 {
     List<Generator<Transformation_Mgr>> generators = Arrays.asList(
+        new GenNonsenseCheck(),
         //new GenNonsenseConcatenate(),
         new GenNonsenseFilter(),
         //new GenNonsenseHideColumns(),

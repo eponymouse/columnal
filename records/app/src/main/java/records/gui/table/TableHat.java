@@ -212,10 +212,10 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s(" "),
                 editSourceLink(parent, check, check.getSource(), newSource ->
                     parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
-                        table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
+                        table.getDetailsForCopy(), newSource, check.getCheckType(), check.getCheckExpression()), null)),
                 StyledString.s(" that "),
                 editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), check.getColumnLookup(), DataType.BOOLEAN, e -> 
-                    parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
+                    parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), check.getCheckType(), e), null)
                 )
             );
         }
