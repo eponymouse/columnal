@@ -6,10 +6,12 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -19,7 +21,9 @@ import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -40,12 +44,15 @@ import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
+import records.gui.table.HeadedDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
+import records.transformations.Check;
 import records.transformations.SummaryStatistics;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
@@ -498,19 +505,47 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         return r;
     }
     
-    @Property
-    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcData, @From(GenRandom.class) Random r) throws Exception
+    @Property(trials = 5)
+    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcData.mgr).get();
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
         TestUtil.sleep(1000);
         TableManager tableManager = details._test_getTableManager();
         VirtualGrid virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
         
         Table srcTable = allTables.get(r.nextInt(allTables.size()));
-        List<Column> srcColumns = srcTable.getData().getColumns();
+        RecordSet srcData = srcTable.getData();
+        List<Column> srcColumns = srcData.getColumns();
         Column srcColumn = srcColumns.get(r.nextInt(srcColumns.size()));
         
-        //TODO pick random value from column, use it to check any/all rows test
+        @Value Object thresholdItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        
+        @SuppressWarnings("nullness")
+        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(1, 0)).max(Comparator.comparing(p -> p.columnIndex)).get();
+        
+        keyboardMoveTo(virtualGrid, targetPos);
+        TestUtil.delay(100);
+        
+        Log.debug("Aiming for " + targetPos);
+        clickOnItemInBounds(from(TestUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
+
+        TestUtil.delay(100);
+        clickOn(".id-new-check");
+        TestUtil.delay(100);
+        write(srcTable.getId().getRaw());
+        push(KeyCode.ENTER);
+
+        EqualExpression checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType(), thresholdItem, null, true), tableManager.getTypeManager())));
+        
+        // Enter expression:
+        enterExpression(tableManager.getTypeManager(), checkExpression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn(".ok-button");
+
+        Label label = (Label)withItemInBounds(lookup(".label"), virtualGrid, new RectangleBounds(targetPos, targetPos.offsetByRowCols(1, 0)), (n, p) -> {});
+        
+        assertEquals("Pass", TestUtil.fx(() -> label.getText()));
     }
 }
