@@ -400,7 +400,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 shallow.add((ExpressionMaker)() ->
                 {
                     @Value TemporalAccessor value = makeTemporalValue(dateTimeInfo);
-                    return literal(value, call("from text to", new TupleExpression(ImmutableList.of(new TypeLiteralExpression(new TypePrimitiveLiteral(DataType.date(dateTimeInfo))), new StringLiteral(value.toString())))));
+                    return literal(value, call("from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(DataType.date(dateTimeInfo))), new StringLiteral(value.toString())));
                 });
                 shallow.add((ExpressionMaker)() ->
                 {

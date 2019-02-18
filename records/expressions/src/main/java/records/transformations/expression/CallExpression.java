@@ -96,12 +96,17 @@ public class CallExpression extends Expression
             return null;
         }
         // Param can only be a pattern if the function is a constructor expression:
+        ExpressionKind expressionKind = ExpressionKind.EXPRESSION;
         for (CheckedExp paramType : paramTypes)
         {
-            if (paramType.expressionKind == ExpressionKind.PATTERN && !(function instanceof ConstructorExpression))
+            if (paramType.expressionKind == ExpressionKind.PATTERN)
             {
-                onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
-                return null;
+                if (!(function instanceof ConstructorExpression))
+                {
+                    onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
+                    return null;
+                }
+                expressionKind = ExpressionKind.PATTERN;
             }
         }
         
@@ -169,7 +174,7 @@ public class CallExpression extends Expression
             return null;
         }
         
-        return onError.recordType(this, ExpressionKind.EXPRESSION, state, returnType);
+        return onError.recordType(this, expressionKind, state, returnType);
     }
 
     @Override
