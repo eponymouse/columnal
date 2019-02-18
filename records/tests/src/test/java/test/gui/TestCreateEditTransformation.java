@@ -17,8 +17,11 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
+import records.data.Column;
 import records.data.ColumnId;
+import records.data.Table;
 import records.data.TableId;
+import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -36,6 +39,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.VirtualGrid;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.SummaryStatistics;
@@ -48,6 +52,8 @@ import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TupleExpression;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
+import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
@@ -490,5 +496,21 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         Collections.sort(r, DataTypeUtility.getValueComparator());
         
         return r;
+    }
+    
+    @Property
+    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcData, @From(GenRandom.class) Random r) throws Exception
+    {
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcData.mgr).get();
+        TestUtil.sleep(1000);
+        TableManager tableManager = details._test_getTableManager();
+        VirtualGrid virtualGrid = details._test_getVirtualGrid();
+        List<Table> allTables = tableManager.getAllTables();
+        
+        Table srcTable = allTables.get(r.nextInt(allTables.size()));
+        List<Column> srcColumns = srcTable.getData().getColumns();
+        Column srcColumn = srcColumns.get(r.nextInt(srcColumns.size()));
+        
+        //TODO pick random value from column, use it to check any/all rows test
     }
 }

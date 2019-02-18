@@ -43,9 +43,16 @@ public class Check extends Transformation
 {
     public static final String NAME = "check";
     private static final String PREFIX = "CHECK";
+
+    public static enum CheckType
+    {
+        STANDALONE, ALL_ROWS, ANY_ROW, NO_ROWS;
+    }
+
     private final TableId srcTableId;
     private final @Nullable RecordSet recordSet;
     private final String error;
+    //private final CheckType checkType;
     @OnThread(Tag.Any)
     private final Expression checkExpression;
     private @MonotonicNonNull DataType type;
