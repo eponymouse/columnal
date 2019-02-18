@@ -198,20 +198,20 @@ public class PropDateFunctions
         if (fromText == null)
             throw new RuntimeException("Cannot find from text to function");
         // First param should be Type Date, but it shouldn't be used....
-        @Value Object[] args = new @Value Object[] {v(""), v(src)};
-        return runFunction1(DataTypeUtility.value(args), DataType.tuple(DummyManager.make().getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
+        ImmutableList<@Value Object> args = ImmutableList.of(v(""), v(src));
+        return runFunction1(args, ImmutableList.of(DummyManager.make().getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
     }
 
     // Tests single numeric input, numeric output function
-    @SuppressWarnings("nullness")
+    @SuppressWarnings({"nullness", "value"})
     @OnThread(Tag.Simulation)
-    private Object runFunction1(@Value Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Object runFunction1(ImmutableList<@Value Object> src, ImmutableList<DataType> srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(srcType));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, srcType);
             assertNotNull(instance);
-            return instance.getFirst().call(new @Value Object[] {src});
+            return instance.getFirst().call(src.toArray());
         }
         catch (RuntimeException e)
         {
