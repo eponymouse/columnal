@@ -3,7 +3,6 @@ package records.gui.table;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -13,7 +12,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -22,7 +20,6 @@ import records.data.Table;
 import records.data.TableId;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.gui.DataDisplay;
 import records.gui.EditExpressionDialog;
 import records.gui.EditSortDialog;
 import records.gui.EntireTableSelection;
@@ -38,7 +35,6 @@ import records.gui.table.TableHat.TableHatDisplay;
 import records.transformations.Calculate;
 import records.transformations.Check;
 import records.transformations.Concatenate;
-import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
 import records.transformations.Sort;
@@ -146,7 +142,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 @Override
                 protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                 {
-                    TableDisplay.editAggregateSplitBy(parent, aggregate);
+                    TransformationEdits.editAggregateSplitBy(parent, aggregate);
                 }
             };
             if (!splitBy.isEmpty())
@@ -245,7 +241,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     @Override
                     protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        FXUtility.alertOnErrorFX_("Error editing column", () -> TableDisplay.editColumn_Calc(parent, calc, c));
+                        FXUtility.alertOnErrorFX_("Error editing column", () -> TransformationEdits.editColumn_Calc(parent, calc, c));
                     }
                 }).withStyle(new StyledCSS("edit-calculate-column")));
                 if (calc.getCalculatedColumns().keySet().size() > 3)

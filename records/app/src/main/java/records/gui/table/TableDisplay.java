@@ -6,11 +6,8 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
-import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -22,15 +19,12 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -55,8 +49,6 @@ import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
-import records.gui.grid.RectangleOverlayItem;
-import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -77,11 +69,9 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
-import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -89,7 +79,6 @@ import utility.*;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.ResizableRectangle;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -856,7 +845,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     Calculate calc = (Calculate) table;
                     // Allow editing of any column:
                     return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
-                        editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
+                        TransformationEdits.editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
                 else if (table instanceof SummaryStatistics)
@@ -867,7 +856,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         if (columnExpression.getFirst().equals(c))
                         {
                             return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
-                                editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, summaryStatistics, c);
+                                TransformationEdits.editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, summaryStatistics, c);
                             });
                         }
                     }
@@ -876,76 +865,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 else if (table instanceof ImmediateDataSource)
                 {
                     ImmediateDataSource data = (ImmediateDataSource) table;
-                    return () -> FXUtility.mouse(TableDisplay.this).editColumn_IDS(data, c, typeFinal);
+                    return () -> TransformationEdits.editColumn_IDS(FXUtility.mouse(TableDisplay.this).parent, data, c, typeFinal);
                 }
                 
                 return null;
             }
         };
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static void editColumn_Calc(View parent, Calculate calc, ColumnId columnId) throws InternalException, UserException
-    {
-        // Start with the existing value.
-        Expression expression = calc.getCalculatedColumns().get(columnId);
-        // If that doesn't exist, copy the name of the column if appropriate:
-        if (expression == null && calc.getData().getColumns().stream().anyMatch(c -> c.getName().equals(columnId)))
-            expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
-        // expression may still be null
-        
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null).showAndWait().ifPresent(newDetails -> {
-            ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
-            Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                FXUtility.alertOnError_("Error saving column", () ->
-                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
-                );
-            });
-        });
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public void editColumn_Agg(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, SummaryStatistics agg, ColumnId columnId) throws InternalException, UserException
-    {
-        // Start with the existing value.
-        ImmutableList<Pair<ColumnId, Expression>> oldColumns = agg.getColumnExpressions();
-        Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
-        if (expression != null)
-        {
-            new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), columnId, expression, agg.getColumnLookup(), null).showAndWait().ifPresent(newDetails -> {
-                ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
-                boolean added = false;
-                for (Pair<ColumnId, Expression> oldColumn : oldColumns)
-                {
-                    if (oldColumn.getFirst().equals(columnId) && !added)
-                    {
-                        newColumns.add(newDetails);
-                    }
-                    else
-                    {
-                        newColumns.add(oldColumn);
-                    }
-                }
-                Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error saving column", () ->
-                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSource(), newColumns.build(), agg.getSplitBy()), null)
-                    );
-                });
-            });
-        }
-    }
-        
-    @OnThread(Tag.FXPlatform)
-    public void editColumn_IDS(ImmediateDataSource data, ColumnId columnId, @Nullable DataType type)
-    {
-        // TODO apply the type and default value.
-        new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
-            Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                FXUtility.alertOnError_("Error saving column", () ->
-                    parent.getManager().edit(data.getId(), null, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))))
-                );
-            });
-        });
     }
 
     public @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation()
@@ -1118,16 +1043,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            editAggregateSplitBy(parent, aggregate);
+            TransformationEdits.editAggregateSplitBy(parent, aggregate);
         }
         // For other tables, do nothing
-    }
-
-    public static void editAggregateSplitBy(View parent, SummaryStatistics aggregate)
-    {
-        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-            FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
-        }));
     }
 
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
