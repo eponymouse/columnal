@@ -54,6 +54,9 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
         int row = 0;
         for (TransformationInfo transformationInfo : TransformationManager.getInstance().getTransformations())
         {
+            // Check is shown in the first dialog:
+            if (transformationInfo.getCanonicalName().equals("check"))
+                continue;
             Button button = new ExplainedButton(transformationInfo.getDisplayNameKey(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {
                 FXUtility.mouse(this).setResult(new Pair<>(p, transformationInfo));
                 close();
