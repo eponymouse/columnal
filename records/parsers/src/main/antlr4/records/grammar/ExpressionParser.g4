@@ -54,10 +54,10 @@ constructor : CONSTRUCTOR typeName COLON constructorName;
 
 standardFunction : FUNCTION ident;
 callTarget : varRef | standardFunction | constructor | unfinished;
-callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
+callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression (COMMA topLevelExpression)*) CLOSE_BRACKET;
 
-tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
-arrayExpression : OPEN_SQUARE (compoundExpression | (expression (COMMA expression)*))? CLOSE_SQUARE;
+tupleExpression : OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)+ CLOSE_BRACKET;
+arrayExpression : OPEN_SQUARE (topLevelExpression (COMMA topLevelExpression)*)? CLOSE_SQUARE;
 
 newVariable : VAR ident;
 typeName : ident;

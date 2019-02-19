@@ -497,10 +497,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             Expression function = visitCallTarget(ctx.callTarget());
             
             ImmutableList<@NonNull Expression> args;
-            if (ctx.topLevelExpression() != null)
-                args = ImmutableList.of(visitTopLevelExpression(ctx.topLevelExpression()));
-            else
-                args = Utility.<ExpressionContext, Expression>mapListI(ctx.expression(), e -> visitExpression(e));
+            args = Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), e -> visitTopLevelExpression(e));
             
             return new CallExpression(function, args);
         }
@@ -563,16 +560,16 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitArrayExpression(ArrayExpressionContext ctx)
         {
-            if (ctx.compoundExpression() != null)
-                return new ArrayExpression(ImmutableList.of(visitCompoundExpression(ctx.compoundExpression())));
+            if (ctx.topLevelExpression() == null)
+                return new ArrayExpression(ImmutableList.of());
             else
-                return new ArrayExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
+                return new ArrayExpression(Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), c -> visitTopLevelExpression(c)));
         }
 
         @Override
         public Expression visitTupleExpression(TupleExpressionContext ctx)
         {
-            return new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
+            return new TupleExpression(Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), c -> visitTopLevelExpression(c)));
         }
 
         @Override

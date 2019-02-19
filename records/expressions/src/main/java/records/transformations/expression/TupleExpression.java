@@ -103,7 +103,7 @@ public class TupleExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = members.stream().map(e -> e.save(structured, BracketedStatus.MISC, renames)).collect(Collectors.joining(", "));
+        String content = members.stream().map(e -> e.save(structured, BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", "));
         if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
             return content;
         else
@@ -113,7 +113,7 @@ public class TupleExpression extends Expression
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.MISC)).collect(StyledString.joining(", "));
+        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.TOP_LEVEL)).collect(StyledString.joining(", "));
         if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
             return content;
         else

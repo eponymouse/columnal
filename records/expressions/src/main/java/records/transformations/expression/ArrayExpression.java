@@ -119,13 +119,13 @@ public class ArrayExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "[" + items.stream().map(e -> e.save(structured, items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC, renames)).collect(Collectors.joining(", ")) + "]";
+        return "[" + items.stream().map(e -> e.save(structured, items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", ")) + "]";
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC)).collect(StyledString.joining(", ")), StyledString.s("]"));
+        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL)).collect(StyledString.joining(", ")), StyledString.s("]"));
     }
 
     @Override
