@@ -329,13 +329,18 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         public ShowStatus shouldShow(String input)
         {
+            if (input.equals(fullText))
+                return ShowStatus.DIRECT_MATCH;
+            else if (fullText.startsWith(input))
+                return ShowStatus.START_DIRECT_MATCH;
+            
             ShowStatus fallback = ShowStatus.NO_MATCH;
             for (String possible : stems)
             {
                 if (possible.equals(input))
-                    return ShowStatus.DIRECT_MATCH;
+                    return ShowStatus.RELATED_MATCH;
                 else if (possible.startsWith(input))
-                    fallback = ShowStatus.START_DIRECT_MATCH;
+                    fallback = ShowStatus.RELATED_MATCH;
             }
             return fallback;
         }
