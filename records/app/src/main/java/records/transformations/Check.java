@@ -266,7 +266,7 @@ public class Check extends Transformation
                 checkTypeStr = "STANDALONE";
                 break;
         }
-        return Collections.singletonList(PREFIX + " " + checkTypeStr + " " + checkExpression.save(true, BracketedStatus.MISC, renames));
+        return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(true, BracketedStatus.MISC, renames));
     }
     
     public CheckType getCheckType()
@@ -311,7 +311,7 @@ public class Check extends Transformation
             else
                 checkType = CheckType.STANDALONE;
             
-            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), mgr.getTypeManager()));
         }
 
         @Override

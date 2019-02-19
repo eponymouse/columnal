@@ -42,9 +42,10 @@ transform : transformItem*;
 
 /* Check: */
 
+checkKW : {_input.LT(1).getText().equals("CHECK")}? ATOM;
 checkStandalone : {_input.LT(1).getText().equals("STANDALONE")}? ATOM;
 checkAllRows : {_input.LT(1).getText().equals("ALLROWS")}? ATOM;
 checkNoRows : {_input.LT(1).getText().equals("NOROWS")}? ATOM;
 checkAnyRows : {_input.LT(1).getText().equals("ANYROWS")}? ATOM;
 checkType : checkStandalone | checkAllRows | checkNoRows | checkAnyRows;
-check : checkType expression;
+check : checkKW checkType expression;
