@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-check" title="Edit Check Details" >
+    <help id="check-type" title="Check Type">
+        <short></short>
+        <full>
+            <p></p>
+        </full>
+    </help>
+    <help id="check-expression" title="Check Expression">
+        <short></short>
+        <full>
+            <p></p>
+        </full>
+    </help>
+</dialog>

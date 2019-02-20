@@ -828,9 +828,9 @@ public class View extends StackPane implements DimmableParent
                     break;
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                        new EditExpressionDialog(thisView, srcTable, null, new MultipleTableLookup(null, tableManager, srcTable.getId()), DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                        new EditCheckExpressionDialog(thisView, srcTable, CheckType.ALL_ROWS, null, ct -> Check.getColumnLookup(tableManager, srcTable.getId(), ct)).showAndWait().ifPresent(details -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
-                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), CheckType.STANDALONE /*TODO*/, checkExpression);
+                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), details.getFirst(), details.getSecond());
                                 tableManager.record(check);
                             }));
                         });

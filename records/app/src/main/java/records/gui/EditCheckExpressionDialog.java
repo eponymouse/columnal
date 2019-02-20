@@ -1,27 +1,22 @@
 package records.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.text.TextFlow;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import javafx.scene.control.ComboBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
-import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.ExpressionEditor;
+import records.transformations.Check.CheckType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
@@ -29,24 +24,27 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 
-import java.util.Optional;
-
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
-public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expression>>
+public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expression>>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
+    public EditCheckExpressionDialog(View parent, @Nullable Table srcTable, CheckType initialCheckType, @Nullable Expression initialExpression, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
-        ColumnNameTextField field = new ColumnNameTextField(initialName);
+        ComboBox<CheckType> combo = new ComboBox<>();
+        combo.getStyleClass().add("check-type-combo");
+        combo.getItems().setAll(CheckType.values());
+        combo.getSelectionModel().select(initialCheckType);
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
-        ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), e -> {curValue = e;}) {
+        ReadOnlyObjectWrapper<@Nullable DataType> expectedType = new ReadOnlyObjectWrapper<@Nullable DataType>(DataType.BOOLEAN);
+        SimpleObjectProperty<ColumnLookup> columnLookupProperty = new SimpleObjectProperty<>(columnLookup.apply(initialCheckType));
+        FXUtility.addChangeListenerPlatform(combo.getSelectionModel().selectedItemProperty(), ct -> columnLookupProperty.set(columnLookup.apply(ct == null ? initialCheckType : ct)));
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, expectedType, parent.getManager().getTypeManager(), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
@@ -57,6 +55,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         };
         curValue = expressionEditor.save();
         // Tab doesn't seem to work right by itself:
+        /*
         field.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.TAB)
             {
@@ -64,14 +63,15 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
                 e.consume();
             }
         });
+        */
         
         LabelledGrid content = new LabelledGrid();
-        content.getStyleClass().add("edit-column-expression-content");
+        content.getStyleClass().add("edit-check-expression-content");
 
-        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", field.getNode()));
+        content.addRow(GUI.labelledGridRow("edit.check.type", "edit-check/check-type", combo));
         
-        content.addRow(GUI.labelledGridRow("edit.column.expression",
-                "edit-column/column-expression", expressionEditor.getContainer()));
+        content.addRow(GUI.labelledGridRow("edit.check.expression",
+                "edit-check/check-expression", expressionEditor.getContainer()));
         
         getDialogPane().setContent(content);
 
@@ -83,36 +83,19 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         FXUtility.preventCloseOnEscape(getDialogPane());
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> {
-            @Nullable ColumnId columnId = field.valueProperty().getValue();
-            if (bt == ButtonType.OK && columnId != null)
-                return new Pair<>(columnId, curValue);
+            @Nullable CheckType checkType = combo.getSelectionModel().getSelectedItem();
+            if (bt == ButtonType.OK && checkType != null)
+                return new Pair<>(checkType, curValue);
             else
                 return null;
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(field::requestFocusWhenInScene);
+            FXUtility.runAfter(expressionEditor::focusWhenShown);
         });
         setOnHiding(e -> {
             expressionEditor.cleanup();
         });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
-    }
-
-    public Optional<Pair<ColumnId, Expression>> showAndWaitCentredOn(Point2D mouseScreenPos)
-    {
-        return super.showAndWaitCentredOn(mouseScreenPos, 400, 200);
-    }
-    
-    public void addTopMessage(@LocalizableKey String topMessage)
-    {
-        TextFlow display = GUI.textFlowKey(topMessage, "edit-column-top-message");
-        display.setMaxWidth(9999.0);
-        Node oldContent = getDialogPane().getContent();
-        getDialogPane().setContent(GUI.borderTopCenter(
-            display,
-                oldContent
-        ));
-        BorderPane.setMargin(oldContent, new Insets(10, 0, 0, 0));
     }
 }

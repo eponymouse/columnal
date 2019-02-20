@@ -56,7 +56,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
-    private final ColumnLookup columnLookup;
+    private final ObservableObjectValue<ColumnLookup> columnLookup;
 
 
     private ObjectProperty<@Nullable DataType> latestType = new SimpleObjectProperty<>(null);
@@ -91,7 +91,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
 
         try
         {
-            @Nullable CheckedExp dataType = expression.check(columnLookup, new TypeState(getTypeManager().getUnitManager(), getTypeManager()), LocationInfo.UNIT_DEFAULT, saver);
+            @Nullable CheckedExp dataType = expression.check(columnLookup.get(), new TypeState(getTypeManager().getUnitManager(), getTypeManager()), LocationInfo.UNIT_DEFAULT, saver);
             if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
             {
                 saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));
@@ -112,10 +112,13 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return expression;
     }
 
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ColumnLookup columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS, typeManager, "expression-editor");
         this.columnLookup = columnLookup;
+        FXUtility.addChangeListenerPlatformNN(this.columnLookup, c -> {
+            Utility.later(this).selfChanged();
+        });
         
         
         // TODO respond to dynamic adjustment of table to revalidate column references:
@@ -208,7 +211,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             }
         });
         */
-        return columnLookup.getAvailableColumnReferences();
+        return columnLookup.get().getAvailableColumnReferences();
     }
 
     @Override

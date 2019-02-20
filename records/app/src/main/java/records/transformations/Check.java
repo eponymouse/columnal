@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -111,17 +112,44 @@ public class Check extends Transformation
 
             type = typeFinal;
         }
-        return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
+        if (checkType == CheckType.STANDALONE)
+        {
+            return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
+        }
+        else
+        {
+            Table srcTable = getManager().getSingleTableOrNull(srcTableId);
+            if (srcTable != null)
+            {
+                int length = srcTable.getData().getLength();
+                for (int row = 0; row < length; row++)
+                {
+                    boolean thisRow = Utility.cast(checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row))).getFirst(), Boolean.class);
+                    if (thisRow && checkType == CheckType.NO_ROWS)
+                        return DataTypeUtility.value(false);
+                    else if (!thisRow && checkType == CheckType.ALL_ROWS)
+                        return DataTypeUtility.value(false);
+                    else if (thisRow && checkType == CheckType.ANY_ROW)
+                        return DataTypeUtility.value(true);
+                }
+                if (checkType == CheckType.ANY_ROW)
+                    return DataTypeUtility.value(false);
+                else
+                    return DataTypeUtility.value(true);
+            }
+            
+            throw new UserException("Cannot find table: " + srcTableId);
+        }
     }
 
     @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
-        return getColumnLookup(getManager(), srcTableId);
+        return getColumnLookup(getManager(), srcTableId, checkType);
     }
 
     @OnThread(Tag.Any)
-    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId)
+    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId, CheckType checkType)
     {
         return new ColumnLookup()
         {
@@ -158,7 +186,10 @@ public class Check extends Transformation
                         switch (columnReferenceType)
                         {
                             case CORRESPONDING_ROW:
-                                return new Pair<>(column.getFirst(), column.getSecond().getType());
+                                if (checkType == CheckType.STANDALONE)
+                                    return null;
+                                else
+                                    return new Pair<>(column.getFirst(), column.getSecond().getType());
                             case WHOLE_COLUMN:
                                 Column columnFinal = column.getSecond();
                                 return new Pair<>(column.getFirst(), DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType())));
@@ -186,6 +217,8 @@ public class Check extends Transformation
                             for (Column column : t.getData().getColumns())
                             {
                                 columns.add(new ColumnReference(column.getName(), ColumnReferenceType.WHOLE_COLUMN));
+                                if (checkType != CheckType.STANDALONE)
+                                    columns.add(new ColumnReference(column.getName(), ColumnReferenceType.CORRESPONDING_ROW));
                             }
                         }
 

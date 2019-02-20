@@ -29,7 +29,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), columnLookup, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), e -> {curValue = e;});
         curValue = expressionEditor.save();
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));

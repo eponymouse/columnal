@@ -48,12 +48,14 @@ import records.gui.table.HeadedDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Check;
+import records.transformations.Check.CheckType;
 import records.transformations.SummaryStatistics;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.ImplicitLambdaArg;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TupleExpression;
@@ -65,6 +67,7 @@ import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gui.trait.ClickOnTableHeaderTrait;
+import test.gui.trait.ComboUtilTrait;
 import test.gui.trait.CreateDataTableTrait;
 import test.gui.trait.EnterExpressionTrait;
 import test.gui.util.FXApplicationTest;
@@ -91,7 +94,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestCreateEditTransformation extends FXApplicationTest implements CreateDataTableTrait, ClickOnTableHeaderTrait, EnterExpressionTrait
+public class TestCreateEditTransformation extends FXApplicationTest implements CreateDataTableTrait, ClickOnTableHeaderTrait, EnterExpressionTrait, ComboUtilTrait
 {
     private static class AggCalculation
     {
@@ -519,33 +522,75 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         List<Column> srcColumns = srcData.getColumns();
         Column srcColumn = srcColumns.get(r.nextInt(srcColumns.size()));
         
-        @Value Object thresholdItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        // Standalone is randomly substituted for some of these later on:
+        ImmutableList<CheckType> possibleTypes = ImmutableList.of(CheckType.ALL_ROWS, CheckType.NO_ROWS, CheckType.ALL_ROWS);
+        CheckType checkType = possibleTypes.get(r.nextInt(possibleTypes.size()));
+        if (srcColumn.getLength() == 0)
+            return;
         
+        @Value Object containedItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        
+        final Expression checkExpression;
+        final boolean expectedPass = checkType == CheckType.ANY_ROW;
+        Expression containedItemExpression = Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType(), containedItem, null, true), tableManager.getTypeManager());
+        if (r.nextInt(3) == 0)
+        {
+            // Fake it using a stand-alone check
+            String function;
+            if (checkType == CheckType.ALL_ROWS)
+            {
+                function = "all";
+            }
+            else if (checkType == CheckType.NO_ROWS)
+            {
+                function = "none";
+            }
+            else
+            {
+                function = "any";
+            }
+                
+            checkExpression = new CallExpression(
+                tableManager.getUnitManager(), function,
+                    new ColumnReference(srcColumn.getName(), ColumnReferenceType.WHOLE_COLUMN),
+                    new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression)));
+            
+            checkType = CheckType.STANDALONE;
+        }
+        else
+        {
+            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), containedItemExpression));
+        }
+
         @SuppressWarnings("nullness")
-        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(1, 0)).max(Comparator.comparing(p -> p.columnIndex)).get();
-        
+        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(0, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
+
         keyboardMoveTo(virtualGrid, targetPos);
-        TestUtil.delay(100);
-        
+        TestUtil.delay(300);
+
         Log.debug("Aiming for " + targetPos);
         clickOnItemInBounds(from(TestUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
 
-        TestUtil.delay(100);
+        TestUtil.delay(300);
         clickOn(".id-new-check");
-        TestUtil.delay(100);
+        TestUtil.delay(300);
         write(srcTable.getId().getRaw());
         push(KeyCode.ENTER);
 
-        EqualExpression checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType(), thresholdItem, null, true), tableManager.getTypeManager())));
+        selectGivenComboBoxItem(lookup(".check-type-combo").query(), checkType);
+
+        push(KeyCode.TAB);
         
         // Enter expression:
         enterExpression(tableManager.getTypeManager(), checkExpression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
 
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
+        
+        sleep(500);
 
         Label label = (Label)withItemInBounds(lookup(".label"), virtualGrid, new RectangleBounds(targetPos, targetPos.offsetByRowCols(1, 0)), (n, p) -> {});
         
-        assertEquals("Pass", TestUtil.fx(() -> label.getText()));
+        assertEquals(expectedPass ? "OK" : "Fail", TestUtil.fx(() -> label.getText()));
     }
 }
