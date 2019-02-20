@@ -321,7 +321,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             private ArrayList<AggCalculation> usual() throws InternalException
             {
                 ArrayList<AggCalculation> calculations = new ArrayList<>();
-                ColumnReference groupExp = new ColumnReference(columnDetails.name, ColumnReferenceType.WHOLE_COLUMN);
+                ColumnReference groupExp = new ColumnReference(columnDetails.name, ColumnReferenceType.CORRESPONDING_ROW);
                 if (random.nextBoolean())
                 {
                     // Keep group as a list:
