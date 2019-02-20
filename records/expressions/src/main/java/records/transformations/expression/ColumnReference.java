@@ -30,6 +30,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility.ListEx;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -150,19 +151,16 @@ public class ColumnReference extends NonOperatorExpression
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         ColumnReference that = (ColumnReference) o;
-
-        if (tableName != null ? !tableName.equals(that.tableName) : that.tableName != null) return false;
-        return columnName.equals(that.columnName);
+        return Objects.equals(tableName, that.tableName) &&
+                columnName.equals(that.columnName) &&
+                referenceType == that.referenceType;
     }
 
     @Override
     public int hashCode()
     {
-        int result = tableName != null ? tableName.hashCode() : 0;
-        result = 31 * result + columnName.hashCode();
-        return result;
+        return Objects.hash(tableName, columnName, referenceType);
     }
 
     @Override
