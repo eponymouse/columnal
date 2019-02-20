@@ -14,6 +14,7 @@ import records.grammar.ExpressionLexer;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.transformations.expression.*;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import test.TestUtil;
@@ -113,7 +114,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         }
         else if (c == ColumnReference.class)
         {
-            write(((ColumnReference)expression).getColumnId().getRaw(), DELAY);
+            ColumnReference columnReference = (ColumnReference) expression;
+            write((columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnReference.getColumnId().getRaw(), DELAY);
             //push(KeyCode.ENTER);
         }
         else if (c == CallExpression.class)
@@ -279,6 +281,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             InvalidIdentExpression invalid = (InvalidIdentExpression) expression;
             write(invalid.getText(), DELAY);
+        }
+        else if (c == ImplicitLambdaArg.class)
+        {
+            write("?");
         }
         else
         {
