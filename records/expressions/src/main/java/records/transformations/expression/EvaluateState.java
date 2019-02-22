@@ -13,22 +13,29 @@ import java.util.OptionalInt;
 /**
  * Created by neil on 29/11/2016.
  */
-public class EvaluateState
+public final class EvaluateState
 {
     private final TypeManager typeManager;
     private final ImmutableMap<String, @Value Object> variables;
     private final OptionalInt rowIndex;
+    private final boolean recordExplanation;
 
     public EvaluateState(TypeManager typeManager, OptionalInt rowIndex)
     {
-        this(ImmutableMap.of(), typeManager, rowIndex);
+        this(ImmutableMap.of(), typeManager, rowIndex, false);
     }
 
-    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex)
+    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
+    {
+        this(ImmutableMap.of(), typeManager, rowIndex, recordExplanation);
+    }
+
+    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
     {
         this.variables = variables;
         this.typeManager = typeManager;
         this.rowIndex = rowIndex;
+        this.recordExplanation = recordExplanation;
     }
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException
@@ -40,7 +47,7 @@ public class EvaluateState
         }
         copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(copy.build(), typeManager, rowIndex);
+        return new EvaluateState(copy.build(), typeManager, rowIndex, recordExplanation);
     }
 
     /**
@@ -67,6 +74,6 @@ public class EvaluateState
 
     public boolean recordBooleanExplanation()
     {
-        return false;
+        return recordExplanation;
     }
 }

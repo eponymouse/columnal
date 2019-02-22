@@ -91,7 +91,7 @@ public class TestExpressionExplanation
     private ImmutableList<ExplanationLocation> l(String tableName, String columnName, int... rowIndexes)
     {
         return Arrays.stream(rowIndexes).mapToObj(rowIndex ->
-            new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), rowIndex)
+            new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), DataItemPosition.row(rowIndex))
         ).collect(ImmutableList.toImmutableList());
     }
     
@@ -103,13 +103,7 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager.getUnitManager(), typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty()) {
-            @Override
-            public boolean recordBooleanExplanation()
-            {
-                return true;
-            }
-        });
+        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty(), true));
         
         // Now explanation should be available:
         ImmutableList<ExplanationLocation> actual = expression.getBooleanExplanation();

@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -200,7 +201,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @OnThread(Tag.Simulation)
-    public @Nullable ExplanationLocation getElementLocation(int index)
+    public @Nullable ExplanationLocation getElementLocation(@TableDataRowIndex int index)
     {
         if (resolvedTableName != null)
             return new ExplanationLocation(resolvedTableName, columnName, index);

@@ -6,6 +6,8 @@ import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.BoundingBox;
@@ -17,9 +19,12 @@ import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.DataItemPosition;
+import records.data.ExplanationLocation;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
@@ -28,6 +33,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataDisplay;
 import records.gui.View;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -40,15 +46,18 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import records.gui.stable.ColumnDetails;
 import records.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,6 +76,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final TableBorderOverlay tableBorderOverlay;
     private final FloatingItem<Label> resultFloatingItem;
     private final StringProperty resultContent = new SimpleStringProperty("");
+    private final ObjectProperty<@Nullable ImmutableList<ExplanationLocation>> linkLocation = new SimpleObjectProperty<>(null);
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -91,11 +101,36 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             protected Label makeCell(VisibleBounds visibleBounds)
             {
                 Label label = new Label("");
+                label.getStyleClass().add("check-result");
                 label.textProperty().bind(resultContent);
-                Tooltip tooltip = new Tooltip();
-                tooltip.textProperty().bind(resultContent);
-                Tooltip.install(label, tooltip);
+                FXUtility.addChangeListenerPlatformNN(label.hoverProperty(), h -> {
+                    if (h && linkLocation.get() != null)
+                        label.setUnderline(true);
+                    else
+                        label.setUnderline(false);
+                });
+                label.setOnMouseClicked(e -> {
+                    FXUtility.mouse(this).jumpToExplanation();
+                });
                 return label;
+            }
+
+            @OnThread(Tag.FXPlatform)
+            private void jumpToExplanation()
+            {
+                ImmutableList<ExplanationLocation> locations = linkLocation.get();
+                if (locations != null)
+                {
+                    if (locations.size() == 1)
+                    {
+                        @Nullable CellSelection selection = FXUtility.mouse(CheckDisplay.this).makeSelection(parent.getManager(), locations.get(0));
+                        if (selection != null)
+                        {
+                            @NonNull CellSelection selectionNN = selection;
+                            withParent_(g -> g.select(selectionNN));
+                        }
+                    }
+                }
             }
 
             @Override
@@ -107,7 +142,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @Override
             public void keyboardActivate(CellPosition cellPosition)
             {
-
+                jumpToExplanation();
             }
         };
         floatingSupplier.addItem(resultFloatingItem);
@@ -126,8 +161,10 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             try
             {
                 boolean pass = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
+                ImmutableList<ExplanationLocation> failLocation = pass ? null : check.getExplanationLocation();
                 Platform.runLater(() -> {
-                    resultContent.set(pass ? "Pass" : "Fail");
+                    resultContent.set(pass ? "OK" : "Fail");
+                    linkLocation.set(failLocation);
                 });
             }
             catch (UserException | InternalException e)
@@ -141,6 +178,30 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         // Must be done as last item:
         @Initialized CheckDisplay usInit = this;
         this.check.setDisplay(usInit);
+    }
+
+    private @Nullable CellSelection makeSelection(TableManager tableManager, ExplanationLocation explanationLocation)
+    {
+        Table table = tableManager.getSingleTableOrNull(explanationLocation.tableId);
+        if (table == null)
+            return null;
+        @Nullable TableDisplayBase display = table.getDisplay();
+        if (display instanceof TableDisplay)
+        {
+            TableDisplay tableDisplay = (TableDisplay) display;
+            ImmutableList<ColumnDetails> displayColumns = tableDisplay.getDisplayColumns();
+            for (int i = 0; i < displayColumns.size(); i++)
+            {
+                ColumnDetails displayColumn = displayColumns.get(i);
+                if (displayColumn.getColumnId().equals(explanationLocation.columnId))
+                {
+                    @TableDataColIndex int relColumnIndex = DataItemPosition.col(i);
+                    CellPosition targetPos = tableDisplay.getDataPosition(explanationLocation.rowIndex, relColumnIndex);
+                    return tableDisplay.getSelectionForSingleCell(targetPos);
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -224,8 +285,77 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     @Override
     public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
-        // TODO
-        return null;
+        if (!cellPosition.equals(getPosition().offsetByRowCols(1, 0)))
+            return null;
+        
+        return new CellSelection()
+        {
+            @Override
+            public void doCopy()
+            {
+                // N/A
+            }
+
+            @Override
+            public void doPaste()
+            {
+                // N/A
+            }
+
+            @Override
+            public CellPosition getActivateTarget()
+            {
+                return cellPosition;
+            }
+
+            @Override
+            public CellSelection atHome(boolean extendSelection)
+            {
+                return this;
+            }
+
+            @Override
+            public CellSelection atEnd(boolean extendSelection)
+            {
+                return this;
+            }
+
+            @Override
+            public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns)
+            {
+                return Either.left(cellPosition.offsetByRowCols(byRows, byColumns));
+            }
+
+            @Override
+            public CellPosition positionToEnsureInView()
+            {
+                return cellPosition;
+            }
+
+            @Override
+            public RectangleBounds getSelectionDisplayRectangle()
+            {
+                return new RectangleBounds(cellPosition, cellPosition);
+            }
+
+            @Override
+            public boolean isExactly(CellPosition pos)
+            {
+                return cellPosition.equals(pos);
+            }
+
+            @Override
+            public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+            {
+                return tableDisplay == CheckDisplay.this;
+            }
+
+            @Override
+            public void gotoRow(Window parent)
+            {
+                // N/A
+            }
+        };
     }
 
     @Override

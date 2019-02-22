@@ -24,6 +24,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.InitialLoadDetails;
+import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -45,6 +46,7 @@ import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.table.HeadedDisplay;
+import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Check;
@@ -509,7 +511,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     }
     
     @Property(trials = 5)
-    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
+    public void testCheck(@When(seed=1L) @From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
         TestUtil.sleep(1000);
@@ -589,8 +591,22 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         sleep(500);
 
-        Label label = (Label)withItemInBounds(lookup(".label"), virtualGrid, new RectangleBounds(targetPos, targetPos.offsetByRowCols(1, 0)), (n, p) -> {});
+        CellPosition labelPos = targetPos.offsetByRowCols(1, 0);
+        Label label = (Label)withItemInBounds(lookup(".check-result"), virtualGrid, new RectangleBounds(targetPos, labelPos), (n, p) -> {});
         
         assertEquals(expectedPass ? "OK" : "Fail", TestUtil.fx(() -> label.getText()));
+
+        // Test out the clicking to see the failure location:
+        keyboardMoveTo(virtualGrid, labelPos);
+        if (r.nextBoolean())
+            clickOn(label);
+        else
+            push(KeyCode.ENTER);
+        sleep(200);
+        @SuppressWarnings("nullness")
+        TableDisplay display = (TableDisplay)TestUtil.fx(() -> srcTable.getDisplay());
+        @SuppressWarnings("units")
+        CellPosition actualFailPosition = TestUtil.fx(() -> display._test_getDataPosition(0 /* TODO */, srcColumns.indexOf(srcColumn)));
+        assertEquals(actualFailPosition, TestUtil.fx(() -> virtualGrid._test_getSelection().get().getActivateTarget()));
     }
 }

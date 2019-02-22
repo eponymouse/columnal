@@ -114,7 +114,7 @@ public class Check extends Transformation
         }
         if (checkType == CheckType.STANDALONE)
         {
-            return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
+            return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true)).getFirst();
         }
         else
         {
@@ -124,7 +124,7 @@ public class Check extends Transformation
                 int length = srcTable.getData().getLength();
                 for (int row = 0; row < length; row++)
                 {
-                    boolean thisRow = Utility.cast(checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row))).getFirst(), Boolean.class);
+                    boolean thisRow = Utility.cast(checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true)).getFirst(), Boolean.class);
                     if (thisRow && checkType == CheckType.NO_ROWS)
                         return DataTypeUtility.value(false);
                     else if (!thisRow && checkType == CheckType.ALL_ROWS)
@@ -305,6 +305,12 @@ public class Check extends Transformation
     public CheckType getCheckType()
     {
         return checkType;
+    }
+
+    // Only valid after fetching the result.
+    public @Nullable ImmutableList<ExplanationLocation> getExplanationLocation()
+    {
+        return checkExpression.getBooleanExplanation();
     }
 
     @Override

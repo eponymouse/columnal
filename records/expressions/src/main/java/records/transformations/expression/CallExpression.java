@@ -2,9 +2,11 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataItemPosition;
 import records.data.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.data.ValueFunction.ArgumentLocation;
@@ -211,7 +213,7 @@ public class CallExpression extends Expression
                         @Override
                         public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
                         {
-                            ExplanationLocation location = ((ColumnReference) arg).getElementLocation(index);
+                            ExplanationLocation location = ((ColumnReference) arg).getElementLocation(DataItemPosition.row(index));
                             if (location == null)
                                 return null;
                             else

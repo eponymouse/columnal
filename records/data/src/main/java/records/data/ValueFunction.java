@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;

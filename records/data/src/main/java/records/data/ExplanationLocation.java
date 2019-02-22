@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -11,9 +12,9 @@ public class ExplanationLocation
 {
     public final TableId tableId;
     public final ColumnId columnId;
-    public final int rowIndex;
+    public final @TableDataRowIndex int rowIndex;
 
-    public ExplanationLocation(TableId tableId, ColumnId columnId, int rowIndex)
+    public ExplanationLocation(TableId tableId, ColumnId columnId, @TableDataRowIndex int rowIndex)
     {
         this.tableId = tableId;
         this.columnId = columnId;

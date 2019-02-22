@@ -309,8 +309,17 @@ class TableHat extends FloatingItem<TableHatDisplay>
     {
         // The first time we are ever added, we will make a cell here and discard it,
         // but there's no good way round this:
-        TableHatDisplay item = getNode() != null ? getNode() : makeCell(visibleBounds);
-        
+        TableHatDisplay item;
+        if (getNode() != null)
+        {
+            item = getNode();
+        }
+        else
+        {
+            item = makeCell(visibleBounds);
+            FXUtility.runAfterDelay(Duration.millis(200), () -> tableDisplay.relayoutGrid());
+        }
+
         // We have N possibilities:
         //  - One is that the table header can be fully above the table
         //    In this case, the preferred width will be at most the table width
