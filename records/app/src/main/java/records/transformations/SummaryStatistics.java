@@ -27,6 +27,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -237,7 +238,7 @@ public class SummaryStatistics extends Transformation
             try
             {
                 @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
-                @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
+                @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
@@ -412,7 +413,7 @@ public class SummaryStatistics extends Transformation
             ImmutableList.Builder<Pair<ColumnId, Expression>> summaryTypes = ImmutableList.builder();
             for (SummaryColContext sumType : loaded.summaryCol())
             {
-                summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
+                summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
             }
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
             return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);

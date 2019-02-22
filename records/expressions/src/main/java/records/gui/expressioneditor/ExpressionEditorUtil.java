@@ -45,6 +45,7 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -166,17 +167,17 @@ public class ExpressionEditorUtil
 
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionSaver>> quickFixesForTypeError(TypeManager typeManager, Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression,ExpressionSaver>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression,ExpressionSaver>> quickFixes = new ArrayList<>();
         FXPlatformSupplierInt<Expression> makeTypeFix = () -> {
-            return TypeLiteralExpression.fixType(typeManager, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
+            return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
         };
         quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src)));
+            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, functionLookup, JellyType.fromConcrete(fixFinal), src)));
         }
         return quickFixes;
     }

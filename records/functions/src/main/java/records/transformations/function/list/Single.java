@@ -9,9 +9,8 @@ import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Utility.ListEx;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 public class Single extends FunctionDefinition
 {

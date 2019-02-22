@@ -38,6 +38,7 @@ import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.function.FunctionLookup;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -65,7 +66,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     private final ScrollPaneFill scrollPane;
     private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
     private final TypeManager typeManager;
-    
+    private final FunctionLookup functionLookup;
+
     // Selections take place within one consecutive and go from one operand to another (inclusive):
     private @Nullable SelectionInfo<?, ?> selection;
     private @Nullable ConsecutiveChild<?, ?> curHoverDropTarget;
@@ -73,7 +75,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     private final ErrorMessagePopup errorMessagePopup;
     private @Localized @Nullable String prompt = null;
 
-    public TopLevelEditor(OperandOps<EXPRESSION, SAVER> operations, TypeManager typeManager, String... styleClasses)
+    public TopLevelEditor(OperandOps<EXPRESSION, SAVER> operations, TypeManager typeManager, FunctionLookup functionLookup, String... styleClasses)
     {
         super(operations, null, "");
         this.container = new TopLevelEditorFlowPane();
@@ -88,6 +90,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         scrollPane.getStyleClass().add("top-level-editor-scroll-pane");
         scrollPane.setAlwaysFitToWidth(true);
         this.typeManager = typeManager;
+        this.functionLookup = functionLookup;
 
         container.getStyleClass().add("top-level-editor");
         container.getStyleClass().addAll(styleClasses);
@@ -363,7 +366,12 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     {
         return Stream.empty();
     }
-    
+
+    public FunctionLookup getFunctionLookup()
+    {
+        return functionLookup;
+    }
+
     private static enum SelectionCaret
     {START, END}
     

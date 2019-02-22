@@ -58,6 +58,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.LocationInfo;
+import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
@@ -1091,7 +1092,7 @@ public class TestUtil
             return null;
         
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
@@ -1129,7 +1130,7 @@ public class TestUtil
             return null;
             
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
@@ -1159,7 +1160,7 @@ public class TestUtil
     public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
-        Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
+        Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
         expression.check(TestUtil.dummyColumnLookup(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
         return expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst();
     }

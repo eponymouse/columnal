@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
@@ -77,7 +77,7 @@ public class ConstructorExpression extends NonOperatorExpression
             if (tag1.getInner() == null)
                 return new TaggedValue(t.tagIndex, null);
             else
-                return DataTypeUtility.value(new ValueFunction()
+                return ValueFunction.value(new ValueFunction()
                 {
                     @Override
                     public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException

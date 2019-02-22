@@ -44,8 +44,6 @@
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="module" module-name="gui-utility" />
     <orderEntry type="module" module-name="data" />
-    <orderEntry type="module" module-name="functions" />
-    <orderEntry type="library" name="Maven: ch.obermuhlner:big-math:2.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.5.7" level="project" />

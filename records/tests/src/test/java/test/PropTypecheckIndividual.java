@@ -42,6 +42,7 @@ import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FunctionList;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -481,6 +482,7 @@ public class PropTypecheckIndividual
 
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
     {
-        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, DummyManager.make().getTypeManager())));
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 }

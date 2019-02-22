@@ -15,6 +15,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.datatype.DataType;
 import records.data.explanation.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
@@ -39,10 +40,10 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionList;
 import records.typeExp.ExpressionBase;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -65,6 +66,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -245,7 +247,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      */
     public abstract String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames);
 
-    public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager) throws UserException, InternalException
+    public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
     {
         if (keyword != null)
         {
@@ -259,7 +261,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         {
             return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
             {
-                return new CompileExpression(typeManager).visit(p.completeExpression().topLevelExpression());
+                return new CompileExpression(typeManager, functionLookup).visit(p.completeExpression().topLevelExpression());
             });
         }
         catch (RuntimeException e)
@@ -292,10 +294,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {
         private final TypeManager typeManager;
+        private final FunctionLookup functionLookup;
 
-        public CompileExpression(TypeManager typeManager)
+        public CompileExpression(TypeManager typeManager, FunctionLookup functionLookup)
         {
             this.typeManager = typeManager;
+            this.functionLookup = functionLookup;
         }
 
         @Override
@@ -506,10 +510,10 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitStandardFunction(StandardFunctionContext ctx)
         {
             String functionName = ctx.ident().getText();
-            @Nullable FunctionDefinition functionDefinition = null;
+            @Nullable StandardFunctionDefinition functionDefinition = null;
             try
             {
-                functionDefinition = FunctionList.lookup(typeManager.getUnitManager(), functionName);
+                functionDefinition = functionLookup.lookup(functionName);
             }
             catch (InternalException e)
             {
@@ -676,16 +680,18 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     protected abstract StyledString toDisplay(BracketedStatus bracketedStatus);
 
     // Only for testing:
-    public static interface _test_TypeVary extends FunctionDefinition._test_TypeVary<Expression>
+    public static interface _test_TypeVary
     {
-        /*
         public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;
         public Expression getNonNumericType() throws InternalException, UserException;
 
         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
-        */
+
+        public Expression makeArrayExpression(ImmutableList<Expression> items);
+
+        public TypeManager getTypeManager();
     }
 
     public static class MultipleTableLookup implements ColumnLookup

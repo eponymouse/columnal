@@ -32,6 +32,7 @@ import records.grammar.UnitParser.ScaleContext;
 import records.gui.expressioneditor.UnitEditor;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.UnitExpression;
+import records.transformations.function.FunctionList;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -216,7 +217,7 @@ public class UnitsDialog extends Dialog<Void>
             @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
             scale = new TextField(equiv == null ? "" : equiv.getFirst().toString());
             scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
-            definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
+            definition = new UnitEditor(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
             definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
             Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
             this.equivalentTickBox = fullDefinition.getFirst();

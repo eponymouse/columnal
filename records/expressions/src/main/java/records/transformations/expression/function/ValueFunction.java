@@ -1,5 +1,6 @@
-package records.data;
+package records.transformations.expression.function;
 
+import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -104,8 +105,16 @@ public abstract class ValueFunction
     
     public static interface ArgumentLocation
     {
+        @OnThread(Tag.Simulation)
         @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException;
-        
+
+        @OnThread(Tag.Simulation)
         @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index);
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ValueFunction value(@UnknownIfValue ValueFunction function)
+    {
+        return function;
     }
 }

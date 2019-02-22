@@ -10,6 +10,7 @@ import records.data.datatype.DataType;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.DialogPaneWithSideButtons;
@@ -29,7 +30,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
         curValue = expressionEditor.save();
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));

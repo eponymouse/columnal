@@ -31,6 +31,7 @@ import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.function.FunctionLookup;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -96,7 +97,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             {
                 saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));
             }
-            latestType.set(dataType == null ? null : saver.recordLeftError(getTypeManager(), expression, dataType.typeExp.toConcreteType(getTypeManager())));
+            latestType.set(dataType == null ? null : saver.recordLeftError(getTypeManager(), getFunctionLookup(), expression, dataType.typeExp.toConcreteType(getTypeManager())));
             //Log.debug("Latest type: " + dataType);
             //errorDisplayers.showAllTypes(tableManager.getTypeManager());
         }
@@ -112,9 +113,9 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return expression;
     }
 
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(EXPRESSION_OPS, typeManager, "expression-editor");
+        super(EXPRESSION_OPS, typeManager, functionLookup, "expression-editor");
         this.columnLookup = columnLookup;
         FXUtility.addChangeListenerPlatformNN(this.columnLookup, c -> {
             Utility.later(this).selfChanged();
@@ -309,6 +310,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     protected @Nullable LoadableExpression<Expression, ExpressionSaver> parse(String src) throws InternalException, UserException
     {
-        return Expression.parse(null, src, getTypeManager());
+        return Expression.parse(null, src, getTypeManager(), getFunctionLookup());
     }
 }

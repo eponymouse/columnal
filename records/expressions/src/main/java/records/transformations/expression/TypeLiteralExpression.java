@@ -14,10 +14,10 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -43,25 +43,25 @@ public class TypeLiteralExpression extends NonOperatorExpression
         this.type = type;
     }
 
-    public static Expression fixType(TypeManager typeManager, JellyType fix, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(TypeManager typeManager, FunctionLookup functionLookup, JellyType fix, @Recorded Expression expression) throws InternalException
     {
         try
         {
-            return fixType(typeManager, TypeExpression.fromJellyType(fix, typeManager), expression);
+            return fixType(functionLookup, TypeExpression.fromJellyType(fix, typeManager), expression);
         }
         catch (UserException e)
         {
             // If we have a user exception, we are trying to fix to a non-existent type.
             // Probably means we fucked up, but just use blank type:
             Log.log(e);
-            return fixType(typeManager, new InvalidIdentTypeExpression(""), expression);
+            return fixType(functionLookup, new InvalidIdentTypeExpression(""), expression);
         }
     }
     
     @SuppressWarnings("recorded") // Don't need to record when making a fix
-    public static Expression fixType(TypeManager typeManager, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(FunctionLookup functionLookup, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
     {
-        FunctionDefinition asType = FunctionList.lookup(typeManager.getUnitManager(), "asType");
+        StandardFunctionDefinition asType = functionLookup.lookup( "asType");
         if (asType == null)
             throw new InternalException("Missing asType function");
         if (expression instanceof CallExpression

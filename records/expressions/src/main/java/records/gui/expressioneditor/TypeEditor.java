@@ -13,6 +13,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import utility.Either;
@@ -27,9 +28,9 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     public static final DataFormat TYPE_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     private final FXPlatformConsumer<TypeExpression> onChange;
 
-    public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<TypeExpression> onChange)
+    public TypeEditor(TypeManager typeManager, FunctionLookup functionLookup, TypeExpression startingValue, FXPlatformConsumer<TypeExpression> onChange)
     {
-        super(new TypeExpressionOps(), typeManager, "type-editor");
+        super(new TypeExpressionOps(), typeManager, functionLookup, "type-editor");
         
         this.onChange = onChange;
         onChange.consume(startingValue);

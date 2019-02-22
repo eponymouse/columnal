@@ -5,8 +5,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 /**
  * A helper extension for ValueFunction which does the casting

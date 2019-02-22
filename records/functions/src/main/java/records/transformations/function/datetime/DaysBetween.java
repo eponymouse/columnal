@@ -12,8 +12,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
-import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;

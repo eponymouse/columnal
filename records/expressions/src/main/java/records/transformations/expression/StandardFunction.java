@@ -13,7 +13,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.function.ValueFunction;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -31,11 +32,11 @@ import java.util.stream.Stream;
 
 public class StandardFunction extends NonOperatorExpression
 {
-    private final FunctionDefinition functionDefinition;
+    private final StandardFunctionDefinition functionDefinition;
     // null if type check fails for some reason:
     private @MonotonicNonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type;
 
-    public StandardFunction(FunctionDefinition functionDefinition)
+    public StandardFunction(StandardFunctionDefinition functionDefinition)
     {
         this.functionDefinition = functionDefinition;
     }
@@ -55,7 +56,7 @@ public class StandardFunction extends NonOperatorExpression
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> typeFinal = type;
-        return new Pair<>(DataTypeUtility.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+        return new Pair<>(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
             Either<MutUnitVar, MutVar> typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
@@ -130,7 +131,7 @@ public class StandardFunction extends NonOperatorExpression
         return functionDefinition.getName();
     }
 
-    public FunctionDefinition getFunction()
+    public StandardFunctionDefinition getFunction()
     {
         return functionDefinition;
     }
@@ -140,4 +141,5 @@ public class StandardFunction extends NonOperatorExpression
     {
         return this == toReplace ? replaceWith : this;
     }
+
 }

@@ -12,6 +12,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.function.FunctionList;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class BackwardsFromText extends BackwardsProvider
     {
         String val = DataTypeUtility.valueToString(targetType, targetValue, null);
         return ImmutableList.of(
-            () -> new CallExpression(parent.getTypeManager().getUnitManager(), "from text to",
+            () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                 new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),
                 new StringLiteral(val)    
             )
@@ -40,7 +41,7 @@ public class BackwardsFromText extends BackwardsProvider
     {        
         String val = DataTypeUtility.valueToString(targetType, targetValue, null);
         return ImmutableList.of(
-                () -> new CallExpression(parent.getTypeManager().getUnitManager(), "from text to",
+                () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                         new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),
                         parent.make(DataType.TEXT, val, maxLevels - 1)
                 )

@@ -31,6 +31,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Calculate;
 import records.transformations.expression.*;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -228,7 +229,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager());
+        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         
         // Check once using structured entry:
         testEntry(new ExpressionValue(

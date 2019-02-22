@@ -21,6 +21,7 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -38,7 +39,7 @@ import records.error.UserException;
 import test.TestUtil;
 import utility.Utility;
 import utility.Utility.ListEx;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -156,7 +157,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             {
                 if (resultType.equals(DataType.BOOLEAN) && argTypes.size() == 1)
                 {
-                    return DataTypeUtility.value(argTypes.get(0).apply(new DataTypeVisitor<ValueFunction>()
+                    return ValueFunction.value(argTypes.get(0).apply(new DataTypeVisitor<ValueFunction>()
                     {
                         private <T> ValueFunction f(Class<T> type, SimulationFunction<@Value T, Boolean> predicate)
                         {
@@ -320,7 +321,7 @@ public abstract class GenValueBase<T> extends Generator<T>
     {
         try
         {
-            return new CallExpression(new UnitManager(), name, args);
+            return new CallExpression(FunctionList.getFunctionLookup(new UnitManager()), name, args);
         }
         catch (InternalException | UserException e)
         {

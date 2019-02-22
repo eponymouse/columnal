@@ -37,6 +37,7 @@ import records.gui.expressioneditor.OperandOps;
 import records.gui.grid.RectangleBounds;
 import records.transformations.Calculate;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
@@ -266,7 +267,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
 
     private String dotCssClassFor(String expression) throws InternalException, UserException
     {
-        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.make().getTypeManager()));
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     /**

@@ -70,6 +70,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.function.FunctionList;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledString;
@@ -814,11 +815,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             if (type.isNumber())
             {
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "sum", c, newId -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(tableManager.getUnitManager(), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "average", c, newId -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(tableManager.getUnitManager(), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
             }
         }

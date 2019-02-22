@@ -25,6 +25,7 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -169,7 +170,7 @@ public class Calculate extends Transformation
             };
             @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
 
-            DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
+            DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
                 throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), error == null ? StyledString.s("") : error)); // A bit redundant, but control flow will pan out right
             @NonNull DataType typeFinal = concrete;
@@ -279,7 +280,7 @@ public class Calculate extends Transformation
             TransformContext transform = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.transform());
             for (TransformItemContext transformItemContext : transform.transformItem())
             {
-                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager()));
+                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
             }
 
             return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());

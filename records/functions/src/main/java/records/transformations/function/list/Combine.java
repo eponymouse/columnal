@@ -12,9 +12,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Utility.ListEx;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 // Foldr, by another name.
 public class Combine extends FunctionDefinition

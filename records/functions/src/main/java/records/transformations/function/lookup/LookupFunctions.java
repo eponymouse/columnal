@@ -16,7 +16,7 @@ import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Utility.ListEx;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class LookupFunctions
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
-                    return DataTypeUtility.value(new ValueFunction()
+                    return ValueFunction.value(new ValueFunction()
                     {
                         @Override
                         public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
@@ -54,7 +54,7 @@ public class LookupFunctions
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
-                    return DataTypeUtility.value(new ValueFunction()
+                    return ValueFunction.value(new ValueFunction()
                     {
                         @Override
                         public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException

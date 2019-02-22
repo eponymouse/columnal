@@ -8,6 +8,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.CallExpression;
+import records.transformations.function.FunctionList;
 
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class BackwardsTuple extends BackwardsProvider
                 "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"
             ).get(elementIndex);
 
-            return new CallExpression(parent.getTypeManager().getUnitManager(), accessor, parent.make(tupleType, DataTypeUtility.value(tupleValue.build().toArray(new @Value Object[0])), maxLevels - 1));
+            return new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), accessor, parent.make(tupleType, DataTypeUtility.value(tupleValue.build().toArray(new @Value Object[0])), maxLevels - 1));
         });
     }
 }

@@ -24,7 +24,7 @@ import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.Random;
 

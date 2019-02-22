@@ -33,6 +33,7 @@ import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.function.FunctionList;
 import test.gen.GenImmediateData;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
@@ -150,7 +151,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
+                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
@@ -163,7 +164,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
+                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
 
         // Lengths should equal original:
@@ -234,14 +235,14 @@ public class PropRunTransformation
         }).findFirst();
         assumeTrue(numericColumn.isPresent());
 
-        Expression countExpression = new CallExpression(original.mgr.getUnitManager(), "list length", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
+        Expression countExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "list length", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
         SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         RecordSet summaryRS = summaryStatistics.getData();
         assertEquals(1, summaryRS.getLength());
         assertEquals(1, summaryRS.getColumns().size());
         assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryRS.getColumns().get(0).getType().getCollapsed(0)));
 
-        Expression sumExpression = new CallExpression(original.mgr.getUnitManager(),"sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
+        Expression sumExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
         summaryStatistics = new SummaryStatistics(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
         summaryRS = summaryStatistics.getData();
         assertEquals(1, summaryRS.getLength());

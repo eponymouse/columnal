@@ -9,6 +9,7 @@ import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.ExpressionKind;
+import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -46,12 +47,12 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message
      */
-    public default <T> @Nullable T recordLeftError(TypeManager typeManager, Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    public default <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return errorOrVal.<@Nullable T>either(err -> {
             @Nullable DataType fix = err.getSuggestedTypeFix();
             recordError(src, err.getErrorText());
-            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(typeManager, src, fix));
+            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(typeManager, functionLookup, src, fix));
             return null;
         }, val -> val);
     }

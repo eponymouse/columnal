@@ -22,6 +22,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -135,7 +136,7 @@ public class BackwardsMatch extends BackwardsProvider
                         return ImmutableList.of(() -> new IdentExpression(name));
                     else
                     {
-                        return ImmutableList.of(() -> new CallExpression(parent.getTypeManager().getUnitManager(), "not", new IdentExpression(name)),
+                        return ImmutableList.of(() -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "not", new IdentExpression(name)),
                             () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), new IdentExpression(name)))
                         );
                     }

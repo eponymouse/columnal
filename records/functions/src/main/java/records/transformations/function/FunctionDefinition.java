@@ -2,7 +2,6 @@ package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.identifier.qual.ExpressionIdentifier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -14,6 +13,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -21,10 +21,9 @@ import records.typeExp.units.MutUnitVar;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,12 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
 
 /**
  * This class is one function, it will have a unique name, a single type and a single implementation
  */
-public abstract class FunctionDefinition
+public abstract class FunctionDefinition implements StandardFunctionDefinition
 {
     private static final ResourceBundle FUNCTION_MINIS = ResourceBundle.getBundle("function_minis");
     private static final ResourceBundle FUNCTION_TYPEARGS = ResourceBundle.getBundle("function_typeargs");
@@ -232,21 +230,6 @@ public abstract class FunctionDefinition
         // share a type variable which will get unified during the inference
         // Returns type of function, and type vars by name.
         public Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
-    }
-
-    // Only for testing:
-    public static interface _test_TypeVary<EXPRESSION>
-    {
-        public EXPRESSION getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
-        public EXPRESSION getAnyType() throws UserException, InternalException;
-        public EXPRESSION getNonNumericType() throws InternalException, UserException;
-
-        public EXPRESSION getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
-        public List<EXPRESSION> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
-
-        public EXPRESSION makeArrayExpression(ImmutableList<EXPRESSION> items);
-        
-        public TypeManager getTypeManager();
     }
 
     // For testing: give a unit list and parameter list that should fail typechecking

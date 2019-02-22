@@ -5,6 +5,8 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.function.core.AsType;
 import records.transformations.function.core.AsUnit;
 import records.transformations.function.core.TypeOf;
@@ -115,5 +117,23 @@ public class FunctionList
                 return functionDefinition;
         }
         return null;
+    }
+
+    public static FunctionLookup getFunctionLookup(UnitManager unitManager)
+    {
+        return new FunctionLookup()
+        {
+            @Override
+            public @Nullable StandardFunctionDefinition lookup(String functionName) throws InternalException
+            {
+                return FunctionList.lookup(unitManager, functionName);
+            }
+
+            @Override
+            public ImmutableList<StandardFunctionDefinition> getAllFunctions() throws InternalException
+            {
+                return Utility.mapListI(FunctionList.getAllFunctions(unitManager), f -> f);
+            }
+        };
     }
 }

@@ -21,6 +21,7 @@ import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
+import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -707,7 +708,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         TypeManager m = dummyManager.getTypeManager();
         return () -> {
             Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
-            return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), inner.getSecond()));
+            return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, FunctionList.getFunctionLookup(m.getUnitManager()), JellyType.fromConcrete(type), inner.getSecond()));
         };
     }
 

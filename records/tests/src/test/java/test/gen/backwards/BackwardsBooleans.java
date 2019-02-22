@@ -16,6 +16,7 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
+import records.transformations.function.FunctionList;
 import test.TestUtil;
 import utility.Pair;
 import utility.Utility;
@@ -176,7 +177,7 @@ public class BackwardsBooleans extends BackwardsProvider
         // If b == true, rhs == !lhs.  If b == false, rhs == lhs
         boolean rhs = b ? !lhs : lhs;
 
-        return new CallExpression(parent.getTypeManager().getUnitManager(), "xor", 
+        return new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "xor", 
             parent.make(DataType.BOOLEAN, lhs, maxLevels -1),
             parent.make(DataType.BOOLEAN, rhs, maxLevels -1));
     }

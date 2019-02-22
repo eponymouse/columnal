@@ -8,14 +8,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
-import records.data.ValueFunction.ArgumentLocation;
+import records.transformations.expression.function.ValueFunction.ArgumentLocation;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionList;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.typeExp.MutVar;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
@@ -27,7 +27,7 @@ import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.TaggedValue;
 import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,16 +54,16 @@ public class CallExpression extends Expression
     // Used for testing, and for creating quick recipe functions:
     // Creates a call to a named function
     @SuppressWarnings("recorded")
-    public CallExpression(UnitManager mgr, String functionName, Expression... args)
+    public CallExpression(FunctionLookup functionLookup, String functionName, Expression... args)
     {
-        this(nonNullLookup(mgr, functionName), ImmutableList.copyOf(args));
+        this(nonNullLookup(functionLookup, functionName), ImmutableList.copyOf(args));
     }
 
-    private static Expression nonNullLookup(UnitManager mgr, String functionName)
+    private static Expression nonNullLookup(FunctionLookup functionLookup, String functionName)
     {
         try
         {
-            FunctionDefinition functionDefinition = FunctionList.lookup(mgr, functionName);
+            StandardFunctionDefinition functionDefinition = functionLookup.lookup(functionName);
             if (functionDefinition != null)
                 return new StandardFunction(functionDefinition);
         }
@@ -204,12 +204,14 @@ public class CallExpression extends Expression
                     paramLocations[i] = new ArgumentLocation()
                     {
                         @Override
+                        @OnThread(Tag.Simulation)
                         public @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException
                         {
                             return arg.getBooleanExplanation();
                         }
 
                         @Override
+                        @OnThread(Tag.Simulation)
                         public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
                         {
                             ExplanationLocation location = ((ColumnReference) arg).getElementLocation(DataItemPosition.row(index));

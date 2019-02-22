@@ -3,6 +3,7 @@ package test.expressions;
 import org.junit.Test;
 import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -17,6 +18,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 
 import java.math.BigDecimal;
@@ -46,9 +48,10 @@ public class TestLoadSaveExpression
             new NumericLiteral(0, null),
             "0"
         );
+        TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            Expression.parse(null, "@column Card", DummyManager.make().getTypeManager())
+            Expression.parse(null, "@column Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
     @Test
@@ -58,9 +61,10 @@ public class TestLoadSaveExpression
             new NotEqualExpression(new StringLiteral("Card"), new StringLiteral("xxx")),
             "\"Card\" <> \"xxx\""
         );
+        TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@column Card <> \"xxx\"", DummyManager.make().getTypeManager())
+            Expression.parse(null, "@column Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
@@ -96,7 +100,7 @@ public class TestLoadSaveExpression
 
         assertBothWays(
             new AddSubtractExpression(Arrays.asList(
-                new CallExpression(new UnitManager(), "abs",
+                new CallExpression(FunctionList.getFunctionLookup(new UnitManager()), "abs",
                     new AddSubtractExpression(Arrays.asList(
                         new BooleanLiteral(true),
                         new BooleanLiteral(false),
@@ -112,7 +116,8 @@ public class TestLoadSaveExpression
 
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
-        assertEquals(expression, Expression.parse(null, src, DummyManager.make().getTypeManager()));
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        assertEquals(expression, Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
         assertEquals(src, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
     }
 }

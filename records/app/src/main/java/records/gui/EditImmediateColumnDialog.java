@@ -25,6 +25,7 @@ import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -105,7 +106,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 Log.log(e);
             }
         }
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()), typeExpression, t -> {
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();

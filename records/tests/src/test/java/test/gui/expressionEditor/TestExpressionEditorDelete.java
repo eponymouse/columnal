@@ -24,6 +24,7 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -158,7 +159,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testPaste(String original, int slotIndex, int subIndex, String paste, String expected, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
+        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         ExpressionEditor expressionEditor = enter(originalExp, r);
 
         ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
@@ -175,7 +176,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         Expression after = TestUtil.fx(() -> expressionEditor.save());
 
-        assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager()), after);
+        assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
         clickOn(".cancel-button");
     }
@@ -183,7 +184,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspaceRetype(String original, int deleteBefore, int deleteCount, String retype, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
+        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         ExpressionEditor expressionEditor = enter(originalExp, r);
 
         ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
@@ -225,8 +226,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspace(String original, int deleteBefore, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager());
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager());
+        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         ExpressionEditor expressionEditor = enter(originalExp, r);
         
         assertEquals(originalExp, TestUtil.fx(() -> expressionEditor.save()));
@@ -260,8 +261,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testDelete(String original, int deleteAfter, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager());
-        ExpressionEditor expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager()), r);
+        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        ExpressionEditor expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
         ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
 

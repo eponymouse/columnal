@@ -6,8 +6,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.SimulationFunction;
-import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 public class StringRight //extends FunctionDefinition
 {

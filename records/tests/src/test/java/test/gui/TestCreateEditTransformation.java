@@ -534,7 +534,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         final Expression checkExpression;
         final boolean expectedPass = checkType == CheckType.ANY_ROW;
-        Expression containedItemExpression = Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType(), containedItem, null, true), tableManager.getTypeManager());
+        Expression containedItemExpression = Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType(), containedItem, null, true), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
         if (r.nextInt(3) == 0)
         {
             // Fake it using a stand-alone check
@@ -553,7 +553,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             }
                 
             checkExpression = new CallExpression(
-                tableManager.getUnitManager(), function,
+                FunctionList.getFunctionLookup(tableManager.getUnitManager()), function,
                     new ColumnReference(srcColumn.getName(), ColumnReferenceType.WHOLE_COLUMN),
                     new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression)));
             

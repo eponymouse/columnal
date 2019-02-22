@@ -2,7 +2,7 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;

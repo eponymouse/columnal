@@ -33,6 +33,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
+import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeConcretisationError;
@@ -182,7 +183,7 @@ public class TestFromDoc
                     tables.put(new TableId(tableName), new KnownLengthRecordSet(columns, length));
                 }
 
-                Expression expression = Expression.parse(null, line, typeManager);
+                Expression expression = Expression.parse(null, line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
                 TypeState typeState = new TypeState(DummyManager.make().getUnitManager(), typeManager);
                 for (Entry<String, TypeExp> e : variables.entrySet())

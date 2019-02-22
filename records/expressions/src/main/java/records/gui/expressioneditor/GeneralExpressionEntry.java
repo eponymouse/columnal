@@ -8,7 +8,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import log.Log;
-import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -39,8 +38,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionList;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import utility.Either;
 import utility.ExFunction;
 import utility.Utility;
@@ -263,7 +261,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     @RequiresNonNull("parent")
     private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r) throws InternalException
     {
-        for (FunctionDefinition function : FunctionList.getAllFunctions(parent.getEditor().getTypeManager().getUnitManager()))
+        for (StandardFunctionDefinition function : parent.getEditor().getFunctionLookup().getAllFunctions())
         {
             r.add(new FunctionCompletion(function));
         }
@@ -360,9 +358,9 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
 
     public static class FunctionCompletion extends Completion
     {
-        private final FunctionDefinition function;
+        private final StandardFunctionDefinition function;
 
-        public FunctionCompletion(FunctionDefinition function)
+        public FunctionCompletion(StandardFunctionDefinition function)
         {
             this.function = function;
         }
@@ -1080,18 +1078,18 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 }
             }
 
-            ImmutableList<FunctionDefinition> allFunctions = ImmutableList.of();
+            ImmutableList<StandardFunctionDefinition> allFunctions = ImmutableList.of();
             TypeManager typeManager = parent.getEditor().getTypeManager();
             try
             {
-                allFunctions = FunctionList.getAllFunctions(typeManager.getUnitManager());
+                allFunctions = parent.getEditor().getFunctionLookup().getAllFunctions();
             }
             catch (InternalException e)
             {
                 Log.log(e);
             }
 
-            for (FunctionDefinition function : allFunctions)
+            for (StandardFunctionDefinition function : allFunctions)
             {
                 if (function.getName().equals(text))
                 {

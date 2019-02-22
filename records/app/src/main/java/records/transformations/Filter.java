@@ -29,6 +29,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -142,7 +143,7 @@ public class Filter extends Transformation
                 @Nullable TypeExp checked = filterExpression.checkExpression(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
-                    typeFinal = errors.recordLeftError(getManager().getTypeManager(), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
+                    typeFinal = errors.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
                     throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, DataType.BOOLEAN)
@@ -230,7 +231,7 @@ public class Filter extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            return new Filter(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+            return new Filter(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
         }
 
         @Override

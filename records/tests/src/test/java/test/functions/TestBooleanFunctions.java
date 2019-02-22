@@ -16,7 +16,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

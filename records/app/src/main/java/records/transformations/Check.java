@@ -28,6 +28,8 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -95,7 +97,7 @@ public class Check extends Transformation
             @Nullable TypeExp checked = checkExpression.checkExpression(lookup, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
-                typeFinal = errors.recordLeftError(getManager().getTypeManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
+                typeFinal = errors.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
             if (typeFinal == null)
                 throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, lookup, DataType.BOOLEAN)
@@ -348,7 +350,7 @@ public class Check extends Transformation
             else
                 checkType = CheckType.STANDALONE;
             
-            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), mgr.getTypeManager()));
+            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
         }
 
         @Override

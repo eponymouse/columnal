@@ -13,7 +13,6 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.MutVar;
-import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -21,7 +20,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -153,7 +152,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         else if (lambdaArgs.size() == 1)
         {
             // Takes non-tuple parameter:
-            return DataTypeUtility.value(new ValueFunction()
+            return ValueFunction.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
@@ -166,7 +165,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         else
         {
             // Takes tuple parameter:
-            return DataTypeUtility.value(new ValueFunction()
+            return ValueFunction.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException

@@ -12,12 +12,14 @@ import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -74,13 +76,15 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     public void testNoOpEdit(String src) throws UserException, InternalException
     {
-        testNoOpEdit(Expression.parse(null, src, DummyManager.make().getTypeManager()));
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        testNoOpEdit(Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     @OnThread(Tag.FXPlatform)
     private void testNoOpEdit(Expression expression)
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(TestUtil.dummyColumnLookup()), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.make().getTypeManager(), e -> {
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(TestUtil.dummyColumnLookup()), new ReadOnlyObjectWrapper<@Nullable DataType>(null), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()),  e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
@@ -103,7 +107,8 @@ public class PropLoadSaveExpression extends FXApplicationTest
     {
         String saved = expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
-        Expression reloaded = Expression.parse(null, saved, TestUtil.managerWithTestTypes().getFirst().getTypeManager());
+        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
+        Expression reloaded = Expression.parse(null, saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);

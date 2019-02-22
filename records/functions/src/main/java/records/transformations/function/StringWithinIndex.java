@@ -6,9 +6,8 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Utility.ListEx;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.List;

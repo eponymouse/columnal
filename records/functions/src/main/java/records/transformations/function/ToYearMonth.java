@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -15,8 +14,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
-import utility.Utility;
-import records.data.ValueFunction;
+import records.transformations.expression.function.ValueFunction;
 
 import java.time.YearMonth;
 import java.time.temporal.Temporal;

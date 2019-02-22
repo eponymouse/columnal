@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import utility.Pair;
 
@@ -32,7 +33,7 @@ public abstract class BackwardsProvider
 
     protected final CallExpression call(String name, Expression... args)
     {
-        return new CallExpression(parent.getTypeManager().getUnitManager(), name, args);
+        return new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), name, args);
     }
 
     protected Unit getUnit(String name) throws InternalException, UserException

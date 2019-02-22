@@ -23,12 +23,14 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
+import records.data.datatype.TypeManager;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.View;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.transformations.Calculate;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
@@ -201,8 +203,9 @@ public class TestExpressionEditorDragPaste extends FXApplicationTest implements 
                             int destBeforeNodexIndexIncl,
                             String afterSrc) throws Exception
     {
-        Expression expression = Expression.parse(null, expressionSrc, DummyManager.make().getTypeManager());
-        Expression after = Expression.parse(null, afterSrc, DummyManager.make().getTypeManager());
+        TypeManager typeManager = DummyManager.make().getTypeManager();
+        Expression expression = Expression.parse(null, expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression after = Expression.parse(null, afterSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         for (MoveMethod moveMethod : MoveMethod.values())
         {

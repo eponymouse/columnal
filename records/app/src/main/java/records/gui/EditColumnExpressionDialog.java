@@ -19,6 +19,7 @@ import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -46,7 +47,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         ColumnNameTextField field = new ColumnNameTextField(initialName);
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {

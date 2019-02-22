@@ -19,6 +19,7 @@ import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FunctionList;
 import styled.StyledString;
 import test.DummyManager;
 import threadchecker.OnThread;
@@ -99,7 +100,7 @@ public class TestExpressionExplanation
     private void testExplanation(String src, @Nullable ImmutableList<ExplanationLocation> expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression expression = Expression.parse(null, src, typeManager);
+        Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager.getUnitManager(), typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);

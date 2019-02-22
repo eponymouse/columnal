@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.transformations.expression.TypeLiteralExpression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class BackwardsFixType extends BackwardsProvider
     {
         return ImmutableList.of(() -> {
             TypeManager m = parent.getTypeManager();
-            return TypeLiteralExpression.fixType(m, JellyType.fromConcrete(targetType), parent.make(targetType, targetValue, maxLevels - 1));
+            return TypeLiteralExpression.fixType(m, FunctionList.getFunctionLookup(m.getUnitManager()), JellyType.fromConcrete(targetType), parent.make(targetType, targetValue, maxLevels - 1));
         });
     }
 }

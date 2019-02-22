@@ -17,6 +17,7 @@ import records.error.UserException;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import utility.Either;
@@ -31,9 +32,9 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
     public static final DataFormat UNIT_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     private final FXPlatformConsumer<@Nullable Unit> onChange;
 
-    public UnitEditor(TypeManager typeManager, @Nullable UnitExpression startingValue, FXPlatformConsumer<@Nullable Unit> onChange)
+    public UnitEditor(TypeManager typeManager, FunctionLookup functionLookup, @Nullable UnitExpression startingValue, FXPlatformConsumer<@Nullable Unit> onChange)
     {
-        super(new UnitExpressionOps(), typeManager, "unit-editor");
+        super(new UnitExpressionOps(), typeManager, functionLookup, "unit-editor");
         
         this.onChange = onChange;
         onChange.consume(null);

@@ -11,6 +11,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -98,7 +99,7 @@ public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValu
     {
         try
         {
-            return Expression.parse(null, DataTypeUtility.valueToString(dataType, object, null, true), dummyManager.getTypeManager());
+            return Expression.parse(null, DataTypeUtility.valueToString(dataType, object, null, true), dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         }
         catch (InternalException | UserException e)
         {

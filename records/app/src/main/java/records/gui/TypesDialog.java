@@ -40,6 +40,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.IdentTypeExpression;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -379,7 +380,7 @@ public class TypesDialog extends Dialog<Void>
                 }
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
-                this.innerType = new TypeEditor(typeManager, startingExpression, latest -> {
+                this.innerType = new TypeEditor(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), startingExpression, latest -> {
                     updateCurrentValue(latest);
                 });
                 innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));
