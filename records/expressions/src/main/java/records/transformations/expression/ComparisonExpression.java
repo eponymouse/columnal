@@ -4,7 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ExplanationLocation;
+import records.data.explanation.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -144,7 +144,7 @@ public class ComparisonExpression extends NaryOpExpression
             @Value Object next = expressions.get(i).getValue(state).getFirst();
             if (!operators.get(i - 1).comparisonTrue(cur, next))
             {
-                if (state.recordBooleanExplanation())
+                if (state.recordExplanation())
                 {
                     @Nullable ImmutableList<ExplanationLocation> aExpl = expressions.get(i - 1).getBooleanExplanation();
                     @Nullable ImmutableList<ExplanationLocation> bExpl = expressions.get(i).getBooleanExplanation();

@@ -72,7 +72,7 @@ public final class EvaluateState
         return rowIndex.orElseThrow(() -> new UserException("No row index available."));
     }
 
-    public boolean recordBooleanExplanation()
+    public boolean recordExplanation()
     {
         return recordExplanation;
     }

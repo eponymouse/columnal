@@ -1,7 +1,9 @@
-package records.data;
+package records.data.explanation;
 
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
+import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

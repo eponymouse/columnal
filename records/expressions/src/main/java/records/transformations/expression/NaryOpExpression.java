@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.ExplanationLocation;
+import records.data.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;

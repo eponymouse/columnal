@@ -6,7 +6,9 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
+import records.data.ValueFunction;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
@@ -19,8 +21,11 @@ import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
 
 import java.util.Objects;
 import java.util.Random;
@@ -67,7 +72,20 @@ public class ConstructorExpression extends NonOperatorExpression
     {
         return new Pair<>(tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");
-        }, t -> t.makeValue()), state);
+        }, t -> {
+            TagType<?> tag1 = t.getTagInfo();
+            if (tag1.getInner() == null)
+                return new TaggedValue(t.tagIndex, null);
+            else
+                return DataTypeUtility.value(new ValueFunction()
+                {
+                    @Override
+                    public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                    {
+                        return new TaggedValue(t.tagIndex, arg(0));
+                    }
+                });
+        }), state);
     }
 
     @Override

@@ -13,10 +13,8 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -24,16 +22,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.DataItemPosition;
-import records.data.ExplanationLocation;
+import records.data.explanation.Explanation;
+import records.data.explanation.ExplanationLocation;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
-import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DataDisplay;
 import records.gui.View;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -48,6 +45,7 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ColumnDetails;
 import records.transformations.Check;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -59,7 +57,9 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -376,5 +376,33 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
             mostRecentBounds.set(cellPosition);
+    }
+    
+    public ImmutableList<StyledString> makeExplanation(Explanation explanation)
+    {
+        return makeExplanation(explanation, new HashSet<>());
+    }
+
+    public ImmutableList<StyledString> makeExplanation(Explanation explanation, HashSet<Explanation> alreadyDescribed)
+    {
+        ImmutableList.Builder<StyledString> output = ImmutableList.builder();
+        // We do a depth-first traversal and print root nodes first,
+        // thus leading to an explanation of what is going on.
+        ImmutableList<Explanation> toProcess = Utility.appendToList(explanation.getDirectSubExplanations(), explanation);
+        for (Explanation directSubExplanation : toProcess)
+        {
+            if (alreadyDescribed.contains(directSubExplanation))
+                continue;
+            
+            StyledString ss = directSubExplanation.describe(alreadyDescribed, this::hyperlinkLocation);
+            alreadyDescribed.add(directSubExplanation);
+            output.add(ss);
+        }
+        return output.build();
+    }
+
+    private StyledString hyperlinkLocation(ExplanationLocation explanationLocation)
+    {
+        return StyledString.s("TODO!#!");
     }
 }

@@ -15,7 +15,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
-import records.data.ExplanationLocation;
+import records.data.explanation.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -822,7 +822,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      * @return
      */
     @OnThread(Tag.Simulation)
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation() throws InternalException
     {
         return null;
     }

@@ -8,6 +8,7 @@ import records.data.*;
 import records.data.Table.InitialLoadDetails;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
+import records.data.explanation.ExplanationLocation;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;

@@ -1,29 +1,36 @@
 package records.data;
 
 import annotation.qual.Value;
-import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
+import records.data.explanation.Explanation;
+import records.data.explanation.ExplanationLocation;
 import records.error.InternalException;
 import records.error.UserException;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.Set;
 import java.util.function.Function;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
 public abstract class ValueFunction
 {
-    protected boolean recordBooleanExplanation = false;
-    protected @Nullable ImmutableList<ExplanationLocation> booleanExplanation;
+    private final String name;
+    protected boolean recordExplanation = false;
+    //protected @MonotonicNonNull Explanation explanation;
+    protected @Nullable ImmutableList<ExplanationLocation> explanation;
     private @Value Object @Nullable [] curArgs;
     private ArgumentLocation @Nullable[] curLocs;
     
     @OnThread(Tag.Any)
-    protected ValueFunction()
+    protected ValueFunction(/*String name*/)
     {
+        this.name = "TODO!!";
     }
 
     @OnThread(Tag.Simulation)
@@ -33,7 +40,21 @@ public abstract class ValueFunction
     public final @Value Object call(@Value Object[] args) throws InternalException, UserException
     {
         this.curArgs = args;
-        return call();
+        if (recordExplanation)
+        {
+            // We provide a default explanation which is only
+            // used if the call() function hasn't filled it in.
+            @Value Object result = call();
+            if (explanation == null)
+            {
+                //explanation = new FunctionExplanation(name, );
+            }
+            return result;
+        }
+        else
+        {
+            return call();
+        }
     }
 
     @OnThread(Tag.Simulation)
@@ -63,14 +84,17 @@ public abstract class ValueFunction
         return DataTypeUtility.requireInteger(arg(index, Number.class));
     }
     
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    public ImmutableList<ExplanationLocation> /*Explanation*/ getExplanation() throws InternalException
     {
-        return booleanExplanation;
+        //if (explanation != null)
+        //    return explanation;
+        //else
+            throw new InternalException("Function was meant to record an explanation, but did not");
     }
 
-    public void setRecordBooleanExplanation(boolean record)
+    public void setRecordExplanation(boolean record)
     {
-        recordBooleanExplanation = record;
+        recordExplanation = record;
     }
     
     protected @Nullable ImmutableList<ExplanationLocation> withArgLoc(int argIndex, Function<ArgumentLocation, @Nullable ImmutableList<ExplanationLocation>> fetch)
@@ -80,7 +104,7 @@ public abstract class ValueFunction
     
     public static interface ArgumentLocation
     {
-        @Nullable ImmutableList<ExplanationLocation> getValueLocation();
+        @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException;
         
         @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index);
     }

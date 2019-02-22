@@ -29,7 +29,6 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
-import records.data.ValueFunction;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -468,22 +467,6 @@ public class TypeManager
         {
             return wholeType.getTags().get(tagIndex);
         }
-        
-        @OnThread(Tag.Simulation)
-        public @Value Object makeValue()
-        {
-            TagType<?> tag = getTagInfo();
-            if (tag.getInner() == null)
-                return new TaggedValue(tagIndex, null);
-            else
-                return DataTypeUtility.value(new ValueFunction()
-                {
-                    @Override
-                    public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
-                    {
-                        return new TaggedValue(tagIndex, arg(0));
-                    }
-                });
-        }
+
     }
 }

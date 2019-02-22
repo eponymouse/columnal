@@ -2,12 +2,11 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
-import records.data.ExplanationLocation;
+import records.data.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.data.ValueFunction.ArgumentLocation;
 import records.data.unit.UnitManager;
@@ -191,10 +190,10 @@ public class CallExpression extends Expression
             paramValues[i] = arg.getValue(state).getFirst();
         }
         ArgumentLocation[] paramLocations;
-        if (state.recordBooleanExplanation())
+        if (state.recordExplanation())
         {
             this.functionValue = functionValue;
-            this.functionValue.setRecordBooleanExplanation(true);
+            this.functionValue.setRecordExplanation(true);
             
             paramLocations = new ArgumentLocation[arguments.size()];
             for (int i = 0; i < arguments.size(); i++)
@@ -205,7 +204,7 @@ public class CallExpression extends Expression
                     paramLocations[i] = new ArgumentLocation()
                     {
                         @Override
-                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation()
+                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException
                         {
                             return arg.getBooleanExplanation();
                         }
@@ -226,7 +225,7 @@ public class CallExpression extends Expression
                     paramLocations[i] = new ArgumentLocation()
                     {
                         @Override
-                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation()
+                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException
                         {
                             return arg.getBooleanExplanation();
                         }
@@ -248,9 +247,9 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
+    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation() throws InternalException
     {
-        return functionValue == null ? null : functionValue.getBooleanExplanation();
+        return functionValue == null ? null : functionValue.getExplanation();
     }
 
     @Override
