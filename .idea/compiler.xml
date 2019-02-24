@@ -32,18 +32,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/utility/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/utility/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/utility/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/utility/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/utility/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/utility/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -67,18 +60,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/gui-utility/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/gui-utility/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/gui-utility/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -95,18 +81,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/data/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/data/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/data/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/data/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/data/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/data/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/data/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/data/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -123,18 +102,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/stf/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/stf/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/stf/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/stf/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/stf/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/stf/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -151,18 +123,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/functions/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/functions/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/functions/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/functions/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/functions/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/functions/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -179,18 +144,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/expressions/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/expressions/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/expressions/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
@@ -227,18 +185,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="conservativeUninferredTypeArguments" value="" />
-        <option name="funcdocfiles" value="$PROJECT_DIR$/records/app/../app/src/main/funcdoc/boolean.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/comparison.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/conversion.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/core.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/datetime.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/list.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/listprocess.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/lookup.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/math.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/number.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/operators.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/text.xml;/Users/neil/intellij/records/records/app/../app/src/main/funcdoc/tuple.xml" />
-        <option name="helpfiles" value="$PROJECT_DIR$/records/app/../app/src/main/help/guess-format.xml;/Users/neil/intellij/records/records/app/../app/src/main/help/edit-check.xml;/Users/neil/intellij/records/records/app/../app/src/main/help/edit-column.xml;/Users/neil/intellij/records/records/app/../app/src/main/help/edit-unit.xml" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/app/../app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/dataentry_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/main_en.properties:/Users/neil/intellij/records/records/app/../app/src/main/resources/import_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="annotation.funcdoc.FuncDocChecker" />
-        <processor name="annotation.help.HelpFileChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.userindex.UserIndexChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
-        <processor name="org.checkerframework.checker.i18n.I18nChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>
