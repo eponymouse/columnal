@@ -22,8 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.DataItemPosition;
-import records.data.explanation.Explanation;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
@@ -59,7 +59,6 @@ import utility.gui.FXUtility;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -76,7 +75,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final TableBorderOverlay tableBorderOverlay;
     private final FloatingItem<Label> resultFloatingItem;
     private final StringProperty resultContent = new SimpleStringProperty("");
-    private final ObjectProperty<@Nullable ImmutableList<ExplanationLocation>> linkLocation = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<@Nullable Explanation> failExplanationProperty = new SimpleObjectProperty<>(null);
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -104,7 +103,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 label.getStyleClass().add("check-result");
                 label.textProperty().bind(resultContent);
                 FXUtility.addChangeListenerPlatformNN(label.hoverProperty(), h -> {
-                    if (h && linkLocation.get() != null)
+                    if (h && failExplanationProperty.get() != null)
                         label.setUnderline(true);
                     else
                         label.setUnderline(false);
@@ -118,9 +117,11 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @OnThread(Tag.FXPlatform)
             private void jumpToExplanation()
             {
-                ImmutableList<ExplanationLocation> locations = linkLocation.get();
-                if (locations != null)
+                @Nullable Explanation explanation = failExplanationProperty.get();
+                if (explanation != null)
                 {
+                    // TODO make a popup showing explanation
+                    /*
                     if (locations.size() == 1)
                     {
                         @Nullable CellSelection selection = FXUtility.mouse(CheckDisplay.this).makeSelection(parent.getManager(), locations.get(0));
@@ -130,6 +131,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                             withParent_(g -> g.select(selectionNN));
                         }
                     }
+                    */
                 }
             }
 
@@ -161,10 +163,10 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             try
             {
                 boolean pass = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
-                ImmutableList<ExplanationLocation> failLocation = pass ? null : check.getExplanationLocation();
+                @Nullable Explanation failExplanation = pass ? null : check.getExplanationLocation();
                 Platform.runLater(() -> {
                     resultContent.set(pass ? "OK" : "Fail");
-                    linkLocation.set(failLocation);
+                    failExplanationProperty.set(failExplanation);
                 });
             }
             catch (UserException | InternalException e)
@@ -180,6 +182,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         this.check.setDisplay(usInit);
     }
 
+    /*
     private @Nullable CellSelection makeSelection(TableManager tableManager, ExplanationLocation explanationLocation)
     {
         Table table = tableManager.getSingleTableOrNull(explanationLocation.tableId);
@@ -203,6 +206,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         }
         return null;
     }
+    */
 
     @Override
     public void cleanupFloatingItems(VirtualGridSupplierFloating floating)
@@ -378,12 +382,14 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             mostRecentBounds.set(cellPosition);
     }
     
-    public ImmutableList<StyledString> makeExplanation(Explanation explanation)
+    @OnThread(Tag.Simulation)
+    public ImmutableList<StyledString> makeExplanation(Explanation explanation) throws UserException, InternalException
     {
         return makeExplanation(explanation, new HashSet<>());
     }
 
-    public ImmutableList<StyledString> makeExplanation(Explanation explanation, HashSet<Explanation> alreadyDescribed)
+    @OnThread(Tag.Simulation)
+    public ImmutableList<StyledString> makeExplanation(Explanation explanation, HashSet<Explanation> alreadyDescribed) throws InternalException, UserException
     {
         ImmutableList.Builder<StyledString> output = ImmutableList.builder();
         // We do a depth-first traversal and print root nodes first,

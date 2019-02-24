@@ -8,7 +8,9 @@ import records.data.*;
 import records.data.Table.InitialLoadDetails;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
-import records.data.explanation.ExplanationLocation;
+import records.error.UnimplementedException;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -32,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.Set;
+import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -90,14 +94,14 @@ public class TestExpressionExplanation
         testExplanation("@call @function none(@entire T2:asc, (? <> (1 \u00B1 1)))", l("T2", "asc", 3));
     }
 
-    private ImmutableList<ExplanationLocation> l(String tableName, String columnName, int... rowIndexes)
+    private Explanation l(String tableName, String columnName, int rowIndex) throws InternalException
     {
-        return Arrays.stream(rowIndexes).mapToObj(rowIndex ->
-            new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), DataItemPosition.row(rowIndex))
-        ).collect(ImmutableList.toImmutableList());
+        throw new UnimplementedException();
+        /*new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), DataItemPosition.row(rowIndex))
+        ).collect(ImmutableList.toImmutableList());*/
     }
     
-    private void testExplanation(String src, @Nullable ImmutableList<ExplanationLocation> expectedExplanation) throws Exception
+    private void testExplanation(String src, @Nullable Explanation expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
@@ -105,10 +109,10 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager.getUnitManager(), typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty(), true));
+        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer));
         
         // Now explanation should be available:
-        ImmutableList<ExplanationLocation> actual = expression.getBooleanExplanation();
+        Explanation actual = expression.getExplanation();
         
         assertEquals(expectedExplanation, actual);
     }

@@ -312,7 +312,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
         @Value Object value = expression.getValue(state).getFirst();
@@ -321,7 +321,8 @@ public class MatchExpression extends NonOperatorExpression
             EvaluateState newState = clause.matches(value, state);
             if (newState != null)
             {
-                return clause.outcome.getValue(newState);
+                // TODO encompass the other expressions
+                return new ValueResult(clause.outcome.getValue(newState).getFirst());
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");

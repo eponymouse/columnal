@@ -18,7 +18,7 @@ import utility.Utility;
 import java.util.List;
 import java.util.Random;
 
-public class StringConcatExpression extends NaryOpExpression
+public class StringConcatExpression extends NaryOpTotalExpression
 {
     public StringConcatExpression(List<@Recorded Expression> operands)
     {

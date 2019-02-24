@@ -24,7 +24,7 @@ import java.util.Random;
 /**
  * Created by neil on 29/11/2016.
  */
-public class TimesExpression extends NaryOpExpression
+public class TimesExpression extends NaryOpTotalExpression
 {
     public TimesExpression(List<@Recorded Expression> expressions)
     {

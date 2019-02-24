@@ -1,10 +1,12 @@
 package records.typeExp;
 
+import com.google.common.collect.ImmutableList;
 import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.UserException;
 import styled.CommonStyles;
 import styled.StyledString;
 import utility.Either;
@@ -94,8 +96,11 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager)
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible) throws InternalException, UserException
     {
+        if (substituteDefaultIfPossible)
+            return Either.right(typeManager.getVoidType().instantiate(ImmutableList.of(), typeManager));
+        
         // Will have been pruned, so error here
         return Either.left(new TypeConcretisationError(StyledString.s("Error: cannot determine type (free variable remaining)"), null));
     }

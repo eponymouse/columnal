@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -31,9 +32,9 @@ import java.util.stream.Stream;
  */
 public class IfThenElseExpression extends NonOperatorExpression
 {
-    private final Expression condition;
-    private final Expression thenExpression;
-    private final Expression elseExpression;
+    private final @Recorded Expression condition;
+    private final @Recorded Expression thenExpression;
+    private final @Recorded Expression elseExpression;
 
     public IfThenElseExpression(@Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
     {
@@ -78,16 +79,17 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         Pair<@Value Object, EvaluateState> condValState = condition.getValue(state);
         Boolean b = Utility.cast(condValState.getFirst(), Boolean.class);
-        // We always return original state:
+        // We always return original state to outermost,
+        // but then-branch gets state from condition:
         if (b)
-            return new Pair<>(thenExpression.getValue(condValState.getSecond()).getFirst(), state);
+            return new ValueResult(thenExpression.getValue(condValState.getSecond()).getFirst(), ImmutableList.<@Recorded Expression>of(condition, thenExpression));
         else
             // Else gets original state, condition didn't pass:
-            return new Pair<>(elseExpression.getValue(state).getFirst(), state);
+            return new ValueResult(elseExpression.getValue(state).getFirst(), ImmutableList.<@Recorded Expression>of(condition, elseExpression));
     }
 
     @Override

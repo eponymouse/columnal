@@ -4,7 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -27,7 +27,7 @@ import java.util.Random;
 /**
  * Created by neil on 30/11/2016.
  */
-public class EqualExpression extends NaryOpExpression
+public class EqualExpression extends NaryOpShortCircuitExpression
 {
     private OptionalInt patternIndex = OptionalInt.empty();
     
@@ -133,7 +133,7 @@ public class EqualExpression extends NaryOpExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         if (patternIndex.isPresent())
         {
@@ -141,7 +141,7 @@ public class EqualExpression extends NaryOpExpression
                 throw new InternalException("Pattern present in equals despite having more than two operands");
             @Value Object value = expressions.get(1 - patternIndex.getAsInt()).getValue(state).getFirst();
             @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value, state);
-            return new Pair<>(DataTypeUtility.value(result != null), result != null ? result : state);    
+            return new ValueResult(DataTypeUtility.value(result != null), result != null ? result : state, expressions);    
         }
         
         @Value Object first = expressions.get(0).getValue(state).getFirst();
@@ -150,20 +150,11 @@ public class EqualExpression extends NaryOpExpression
             @Value Object rhsVal = expressions.get(i).getValue(state).getFirst();
             if (0 != Utility.compareValues(first, rhsVal))
             {
-                if (state.recordExplanation())
-                {
-                    @Nullable ImmutableList<ExplanationLocation> aExpl = expressions.get(i - 1).getBooleanExplanation();
-                    @Nullable ImmutableList<ExplanationLocation> bExpl = expressions.get(i).getBooleanExplanation();
-                    if (aExpl != null || bExpl != null)
-                    {
-                        booleanExplanation = Utility.concatI(aExpl == null ? ImmutableList.<ExplanationLocation>of() : aExpl, bExpl == null ? ImmutableList.<ExplanationLocation>of() : bExpl);
-                    }
-                }
-                return new Pair<>(DataTypeUtility.value(false), state);
+                return new ValueResult(DataTypeUtility.value(false), ImmutableList.copyOf(expressions.subList(0, i + 1)));
             }
         }
 
-        return new Pair<>(DataTypeUtility.value(true), state);
+        return new ValueResult(DataTypeUtility.value(true), expressions);
     }
 
     @Override

@@ -23,7 +23,7 @@ import java.util.Random;
 /**
  * Created by neil on 10/12/2016.
  */
-public class OrExpression extends NaryOpExpression
+public class OrExpression extends NaryOpShortCircuitExpression
 {
     public OrExpression(List<@Recorded Expression> expressions)
     {
@@ -58,19 +58,18 @@ public class OrExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        for (Expression expression : expressions)
+        for (int i = 0; i < expressions.size(); i++)
         {
+            Expression expression = expressions.get(i);
             Boolean b = Utility.cast(expression.getValue(state).getFirst(), Boolean.class);
             if (b == true)
             {
-                if (state.recordExplanation())
-                    booleanExplanation = expression.getBooleanExplanation();
-                return new Pair<>(DataTypeUtility.value(true), state);
+                return new ValueResult(DataTypeUtility.value(true), ImmutableList.copyOf(expressions.subList(0, i + 1)));
             }
         }
-        return new Pair<>(DataTypeUtility.value(false), state);
+        return new ValueResult(DataTypeUtility.value(false), expressions);
     }
 
     @SuppressWarnings("recorded")

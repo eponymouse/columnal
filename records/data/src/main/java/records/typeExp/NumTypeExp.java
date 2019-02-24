@@ -53,12 +53,12 @@ public class NumTypeExp extends TypeExp
 
 
     @Override
-    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager)
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible)
     {
         @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
         {
-            if (this.unit.isOnlyVars())
+            if (this.unit.isOnlyVars() || substituteDefaultIfPossible)
                 return Either.right(DataType.number(new NumberInfo(Unit.SCALAR)));
             else
                 return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));

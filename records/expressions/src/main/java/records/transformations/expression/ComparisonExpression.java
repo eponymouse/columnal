@@ -4,7 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -29,7 +29,7 @@ import java.util.Random;
 /**
  * Created by neil on 17/01/2017.
  */
-public class ComparisonExpression extends NaryOpExpression
+public class ComparisonExpression extends NaryOpShortCircuitExpression
 {
     public static enum ComparisonOperator
     {
@@ -136,7 +136,7 @@ public class ComparisonExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         @Value Object cur = expressions.get(0).getValue(state).getFirst();
         for (int i = 1; i < expressions.size(); i++)
@@ -144,21 +144,11 @@ public class ComparisonExpression extends NaryOpExpression
             @Value Object next = expressions.get(i).getValue(state).getFirst();
             if (!operators.get(i - 1).comparisonTrue(cur, next))
             {
-                if (state.recordExplanation())
-                {
-                    @Nullable ImmutableList<ExplanationLocation> aExpl = expressions.get(i - 1).getBooleanExplanation();
-                    @Nullable ImmutableList<ExplanationLocation> bExpl = expressions.get(i).getBooleanExplanation();
-                    if (aExpl != null || bExpl != null)
-                    {
-                        booleanExplanation = Utility.concatI(aExpl == null ? ImmutableList.<ExplanationLocation>of() : aExpl, bExpl == null ? ImmutableList.<ExplanationLocation>of() : bExpl);
-                    }
-                }
-                
-                return new Pair<>(DataTypeUtility.value(false), state);
+                return new ValueResult(DataTypeUtility.value(false), ImmutableList.copyOf(expressions.subList(0, i + 1)));
             }
             cur = next;
         }
-        return new Pair<>(DataTypeUtility.value(true), state);
+        return new ValueResult(DataTypeUtility.value(true), expressions);
     }
 
     @SuppressWarnings("recorded")

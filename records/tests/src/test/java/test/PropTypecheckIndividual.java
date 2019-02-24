@@ -90,7 +90,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+        public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Testing");
         }
@@ -400,7 +400,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+        public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Should not be called");
         }

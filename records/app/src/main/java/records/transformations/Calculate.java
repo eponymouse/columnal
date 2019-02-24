@@ -19,6 +19,7 @@ import records.gui.View;
 import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -147,34 +148,14 @@ public class Calculate extends Transformation
     {
         try
         {
-            ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
-            {
-                @Override
-                public <E> void recordError(E src, StyledString s)
-                {
-                    error = s;
-                }
-
-                @Override
-                public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-                {
-
-                }
-
-                @SuppressWarnings("recorded")
-                @Override
-                public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-                {
-                    return typeExp;
-                }
-            };
+            ErrorAndTypeRecorderStorer errorAndTypeRecorder = new ErrorAndTypeRecorderStorer();
             @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
                 throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), error == null ? StyledString.s("") : error)); // A bit redundant, but control flow will pan out right
             @NonNull DataType typeFinal = concrete;
-            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).getFirst());
+            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index), errorAndTypeRecorder)).getFirst());
         }
         catch (UserException e)
         {

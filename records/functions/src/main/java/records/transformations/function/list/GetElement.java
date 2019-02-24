@@ -10,6 +10,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
+import threadchecker.OnThread;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -39,9 +40,10 @@ public class GetElement extends FunctionDefinition
         {
             @Value int zeroBasedIndex = intArg(1);
             @UserIndex int userIndex = DataTypeUtility.userIndex(zeroBasedIndex);
+            @Value Object listItemValue = Utility.getAtIndex(arg(0, ListEx.class), userIndex);
             if (recordExplanation)
-                explanation = withArgLoc(0, loc -> loc.getListElementLocation(zeroBasedIndex));
-            return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
+                setExplanation(withArgLoc(0, loc -> loc.getListElementExplanation(zeroBasedIndex, listItemValue)));
+            return listItemValue;
         }
     }
 }

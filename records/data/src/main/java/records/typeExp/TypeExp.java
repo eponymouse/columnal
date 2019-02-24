@@ -330,13 +330,18 @@ public abstract class TypeExp implements StyledShowable
         });
     }
 
-    public Either<TypeConcretisationError, DataType> toConcreteType(TypeManager typeManager) throws InternalException, UserException
+    public Either<TypeConcretisationError, DataType> toConcreteType(TypeManager typeManager, boolean substituteDefaultIfPossible) throws InternalException, UserException
     {
-        return prune()._concrete(typeManager);
-        
+        return prune()._concrete(typeManager, substituteDefaultIfPossible);
     }
 
-    protected abstract Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
+    public Either<TypeConcretisationError, DataType> toConcreteType(TypeManager typeManager) throws InternalException, UserException
+    {
+        return toConcreteType(typeManager, false);
+
+    }
+
+    protected abstract Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible) throws InternalException, UserException;
 
     @Override
     @SuppressWarnings("i18n")

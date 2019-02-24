@@ -101,7 +101,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible) throws InternalException, UserException
     {
         switch (name)
         {
@@ -113,14 +113,14 @@ public class TypeCons extends TypeExp
                 if (operands.get(0).isLeft())
                     throw new UserException("List must be of a type, not a unit");
                 else
-                    return operands.get(0).getRight("Impossible").toConcreteType(typeManager).map(t -> DataType.array(t));
+                    return operands.get(0).getRight("Impossible").toConcreteType(typeManager, substituteDefaultIfPossible).map(t -> DataType.array(t));
             case CONS_FUNCTION:
                 if (operands.stream().anyMatch(Either::isLeft))
                     throw new UserException("Function cannot take or return a unit");
-                Either<TypeConcretisationError, ImmutableList<DataType>> arg = Either.<TypeConcretisationError, DataType, Either<UnitExp, TypeExp>>mapMEx(operands.subList(0, operands.size() - 1), op -> op.getRight("Impossible").toConcreteType(typeManager));
+                Either<TypeConcretisationError, ImmutableList<DataType>> arg = Either.<TypeConcretisationError, DataType, Either<UnitExp, TypeExp>>mapMEx(operands.subList(0, operands.size() - 1), op -> op.getRight("Impossible").toConcreteType(typeManager, substituteDefaultIfPossible));
                 if (arg.isLeft())
                     return Either.left(arg.getLeft("Impossible"));
-                Either<TypeConcretisationError, DataType> ret = operands.get(operands.size() - 1).getRight("Impossible").toConcreteType(typeManager);
+                Either<TypeConcretisationError, DataType> ret = operands.get(operands.size() - 1).getRight("Impossible").toConcreteType(typeManager, substituteDefaultIfPossible);
                 if (ret.isLeft())
                     return ret;
                 return Either.right(DataType.function(arg.getRight("Impossible"), ret.getRight("Impossible")));
@@ -141,7 +141,7 @@ public class TypeCons extends TypeExp
                             return Either.<TypeConcretisationError, Either<Unit, DataType>>left(new TypeConcretisationError(StyledString.s("Unit unspecified; could be any unit: " + u)));
                         Either<Unit, DataType> unitOrType = Either.left(concreteUnit);
                         return Either.right(unitOrType);
-                    }, t -> t.toConcreteType(typeManager).map(x -> Either.<Unit, DataType>right(x)));
+                    }, t -> t.toConcreteType(typeManager, substituteDefaultIfPossible).map(x -> Either.<Unit, DataType>right(x)));
                 });
                 return errOrOperandsAsTypes.eitherEx(err -> Either.<TypeConcretisationError, DataType>left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
                     @Nullable DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));

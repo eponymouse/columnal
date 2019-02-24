@@ -62,9 +62,9 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(state.get(text), state);
+        return new ValueResult(state.get(text));
     }
 
     @Override

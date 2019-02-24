@@ -9,6 +9,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -16,7 +18,9 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
-import records.data.explanation.ExplanationLocation;
+import records.data.datatype.DataTypeUtility;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -56,6 +60,8 @@ import utility.ExFunction;
 import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationSupplier;
+import utility.SimulationSupplierInt;
 import utility.StreamTreeBuilder;
 import utility.Utility;
 
@@ -65,6 +71,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -75,6 +82,8 @@ import java.util.stream.Stream;
  */
 public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>
 {
+    protected @MonotonicNonNull Explanation explanation;
+    
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
     public static interface ColumnLookup
@@ -228,11 +237,76 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return check.typeExp;
     }
     
+    @OnThread(Tag.Simulation)
+    protected static class ValueResult
+    {
+        public final @Value Object value;
+        // If null, means unaltered.
+        private final @Nullable EvaluateState evaluateState;
+        private final SimulationSupplierInt<ImmutableList<Explanation>> directChildExplanations;
+        private final ImmutableList<ExplanationLocation> usedLocations;
+
+        public ValueResult(@Value Object value)
+        {
+            this(value, ImmutableList.of());
+        }
+
+        public ValueResult(@Value Object value, ImmutableList<@Recorded Expression> childrenForExplanations)
+        {
+            this(value, null, childrenForExplanations);
+        }
+
+        public ValueResult(@Value Object value, @Nullable EvaluateState state, ImmutableList<@Recorded Expression> childrenForExplanations)
+        {
+            this(value, state, childrenForExplanations, ImmutableList.of());
+        }
+        
+        public ValueResult(@Value Object value, @Nullable EvaluateState state, ImmutableList<@Recorded Expression> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+        {
+            this.value = value;
+            this.evaluateState = state;
+            this.directChildExplanations = () -> Utility.mapListInt(childrenForExplanations, e -> e.getExplanation());
+            this.usedLocations = usedLocations;
+        }
+    }
+    
+    
     /**
      * Gets the value for this expression at the given evaluation state
      */
     @OnThread(Tag.Simulation)
-    public abstract Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException;
+    protected abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
+    
+    @OnThread(Tag.Simulation)
+    public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    {
+        ValueResult r = calculateValue(state);
+        if (explanation == null && state.recordExplanation())
+        {
+            explanation = makeExplanation(state, r);
+        }
+        return new Pair<>(r.value, r.evaluateState == null ? state : r.evaluateState);
+    }
+
+    protected Explanation makeExplanation(EvaluateState state, ValueResult r)
+    {
+        return new Explanation(this, state, r.value, r.usedLocations)
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+            {
+                return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(Expression.this), r.value, null)));
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+            {
+                return r.directChildExplanations.get();
+            }
+        };
+    }
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
@@ -828,8 +902,11 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      * @return
      */
     @OnThread(Tag.Simulation)
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation() throws InternalException
+    public final @NonNull Explanation getExplanation() throws InternalException
     {
-        return null;
+        if (explanation == null)
+            throw new InternalException("Missing explanation for expression: " + this + "(" + getClass() + ")");
+        else
+            return explanation;
     }
 }

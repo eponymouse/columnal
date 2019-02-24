@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;

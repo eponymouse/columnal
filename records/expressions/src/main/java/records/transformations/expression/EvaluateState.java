@@ -1,7 +1,9 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
+import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -19,23 +21,25 @@ public final class EvaluateState
     private final ImmutableMap<String, @Value Object> variables;
     private final OptionalInt rowIndex;
     private final boolean recordExplanation;
+    private final TypeLookup typeLookup;
 
-    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex)
+    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, TypeLookup typeLookup)
     {
-        this(ImmutableMap.of(), typeManager, rowIndex, false);
+        this(ImmutableMap.of(), typeManager, rowIndex, false, typeLookup);
     }
 
-    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
+    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
     {
-        this(ImmutableMap.of(), typeManager, rowIndex, recordExplanation);
+        this(ImmutableMap.of(), typeManager, rowIndex, recordExplanation, typeLookup);
     }
 
-    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
+    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
     {
         this.variables = variables;
         this.typeManager = typeManager;
         this.rowIndex = rowIndex;
         this.recordExplanation = recordExplanation;
+        this.typeLookup = typeLookup;
     }
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException
@@ -47,7 +51,7 @@ public final class EvaluateState
         }
         copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(copy.build(), typeManager, rowIndex, recordExplanation);
+        return new EvaluateState(copy.build(), typeManager, rowIndex, recordExplanation, typeLookup);
     }
 
     /**
@@ -67,7 +71,8 @@ public final class EvaluateState
         return typeManager;
     }
 
-    public int getRowIndex() throws UserException
+    @SuppressWarnings("units")
+    public @TableDataRowIndex int getRowIndex() throws UserException
     {
         return rowIndex.orElseThrow(() -> new UserException("No row index available."));
     }
@@ -75,5 +80,17 @@ public final class EvaluateState
     public boolean recordExplanation()
     {
         return recordExplanation;
+    }
+    
+    // Allows run-time lookup of the final data type that was assigned
+    // to a given expression during type-checking.
+    public static interface TypeLookup
+    {
+        DataType getTypeFor(TypeManager typeManager, Expression expression) throws InternalException, UserException;
+    }
+    
+    public DataType getTypeFor(Expression expression) throws InternalException, UserException
+    {
+        return typeLookup.getTypeFor(typeManager, expression);
     }
 }

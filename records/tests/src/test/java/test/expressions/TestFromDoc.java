@@ -210,7 +210,7 @@ public class TestFromDoc
                 if (!errorLine)
                     assertEquals(line, Either.right(DataType.BOOLEAN), concreteReturnType);
 
-                EvaluateState evaluateState = new EvaluateState(typeManager, OptionalInt.empty());
+                EvaluateState evaluateState = new EvaluateState(typeManager, OptionalInt.empty(), errors);
                 List<Pair<String, String>> varValues = new ArrayList<>();
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {

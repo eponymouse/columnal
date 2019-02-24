@@ -50,13 +50,13 @@ public class StandardFunction extends NonOperatorExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         if (type == null)
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> typeFinal = type;
-        return new Pair<>(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+        return new ValueResult(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
             Either<MutUnitVar, MutVar> typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
@@ -65,11 +65,11 @@ public class StandardFunction extends NonOperatorExpression
                 if (concrete == null)
                     throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
                 return concrete;
-            }, t -> t.toConcreteType(state.getTypeManager()).eitherEx(
+            }, t -> t.toConcreteType(state.getTypeManager(), true).eitherEx(
                 l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
                 t2 -> t2
             ));
-        })), state);
+        })));
     }
 
     @Override

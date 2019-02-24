@@ -2,11 +2,13 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataTypeValue;
@@ -83,16 +85,16 @@ public class ColumnReference extends NonOperatorExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        if (column == null)
+        if (column == null || resolvedTableName == null)
             throw new InternalException("Attempting to fetch value despite type check failure");
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return new Pair<>(column.getCollapsed(state.getRowIndex()), state);
+                return new ValueResult(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())));
             case WHOLE_COLUMN:
-                return new Pair<>(column.getCollapsed(0), state);
+                return new ValueResult(column.getCollapsed(0), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName)));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }
@@ -193,11 +195,11 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @OnThread(Tag.Simulation)
-    public @Nullable ExplanationLocation getElementLocation(@TableDataRowIndex int index)
+    public Explanation getElementExplanation(EvaluateState state, @TableDataRowIndex int index, @Value Object value) throws InternalException
     {
         if (resolvedTableName != null)
-            return new ExplanationLocation(resolvedTableName, columnName, index);
-        return null;
+            return makeExplanation(state, new ValueResult(value, state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, index))));
+        throw new InternalException("Cannot explain unresolved table for column " + columnName);
     }
 }
 

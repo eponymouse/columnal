@@ -25,6 +25,7 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
@@ -65,7 +66,7 @@ public class Filter extends Transformation
     private int nextIndexToExamine = 0;
     @OnThread(Tag.Any)
     private final Expression filterExpression;
-    private @MonotonicNonNull DataType type;
+    private @MonotonicNonNull Pair<TypeLookup, DataType> type;
     private boolean typeChecked = false;
 
     public Filter(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression filterExpression) throws InternalException
@@ -137,16 +138,16 @@ public class Filter extends Transformation
         {
             if (!typeChecked)
             {
+                ErrorAndTypeRecorderStorer typeRecorder = new ErrorAndTypeRecorderStorer();
                 // Must set it before, in case it throws:
                 typeChecked = true;
-                ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp checked = filterExpression.checkExpression(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+                @Nullable TypeExp checked = filterExpression.checkExpression(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), typeRecorder);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
-                    typeFinal = errors.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
+                    typeFinal = typeRecorder.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
-                    throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, DataType.BOOLEAN)
+                    throw new ExpressionErrorException(typeRecorder.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, DataType.BOOLEAN)
                     {
                         @Override
                         @OnThread(Tag.Simulation)
@@ -156,7 +157,7 @@ public class Filter extends Transformation
                         }
                     });
                 
-                type = typeFinal;
+                type = new Pair<>(typeRecorder, typeFinal);
             }
             if (type == null)
                 return;
@@ -165,7 +166,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = Utility.cast(filterExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine))).getFirst(), Boolean.class);
+            boolean keep = Utility.cast(filterExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).getFirst(), Boolean.class);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

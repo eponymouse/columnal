@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
@@ -57,20 +57,6 @@ public abstract class NaryOpExpression extends Expression
     }
 
     public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
-
-    @Override
-    public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
-    {
-        if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
-        {
-            return new Pair<>(ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> getValueNaryOp(s).getFirst()), state);
-        }
-        else
-            return getValueNaryOp(state);
-    }
-
-    @OnThread(Tag.Simulation)
-    public abstract Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()
@@ -305,11 +291,5 @@ public abstract class NaryOpExpression extends Expression
         }
         
         return allValid ? target : null;
-    }
-
-    @Override
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation()
-    {
-        return booleanExplanation;
     }
 }

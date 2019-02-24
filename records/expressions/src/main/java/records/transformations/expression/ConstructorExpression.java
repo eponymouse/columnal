@@ -68,9 +68,9 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(tag.<@Value Object>eitherEx(s -> {
+        return new ValueResult(tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");
         }, t -> {
             TagType<?> tag1 = t.getTagInfo();
@@ -85,7 +85,7 @@ public class ConstructorExpression extends NonOperatorExpression
                         return new TaggedValue(t.tagIndex, arg(0));
                     }
                 });
-        }), state);
+        }));
     }
 
     @Override

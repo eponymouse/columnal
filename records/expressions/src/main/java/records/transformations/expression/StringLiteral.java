@@ -38,9 +38,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(value, state);
+        return new ValueResult(value);
     }
 
     @Override

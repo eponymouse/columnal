@@ -31,7 +31,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on \"_\" pattern (should only call matchAsPattern)");
     }

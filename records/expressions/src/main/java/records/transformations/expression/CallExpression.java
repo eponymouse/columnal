@@ -6,9 +6,10 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
-import records.transformations.expression.function.ValueFunction.ArgumentLocation;
+import records.transformations.expression.function.ValueFunction.ArgumentExplanation;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -179,7 +180,7 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
 
@@ -189,51 +190,48 @@ public class CallExpression extends Expression
             @Recorded Expression arg = arguments.get(i);
             paramValues[i] = arg.getValue(state).getFirst();
         }
-        ArgumentLocation[] paramLocations;
+        ArgumentExplanation[] paramLocations;
         if (state.recordExplanation())
         {
             this.functionValue = functionValue;
             this.functionValue.setRecordExplanation(true);
             
-            paramLocations = new ArgumentLocation[arguments.size()];
+            paramLocations = new ArgumentExplanation[arguments.size()];
             for (int i = 0; i < arguments.size(); i++)
             {
                 @Recorded Expression arg = arguments.get(i);
                 if (arg instanceof ColumnReference)
                 {
-                    paramLocations[i] = new ArgumentLocation()
+                    paramLocations[i] = new ArgumentExplanation()
                     {
                         @Override
                         @OnThread(Tag.Simulation)
-                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException
+                        public Explanation getValueExplanation() throws InternalException
                         {
-                            return arg.getBooleanExplanation();
+                            return arg.getExplanation();
                         }
 
                         @Override
                         @OnThread(Tag.Simulation)
-                        public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
+                        public Explanation getListElementExplanation(int index, @Value Object value) throws InternalException
                         {
-                            ExplanationLocation location = ((ColumnReference) arg).getElementLocation(DataItemPosition.row(index));
-                            if (location == null)
-                                return null;
-                            else
-                                return ImmutableList.of(location);
+                            return ((ColumnReference) arg).getElementExplanation(state, DataItemPosition.row(index), value);
                         }
                     };
                 }
                 else
                 {
-                    paramLocations[i] = new ArgumentLocation()
+                    paramLocations[i] = new ArgumentExplanation()
                     {
+
                         @Override
-                        public @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException
+                        public @OnThread(Tag.Simulation) Explanation getValueExplanation() throws InternalException
                         {
-                            return arg.getBooleanExplanation();
+                            return arg.getExplanation();
                         }
 
                         @Override
-                        public @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index)
+                        public @OnThread(Tag.Simulation) @Nullable Explanation getListElementExplanation(int index, @Value Object value)
                         {
                             return null;
                         }
@@ -245,13 +243,9 @@ public class CallExpression extends Expression
         {
             paramLocations = null;
         }
-        return new Pair<>(functionValue.call(paramValues, paramLocations), state);
-    }
-
-    @Override
-    public @Nullable ImmutableList<ExplanationLocation> getBooleanExplanation() throws InternalException
-    {
-        return functionValue == null ? null : functionValue.getExplanation();
+        @Value Object value = functionValue.call(paramValues, paramLocations);
+        explanation = functionValue.getExplanation();
+        return new ValueResult(value, arguments);
     }
 
     @Override

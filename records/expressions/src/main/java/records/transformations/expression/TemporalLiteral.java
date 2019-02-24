@@ -74,11 +74,11 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(value.<@Value Object>eitherInt(err -> {
+        return new ValueResult(value.<@Value Object>eitherInt(err -> {
             throw new InternalException("Executing with unrecognised date/time literal: " + content + " " + err);
-        }, v -> v), state);
+        }, v -> v));
     }
 
     @Override

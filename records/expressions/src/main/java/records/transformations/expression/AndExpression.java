@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -19,7 +20,7 @@ import java.util.Random;
 /**
  * Created by neil on 10/12/2016.
  */
-public class AndExpression extends NaryOpExpression
+public class AndExpression extends NaryOpShortCircuitExpression
 {
     public AndExpression(List<@Recorded Expression> expressions)
     {
@@ -67,22 +68,21 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(final EvaluateState origState) throws UserException, InternalException
+    public ValueResult getValueNaryOp(final EvaluateState origState) throws UserException, InternalException
     {
         EvaluateState state = origState;
-        for (Expression expression : expressions)
+        for (int i = 0; i < expressions.size(); i++)
         {
+            Expression expression = expressions.get(i);
             Pair<@Value Object, EvaluateState> valState = expression.getValue(state);
             Boolean b = Utility.cast(valState.getFirst(), Boolean.class);
             if (b == false)
             {
-                if (state.recordExplanation())
-                    booleanExplanation = expression.getBooleanExplanation();           
-                return new Pair<>(DataTypeUtility.value(false), origState);
+                return new ValueResult(DataTypeUtility.value(false), origState, ImmutableList.copyOf(expressions.subList(0, i + 1)));
             }
             state = valState.getSecond();
         }
-        return new Pair<>(DataTypeUtility.value(true), state);
+        return new ValueResult(DataTypeUtility.value(true), state, expressions);
     }
 
     @SuppressWarnings("recorded")

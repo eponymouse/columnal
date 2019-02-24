@@ -6,16 +6,15 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
-import records.data.explanation.Explanation;
-import records.data.explanation.ExplanationLocation;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.error.InternalException;
 import records.error.UserException;
-import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.Utility;
 
-import java.util.Set;
 import java.util.function.Function;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
@@ -23,10 +22,9 @@ public abstract class ValueFunction
 {
     private final String name;
     protected boolean recordExplanation = false;
-    //protected @MonotonicNonNull Explanation explanation;
-    protected @Nullable ImmutableList<ExplanationLocation> explanation;
+    private @MonotonicNonNull Explanation explanation;
     private @Value Object @Nullable [] curArgs;
-    private ArgumentLocation @Nullable[] curLocs;
+    private ArgumentExplanation @Nullable[] curLocs;
     
     @OnThread(Tag.Any)
     protected ValueFunction(/*String name*/)
@@ -48,7 +46,7 @@ public abstract class ValueFunction
             @Value Object result = call();
             if (explanation == null)
             {
-                //explanation = new FunctionExplanation(name, );
+               // TODO make an explanation 
             }
             return result;
         }
@@ -59,10 +57,10 @@ public abstract class ValueFunction
     }
 
     @OnThread(Tag.Simulation)
-    public final @Value Object call(@Value Object[] args, ArgumentLocation @Nullable[] argumentLocations) throws InternalException, UserException
+    public final @Value Object call(@Value Object[] args, ArgumentExplanation @Nullable[] argumentExplanations) throws InternalException, UserException
     {
         this.curArgs = args;
-        this.curLocs = argumentLocations;
+        this.curLocs = argumentExplanations;
         return call();
     }
 
@@ -85,11 +83,11 @@ public abstract class ValueFunction
         return DataTypeUtility.requireInteger(arg(index, Number.class));
     }
     
-    public ImmutableList<ExplanationLocation> /*Explanation*/ getExplanation() throws InternalException
+    public Explanation getExplanation() throws InternalException
     {
-        //if (explanation != null)
-        //    return explanation;
-        //else
+        if (explanation != null)
+            return explanation;
+        else
             throw new InternalException("Function was meant to record an explanation, but did not");
     }
 
@@ -98,18 +96,26 @@ public abstract class ValueFunction
         recordExplanation = record;
     }
     
-    protected @Nullable ImmutableList<ExplanationLocation> withArgLoc(int argIndex, Function<ArgumentLocation, @Nullable ImmutableList<ExplanationLocation>> fetch)
+    protected void setExplanation(@Nullable Explanation explanation)
+    {
+        if (explanation != null && recordExplanation)
+            this.explanation = explanation;
+    }
+    
+    protected @Nullable Explanation withArgLoc(int argIndex, ExFunction<ArgumentExplanation, @Nullable Explanation> fetch) throws InternalException, UserException
     {
         return curLocs == null ? null : fetch.apply(curLocs[argIndex]);
     }
     
-    public static interface ArgumentLocation
+    // Used by some function implementations to access explanations
+    // of arguments, or of a list element of an argument.
+    public static interface ArgumentExplanation
     {
         @OnThread(Tag.Simulation)
-        @Nullable ImmutableList<ExplanationLocation> getValueLocation() throws InternalException;
+        Explanation getValueExplanation() throws InternalException;
 
         @OnThread(Tag.Simulation)
-        @Nullable ImmutableList<ExplanationLocation> getListElementLocation(int index);
+        @Nullable Explanation getListElementExplanation(int index, @Value Object value) throws InternalException;
     }
 
     @SuppressWarnings("valuetype")

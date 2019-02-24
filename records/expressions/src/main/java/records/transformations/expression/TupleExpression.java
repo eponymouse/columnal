@@ -82,7 +82,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         @Value Object[] values = new Object[members.size()];
         for (int i = 0; i < values.length; i++)
@@ -91,7 +91,7 @@ public class TupleExpression extends Expression
             values[i] = pair.getFirst();
             state = pair.getSecond();
         }
-        return new Pair<>(DataTypeUtility.value(values), state);
+        return new ValueResult(DataTypeUtility.value(values), state, members);
     }
 
     @Override

@@ -44,7 +44,7 @@ public abstract class AnyAllNone
                     if (recordExplanation)
                     {
                         int iFinal = i;
-                        explanation = withArgLoc(0, a -> a.getListElementLocation(iFinal));
+                        setExplanation(withArgLoc(0, a -> a.getListElementExplanation(iFinal, result)));
                     }
                     return returnIfTrueFound;
                 }
@@ -53,7 +53,7 @@ public abstract class AnyAllNone
                     if (recordExplanation)
                     {
                         int iFinal = i;
-                        explanation = withArgLoc(0, a -> a.getListElementLocation(iFinal));
+                        setExplanation(withArgLoc(0, a -> a.getListElementExplanation(iFinal, result)));
                     }
                     return returnIfFalseFound;
                 }

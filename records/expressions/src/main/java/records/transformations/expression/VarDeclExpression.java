@@ -54,7 +54,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
     }

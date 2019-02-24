@@ -46,10 +46,10 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // TODO return the actual type literal once we define the GADT
-        return new Pair<>(new TaggedValue(0, null), state);
+        return new ValueResult(new TaggedValue(0, null));
     }
 
     @Override

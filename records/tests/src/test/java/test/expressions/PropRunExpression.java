@@ -52,7 +52,7 @@ public class PropRunExpression
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)
             {
-                @Value Object actualValue = src.expression.getValue(new EvaluateState(dummyManager.getTypeManager(), OptionalInt.of(row))).getFirst();
+                @Value Object actualValue = src.expression.getValue(new EvaluateState(dummyManager.getTypeManager(), OptionalInt.of(row), errors)).getFirst();
                 assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
                     Utility.compareValues(src.value.get(row), actualValue, new Pair<>(EpsilonType.RELATIVE, new BigDecimal("0.000000001"))) == 0);
             }

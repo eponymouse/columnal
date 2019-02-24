@@ -31,7 +31,7 @@ import static records.transformations.expression.AddSubtractExpression.AddSubtra
 /**
  * Created by neil on 10/12/2016.
  */
-public class AddSubtractExpression extends NaryOpExpression
+public class AddSubtractExpression extends NaryOpTotalExpression
 {
     public static enum AddSubtractOp
     { ADD, SUBTRACT };
