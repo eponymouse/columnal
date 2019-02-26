@@ -16,6 +16,8 @@ import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.Check;
+import records.transformations.Check.CheckType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -117,6 +119,18 @@ public class TestExpressionExplanation
                 e("@call @function all(@entire T2:asc, (? = (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"), e("? = (1.8 \u00B1 1.2)", null, false, null, e("?", null, 4, null), e("1.8 \u00B1 1.2", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2"))))));
         testExplanation("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))",
                 e("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"), e("? <> (1.8 \u00B1 0.9)", null, true, null, e("?", null, 3, null), e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9"))))));
+        
+        testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", 0, false, l("T1", "half false", 0)));
+
+        testCheckExplanation("T1", "@if @column half false @then @column all false @else @column all true @endif", CheckType.ALL_ROWS, e("@if @column half false @then @column all false @else @column all true @endif", 1, false, null,
+            e("@column half false", 1, true, l("T1", "half false", 1)),
+            e("@column all false", 1, false, l("T1", "all false", 1))
+                ));
+
+        testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", 1, false, null,
+                e("@column half false", 1, true, l("T1", "half false", 1)),
+                e("@column all false", 1, false, l("T1", "all false", 1))
+        ));
     }
     
     @SuppressWarnings("value")
@@ -169,5 +183,17 @@ public class TestExpressionExplanation
         Explanation actual = expression.getExplanation();
         
         assertEquals(expectedExplanation, actual);
+    }
+
+    private void testCheckExplanation(String srcTable, String src, CheckType checkType, @Nullable Explanation expectedExplanation) throws Exception
+    {
+        TypeManager typeManager = tableManager.getTypeManager();
+        Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        
+        Check check = new Check(tableManager, TestUtil.ILD, new TableId(srcTable), checkType, expression);
+        boolean result = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
+        // null explanation means we expect a pass:
+        assertEquals(expectedExplanation == null, result);
+        assertEquals(expectedExplanation, check.getExplanation());
     }
 }

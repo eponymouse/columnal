@@ -17,18 +17,15 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
-import records.data.DataItemPosition;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
-import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View;
@@ -43,7 +40,6 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
-import records.gui.stable.ColumnDetails;
 import records.transformations.Check;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -163,7 +159,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             try
             {
                 boolean pass = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
-                @Nullable Explanation failExplanation = pass ? null : check.getExplanationLocation();
+                @Nullable Explanation failExplanation = pass ? null : check.getExplanation();
                 Platform.runLater(() -> {
                     resultContent.set(pass ? "OK" : "Fail");
                     failExplanationProperty.set(failExplanation);

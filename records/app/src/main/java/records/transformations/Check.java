@@ -309,7 +309,7 @@ public class Check extends Transformation
     }
 
     // Only valid after fetching the result.
-    public Explanation getExplanationLocation() throws InternalException
+    public Explanation getExplanation() throws InternalException
     {
         return checkExpression.getExplanation();
     }
