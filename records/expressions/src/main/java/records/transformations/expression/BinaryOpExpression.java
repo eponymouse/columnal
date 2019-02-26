@@ -134,9 +134,13 @@ public abstract class BinaryOpExpression extends Expression
     @OnThread(Tag.Simulation)
     public final ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
+        if (lhs instanceof ImplicitLambdaArg || rhs instanceof ImplicitLambdaArg)
         {
-            return new ValueResult(ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> getValueBinaryOp(s).getFirst()));
+            return new ValueResult(ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> {
+                Pair<@Value Object, EvaluateState> r = getValueBinaryOp(s);
+                explanation = makeExplanation(state, new ValueResult(r.getFirst(), state, ImmutableList.of(lhs, rhs)));
+                return r.getFirst();
+            }), ImmutableList.of(lhs, rhs));
         }
         else
         {

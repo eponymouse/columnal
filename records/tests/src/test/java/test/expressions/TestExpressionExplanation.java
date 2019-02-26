@@ -115,9 +115,8 @@ public class TestExpressionExplanation
             e("@call @function all(@entire T2:asc, (? < 3))", null, false, l("T2", "asc", 2), entire("T2", "asc"), e("? < 3", null, false, null, e("?", null, 3, null), lit(3))));
         testExplanation("@call @function all(@entire T2:asc, (? = (1.8 \u00B1 1.2)))",
                 e("@call @function all(@entire T2:asc, (? = (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"), e("? = (1.8 \u00B1 1.2)", null, false, null, e("?", null, 4, null), e("1.8 \u00B1 1.2", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2"))))));
-        /*
-        testExplanation("@call @function none(@entire T2:asc, (? <> (1 \u00B1 1)))", l("T2", "asc", 3));
-        */
+        testExplanation("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))",
+                e("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"), e("? <> (1.8 \u00B1 0.9)", null, true, null, e("?", null, 3, null), e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9"))))));
     }
     
     @SuppressWarnings("value")
