@@ -53,7 +53,7 @@ public class ToString extends FunctionDefinition
         }
         
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return DataTypeUtility.value(convertToString(type, arg(0)));
         }

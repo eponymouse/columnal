@@ -155,7 +155,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
             return ValueFunction.value(new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                 {
                     EvaluateState argState = state.add(lambdaArgs.get(0).getVarName(), arg(0));
                     return body.apply(argState);
@@ -168,7 +168,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
             return ValueFunction.value(new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                 {
                     EvaluateState argState = state;
                     for (int i = 0; i < lambdaArgs.size(); i++)

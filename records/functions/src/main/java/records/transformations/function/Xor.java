@@ -27,7 +27,7 @@ public class Xor extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return DataTypeUtility.value(arg(0, Boolean.class) ^ arg(1, Boolean.class));
         }

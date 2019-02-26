@@ -29,7 +29,7 @@ public class StringTrim extends FunctionDefinition
     {
 
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             String src = arg(0, String.class);
             String trimmed = CharMatcher.whitespace().trimFrom(src);

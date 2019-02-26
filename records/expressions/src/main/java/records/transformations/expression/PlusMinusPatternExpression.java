@@ -2,19 +2,28 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.EpsilonType;
+
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * This is a pattern match item, value +- tolerance.
@@ -71,7 +80,26 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     @Override
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        boolean match = Utility.compareNumbers(value, lhs.getValue(state).getFirst(), new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhs.getValue(state).getFirst(), Number.class)))) == 0;
+        @Value Object lhsValue = lhs.getValue(state).getFirst();
+        @Value Object rhsValue = rhs.getValue(state).getFirst();
+        boolean match = Utility.compareNumbers(value, lhsValue, new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
+        if (state.recordExplanation())
+        {
+            explanation = new Explanation(this, state, null, ImmutableList.of())
+            {
+                @Override
+                public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                {
+                    return StyledString.concat(PlusMinusPatternExpression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(lhs), lhsValue, null)), StyledString.s(" " + saveOp() + " "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(rhs), rhsValue, null)));
+                }
+
+                @Override
+                public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                {
+                    return ImmutableList.of(lhs.getExplanation(), rhs.getExplanation());
+                }
+            };
+        }
         return match ? state : null;
     }
 

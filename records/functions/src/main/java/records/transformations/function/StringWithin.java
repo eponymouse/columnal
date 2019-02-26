@@ -24,7 +24,7 @@ public class StringWithin //extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return DataTypeUtility.value(arg(1, String.class).contains(arg(0, String.class)));
         }

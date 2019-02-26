@@ -27,7 +27,7 @@ public class StringReplaceAll extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             @Value String target = arg(0, String.class);
             @Value String whole = arg(2, String.class);

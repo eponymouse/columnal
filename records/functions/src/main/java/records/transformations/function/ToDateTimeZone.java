@@ -95,7 +95,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class D_T_Z extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return ZonedDateTime.of(LocalDateTime.of(arg(0, LocalDate.class), arg(1, LocalTime.class)), ZoneId.of(arg(2, String.class)));
         }

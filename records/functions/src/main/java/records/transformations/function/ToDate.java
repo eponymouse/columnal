@@ -66,7 +66,7 @@ public class ToDate extends ToTemporalFunction
     private class FromYearMonth_Day extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             YearMonth ym = arg(0, YearMonth.class);
             int day = intArg(1);
@@ -84,7 +84,7 @@ public class ToDate extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             int year = intArg(0);
             int month = intArg(1);

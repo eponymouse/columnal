@@ -2,6 +2,9 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
+import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.function.ValueFunction;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -12,9 +15,12 @@ import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import utility.Either;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
+
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 17/01/2017.
@@ -36,14 +42,12 @@ public class GetElement extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
-            @Value int zeroBasedIndex = intArg(1);
-            @UserIndex int userIndex = DataTypeUtility.userIndex(zeroBasedIndex);
-            @Value Object listItemValue = Utility.getAtIndex(arg(0, ListEx.class), userIndex);
-            if (recordExplanation)
-                setExplanation(withArgLoc(0, loc -> loc.getListElementExplanation(zeroBasedIndex, listItemValue)));
-            return listItemValue;
+            @Value int oneBasedIndex = intArg(1);
+            @UserIndex int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
+            setUsedLocations(locs -> Utility.streamNullable(locs.get(0).getListElementLocation(oneBasedIndex - 1)));
+            return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
         }
     }
 }

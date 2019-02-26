@@ -22,7 +22,7 @@ public abstract class ValueFunction1<A> extends ValueFunction
 
     @Override
     @OnThread(Tag.Simulation)
-    public final @Value Object call() throws InternalException, UserException
+    public final @Value Object _call() throws InternalException, UserException
     {
         return call1(arg(0, classA));
     }

@@ -47,7 +47,7 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                         {
                             return convertEntireString(arg(0), type);
                         }
@@ -65,7 +65,7 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                         {
                             return convertEntireString(arg(1), type);
                         }

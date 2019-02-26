@@ -28,7 +28,7 @@ public class Single extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             ListEx list = arg(0, ListEx.class);
             if (list.size() == 1)

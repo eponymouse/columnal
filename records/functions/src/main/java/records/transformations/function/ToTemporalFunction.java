@@ -67,7 +67,7 @@ public abstract class ToTemporalFunction
         }
 
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             String src = Utility.preprocessDate(arg(0, String.class));
 
@@ -150,7 +150,7 @@ public abstract class ToTemporalFunction
             return new ValueFunction()
             {
                 @Override
-                public @Value Object call() throws UserException, InternalException
+                public @Value Object _call() throws UserException, InternalException
                 {
                     try
                     {

@@ -67,7 +67,7 @@ public class ToTime extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             int hour = DataTypeUtility.requireInteger(arg(0));
             int minute = DataTypeUtility.requireInteger(arg(1));

@@ -31,7 +31,7 @@ public class Mean extends SingleNumericSummaryFunction
         return new ValueFunction()
         {
             @Override
-            public @Value Object call() throws UserException, InternalException
+            public @Value Object _call() throws UserException, InternalException
             {
                 ListEx list = arg(0, ListEx.class);
                 int size = list.size();

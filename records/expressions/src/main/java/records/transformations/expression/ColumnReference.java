@@ -195,10 +195,10 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @OnThread(Tag.Simulation)
-    public Explanation getElementExplanation(EvaluateState state, @TableDataRowIndex int index, @Value Object value) throws InternalException
+    public @Nullable ExplanationLocation getElementLocation(@TableDataRowIndex int index) throws InternalException
     {
         if (resolvedTableName != null)
-            return makeExplanation(state, new ValueResult(value, state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, index))));
+            return new ExplanationLocation(resolvedTableName, columnName, index);
         throw new InternalException("Cannot explain unresolved table for column " + columnName);
     }
 }

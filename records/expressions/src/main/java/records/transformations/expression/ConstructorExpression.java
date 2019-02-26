@@ -80,7 +80,7 @@ public class ConstructorExpression extends NonOperatorExpression
                 return ValueFunction.value(new ValueFunction()
                 {
                     @Override
-                    public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                    public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                     {
                         return new TaggedValue(t.tagIndex, arg(0));
                     }

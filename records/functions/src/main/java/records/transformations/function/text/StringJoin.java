@@ -30,7 +30,7 @@ public class StringJoin extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             @Value ListEx textList = arg(0, ListEx.class);
             StringBuilder b = new StringBuilder();

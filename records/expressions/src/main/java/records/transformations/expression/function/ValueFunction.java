@@ -12,56 +12,47 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
+import utility.FunctionInt;
+import utility.Pair;
 import utility.Utility;
 
-import java.util.function.Function;
+import java.util.stream.Stream;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
 public abstract class ValueFunction
 {
-    private final String name;
-    protected boolean recordExplanation = false;
-    private @MonotonicNonNull Explanation explanation;
-    private @Value Object @Nullable [] curArgs;
-    private ArgumentExplanation @Nullable[] curLocs;
+    // null if we are not recording explanations or have no special info
+    private @MonotonicNonNull ImmutableList<ExplanationLocation> usedLocations;
+    // null if we are not recording
+    private @MonotonicNonNull ImmutableList<ArgumentExplanation> argExplanations;
+    private @Value Object @MonotonicNonNull[] curArgs;
     
+
     @OnThread(Tag.Any)
-    protected ValueFunction(/*String name*/)
+    protected ValueFunction()
     {
-        this.name = "TODO!!";
     }
 
+    // Not for external calling
     @OnThread(Tag.Simulation)
-    protected abstract @Value Object call() throws InternalException, UserException;
+    protected abstract @Value Object _call() throws InternalException, UserException;
 
+    // Call without recording an explanation
     @OnThread(Tag.Simulation)
     public final @Value Object call(@Value Object[] args) throws InternalException, UserException
     {
         this.curArgs = args;
-        if (recordExplanation)
-        {
-            // We provide a default explanation which is only
-            // used if the call() function hasn't filled it in.
-            @Value Object result = call();
-            if (explanation == null)
-            {
-               // TODO make an explanation 
-            }
-            return result;
-        }
-        else
-        {
-            return call();
-        }
+        return _call();
     }
 
+    // Call and record an explanation
     @OnThread(Tag.Simulation)
-    public final @Value Object call(@Value Object[] args, ArgumentExplanation @Nullable[] argumentExplanations) throws InternalException, UserException
+    public final RecordedFunctionResult callRecord(@Value Object[] args, ImmutableList<ArgumentExplanation> argumentExplanations) throws InternalException, UserException
     {
         this.curArgs = args;
-        this.curLocs = argumentExplanations;
-        return call();
+        this.argExplanations = argumentExplanations;
+        @Value Object result = _call();
+        return new RecordedFunctionResult(result, Utility.mapListInt(argumentExplanations, e -> e.getValueExplanation()), usedLocations != null ? usedLocations : ImmutableList.of());
     }
 
     protected final <T> @Value T arg(int index, Class<T> tClass) throws InternalException
@@ -83,30 +74,6 @@ public abstract class ValueFunction
         return DataTypeUtility.requireInteger(arg(index, Number.class));
     }
     
-    public Explanation getExplanation() throws InternalException
-    {
-        if (explanation != null)
-            return explanation;
-        else
-            throw new InternalException("Function was meant to record an explanation, but did not");
-    }
-
-    public void setRecordExplanation(boolean record)
-    {
-        recordExplanation = record;
-    }
-    
-    protected void setExplanation(@Nullable Explanation explanation)
-    {
-        if (explanation != null && recordExplanation)
-            this.explanation = explanation;
-    }
-    
-    protected @Nullable Explanation withArgLoc(int argIndex, ExFunction<ArgumentExplanation, @Nullable Explanation> fetch) throws InternalException, UserException
-    {
-        return curLocs == null ? null : fetch.apply(curLocs[argIndex]);
-    }
-    
     // Used by some function implementations to access explanations
     // of arguments, or of a list element of an argument.
     public static interface ArgumentExplanation
@@ -114,13 +81,35 @@ public abstract class ValueFunction
         @OnThread(Tag.Simulation)
         Explanation getValueExplanation() throws InternalException;
 
+        // If this argument is a column, give back the location
+        // for the given zero-based index.
         @OnThread(Tag.Simulation)
-        @Nullable Explanation getListElementExplanation(int index, @Value Object value) throws InternalException;
+        @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException;
+    }
+    
+    protected void setUsedLocations(FunctionInt<ImmutableList<ArgumentExplanation>, Stream<ExplanationLocation>> extractLocations) throws InternalException
+    {
+        if (argExplanations != null)
+            this.usedLocations = extractLocations.apply(argExplanations).collect(ImmutableList.<ExplanationLocation>toImmutableList());
     }
 
     @SuppressWarnings("valuetype")
     public static @Value ValueFunction value(@UnknownIfValue ValueFunction function)
     {
         return function;
+    }
+
+    public static class RecordedFunctionResult
+    {
+        public final @Value Object result;
+        public final ImmutableList<Explanation> childExplanations;
+        public final ImmutableList<ExplanationLocation> usedLocations;
+
+        public RecordedFunctionResult(@Value Object result, ImmutableList<Explanation> childExplanations, ImmutableList<ExplanationLocation> usedLocations)
+        {
+            this.result = result;
+            this.childExplanations = childExplanations;
+            this.usedLocations = usedLocations;
+        }
     }
 }

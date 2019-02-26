@@ -32,7 +32,7 @@ public class InList extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
             ListEx list = Utility.cast(arg(1), ListEx.class);
             for (int i = 0; i < list.size(); i++)

@@ -35,7 +35,7 @@ public class LookupFunctions
                     return ValueFunction.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                         {
                             ListEx listA = arg(0, ListEx.class);
                             ListEx listB = arg(2, ListEx.class);
@@ -57,7 +57,7 @@ public class LookupFunctions
                     return ValueFunction.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
                         {
                             ListEx listA = arg(0, ListEx.class);
                             ListEx listB = arg(2, ListEx.class);

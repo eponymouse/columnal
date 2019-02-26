@@ -31,7 +31,7 @@ public class Round extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @Value Object call() throws UserException, InternalException
+            public @Value Object _call() throws UserException, InternalException
             {
                 return DataTypeUtility.value(Utility.<Number>withNumber(arg(0, Number.class), x -> x, d -> d.setScale(0, RoundingMode.HALF_UP)));
             }

@@ -32,7 +32,7 @@ public class JoinLists extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
             ListEx listOfLists = arg(0, ListEx.class);
             return DataTypeUtility.value(new ListEx()

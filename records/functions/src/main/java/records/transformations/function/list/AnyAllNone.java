@@ -32,29 +32,22 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             ListEx list = arg(0, ListEx.class);
             ValueFunction processElement = arg(1, ValueFunction.class);
             for (int i = 0; i < list.size(); i++)
             {
+                int iFinal = i;
                 @Value Boolean result = Utility.cast(processElement.call(new @Value Object [] {list.get(i)}), Boolean.class);
                 if (result && returnIfTrueFound != null)
                 {
-                    if (recordExplanation)
-                    {
-                        int iFinal = i;
-                        setExplanation(withArgLoc(0, a -> a.getListElementExplanation(iFinal, result)));
-                    }
+                    setUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
                     return returnIfTrueFound;
                 }
                 else if (!result && returnIfFalseFound != null)
                 {
-                    if (recordExplanation)
-                    {
-                        int iFinal = i;
-                        setExplanation(withArgLoc(0, a -> a.getListElementExplanation(iFinal, result)));
-                    }
+                    setUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
                     return returnIfFalseFound;
                 }
             }

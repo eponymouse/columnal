@@ -46,6 +46,7 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.function.ValueFunction.RecordedFunctionResult;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.typeExp.ExpressionBase;
@@ -268,6 +269,14 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             this.directChildExplanations = () -> Utility.mapListInt(childrenForExplanations, e -> e.getExplanation());
             this.usedLocations = usedLocations;
         }
+
+        public ValueResult(RecordedFunctionResult recordedFunctionResult)
+        {
+            this.value = recordedFunctionResult.result;
+            this.evaluateState = null;
+            this.directChildExplanations = () -> recordedFunctionResult.childExplanations;
+            this.usedLocations = recordedFunctionResult.usedLocations;
+        }
     }
     
     
@@ -281,13 +290,16 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         ValueResult r = calculateValue(state);
-        if (explanation == null && state.recordExplanation())
+        // Important we always overwrite, because some expressions (e.g. inside a lambda)
+        // may get evaluated multiple times, but we always want to keep the last value seen:
+        if (state.recordExplanation())
         {
             explanation = makeExplanation(state, r);
         }
         return new Pair<>(r.value, r.evaluateState == null ? state : r.evaluateState);
     }
 
+    // Can be overridden by subclasses if needed
     protected Explanation makeExplanation(EvaluateState state, ValueResult r)
     {
         return new Explanation(this, state, r.value, r.usedLocations)
@@ -896,10 +908,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     }
 
     /**
-     * If this is a boolean expression, can we pinpoint why it
-     * came back with its result?  If so, return the non-null
-     * list of cell locations from this method.
-     * @return
+     * Get the explanation of the expression's most recent value.
      */
     @OnThread(Tag.Simulation)
     public final @NonNull Explanation getExplanation() throws InternalException

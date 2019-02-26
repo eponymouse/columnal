@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -10,6 +11,7 @@ import records.error.UserException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.OptionalInt;
 
 /**
@@ -75,6 +77,11 @@ public final class EvaluateState
     public @TableDataRowIndex int getRowIndex() throws UserException
     {
         return rowIndex.orElseThrow(() -> new UserException("No row index available."));
+    }
+    
+    public OptionalInt _test_getOptionalRowIndex()
+    {
+        return rowIndex;
     }
 
     public boolean recordExplanation()

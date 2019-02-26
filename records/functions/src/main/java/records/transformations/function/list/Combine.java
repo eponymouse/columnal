@@ -32,7 +32,7 @@ public class Combine extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
             ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)

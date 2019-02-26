@@ -63,7 +63,7 @@ public class ToDateTime extends ToTemporalFunction
     private class DateAndTimeInstance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return LocalDateTime.of(arg(0, LocalDate.class), arg(1, LocalTime.class));
         }

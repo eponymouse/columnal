@@ -61,7 +61,7 @@ public class ToYearMonth extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             return YearMonth.of(intArg(0), intArg(1));
         }

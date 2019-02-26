@@ -35,7 +35,7 @@ public class AddDays extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+            public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
             {
                 @Value Temporal lhs = arg(0, Temporal.class);
                 @Value Number rhs = arg(1, Number.class);

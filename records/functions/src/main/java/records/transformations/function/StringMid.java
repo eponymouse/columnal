@@ -24,7 +24,7 @@ public class StringMid //extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object call() throws UserException, InternalException
+        public @Value Object _call() throws UserException, InternalException
         {
             String src = arg(0, String.class);
             int codePointStart = intArg(1);

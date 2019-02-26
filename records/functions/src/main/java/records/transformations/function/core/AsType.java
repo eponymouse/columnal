@@ -29,7 +29,7 @@ public class AsType extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object call() throws InternalException, UserException
+        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
             return arg(1);
         }
