@@ -3,14 +3,19 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.Utility;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.OptionalInt;
 
@@ -83,6 +88,11 @@ public final class EvaluateState
     {
         return rowIndex;
     }
+    
+    public ImmutableMap<String, @Value Object> _test_getVariables()
+    {
+        return variables;
+    }
 
     public boolean recordExplanation()
     {
@@ -99,5 +109,45 @@ public final class EvaluateState
     public DataType getTypeFor(Expression expression) throws InternalException, UserException
     {
         return typeLookup.getTypeFor(typeManager, expression);
+    }
+
+    // Equals and hashCode on EvaluateState are only used by
+    // explanations, for checking if two executations of the same
+    // expression had equivalent context.
+    @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EvaluateState that = (EvaluateState) o;
+        if (!variables.keySet().equals(that.variables.keySet()))
+            return false;
+        for (Entry<String, @Value Object> var : variables.entrySet())
+        {
+            @Value Object otherVarValue = that.variables.get(var.getKey());
+            // Shouldn't be null given the above keySet check, but satisfy checker:
+            if (otherVarValue == null)
+                continue;
+            try
+            {
+                if (Utility.compareValues(var.getValue(), otherVarValue) != 0)
+                    return false;
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                return false;
+            }
+        }
+        return rowIndex.equals(that.rowIndex);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        // We don't hash variables because it's too complex, so
+        // we just live with having hash collisions:
+        return Objects.hash(rowIndex);
     }
 }

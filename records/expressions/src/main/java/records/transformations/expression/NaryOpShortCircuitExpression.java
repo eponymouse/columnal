@@ -22,12 +22,7 @@ public abstract class NaryOpShortCircuitExpression extends NaryOpExpression
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return new ValueResult(ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> {
-                ValueResult r = getValueNaryOp(s);
-                explanation = makeExplanation(s, r);
-                return r.value;
-                
-            }), expressions);
+            return ImplicitLambdaArg.makeImplicitFunction(this, expressions, state, s -> getValueNaryOp(s));
         }
         else
         {

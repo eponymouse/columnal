@@ -69,7 +69,7 @@ public class StandardFunction extends NonOperatorExpression
                 l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
                 t2 -> t2
             ));
-        })));
+        })), state);
     }
 
     @Override

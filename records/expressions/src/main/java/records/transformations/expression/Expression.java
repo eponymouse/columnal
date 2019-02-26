@@ -83,8 +83,6 @@ import java.util.stream.Stream;
  */
 public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>
 {
-    protected @MonotonicNonNull Explanation explanation;
-    
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
     public static interface ColumnLookup
@@ -239,86 +237,67 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     }
     
     @OnThread(Tag.Simulation)
-    protected static class ValueResult
+    public class ValueResult
     {
         public final @Value Object value;
-        // If null, means unaltered.
-        private final @Nullable EvaluateState evaluateState;
+        // State after execution:
+        public final EvaluateState evaluateState;
         private final SimulationSupplierInt<ImmutableList<Explanation>> directChildExplanations;
         private final ImmutableList<ExplanationLocation> usedLocations;
 
-        public ValueResult(@Value Object value)
+        protected ValueResult(@Value Object value, EvaluateState state)
         {
-            this(value, ImmutableList.of());
+            this(value, state, ImmutableList.of());
         }
-
-        public ValueResult(@Value Object value, ImmutableList<@Recorded Expression> childrenForExplanations)
-        {
-            this(value, null, childrenForExplanations);
-        }
-
-        public ValueResult(@Value Object value, @Nullable EvaluateState state, ImmutableList<@Recorded Expression> childrenForExplanations)
+        
+        protected ValueResult(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
         {
             this(value, state, childrenForExplanations, ImmutableList.of());
         }
         
-        public ValueResult(@Value Object value, @Nullable EvaluateState state, ImmutableList<@Recorded Expression> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+        protected ValueResult(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
         {
             this.value = value;
             this.evaluateState = state;
-            this.directChildExplanations = () -> Utility.mapListInt(childrenForExplanations, e -> e.getExplanation());
+            this.directChildExplanations = () -> Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation());
             this.usedLocations = usedLocations;
         }
 
-        public ValueResult(RecordedFunctionResult recordedFunctionResult)
+        protected ValueResult(RecordedFunctionResult recordedFunctionResult, EvaluateState state)
         {
             this.value = recordedFunctionResult.result;
-            this.evaluateState = null;
+            this.evaluateState = state;
             this.directChildExplanations = () -> recordedFunctionResult.childExplanations;
             this.usedLocations = recordedFunctionResult.usedLocations;
         }
+
+        // Can be overridden by subclasses if needed
+        public Explanation makeExplanation()
+        {
+            return new Explanation(Expression.this, evaluateState, value, usedLocations)
+            {
+                @Override
+                @OnThread(Tag.Simulation)
+                public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                {
+                    return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
+                }
+
+                @Override
+                @OnThread(Tag.Simulation)
+                public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                {
+                    return directChildExplanations.get();
+                }
+            };
+        }
     }
-    
     
     /**
      * Gets the value for this expression at the given evaluation state
      */
     @OnThread(Tag.Simulation)
-    protected abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
-    
-    @OnThread(Tag.Simulation)
-    public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
-    {
-        ValueResult r = calculateValue(state);
-        // Important we always overwrite, because some expressions (e.g. inside a lambda)
-        // may get evaluated multiple times, but we always want to keep the last value seen:
-        if (state.recordExplanation())
-        {
-            explanation = makeExplanation(state, r);
-        }
-        return new Pair<>(r.value, r.evaluateState == null ? state : r.evaluateState);
-    }
-
-    // Can be overridden by subclasses if needed
-    protected Explanation makeExplanation(EvaluateState state, ValueResult r)
-    {
-        return new Explanation(this, state, r.value, r.usedLocations)
-        {
-            @Override
-            @OnThread(Tag.Simulation)
-            public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
-            {
-                return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(Expression.this), r.value, null)));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
-            {
-                return r.directChildExplanations.get();
-            }
-        };
-    }
+    public abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
@@ -372,7 +351,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @OnThread(Tag.Simulation)
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object ourValue = getValue(state).getFirst();
+        @Value Object ourValue = calculateValue(state).value;
         return Utility.compareValues(value, ourValue) == 0 ? state : null;
     }
 
@@ -905,17 +884,5 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             buildContent.run();
             builder.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         }
-    }
-
-    /**
-     * Get the explanation of the expression's most recent value.
-     */
-    @OnThread(Tag.Simulation)
-    public final @NonNull Explanation getExplanation() throws InternalException
-    {
-        if (explanation == null)
-            throw new InternalException("Missing explanation for expression: " + this + "(" + getClass() + ")");
-        else
-            return explanation;
     }
 }

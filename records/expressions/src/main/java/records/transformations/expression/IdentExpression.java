@@ -64,7 +64,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new ValueResult(state.get(text));
+        return new ValueResult(state.get(text), state);
     }
 
     @Override

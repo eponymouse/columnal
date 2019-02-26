@@ -78,7 +78,7 @@ public class TemporalLiteral extends Literal
     {
         return new ValueResult(value.<@Value Object>eitherInt(err -> {
             throw new InternalException("Executing with unrecognised date/time literal: " + content + " " + err);
-        }, v -> v));
+        }, v -> v), state);
     }
 
     @Override

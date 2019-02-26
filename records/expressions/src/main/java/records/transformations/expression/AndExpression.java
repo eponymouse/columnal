@@ -13,6 +13,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -71,18 +72,20 @@ public class AndExpression extends NaryOpShortCircuitExpression
     public ValueResult getValueNaryOp(final EvaluateState origState) throws UserException, InternalException
     {
         EvaluateState state = origState;
+        TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
         for (int i = 0; i < expressions.size(); i++)
         {
             Expression expression = expressions.get(i);
-            Pair<@Value Object, EvaluateState> valState = expression.getValue(state);
-            Boolean b = Utility.cast(valState.getFirst(), Boolean.class);
+            ValueResult valState = values.add(expression.calculateValue(state));
+            Boolean b = Utility.cast(valState.value, Boolean.class);
             if (b == false)
             {
-                return new ValueResult(DataTypeUtility.value(false), origState, ImmutableList.copyOf(expressions.subList(0, i + 1)));
+                return new ValueResult(DataTypeUtility.value(false), origState, values.build());
             }
-            state = valState.getSecond();
+            // In and, state is threaded through to next items:
+            state = valState.evaluateState;
         }
-        return new ValueResult(DataTypeUtility.value(true), state, expressions);
+        return new ValueResult(DataTypeUtility.value(true), state, values.build());
     }
 
     @SuppressWarnings("recorded")

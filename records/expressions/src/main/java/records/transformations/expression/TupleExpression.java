@@ -20,6 +20,7 @@ import styled.StyledString;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -84,14 +85,13 @@ public class TupleExpression extends Expression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
+        TransparentBuilder<ValueResult> valueResults = new TransparentBuilder<>(members.size());
         @Value Object[] values = new Object[members.size()];
         for (int i = 0; i < values.length; i++)
         {
-            Pair<@Value Object, EvaluateState> pair = members.get(i).getValue(state);
-            values[i] = pair.getFirst();
-            state = pair.getSecond();
+            values[i] = valueResults.add(members.get(i).calculateValue(state)).value;
         }
-        return new ValueResult(DataTypeUtility.value(values), state, members);
+        return new ValueResult(DataTypeUtility.value(values), state, valueResults.build());
     }
 
     @Override

@@ -136,21 +136,20 @@ public abstract class BinaryOpExpression extends Expression
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof ImplicitLambdaArg)
         {
-            return new ValueResult(ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> {
-                Pair<@Value Object, EvaluateState> r = getValueBinaryOp(s);
-                explanation = makeExplanation(state, new ValueResult(r.getFirst(), state, ImmutableList.of(lhs, rhs)));
-                return r.getFirst();
-            }), ImmutableList.of(lhs, rhs));
+            return ImplicitLambdaArg.makeImplicitFunction(this, ImmutableList.of(lhs, rhs), state, s -> {
+                Pair<@Value Object, ImmutableList<ValueResult>> result = getValueBinaryOp(s);
+                return new ValueResult(result.getFirst(), s, result.getSecond());
+            });
         }
         else
         {
-            Pair<@Value Object, EvaluateState> r = getValueBinaryOp(state);
-            return new ValueResult(r.getFirst(), r.getSecond(), ImmutableList.of(lhs, rhs));
+            Pair<@Value Object, ImmutableList<ValueResult>> r = getValueBinaryOp(state);
+            return new ValueResult(r.getFirst(), state, r.getSecond());
         }
     }
 
     @OnThread(Tag.Simulation)
-    public abstract Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
+    public abstract Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
     public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException

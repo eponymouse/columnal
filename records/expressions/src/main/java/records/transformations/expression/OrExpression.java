@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -60,16 +61,17 @@ public class OrExpression extends NaryOpShortCircuitExpression
     @OnThread(Tag.Simulation)
     public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
+        TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
         for (int i = 0; i < expressions.size(); i++)
         {
             Expression expression = expressions.get(i);
-            Boolean b = Utility.cast(expression.getValue(state).getFirst(), Boolean.class);
+            Boolean b = Utility.cast(values.add(expression.calculateValue(state)).value, Boolean.class);
             if (b == true)
             {
-                return new ValueResult(DataTypeUtility.value(true), ImmutableList.copyOf(expressions.subList(0, i + 1)));
+                return new ValueResult(DataTypeUtility.value(true), state, values.build());
             }
         }
-        return new ValueResult(DataTypeUtility.value(false), expressions);
+        return new ValueResult(DataTypeUtility.value(false), state, values.build());
     }
 
     @SuppressWarnings("recorded")

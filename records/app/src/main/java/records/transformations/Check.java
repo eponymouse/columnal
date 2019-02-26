@@ -10,6 +10,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.transformations.expression.EvaluateState.TypeLookup;
+import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.error.InternalException;
@@ -64,6 +65,7 @@ public class Check extends Transformation
     @OnThread(Tag.Any)
     private final Expression checkExpression;
     private @MonotonicNonNull Pair<TypeLookup, DataType> type;
+    private @MonotonicNonNull Explanation explanation;
     
     public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, CheckType checkType, Expression checkExpression) throws InternalException
     {
@@ -115,7 +117,9 @@ public class Check extends Transformation
         }
         if (checkType == CheckType.STANDALONE)
         {
-            return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true, type.getFirst())).getFirst();
+            ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true, type.getFirst()));
+            explanation = r.makeExplanation();
+            return r.value;
         }
         else
         {
@@ -125,13 +129,23 @@ public class Check extends Transformation
                 int length = srcTable.getData().getLength();
                 for (int row = 0; row < length; row++)
                 {
-                    boolean thisRow = Utility.cast(checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true, type.getFirst())).getFirst(), Boolean.class);
+                    ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true, type.getFirst()));
+                    boolean thisRow = Utility.cast(r.value, Boolean.class);
                     if (thisRow && checkType == CheckType.NO_ROWS)
+                    {
+                        explanation = r.makeExplanation();
                         return DataTypeUtility.value(false);
+                    }
                     else if (!thisRow && checkType == CheckType.ALL_ROWS)
+                    {
+                        explanation = r.makeExplanation();
                         return DataTypeUtility.value(false);
+                    }
                     else if (thisRow && checkType == CheckType.ANY_ROW)
+                    {
+                        explanation = r.makeExplanation();
                         return DataTypeUtility.value(true);
+                    }
                 }
                 if (checkType == CheckType.ANY_ROW)
                     return DataTypeUtility.value(false);
@@ -309,9 +323,9 @@ public class Check extends Transformation
     }
 
     // Only valid after fetching the result.
-    public Explanation getExplanation() throws InternalException
+    public @Nullable Explanation getExplanation() throws InternalException
     {
-        return checkExpression.getExplanation();
+        return explanation;
     }
 
     @Override

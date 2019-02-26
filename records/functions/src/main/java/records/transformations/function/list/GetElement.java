@@ -46,7 +46,7 @@ public class GetElement extends FunctionDefinition
         {
             @Value int oneBasedIndex = intArg(1);
             @UserIndex int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
-            setUsedLocations(locs -> Utility.streamNullable(locs.get(0).getListElementLocation(oneBasedIndex - 1)));
+            addUsedLocations(locs -> Utility.streamNullable(locs.get(0).getListElementLocation(oneBasedIndex - 1)));
             return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
         }
     }

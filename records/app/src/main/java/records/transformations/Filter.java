@@ -166,7 +166,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = Utility.cast(filterExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).getFirst(), Boolean.class);
+            boolean keep = Utility.cast(filterExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).value, Boolean.class);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

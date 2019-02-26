@@ -17,6 +17,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.Random;
  */
 public class EqualExpression extends NaryOpShortCircuitExpression
 {
+    // Calculated during type-checking; which sub-expression, if any, is the single pattern?
     private OptionalInt patternIndex = OptionalInt.empty();
     
     public EqualExpression(List<@Recorded Expression> operands)
@@ -139,22 +141,23 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         {
             if (expressions.size() > 2)
                 throw new InternalException("Pattern present in equals despite having more than two operands");
-            @Value Object value = expressions.get(1 - patternIndex.getAsInt()).getValue(state).getFirst();
-            @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value, state);
-            return new ValueResult(DataTypeUtility.value(result != null), result != null ? result : state, expressions);    
+            ValueResult value = expressions.get(1 - patternIndex.getAsInt()).calculateValue(state);
+            @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value.value, state);
+            return new ValueResult(DataTypeUtility.value(result != null), result != null ? result : state, ImmutableList.of(value));    
         }
-        
-        @Value Object first = expressions.get(0).getValue(state).getFirst();
+
+        TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
+        @Value Object first = values.add(expressions.get(0).calculateValue(state)).value;
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object rhsVal = expressions.get(i).getValue(state).getFirst();
+            @Value Object rhsVal = values.add(expressions.get(i).calculateValue(state)).value;
             if (0 != Utility.compareValues(first, rhsVal))
             {
-                return new ValueResult(DataTypeUtility.value(false), ImmutableList.copyOf(expressions.subList(0, i + 1)));
+                return new ValueResult(DataTypeUtility.value(false), state, values.build());
             }
         }
 
-        return new ValueResult(DataTypeUtility.value(true), expressions);
+        return new ValueResult(DataTypeUtility.value(true), state, values.build());
     }
 
     @Override

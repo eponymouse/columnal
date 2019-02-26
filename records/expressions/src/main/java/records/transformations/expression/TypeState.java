@@ -33,6 +33,7 @@ public class TypeState
     private final ImmutableMap<String, ImmutableList<TypeExp>> variables;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
+    private int nextLambdaId = 1;
 
     public TypeState(UnitManager unitManager, TypeManager typeManager)
     {
@@ -64,6 +65,7 @@ public class TypeState
         TypeState typeState = this;
         for (int i = 0; i < lambdaArgs.size(); i++)
         {
+            lambdaArgs.get(i).assignId(this);
             typeState = typeState.addAllowShadow(lambdaArgs.get(i).getVarName(), argTypes.get(i));
         }
         return typeState;
@@ -233,5 +235,10 @@ public class TypeState
         return "TypeState{" +
                 "variables=" + variables +
                 '}';
+    }
+
+    public int getNextLambdaId()
+    {
+        return nextLambdaId++;
     }
 }

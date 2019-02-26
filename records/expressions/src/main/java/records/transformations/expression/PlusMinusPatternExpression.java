@@ -72,7 +72,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
     }
@@ -80,11 +80,12 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     @Override
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object lhsValue = lhs.getValue(state).getFirst();
-        @Value Object rhsValue = rhs.getValue(state).getFirst();
+        @Value Object lhsValue = lhs.calculateValue(state).value;
+        @Value Object rhsValue = rhs.calculateValue(state).value;
         boolean match = Utility.compareNumbers(value, lhsValue, new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
         if (state.recordExplanation())
         {
+            /*TODO
             explanation = new Explanation(this, state, null, ImmutableList.of())
             {
                 @Override
@@ -99,6 +100,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
                     return ImmutableList.of(lhs.getExplanation(), rhs.getExplanation());
                 }
             };
+            */
         }
         return match ? state : null;
     }

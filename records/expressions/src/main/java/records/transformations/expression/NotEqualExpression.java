@@ -72,27 +72,27 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
         if (patternIsLeft != null)
         {
             boolean left = patternIsLeft;
             // Get value from the non-pattern:
-            @Value Object val = left ? rhs.getValue(state).getFirst() : lhs.getValue(state).getFirst();
+            ValueResult val = left ? rhs.calculateValue(state) : lhs.calculateValue(state);
             @Nullable EvaluateState result;
             if (left)
-                result = lhs.matchAsPattern(val, state);
+                result = lhs.matchAsPattern(val.value, state);
             else
-                result = rhs.matchAsPattern(val, state);
+                result = rhs.matchAsPattern(val.value, state);
             // We are not-equals, so looking for failure,
             // and we don't affect the state:
-            return new Pair<>(DataTypeUtility.value(result == null), state);
+            return new Pair<>(DataTypeUtility.value(result == null), ImmutableList.of(val));
         }
         else
         {
-            @Value Object lhsVal = lhs.getValue(state).getFirst();
-            @Value Object rhsVal = rhs.getValue(state).getFirst();
-            return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal)), state);
+            ValueResult lhsVal = lhs.calculateValue(state);
+            ValueResult rhsVal = rhs.calculateValue(state);
+            return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal.value, rhsVal.value)), ImmutableList.of(lhsVal, rhsVal));
         }
     }
 

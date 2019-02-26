@@ -21,6 +21,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -138,17 +139,18 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     @OnThread(Tag.Simulation)
     public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object cur = expressions.get(0).getValue(state).getFirst();
+        TransparentBuilder<ValueResult> usedValues = new TransparentBuilder<>(expressions.size());
+        @Value Object cur = usedValues.add(expressions.get(0).calculateValue(state)).value;
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object next = expressions.get(i).getValue(state).getFirst();
+            @Value Object next = usedValues.add(expressions.get(i).calculateValue(state)).value;
             if (!operators.get(i - 1).comparisonTrue(cur, next))
             {
-                return new ValueResult(DataTypeUtility.value(false), ImmutableList.copyOf(expressions.subList(0, i + 1)));
+                return new ValueResult(DataTypeUtility.value(false), state, usedValues.build());
             }
             cur = next;
         }
-        return new ValueResult(DataTypeUtility.value(true), expressions);
+        return new ValueResult(DataTypeUtility.value(true), state, usedValues.build());
     }
 
     @SuppressWarnings("recorded")

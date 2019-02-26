@@ -49,7 +49,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // TODO return the actual type literal once we define the GADT
-        return new ValueResult(new TaggedValue(0, null));
+        return new ValueResult(new TaggedValue(0, null), state);
     }
 
     @Override

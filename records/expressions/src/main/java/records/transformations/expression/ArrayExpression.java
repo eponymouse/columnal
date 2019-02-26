@@ -24,6 +24,7 @@ import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.TransparentBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,14 +101,13 @@ public class ArrayExpression extends Expression
     @OnThread(Tag.Simulation)
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        List<@Value Object> values = new ArrayList<>(items.size());
+        TransparentBuilder<ValueResult> valuesBuilder = new TransparentBuilder<>(items.size());
         for (Expression item : items)
         {
-            Pair<@Value Object, EvaluateState> valueAndState = item.getValue(state);
-            values.add(valueAndState.getFirst());
-            state = valueAndState.getSecond();
+            valuesBuilder.add(item.calculateValue(state));
         }
-        return new ValueResult(DataTypeUtility.value(values), state, items);
+        ImmutableList<ValueResult> values = valuesBuilder.build();
+        return new ValueResult(DataTypeUtility.value(Utility.mapList(values, v -> v.value)), state, values);
     }
 
     @Override

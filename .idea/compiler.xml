@@ -16,9 +16,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar." />
         <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
-        <processor name="org.checkerframework.checker.guieffect.GuiEffectChecker" />
-        <processor name="org.checkerframework.checker.interning.InterningChecker" />
-        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/checker-dist/checker.jar" />
           <entry name="J" />

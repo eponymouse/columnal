@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
@@ -88,17 +89,15 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws UserException, InternalException
     {
         StringBuilder sb = new StringBuilder();
-        for (Expression expression : expressions)
+        for (ValueResult value : values)
         {
-            Pair<@Value Object, EvaluateState> valueAndState = expression.getValue(state);
-            String s = Utility.cast(valueAndState.getFirst(), String.class);
+            String s = Utility.cast(value.value, String.class);
             sb.append(s);
-            state = valueAndState.getSecond();
         }
-        return new Pair<>(DataTypeUtility.value(sb.toString()), state);
+        return new ValueResult(DataTypeUtility.value(sb.toString()), state, values);
     }
 
     @Override
@@ -117,7 +116,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             else
             {
                 // It's a value; get that value:
-                String subValue = Utility.cast(expressions.get(i).getValue(state).getFirst(), String.class);
+                String subValue = Utility.cast(expressions.get(i).calculateValue(state).value, String.class);
                 if (subValue.isEmpty())
                 {
                     // Matches, but nothing to do.  Keep going...

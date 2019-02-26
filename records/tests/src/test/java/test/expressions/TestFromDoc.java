@@ -243,7 +243,7 @@ public class TestFromDoc
                     // Must be user exception
                     try
                     {
-                        expression.getValue(evaluateState);
+                        expression.calculateValue(evaluateState);
                         Assert.fail("Expected error but got none for\n" + line);
                     }
                     catch (UserException e)
@@ -253,7 +253,7 @@ public class TestFromDoc
                 }
                 else
                 {
-                    boolean result = (Boolean)expression.getValue(evaluateState).getFirst();
+                    boolean result = (Boolean)expression.calculateValue(evaluateState).value;
                     assertTrue(line + " values: " + Utility.listToString(varValues), result);
                 }
             }

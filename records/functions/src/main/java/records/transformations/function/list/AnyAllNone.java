@@ -1,6 +1,7 @@
 package records.transformations.function.list;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -8,12 +9,16 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.function.FunctionDefinition;
+import threadchecker.OnThread;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import records.transformations.expression.function.ValueFunction;
+import threadchecker.Tag;
 
 // Maybe this should be a package
 public abstract class AnyAllNone
@@ -35,19 +40,18 @@ public abstract class AnyAllNone
         public @Value Object _call() throws UserException, InternalException
         {
             ListEx list = arg(0, ListEx.class);
-            ValueFunction processElement = arg(1, ValueFunction.class);
             for (int i = 0; i < list.size(); i++)
             {
                 int iFinal = i;
-                @Value Boolean result = Utility.cast(processElement.call(new @Value Object [] {list.get(i)}), Boolean.class);
+                @Value Boolean result = Utility.cast(callArg(1, new @Value Object [] {list.get(i)}), Boolean.class);
                 if (result && returnIfTrueFound != null)
                 {
-                    setUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
+                    addUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
                     return returnIfTrueFound;
                 }
                 else if (!result && returnIfFalseFound != null)
                 {
-                    setUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
+                    addUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));
                     return returnIfFalseFound;
                 }
             }

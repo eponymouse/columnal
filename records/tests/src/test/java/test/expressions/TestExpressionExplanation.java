@@ -2,6 +2,7 @@ package test.expressions;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListExList;
@@ -40,6 +42,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
@@ -110,7 +113,10 @@ public class TestExpressionExplanation
     public void testExplainedAll() throws Exception
     {
         testExplanation("@call @function all(@entire T1:all false, (? = true))", 
-            e("@call @function all(@entire T1:all false, (? = true))", null, false, l("T1", "all false", 0), entire("T1", "all false"), e("? = true", null, false, null, e("?", null, false, null), lit(true))));
+            e("@call @function all(@entire T1:all false, (? = true))", null, false, l("T1", "all false", 0),
+                entire("T1", "all false"),
+                    e("? = true", null, null, null),
+                    e("? = true", q(false), false, null, e("?", q(false), false, null), lit(true))));
         testExplanation("@call @function all(@entire T1:half false, @function not)",
             e("@call @function all(@entire T1:half false, @function not)", null, false, l("T1", "half false", 1), entire("T1", "half false"), e("@function not", null, null, null)));
         testExplanation("@call @function all(@entire T2:asc, (? < 3))",
@@ -120,25 +126,48 @@ public class TestExpressionExplanation
         testExplanation("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))",
                 e("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"), e("? <> (1.8 \u00B1 0.9)", null, true, null, e("?", null, 3, null), e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9"))))));
         
-        testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", 0, false, l("T1", "half false", 0)));
+        testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", r(0), false, l("T1", "half false", 0)));
 
-        testCheckExplanation("T1", "@if @column half false @then @column all false @else @column all true @endif", CheckType.ALL_ROWS, e("@if @column half false @then @column all false @else @column all true @endif", 1, false, null,
-            e("@column half false", 1, true, l("T1", "half false", 1)),
-            e("@column all false", 1, false, l("T1", "all false", 1))
+        testCheckExplanation("T1", "@if @column half false @then @column all false @else @column all true @endif", CheckType.ALL_ROWS, e("@if @column half false @then @column all false @else @column all true @endif", r(1), false, null,
+            e("@column half false", r(1), true, l("T1", "half false", 1)),
+            e("@column all false", r(1), false, l("T1", "all false", 1))
                 ));
 
-        testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", 1, false, null,
-                e("@column half false", 1, true, l("T1", "half false", 1)),
-                e("@column all false", 1, false, l("T1", "all false", 1))
+        testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", r(1), false, null,
+                e("@column half false", r(1), true, l("T1", "half false", 1)),
+                e("@column all false", r(1), false, l("T1", "all false", 1))
         ));
     }
+
+    // No row index, and a mapping from a single implicit lambda arg param to the given value
+    @SuppressWarnings("value")
+    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> q(Object value)
+    {
+        return new Pair<>(OptionalInt.empty(), ImmutableMap.of("?1", value));
+    }
+
+    // Just a row index, no variables
+    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> r(int rowIndex)
+    {
+        return new Pair<>(OptionalInt.of(rowIndex), ImmutableMap.<String, @Value Object>of());
+    }    
     
     @SuppressWarnings("value")
-    private Explanation e(String expressionSrc, @Nullable Integer rowIndex, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = Expression.parse(null, expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        return new Explanation(expression, new EvaluateState(typeManager,rowIndex == null ? OptionalInt.empty() : OptionalInt.of(rowIndex), (m, e) -> { throw new InternalException("No type lookup in TestExpressionExplanation");}), result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
+        EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst(), (m, e) -> {
+            throw new InternalException("No type lookup in TestExpressionExplanation");
+        });
+        if (rowIndexAndVars != null)
+        {
+            for (Entry<String, Object> var : rowIndexAndVars.getSecond().entrySet())
+            {
+                evaluateState = evaluateState.add(var.getKey(), var.getValue());
+            }
+        }
+        return new Explanation(expression, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
@@ -177,11 +206,7 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager.getUnitManager(), typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        expression.getValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer));
-        
-        // Now explanation should be available:
-        Explanation actual = expression.getExplanation();
-        
+        Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer)).makeExplanation();
         assertEquals(expectedExplanation, actual);
     }
 

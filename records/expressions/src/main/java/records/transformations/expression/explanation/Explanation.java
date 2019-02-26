@@ -59,7 +59,7 @@ public abstract class Explanation
         Explanation that = (Explanation) o;
 
         if (!expression.equals(that.expression)) return false;
-        if (!evaluateState._test_getOptionalRowIndex().equals(that.evaluateState._test_getOptionalRowIndex())) return false;
+        if (!evaluateState.equals(that.evaluateState)) return false;
         if (!directlyUsedLocations.equals(that.directlyUsedLocations)) return false;
         try
         {
@@ -106,6 +106,7 @@ public abstract class Explanation
             return "Explanation{" +
                     "expression=" + expression +
                     ", evaluateState.rowIndex=" + evaluateState._test_getOptionalRowIndex() +
+                    ", evaluateState.vars=" + evaluateState._test_getVariables() +
                     ", result=" + result +
                     ", directlyUsedLocations=" + directlyUsedLocations +
                     ", directSubExplanations=" + getDirectSubExplanations() +

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.UnitManager;
@@ -93,12 +94,12 @@ public class TimesExpression extends NaryOpTotalExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws UserException, InternalException
     {
-        @Value Number n = Utility.cast(expressions.get(0).getValue(state).getFirst(), Number.class);
+        @Value Number n = Utility.cast(values.get(0).value, Number.class);
         for (int i = 1; i < expressions.size(); i++)
-            n = Utility.multiplyNumbers(n, Utility.cast(expressions.get(i).getValue(state).getFirst(), Number.class));
-        return new Pair<>(n, state);
+            n = Utility.multiplyNumbers(n, Utility.cast(values.get(i).value, Number.class));
+        return new ValueResult(n, state, values);
     }
 
     @SuppressWarnings("recorded")

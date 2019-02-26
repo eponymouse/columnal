@@ -13,6 +13,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
@@ -81,15 +82,21 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        Pair<@Value Object, EvaluateState> condValState = condition.getValue(state);
-        Boolean b = Utility.cast(condValState.getFirst(), Boolean.class);
+        ValueResult condValState = condition.calculateValue(state);
+        Boolean b = Utility.cast(condValState.value, Boolean.class);
         // We always return original state to outermost,
         // but then-branch gets state from condition:
         if (b)
-            return new ValueResult(thenExpression.getValue(condValState.getSecond()).getFirst(), ImmutableList.<@Recorded Expression>of(condition, thenExpression));
+        {
+            ValueResult thenResult = thenExpression.calculateValue(condValState.evaluateState);
+            return new ValueResult(thenResult.value, state, ImmutableList.of(condValState, thenResult));
+        }
         else
+        {
             // Else gets original state, condition didn't pass:
-            return new ValueResult(elseExpression.getValue(state).getFirst(), ImmutableList.<@Recorded Expression>of(condition, elseExpression));
+            ValueResult elseResult = elseExpression.calculateValue(state);
+            return new ValueResult(elseResult.value, state, ImmutableList.of(condValState, elseResult));
+        }
     }
 
     @Override

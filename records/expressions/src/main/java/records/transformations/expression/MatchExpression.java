@@ -219,10 +219,10 @@ public class MatchExpression extends NonOperatorExpression
                 return null;
             if (guard != null)
             {
-                Pair<@Value Object, EvaluateState> valAndState = guard.getValue(newState);
-                boolean b = Utility.cast(valAndState.getFirst(), Boolean.class);
+                ValueResult valAndState = guard.calculateValue(newState);
+                boolean b = Utility.cast(valAndState.value, Boolean.class);
                 if (b)
-                    return valAndState.getSecond();
+                    return valAndState.evaluateState;
                 else
                     return null;
             }
@@ -315,14 +315,14 @@ public class MatchExpression extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        @Value Object value = expression.getValue(state).getFirst();
+        @Value Object value = expression.calculateValue(state).value;
         for (MatchClause clause : clauses)
         {
             EvaluateState newState = clause.matches(value, state);
             if (newState != null)
             {
-                // TODO encompass the other expressions
-                return new ValueResult(clause.outcome.getValue(newState).getFirst());
+                // TODO use the children for explanations
+                return new ValueResult(clause.outcome.calculateValue(newState).value, state);
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");

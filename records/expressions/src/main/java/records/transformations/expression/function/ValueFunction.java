@@ -10,21 +10,34 @@ import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.error.InternalException;
 import records.error.UserException;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FunctionInt;
 import utility.Pair;
+import utility.SimulationSupplierInt;
 import utility.Utility;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
 public abstract class ValueFunction
 {
-    // null if we are not recording explanations or have no special info
-    private @MonotonicNonNull ImmutableList<ExplanationLocation> usedLocations;
+    // All fields are used temporarily while _call() is executing.
+    // This means that an individual ValueFunction is not re-entrant.
+    
+    // null if we are not recording explanationss
+    private @Nullable ArrayList<ExplanationLocation> usedLocations;
     // null if we are not recording
-    private @MonotonicNonNull ImmutableList<ArgumentExplanation> argExplanations;
+    private @Nullable ImmutableList<ArgumentExplanation> argExplanations;
+    // null if we are not recording
+    private @Nullable ArrayList<Explanation> extraExplanations;
+    
+    // Non-null once we are executing:
     private @Value Object @MonotonicNonNull[] curArgs;
     
 
@@ -42,17 +55,22 @@ public abstract class ValueFunction
     public final @Value Object call(@Value Object[] args) throws InternalException, UserException
     {
         this.curArgs = args;
+        this.argExplanations = null;
+        this.usedLocations = null;
+        this.extraExplanations = null;
         return _call();
     }
 
     // Call and record an explanation
     @OnThread(Tag.Simulation)
-    public final RecordedFunctionResult callRecord(@Value Object[] args, ImmutableList<ArgumentExplanation> argumentExplanations) throws InternalException, UserException
+    public final RecordedFunctionResult callRecord(@Value Object[] args, @Nullable ImmutableList<ArgumentExplanation> argumentExplanations) throws InternalException, UserException
     {
         this.curArgs = args;
         this.argExplanations = argumentExplanations;
+        this.usedLocations = new ArrayList<>();
+        ArrayList<Explanation> extra = this.extraExplanations = new ArrayList<>();
         @Value Object result = _call();
-        return new RecordedFunctionResult(result, Utility.mapListInt(argumentExplanations, e -> e.getValueExplanation()), usedLocations != null ? usedLocations : ImmutableList.of());
+        return new RecordedFunctionResult(result, Utility.<Explanation>concatI(argumentExplanations == null ? ImmutableList.<Explanation>of() : Utility.<ArgumentExplanation, Explanation>mapListInt(argumentExplanations, e -> e.getValueExplanation()), extra), usedLocations != null ? ImmutableList.copyOf(usedLocations) : ImmutableList.of());
     }
 
     protected final <T> @Value T arg(int index, Class<T> tClass) throws InternalException
@@ -74,6 +92,27 @@ public abstract class ValueFunction
         return DataTypeUtility.requireInteger(arg(index, Number.class));
     }
     
+    @OnThread(Tag.Simulation)
+    protected final @Value Object callArg(int index, @Value Object[] arguments) throws InternalException, UserException
+    {
+        ValueFunction function = arg(index, ValueFunction.class);
+        if (extraExplanations == null)
+        {
+            // Not recording:
+            return function.call(arguments);
+        }
+        else
+        {
+            // We are recording, so pass argument explanations to the chained call:
+            RecordedFunctionResult r = function.callRecord(arguments, null);
+            if (extraExplanations != null)
+                extraExplanations.addAll(r.childExplanations);
+            if (usedLocations != null)
+                usedLocations.addAll(r.usedLocations);
+            return r.result;
+        }
+    }
+    
     // Used by some function implementations to access explanations
     // of arguments, or of a list element of an argument.
     public static interface ArgumentExplanation
@@ -87,10 +126,19 @@ public abstract class ValueFunction
         @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException;
     }
     
-    protected void setUsedLocations(FunctionInt<ImmutableList<ArgumentExplanation>, Stream<ExplanationLocation>> extractLocations) throws InternalException
+    protected final void addUsedLocations(FunctionInt<ImmutableList<ArgumentExplanation>, Stream<ExplanationLocation>> extractLocations) throws InternalException
     {
-        if (argExplanations != null)
-            this.usedLocations = extractLocations.apply(argExplanations).collect(ImmutableList.<ExplanationLocation>toImmutableList());
+        if (argExplanations != null && this.usedLocations != null)
+            this.usedLocations.addAll(extractLocations.apply(argExplanations).collect(ImmutableList.<ExplanationLocation>toImmutableList()));
+    }
+    
+    @OnThread(Tag.Simulation)
+    protected final void addExtraExplanation(SimulationSupplierInt<Explanation> makeExplanation) throws InternalException
+    {
+        if (extraExplanations != null)
+        {
+            extraExplanations.add(makeExplanation.get());
+        }
     }
 
     @SuppressWarnings("valuetype")

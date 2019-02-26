@@ -181,26 +181,31 @@ public class CallExpression extends Expression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
+        ValueFunction functionValue = Utility.cast(function.calculateValue(state).value, ValueFunction.class);
 
+        ArrayList<ValueResult> paramValueResults = new ArrayList<>(arguments.size()); 
         @Value Object[] paramValues = new Object[arguments.size()];
         for (int i = 0; i < arguments.size(); i++)
         {
             @Recorded Expression arg = arguments.get(i);
-            paramValues[i] = arg.getValue(state).getFirst();
+            ValueResult r = arg.calculateValue(state);
+            paramValueResults.add(r);
+            paramValues[i] = r.value;
         }
         if (state.recordExplanation())
         {
             ImmutableList.Builder<ArgumentExplanation> paramLocations = ImmutableList.builderWithExpectedSize(arguments.size());
-            for (@Recorded Expression arg : arguments)
+            for (int i = 0; i < arguments.size(); i++)
             {
+                int iFinal = i;
+                @Recorded Expression arg = arguments.get(i);
                 paramLocations.add(new ArgumentExplanation()
                 {
                     @Override
                     @OnThread(Tag.Simulation)
                     public Explanation getValueExplanation() throws InternalException
                     {
-                        return arg.getExplanation();
+                        return paramValueResults.get(iFinal).makeExplanation();
                     }
 
                     @Override
@@ -212,11 +217,11 @@ public class CallExpression extends Expression
                 });
             }
             
-            return new ValueResult(functionValue.callRecord(paramValues, paramLocations.build()));
+            return new ValueResult(functionValue.callRecord(paramValues, paramLocations.build()), state);
         }
         else
         {
-            return new ValueResult(functionValue.call(paramValues));
+            return new ValueResult(functionValue.call(paramValues), state);
         }
     }
 

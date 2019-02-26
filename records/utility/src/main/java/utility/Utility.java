@@ -1916,4 +1916,27 @@ public class Utility
             return r;
         }
     }
+    
+    // Like ImmutableList.Builder, but the add method
+    // returns the item added, not the builder.
+    public static class TransparentBuilder<T>
+    {
+        private final ImmutableList.Builder<T> builder;
+        
+        public TransparentBuilder(int expectedSize)
+        {
+            builder = ImmutableList.builderWithExpectedSize(expectedSize);
+        }
+        
+        public T add(T t)
+        {
+            builder.add(t);
+            return t;
+        }
+        
+        public ImmutableList<T> build()
+        {
+            return builder.build();
+        }
+    }
 }

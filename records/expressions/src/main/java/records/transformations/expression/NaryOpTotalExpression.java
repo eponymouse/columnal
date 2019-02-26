@@ -2,11 +2,13 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 
@@ -24,19 +26,23 @@ public abstract class NaryOpTotalExpression extends NaryOpExpression
     }
 
     @Override
+    @OnThread(Tag.Simulation)
     public final ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return new ValueResult(ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> getValueNaryOp(s).getFirst()), expressions);
+            return ImplicitLambdaArg.makeImplicitFunction(this, expressions, state, s -> {
+                ImmutableList<ValueResult> expressionValues = Utility.mapListExI(expressions, e -> e.calculateValue(s));
+                return getValueNaryOp(expressionValues, s);
+            });
         }
         else
         {
-            Pair<@Value Object, EvaluateState> p = getValueNaryOp(state);
-            return new ValueResult(p.getFirst(), p.getSecond(), expressions);
+            ImmutableList<ValueResult> expressionValues = Utility.mapListExI(expressions, e -> e.calculateValue(state));
+            return getValueNaryOp(expressionValues, state);
         }
     }
 
     @OnThread(Tag.Simulation)
-    public abstract Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException;
+    public abstract ValueResult getValueNaryOp(ImmutableList<ValueResult> expressionValues, EvaluateState state) throws UserException, InternalException;
 }

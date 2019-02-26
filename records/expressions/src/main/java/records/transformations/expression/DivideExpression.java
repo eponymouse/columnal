@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -69,9 +70,11 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(DataTypeUtility.value(Utility.divideNumbers((Number)lhs.getValue(state).getFirst(), (Number)rhs.getValue(state).getFirst())), state);
+        ValueResult lhsValue = lhs.calculateValue(state);
+        ValueResult rhsValue = rhs.calculateValue(state);
+        return new Pair<>(DataTypeUtility.value(Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class))), ImmutableList.of(lhsValue, rhsValue));
     }
 
     @Override

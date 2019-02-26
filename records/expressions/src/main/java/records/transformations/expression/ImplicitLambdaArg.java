@@ -33,23 +33,27 @@ import java.util.stream.Stream;
  */
 public class ImplicitLambdaArg extends NonOperatorExpression
 {
-    private static final AtomicInteger nextId = new AtomicInteger(0);
-    
-    private final int id;
+    private int id = -1;
     
     public ImplicitLambdaArg()
     {
-        this.id = nextId.incrementAndGet();
     }
 
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        assignId(typeState);
         ImmutableList<TypeExp> questTypes = typeState.findVarType(getVarName());
         if (questTypes == null || questTypes.isEmpty())
             throw new UserException("? is not a valid expression by itself");
         // Pick last one in case of nested definitions:
         return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, questTypes.get(questTypes.size() - 1));
+    }
+
+    protected void assignId(TypeState typeState)
+    {
+        if (id < 0)
+            id = typeState.getNextLambdaId();
     }
 
     protected String getVarName()
@@ -60,7 +64,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new ValueResult(state.get(getVarName()));
+        return new ValueResult(state.get(getVarName()), state);
     }
 
     @Override
@@ -141,31 +145,19 @@ public class ImplicitLambdaArg extends NonOperatorExpression
      * @return
      */
     @OnThread(Tag.Simulation)
-    public static @Value Object makeImplicitFunction(ImmutableList<@Recorded Expression> possibleArgs, EvaluateState state, SimulationFunction<EvaluateState, @Value Object> body) throws UserException, InternalException
+    public static ValueResult makeImplicitFunction(Expression outer, ImmutableList<@Recorded Expression> possibleArgs, EvaluateState state, SimulationFunction<EvaluateState, ValueResult> body) throws UserException, InternalException
     {
         ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
         if (lambdaArgs.size() == 0)
         {
-            // Not an implicit lambda
+            // Not an implicit lambda, we shouldn't have been called,
+            // but there is a sensible result to give:
             return body.apply(state);
-        }
-        else if (lambdaArgs.size() == 1)
-        {
-            // Takes non-tuple parameter:
-            return ValueFunction.value(new ValueFunction()
-            {
-                @Override
-                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
-                {
-                    EvaluateState argState = state.add(lambdaArgs.get(0).getVarName(), arg(0));
-                    return body.apply(argState);
-                }
-            });
         }
         else
         {
-            // Takes tuple parameter:
-            return ValueFunction.value(new ValueFunction()
+            // Takes one or more parameters:
+            return outer.new ValueResult(ValueFunction.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
@@ -175,9 +167,11 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                     {
                         argState = argState.add(lambdaArgs.get(i).getVarName(), arg(i));
                     }
-                    return body.apply(argState);
+                    ValueResult r = body.apply(argState);
+                    addExtraExplanation(r::makeExplanation);
+                    return r.value;
                 }
-            });
+            }), state);
         }
     }
 

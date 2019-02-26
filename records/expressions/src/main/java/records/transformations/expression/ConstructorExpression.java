@@ -32,6 +32,11 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * This just provides the constructor.  If it has an inner argument,
+ * that is specified by a CallExpression that has this ConstructorExpression
+ * as the first argument.
+ */
 public class ConstructorExpression extends NonOperatorExpression
 {
     /**
@@ -85,7 +90,7 @@ public class ConstructorExpression extends NonOperatorExpression
                         return new TaggedValue(t.tagIndex, arg(0));
                     }
                 });
-        }));
+        }), state, ImmutableList.of());
     }
 
     @Override
