@@ -102,6 +102,12 @@ public class PropTypecheckIndividual
         }
 
         @Override
+        public Stream<String> allVariableReferences()
+        {
+            return Stream.empty();
+        }
+
+        @Override
         public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
@@ -407,6 +413,12 @@ public class PropTypecheckIndividual
 
         @Override
         public Stream<ColumnReference> allColumnReferences()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public Stream<String> allVariableReferences()
         {
             return Stream.empty();
         }

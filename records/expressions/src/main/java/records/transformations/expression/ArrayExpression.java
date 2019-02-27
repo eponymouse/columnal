@@ -117,6 +117,12 @@ public class ArrayExpression extends Expression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return items.stream().flatMap(Expression::allVariableReferences);
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "[" + items.stream().map(e -> e.save(structured, items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", ")) + "]";

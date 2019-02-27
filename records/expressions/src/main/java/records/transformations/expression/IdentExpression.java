@@ -74,6 +74,12 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.of(text);
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return text;

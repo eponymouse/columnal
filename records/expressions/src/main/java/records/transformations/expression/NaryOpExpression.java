@@ -64,6 +64,12 @@ public abstract class NaryOpExpression extends Expression
         return expressions.stream().flatMap(Expression::allColumnReferences);
     }
 
+    @Override
+    public Stream<String> allVariableReferences()
+    {
+        return expressions.stream().flatMap(Expression::allVariableReferences);
+    }
+
     // Will be same length as expressions, if null use existing
     public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
     {

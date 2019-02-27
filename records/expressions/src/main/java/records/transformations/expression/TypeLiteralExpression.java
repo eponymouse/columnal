@@ -99,7 +99,13 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.of();
+        return Stream.empty();
+    }
+
+    @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.empty();
     }
 
     @Override

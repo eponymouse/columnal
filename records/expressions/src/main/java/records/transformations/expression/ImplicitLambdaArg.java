@@ -74,6 +74,12 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.of(getVarName());
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "?";

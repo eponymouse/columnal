@@ -1,8 +1,11 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -18,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 29/11/2016.
@@ -98,7 +102,12 @@ public final class EvaluateState
     {
         return recordExplanation;
     }
-    
+
+    public EvaluateState varFilteredTo(ImmutableSet<String> variableNames)
+    {
+        return new EvaluateState(ImmutableMap.<String, @Value Object>copyOf(Maps.<String, @Value Object>filterEntries(variables, (Entry<String, @Value Object> e) -> e != null && variableNames.contains(e.getKey()))), typeManager, rowIndex, recordExplanation, typeLookup);
+    }
+
     // Allows run-time lookup of the final data type that was assigned
     // to a given expression during type-checking.
     public static interface TypeLookup

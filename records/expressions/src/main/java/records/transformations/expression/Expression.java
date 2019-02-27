@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -301,6 +302,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
+
+    // Note that there will be duplicates if referred to multiple times
+    public abstract Stream<String> allVariableReferences();
 
     /**
      * 

@@ -106,6 +106,12 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.of(condition, thenExpression, elseExpression).flatMap(Expression::allVariableReferences);
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String content = "@if " + condition.save(structured, BracketedStatus.MISC, renames) + " @then " + thenExpression.save(structured, BracketedStatus.MISC,renames) + " @else " + elseExpression.save(structured, BracketedStatus.MISC, renames) + " @endif";

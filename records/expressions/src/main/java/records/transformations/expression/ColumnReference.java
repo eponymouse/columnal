@@ -135,6 +135,12 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.of();
+    }
+
+    @Override
     @OnThread(Tag.FXPlatform)
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {

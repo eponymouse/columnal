@@ -66,6 +66,13 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        // This isn't a reference, it's a declaration
+        return Stream.empty();
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "_" + varName;

@@ -97,6 +97,12 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.concat(lhs.allVariableReferences(), rhs.allVariableReferences());
+    }
+
+    @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

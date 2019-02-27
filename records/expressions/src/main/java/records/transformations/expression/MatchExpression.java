@@ -335,6 +335,12 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.<String>concat(expression.allVariableReferences(), clauses.stream().<String>flatMap(c -> c.outcome.allVariableReferences()));
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String inner = "@match " + expression.save(structured, BracketedStatus.MISC, renames) + clauses.stream().map(c -> c.save(structured, renames)).collect(Collectors.joining("")) + " @endmatch";

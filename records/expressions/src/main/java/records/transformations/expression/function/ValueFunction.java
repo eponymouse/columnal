@@ -106,9 +106,15 @@ public abstract class ValueFunction
             // We are recording, so pass argument explanations to the chained call:
             RecordedFunctionResult r = function.callRecord(arguments, null);
             if (extraExplanations != null)
+            {
+                extraExplanations.clear();
                 extraExplanations.addAll(r.childExplanations);
+            }
             if (usedLocations != null)
+            {
+                usedLocations.clear();
                 usedLocations.addAll(r.usedLocations);
+            }
             return r.result;
         }
     }

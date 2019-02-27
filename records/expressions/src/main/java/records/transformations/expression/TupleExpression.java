@@ -101,6 +101,12 @@ public class TupleExpression extends Expression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return members.stream().flatMap(Expression::allVariableReferences);
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String content = members.stream().map(e -> e.save(structured, BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", "));

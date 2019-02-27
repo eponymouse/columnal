@@ -59,6 +59,12 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.empty();
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "unit{" + unitExpression.save(structured, true) + "}";

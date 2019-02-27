@@ -267,7 +267,13 @@ public class CallExpression extends Expression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return arguments.stream().flatMap(a -> a.allColumnReferences());
+        return Stream.<ColumnReference>concat(function.allColumnReferences(), arguments.stream().<ColumnReference>flatMap(a -> a.allColumnReferences()));
+    }
+
+    @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.<String>concat(function.allVariableReferences(), arguments.stream().<String>flatMap(a -> a.allVariableReferences()));
     }
 
     @Override

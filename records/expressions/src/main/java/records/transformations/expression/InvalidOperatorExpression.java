@@ -69,6 +69,12 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return items.stream().flatMap(x -> x.allVariableReferences());
+    }
+
+    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (structured)

@@ -2,6 +2,7 @@ package records.transformations.expression.explanation;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
@@ -59,7 +60,8 @@ public abstract class Explanation
         Explanation that = (Explanation) o;
 
         if (!expression.equals(that.expression)) return false;
-        if (!evaluateState.equals(that.evaluateState)) return false;
+        ImmutableSet<String> usedVars = expression.allVariableReferences().collect(ImmutableSet.<String>toImmutableSet());
+        if (!evaluateState.varFilteredTo(usedVars).equals(that.evaluateState.varFilteredTo(usedVars))) return false;
         if (!directlyUsedLocations.equals(that.directlyUsedLocations)) return false;
         try
         {

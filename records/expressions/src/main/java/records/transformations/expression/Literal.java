@@ -35,6 +35,12 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     @Override
+    public Stream<String> allVariableReferences()
+    {
+        return Stream.empty();
+    }
+
+    @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return Stream.empty();
