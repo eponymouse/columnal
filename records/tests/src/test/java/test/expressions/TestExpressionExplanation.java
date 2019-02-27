@@ -147,6 +147,7 @@ public class TestExpressionExplanation
 
         testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", r(1), false, null,
                 e("@column half false", r(1), true, l("T1", "half false", 1)),
+                lit(true),
                 e("@column all false", r(1), false, l("T1", "all false", 1))
         ));
     }

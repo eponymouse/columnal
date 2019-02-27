@@ -236,7 +236,13 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
         return check.typeExp;
     }
-    
+
+    /**
+     * For convenience this is a non-static class, as the Expression reference
+     * is used by the default implementation of makeExplanation.
+     * If you override makeExplanation, it doesn't matter which Expression
+     * instance is used to construct the object.
+     */
     @OnThread(Tag.Simulation)
     public class ValueResult
     {
@@ -351,12 +357,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Given that the expression has type-checked, you can assume the value is of the same type
     // as the current expression (and throw an InternalException if not)
     // If you override this, you should also override checkAsPattern
-    // If there is a match, returns non-null.  If no match, returns null.
+    // If there is a match, returns result with true value.  If no match, returns a result with false value.
     @OnThread(Tag.Simulation)
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object ourValue = calculateValue(state).value;
-        return Utility.compareValues(value, ourValue) == 0 ? state : null;
+        ValueResult ourValue = calculateValue(state);
+        return new ValueResult(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), state, ImmutableList.of(ourValue), ourValue.usedLocations);
     }
 
     @SuppressWarnings("recorded")

@@ -15,6 +15,7 @@ import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -101,12 +102,14 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, @NonNull EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, final @NonNull EvaluateState originalState) throws InternalException, UserException
     {
         String s = Utility.cast(value, String.class);
         int curOffset = 0;
 
+        TransparentBuilder<ValueResult> matches = new TransparentBuilder<>(expressions.size());
         @Nullable Expression pendingMatch = null;
+        EvaluateState threadedState = originalState;
         for (int i = 0; i < expressions.size(); i++)
         {
             if (expressions.get(i) instanceof VarDeclExpression || expressions.get(i) instanceof MatchAnythingExpression)
@@ -116,7 +119,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             else
             {
                 // It's a value; get that value:
-                String subValue = Utility.cast(expressions.get(i).calculateValue(state).value, String.class);
+                String subValue = Utility.cast(expressions.get(i).calculateValue(threadedState).value, String.class);
                 if (subValue.isEmpty())
                 {
                     // Matches, but nothing to do.  Keep going...
@@ -132,7 +135,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     else
                     {
                         // Can't match
-                        return null;
+                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
                     }
                     pendingMatch = null;
                 }
@@ -141,11 +144,11 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     // We find the next occurrence:
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
-                        return null;
-                    EvaluateState newState = pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), state);
-                    if (newState == null)
-                        return null;
-                    state = newState;
+                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());;
+                    ValueResult match = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState));
+                    if (Utility.cast(match.value, Boolean.class) == false)
+                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
+                    threadedState = match.evaluateState;
                     curOffset = nextPos + subValue.length();
                     pendingMatch = null;
                 }
@@ -153,10 +156,13 @@ public class StringConcatExpression extends NaryOpTotalExpression
         }
         if (pendingMatch != null)
         {
-            return pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), state);
+            ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
+            if (Utility.cast(last.value, Boolean.class) == false)
+                return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
         }
-        else
-            return state;
+
+
+        return new ValueResult(DataTypeUtility.value(true), threadedState, matches.build());
     }
 
     @Override

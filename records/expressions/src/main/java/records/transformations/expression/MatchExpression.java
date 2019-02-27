@@ -5,6 +5,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -13,6 +14,8 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -20,12 +23,14 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -97,15 +102,16 @@ public class MatchExpression extends NonOperatorExpression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState matches(@Value Object value, EvaluateState state) throws UserException, InternalException
+        public ValueResult matches(@Value Object value, EvaluateState state) throws UserException, InternalException
         {
+            TransparentBuilder<ValueResult> patternsSoFar = new TransparentBuilder<>(patterns.size());
             for (Pattern p : patterns)
             {
-                EvaluateState newState = p.match(value, state);
-                if (newState != null) // Did it match?
-                    return newState;
+                ValueResult patternOutcome = patternsSoFar.add(p.match(value, state));
+                if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
+                    return new ValueResult(patternOutcome.value, patternOutcome.evaluateState, patternsSoFar.build());
             }
-            return null;
+            return new ValueResult(DataTypeUtility.value(false), state, patternsSoFar.build());
         }
 
         public String save(boolean structured, TableAndColumnRenames renames)
@@ -212,21 +218,16 @@ public class MatchExpression extends NonOperatorExpression
 
         // Returns non-null if it matched, null if it didn't match.
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(@Value Object value, EvaluateState state) throws InternalException, UserException
+        public ValueResult match(@Value Object value, EvaluateState state) throws InternalException, UserException
         {
-            @Nullable EvaluateState newState = pattern.matchAsPattern(value, state);
-            if (newState == null)
-                return null;
-            if (guard != null)
+            ValueResult patternOutcome = pattern.matchAsPattern(value, state);
+            // Only check guard if initial match was valid:
+            if (guard != null && Utility.cast(patternOutcome.value, Boolean.class))
             {
-                ValueResult valAndState = guard.calculateValue(newState);
-                boolean b = Utility.cast(valAndState.value, Boolean.class);
-                if (b)
-                    return valAndState.evaluateState;
-                else
-                    return null;
+                ValueResult guardOutcome = guard.calculateValue(patternOutcome.evaluateState);
+                return guard.new ValueResult(guardOutcome.value, guardOutcome.evaluateState, ImmutableList.of(patternOutcome, guardOutcome));
             }
-            return newState;
+            return patternOutcome;
         }
 
         public String save(boolean structured, TableAndColumnRenames renames)
@@ -315,14 +316,35 @@ public class MatchExpression extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        @Value Object value = expression.calculateValue(state).value;
+        ValueResult originalResult = expression.calculateValue(state);
+        @Value Object value = originalResult.value;
         for (MatchClause clause : clauses)
         {
-            EvaluateState newState = clause.matches(value, state);
-            if (newState != null)
+            ValueResult patternMatch = clause.matches(value, state);
+            if (Utility.cast(patternMatch.value, Boolean.class))
             {
-                // TODO use the children for explanations
-                return new ValueResult(clause.outcome.calculateValue(newState).value, state);
+                ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
+                return new ValueResult(clauseOutcomeResult.value, state, ImmutableList.of(patternMatch, clauseOutcomeResult)) {
+                    @Override
+                    public Explanation makeExplanation()
+                    {
+                        return new Explanation(MatchExpression.this, state, clauseOutcomeResult.value, ImmutableList.of())
+                        {
+                            @Override
+                            public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                            {
+                                return StyledString.s("TODO match");
+                            }
+
+                            @Override
+                            public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                            {
+                                // TODO use all the inspected clauses too
+                                return ImmutableList.of(originalResult.makeExplanation(), clauseOutcomeResult.makeExplanation());
+                            }
+                        };
+                    }
+                };
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");

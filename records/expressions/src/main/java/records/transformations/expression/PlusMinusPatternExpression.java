@@ -78,31 +78,14 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object lhsValue = lhs.calculateValue(state).value;
-        @Value Object rhsValue = rhs.calculateValue(state).value;
+        ValueResult lhsOutcome = lhs.calculateValue(state);
+        @Value Object lhsValue = lhsOutcome.value;
+        ValueResult rhsOutcome = rhs.calculateValue(state);
+        @Value Object rhsValue = rhsOutcome.value;
         boolean match = Utility.compareNumbers(value, lhsValue, new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
-        if (state.recordExplanation())
-        {
-            /*TODO
-            explanation = new Explanation(this, state, null, ImmutableList.of())
-            {
-                @Override
-                public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
-                {
-                    return StyledString.concat(PlusMinusPatternExpression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(lhs), lhsValue, null)), StyledString.s(" " + saveOp() + " "), StyledString.s(DataTypeUtility.valueToString(state.getTypeFor(rhs), rhsValue, null)));
-                }
-
-                @Override
-                public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
-                {
-                    return ImmutableList.of(lhs.getExplanation(), rhs.getExplanation());
-                }
-            };
-            */
-        }
-        return match ? state : null;
+        return new ValueResult(DataTypeUtility.value(match), state, ImmutableList.of(lhsOutcome, rhsOutcome));
     }
 
     @Override

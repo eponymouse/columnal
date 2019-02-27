@@ -63,21 +63,23 @@ public class TupleExpression extends Expression
     }
     
     @Override
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, final EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, final EvaluateState state) throws InternalException, UserException
     {
         if (value instanceof Object[])
         {
             @Value Object @Value[] tuple = (@Value Object @Value[]) value;
             if (tuple.length != members.size())
                 throw new InternalException("Mismatch in tuple size, type is " + members.size() + " but found " + tuple.length);
-            @Nullable EvaluateState curState = state;
+            EvaluateState curState = state;
+            TransparentBuilder<ValueResult> memberValues = new TransparentBuilder<>(tuple.length);
             for (int i = 0; i < tuple.length; i++)
             {
-                curState = members.get(i).matchAsPattern(tuple[i], curState);
-                if (curState == null)
-                    return null;
+                ValueResult latest = memberValues.add(members.get(i).matchAsPattern(tuple[i], curState));
+                if (Utility.cast(latest.value, Boolean.class) == false)
+                    return new ValueResult(DataTypeUtility.value(false), state, memberValues.build());
+                curState = latest.evaluateState;
             }
-            return curState;
+            return new ValueResult(DataTypeUtility.value(true), curState, memberValues.build());
         }
         throw new InternalException("Expected tuple but found " + value.getClass());
     }

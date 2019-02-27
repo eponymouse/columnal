@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -37,10 +38,10 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         // Like the name says, we match anything:
-        return state;
+        return new ValueResult(DataTypeUtility.value(true), state);
     }
 
     @Override

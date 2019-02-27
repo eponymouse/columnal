@@ -78,21 +78,23 @@ public class ArrayExpression extends Expression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         if (value instanceof ListEx)
         {
             ListEx list = (ListEx)value;
             if (list.size() != items.size())
-                return null; // Not an exception, just means the value has different size to the pattern, so can't match
+                return new ValueResult(DataTypeUtility.value(false), state); // Not an exception, just means the value has different size to the pattern, so can't match
             @Nullable EvaluateState curState = state;
+            TransparentBuilder<ValueResult> itemValues = new TransparentBuilder<>(items.size());
             for (int i = 0; i < items.size(); i++)
             {
-                curState = items.get(i).matchAsPattern(list.get(i), curState);
-                if (curState == null)
-                    return null;
+                ValueResult latest = itemValues.add(items.get(i).matchAsPattern(list.get(i), curState));
+                if (Utility.cast(latest.value, Boolean.class) == false)
+                    return new ValueResult(DataTypeUtility.value(false), state, itemValues.build());
+                curState = latest.evaluateState;
             }
-            return curState;
+            return new ValueResult(DataTypeUtility.value(true), curState, itemValues.build());
         }
         throw new InternalException("Expected array but found " + value.getClass());
     }

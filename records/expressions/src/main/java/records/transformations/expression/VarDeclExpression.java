@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -48,9 +49,9 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        return state.add(varName, value);
+        return new ValueResult(DataTypeUtility.value(true), state.add(varName, value));
     }
 
     @Override

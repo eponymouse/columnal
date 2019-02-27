@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -15,7 +14,6 @@ import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import utility.Pair;
 import utility.Utility;
 import utility.Utility.TransparentBuilder;
 
@@ -142,8 +140,9 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             if (expressions.size() > 2)
                 throw new InternalException("Pattern present in equals despite having more than two operands");
             ValueResult value = expressions.get(1 - patternIndex.getAsInt()).calculateValue(state);
-            @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value.value, state);
-            return new ValueResult(DataTypeUtility.value(result != null), result != null ? result : state, ImmutableList.of(value));    
+            ValueResult matchResult = expressions.get(patternIndex.getAsInt()).matchAsPattern(value.value, state);
+            boolean matched = Utility.cast(matchResult.value, Boolean.class);
+            return new ValueResult(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));    
         }
 
         TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());

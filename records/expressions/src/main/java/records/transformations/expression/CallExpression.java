@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
+import records.data.datatype.DataTypeUtility;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
@@ -226,14 +227,14 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         if (function instanceof ConstructorExpression)
         {
             ConstructorExpression constructor = (ConstructorExpression) function;
             TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
             if (taggedValue.getTagIndex() != constructor.getTagIndex())
-                return null;
+                return new ValueResult(DataTypeUtility.value(false), state);
             // If we do match, go to the inner:
             @Nullable @Value Object inner = taggedValue.getInner();
             if (inner == null)
@@ -245,11 +246,12 @@ public class CallExpression extends Expression
                 for (int i = 0; i < arguments.size(); i++)
                 {
                     Expression argument = arguments.get(i);
-                    curState = argument.matchAsPattern(tuple[i], curState);
-                    if (curState == null)
-                        return null;
+                    ValueResult argMatch = argument.matchAsPattern(tuple[i], curState);
+                    if (Utility.cast(argMatch.value, Boolean.class) == false)
+                        return new ValueResult(DataTypeUtility.value(false), state);
+                    curState = argMatch.evaluateState;
                 }
-                return curState;
+                return new ValueResult(DataTypeUtility.value(true), curState);
             }
             else if (arguments.size() == 1)
             {
