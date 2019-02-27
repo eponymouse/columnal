@@ -228,23 +228,14 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 4, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
+        ArrayList<MatchClause> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
             // Generate a bunch which can't match the item:
             List<PatternInfo> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
             Expression outcome = parent.make(targetType, parent.makeValue(targetType), maxLevels - 1);
             if (patterns.isEmpty())
-                return Optional.<Function<MatchExpression, MatchClause>>empty();
-            return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> {
-                try
-                {
-                    return me.new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), outcome);
-                }
-                catch (UserException | InternalException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            });
-        }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
+                return Optional.<MatchClause>empty();
+            return Optional.<MatchClause>of(new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), outcome));
+        }).stream().<MatchClause>flatMap(o -> o.isPresent() ? Stream.<MatchClause>of(o.get()) : Stream.<MatchClause>empty()).collect(Collectors.<MatchClause>toList()));
         List<PatternInfo> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
 
         Expression toMatch = parent.make(targetType, targetValue, maxLevels - 1);
@@ -261,17 +252,8 @@ public class BackwardsMatch extends BackwardsProvider
         patterns.add(r.nextInt(0, patterns.size()), successful);
         // Remove for successful pattern:
         varContexts.remove(varContexts.size() -1);
-        clauses.add(r.nextInt(0, clauses.size()), me -> {
-            try
-            {
-                return me.new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), toMatch);
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
-        return new MatchExpression(parent.make(t, actual, maxLevels - 1), clauses);
+        clauses.add(r.nextInt(0, clauses.size()), new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), toMatch));
+        return new MatchExpression(parent.make(t, actual, maxLevels - 1), ImmutableList.copyOf(clauses));
     }
     
     class PatternInfo

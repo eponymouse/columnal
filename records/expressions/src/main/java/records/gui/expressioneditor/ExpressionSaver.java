@@ -224,7 +224,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         // in which case we are Right with the given patterns
         private final @Nullable Pair<@Recorded Expression, ImmutableList<Pattern>> matchAndPatterns;
         // Previous complete clauses
-        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<MatchClause> previousClauses;
         
         // Looks for first @case after a @match
         public Case(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword)
@@ -236,7 +236,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         
         // Matches a later @case, meaning we follow a @then and an outcome
-        public Case(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> patternsForCur)
+        public Case(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> patternsForCur)
         {
             super(Keyword.CASE);
             this.matchKeyword = matchKeyword;
@@ -248,7 +248,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             final @Recorded Expression m;
-            final ImmutableList<Function<MatchExpression, MatchClause>> newClauses;
+            final ImmutableList<MatchClause> newClauses;
             // If we are first case, use the expression as the match expression:
             if (matchAndPatterns == null)
             {
@@ -260,7 +260,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 // Otherwise this is the outcome for the most recent clause:
                 m = matchAndPatterns.getFirst();
                 ImmutableList<Pattern> patterns = matchAndPatterns.getSecond();
-                newClauses = Utility.appendToList(previousClauses, me -> me.new MatchClause(patterns, expressionBefore));
+                newClauses = Utility.appendToList(previousClauses, new MatchClause(patterns, expressionBefore));
             }
             return Either.right(expectOneOf(node, ImmutableList.of(
                 new Then(matchKeyword, m, newClauses, ImmutableList.of(), Keyword.CASE),
@@ -275,10 +275,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         private final ConsecutiveChild<Expression, ExpressionSaver> matchKeyword;
         private final @Recorded Expression matchFrom;
-        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
 
-        public Given(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousCases)
+        public Given(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases)
         {
             super(Keyword.GIVEN);
             this.matchKeyword = matchKeyword;
@@ -303,11 +303,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         private final ConsecutiveChild<Expression, ExpressionSaver> matchKeyword;
         private final @Recorded Expression matchFrom;
-        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
         private final @Nullable @Recorded Expression curMatch; // if null, nothing so far, if non-null we are a guard
 
-        private OrCase(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousCases, @Nullable @Recorded Expression curMatch)
+        private OrCase(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, @Nullable @Recorded Expression curMatch)
         {
             super(Keyword.ORCASE);
             this.matchKeyword = matchKeyword;
@@ -339,13 +339,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         private final ConsecutiveChild<Expression, ExpressionSaver> matchKeywordNode;
         private final @Recorded Expression matchFrom;
-        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousPatterns;
         private final Keyword precedingKeyword;
         
 
         // Preceding keyword may be CASE, GIVEN or ORCASE:
-        private Then(ConsecutiveChild<Expression, ExpressionSaver> matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
+        private Then(ConsecutiveChild<Expression, ExpressionSaver> matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
         {
             super(Keyword.THEN);
             this.matchKeywordNode = matchKeywordNode;
@@ -375,7 +375,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     @Override
                     public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
                     {
-                        MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, me -> me.new MatchClause(newPatterns, lastExpression)));
+                        MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, new MatchClause(newPatterns, lastExpression)));
                         return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
                     }
                 }

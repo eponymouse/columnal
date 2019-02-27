@@ -16,6 +16,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExplanationSource;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -44,7 +45,7 @@ public class MatchExpression extends NonOperatorExpression
     /**
      * A clause is a list of patterns, and an outcome expression
      */
-    public class MatchClause
+    public static class MatchClause implements ExplanationSource
     {
         private final ImmutableList<Pattern> patterns;
         private final @Recorded Expression outcome;
@@ -65,6 +66,12 @@ public class MatchExpression extends NonOperatorExpression
             return outcome;
         }
 
+        @Override
+        public Stream<String> allVariableReferences()
+        {
+            return Stream.<String>concat(patterns.stream().<String>flatMap(Pattern::allVariableReferences), outcome.allVariableReferences());
+        }
+
         /**
          * Returns pattern match type, outcome type
          */
@@ -75,8 +82,7 @@ public class MatchExpression extends NonOperatorExpression
             if (patterns.isEmpty())
             {
                 // Probably a test generation error:
-                onError.recordError(MatchExpression.this, StyledString.s("Clause with no patterns"));
-                return null;
+                throw new UserException("Clause with no patterns");
             }
             for (int i = 0; i < patterns.size(); i++)
             {
@@ -110,9 +116,35 @@ public class MatchExpression extends NonOperatorExpression
             {
                 ValueResult patternOutcome = patternsSoFar.add(p.match(value, state));
                 if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
-                    return result(patternOutcome.value, patternOutcome.evaluateState, patternsSoFar.build());
+                    return result(true, patternOutcome.evaluateState, patternsSoFar.build());
             }
-            return result(DataTypeUtility.value(false), state, patternsSoFar.build());
+            return result(false, state, patternsSoFar.build());
+        }
+        
+        @OnThread(Tag.Simulation)
+        private ValueResult result(boolean match, EvaluateState state, ImmutableList<ValueResult> children)
+        {
+            return new ValueResult(DataTypeUtility.value(match), state)
+            {
+                @Override
+                public Explanation makeExplanation() throws InternalException
+                {
+                    return new Explanation(MatchClause.this, evaluateState, value, ImmutableList.of())
+                    {
+                        @Override
+                        public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                        {
+                            return StyledString.s("TODO MatchClause");
+                        }
+
+                        @Override
+                        public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                        {
+                            return Utility.mapListInt(children, c -> c.makeExplanation());
+                        }
+                    };
+                }
+            };
         }
 
         public String save(boolean structured, TableAndColumnRenames renames)
@@ -130,9 +162,15 @@ public class MatchExpression extends NonOperatorExpression
             );
         }
 
-        public MatchClause copy(MatchExpression e)
+        @Override
+        public String toString()
         {
-            return e.new MatchClause(patterns, outcome); //TODO deep copy patterns
+            return toDisplay().toPlain();
+        }
+
+        public MatchClause copy()
+        {
+            return new MatchClause(patterns, outcome); //TODO deep copy patterns
         }
 
         @Override
@@ -174,16 +212,16 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-        public Function<MatchExpression, MatchClause> replaceSubExpression(Expression toReplace, Expression replaceWith)
+        public MatchClause replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
-            return me -> me.new MatchClause(Utility.mapListI(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
+            return new MatchClause(Utility.mapListI(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
         }
     }
 
     /**
      * A pattern is an expression, plus an optional guard
      */
-    public static class Pattern
+    public static class Pattern implements ExplanationSource
     {
         private final @Recorded Expression pattern;
         private final @Nullable @Recorded Expression guard;
@@ -192,6 +230,15 @@ public class MatchExpression extends NonOperatorExpression
         {
             this.pattern = pattern;
             this.guard = guard;
+        }
+
+        @Override
+        public Stream<String> allVariableReferences()
+        {
+            if (guard == null)
+                return pattern.allVariableReferences();
+            else
+                return Stream.concat(pattern.allVariableReferences(), guard.allVariableReferences());
         }
 
         /**
@@ -301,13 +348,12 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     private final @Recorded Expression expression;
-    private final List<MatchClause> clauses;
+    private final ImmutableList<MatchClause> clauses;
 
-    @SuppressWarnings("initialization") // Because we pass this to sub-clauses which we are creating.
-    public MatchExpression(@Recorded Expression expression, List<Function<MatchExpression, MatchClause>> clauses)
+    public MatchExpression(@Recorded Expression expression, ImmutableList<MatchClause> clauses)
     {
         this.expression = expression;
-        this.clauses = Utility.<Function<MatchExpression, MatchClause>, MatchClause>mapList(clauses, f -> f.apply(this));
+        this.clauses = clauses;
     }
 
     public Expression getExpression()
@@ -332,27 +378,8 @@ public class MatchExpression extends NonOperatorExpression
             if (Utility.cast(patternMatch.value, Boolean.class))
             {
                 ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
-                return new ValueResult(clauseOutcomeResult.value, state) {
-                    @Override
-                    public Explanation makeExplanation()
-                    {
-                        return new Explanation(MatchExpression.this, state, clauseOutcomeResult.value, ImmutableList.of())
-                        {
-                            @Override
-                            public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
-                            {
-                                return StyledString.s("TODO match");
-                            }
-
-                            @Override
-                            public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
-                            {
-                                // TODO use all the inspected clauses too
-                                return ImmutableList.of(originalResult.makeExplanation(), clauseOutcomeResult.makeExplanation());
-                            }
-                        };
-                    }
-                };
+                // TODO also include other checked patterns
+                return result(clauseOutcomeResult.value, state, ImmutableList.of(originalResult, patternMatch, clauseOutcomeResult));
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");
@@ -489,7 +516,7 @@ public class MatchExpression extends NonOperatorExpression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         // TODO allow replacement within clauses
-        return expression._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), e -> new MatchExpression(p.getSecond().apply(e), Utility.<MatchClause, Function<MatchExpression, MatchClause>>mapList(clauses, c -> c::copy))));
+        return expression._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), e -> new MatchExpression(p.getSecond().apply(e), Utility.<MatchClause, MatchClause>mapListI(clauses, MatchClause::copy))));
     }
 
     @Override
@@ -505,6 +532,6 @@ public class MatchExpression extends NonOperatorExpression
         if (toReplace == this)
             return replaceWith;
         else
-            return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapList(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
+            return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
     }
 }

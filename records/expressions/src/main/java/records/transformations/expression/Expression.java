@@ -82,7 +82,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>
+public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>, Explanation.ExplanationSource
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
@@ -368,6 +368,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public abstract Stream<ColumnReference> allColumnReferences();
 
     // Note that there will be duplicates if referred to multiple times
+    @Override
     public abstract Stream<String> allVariableReferences();
 
     /**
@@ -677,21 +678,19 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitMatch(MatchContext ctx)
         {
-            List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>();
+            ImmutableList.Builder<MatchClause> clauses = ImmutableList.builder();
             for (MatchClauseContext matchClauseContext : ctx.matchClause())
             {
-                clauses.add(me -> {
-                    ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
-                    for (PatternContext patternContext : matchClauseContext.pattern())
-                    {
-                        @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
-                        @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
-                        patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
-                    }
-                    return me.new MatchClause(patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression()));
-                });
+                ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
+                for (PatternContext patternContext : matchClauseContext.pattern())
+                {
+                    @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                    @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                    patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
+                }
+                clauses.add(new MatchClause(patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
             }
-            return new MatchExpression(visitTopLevelExpression(ctx.topLevelExpression()), clauses);
+            return new MatchExpression(visitTopLevelExpression(ctx.topLevelExpression()), clauses.build());
         }
 
         @Override

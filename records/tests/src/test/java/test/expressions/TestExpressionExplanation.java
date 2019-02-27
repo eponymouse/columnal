@@ -12,6 +12,10 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.error.UnimplementedException;
+import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.MatchExpression;
+import records.transformations.expression.MatchExpression.MatchClause;
+import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.unit.Unit;
@@ -151,9 +155,12 @@ public class TestExpressionExplanation
 
         testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", r(1), false, null,
                 e("@column half false", r(1), true, l("T1", "half false", 1)),
-                lit(true),
-                e("@column all false", r(1), false, l("T1", "all false", 1))
-        ));
+                clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "@column all false", r(1), true,
+                    // Bit confusing; outer true is result of pattern match,
+                    // inner true is the literal that it was matched against
+                    e("true", r(1), true, null, e("true", r(1), true, null))),
+                e("@column all false", r(1), false, l("T1", "all false", 1)))
+        );
     }
 
     // No row index, and a mapping from a single implicit lambda arg param to the given value
@@ -167,24 +174,13 @@ public class TestExpressionExplanation
     private Pair<OptionalInt, ImmutableMap<String, @Value Object>> r(int rowIndex)
     {
         return new Pair<>(OptionalInt.of(rowIndex), ImmutableMap.<String, @Value Object>of());
-    }    
+    }
     
-    @SuppressWarnings("value")
-    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation clause(ImmutableList<Pattern> patterns, String outcomeSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, boolean result, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression expression = Expression.parse(null, expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst(), (m, e) -> {
-            throw new InternalException("No type lookup in TestExpressionExplanation");
-        });
-        if (rowIndexAndVars != null)
-        {
-            for (Entry<String, Object> var : rowIndexAndVars.getSecond().entrySet())
-            {
-                evaluateState = evaluateState.add(var.getKey(), var.getValue());
-            }
-        }
-        return new Explanation(expression, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
+        Expression outcomeExpression = Expression.parse(null, outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        return new Explanation(new MatchClause(patterns, outcomeExpression), makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
@@ -200,6 +196,43 @@ public class TestExpressionExplanation
         };
     }
     
+    @SuppressWarnings("value")
+    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    {
+        TypeManager typeManager = tableManager.getTypeManager();
+        Expression expression = Expression.parse(null, expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        EvaluateState evaluateState = makeEvaluateState(rowIndexAndVars, typeManager);
+        return new Explanation(expression, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
+        {
+            @Override
+            public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+            {
+                return StyledString.s("No description in TestExpressionExplanation");
+            }
+
+            @Override
+            public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+            {
+                return ImmutableList.copyOf(children);
+            }
+        };
+    }
+
+    private EvaluateState makeEvaluateState(@Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, TypeManager typeManager) throws InternalException
+    {
+        EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst(), (m, e) -> {
+            throw new InternalException("No type lookup in TestExpressionExplanation");
+        });
+        if (rowIndexAndVars != null)
+        {
+            for (Entry<String, @Value Object> var : rowIndexAndVars.getSecond().entrySet())
+            {
+                evaluateState = evaluateState.add(var.getKey(), var.getValue());
+            }
+        }
+        return evaluateState;
+    }
+
     private Explanation lit(Object value) throws UserException, InternalException
     {
         return e(value.toString(), null, value, null);

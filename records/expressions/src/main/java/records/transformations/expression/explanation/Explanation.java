@@ -17,6 +17,7 @@ import utility.Utility;
 
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * An explanation of how a value came to be calculated.
@@ -26,12 +27,12 @@ import java.util.function.Function;
  */
 public abstract class Explanation
 {
-    private final Expression expression;
+    private final ExplanationSource expression;
     private final EvaluateState evaluateState;
     private final @Nullable @Value Object result;
     private final ImmutableList<ExplanationLocation> directlyUsedLocations;
 
-    protected Explanation(Expression expression, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations)
+    protected Explanation(ExplanationSource expression, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations)
     {
         this.expression = expression;
         this.evaluateState = evaluateState;
@@ -118,5 +119,11 @@ public abstract class Explanation
         {
             return "InternalException: " + e.getLocalizedMessage();
         }
+    }
+    
+    // Marker interface for items which can be the (code) source of an explanation 
+    public static interface ExplanationSource
+    {
+        public Stream<String> allVariableReferences();
     }
 }

@@ -18,6 +18,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -185,17 +186,17 @@ public class GenNonsenseExpression extends Generator<Expression>
         return UnitExpression.load(genUnit.generate(r, gs));
     }
 
-    private Function<MatchExpression, MatchExpression.MatchClause> genClause(SourceOfRandomness r, GenerationStatus gs, int depth)
+    private MatchExpression.MatchClause genClause(SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return e -> e.new MatchClause(TestUtil.makeList(r, 1, 4, () -> genPattern(e, r, gs, depth)), genDepth(r, depth, gs));
+        return new MatchClause(TestUtil.makeList(r, 1, 4, () -> genPattern(r, gs, depth)), genDepth(r, depth, gs));
     }
 
-    private MatchExpression.Pattern genPattern(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
+    private MatchExpression.Pattern genPattern(SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return new MatchExpression.Pattern(genPatternMatch(e, r, gs, depth), r.nextBoolean() ? null : genDepth(r, depth, gs));
+        return new MatchExpression.Pattern(genPatternMatch(r, gs, depth), r.nextBoolean() ? null : genDepth(r, depth, gs));
     }
 
-    private Expression genPatternMatch(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
+    private Expression genPatternMatch(SourceOfRandomness r, GenerationStatus gs, int depth)
     {
         return r.choose(Arrays.<Supplier<Expression>>asList(
             () -> genDepth(false, r, depth, gs),
@@ -205,7 +206,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 try
                 {
                     Pair<DataType, TagInfo> tag = genTag(r);
-                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1), tag.getFirst(), true);
+                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(r, gs, depth + 1), tag.getFirst(), true);
                 }
                 catch (InternalException | UserException ex)
                 {
