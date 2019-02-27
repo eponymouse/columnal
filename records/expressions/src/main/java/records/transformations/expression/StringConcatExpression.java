@@ -10,6 +10,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -137,7 +138,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     else
                     {
                         // Can't match
-                        return result(DataTypeUtility.value(false), originalState, matches.build());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
                     }
                     pendingMatch = null;
                 }
@@ -146,10 +147,10 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     // We find the next occurrence:
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
-                        return result(DataTypeUtility.value(false), originalState, matches.build());;
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
                     ValueResult match = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState));
                     if (Utility.cast(match.value, Boolean.class) == false)
-                        return result(DataTypeUtility.value(false), originalState, matches.build());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
                     threadedState = match.evaluateState;
                     curOffset = nextPos + subValue.length();
                     pendingMatch = null;
@@ -160,11 +161,11 @@ public class StringConcatExpression extends NaryOpTotalExpression
         {
             ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
             if (Utility.cast(last.value, Boolean.class) == false)
-                return result(DataTypeUtility.value(false), originalState, matches.build());
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
         }
 
 
-        return result(DataTypeUtility.value(true), threadedState, matches.build());
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, threadedState, matches.build(), ImmutableList.of());
     }
 
     @Override

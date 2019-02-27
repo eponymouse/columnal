@@ -16,6 +16,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.Explanation.ExplanationSource;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
@@ -131,7 +132,7 @@ public class MatchExpression extends NonOperatorExpression
                 @Override
                 public Explanation makeExplanation() throws InternalException
                 {
-                    return new Explanation(MatchClause.this, evaluateState, value, ImmutableList.of())
+                    return new Explanation(MatchClause.this, ExecutionType.MATCH, evaluateState, value, ImmutableList.of())
                     {
                         @Override
                         public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
@@ -375,7 +376,6 @@ public class MatchExpression extends NonOperatorExpression
             if (Utility.cast(patternMatch.value, Boolean.class))
             {
                 ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
-                // TODO also include other checked patterns
                 return result(clauseOutcomeResult.value, state, 
                     Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }

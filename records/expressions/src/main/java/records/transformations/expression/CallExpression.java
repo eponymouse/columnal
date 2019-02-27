@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.datatype.DataTypeUtility;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.transformations.expression.function.ValueFunction.ArgumentExplanation;
@@ -234,7 +235,7 @@ public class CallExpression extends Expression
             ConstructorExpression constructor = (ConstructorExpression) function;
             TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
             if (taggedValue.getTagIndex() != constructor.getTagIndex())
-                return result(DataTypeUtility.value(false), state);
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
             // If we do match, go to the inner:
             @Nullable @Value Object inner = taggedValue.getInner();
             if (inner == null)
@@ -248,10 +249,10 @@ public class CallExpression extends Expression
                     Expression argument = arguments.get(i);
                     ValueResult argMatch = argument.matchAsPattern(tuple[i], curState);
                     if (Utility.cast(argMatch.value, Boolean.class) == false)
-                        return result(DataTypeUtility.value(false), state);
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
                     curState = argMatch.evaluateState;
                 }
-                return result(DataTypeUtility.value(true), curState);
+                return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, ImmutableList.of(), ImmutableList.of());
             }
             else if (arguments.size() == 1)
             {

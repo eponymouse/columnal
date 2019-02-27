@@ -14,6 +14,7 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -76,10 +77,10 @@ public class TupleExpression extends Expression
             {
                 ValueResult latest = memberValues.add(members.get(i).matchAsPattern(tuple[i], curState));
                 if (Utility.cast(latest.value, Boolean.class) == false)
-                    return result(DataTypeUtility.value(false), state, memberValues.build());
+                    return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, memberValues.build(), ImmutableList.of());
                 curState = latest.evaluateState;
             }
-            return result(DataTypeUtility.value(true), curState, memberValues.build());
+            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, memberValues.build(), ImmutableList.of());
         }
         throw new InternalException("Expected tuple but found " + value.getClass());
     }

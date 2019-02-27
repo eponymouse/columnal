@@ -21,6 +21,7 @@ import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
@@ -252,6 +253,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @OnThread(Tag.Simulation)
     protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
     {
+        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, usedLocations);
+    }
+
+    @OnThread(Tag.Simulation)
+    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+    {
         if (!state.recordExplanation())
         {
             return new ValueResult(value, state)
@@ -269,7 +276,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             @Override
             public Explanation makeExplanation()
             {
-                return new Explanation(Expression.this, evaluateState, value, usedLocations)
+                return new Explanation(Expression.this, executionType, evaluateState, value, usedLocations)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -303,7 +310,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             @Override
             public Explanation makeExplanation()
             {
-                return new Explanation(Expression.this, evaluateState, value, recordedFunctionResult.usedLocations)
+                return new Explanation(Expression.this, ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -421,7 +428,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         ValueResult ourValue = calculateValue(state);
-        return result(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations());
+        return explanation(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), ExecutionType.MATCH, state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations());
     }
 
     @SuppressWarnings("recorded")

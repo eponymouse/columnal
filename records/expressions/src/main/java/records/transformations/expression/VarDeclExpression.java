@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -11,6 +12,7 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import utility.Pair;
@@ -51,7 +53,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        return result(DataTypeUtility.value(true), state.add(varName, value));
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(varName, value), ImmutableList.of(), ImmutableList.of());
     }
 
     @Override

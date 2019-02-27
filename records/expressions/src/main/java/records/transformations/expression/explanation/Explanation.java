@@ -29,14 +29,20 @@ import java.util.stream.Stream;
  */
 public abstract class Explanation
 {
+    // Is this a normal fetch of an expression's value,
+    // or is it being asked to match against a given value?
+    public static enum ExecutionType {VALUE, MATCH};
+    
     private final ExplanationSource expression;
+    private final ExecutionType executionType;
     private final EvaluateState evaluateState;
     private final @Nullable @Value Object result;
     private final ImmutableList<ExplanationLocation> directlyUsedLocations;
 
-    protected Explanation(ExplanationSource expression, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations)
+    protected Explanation(ExplanationSource expression, ExecutionType executionType, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations)
     {
         this.expression = expression;
+        this.executionType = executionType;
         this.evaluateState = evaluateState;
         this.result = result;
         this.directlyUsedLocations = directlyUsedLocations;
@@ -63,6 +69,7 @@ public abstract class Explanation
         Explanation that = (Explanation) o;
 
         if (!expression.equals(that.expression)) return false;
+        if (!executionType.equals(that.executionType)) return false;
         ImmutableSet<String> usedVars = expression.allVariableReferences().collect(ImmutableSet.<String>toImmutableSet());
         if (!evaluateState.varFilteredTo(usedVars).equals(that.evaluateState.varFilteredTo(usedVars))) return false;
         if (!directlyUsedLocations.equals(that.directlyUsedLocations)) return false;
@@ -86,6 +93,7 @@ public abstract class Explanation
     public int hashCode()
     {
         int result1 = expression.hashCode();
+        result1 = 31 * result1 + executionType.hashCode();
         result1 = 31 * result1 + evaluateState.hashCode();
         result1 = 31 * result1 + directlyUsedLocations.hashCode();
         try
@@ -110,6 +118,7 @@ public abstract class Explanation
         {
             return "Explanation{" +
                     "expression=" + expression +
+                    ", executionType=" + executionType +
                     ", evaluateState.rowIndex=" + evaluateState._test_getOptionalRowIndex() +
                     ", evaluateState.vars=" + evaluateState._test_getVariables() +
                     ", result=" + result +

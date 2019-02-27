@@ -17,6 +17,7 @@ import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -141,7 +142,7 @@ public class TestExpressionExplanation
                     e("? = (1.8 \u00B1 1.2)", null, null, null),
                     e("? = (1.8 \u00B1 1.2)", q(4), false, null, 
                         e("?", q(4), 4, null),
-                        e("1.8 \u00B1 1.2", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
+                        m("1.8 \u00B1 1.2", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
         )));
         testExplanation("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))",
                 e("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
@@ -149,7 +150,7 @@ public class TestExpressionExplanation
                     e("? <> (1.8 \u00B1 0.9)", null, null, null),
                     e("? <> (1.8 \u00B1 0.9)", q(3), true, null, 
                         e("?", q(3), 3, null),
-                        e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
+                        m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
         )));
         
         testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", r(0), false, l("T1", "half false", 0)));
@@ -164,7 +165,7 @@ public class TestExpressionExplanation
                 clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "@column all false", r(1), true,
                     // Bit confusing; outer true is result of pattern match,
                     // inner true is the literal that it was matched against
-                    e("true", r(1), true, null, e("true", r(1), true, null))),
+                    m("true", r(1), true, null, e("true", r(1), true, null))),
                 e("@column all false", r(1), false, l("T1", "all false", 1)))
         );
         
@@ -174,9 +175,9 @@ public class TestExpressionExplanation
         
         // First clause is (_n, _a) @given n > text length(a)
         Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(_n, _a)", "n > @call @function text length(a)")), "true", r(2), false,
-                e("(_n, _a)", r(2, v("n", 3), v("a", "Cat")), true, null,
-                    e("_n", r(2, v("n", 3)), true, null),
-                    e("_a", r(2, v("a", "Cat")), true, null)),
+                m("(_n, _a)", r(2, v("n", 3), v("a", "Cat")), true, null,
+                    m("_n", r(2, v("n", 3)), true, null),
+                    m("_a", r(2, v("a", "Cat")), true, null)),
                 e("n > @call @function text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
                     e("n", r(2, v("n", 3)), 3, null),
                     e("@call @function text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
@@ -184,21 +185,21 @@ public class TestExpressionExplanation
                 );
         // Second clause is (3,  _ ; "t") @given false @then 1 > 0
         Explanation megaClause2Expl = clause(ImmutableList.of(pattern("(3, _ ; \"t\")", "false")), "1 > 0", r(2), false,
-            e("(3, _ ; \"t\")", r(2), true, null,
-                e("3", r(2), true, null,
+            m("(3, _ ; \"t\")", r(2), true, null,
+                m("3", r(2), true, null,
                     e("3", r(2), 3, null)),
-                e("_ ; \"t\"", r(2), true, null,
+                m("_ ; \"t\"", r(2), true, null,
                     e("\"t\"", r(2), "t", null),
-                    e("_", r(2), true, null))
+                    m("_", r(2), true, null))
             ),
             e("false", r(2), false, null)
         );
         
         // Third clause is @case (_n, "Cat") @then n > 2
         Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(_n, \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
-            e("(_n, \"Cat\")", r(2, v("n", 3)), true, null, 
-                    e("_n", r(2, v("n", 3)), true, null),
-                    e("\"Cat\"", r(2), true, null, e("\"Cat\"", r(2), "Cat", null)))    
+            m("(_n, \"Cat\")", r(2, v("n", 3)), true, null, 
+                    m("_n", r(2, v("n", 3)), true, null),
+                    m("\"Cat\"", r(2), true, null, e("\"Cat\"", r(2), "Cat", null)))    
         );
         Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
         
@@ -260,7 +261,7 @@ public class TestExpressionExplanation
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression outcomeExpression = Expression.parse(null, outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        return new Explanation(new MatchClause(patterns, outcomeExpression), makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
+        return new Explanation(new MatchClause(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
@@ -275,14 +276,24 @@ public class TestExpressionExplanation
             }
         };
     }
+
+    private Explanation m(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    {
+        return explanation(expressionSrc, ExecutionType.MATCH, rowIndexAndVars, result, location, children);
+    }
+    
+    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    {
+        return explanation(expressionSrc, ExecutionType.VALUE, rowIndexAndVars, result, location, children);
+    }
     
     @SuppressWarnings("value")
-    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = Expression.parse(null, expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         EvaluateState evaluateState = makeEvaluateState(rowIndexAndVars, typeManager);
-        return new Explanation(expression, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
+        return new Explanation(expression, executionType, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException

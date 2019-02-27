@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -85,7 +86,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
         ValueResult rhsOutcome = rhs.calculateValue(state);
         @Value Object rhsValue = rhsOutcome.value;
         boolean match = Utility.compareNumbers(value, lhsValue, new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
-        return result(DataTypeUtility.value(match), state, ImmutableList.of(lhsOutcome, rhsOutcome));
+        return explanation(DataTypeUtility.value(match), ExecutionType.MATCH, state, ImmutableList.of(lhsOutcome, rhsOutcome), ImmutableList.of());
     }
 
     @Override

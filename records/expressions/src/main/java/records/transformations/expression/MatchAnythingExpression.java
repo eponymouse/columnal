@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -10,6 +11,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -41,7 +43,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         // Like the name says, we match anything:
-        return result(DataTypeUtility.value(true), state);
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
     }
 
     @Override

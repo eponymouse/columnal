@@ -14,6 +14,7 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -91,10 +92,10 @@ public class ArrayExpression extends Expression
             {
                 ValueResult latest = itemValues.add(items.get(i).matchAsPattern(list.get(i), curState));
                 if (Utility.cast(latest.value, Boolean.class) == false)
-                    return result(DataTypeUtility.value(false), state, itemValues.build());
+                    return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of());
                 curState = latest.evaluateState;
             }
-            return result(DataTypeUtility.value(true), curState, itemValues.build());
+            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, itemValues.build(), ImmutableList.of());
         }
         throw new InternalException("Expected array but found " + value.getClass());
     }
