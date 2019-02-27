@@ -82,7 +82,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.s(varName);
+        return StyledString.s("_" + varName);
     }
 
     @Override

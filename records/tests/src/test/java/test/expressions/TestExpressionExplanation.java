@@ -71,6 +71,7 @@ public class TestExpressionExplanation
         
         columns.clear();
         columns.add(nums("asc", 1, 2, 3, 4));
+        columns.add(text("alphabet animals", "Aardvark", "Bear", "Cat", "Deer"));
         tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T2"), null, null), new EditableRecordSet(columns, () -> 4)));
     }
 
@@ -82,6 +83,11 @@ public class TestExpressionExplanation
     private static SimulationFunction<RecordSet, EditableColumn> nums(String name, Number... values)
     {
         return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), 0);
+    }
+
+    private static SimulationFunction<RecordSet, EditableColumn> text(String name, String... values)
+    {
+        return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
     }
 
     @Test
@@ -161,6 +167,56 @@ public class TestExpressionExplanation
                     e("true", r(1), true, null, e("true", r(1), true, null))),
                 e("@column all false", r(1), false, l("T1", "all false", 1)))
         );
+        
+        // This is a mega-match clause with multiple clauses that won't match.
+        // The matching row is the third row (index 2).
+        // The value being matched against is (asc, alphabet animals)
+        
+        // First clause is (_n, _a) @given n > text length(a)
+        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(_n, _a)", "n > @call @function text length(a)")), "true", r(2), false,
+                e("(_n, _a)", r(2, v("n", 3), v("a", "Cat")), true, null,
+                    e("_n", r(2, v("n", 3)), true, null),
+                    e("_a", r(2, v("a", "Cat")), true, null)),
+                e("n > @call @function text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
+                    e("n", r(2, v("n", 3)), 3, null),
+                    e("@call @function text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
+                    )
+                );
+        // Second clause is (3,  _ ; "t") @given false @then 1 > 0
+        Explanation megaClause2Expl = clause(ImmutableList.of(pattern("(3, _ ; \"t\")", "false")), "1 > 0", r(2), false,
+            e("(3, _ ; \"t\")", r(2), true, null,
+                e("3", r(2), true, null,
+                    e("3", r(2), 3, null)),
+                e("_ ; \"t\"", r(2), true, null,
+                    e("\"t\"", r(2), "t", null),
+                    e("_", r(2), true, null))
+            ),
+            e("false", r(2), false, null)
+        );
+        
+        // Third clause is @case (_n, "Cat") @then n > 2
+        Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(_n, \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
+            e("(_n, \"Cat\")", r(2, v("n", 3)), true, null, 
+                    e("_n", r(2, v("n", 3)), true, null),
+                    e("\"Cat\"", r(2), true, null, e("\"Cat\"", r(2), "Cat", null)))    
+        );
+        Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
+        
+        String fullMega = "@match (@column asc, @column alphabet animals) @case (_n, _a) @given n > @call @function text length(a) @then true @case (3,  _ ; \"t\") @given false @then 1 > 0 @case (_n, \"Cat\") @then n > 2 @case _ @then false @endmatch";
+        testCheckExplanation("T2", fullMega, CheckType.NO_ROWS, e(fullMega, r(2), true, null, 
+            e("(@column asc, @column alphabet animals)", r(2), new Object[]{3, "Cat"}, null,
+                e("@column asc", r(2), 3, l("T2", "asc", 2)),
+                e("@column alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
+                ),
+            megaClause1Expl, megaClause2Expl, megaClause3Expl, outcome));
+    }
+
+    private Pattern pattern(String patternSrc, @Nullable String guardSrc) throws InternalException, UserException
+    {
+        TypeManager typeManager = tableManager.getTypeManager();
+        Expression pattern = Expression.parse(null, patternSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression guard = guardSrc == null ? null : Expression.parse(null, guardSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        return new Pattern(pattern, guard);
     }
 
     // No row index, and a mapping from a single implicit lambda arg param to the given value
@@ -169,11 +225,35 @@ public class TestExpressionExplanation
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of("?1", value));
     }
-
-    // Just a row index, no variables
-    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> r(int rowIndex)
+    
+    private static class VarValue
     {
-        return new Pair<>(OptionalInt.of(rowIndex), ImmutableMap.<String, @Value Object>of());
+        private final String name;
+        private final @Value Object value;
+
+        public VarValue(String name, @Value Object value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    @SuppressWarnings("value")
+    private VarValue v(String name, Object value)
+    {
+        return new VarValue(name, value);
+    }
+    
+    // Just a row index, no variables
+    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> r(int rowIndex, VarValue... varValues)
+    {
+        ImmutableMap.Builder<String, @Value Object> vars = ImmutableMap.builderWithExpectedSize(varValues.length);
+        for (VarValue varValue : varValues)
+        {
+            vars.put(varValue.name, varValue.value);
+        }
+        
+        return new Pair<>(OptionalInt.of(rowIndex), vars.build());
     }
     
     private Explanation clause(ImmutableList<Pattern> patterns, String outcomeSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, boolean result, Explanation... children) throws InternalException, UserException

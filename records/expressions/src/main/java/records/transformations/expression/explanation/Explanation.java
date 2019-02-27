@@ -15,8 +15,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -112,7 +114,7 @@ public abstract class Explanation
                     ", evaluateState.vars=" + evaluateState._test_getVariables() +
                     ", result=" + result +
                     ", directlyUsedLocations=" + directlyUsedLocations +
-                    ", directSubExplanations=" + getDirectSubExplanations() +
+                    ", directSubExplanations:{\n" + getDirectSubExplanations().stream().map(o -> Arrays.stream(o.toString().split("\n", -1)).map(s -> "    " + s + "\n").collect(Collectors.joining()) + "\n").collect(Collectors.joining()) +
                     '}';
         }
         catch (InternalException e)

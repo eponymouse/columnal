@@ -114,7 +114,9 @@ public class MatchExpression extends NonOperatorExpression
             TransparentBuilder<ValueResult> patternsSoFar = new TransparentBuilder<>(patterns.size());
             for (Pattern p : patterns)
             {
-                ValueResult patternOutcome = patternsSoFar.add(p.match(value, state));
+                ImmutableList<ValueResult> matches = p.match(value, state);
+                matches.forEach(patternsSoFar::add);
+                ValueResult patternOutcome = matches.get(matches.size() - 1);
                 if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
                     return result(true, patternOutcome.evaluateState, patternsSoFar.build());
             }
@@ -264,25 +266,19 @@ public class MatchExpression extends NonOperatorExpression
             return rhsState;
         }
 
-        // Returns non-null if it matched, null if it didn't match.
+        // Returns just pattern, or pattern + guard.
+        // Either way, the real result is the one in last list item. 
         @OnThread(Tag.Simulation)
-        public ValueResult match(@Value Object value, EvaluateState state) throws InternalException, UserException
+        public ImmutableList<ValueResult> match(@Value Object value, EvaluateState state) throws InternalException, UserException
         {
             ValueResult patternOutcome = pattern.matchAsPattern(value, state);
             // Only check guard if initial match was valid:
             if (guard != null && Utility.cast(patternOutcome.value, Boolean.class))
             {
                 ValueResult guardOutcome = guard.calculateValue(patternOutcome.evaluateState);
-                return new ValueResult(guardOutcome.value, guardOutcome.evaluateState)
-                {
-                    @Override
-                    public Explanation makeExplanation() throws InternalException
-                    {
-                        throw new UnimplementedException();
-                    }
-                };
+                return ImmutableList.of(patternOutcome, guardOutcome);
             }
-            return patternOutcome;
+            return ImmutableList.of(patternOutcome);
         }
 
         public String save(boolean structured, TableAndColumnRenames renames)
@@ -372,14 +368,16 @@ public class MatchExpression extends NonOperatorExpression
         // It's type checked so can just copy first clause:
         ValueResult originalResult = expression.calculateValue(state);
         @Value Object value = originalResult.value;
+        TransparentBuilder<ValueResult> checkedClauses = new TransparentBuilder<>(clauses.size());
         for (MatchClause clause : clauses)
         {
-            ValueResult patternMatch = clause.matches(value, state);
+            ValueResult patternMatch = checkedClauses.add(clause.matches(value, state));
             if (Utility.cast(patternMatch.value, Boolean.class))
             {
                 ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
                 // TODO also include other checked patterns
-                return result(clauseOutcomeResult.value, state, ImmutableList.of(originalResult, patternMatch, clauseOutcomeResult));
+                return result(clauseOutcomeResult.value, state, 
+                    Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");

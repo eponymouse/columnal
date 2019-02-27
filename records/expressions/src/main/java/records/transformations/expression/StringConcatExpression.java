@@ -12,6 +12,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -119,7 +120,8 @@ public class StringConcatExpression extends NaryOpTotalExpression
             else
             {
                 // It's a value; get that value:
-                String subValue = Utility.cast(expressions.get(i).calculateValue(threadedState).value, String.class);
+                ValueResult valueToFind = matches.add(expressions.get(i).calculateValue(threadedState));
+                String subValue = Utility.cast(valueToFind.value, String.class);
                 if (subValue.isEmpty())
                 {
                     // Matches, but nothing to do.  Keep going...
