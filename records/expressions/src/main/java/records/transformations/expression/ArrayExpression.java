@@ -84,17 +84,17 @@ public class ArrayExpression extends Expression
         {
             ListEx list = (ListEx)value;
             if (list.size() != items.size())
-                return new ValueResult(DataTypeUtility.value(false), state); // Not an exception, just means the value has different size to the pattern, so can't match
+                return result(DataTypeUtility.value(false), state); // Not an exception, just means the value has different size to the pattern, so can't match
             @Nullable EvaluateState curState = state;
             TransparentBuilder<ValueResult> itemValues = new TransparentBuilder<>(items.size());
             for (int i = 0; i < items.size(); i++)
             {
                 ValueResult latest = itemValues.add(items.get(i).matchAsPattern(list.get(i), curState));
                 if (Utility.cast(latest.value, Boolean.class) == false)
-                    return new ValueResult(DataTypeUtility.value(false), state, itemValues.build());
+                    return result(DataTypeUtility.value(false), state, itemValues.build());
                 curState = latest.evaluateState;
             }
-            return new ValueResult(DataTypeUtility.value(true), curState, itemValues.build());
+            return result(DataTypeUtility.value(true), curState, itemValues.build());
         }
         throw new InternalException("Expected array but found " + value.getClass());
     }
@@ -109,7 +109,7 @@ public class ArrayExpression extends Expression
             valuesBuilder.add(item.calculateValue(state));
         }
         ImmutableList<ValueResult> values = valuesBuilder.build();
-        return new ValueResult(DataTypeUtility.value(Utility.mapList(values, v -> v.value)), state, values);
+        return result(DataTypeUtility.value(Utility.mapList(values, v -> v.value)), state, values);
     }
 
     @Override

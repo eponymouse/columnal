@@ -92,9 +92,9 @@ public class ColumnReference extends NonOperatorExpression
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return new ValueResult(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())));
+                return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())));
             case WHOLE_COLUMN:
-                return new ValueResult(column.getCollapsed(0), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName)));
+                return result(column.getCollapsed(0), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName)));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

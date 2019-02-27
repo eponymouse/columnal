@@ -51,7 +51,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        return new ValueResult(DataTypeUtility.value(true), state.add(varName, value));
+        return result(DataTypeUtility.value(true), state.add(varName, value));
     }
 
     @Override

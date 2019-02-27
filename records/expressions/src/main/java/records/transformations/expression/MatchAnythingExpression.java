@@ -41,7 +41,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         // Like the name says, we match anything:
-        return new ValueResult(DataTypeUtility.value(true), state);
+        return result(DataTypeUtility.value(true), state);
     }
 
     @Override

@@ -8,6 +8,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionSaver;
@@ -109,9 +110,9 @@ public class MatchExpression extends NonOperatorExpression
             {
                 ValueResult patternOutcome = patternsSoFar.add(p.match(value, state));
                 if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
-                    return new ValueResult(patternOutcome.value, patternOutcome.evaluateState, patternsSoFar.build());
+                    return result(patternOutcome.value, patternOutcome.evaluateState, patternsSoFar.build());
             }
-            return new ValueResult(DataTypeUtility.value(false), state, patternsSoFar.build());
+            return result(DataTypeUtility.value(false), state, patternsSoFar.build());
         }
 
         public String save(boolean structured, TableAndColumnRenames renames)
@@ -225,7 +226,14 @@ public class MatchExpression extends NonOperatorExpression
             if (guard != null && Utility.cast(patternOutcome.value, Boolean.class))
             {
                 ValueResult guardOutcome = guard.calculateValue(patternOutcome.evaluateState);
-                return guard.new ValueResult(guardOutcome.value, guardOutcome.evaluateState, ImmutableList.of(patternOutcome, guardOutcome));
+                return new ValueResult(guardOutcome.value, guardOutcome.evaluateState)
+                {
+                    @Override
+                    public Explanation makeExplanation() throws InternalException
+                    {
+                        throw new UnimplementedException();
+                    }
+                };
             }
             return patternOutcome;
         }
@@ -324,7 +332,7 @@ public class MatchExpression extends NonOperatorExpression
             if (Utility.cast(patternMatch.value, Boolean.class))
             {
                 ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
-                return new ValueResult(clauseOutcomeResult.value, state, ImmutableList.of(patternMatch, clauseOutcomeResult)) {
+                return new ValueResult(clauseOutcomeResult.value, state) {
                     @Override
                     public Explanation makeExplanation()
                     {

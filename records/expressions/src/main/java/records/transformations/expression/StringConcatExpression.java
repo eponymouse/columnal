@@ -98,7 +98,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             String s = Utility.cast(value.value, String.class);
             sb.append(s);
         }
-        return new ValueResult(DataTypeUtility.value(sb.toString()), state, values);
+        return result(DataTypeUtility.value(sb.toString()), state, values);
     }
 
     @Override
@@ -135,7 +135,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     else
                     {
                         // Can't match
-                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
+                        return result(DataTypeUtility.value(false), originalState, matches.build());
                     }
                     pendingMatch = null;
                 }
@@ -144,10 +144,10 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     // We find the next occurrence:
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
-                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());;
+                        return result(DataTypeUtility.value(false), originalState, matches.build());;
                     ValueResult match = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState));
                     if (Utility.cast(match.value, Boolean.class) == false)
-                        return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
+                        return result(DataTypeUtility.value(false), originalState, matches.build());
                     threadedState = match.evaluateState;
                     curOffset = nextPos + subValue.length();
                     pendingMatch = null;
@@ -158,11 +158,11 @@ public class StringConcatExpression extends NaryOpTotalExpression
         {
             ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
             if (Utility.cast(last.value, Boolean.class) == false)
-                return new ValueResult(DataTypeUtility.value(false), originalState, matches.build());
+                return result(DataTypeUtility.value(false), originalState, matches.build());
         }
 
 
-        return new ValueResult(DataTypeUtility.value(true), threadedState, matches.build());
+        return result(DataTypeUtility.value(true), threadedState, matches.build());
     }
 
     @Override

@@ -75,7 +75,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new ValueResult(tag.<@Value Object>eitherEx(s -> {
+        return result(tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");
         }, t -> {
             TagType<?> tag1 = t.getTagInfo();

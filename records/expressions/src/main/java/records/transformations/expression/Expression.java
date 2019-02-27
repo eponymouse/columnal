@@ -237,6 +237,98 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return check.typeExp;
     }
 
+    @OnThread(Tag.Simulation)
+    protected final ValueResult result(@Value Object value, EvaluateState state)
+    {
+        return result(value, state, ImmutableList.of());
+    }
+
+    @OnThread(Tag.Simulation)
+    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
+    {
+        return result(value, state, childrenForExplanations, ImmutableList.of());
+    }
+
+    @OnThread(Tag.Simulation)
+    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+    {
+        if (!state.recordExplanation())
+        {
+            return new ValueResult(value, state)
+            {
+                @Override
+                public Explanation makeExplanation() throws InternalException
+                {
+                    throw new InternalException("Fetching explanation but did not record explanation");
+                }
+            };
+        }
+        
+        return new ValueResult(value, state)
+        {
+            @Override
+            public Explanation makeExplanation()
+            {
+                return new Explanation(Expression.this, evaluateState, value, usedLocations)
+                {
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    {
+                        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
+                    }
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                    {
+                        return Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation());
+                    }
+                };
+            }
+
+            @Override
+            public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
+            {
+                return usedLocations;
+            }
+        };
+    }
+
+    @OnThread(Tag.Simulation)
+    protected ValueResult result(EvaluateState state, RecordedFunctionResult recordedFunctionResult)
+    {
+        return new ValueResult(recordedFunctionResult.result, state)
+        {
+            @Override
+            public Explanation makeExplanation()
+            {
+                return new Explanation(Expression.this, evaluateState, value, recordedFunctionResult.usedLocations)
+                {
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    {
+                        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
+                    }
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                    {
+                        return recordedFunctionResult.childExplanations;
+                    }
+                };
+            }
+
+            @Override
+            public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
+            {
+                return recordedFunctionResult.usedLocations;
+            }
+        };
+    }
+
     /**
      * For convenience this is a non-static class, as the Expression reference
      * is used by the default implementation of makeExplanation.
@@ -244,59 +336,25 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      * instance is used to construct the object.
      */
     @OnThread(Tag.Simulation)
-    public class ValueResult
+    public abstract static class ValueResult
     {
         public final @Value Object value;
         // State after execution:
         public final EvaluateState evaluateState;
-        private final SimulationSupplierInt<ImmutableList<Explanation>> directChildExplanations;
-        private final ImmutableList<ExplanationLocation> usedLocations;
-
+        
         protected ValueResult(@Value Object value, EvaluateState state)
-        {
-            this(value, state, ImmutableList.of());
-        }
-        
-        protected ValueResult(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
-        {
-            this(value, state, childrenForExplanations, ImmutableList.of());
-        }
-        
-        protected ValueResult(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
         {
             this.value = value;
             this.evaluateState = state;
-            this.directChildExplanations = () -> Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation());
-            this.usedLocations = usedLocations;
         }
 
-        protected ValueResult(RecordedFunctionResult recordedFunctionResult, EvaluateState state)
-        {
-            this.value = recordedFunctionResult.result;
-            this.evaluateState = state;
-            this.directChildExplanations = () -> recordedFunctionResult.childExplanations;
-            this.usedLocations = recordedFunctionResult.usedLocations;
-        }
+        public abstract Explanation makeExplanation() throws InternalException;
 
-        // Can be overridden by subclasses if needed
-        public Explanation makeExplanation()
+        // Locations used directly by this result, not including
+        // locations from child explanations
+        public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
         {
-            return new Explanation(Expression.this, evaluateState, value, usedLocations)
-            {
-                @Override
-                @OnThread(Tag.Simulation)
-                public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
-                {
-                    return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
-                }
-
-                @Override
-                @OnThread(Tag.Simulation)
-                public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
-                {
-                    return directChildExplanations.get();
-                }
-            };
+            return ImmutableList.of();
         }
     }
     
@@ -362,7 +420,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         ValueResult ourValue = calculateValue(state);
-        return new ValueResult(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), state, ImmutableList.of(ourValue), ourValue.usedLocations);
+        return result(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations());
     }
 
     @SuppressWarnings("recorded")

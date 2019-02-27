@@ -99,7 +99,7 @@ public class TimesExpression extends NaryOpTotalExpression
         @Value Number n = Utility.cast(values.get(0).value, Number.class);
         for (int i = 1; i < expressions.size(); i++)
             n = Utility.multiplyNumbers(n, Utility.cast(values.get(i).value, Number.class));
-        return new ValueResult(n, state, values);
+        return result(n, state, values);
     }
 
     @SuppressWarnings("recorded")

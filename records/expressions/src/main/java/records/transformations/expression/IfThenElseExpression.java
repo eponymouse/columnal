@@ -89,13 +89,13 @@ public class IfThenElseExpression extends NonOperatorExpression
         if (b)
         {
             ValueResult thenResult = thenExpression.calculateValue(condValState.evaluateState);
-            return new ValueResult(thenResult.value, state, ImmutableList.of(condValState, thenResult));
+            return result(thenResult.value, state, ImmutableList.of(condValState, thenResult));
         }
         else
         {
             // Else gets original state, condition didn't pass:
             ValueResult elseResult = elseExpression.calculateValue(state);
-            return new ValueResult(elseResult.value, state, ImmutableList.of(condValState, elseResult));
+            return result(elseResult.value, state, ImmutableList.of(condValState, elseResult));
         }
     }
 

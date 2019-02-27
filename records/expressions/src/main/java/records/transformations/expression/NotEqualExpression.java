@@ -80,10 +80,12 @@ public class NotEqualExpression extends BinaryOpExpression
             // Get value from the non-pattern:
             ValueResult val = (left ? rhs : lhs).calculateValue(state);
             // Match it against the pattern:
-            boolean result = Utility.cast((left ? lhs : rhs).matchAsPattern(val.value, state).value, Boolean.class);
+            ValueResult pattern = (left ? lhs : rhs).matchAsPattern(val.value, state);
+            // Don't forget the not; we are not-equals:
+            boolean result = ! Utility.cast(pattern.value, Boolean.class);
             // We are not-equals, so looking for failure,
             // and we don't affect the state:
-            return new Pair<>(DataTypeUtility.value(result), ImmutableList.of(val));
+            return new Pair<>(DataTypeUtility.value(result), ImmutableList.of(val, pattern));
         }
         else
         {

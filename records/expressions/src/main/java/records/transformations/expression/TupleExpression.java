@@ -76,10 +76,10 @@ public class TupleExpression extends Expression
             {
                 ValueResult latest = memberValues.add(members.get(i).matchAsPattern(tuple[i], curState));
                 if (Utility.cast(latest.value, Boolean.class) == false)
-                    return new ValueResult(DataTypeUtility.value(false), state, memberValues.build());
+                    return result(DataTypeUtility.value(false), state, memberValues.build());
                 curState = latest.evaluateState;
             }
-            return new ValueResult(DataTypeUtility.value(true), curState, memberValues.build());
+            return result(DataTypeUtility.value(true), curState, memberValues.build());
         }
         throw new InternalException("Expected tuple but found " + value.getClass());
     }
@@ -93,7 +93,7 @@ public class TupleExpression extends Expression
         {
             values[i] = valueResults.add(members.get(i).calculateValue(state)).value;
         }
-        return new ValueResult(DataTypeUtility.value(values), state, valueResults.build());
+        return result(DataTypeUtility.value(values), state, valueResults.build());
     }
 
     @Override

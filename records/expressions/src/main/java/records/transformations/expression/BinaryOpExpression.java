@@ -144,13 +144,13 @@ public abstract class BinaryOpExpression extends Expression
         {
             return ImplicitLambdaArg.makeImplicitFunction(this, ImmutableList.of(lhs, rhs), state, s -> {
                 Pair<@Value Object, ImmutableList<ValueResult>> result = getValueBinaryOp(s);
-                return new ValueResult(result.getFirst(), s, result.getSecond());
+                return result(result.getFirst(), s, result.getSecond());
             });
         }
         else
         {
             Pair<@Value Object, ImmutableList<ValueResult>> r = getValueBinaryOp(state);
-            return new ValueResult(r.getFirst(), state, r.getSecond());
+            return result(r.getFirst(), state, r.getSecond());
         }
     }
 

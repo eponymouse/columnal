@@ -64,7 +64,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return new ValueResult(state.get(getVarName()), state);
+        return result(state.get(getVarName()), state);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         else
         {
             // Takes one or more parameters:
-            return outer.new ValueResult(ValueFunction.value(new ValueFunction()
+            return outer.result(ValueFunction.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException

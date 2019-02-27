@@ -68,10 +68,10 @@ public class OrExpression extends NaryOpShortCircuitExpression
             Boolean b = Utility.cast(values.add(expression.calculateValue(state)).value, Boolean.class);
             if (b == true)
             {
-                return new ValueResult(DataTypeUtility.value(true), state, values.build());
+                return result(DataTypeUtility.value(true), state, values.build());
             }
         }
-        return new ValueResult(DataTypeUtility.value(false), state, values.build());
+        return result(DataTypeUtility.value(false), state, values.build());
     }
 
     @SuppressWarnings("recorded")

@@ -80,12 +80,12 @@ public class AndExpression extends NaryOpShortCircuitExpression
             Boolean b = Utility.cast(valState.value, Boolean.class);
             if (b == false)
             {
-                return new ValueResult(DataTypeUtility.value(false), origState, values.build());
+                return result(DataTypeUtility.value(false), origState, values.build());
             }
             // In and, state is threaded through to next items:
             state = valState.evaluateState;
         }
-        return new ValueResult(DataTypeUtility.value(true), state, values.build());
+        return result(DataTypeUtility.value(true), state, values.build());
     }
 
     @SuppressWarnings("recorded")

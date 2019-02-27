@@ -120,7 +120,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             n = Utility.addSubtractNumbers(n, Utility.cast(values.get(i).value, Number.class), ops.get(i - 1) == ADD);
         }
         //System.err.println("Actual Result: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(expressions.size()-1).save(true));
-        return new ValueResult(n, state, values);
+        return result(n, state, values);
     }
 
     @SuppressWarnings("recorded")

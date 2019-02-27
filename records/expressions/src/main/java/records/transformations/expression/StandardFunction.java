@@ -56,7 +56,7 @@ public class StandardFunction extends NonOperatorExpression
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> typeFinal = type;
-        return new ValueResult(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+        return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
             Either<MutUnitVar, MutVar> typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());

@@ -142,7 +142,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             ValueResult value = expressions.get(1 - patternIndex.getAsInt()).calculateValue(state);
             ValueResult matchResult = expressions.get(patternIndex.getAsInt()).matchAsPattern(value.value, state);
             boolean matched = Utility.cast(matchResult.value, Boolean.class);
-            return new ValueResult(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));    
+            return result(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));    
         }
 
         TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
@@ -152,11 +152,11 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             @Value Object rhsVal = values.add(expressions.get(i).calculateValue(state)).value;
             if (0 != Utility.compareValues(first, rhsVal))
             {
-                return new ValueResult(DataTypeUtility.value(false), state, values.build());
+                return result(DataTypeUtility.value(false), state, values.build());
             }
         }
 
-        return new ValueResult(DataTypeUtility.value(true), state, values.build());
+        return result(DataTypeUtility.value(true), state, values.build());
     }
 
     @Override

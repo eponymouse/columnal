@@ -129,14 +129,18 @@ public class TestExpressionExplanation
                 e("@call @function all(@entire T2:asc, (? = (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
                     // Once for function, once for call:
                     e("? = (1.8 \u00B1 1.2)", null, null, null),
-                    e("? = (1.8 \u00B1 1.2)", q(4), false, null, e("?", q(4), 4, null))));
-        // e("1.8 \u00B1 1.2", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
+                    e("? = (1.8 \u00B1 1.2)", q(4), false, null, 
+                        e("?", q(4), 4, null),
+                        e("1.8 \u00B1 1.2", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
+        )));
         testExplanation("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))",
                 e("@call @function none(@entire T2:asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                     // Once for function, once for call:
                     e("? <> (1.8 \u00B1 0.9)", null, null, null),
-                    e("? <> (1.8 \u00B1 0.9)", q(3), true, null, e("?", q(3), 3, null))));
-        // e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
+                    e("? <> (1.8 \u00B1 0.9)", q(3), true, null, 
+                        e("?", q(3), 3, null),
+                        e("1.8 \u00B1 0.9", null, null, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
+        )));
         
         testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", r(0), false, l("T1", "half false", 0)));
 

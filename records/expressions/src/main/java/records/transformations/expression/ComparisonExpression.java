@@ -146,11 +146,11 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
             @Value Object next = usedValues.add(expressions.get(i).calculateValue(state)).value;
             if (!operators.get(i - 1).comparisonTrue(cur, next))
             {
-                return new ValueResult(DataTypeUtility.value(false), state, usedValues.build());
+                return result(DataTypeUtility.value(false), state, usedValues.build());
             }
             cur = next;
         }
-        return new ValueResult(DataTypeUtility.value(true), state, usedValues.build());
+        return result(DataTypeUtility.value(true), state, usedValues.build());
     }
 
     @SuppressWarnings("recorded")
