@@ -207,7 +207,7 @@ public class CallExpression extends Expression
                     @OnThread(Tag.Simulation)
                     public Explanation getValueExplanation() throws InternalException
                     {
-                        return paramValueResults.get(iFinal).makeExplanation();
+                        return paramValueResults.get(iFinal).makeExplanation(null);
                     }
 
                     @Override

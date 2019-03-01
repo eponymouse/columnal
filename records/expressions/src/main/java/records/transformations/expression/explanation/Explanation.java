@@ -31,10 +31,11 @@ public abstract class Explanation
 {
     // Is this a normal fetch of an expression's value,
     // or is it being asked to match against a given value?
-    public static enum ExecutionType {VALUE, MATCH};
+    // or is it constructing an implicit lambda function?
+    public static enum ExecutionType {VALUE, MATCH, CALL_IMPLICIT};
     
     private final ExplanationSource expression;
-    private final ExecutionType executionType;
+    protected final ExecutionType executionType;
     private final EvaluateState evaluateState;
     private final @Nullable @Value Object result;
     private final ImmutableList<ExplanationLocation> directlyUsedLocations;

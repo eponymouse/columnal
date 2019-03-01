@@ -130,9 +130,9 @@ public class MatchExpression extends NonOperatorExpression
             return new ValueResult(DataTypeUtility.value(match), state)
             {
                 @Override
-                public Explanation makeExplanation() throws InternalException
+                public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
                 {
-                    return new Explanation(MatchClause.this, ExecutionType.MATCH, evaluateState, value, ImmutableList.of())
+                    return new Explanation(MatchClause.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.MATCH, evaluateState, value, ImmutableList.of())
                     {
                         @Override
                         public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
@@ -143,7 +143,7 @@ public class MatchExpression extends NonOperatorExpression
                         @Override
                         public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                         {
-                            return Utility.mapListInt(children, c -> c.makeExplanation());
+                            return Utility.mapListInt(children, c -> c.makeExplanation(null));
                         }
                     };
                 }

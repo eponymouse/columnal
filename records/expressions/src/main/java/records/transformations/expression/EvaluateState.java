@@ -12,6 +12,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -115,9 +116,17 @@ public final class EvaluateState
         DataType getTypeFor(TypeManager typeManager, Expression expression) throws InternalException, UserException;
     }
     
-    public DataType getTypeFor(Expression expression) throws InternalException, UserException
+    public DataType getTypeFor(Expression expression, ExecutionType executionType) throws InternalException, UserException
     {
-        return typeLookup.getTypeFor(typeManager, expression);
+        if (executionType == ExecutionType.MATCH)
+            return DataType.BOOLEAN;
+
+        DataType dataType = typeLookup.getTypeFor(typeManager, expression);
+        if (executionType == ExecutionType.CALL_IMPLICIT && dataType.isFunction())
+        {
+            return dataType.getMemberType().get(dataType.getMemberType().size() - 1);
+        }
+        return dataType;
     }
 
     // Equals and hashCode on EvaluateState are only used by

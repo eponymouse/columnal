@@ -849,6 +849,12 @@ public class DataType implements StyledShowable
     }
 
     @Pure
+    public boolean isFunction()
+    {
+        return kind == Kind.FUNCTION;
+    }
+
+    @Pure
     public boolean isDateTime()
     {
         return kind == Kind.DATETIME;

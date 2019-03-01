@@ -259,7 +259,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             return new ValueResult(value, state)
             {
                 @Override
-                public Explanation makeExplanation() throws InternalException
+                public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
                 {
                     throw new InternalException("Fetching explanation but did not record explanation");
                 }
@@ -269,22 +269,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return new ValueResult(value, state)
         {
             @Override
-            public Explanation makeExplanation()
+            public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
             {
-                return new Explanation(Expression.this, executionType, evaluateState, value, usedLocations)
+                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : executionType, evaluateState, value, usedLocations)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
                     public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value, evaluateState, hyperlinkLocation, usedLocations);
+                        return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, usedLocations);
                     }
 
                     @Override
                     @OnThread(Tag.Simulation)
                     public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                     {
-                        return Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation());
+                        return Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation(null));
                     }
                 };
             }
@@ -299,7 +299,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
     @OnThread(Tag.Simulation)
     @Nullable
-    private StyledString describe(@Value Object value, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations) throws UserException, InternalException
+    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations) throws UserException, InternalException
     {
         // Don't bother explaining literals:
         if (Expression.this.hideFromExplanation())
@@ -310,7 +310,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
         StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().map(hyperlinkLocation).collect(StyledString.joining(", ")));
 
-        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)), using);
+        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
     }
 
     @OnThread(Tag.Simulation)
@@ -319,15 +319,15 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return new ValueResult(recordedFunctionResult.result, state)
         {
             @Override
-            public Explanation makeExplanation()
+            public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
             {
-                return new Explanation(Expression.this, ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations)
+                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
                     public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value, evaluateState, hyperlinkLocation, recordedFunctionResult.usedLocations);
+                        return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, recordedFunctionResult.usedLocations);
                     }
 
                     @Override
@@ -366,7 +366,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             this.evaluateState = state;
         }
 
-        public abstract Explanation makeExplanation() throws InternalException;
+        public abstract Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException;
 
         // Locations used directly by this result, not including
         // locations from child explanations

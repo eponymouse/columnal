@@ -5,13 +5,13 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -23,7 +23,6 @@ import utility.Utility;
 import records.transformations.expression.function.ValueFunction;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -163,7 +162,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         else
         {
             // Takes one or more parameters:
-            return outer.result(ValueFunction.value(new ValueFunction()
+            return outer.explanation(ValueFunction.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
@@ -174,10 +173,10 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                         argState = argState.add(lambdaArgs.get(i).getVarName(), arg(i));
                     }
                     ValueResult r = body.apply(argState);
-                    addExtraExplanation(r::makeExplanation);
+                    addExtraExplanation(() -> r.makeExplanation(ExecutionType.CALL_IMPLICIT));
                     return r.value;
                 }
-            }), state);
+            }), ExecutionType.VALUE, state, ImmutableList.of(), ImmutableList.of());
         }
     }
 

@@ -118,7 +118,7 @@ public class Check extends Transformation
         if (checkType == CheckType.STANDALONE)
         {
             ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true, type.getFirst()));
-            explanation = r.makeExplanation();
+            explanation = r.makeExplanation(null);
             return r.value;
         }
         else
@@ -133,17 +133,17 @@ public class Check extends Transformation
                     boolean thisRow = Utility.cast(r.value, Boolean.class);
                     if (thisRow && checkType == CheckType.NO_ROWS)
                     {
-                        explanation = r.makeExplanation();
+                        explanation = r.makeExplanation(null);
                         return DataTypeUtility.value(false);
                     }
                     else if (!thisRow && checkType == CheckType.ALL_ROWS)
                     {
-                        explanation = r.makeExplanation();
+                        explanation = r.makeExplanation(null);
                         return DataTypeUtility.value(false);
                     }
                     else if (thisRow && checkType == CheckType.ANY_ROW)
                     {
-                        explanation = r.makeExplanation();
+                        explanation = r.makeExplanation(null);
                         return DataTypeUtility.value(true);
                     }
                 }
