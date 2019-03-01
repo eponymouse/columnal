@@ -49,7 +49,7 @@ public abstract class Explanation
     }
 
     @OnThread(Tag.Simulation)
-    public abstract StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException;
+    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException;
 
     public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
     {

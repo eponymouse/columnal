@@ -141,6 +141,13 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
+    public boolean hideFromExplanation()
+    {
+        // Don't want to print out entire column:
+        return referenceType.equals(ColumnReferenceType.WHOLE_COLUMN);
+    }
+
+    @Override
     @OnThread(Tag.FXPlatform)
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {

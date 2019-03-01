@@ -65,4 +65,10 @@ public abstract class Literal extends NonOperatorExpression
     {
         return this == toReplace ? replaceWith : this;
     }
+
+    @Override
+    public boolean hideFromExplanation()
+    {
+        return true;
+    }
 }

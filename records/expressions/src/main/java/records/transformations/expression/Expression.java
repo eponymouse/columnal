@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -10,8 +9,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -48,6 +45,7 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.function.ValueFunction.RecordedFunctionResult;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -63,12 +61,9 @@ import utility.ExFunction;
 import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
-import utility.SimulationSupplier;
-import utility.SimulationSupplierInt;
 import utility.StreamTreeBuilder;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -280,9 +275,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
                     {
-                        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
+                        return Expression.this.describe(value, evaluateState, hyperlinkLocation, usedLocations);
                     }
 
                     @Override
@@ -303,6 +298,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     }
 
     @OnThread(Tag.Simulation)
+    @Nullable
+    private StyledString describe(@Value Object value, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations) throws UserException, InternalException
+    {
+        // Don't bother explaining literals:
+        if (Expression.this.hideFromExplanation())
+            return null;
+        // Or things which result in functions, as output won't be useful:
+        if (value instanceof ValueFunction)
+            return null;
+
+        StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().map(hyperlinkLocation).collect(StyledString.joining(", ")));
+
+        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)), using);
+    }
+
+    @OnThread(Tag.Simulation)
     protected ValueResult result(EvaluateState state, RecordedFunctionResult recordedFunctionResult)
     {
         return new ValueResult(recordedFunctionResult.result, state)
@@ -314,9 +325,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
                     {
-                        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this), value, null)));
+                        return Expression.this.describe(value, evaluateState, hyperlinkLocation, recordedFunctionResult.usedLocations);
                     }
 
                     @Override
@@ -416,7 +427,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     {
         return Optional.empty();
     }
-
+    
+    public boolean hideFromExplanation()
+    {
+        return false;
+    }
+    
     // Vaguely similar to getValue, but instead checks if the expression matches the given value
     // For many expressions, matching means equality, but if a new-variable item is involved
     // it's not necessarily plain equality.

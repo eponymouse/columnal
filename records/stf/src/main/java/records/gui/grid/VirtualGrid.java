@@ -1970,6 +1970,15 @@ public final class VirtualGrid implements ScrollBindable
         {
             // Do nothing if not in a table
         }
+
+        // Useful for debugging
+        @Override
+        public String toString()
+        {
+            return "EmptyCellSelection{" +
+                    "position=" + position +
+                    '}';
+        }
     }
     
     public static enum ListenerOutcome { KEEP, REMOVE }

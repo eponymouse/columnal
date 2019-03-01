@@ -15,11 +15,13 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.Table;
@@ -105,29 +107,22 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                         label.setUnderline(false);
                 });
                 label.setOnMouseClicked(e -> {
-                    FXUtility.mouse(this).jumpToExplanation();
+                    FXUtility.mouse(this).showExplanation();
                 });
                 return label;
             }
 
             @OnThread(Tag.FXPlatform)
-            private void jumpToExplanation()
+            private void showExplanation()
             {
                 @Nullable Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
-                    // TODO make a popup showing explanation
-                    /*
-                    if (locations.size() == 1)
-                    {
-                        @Nullable CellSelection selection = FXUtility.mouse(CheckDisplay.this).makeSelection(parent.getManager(), locations.get(0));
-                        if (selection != null)
-                        {
-                            @NonNull CellSelection selectionNN = selection;
-                            withParent_(g -> g.select(selectionNN));
-                        }
-                    }
-                    */
+                    ExplanationDisplay explanationDisplay = new ExplanationDisplay(check.getSource(), getPosition().offsetByRowCols(1, 0), explanation);
+                    withParent_(g -> {
+                        g.getFloatingSupplier().addItem(explanationDisplay);
+                        g.positionOrAreaChanged();
+                    });
                 }
             }
 
@@ -140,7 +135,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @Override
             public void keyboardActivate(CellPosition cellPosition)
             {
-                jumpToExplanation();
+                showExplanation();
             }
         };
         floatingSupplier.addItem(resultFloatingItem);
@@ -167,6 +162,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
             catch (UserException | InternalException e)
             {
+                Log.log(e);
                 Platform.runLater(() -> {
                     resultContent.set("ERR:" + e.getLocalizedMessage());
                 });
@@ -285,6 +281,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     @Override
     public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
+        if (cellPosition.equals(getPosition()))
+            return new EntireTableSelection(this, cellPosition.columnIndex);
+        
         if (!cellPosition.equals(getPosition().offsetByRowCols(1, 0)))
             return null;
         
@@ -398,7 +397,8 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             
             StyledString ss = directSubExplanation.describe(alreadyDescribed, this::hyperlinkLocation);
             alreadyDescribed.add(directSubExplanation);
-            output.add(ss);
+            if (ss != null)
+                output.add(ss);
         }
         return output.build();
     }
