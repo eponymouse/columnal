@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -113,21 +114,22 @@ public class MatchExpression extends NonOperatorExpression
         public ValueResult matches(@Value Object value, EvaluateState state) throws UserException, InternalException
         {
             TransparentBuilder<ValueResult> patternsSoFar = new TransparentBuilder<>(patterns.size());
-            for (Pattern p : patterns)
+            for (int i = 0; i < patterns.size(); i++)
             {
+                Pattern p = patterns.get(i);
                 ImmutableList<ValueResult> matches = p.match(value, state);
                 matches.forEach(patternsSoFar::add);
                 ValueResult patternOutcome = matches.get(matches.size() - 1);
                 if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
-                    return result(true, patternOutcome.evaluateState, patternsSoFar.build());
+                    return result(OptionalInt.of(i), patternOutcome.evaluateState, patternsSoFar.build());
             }
-            return result(false, state, patternsSoFar.build());
+            return result(OptionalInt.empty(), state, patternsSoFar.build());
         }
         
         @OnThread(Tag.Simulation)
-        private ValueResult result(boolean match, EvaluateState state, ImmutableList<ValueResult> children)
+        private ValueResult result(OptionalInt matchedPatternIndex, EvaluateState state, ImmutableList<ValueResult> children)
         {
-            return new ValueResult(DataTypeUtility.value(match), state)
+            return new ValueResult(DataTypeUtility.value(matchedPatternIndex.isPresent()), state)
             {
                 @Override
                 public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
@@ -135,9 +137,12 @@ public class MatchExpression extends NonOperatorExpression
                     return new Explanation(MatchClause.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.MATCH, evaluateState, value, ImmutableList.of())
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                        public @OnThread(Tag.Simulation) @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
                         {
-                            return StyledString.s("TODO MatchClause");
+                            // We only need to describe the patterns, if we are chosen
+                            // then the outer MatchExpression will describe outcome.
+                            // We know that all patterns before the last did not match
+                            return null;
                         }
 
                         @Override
@@ -161,7 +166,7 @@ public class MatchExpression extends NonOperatorExpression
                 StyledString.s(" case "),
                 patterns.stream().map(p -> p.toDisplay()).collect(StyledString.joining(" or ")),
                 StyledString.s(" then "),
-                outcome.toDisplay(BracketedStatus.MISC)
+                outcome.toDisplay(BracketedStatus.TOP_LEVEL)
             );
         }
 
@@ -289,8 +294,8 @@ public class MatchExpression extends NonOperatorExpression
 
         public StyledString toDisplay()
         {
-            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.MISC);
-            return guard == null ? patternDisplay : StyledString.concat(StyledString.s(" given "), guard.toDisplay(BracketedStatus.MISC));
+            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.TOP_LEVEL);
+            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(BracketedStatus.TOP_LEVEL));
         }
 
         public @Recorded Expression getPattern()
@@ -405,8 +410,8 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.MISC), clauses.stream().map(c -> c.toDisplay()).collect(StyledString.joining("")));
-        return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : StyledString.roundBracket(inner);
+        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.TOP_LEVEL), clauses.stream().map(c -> c.toDisplay()).collect(StyledString.joining("")), StyledString.s(" endmatch"));
+        return inner; //(surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : StyledString.roundBracket(inner);
     }
 
     @Override

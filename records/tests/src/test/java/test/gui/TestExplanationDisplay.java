@@ -37,7 +37,7 @@ import static test.TestUtil.fx_;
 @OnThread(Tag.Simulation)
 public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait
 {
-    private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(8), CellPosition.col(9));
+    private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(13), CellPosition.col(9));
     
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
@@ -120,6 +120,32 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
             "\u2192alphabet animals was \"Cat\", using alphabet animals (row 3)",
             "text length(\u2192alphabet animals) was 3",
             "\u2192asc < text length(\u2192alphabet animals) was false");
+    }
+
+    @Test
+    public void testExplanationMatch() throws UserException, InternalException
+    {
+        addCheck("T2", CheckType.NO_ROWS, "@match (@column asc, @column alphabet animals) @case (_n, _) @given n > 5 @then false @case (_, _animal) @then (_n = @call @function text length(animal)) & (n > 5) @endmatch");
+        testFailureExplanation(
+                "\u2192asc was 1, using asc (row 1)",
+                "\u2192alphabet animals was \"Aardvark\", using alphabet animals (row 1)",
+                "(\u2192asc, \u2192alphabet animals) was (1, \"Aardvark\")",
+                "_n matched",
+                "_ matched",
+                "(_n, _) matched",
+                "n was 1",
+                "n > 5 was false",
+                "_ matched",
+                "_animal matched",
+                "(_, _animal) matched",
+                "animal was \"Aardvark\"",
+                "text length(animal) was 8",
+                "_n matched",
+                "_n = text length(animal) was true",
+                "n was 8",
+                "n > 5 was true",
+                "(_n = text length(animal)) & (n > 5) was true",
+                "match (\u2192asc, \u2192alphabet animals) case (_n, _) given n > 5 then false case (_, _animal) then (_n = text length(animal)) & (n > 5) endmatch was true");
     }
 
     private void testFailureExplanation(String... lines)

@@ -310,7 +310,14 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
         StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().map(hyperlinkLocation).collect(StyledString.joining(", ")));
 
-        return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
+        if (executionType == ExecutionType.MATCH && value instanceof Boolean)
+        {
+            return StyledString.concat(Expression.this.toStyledString(), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
+        }
+        else
+        {
+            return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
+        }
     }
 
     @OnThread(Tag.Simulation)

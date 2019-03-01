@@ -411,7 +411,7 @@ public class DataTypeUtility
                 for (int i = 0; i < tuple.length; i++)
                 {
                     if (i != 0)
-                        s.append(",");
+                        s.append(", ");
                     s.append(valueToString(inner.get(i), tuple[i], dataType, asExpression));
                 }
                 if (parent == null || !parent.isTagged())
@@ -428,7 +428,7 @@ public class DataTypeUtility
                 for (int i = 0; i < listEx.size(); i++)
                 {
                     if (i != 0)
-                        s.append(",");
+                        s.append(", ");
                     if (inner == null)
                         throw new InternalException("Array has empty type but is not empty");
                     s.append(valueToString(inner, listEx.get(i), dataType, asExpression));
