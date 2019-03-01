@@ -157,6 +157,11 @@ public abstract class Explanation
             return "InternalException: " + e.getLocalizedMessage();
         }
     }
+
+    public boolean isValue()
+    {
+        return executionType == ExecutionType.VALUE;
+    }
     
     // Marker interface for items which can be the (code) source of an explanation 
     public static interface ExplanationSource

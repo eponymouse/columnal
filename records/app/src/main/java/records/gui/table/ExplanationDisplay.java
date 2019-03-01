@@ -75,6 +75,9 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     @OnThread(Tag.Simulation)
     private ImmutableList<ExplanationLocation> makeString(Explanation explanation, HashSet<Explanation> alreadyExplained, ImmutableList.Builder<StyledString> lines, boolean skipIfTrivial) throws UserException, InternalException
     {
+        if (explanation.isValue() && alreadyExplained.contains(explanation))
+            return ImmutableList.of();
+        
         ImmutableList.Builder<ExplanationLocation> skippedLocationsBuilder = ImmutableList.builder(); 
         // Go from lowest child upwards:
         for (Explanation child : explanation.getDirectSubExplanations())

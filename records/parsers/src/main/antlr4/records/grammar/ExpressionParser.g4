@@ -41,7 +41,7 @@ lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
-ifThenElseExpression : IF expression THEN expression ELSE expression ENDIF;
+ifThenElseExpression : IF topLevelExpression THEN topLevelExpression ELSE topLevelExpression ENDIF;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | PLUS_MINUS | COMMA;
 stringConcatExpression : expression (STRING_CONCAT expression)+;

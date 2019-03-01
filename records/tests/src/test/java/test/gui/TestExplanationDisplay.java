@@ -142,6 +142,19 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
                 "match (\u2192asc, \u2192alphabet animals) case (_n, _) given n > 5 then false case (_, _animal) then (_n = text length(animal)) & (n > 5) endmatch was true");
     }
 
+    @Test
+    public void testExplanationRepetitiveIf() throws UserException, InternalException
+    {
+        addCheck("T2", CheckType.NO_ROWS, "@if (@column asc + 1) > 3 @then (@column asc + 1) > 4 @else (@column asc + 1) > 3 @endif");
+        testFailureExplanation(
+                "\u2192asc was 4, using asc (row 4)",
+                "\u2192asc + 1 was 5",
+                "(\u2192asc + 1) > 3 was true",
+                "(\u2192asc + 1) > 4 was true",
+                "if (\u2192asc + 1) > 3 then (\u2192asc + 1) > 4 else (\u2192asc + 1) > 3 endif was true"
+        );
+    }  
+
     private void testFailureExplanation(String... lines)
     {
         TestUtil.fx_(() -> mainWindowActions._test_getVirtualGrid().findAndSelect(Either.left(CellPosition.ORIGIN)));

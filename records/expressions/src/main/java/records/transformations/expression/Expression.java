@@ -608,7 +608,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
         {
-            return new IfThenElseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)), visitExpression(ctx.expression(2)));
+            return new IfThenElseExpression(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
         }
 
         @Override

@@ -123,12 +123,14 @@ public class IfThenElseExpression extends NonOperatorExpression
     {
         StyledString content = StyledString.concat(
             StyledString.s("if "),
-            condition.toDisplay(BracketedStatus.MISC),
+            condition.toDisplay(BracketedStatus.TOP_LEVEL),
             StyledString.s(" then "),
-            thenExpression.toDisplay(BracketedStatus.MISC),
+            thenExpression.toDisplay(BracketedStatus.TOP_LEVEL),
             StyledString.s(" else "),
-            elseExpression.toDisplay(BracketedStatus.MISC));
-        return surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
+            elseExpression.toDisplay(BracketedStatus.TOP_LEVEL),
+            StyledString.s(" endif")
+        );
+        return content; //surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
     }
 
     @Override
