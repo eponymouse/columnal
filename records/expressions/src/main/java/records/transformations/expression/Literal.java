@@ -67,7 +67,7 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     @Override
-    public boolean hideFromExplanation()
+    public boolean hideFromExplanation(boolean skipIfTrivial)
     {
         return true;
     }

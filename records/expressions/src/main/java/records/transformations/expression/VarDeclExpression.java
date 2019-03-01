@@ -53,13 +53,21 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(varName, value), ImmutableList.of(), ImmutableList.of());
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(varName, value), ImmutableList.of(), ImmutableList.of(), false);
     }
 
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+    }
+
+    @Override
+    public boolean hideFromExplanation(boolean skipIfTrivial)
+    {
+        // We are a trivial match, no point saying _foo matched successfully if
+        // we appear inside a tuple, etc.
+        return skipIfTrivial;
     }
 
     @Override

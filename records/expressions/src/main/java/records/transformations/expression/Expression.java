@@ -242,17 +242,17 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @OnThread(Tag.Simulation)
     protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
     {
-        return result(value, state, childrenForExplanations, ImmutableList.of());
+        return result(value, state, childrenForExplanations, ImmutableList.of(), false);
     }
 
     @OnThread(Tag.Simulation)
-    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
     {
-        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, usedLocations);
+        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, usedLocations, skipChildrenIfTrivial);
     }
 
     @OnThread(Tag.Simulation)
-    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations)
+    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
     {
         if (!state.recordExplanation())
         {
@@ -275,9 +275,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, usedLocations);
+                        return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, Utility.concatI(usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
@@ -285,6 +285,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                     public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                     {
                         return Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation(null));
+                    }
+
+                    @Override
+                    public boolean excludeChildrenIfTrivial()
+                    {
+                        return skipChildrenIfTrivial;
                     }
                 };
             }
@@ -299,16 +305,17 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
     @OnThread(Tag.Simulation)
     @Nullable
-    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations) throws UserException, InternalException
+    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
     {
-        // Don't bother explaining literals:
-        if (Expression.this.hideFromExplanation())
+        // Don't bother explaining literals, or trivial if we are skipping trivial:
+        if (Expression.this.hideFromExplanation(skipIfTrivial))
             return null;
+        
         // Or things which result in functions, as output won't be useful:
         if (value instanceof ValueFunction)
             return null;
 
-        StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().map(hyperlinkLocation).collect(StyledString.joining(", ")));
+        StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().filter(l -> l.rowIndex.isPresent()).map(hyperlinkLocation).collect(StyledString.joining(", ")));
 
         if (executionType == ExecutionType.MATCH && value instanceof Boolean)
         {
@@ -332,9 +339,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, recordedFunctionResult.usedLocations);
+                        return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, Utility.concatI(recordedFunctionResult.usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
@@ -435,7 +442,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return Optional.empty();
     }
     
-    public boolean hideFromExplanation()
+    public boolean hideFromExplanation(boolean skipIfTrivial)
     {
         return false;
     }
@@ -451,7 +458,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         ValueResult ourValue = calculateValue(state);
-        return explanation(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), ExecutionType.MATCH, state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations());
+        return explanation(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), ExecutionType.MATCH, state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations(), false);
     }
 
     @SuppressWarnings("recorded")

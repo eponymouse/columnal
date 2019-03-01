@@ -376,35 +376,4 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         if (mostRecentBounds != null)
             mostRecentBounds.set(cellPosition);
     }
-    
-    @OnThread(Tag.Simulation)
-    public ImmutableList<StyledString> makeExplanation(Explanation explanation) throws UserException, InternalException
-    {
-        return makeExplanation(explanation, new HashSet<>());
-    }
-
-    @OnThread(Tag.Simulation)
-    public ImmutableList<StyledString> makeExplanation(Explanation explanation, HashSet<Explanation> alreadyDescribed) throws InternalException, UserException
-    {
-        ImmutableList.Builder<StyledString> output = ImmutableList.builder();
-        // We do a depth-first traversal and print root nodes first,
-        // thus leading to an explanation of what is going on.
-        ImmutableList<Explanation> toProcess = Utility.appendToList(explanation.getDirectSubExplanations(), explanation);
-        for (Explanation directSubExplanation : toProcess)
-        {
-            if (alreadyDescribed.contains(directSubExplanation))
-                continue;
-            
-            StyledString ss = directSubExplanation.describe(alreadyDescribed, this::hyperlinkLocation);
-            alreadyDescribed.add(directSubExplanation);
-            if (ss != null)
-                output.add(ss);
-        }
-        return output.build();
-    }
-
-    private StyledString hyperlinkLocation(ExplanationLocation explanationLocation)
-    {
-        return StyledString.s("TODO!#!");
-    }
 }

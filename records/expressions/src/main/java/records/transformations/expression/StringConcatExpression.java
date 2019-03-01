@@ -138,7 +138,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     else
                     {
                         // Can't match
-                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
                     }
                     pendingMatch = null;
                 }
@@ -147,10 +147,10 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     // We find the next occurrence:
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
-                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
                     ValueResult match = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState));
                     if (Utility.cast(match.value, Boolean.class) == false)
-                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
                     threadedState = match.evaluateState;
                     curOffset = nextPos + subValue.length();
                     pendingMatch = null;
@@ -161,11 +161,11 @@ public class StringConcatExpression extends NaryOpTotalExpression
         {
             ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
             if (Utility.cast(last.value, Boolean.class) == false)
-                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of());
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
         }
 
 
-        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, threadedState, matches.build(), ImmutableList.of());
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, threadedState, matches.build(), ImmutableList.of(), false);
     }
 
     @Override

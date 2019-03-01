@@ -43,7 +43,13 @@ public class MatchAnythingExpression extends NonOperatorExpression
     public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         // Like the name says, we match anything:
-        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
+    }
+
+    @Override
+    public boolean hideFromExplanation(boolean skipIfTrivial)
+    {
+        return skipIfTrivial;
     }
 
     @Override

@@ -92,10 +92,10 @@ public class ArrayExpression extends Expression
             {
                 ValueResult latest = itemValues.add(items.get(i).matchAsPattern(list.get(i), curState));
                 if (Utility.cast(latest.value, Boolean.class) == false)
-                    return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of());
+                    return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
                 curState = latest.evaluateState;
             }
-            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, itemValues.build(), ImmutableList.of());
+            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, itemValues.build(), ImmutableList.of(), false);
         }
         throw new InternalException("Expected array but found " + value.getClass());
     }

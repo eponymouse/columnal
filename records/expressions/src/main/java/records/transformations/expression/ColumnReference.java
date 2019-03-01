@@ -92,9 +92,9 @@ public class ColumnReference extends NonOperatorExpression
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())));
+                return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())), false);
             case WHOLE_COLUMN:
-                return result(column.getCollapsed(0), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName)));
+                return result(column.getCollapsed(0), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName)), false);
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }
@@ -141,10 +141,10 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public boolean hideFromExplanation()
+    public boolean hideFromExplanation(boolean skipIfTrivial)
     {
         // Don't want to print out entire column:
-        return referenceType.equals(ColumnReferenceType.WHOLE_COLUMN);
+        return skipIfTrivial || referenceType.equals(ColumnReferenceType.WHOLE_COLUMN);
     }
 
     @Override

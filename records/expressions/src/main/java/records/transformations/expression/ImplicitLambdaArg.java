@@ -176,7 +176,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                     addExtraExplanation(() -> r.makeExplanation(ExecutionType.CALL_IMPLICIT));
                     return r.value;
                 }
-            }), ExecutionType.VALUE, state, ImmutableList.of(), ImmutableList.of());
+            }), ExecutionType.VALUE, state, ImmutableList.of(), ImmutableList.of(), false);
         }
     }
 

@@ -49,8 +49,21 @@ public abstract class Explanation
         this.directlyUsedLocations = directlyUsedLocations;
     }
 
+    /**
+     * 
+     * @param alreadyDescribed The set of already described explanations.  Do not
+     *                         describe if this is the same explanation as one in the set.
+     * @param hyperlinkLocation A function to hyperlink used locations so that they
+     *                          jump to the right point in the data display.
+     * @param skipIfTrivial If true, return null here if this is a trivial expression
+     *                      (i.e. one that doesn't calculate, it just substitutes
+     *                      a variable or column reference for a value)
+     * @return
+     * @throws InternalException
+     * @throws UserException
+     */
     @OnThread(Tag.Simulation)
-    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation) throws InternalException, UserException;
+    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
 
     public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
     {
@@ -59,6 +72,18 @@ public abstract class Explanation
 
     @OnThread(Tag.Simulation)
     public abstract ImmutableList<Explanation> getDirectSubExplanations() throws InternalException;
+
+    /**
+     * Should we miss out explaining children if they are trivial?  If so return true.
+     * This is true for things like tuples, lists and tag applications, where we don't
+     * want to say x is 1, y is 2, (x, y) is (1, 2).  It's enough to say (x, y) is (1, 2)
+     * and the user will work it out.
+     * @return
+     */
+    public boolean excludeChildrenIfTrivial()
+    {
+        return false;
+    }
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)

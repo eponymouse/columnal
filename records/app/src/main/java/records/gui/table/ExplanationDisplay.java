@@ -26,6 +26,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 
@@ -65,25 +66,35 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     {
         return new ExplanationPane(() -> {
             ImmutableList.Builder<StyledString> lines = ImmutableList.builder();
-            makeString(explanation, new HashSet<>(), lines);
+            makeString(explanation, new HashSet<>(), lines, false);
             return lines.build().stream().collect(StyledString.joining("\n"));
         });
     }
 
+    // Returns any locations which were not shown in skipped children
     @OnThread(Tag.Simulation)
-    private void makeString(Explanation explanation, HashSet<Explanation> alreadyExplained, ImmutableList.Builder<StyledString> lines) throws UserException, InternalException
+    private ImmutableList<ExplanationLocation> makeString(Explanation explanation, HashSet<Explanation> alreadyExplained, ImmutableList.Builder<StyledString> lines, boolean skipIfTrivial) throws UserException, InternalException
     {
+        ImmutableList.Builder<ExplanationLocation> skippedLocationsBuilder = ImmutableList.builder(); 
         // Go from lowest child upwards:
         for (Explanation child : explanation.getDirectSubExplanations())
         {
-            makeString(child, alreadyExplained, lines);
+            skippedLocationsBuilder.addAll(makeString(child, alreadyExplained, lines, explanation.excludeChildrenIfTrivial()));
         }
 
-        StyledString description = explanation.describe(alreadyExplained, this::hyperlinkLocation);
-        if (description != null)
-            lines.add(description);
-        
+        ImmutableList<ExplanationLocation> skippedLocations = skippedLocationsBuilder.build();
+        @Nullable StyledString description = explanation.describe(alreadyExplained, this::hyperlinkLocation, skippedLocations, skipIfTrivial);
         alreadyExplained.add(explanation);
+        if (description != null)
+        {
+            lines.add(description);
+            return ImmutableList.of();
+        }
+        else
+        {
+            return Utility.concatI(skippedLocations, explanation.getDirectlyUsedLocations());
+        }
+        
     }
 
     private StyledString hyperlinkLocation(ExplanationLocation explanationLocation)

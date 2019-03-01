@@ -235,7 +235,7 @@ public class CallExpression extends Expression
             ConstructorExpression constructor = (ConstructorExpression) function;
             TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
             if (taggedValue.getTagIndex() != constructor.getTagIndex())
-                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
             // If we do match, go to the inner:
             @Nullable @Value Object inner = taggedValue.getInner();
             if (inner == null)
@@ -249,10 +249,10 @@ public class CallExpression extends Expression
                     Expression argument = arguments.get(i);
                     ValueResult argMatch = argument.matchAsPattern(tuple[i], curState);
                     if (Utility.cast(argMatch.value, Boolean.class) == false)
-                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of());
+                        return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
                     curState = argMatch.evaluateState;
                 }
-                return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, ImmutableList.of(), ImmutableList.of());
+                return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, ImmutableList.of(), ImmutableList.of(), false);
             }
             else if (arguments.size() == 1)
             {
