@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
@@ -21,6 +22,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.gui.DataDisplay;
 import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -74,6 +76,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final FloatingItem<Label> resultFloatingItem;
     private final StringProperty resultContent = new SimpleStringProperty("");
     private final ObjectProperty<@Nullable Explanation> failExplanationProperty = new SimpleObjectProperty<>(null);
+    private @Nullable ExplanationDisplay explanationDisplay;
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -102,9 +105,15 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 label.textProperty().bind(resultContent);
                 FXUtility.addChangeListenerPlatformNN(label.hoverProperty(), h -> {
                     if (h && failExplanationProperty.get() != null)
+                    {
                         label.setUnderline(true);
+                        label.setCursor(Cursor.HAND);
+                    }
                     else
+                    {
                         label.setUnderline(false);
+                        label.setCursor(null);
+                    }
                 });
                 label.setOnMouseClicked(e -> {
                     FXUtility.mouse(this).showExplanation();
@@ -118,9 +127,22 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 @Nullable Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
-                    ExplanationDisplay explanationDisplay = new ExplanationDisplay(check.getSource(), getPosition().offsetByRowCols(1, 0), explanation);
+                    explanationDisplay = new ExplanationDisplay(check.getSource(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
+                        Table t = parent.getManager().getSingleTableOrNull(l.tableId);
+                        if (t != null && l.rowIndex.isPresent() && t.getDisplay() instanceof DataDisplay)
+                        {
+                            CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex.get());
+                            withParent_(g -> g.select(selection));
+                        }
+                    }, item -> {
+                        withParent_(g -> {
+                            g.getFloatingSupplier().removeItem(item);
+                            g.positionOrAreaChanged();
+                        });
+                    });
                     withParent_(g -> {
-                        g.getFloatingSupplier().addItem(explanationDisplay);
+                        if (explanationDisplay != null)
+                            g.getFloatingSupplier().addItem(explanationDisplay);
                         g.positionOrAreaChanged();
                     });
                 }
@@ -207,7 +229,8 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         floating.removeItem(tableBorderOverlay);
         floating.removeItem(tableHat);
         floating.removeItem(resultFloatingItem);
-        
+        if (explanationDisplay != null)
+            floating.removeItem(explanationDisplay);
     }
 
     @Override

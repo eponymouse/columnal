@@ -56,4 +56,40 @@ public class SmallDeleteButton extends StackPane
         setOnMouseEntered(e -> onHover.consume(true));
         setOnMouseExited(e -> onHover.consume(false));
     }
+
+    @Override
+    protected double computeMinWidth(double height)
+    {
+        return 8;
+    }
+
+    @Override
+    protected double computeMinHeight(double width)
+    {
+        return 8;
+    }
+
+    @Override
+    protected double computePrefWidth(double height)
+    {
+        return 8;
+    }
+
+    @Override
+    protected double computePrefHeight(double width)
+    {
+        return 8;
+    }
+
+    @Override
+    protected double computeMaxWidth(double height)
+    {
+        return 8;
+    }
+
+    @Override
+    protected double computeMaxHeight(double width)
+    {
+        return 8;
+    }
 }

@@ -4,9 +4,13 @@ import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
@@ -25,10 +29,12 @@ import records.transformations.expression.explanation.ExplanationLocation;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.SmallDeleteButton;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -42,13 +48,17 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     private final Explanation explanation;
     private final CellPosition attachedTo;
     private final TableId srcTableId;
+    private final FXPlatformConsumer<ExplanationLocation> jumpTo;
+    private final FXPlatformConsumer<ExplanationDisplay> close;
 
-    protected ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation)
+    protected ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation, FXPlatformConsumer<ExplanationLocation> jumpTo, FXPlatformConsumer<ExplanationDisplay> close)
     {
         super(ViewOrder.POPUP);
         this.attachedTo = attachedTo;
         this.explanation = explanation;
         this.srcTableId = srcTableId;
+        this.jumpTo = jumpTo;
+        this.close = close;
     }
 
     @Override
@@ -111,7 +121,17 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         // +1 to turn back into user index:
         if (explanationLocation.rowIndex.isPresent())
             content += " (row " + (explanationLocation.rowIndex.get() + 1) + ")";
-        return StyledString.s(content);
+        
+        Clickable click = new Clickable("click.to.view")
+        {
+            @Override
+            protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                jumpTo.consume(explanationLocation);
+            }
+        };
+        
+        return StyledString.s(content).withStyle(click);
     }
 
     @Override
@@ -133,7 +153,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     }
     
     @OnThread(Tag.FXPlatform)
-    static class ExplanationPane extends BorderPane
+    class ExplanationPane extends StackPane
     {
         private final TextFlow textFlow;
         
@@ -155,7 +175,28 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
                 Platform.runLater(() -> textFlow.getChildren().setAll(contentFinal.toGUI()));
             });
             textFlow.getStyleClass().add("explanation-flow");
-            setCenter(textFlow);
+            setMargin(textFlow, new Insets(8));
+
+            SmallDeleteButton deleteButton = new SmallDeleteButton();
+            deleteButton.setOnAction(() -> close());
+            setMargin(deleteButton, new Insets(10));
+            setAlignment(deleteButton, Pos.TOP_RIGHT);
+            
+            setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    close();
+                    e.consume();
+                }
+            });
+            
+            getChildren().addAll(textFlow, deleteButton);
+            getStyleClass().add("explanation-pane");
         }
+    }
+    
+    private void close()
+    {
+        close.consume(this);
     }
 }

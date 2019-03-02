@@ -211,3 +211,27 @@
         -fx-fill: black;
     }
 }
+
+.small-delete {
+    -fx-cursor: hand;
+}
+.small-delete-circle {
+    .small-delete > & {
+        -fx-fill: transparent;
+    }
+    .small-delete:hover > &, .fancy-list-cell:my_hover_sel .small-delete > & {
+        -fx-fill: darkred;
+    }
+}
+.small-delete-cross {
+    -fx-stroke-width: 2;
+
+    .small-delete > & {
+        -fx-stroke: grey;
+
+    }
+    .small-delete:hover > &, .fancy-list-cell:my_hover_sel .small-delete > &,
+      .fancy-list-cell:selected & {
+        -fx-stroke: white;
+    }
+}

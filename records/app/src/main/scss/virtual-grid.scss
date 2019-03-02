@@ -150,7 +150,7 @@
 .table-border-overlay, .table-row-label-border {
     -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
 }
-.table-hat {
+.table-hat, .explanation-pane {
     -fx-effect: dropshadow(gaussian, grey(70%), 6, 0.2, 1, 1);
 }
 .table-error-message-container {
@@ -227,6 +227,16 @@
     -fx-fill: $table-row-label-text-color;
     &:hover {
         -fx-fill: derive($table-row-label-text-color, 30%);
+    }
+}
+
+.explanation-pane {
+    -fx-background-radius: 5;
+    -fx-background-insets: 0, 1;
+    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
+    
+    .explanation-flow .styled-text-clickable {
+        -fx-underline: true;
     }
 }
 

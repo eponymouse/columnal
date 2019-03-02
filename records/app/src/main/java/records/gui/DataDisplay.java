@@ -361,6 +361,16 @@ public abstract class DataDisplay extends HeadedDisplay
         super.cleanupFloatingItems(floatingItems);        
     }
 
+    public @Nullable CellSelection getSelectionForSingleCell(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    {
+        @SuppressWarnings("units")
+        @TableDataColIndex int colIndex = Utility.findFirstIndex(displayColumns, c -> c.getColumnId().equals(columnId)).orElse(-1);
+        if (colIndex < 0)
+            return null;
+        CellPosition pos = getDataPosition(rowIndex, colIndex);
+        return getSelectionForSingleCell(pos);
+    }
+
     @Override
     public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
