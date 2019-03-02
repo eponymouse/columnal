@@ -58,6 +58,7 @@ import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.FXPlatformBiFunction;
 import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -275,9 +276,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, Utility.concatI(usedLocations, extraLocations), skipIfTrivial);
+                        return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
@@ -305,7 +306,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
     @OnThread(Tag.Simulation)
     @Nullable
-    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
+    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
     {
         // Don't bother explaining literals, or trivial if we are skipping trivial:
         if (Expression.this.hideFromExplanation(skipIfTrivial))
@@ -319,11 +320,11 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
         if (executionType == ExecutionType.MATCH && value instanceof Boolean)
         {
-            return StyledString.concat(Expression.this.toStyledString(), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
+            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
         }
         else
         {
-            return StyledString.concat(Expression.this.toStyledString(), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
+            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
         }
     }
 
@@ -339,9 +340,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
-                        return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, Utility.concatI(recordedFunctionResult.usedLocations, extraLocations), skipIfTrivial);
+                        return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(recordedFunctionResult.usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
@@ -843,10 +844,15 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @Override
     public final StyledString toStyledString()
     {
-        return toDisplay(BracketedStatus.TOP_LEVEL);
+        return toDisplay(BracketedStatus.TOP_LEVEL, (s, e) -> s);
     }
 
-    protected abstract StyledString toDisplay(BracketedStatus bracketedStatus);
+    public static interface ExpressionStyler
+    {
+        public StyledString styleExpression(StyledString display, Expression src);
+    }
+    
+    protected abstract StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler);
 
     // Only for testing:
     public static interface _test_TypeVary

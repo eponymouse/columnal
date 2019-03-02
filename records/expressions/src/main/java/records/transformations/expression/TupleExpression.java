@@ -120,13 +120,10 @@ public class TupleExpression extends Expression
     }
     
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.TOP_LEVEL)).collect(StyledString.joining(", "));
-        if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
-            return content;
-        else
-            return StyledString.roundBracket(content);
+        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", "));
+        return expressionStyler.styleExpression(surround == BracketedStatus.DIRECT_ROUND_BRACKETED ? content : StyledString.roundBracket(content), this);
     }
 
     @Override

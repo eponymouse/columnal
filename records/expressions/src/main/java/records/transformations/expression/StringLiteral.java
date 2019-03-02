@@ -50,9 +50,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s("\"" + value + "\"").withStyle(CommonStyles.MONOSPACE);
+        return expressionStyler.styleExpression(StyledString.s("\"" + value + "\"").withStyle(CommonStyles.MONOSPACE), this);
     }
 
     @Override

@@ -132,9 +132,9 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL)).collect(StyledString.joining(", ")), StyledString.s("]"));
+        return expressionStyler.styleExpression(StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s("]")), this);
     }
 
     @Override

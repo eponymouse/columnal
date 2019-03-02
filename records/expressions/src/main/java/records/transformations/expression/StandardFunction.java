@@ -112,9 +112,9 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s(functionDefinition.getName());
+        return expressionStyler.styleExpression(StyledString.s(functionDefinition.getName()), this);
     }
 
     @Override

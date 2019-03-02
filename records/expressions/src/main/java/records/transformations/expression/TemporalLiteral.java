@@ -111,9 +111,9 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s(save(true, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of())));
+        return expressionStyler.styleExpression(StyledString.s(save(true, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of()))), this);
     }
 
     @Override

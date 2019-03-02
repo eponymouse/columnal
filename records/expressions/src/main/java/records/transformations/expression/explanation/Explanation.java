@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ExpressionStyler;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -63,7 +64,7 @@ public abstract class Explanation
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
+    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
 
     public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
     {
@@ -161,6 +162,11 @@ public abstract class Explanation
     public boolean isValue()
     {
         return executionType == ExecutionType.VALUE;
+    }
+
+    public boolean isDescribing(Expression e)
+    {
+        return expression == e;
     }
     
     // Marker interface for items which can be the (code) source of an explanation 

@@ -75,13 +75,13 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString inner = StyledString.concat(lhs.toDisplay(BracketedStatus.MISC), StyledString.s(" " + saveOp() + " "), rhs.toDisplay(BracketedStatus.MISC));
+        StyledString inner = StyledString.concat(lhs.toDisplay(BracketedStatus.MISC, expressionStyler), StyledString.s(" " + saveOp() + " "), rhs.toDisplay(BracketedStatus.MISC, expressionStyler));
         if (surround != BracketedStatus.MISC)
-            return inner;
+            return expressionStyler.styleExpression(inner, this);
         else
-            return StyledString.roundBracket(inner);
+            return expressionStyler.styleExpression(StyledString.roundBracket(inner), this);
     }
 
     // For saving to string:

@@ -115,9 +115,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s("?");
+        return expressionStyler.styleExpression(StyledString.s("?"), this);
     }
 
     // If any of the list are implicit lambda args ('?'), returns a new type state

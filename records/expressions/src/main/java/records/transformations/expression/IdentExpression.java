@@ -86,9 +86,9 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s(text);
+        return expressionStyler.styleExpression(StyledString.s(text), this);
     }
 
     @Override

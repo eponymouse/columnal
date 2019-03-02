@@ -133,9 +133,9 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s(tag.either(s -> s, t -> t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName()));
+        return expressionStyler.styleExpression(StyledString.s(tag.either(s -> s, t -> t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName())), this);
     }
 
     @Override

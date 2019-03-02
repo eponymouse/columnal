@@ -115,7 +115,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        protected StyledString toDisplay(BracketedStatus bracketedStatus)
+        protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
         {
             return StyledString.s("Testing");
         }
@@ -431,7 +431,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        protected StyledString toDisplay(BracketedStatus bracketedStatus)
+        protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
         {
             return StyledString.s("Testing");
         }

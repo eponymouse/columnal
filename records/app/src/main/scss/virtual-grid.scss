@@ -235,8 +235,16 @@
     -fx-background-insets: 0, 1;
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
     
-    .explanation-flow .styled-text-clickable {
-        -fx-underline: true;
+    .explanation-flow {
+        .styled-text-clickable {
+            -fx-underline: true;
+        }
+        .explained-expression {
+            &:highlight {
+                -fx-fill: royalblue;
+                -fx-underline: true;
+            }
+        }
     }
 }
 

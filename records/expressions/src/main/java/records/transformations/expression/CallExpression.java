@@ -286,9 +286,9 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        return StyledString.concat(function.toDisplay(BracketedStatus.MISC), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.TOP_LEVEL)).collect(StyledString.joining(", ")), StyledString.s(")"));
+        return expressionStyler.styleExpression(StyledString.concat(function.toDisplay(BracketedStatus.MISC, expressionStyler), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s(")")), this);
     }
 
     @Override

@@ -111,7 +111,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString.Builder s = new StyledString.Builder();
         s.append(surround == BracketedStatus.MISC ? "(" : "");
@@ -119,11 +119,11 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).toDisplay(BracketedStatus.MISC));
+            s.append(expressions.get(i).toDisplay(BracketedStatus.MISC, expressionStyler));
         }
         if (surround == BracketedStatus.MISC)
             s.append(")");
-        return s.build();
+        return expressionStyler.styleExpression(s.build(), this);
     }
 
     // Can be overridden by child classes to insert prefix before expression

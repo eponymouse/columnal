@@ -102,13 +102,13 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString num = StyledString.s(numberAsString());
         if (unit == null)
-            return num;
+            return expressionStyler.styleExpression(num, this);
         else
-            return StyledString.concat(num, StyledString.s("{"), unit.toStyledString(), StyledString.s("}"));
+            return expressionStyler.styleExpression(StyledString.concat(num, StyledString.s("{"), unit.toStyledString(), StyledString.s("}")), this);
     }
 
     private String numberAsString()

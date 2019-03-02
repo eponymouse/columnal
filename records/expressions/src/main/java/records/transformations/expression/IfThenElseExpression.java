@@ -119,18 +119,18 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround)
+    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString content = StyledString.concat(
             StyledString.s("if "),
-            condition.toDisplay(BracketedStatus.TOP_LEVEL),
+            condition.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
             StyledString.s(" then "),
-            thenExpression.toDisplay(BracketedStatus.TOP_LEVEL),
+            thenExpression.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
             StyledString.s(" else "),
-            elseExpression.toDisplay(BracketedStatus.TOP_LEVEL),
+            elseExpression.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
             StyledString.s(" endif")
         );
-        return content; //surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
+        return expressionStyler.styleExpression(content, this); //surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
     }
 
     @Override

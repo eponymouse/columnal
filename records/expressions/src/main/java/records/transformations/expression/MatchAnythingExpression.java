@@ -71,9 +71,9 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return StyledString.s("_");
+        return expressionStyler.styleExpression(StyledString.s("_"), this);
     }
 
     @Override

@@ -38,6 +38,8 @@ public final class StyledString
         @OnThread(Tag.FXPlatform)
         protected abstract void style(Text t);
         
+        // The first applied style is this; the next applied style is the parameter.
+        // To keep first, return this, to keep last, return the parameter.
         protected abstract S combine(S with);
                 
         protected final <T> @Nullable T as(Class<T> otherClass)
