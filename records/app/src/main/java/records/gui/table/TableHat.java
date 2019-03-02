@@ -207,6 +207,19 @@ class TableHat extends FloatingItem<TableHatDisplay>
         else if (table instanceof Check)
         {
             Check check = (Check)table;
+            String type = "";
+            switch (check.getCheckType())
+            {
+                case ALL_ROWS:
+                    type = "for all rows ";
+                    break;
+                case ANY_ROW:
+                    type = "at least one row ";
+                    break;
+                case NO_ROWS:
+                    type = "no rows ";
+                    break;
+            }
             content = StyledString.concat(
                 collapsedContent = StyledString.s("Check"),
                 StyledString.s(" "),
@@ -214,6 +227,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                         table.getDetailsForCopy(), newSource, check.getCheckType(), check.getCheckExpression()), null)),
                 StyledString.s(" that "),
+                StyledString.s(type),
                 editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), check.getColumnLookup(), DataType.BOOLEAN, e -> 
                     parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), check.getCheckType(), e), null)
                 )

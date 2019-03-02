@@ -317,6 +317,7 @@ public class Check extends Transformation
         return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(true, BracketedStatus.MISC, renames));
     }
     
+    @OnThread(Tag.Any)
     public CheckType getCheckType()
     {
         return checkType;
