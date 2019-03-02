@@ -206,10 +206,12 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
             current = current.substring("@entire".length()).trim();
         }
         // Special case: @ can only be followed by letters:
+        /*
         else if (current.startsWith("@"))
         {
             return !Character.isLetter(newCodepoint);
         }
+        */
         
         // Identifiers can have numbers after first char:
         if (current.codePoints().limit(1).anyMatch(ExpressionAlphabet.WORD::test) && Character.isDigit(newCodepoint))
