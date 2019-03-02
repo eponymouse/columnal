@@ -139,7 +139,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                             g.getFloatingSupplier().removeItem(item);
                             g.positionOrAreaChanged();
                         });
-                    });
+                    }, () -> withParent_(g -> g.positionOrAreaChanged()));
                     withParent_(g -> {
                         if (explanationDisplay != null)
                             g.getFloatingSupplier().addItem(explanationDisplay);

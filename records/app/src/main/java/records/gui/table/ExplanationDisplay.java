@@ -11,11 +11,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,11 +40,13 @@ import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.ScrollPaneFill;
 import utility.gui.SmallDeleteButton;
 
 import java.util.*;
@@ -56,8 +61,9 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     private final TableId srcTableId;
     private final FXPlatformConsumer<ExplanationLocation> jumpTo;
     private final FXPlatformConsumer<ExplanationDisplay> close;
+    private final FXPlatformRunnable relayout;
 
-    protected ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation, FXPlatformConsumer<ExplanationLocation> jumpTo, FXPlatformConsumer<ExplanationDisplay> close)
+    protected ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation, FXPlatformConsumer<ExplanationLocation> jumpTo, FXPlatformConsumer<ExplanationDisplay> close, FXPlatformRunnable relayout)
     {
         super(ViewOrder.POPUP);
         this.attachedTo = attachedTo;
@@ -65,15 +71,21 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         this.srcTableId = srcTableId;
         this.jumpTo = jumpTo;
         this.close = close;
+        this.relayout = relayout;
     }
 
     @Override
     protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
     {
-        double left = visibleBounds.getXCoord(attachedTo.columnIndex) - 80;
-        double right = visibleBounds.getXCoordAfter(attachedTo.columnIndex) + 80;
+        ExplanationPane node = getNode();
+        double width = Math.min(300.0, node == null ? 0.0 : node.prefWidth(-1));
+        double height = node == null ? 0 : node.prefHeight(width);
+                
+        double middle = (visibleBounds.getXCoord(attachedTo.columnIndex) + visibleBounds.getXCoordAfter(attachedTo.columnIndex)) / 2.0;
+        double left = middle - width / 2.0;
+        double right = middle + width / 2.0;
         double top = visibleBounds.getYCoordAfter(attachedTo.rowIndex) + 10;
-        double bottom = top + 300;
+        double bottom = top + height;
         return Optional.of(new BoundingBox(left, top, right - left, bottom - top));
     }
 
@@ -85,7 +97,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             HashMap<Explanation, Boolean> alreadyExplained = new HashMap<>();
             Multimap<Expression, HighlightExpression> highlights = ArrayListMultimap.create();
             makeString(explanation, alreadyExplained, highlights, lines, false);
-            return lines.build().stream().collect(StyledString.joining("\n"));
+            return lines.build().stream().collect(StyledString.joining("\n\u21aa "));
         });
     }
 
@@ -182,7 +194,10 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
                     content = StyledString.concat(StyledString.s("Error: "), e.getStyledMessage());
                 }
                 StyledString contentFinal = content;
-                Platform.runLater(() -> textFlow.getChildren().setAll(contentFinal.toGUI()));
+                Platform.runLater(() -> {
+                    textFlow.getChildren().setAll(contentFinal.toGUI());
+                    FXUtility.runAfterDelay(Duration.millis(300), relayout);
+                });
             });
             textFlow.getStyleClass().add("explanation-flow");
             setMargin(textFlow, new Insets(8));
