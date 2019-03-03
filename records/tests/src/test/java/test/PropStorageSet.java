@@ -18,7 +18,7 @@ import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import test.gen.GenRandom;
-import test.gen.GenTypeAndValueGen;
+import test.gen.type.GenTypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

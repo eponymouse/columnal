@@ -11,10 +11,10 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import test.gen.type.GenDataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.SimulationFunction;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
     public EditableColumn generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         GenDataType genDataType = new GenDataType(true);
-        DataType type = genDataType.generate(sourceOfRandomness, generationStatus).dataType;
+        DataType type = genDataType.generate(sourceOfRandomness, generationStatus);
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
         try

@@ -1,4 +1,4 @@
-package test.gen;
+package test.gen.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -19,7 +19,8 @@ import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import test.TestUtil;
-import test.gen.GenJellyType.JellyTypeAndManager;
+import test.gen.GenUnit;
+import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
 import utility.Either;
 import utility.ExSupplier;
 import utility.Pair;
@@ -27,27 +28,13 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by neil on 13/01/2017.
+ * Generates a generator for jelly types
  */
-public class GenJellyType extends Generator<JellyTypeAndManager>
+public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
 {
-    // This isn't ideal because it makes tests inter-dependent:
-    protected static final TypeManager typeManager;
-    static {
-        try
-        {
-            typeManager = new TypeManager(new UnitManager());
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static enum TypeKinds {
         NUM_TEXT_TEMPORAL,
         BOOLEAN_TUPLE_LIST,
@@ -59,43 +46,59 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
     private final ImmutableSet<@ExpressionIdentifier String> availableTypeVars;
     private final boolean mustHaveValues;
 
-    public static class JellyTypeAndManager
+    /**
+     * A generator for jelly types, each of which is added to the same type manager.
+     */
+    public class JellyTypeMaker
     {
         public final TypeManager typeManager;
-        public final JellyType jellyType;
+        private final ExSupplier<JellyType> maker;
 
-        public JellyTypeAndManager(TypeManager typeManager, JellyType jellyType) throws InternalException
+        private JellyTypeMaker(TypeManager typeManager, ExSupplier<JellyType> maker)
         {
             this.typeManager = typeManager;
-            this.jellyType = jellyType;
+            this.maker = maker;
+        }
+        
+        public JellyType makeType()
+        {
+            try
+            {
+                return maker.get();
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
     
-    public GenJellyType()
+    public GenJellyTypeMaker()
     {
         this(ImmutableSet.copyOf(TypeKinds.values()));
     }
 
-    public GenJellyType(ImmutableSet<TypeKinds> typeKinds)
+    public GenJellyTypeMaker(ImmutableSet<TypeKinds> typeKinds)
     {
         this(typeKinds, ImmutableSet.of(), false);
     }
 
-    public GenJellyType(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars, boolean mustHaveValues)
+    public GenJellyTypeMaker(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars, boolean mustHaveValues)
     {
-        super(JellyTypeAndManager.class);
+        super(JellyTypeMaker.class);
         this.typeKinds = typeKinds;
         this.availableTypeVars = availableTypeVars;
         this.mustHaveValues = mustHaveValues;
     }
 
     @Override
-    public JellyTypeAndManager generate(SourceOfRandomness r, GenerationStatus generationStatus)
+    public JellyTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         // Use depth system to prevent infinite generation:
         try
         {
-            return new JellyTypeAndManager(typeManager, genDepth(r, 3, generationStatus));
+            TypeManager typeManager = new TypeManager(new UnitManager());
+            return new JellyTypeMaker(typeManager, () -> genDepth(typeManager, r, 3, generationStatus));
         }
         catch (InternalException | UserException e)
         {
@@ -103,7 +106,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         }
     }
 
-    private JellyType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
+    private JellyType genDepth(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
     {
         List<ExSupplier<JellyType>> options = new ArrayList<>();
         if (typeKinds.contains(TypeKinds.NUM_TEXT_TEMPORAL))
@@ -121,13 +124,13 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
             if (maxDepth > 1)
             {
                 options.addAll(Arrays.asList(
-                        () -> JellyType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
-                        () -> JellyType.list(genDepth(r, maxDepth - 1, gs))
+                        () -> JellyType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(typeManager, r, maxDepth - 1, gs))),
+                        () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs))
                 ));
             }
         }
         if ((typeKinds.contains(TypeKinds.BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
-            options.add(() -> genTagged(r, maxDepth, gs));
+            options.add(() -> genTagged(typeManager, r, maxDepth, gs));
         
         if (!availableTypeVars.isEmpty())
             options.add(() -> JellyType.typeVariable(r.choose(availableTypeVars)));
@@ -135,18 +138,19 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         return r.<ExSupplier<JellyType>>choose(options).get();
     }
 
-    public static class GenTaggedType extends GenJellyType
+    public static class GenTaggedType extends GenJellyTypeMaker
     {
         public GenTaggedType()
         {
         }
 
         @Override
-        public JellyTypeAndManager generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+        public JellyTypeMaker generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
             try
             {
-                return new JellyTypeAndManager(typeManager, genTagged(sourceOfRandomness, 3, generationStatus));
+                TypeManager typeManager = new TypeManager(new UnitManager());
+                return new JellyTypeMaker(typeManager, () -> genTagged(typeManager, sourceOfRandomness, 3, generationStatus));
             }
             catch (InternalException | UserException e)
             {
@@ -155,7 +159,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         }
     }
 
-    protected JellyType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
+    protected JellyType genTagged(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition = null;
         List<TaggedTypeDefinition> pool;
@@ -191,7 +195,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
             if (r.nextInt(3) == 1)
                 types = new ArrayList<>();
             else
-                types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
+                types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs)));
             // Then those with inner types, making sure we have at least one:
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
@@ -213,7 +217,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         }
         return JellyType.tagged(typeDefinition.getTaggedTypeName(), Utility.mapListExI(typeDefinition.getTypeArguments(), (Pair<TypeVariableKind, String> arg) -> {
             if (arg.getFirst() == TypeVariableKind.TYPE)
-                return Either.right(genDepth(r, maxDepth - 1, gs));
+                return Either.right(genDepth(typeManager, r, maxDepth - 1, gs));
             else
                 return Either.left(JellyUnit.fromConcrete(new GenUnit().generate(r, gs)));
         }));

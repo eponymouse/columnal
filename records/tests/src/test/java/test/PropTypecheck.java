@@ -36,13 +36,14 @@ import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.ExpressionValue;
-import test.gen.GenDataType;
-import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.type.GenDataType;
+import test.gen.type.GenDataTypeMaker.DataTypeMaker;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.GenRandom;
 import test.gen.GenTypecheckFail;
 import test.gen.GenUnit;
+import test.gen.type.GenDataTypeMaker;
 import utility.Either;
 import utility.Utility;
 
@@ -80,17 +81,17 @@ public class PropTypecheck
     
     // This won't test tagged types very well, but it should do okay for numbers, etc
     @Property(trials=10000)
-    public void testTypeHashCodeAndEquals(@From(GenDataType.class) DataTypeAndManager dataTypeAndManagerA, @From(GenDataType.class) DataTypeAndManager dataTypeAndManagerB) throws InternalException
+    public void testTypeHashCodeAndEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException
     {
-        assertTrue(dataTypeAndManagerA.dataType.equals(dataTypeAndManagerA.dataType));
-        assertTrue(dataTypeAndManagerB.dataType.equals(dataTypeAndManagerB.dataType));
-        assertEquals(dataTypeAndManagerA.dataType.hashCode(),dataTypeAndManagerA.dataType.hashCode());
-        assertEquals(dataTypeAndManagerB.dataType.hashCode(),dataTypeAndManagerB.dataType.hashCode());
-        String aSaved = dataTypeAndManagerA.dataType.save(new OutputBuilder()).toString();
-        String bSaved = dataTypeAndManagerB.dataType.save(new OutputBuilder()).toString();
-        assertEquals(aSaved + " =?= " + bSaved, dataTypeAndManagerA.dataType.equals(dataTypeAndManagerB.dataType), aSaved.equals(bSaved));
+        assertTrue(a.equals(a));
+        assertTrue(b.equals(b));
+        assertEquals(a.hashCode(),a.hashCode());
+        assertEquals(b.hashCode(),b.hashCode());
+        String aSaved = a.save(new OutputBuilder()).toString();
+        String bSaved = b.save(new OutputBuilder()).toString();
+        assertEquals(aSaved + " =?= " + bSaved, a.equals(b), aSaved.equals(bSaved));
         if (aSaved.equals(bSaved))
-            assertEquals(aSaved, dataTypeAndManagerA.dataType.hashCode(), dataTypeAndManagerB.dataType.hashCode());
+            assertEquals(aSaved, a.hashCode(), b.hashCode());
     }
 
     @SuppressWarnings("intern")
@@ -206,36 +207,45 @@ public class PropTypecheck
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
     @SuppressWarnings("unchecked")
     @Property
-    public void checkTuple(@From(GenDataType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.class) GenDataType.DataTypeAndManager typeB, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
+    public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
     {
-        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA.dataType, typeB.dataType), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        DataType typeA = typeMaker.makeType().getDataType();
+        DataType typeB = typeMaker.makeType().getDataType();
+        
+        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType type = DataType.tuple(all);
         DataTypeValue typeV = DataTypeValue.tupleV(Utility.mapListEx(all, t -> toValue(t)));
-        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB.dataType, typeA.dataType), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
         DataTypeValue typeSV = DataTypeValue.tupleV(Utility.mapListEx(allSwapped, t -> toValue(t)));
         // Swapped is same as unswapped only if typeA and typeB are same:
-        checkSameRelations(typeA.typeManager, type, typeS, typeV, typeSV, DataType.checkSame(typeA.dataType, typeB.dataType, s -> {}) != null);
+        checkSameRelations(typeMaker.getTypeManager(), type, typeS, typeV, typeSV, DataType.checkSame(typeA, typeB, s -> {}) != null);
     }
 
     @Property
-    public void checkArray(@From(GenDataType.class) GenDataType.DataTypeAndManager innerA, @From(GenDataType.class) GenDataType.DataTypeAndManager innerB) throws InternalException, UserException
+    public void checkArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
-        DataType typeA = DataType.array(innerA.dataType);
-        DataType typeB = DataType.array(innerB.dataType);
-        checkSameRelations(innerA.typeManager, typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA.dataType, innerB.dataType, s -> {}) != null);
+        DataType innerA = typeMaker.makeType().getDataType();
+        DataType innerB = typeMaker.makeType().getDataType();
+        DataType typeA = DataType.array(innerA);
+        DataType typeB = DataType.array(innerB);
+        checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA, innerB, s -> {}) != null);
     }
 
     @Property
-    public void checkTagged(@From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
+    public void checkTagged(@From(GenDataTypeMaker.GenTaggedType.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws UserException, InternalException
     {
+        DataType typeA = typeMaker.makeType().getDataType();
+        DataType typeB = typeMaker.makeType().getDataType();
         // Is equals right here?
-        checkSameRelations(typeA.typeManager, typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB.dataType));
+        checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, toValue(typeA), toValue(typeB), typeA.equals(typeB));
     }
 
     @Property(trials = 2000)
-    public void checkBlankArray(@From(GenDataType.class) GenDataType.DataTypeAndManager original, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void checkBlankArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
+        DataType original = typeMaker.makeType().getDataType();
+        
         // We make a list with the original type, and N duplicates of that type
         // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
         // put them in and feed them to checkAllSameType, you should get back
@@ -247,12 +257,12 @@ public class PropTypecheck
         int amount = r.nextInt(8);
         for (int i = 0; i < amount; i++)
         {
-            types.add(TypeExp.fromDataType(null, blankArray(original.dataType, r)));
+            types.add(TypeExp.fromDataType(null, blankArray(original, r)));
         }
 
         // Now add original at random place:
-        types.add(r.nextInt(types.size() + 1), TypeExp.fromDataType(null, original.dataType));
-        assertEquals(Either.right(original.dataType), TypeExp.unifyTypes(types).eitherEx(err -> Either.left(err), t -> t.toConcreteType(original.typeManager)));
+        types.add(r.nextInt(types.size() + 1), TypeExp.fromDataType(null, original));
+        assertEquals(Either.right(original), TypeExp.unifyTypes(types).eitherEx(err -> Either.left(err), t -> t.toConcreteType(typeMaker.getTypeManager())));
     }
 
     /**
@@ -437,7 +447,7 @@ public class PropTypecheck
         @Override
         public List generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
-            return Utility.mapList(TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenDataType(), sourceOfRandomness, generationStatus), t -> t.dataType);
+            return TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenDataType(), sourceOfRandomness, generationStatus);
         }
     }
 }

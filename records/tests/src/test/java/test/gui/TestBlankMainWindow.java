@@ -32,6 +32,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
@@ -41,12 +42,12 @@ import records.gui.dtf.DocumentTextField;
 import records.gui.grid.RectangleBounds;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
-import test.gen.GenDataType;
-import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.type.GenDataType;
 import test.gen.GenNumber;
 import test.gen.GenRandom;
-import test.gen.GenTypeAndValueGen;
-import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gen.type.GenDataTypeMaker;
+import test.gen.type.GenTypeAndValueGen;
+import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ComboUtilTrait;
 import test.gui.trait.EnterStructuredValueTrait;
@@ -318,12 +319,18 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
-            mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(dataTypeAndManager.typeManager);
-            addNewTableWithColumn(dataTypeAndManager.dataType, null);
+            addColumnToEntryTable(dataTypeMaker.getTypeManager(), dataTypeMaker.makeType().getDataType());
         });
+    }
+
+    @OnThread(Tag.Any)
+    private void addColumnToEntryTable(TypeManager typeManager, DataType dataType) throws InternalException, UserException
+    {
+        mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeManager);
+        addNewTableWithColumn(dataType, null);
     }
 
     @OnThread(Tag.Any)
@@ -397,7 +404,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Simulation)
     public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws InternalException, UserException, Exception
     {
-        propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
+        addColumnToEntryTable(typeAndValueGen.getTypeManager(), typeAndValueGen.getType());
         // Now set the values
         List<Either<String, @Value Object>> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)

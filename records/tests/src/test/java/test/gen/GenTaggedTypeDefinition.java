@@ -15,16 +15,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import test.TestUtil;
-import utility.Either;
+import test.gen.type.GenJellyTypeMaker;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
-import static test.gen.GenJellyType.TypeKinds.BOOLEAN_TUPLE_LIST;
-import static test.gen.GenJellyType.TypeKinds.BUILTIN_TAGGED;
-import static test.gen.GenJellyType.TypeKinds.NUM_TEXT_TEMPORAL;
+import static test.gen.type.GenJellyTypeMaker.TypeKinds.*;
 
 public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
 {
@@ -48,13 +45,13 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             {
                 typeVars = ImmutableList.of();
             }
-            GenJellyType genDataType = new GenJellyType(ImmutableSet.of(NUM_TEXT_TEMPORAL,
+            GenJellyTypeMaker genDataType = new GenJellyTypeMaker(ImmutableSet.of(NUM_TEXT_TEMPORAL,
                     BOOLEAN_TUPLE_LIST,
                     BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()), false);
             
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
-            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).jellyType));
+            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).makeType()));
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
             {

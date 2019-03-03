@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ConcreteDataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
@@ -16,7 +15,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import test.gen.GenDataType;
+import test.gen.type.GenDataType;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -60,7 +59,7 @@ public class TestGenDataType
         for (int i = 0; i < 1000; i++)
         {
             SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
-            DataType t = genDataType.generate(sourceOfRandomness, new SimpleGenerationStatus(new GeometricDistribution(), sourceOfRandomness, 10)).dataType;
+            DataType t = genDataType.generate(sourceOfRandomness, new SimpleGenerationStatus(new GeometricDistribution(), sourceOfRandomness, 10));
             nestings.removeAll(calculateNesting(t).collect(Collectors.toList()));
         }
 

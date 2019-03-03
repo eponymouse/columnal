@@ -1,6 +1,5 @@
 package test;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -48,8 +47,9 @@ import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
-import test.gen.GenDataType;
+import test.gen.type.GenDataType;
 import test.gen.GenUnit;
+import test.gen.type.GenDataTypeMaker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -177,10 +177,8 @@ public class PropTypecheckIndividual
 
     @Property
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat
-    public void propEquals(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
+    public void propEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
-        DataType a = am.dataType;
-        DataType b = bm.dataType;
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
@@ -194,10 +192,8 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void propDivide(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
+    public void propDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
-        DataType a = am.dataType;
-        DataType b = bm.dataType;
         ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
         if (a.isNumber() && b.isNumber())
         {
@@ -216,10 +212,10 @@ public class PropTypecheckIndividual
 
     @Property
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat 
-    public void testArray(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
+    public void testArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
-        DataType a = am.dataType;
-        DataType b = bm.dataType;
+        DataType a = typeMaker.makeType().getDataType();
+        DataType b = typeMaker.makeType().getDataType();
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
@@ -229,23 +225,22 @@ public class PropTypecheckIndividual
             // Add once more as length increases:
             types.add(a);
             // All a should type check:
-            assertEquals(DataType.array(a), checkConcrete(am.typeManager, new ArrayExpression(Utility.mapListExI(types, DummyExpression::new))));
+            assertEquals(DataType.array(a), checkConcrete(typeMaker.getTypeManager(), new ArrayExpression(Utility.mapListExI(types, DummyExpression::new))));
 
             for (int i = 0; i <= length; i++)
             {
                 // Once we add b in, should fail to type check:
                 List<DataType> badTypes = new ArrayList<>(types);
                 badTypes.add(i, b);
-                assertEquals(null, checkConcrete(am.typeManager, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new))));
+                assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new))));
             }
         }
     }
 
     // Tests non-numeric types in raise expressions
     @Property
-    public void propRaiseNonNumeric(@From(GenDataType.class) GenDataType.DataTypeAndManager am) throws UserException, InternalException
+    public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
-        DataType a = am.dataType;
         Assume.assumeFalse(a.isNumber());
         assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
         assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
@@ -285,9 +280,8 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void propAndOr(@From(GenDataType.class) GenDataType.DataTypeAndManager nonBoolM) throws InternalException, UserException
+    public void propAndOr(@From(GenDataType.class) DataType nonBool) throws InternalException, UserException
     {
-        DataType nonBool = nonBoolM.dataType;
         Assume.assumeFalse(nonBool.equals(DataType.BOOLEAN));
 
         for (Function<List<Expression>, Expression> create : Arrays.<Function<List<Expression>, Expression>>asList(AndExpression::new, OrExpression::new))
@@ -306,11 +300,8 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void propComparison(@From(GenDataType.class) GenDataType.DataTypeAndManager mainM, @From(GenDataType.class) GenDataType.DataTypeAndManager otherM) throws InternalException, UserException
-    {
-        DataType main = mainM.dataType;
-        DataType other = otherM.dataType;
-        
+    public void propComparison(@From(GenDataType.class) DataType main, @From(GenDataType.class) DataType other) throws InternalException, UserException
+    {        
         // Must be different types:
         Assume.assumeFalse(DataType.checkSame(main, other, s -> {}) != null);
 
@@ -327,11 +318,11 @@ public class PropTypecheckIndividual
     // TODO typecheck all the compound expressions (addsubtract, times, tag)
 
     @Property
-    public void checkMatch(@From(GenDataType.class) GenDataType.DataTypeAndManager match, @From(GenDataType.class) GenDataType.DataTypeAndManager result, @From(GenDataType.class) GenDataType.DataTypeAndManager other) throws InternalException, UserException
+    public void checkMatch(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
-        DataType matchType = match.dataType;
-        DataType resultType = result.dataType;
-        DataType otherType = other.dataType;
+        DataType matchType = typeMaker.makeType().getDataType();
+        DataType resultType = typeMaker.makeType().getDataType();
+        DataType otherType = typeMaker.makeType().getDataType();
         
         // Doesn't matter if match is same as result, but other must be different than both to make failures actually fail:
         Assume.assumeFalse(DataType.checkSame(matchType, otherType, s -> {}) != null);
@@ -341,25 +332,25 @@ public class PropTypecheckIndividual
         assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), ImmutableList.of())));
 
         // One clause with one pattern, all checks out:
-        assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // One clause, two patterns
-        assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns each
-        assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one pattern doesn't match:
-        assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one clause doesn't match:
-        assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(otherType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType)), new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one result doesn't match:
-        assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))))));
     }

@@ -17,14 +17,13 @@ import records.transformations.ManualEdit.ColumnReplacementValues;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
-import test.gen.GenDataType.DataTypeAndManager;
-import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gen.type.GenTypeAndValueGen;
+import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.HashMap;
-import java.util.TreeMap;
 
 public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
 {

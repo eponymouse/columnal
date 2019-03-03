@@ -1,5 +1,6 @@
-package test.gen;
+package test.gen.type;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -16,70 +17,107 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import test.gen.GenDataType.DataTypeAndManager;
-import test.gen.GenJellyType.JellyTypeAndManager;
-import test.gen.GenJellyType.TypeKinds;
+import test.gen.GenValueBase;
+import test.gen.type.GenJellyTypeMaker.GenTaggedType;
+import test.gen.type.GenJellyTypeMaker.TypeKinds;
+import test.gen.type.GenDataTypeMaker.DataTypeMaker;
+import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
 import utility.Either;
 
 /**
  * Created by neil on 13/01/2017.
  */
-public class GenDataType extends Generator<DataTypeAndManager>
+public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
 {
-    private final GenJellyType genJellyType;
+    private final GenJellyTypeMaker genJellyTypeMaker;
     private final boolean mustHaveValues;
-
-    public static class DataTypeAndManager
+    
+    public class DataTypeAndValueMaker
     {
-        public final TypeManager typeManager;
-        public final DataType dataType;
+        private final TypeManager typeManager;
+        private final DataType dataType;
 
-        public DataTypeAndManager(TypeManager typeManager, DataType dataType) throws InternalException
+        private DataTypeAndValueMaker(TypeManager typeManager, DataType dataType)
         {
             this.typeManager = typeManager;
             this.dataType = dataType;
         }
+
+        public DataType getDataType()
+        {
+            return dataType;
+        }
+
+        public TypeManager getTypeManager()
+        {
+            return typeManager;
+        }
+        
+        public @Value Object makeValue() throws InternalException, UserException
+        {
+            return GenDataTypeMaker.this.makeValue(dataType);
+        }
+    }
+
+    public class DataTypeMaker
+    {
+        private final JellyTypeMaker jellyTypeMaker;
+
+        public DataTypeMaker(JellyTypeMaker jellyTypeMaker)
+        {
+            this.jellyTypeMaker = jellyTypeMaker;
+        }
+        
+        public DataTypeAndValueMaker makeType() throws InternalException, UserException
+        {
+            DataType dataType;
+            do
+            {
+                dataType = jellyTypeMaker.makeType().makeDataType(ImmutableMap.of(), jellyTypeMaker.typeManager);
+            }
+            while (mustHaveValues && !hasValues(dataType));
+
+
+            return new DataTypeAndValueMaker(jellyTypeMaker.typeManager, dataType);
+        }
+
+        public TypeManager getTypeManager()
+        {
+            return jellyTypeMaker.typeManager;
+        }
     }
     
-    public GenDataType()
+    public GenDataTypeMaker()
     {
         // All kinds:
         this(false);
     }
 
-    public GenDataType(boolean mustHaveValues)
+    public GenDataTypeMaker(boolean mustHaveValues)
     {
         // All kinds:
         this(ImmutableSet.copyOf(TypeKinds.values()), mustHaveValues);
     }
 
-    public GenDataType(ImmutableSet<TypeKinds> typeKinds, boolean mustHaveValues)
+    public GenDataTypeMaker(ImmutableSet<TypeKinds> typeKinds, boolean mustHaveValues)
     {
-        super(DataTypeAndManager.class);
-        genJellyType = new GenJellyType(typeKinds, ImmutableSet.of(), mustHaveValues);
+        this(new GenJellyTypeMaker(typeKinds, ImmutableSet.of(), mustHaveValues), mustHaveValues);
+    }
+    
+    protected GenDataTypeMaker(GenJellyTypeMaker genJellyTypeMaker, boolean mustHaveValues)
+    {
+        super(DataTypeMaker.class);
+        this.genJellyTypeMaker = genJellyTypeMaker;
         this.mustHaveValues = mustHaveValues;
     }
     
     @Override
-    public DataTypeAndManager generate(SourceOfRandomness r, GenerationStatus generationStatus)
+    public DataTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        JellyTypeAndManager jellyTypeAndManager = genJellyType.generate(r, generationStatus);
-        try
-        {
-            DataType dataType;
-            do
-            {
-                dataType = jellyTypeAndManager.jellyType.makeDataType(ImmutableMap.of(), jellyTypeAndManager.typeManager);
-            }
-            while (mustHaveValues && !hasValues(dataType));
-            
-            
-            return new DataTypeAndManager(jellyTypeAndManager.typeManager, dataType);
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
+        this.r = r;
+        this.gs = generationStatus;
+        JellyTypeMaker jellyTypeMaker = genJellyTypeMaker.generate(r, generationStatus);
+        return new DataTypeMaker(jellyTypeMaker);
     }
 
     private static boolean hasValues(DataType dataType) throws InternalException
@@ -137,28 +175,11 @@ public class GenDataType extends Generator<DataTypeAndManager>
         });
     }
 
-    public static class GenTaggedType extends Generator<DataTypeAndManager>
+    public static class GenTaggedType extends GenDataTypeMaker
     {
         public GenTaggedType()
         {
-            super(DataTypeAndManager.class);
-        }
-
-        @Override
-        public DataTypeAndManager generate(SourceOfRandomness random, GenerationStatus status)
-        {
-            GenJellyType.GenTaggedType genJellyTagged = new GenJellyType.GenTaggedType();
-            
-            JellyTypeAndManager jellyTypeAndManager = genJellyTagged.generate(random, status);
-            
-            try
-            {
-                return new DataTypeAndManager(jellyTypeAndManager.typeManager, jellyTypeAndManager.jellyType.makeDataType(ImmutableMap.of(), jellyTypeAndManager.typeManager));
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
+            super(new GenJellyTypeMaker.GenTaggedType(), true);
+        }        
     }
 }
