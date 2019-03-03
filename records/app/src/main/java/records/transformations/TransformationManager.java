@@ -1,5 +1,6 @@
 package records.transformations;
 
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.Table;
@@ -47,12 +48,13 @@ public class TransformationManager implements TransformationLoader
     {
         // Note: the order here is the order they are shown in the transformation edit dialog,
         // but is otherwise unimportant.
-        return Arrays.asList(
+        return ImmutableList.of(
             new Calculate.Info(),
             new SummaryStatistics.Info(),
             new Filter.Info(),
             new Sort.Info(),
             new Check.Info(),
+            new ManualEdit.Info(),
             new HideColumns.Info(),
             new Concatenate.Info()
         );

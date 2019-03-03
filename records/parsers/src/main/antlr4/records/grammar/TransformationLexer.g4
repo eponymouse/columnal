@@ -11,8 +11,9 @@ EXPRESSION_END: NEWLINE -> popMode;
 EXPRESSION: (~[\n\r])+;
 
 mode VALUE_MODE;
-VALUE_END: NEWLINE -> popMode;
-VALUE: (~[\n\r])+;
+VALUE_END: '@ENDVALUE' -> popMode;
+VALUE: (~[\n\r@])+;
 
 mode TYPE_MODE;
-TYPE: (~[\n\r@])+ -> popMode;
+TYPE_END : NEWLINE -> popMode;
+TYPE: (~[\n\r])+;

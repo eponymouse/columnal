@@ -6,7 +6,7 @@ item : ATOM | STRING;
 
 expression: EXPRESSION_BEGIN EXPRESSION EXPRESSION_END;
 value: VALUE_BEGIN VALUE VALUE_END;
-type: TYPE_BEGIN TYPE;
+type: TYPE_BEGIN TYPE TYPE_END;
 
 
 /* Hide: */
@@ -49,3 +49,13 @@ checkNoRows : {_input.LT(1).getText().equals("NOROWS")}? ATOM;
 checkAnyRows : {_input.LT(1).getText().equals("ANYROWS")}? ATOM;
 checkType : checkStandalone | checkAllRows | checkNoRows | checkAnyRows;
 check : checkKW checkType expression;
+
+/* Manual Edit: */
+editKW : {_input.LT(1).getText().equals("EDIT")}? ATOM;
+editHeader : editKW (key=item type | NEWLINE);
+editColumnKW : {_input.LT(1).getText().equals("EDITCOLUMN")}? ATOM;
+editColumnHeader : editColumnKW column=item type;
+editColumnDataKW : {_input.LT(1).getText().equals("REPLACEMEMT")}? ATOM;
+editColumnData : editColumnDataKW value value NEWLINE;
+editColumn : editColumnHeader editColumnData*;
+edit : editHeader editColumn*;

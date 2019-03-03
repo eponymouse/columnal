@@ -63,7 +63,7 @@ public abstract class Transformation extends Table
     @OnThread(Tag.Any)
     protected abstract String getTransformationName();
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.Simulation)
     protected abstract List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames);
 
     // hashCode and equals must be implemented properly (used for testing).

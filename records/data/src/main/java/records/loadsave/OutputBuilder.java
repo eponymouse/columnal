@@ -149,6 +149,14 @@ public class OutputBuilder
         return this;
     }
 
+    // Blank the current line.  Used in exception catch blocks
+    // to not leave a partially-completed line.
+    @OnThread(Tag.Any)
+    public synchronized void undoCurLine()
+    {
+        curLine = null;
+    }
+
     public static enum QuoteBehaviour
     {
         ALWAYS_QUOTE, QUOTE_SPACES, DEFAULT;
