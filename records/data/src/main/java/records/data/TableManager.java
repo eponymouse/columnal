@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.Saver;
+import records.data.Table.TableDisplayBase;
 import records.data.TableOperations.RenameTable;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -261,6 +262,33 @@ public class TableManager
     public synchronized ImmutableList<Table> getAllTables()
     {
         return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(ImmutableList.<Table>toImmutableList());
+    }
+
+    /**
+     * Finds a suitable position for a table inserted to the
+     * right of the given position, or at the far right-hand end
+     */
+    @OnThread(Tag.FXPlatform)
+    public CellPosition getNextInsertPosition(@Nullable TableId toRightOf)
+    {
+        @Nullable TableDisplayBase toRightOfDisplay = toRightOf == null ? null : Optional.ofNullable(getSingleTableOrNull(toRightOf)).map(Table::getDisplay).orElse(null);
+        if (toRightOfDisplay == null)
+        {
+            return Utility.filterOutNulls(streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).findFirst().orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
+        }
+        else
+        {
+            // We usually leave a blank space to the right
+            // of the table, unless there's another table beginning in that row:
+            boolean anyImmediatelyToRight = streamAllTables().filter(t -> t.getDisplay() != null && t.getDisplay().getMostRecentPosition().columnIndex == toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex).findFirst().isPresent();
+            return getTopRight(toRightOfDisplay).offsetByRowCols(0, anyImmediatelyToRight ? 1 : 2);
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private CellPosition getTopRight(TableDisplayBase display)
+    {
+        return new CellPosition(display.getMostRecentPosition().rowIndex, display.getBottomRightIncl().columnIndex);
     }
 
     public static interface TableMaker

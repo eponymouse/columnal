@@ -336,6 +336,9 @@ public abstract class Table
 
         @OnThread(Tag.Any)
         public CellPosition getMostRecentPosition();
+
+        @OnThread(Tag.FXPlatform)
+        public CellPosition getBottomRightIncl();
     }
 
     @OnThread(Tag.Any)

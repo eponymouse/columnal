@@ -20,6 +20,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
@@ -27,6 +28,7 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
@@ -181,8 +183,8 @@ edit : editHeader editColumn*;
                 try
                 {
                     r.raw("REPLACEMENT");
-                    r.data(keyType.fromCollapsed((i, prog) -> k), 0);
-                    r.data(crv.dataType.fromCollapsed((i, prog) -> v), 0);
+                    r.data(keyType.fromCollapsed((i, prog) -> k.getValue()), 0);
+                    r.data(crv.dataType.fromCollapsed((i, prog) -> v.getValue()), 0);
                     r.nl();
                 }
                 catch (InternalException | UserException e)
@@ -244,12 +246,12 @@ edit : editHeader editColumn*;
                 else
                 {
                     dataType = originalType.fromCollapsed((i, prog) -> {
-                        @Value Object replaced = columnReplacements.replacementValues.get(i);
+                        ComparableValue replaced = columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
                         if (replaced != null)
-                            return replaced;
+                            return replaced.getValue();
                         else
                             return originalType.getCollapsed(i);
-                            // TODO override set
+                            // TODO override set as well as get
                     });
                 }
                         
@@ -354,7 +356,9 @@ edit : editHeader editColumn*;
         
         // The key is either a value in ManualEdit.this.replacementKey column
         // or if that is null, it's a row number.
-        private final TreeMap<@Value Object, @Value Object> replacementValues;
+        // Keys must be comparable for TreeMap, values are to
+        // help with equals definition.
+        private final TreeMap<ComparableValue, ComparableValue> replacementValues;
 
         public ColumnReplacementValues(DataType dataType, List<Pair<@Value Object, @Value Object>> replacementValues)
         {
@@ -377,32 +381,19 @@ edit : editHeader editColumn*;
             if (!(obj instanceof ColumnReplacementValues))
                 return false;
             ColumnReplacementValues crv = (ColumnReplacementValues) obj;
-            if (!Objects.equals(dataType, crv.dataType))
-                return false;
-            
-            try
-            {
-                return Utility.compareLists(ImmutableList.<@Value Object>copyOf(replacementValues.keySet()), ImmutableList.<@Value Object>copyOf(crv.replacementValues.keySet())) == 0
-                        && Utility.compareLists(ImmutableList.<@Value Object>copyOf(replacementValues.values()), ImmutableList.<@Value Object>copyOf(crv.replacementValues.values())) == 0;
-            }
-            catch (InternalException | UserException e)
-            {
-                Log.log(e);
-                return false;
-            }                    
+            return Objects.equals(dataType, crv.dataType) && Objects.equals(replacementValues, crv.replacementValues);
         }
     }
 
-    public static class Info extends TransformationInfo
+    public static class Info extends SingleSourceTransformationInfo
     {
-        @SuppressWarnings("nullness") // TODO fill the details in and remove this
         public Info()
         {
-            super(NAME, null, null, null, ImmutableList.of());
+            super(NAME, "transform.edit", "preview-edit.png", "edit.explanation.short", ImmutableList.of());
         }
         
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             EditContext editContext = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.edit());
             @Nullable Pair<ColumnId, DataType> replacementKey;
@@ -431,13 +422,13 @@ edit : editHeader editColumn*;
                 replacements.put(columnId, new ColumnReplacementValues(dataType, replacementValues));
             }
             
-            return new ManualEdit(mgr, initialLoadDetails, source.get(0), replacementKey, ImmutableMap.copyOf(replacements));
+            return new ManualEdit(mgr, initialLoadDetails, srcTableId, replacementKey, ImmutableMap.copyOf(replacements));
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return null;
+            throw new UnimplementedException();
         }
     }
 }
