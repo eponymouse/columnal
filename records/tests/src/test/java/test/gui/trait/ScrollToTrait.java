@@ -131,7 +131,11 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
             push(KeyCode.DOWN);
         }
         
-        while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex)
+        int maxAttempts = target.columnIndex + 1;
+        int attempts = 0;
+        
+        while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex && attempts++ < maxAttempts)
+        
         {
             push(KeyCode.RIGHT);
         }
