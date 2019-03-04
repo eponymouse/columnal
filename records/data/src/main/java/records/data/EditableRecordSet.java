@@ -124,10 +124,10 @@ public class EditableRecordSet extends RecordSet
                 List<Either<String, TaggedValue>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
-                    int tagIndex = g.get(i);
-                    @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
                     try
                     {
+                        int tagIndex = g.get(i);
+                        @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
                         r.add(Either.right(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i))));
                     }
                     catch (InvalidImmediateValueException e)
