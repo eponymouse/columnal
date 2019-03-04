@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -108,13 +109,13 @@ public class SummaryStatistics extends Transformation
             valuesAndOccurrences = ImmutableList.of(new Pair<List<@Value Object>, Occurrences>(ImmutableList.<@Value Object>of(), new Occurrences(bitSet)));
         }
 
-        public JoinedSplit(Column column, TreeMap<@Value Object, BitSet> valuesAndOccurrences)
+        public JoinedSplit(Column column, TreeMap<ComparableValue, BitSet> valuesAndOccurrences)
         {
             this.columns = ImmutableList.of(column);
             ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valOccBuilder = ImmutableList.builderWithExpectedSize(valuesAndOccurrences.size());
-            valuesAndOccurrences.forEach((@Value Object k, BitSet v) ->
+            valuesAndOccurrences.forEach((ComparableValue k, BitSet v) ->
             {
-                valOccBuilder.add(new Pair<>(ImmutableList.<@Value Object>of(k), new Occurrences(v)));
+                valOccBuilder.add(new Pair<>(ImmutableList.<@Value Object>of(k.getValue()), new Occurrences(v)));
             });
             this.valuesAndOccurrences = valOccBuilder.build();
         }
@@ -254,9 +255,9 @@ public class SummaryStatistics extends Transformation
     private static class SingleSplit
     {
         private final Column column;
-        private final TreeMap<@NonNull @Value Object, BitSet> valuesAndOccurrences;
+        private final TreeMap<@NonNull ComparableValue, BitSet> valuesAndOccurrences;
 
-        public SingleSplit(Column column, TreeMap<@NonNull @Value Object, BitSet> valuesAndOccurrences)
+        public SingleSplit(Column column, TreeMap<@NonNull ComparableValue, BitSet> valuesAndOccurrences)
         {
             this.column = column;
             this.valuesAndOccurrences = valuesAndOccurrences;
@@ -277,13 +278,13 @@ public class SummaryStatistics extends Transformation
             //else
             {
                 // A bit is set if the value occurred at a particular index:
-                TreeMap<@Value Object, BitSet> r = new TreeMap<>(DataTypeUtility.getValueComparator());
+                TreeMap<ComparableValue, BitSet> r = new TreeMap<>();
                 try
                 {
                     for (int i = 0; c.indexValid(i); i++)
                     {
                         int iFinal = i;
-                        r.compute(c.getType().getCollapsed(i), (k, bs) -> {
+                        r.compute(new ComparableValue(c.getType().getCollapsed(i)), (k, bs) -> {
                             if (bs == null)
                                 bs = new BitSet();
                             bs.set(iFinal);
@@ -346,7 +347,7 @@ public class SummaryStatistics extends Transformation
                 jointOccurrence.and(restPair.getSecond().bitSet);
                 if (!jointOccurrence.isEmpty())
                 {
-                    valuesAndOccurrences.add(new Pair<>(Utility.prependToList(firstVal, restPair.getFirst()), new Occurrences(jointOccurrence)));
+                    valuesAndOccurrences.add(new Pair<>(Utility.prependToList(firstVal.getValue(), restPair.getFirst()), new Occurrences(jointOccurrence)));
                 }
             }
         });

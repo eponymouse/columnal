@@ -973,4 +973,58 @@ public class DataTypeUtility
         }
     }
 
+    /**
+     * Things like TreeMap say that the Comparable instance should
+     * be compatible with .equals, i.e. that if they compareTo equal,
+     * then equals should return true.  But we have object arrays
+     * which don't implement equals reasonably, and things like numbers
+     * should compare equal even when they use different types.
+     * 
+     * So this wraps an @Value Object just for the purpose of implementing
+     * equals and compareTo sensibly, so you can use @Value Object as a key
+     * in a TreeMap.
+     */
+    @OnThread(Tag.Simulation)
+    public static class ComparableValue implements Comparable<ComparableValue>
+    {
+        private final @Value Object value;
+
+        public ComparableValue(@Value Object value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            // Accept hash collisions; should be using comparable implementation for maps anyway
+            return 1;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj)
+        {
+            return obj instanceof ComparableValue && compareTo((ComparableValue) obj) == 0;
+        }
+
+        @Override
+        public int compareTo(ComparableValue o)
+        {
+            try
+            {
+                return Utility.compareValues(value, o.value);
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                // Don't want to throw, so this is best we can do:
+                return -1;
+            }
+        }
+
+        public @Value Object getValue()
+        {
+            return value;
+        }
+    }
 }
