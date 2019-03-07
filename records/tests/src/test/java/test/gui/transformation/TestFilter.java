@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.transformation;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +59,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
         TestUtil.sleep(5000);
-        CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(TestUtil.fx(() -> Utility.filterOptional(mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> Optional.ofNullable((TableDisplay) t.getDisplay()))).mapToInt(d -> d.getBottomRightIncl().columnIndex + 1).max().orElse(1))));
+        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         TestUtil.delay(100);

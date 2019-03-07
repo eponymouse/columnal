@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.transformation;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -210,7 +210,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     @Override
                     public boolean matches(Object o)
                     {
-                        return !(o instanceof AutoComplete.AutoCompleteWindow) || !((Window)o).isShowing();
+                        return !(o instanceof AutoComplete.AutoCompleteWindow) || TestUtil.fx(() -> !((Window)o).isShowing());
                     }
 
                     @Override
