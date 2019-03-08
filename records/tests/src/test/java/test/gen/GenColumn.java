@@ -38,13 +38,15 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         }
     };
     private final List<DataType> distinctTypes;
+    private final boolean canHaveErrors;
 
     @SuppressWarnings("unchecked")
-    public GenColumn(TableManager mgr, List<DataType> distinctTypes)
+    public GenColumn(TableManager mgr, List<DataType> distinctTypes, boolean canHaveErrors)
     {
         super((Class<ExBiFunction<Integer, RecordSet, Column>>)(Class<?>)BiFunction.class);
         this.mgr = mgr;
         this.distinctTypes = distinctTypes;
+        this.canHaveErrors = canHaveErrors;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         DataType type = sourceOfRandomness.choose(distinctTypes);
         try
         {
-            return columnForType(type);
+            return columnForType(type, sourceOfRandomness);
         }
         catch (InternalException e)
         {
@@ -67,8 +69,13 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     // Only valid to call after generate has been called at least once
     @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type) throws InternalException
+    public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type, SourceOfRandomness sourceOfRandomness) throws InternalException
     {
-        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> Either.right(makeValue(type))), makeValue(type)).apply(rs);
+        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> {
+            if (canHaveErrors && sourceOfRandomness.nextInt(10) == 1)
+                return Either.left("#" + r.nextInt());
+            else
+                return Either.right(makeValue(type));
+        }), makeValue(type)).apply(rs);
     }
 }

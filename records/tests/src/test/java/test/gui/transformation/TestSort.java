@@ -36,6 +36,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.NumericLiteral;
 import test.TestUtil;
 import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.CanHaveErrorValues;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
@@ -68,8 +69,8 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propSort(
-            @When(seed=1L) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+            @CanHaveErrorValues @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a sort transformation
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
@@ -150,8 +151,13 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
                 {
                     Either<String, @Value Object> prevVal = TestUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
                     Either<String, @Value Object> curVal = TestUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
+                    // If both errors, sort by error text:
                     if (prevVal.isLeft() && curVal.isLeft())
-                        assertEquals(prevVal.getLeft("prev"), curVal.getLeft("cur"));
+                    {
+                        MatcherAssert.assertThat(prevVal.getLeft("prev"), Matchers.lessThanOrEqualTo(curVal.getLeft("cur")));
+                        if (!prevVal.equals(curVal))
+                            break; // Don't check other columns
+                    }
                     else if (prevVal.isRight() && curVal.isRight())
                     {
                         int actualComparison = Utility.compareValues(prevVal.getRight("prev"), curVal.getRight("cur"));
@@ -166,8 +172,11 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
                     }
                     else
                     {
-                        // Bound to fail, and print-out:
-                        assertEquals(prevVal, curVal);
+                        // A mix of left and right
+                        // Left should always be first, regardless
+                        assertTrue(prevVal.isLeft());
+                        assertFalse(curVal.isLeft());
+                        break;
                     }
 
                 }

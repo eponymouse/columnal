@@ -44,6 +44,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     private @Nullable NumTables numTables;
     private boolean mustIncludeNumber = false;
     private int nextTableNum = 0;
+    private boolean canHaveErrorValues = false;
 
     public GenImmediateData()
     {
@@ -58,6 +59,11 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     public void configure(MustIncludeNumber mustIncludeNumber)
     {
         this.mustIncludeNumber = true;
+    }
+
+    public void configure(CanHaveErrorValues canHaveErrorValues)
+    {
+        this.canHaveErrorValues = true;
     }
 
     @Override
@@ -79,7 +85,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 
                 int numColumns = r.nextInt(1, 12);
                 List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
-                GenColumn genColumn = new GenColumn(mgrAndTypes.getFirst(), mgrAndTypes.getSecond());
+                GenColumn genColumn = new GenColumn(mgrAndTypes.getFirst(), mgrAndTypes.getSecond(), canHaveErrorValues);
                 for (int i = 0; i < numColumns; i++)
                 {
                     ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
@@ -88,7 +94,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 if (mustIncludeNumber)
                 {
                     // Can't tell what types have been added, so just add another number one in case:
-                    ExBiFunction<Integer, RecordSet, Column> col = genColumn.columnForType(DataType.NUMBER);
+                    ExBiFunction<Integer, RecordSet, Column> col = genColumn.columnForType(DataType.NUMBER, r);
                     columns.add(rs -> (EditableColumn)col.apply(length, rs));
                 }
 
@@ -137,6 +143,12 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     @Retention(RUNTIME)
     @GeneratorConfiguration
     public @interface MustIncludeNumber {
+    }
+
+    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
+    @Retention(RUNTIME)
+    @GeneratorConfiguration
+    public @interface CanHaveErrorValues {
     }
 
 /*

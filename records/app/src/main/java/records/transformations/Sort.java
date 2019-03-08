@@ -27,6 +27,7 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
@@ -39,6 +40,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
@@ -216,8 +218,7 @@ public class Sort extends Transformation
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
-            boolean foundLowest = false;
-            @Value Object @Nullable [] lowest = null;
+            ImmutableList<Either<String, @Value Object>> lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
             if (stillToOrder == null)
@@ -226,17 +227,16 @@ public class Sort extends Transformation
             for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder == null ? -1 : stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                @Value Object @Nullable[] cur = getItem(src - 1);
-                if (!foundLowest || compareFixedSet(cur, lowest, justDirections) < 0)
+                ImmutableList<Either<String, @Value Object>> cur = getItem(src - 1);
+                if (lowest == null || compareFixedSet(cur, lowest, justDirections) < 0)
                 {
-                    foundLowest = true;
                     lowest = cur;
                     lowestIndex = src;
                     pointerToLowestIndex = prevSrc;
                 }
                 prevSrc = src;
             }
-            if (foundLowest && stillToOrder != null)
+            if (lowest != null && stillToOrder != null)
             {
                 // Make the pointer behind lowest point to entry after lowest:
                 stillToOrder[pointerToLowestIndex] = stillToOrder[lowestIndex];
@@ -259,18 +259,25 @@ public class Sort extends Transformation
     // All arrays must be same length.
     // Returns -1 if a is before b, given the directions.
     // e.g. compareFixedSet({0}, {1}, DESCENDING) will return positive number, because 0 is after 1 when descending
-    private static int compareFixedSet(@Value Object @Nullable[] a, @Value Object @Nullable[] b, Direction[] justDirections) throws UserException, InternalException
+    private static int compareFixedSet(ImmutableList<Either<String, @Value Object>> a, ImmutableList<Either<String, @Value Object>> b, Direction[] justDirections) throws UserException, InternalException
     {
-        if (a == null && b == null)
-            return 0;
-        else if (a == null)
-            return -1;
-        else if (b == null)
-            return 1;
-        
-        for (int i = 0; i < a.length; i++)
+        for (int i = 0; i < a.size(); i++)
         {
-            int cmp = Utility.compareValues(a[i], b[i]);
+            Either<String, @Value Object> ax = a.get(i);
+            Either<String, @Value Object> bx = b.get(i);
+            // Errors are always first, whether descending or ascending:
+            if (ax.isLeft())
+            {
+                if (bx.isLeft())
+                    return ax.getLeft("Impossible ax").compareTo(bx.getLeft("Impossible bx"));
+                else
+                    return -1;
+            }
+            else if (bx.isLeft())
+            {
+                return 1;
+            }
+            int cmp = Utility.compareValues(ax.getRight("Impossible ax"), bx.getRight("Impossible bx"));
             if (justDirections[i] == Direction.DESCENDING)
                 cmp = -cmp;
             if (cmp != 0)
@@ -280,26 +287,28 @@ public class Sort extends Transformation
     }
 
     @Pure
-    private @Value Object @Nullable[] getItem(int srcIndex) throws UserException, InternalException
+    private ImmutableList<Either<String, @Value Object>> getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
-        @Value Object[] r = new @Value Object[sortBy.size()];
+        ImmutableList.Builder<Either<String, @Value Object>> r = ImmutableList.builderWithExpectedSize(sortBy.size());
         for (int i = 0; i < sortBy.size(); i++)
         {
             Pair<Column, Direction> c = sortBy.get(i);
+            Either<String, @Value Object> val;
             try
             {
-                r[i] = c.getFirst().getType().getCollapsed(srcIndex);
+                val = Either.right(c.getFirst().getType().getCollapsed(srcIndex));
             }
             catch (InternalException | UserException e)
             {
                 if (e instanceof InternalException)
                     Log.log(e);
-                return null;
+                val = Either.left(e.getLocalizedMessage());
             }
+            r.add(val);
         }
-        return r;
+        return r.build();
     }
 
     @Override
