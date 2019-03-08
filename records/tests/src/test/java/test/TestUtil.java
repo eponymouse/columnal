@@ -18,6 +18,7 @@ import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -108,6 +109,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1510,5 +1512,16 @@ public class TestUtil
             }
             return null;
         }
+    }
+    
+    // Finds the first parent (starting at given one and going upwards via getParent) that satisfies the given predicate
+    @OnThread(Tag.FXPlatform)
+    public static @Nullable Parent findParent(@Nullable Parent parent, Predicate<Node> check)
+    {
+        while (parent != null && !check.test(parent))
+        {
+            parent = parent.getParent();
+        }
+        return parent;
     }
 }

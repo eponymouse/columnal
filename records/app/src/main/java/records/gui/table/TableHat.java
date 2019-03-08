@@ -102,14 +102,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 {
                     if (mouseButton == MouseButton.PRIMARY)
                     {
-                        new EditSortDialog(parent, screenPoint,
-                            parent.getManager().getSingleTableOrNull(sort.getSource()),
-                            sort,
-                            sort.getSortBy()).showAndWait().ifPresent(newSort -> {
-                                Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
-                                    parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
-                                ));
-                        });
+                        edit_Sort(screenPoint, parent, sort);
                     }
                 }
             });
@@ -316,6 +309,18 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         this.tableDisplay = Utility.later(tableDisplay);
+    }
+
+    protected static void edit_Sort(@Nullable Point2D screenPoint, View parent, Sort sort)
+    {
+        new EditSortDialog(parent, screenPoint,
+            parent.getManager().getSingleTableOrNull(sort.getSource()),
+            sort,
+            sort.getSortBy()).showAndWait().ifPresent(newSort -> {
+                Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
+                    parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
+                ));
+        });
     }
 
     @Override

@@ -65,7 +65,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
     private final @Nullable RecordSet dataWithColumns;
     private final SortList sortList;
 
-    public EditSortDialog(View parent, Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
+    public EditSortDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
         super(parent);
         setResizable(true);
@@ -89,6 +89,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         sortList.getNode().setPrefHeight(250.0);
         getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")
@@ -129,6 +130,8 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         protected Pair<SortPane, FXPlatformSupplier<Pair<ColumnId, Direction>>> makeCellContent(@Nullable Pair<ColumnId, Direction> initialContent, boolean editImmediately)
         {
             SortPane sortPane = new SortPane(initialContent);
+            if (editImmediately)
+                FXUtility.onceNotNull(sortPane.sceneProperty(), s -> FXUtility.runAfter(sortPane.columnField::requestFocus));
             return new Pair<>(sortPane, sortPane::getCurrentValue);
         }
 

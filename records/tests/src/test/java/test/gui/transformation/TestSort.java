@@ -4,9 +4,11 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -58,8 +60,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait
@@ -67,8 +68,8 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propSort(
-            @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @From(GenRandom.class) Random r) throws Exception
+            @When(seed=1L) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a sort transformation
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
@@ -96,16 +97,23 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         }
         while (r.nextInt(2) == 1 && !pickFrom.isEmpty());
 
+        TextField prevFocus = null;
         for (Pair<ColumnId, Direction> pickedColumn : pickedColumns)
         {
             scrollTo(".id-fancylist-add");
+            moveAndDismissPopupsAtPos(point(".id-fancylist-add"));
             clickOn(".id-fancylist-add");
+            sleep(300);
+            TextField focused = TestUtil.checkNonNull(getFocusOwner(TextField.class));
+            assertNotEquals(prevFocus, focused);
+            prevFocus = focused;
+            
             write(pickedColumn.getFirst().getRaw());
             // All columns start ascending.  We click n * 2 times, + 1 if descending
             int numClicks = 2 * r.nextInt(3) + (pickedColumn.getSecond() == Direction.DESCENDING ? 1 : 0);
             // Bit of a hack to find the matching button
-            Parent sortPane = TestUtil.checkNonNull(TestUtil.<@Nullable Parent>fx(() -> Utility.onNullable(getFocusOwner(), n -> n.getParent())));
-            Node button = TestUtil.fx(() -> sortPane.lookup(".sort-direction-button"));
+            Parent sortPane = TestUtil.checkNonNull(TestUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
+            Node button = TestUtil.checkNonNull(TestUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
             for (int i = 0; i < numClicks; i++)
             {
                 clickOn(button);
@@ -116,50 +124,56 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
 
-        // Now check output values by getting them from clipboard:
         TestUtil.sleep(500);
+        assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Sort.class).findFirst().get().getSortBy());
+
+        // Now check output values by getting them from clipboard:
         showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
 
-        assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Sort.class).findFirst().get().getSortBy());
+        
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
-        // Need to check that items are in the right order:
-        Map<ColumnId, Either<String, @Value Object>> prev = getRow(clip.get(), 0);
-        int length = original.data().getData().getLength();
-        for (int i = 1; i < length; i++)
+        // No point checking order if 1 row or less:
+        if (original.data().getData().getLength() > 1)
         {
-            Map<ColumnId, Either<String, @Value Object>> cur = getRow(clip.get(), i);
-
-            for (Pair<ColumnId, Direction> pickedColumn : pickedColumns)
+            // Need to check that items are in the right order:
+            Map<ColumnId, Either<String, @Value Object>> prev = getRow(clip.get(), 0);
+            int length = original.data().getData().getLength();
+            for (int i = 1; i < length; i++)
             {
-                Either<String, @Value Object> prevVal = TestUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
-                Either<String, @Value Object> curVal = TestUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
-                if (prevVal.isLeft() && curVal.isLeft())
-                    assertEquals(prevVal.getLeft("prev"), curVal.getLeft("cur"));
-                else if (prevVal.isRight() && curVal.isRight())
+                Map<ColumnId, Either<String, @Value Object>> cur = getRow(clip.get(), i);
+
+                for (Pair<ColumnId, Direction> pickedColumn : pickedColumns)
                 {
-                    int actualComparison = Utility.compareValues(prevVal.getRight("prev"), curVal.getRight("cur"));
-                    // For equals (i.e. zero) results, there's nothing to check (valid for ASC and DESC)
-                    // and we continue on to compare the next column:
-                    if (actualComparison != 0)
+                    Either<String, @Value Object> prevVal = TestUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
+                    Either<String, @Value Object> curVal = TestUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
+                    if (prevVal.isLeft() && curVal.isLeft())
+                        assertEquals(prevVal.getLeft("prev"), curVal.getLeft("cur"));
+                    else if (prevVal.isRight() && curVal.isRight())
                     {
-                        // For non-zero, check it is in right direction and break:
-                        MatcherAssert.assertThat(actualComparison, pickedColumn.getSecond() == Direction.ASCENDING ? Matchers.lessThan(0) : Matchers.greaterThan(0));
-                        break;
+                        int actualComparison = Utility.compareValues(prevVal.getRight("prev"), curVal.getRight("cur"));
+                        // For equals (i.e. zero) results, there's nothing to check (valid for ASC and DESC)
+                        // and we continue on to compare the next column:
+                        if (actualComparison != 0)
+                        {
+                            // For non-zero, check it is in right direction and break:
+                            MatcherAssert.assertThat(actualComparison, pickedColumn.getSecond() == Direction.ASCENDING ? Matchers.lessThan(0) : Matchers.greaterThan(0));
+                            break;
+                        }
                     }
+                    else
+                    {
+                        // Bound to fail, and print-out:
+                        assertEquals(prevVal, curVal);
+                    }
+
                 }
-                else
-                {
-                    // Bound to fail, and print-out:
-                    assertEquals(prevVal, curVal);
-                }
-                    
+
+                prev = cur;
             }
-            
-            prev = cur;
         }
     }
 

@@ -63,6 +63,7 @@ import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Filter;
+import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
@@ -1045,6 +1046,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
             TransformationEdits.editAggregateSplitBy(parent, aggregate);
+        }
+        else if (table instanceof Sort)
+        {
+            TableHat.edit_Sort(null, parent, (Sort)table);
         }
         // For other tables, do nothing
     }
