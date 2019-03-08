@@ -274,7 +274,7 @@ public class TableManager
         @Nullable TableDisplayBase toRightOfDisplay = toRightOf == null ? null : Optional.ofNullable(getSingleTableOrNull(toRightOf)).map(Table::getDisplay).orElse(null);
         if (toRightOfDisplay == null)
         {
-            return Utility.filterOutNulls(streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).findFirst().orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
+            return Utility.filterOutNulls(streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).max(Comparator.comparing(p -> p.columnIndex)).orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
         }
         else
         {

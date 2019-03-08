@@ -6,6 +6,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
@@ -19,6 +20,7 @@ import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.Table.TableDisplayBase;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
@@ -75,8 +77,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 {
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void propManualEdit(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
-            @From(GenRandom.class) Random r) throws Exception
+    public void propManualEdit(
+            @When(seed=1L) @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
+            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         int length = 1 + r.nextInt(50);
         int numColumns = 1 + r.nextInt(5);
@@ -127,11 +130,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         Supplier<@TableDataColIndex Integer> makeColIndex = () -> r.nextInt(numColumns);
 
         HashMap<ColumnId, TreeMap<ComparableValue, ComparableValue>> replacementsSoFar = new HashMap<>();
+
+        TableId sortId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> t.getId()).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find sort"));
         
         // There's two ways to create a new manual edit.  One is to just create it using the menu.  The other is to try to edit an existing transformation, and follow the popup which appears
         if (r.nextBoolean())
         {
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> t.getId()).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find sort")), makeRowIndex.get(), makeColIndex.get());
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, makeRowIndex.get(), makeColIndex.get());
         }
         else
         {
@@ -145,6 +150,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             clickOn(".id-new-transform");
             TestUtil.delay(100);
             clickOn(".id-transform-edit");
+            TestUtil.delay(100);
+            write(sortId.getRaw());
+            push(KeyCode.ENTER);
             TestUtil.delay(1000);
         }
 

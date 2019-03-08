@@ -428,7 +428,7 @@ edit : editHeader editColumn*;
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            throw new UnimplementedException();
+            return new ManualEdit(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), null, ImmutableMap.of());
         }
     }
 }
