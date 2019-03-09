@@ -3,10 +3,15 @@ package records.transformations;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.TreeMultimap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
@@ -17,18 +22,10 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TypeId;
-import records.data.unit.Unit;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
@@ -37,29 +34,27 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.EditColumnContext;
 import records.grammar.TransformationParser.EditColumnDataContext;
 import records.grammar.TransformationParser.EditContext;
+import records.gui.PickManualEditIdentifierDialog;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
-import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.SimulationSupplier;
 import utility.Utility;
-import utility.Utility.ListEx;
 
 import java.io.File;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
@@ -70,8 +65,9 @@ public class ManualEdit extends Transformation
     private final TableId srcTableId;
     private final @Nullable Table src;
     // If null, we use the row number as the replacement key.
+    // We cache the type to avoid checked exceptions fetching it from the column
     @OnThread(Tag.Any)
-    private final @Nullable Pair<ColumnId, DataType> replacementKey;
+    private final @Nullable Pair<Column, DataType> keyColumn;
     @OnThread(Tag.Any)
     private final Either<StyledString, RecordSet> recordSet;
     @OnThread(Tag.Any)
@@ -81,15 +77,30 @@ public class ManualEdit extends Transformation
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
-        this.replacementKey = replacementKey;
         this.replacements = replacements;
 
         Table srcTable = null;
         Either<StyledString, RecordSet> data;
+        Pair<Column, DataType> keyColumn = null;
         try
         {
             srcTable = mgr.getSingleTableOrThrow(srcTableId);
             RecordSet srcData = srcTable.getData();
+            if (replacementKey != null)
+            {
+                // Check key exists and has same type:
+                Column keyCol = srcData.getColumnOrNull(replacementKey.getFirst());
+                if (keyCol == null)
+                {
+                    throw new UserException("Could not find identifier column " + replacementKey.getFirst().getRaw());
+                }
+                keyColumn = new Pair<>(keyCol, keyCol.getType());
+                if (!keyColumn.getSecond().equals(replacementKey.getSecond()))
+                {
+                    throw new UserException("Last recorded type of identifier column " + replacementKey.getFirst().getRaw() + " does not match actual column type.");
+                }
+            }
+            
             List<SimulationFunction<RecordSet, Column>> columns = Utility.mapList(srcData.getColumns(), c -> rs -> new ReplacedColumn(rs, c));
             data = Either.right(new <Column>RecordSet(columns)
             {
@@ -107,6 +118,7 @@ public class ManualEdit extends Transformation
 
         this.src = srcTable;
         this.recordSet = data;
+        this.keyColumn = keyColumn;
     }
 
     @Override
@@ -144,13 +156,14 @@ edit : editHeader editColumn*;
         OutputBuilder r = new OutputBuilder();
         r.raw("EDIT");
         DataType keyType;
-        if (replacementKey != null)
+        if (keyColumn != null)
         {
-            r.quote(replacementKey.getFirst());
+            r.quote(keyColumn.getFirst().getName());
             r.t(TransformationLexer.TYPE_BEGIN, TransformationLexer.VOCABULARY);
             try
             {
-                replacementKey.getSecond().save(r);
+                keyType = keyColumn.getSecond();
+                keyType.save(r);
             }
             catch (InternalException e)
             {
@@ -158,7 +171,6 @@ edit : editHeader editColumn*;
                 // Bail out completely:
                 return ImmutableList.of();
             }
-            keyType = replacementKey.getSecond();
         }
         else
         {
@@ -201,7 +213,7 @@ edit : editHeader editColumn*;
     @Override
     protected int transformationHashCode()
     {
-        return Objects.hash(srcTableId, replacementKey, replacements);
+        return Objects.hash(srcTableId, keyColumn, replacements);
     }
 
     @Override
@@ -211,7 +223,7 @@ edit : editHeader editColumn*;
             return false;
         ManualEdit m = (ManualEdit)obj;
         return Objects.equals(srcTableId, m.srcTableId)
-                && Objects.equals(replacementKey, m.replacementKey)
+                && Objects.equals(keyColumn, m.keyColumn)
                 && Objects.equals(replacements, m.replacements);
     }
 
@@ -219,6 +231,63 @@ edit : editHeader editColumn*;
     public @NonNull @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
     {
         return recordSet.eitherEx(e -> {throw new UserException(e);}, rs -> rs);
+    }
+
+    @Pure
+    @OnThread(Tag.Any)
+    public Optional<ColumnId> getReplacementIdentifier()
+    {
+        return keyColumn == null ? Optional.empty() : Optional.of(keyColumn.getFirst().getName());
+    }
+    
+    @OnThread(Tag.Simulation)
+    public ManualEdit swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
+    {
+        if (src == null)
+            throw new UserException("Cannot modify manual edit when original table is missing.");
+        
+        RecordSet srcRecordSet = src.getData();
+        int length = srcRecordSet.getLength();
+        Column newKeyColumn = newReplacementKey == null ? null : srcRecordSet.getColumn(newReplacementKey);
+        
+        // Need to go through existing replacements and find the value in the new column:
+
+        Collector<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>, ?, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>>> collector = Multimaps.<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>, ComparableValue, Pair<ColumnId, ComparableValue>, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>>>toMultimap(p -> p.getFirst(), p -> p.getSecond(), () -> TreeMultimap.<ComparableValue, Pair<ColumnId, ComparableValue>>create(Comparator.<ComparableValue>naturalOrder(), Pair.<ColumnId, ComparableValue>comparator()));
+        
+        // Each item is (value in identifier column, (target column, value to change to))
+        TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>> toFind = replacements.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>>flatMap(e -> e.getValue().replacementValues.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>>map(rv -> new Pair<ComparableValue, Pair<ColumnId, ComparableValue>>(rv.getKey(), new Pair<ColumnId, ComparableValue>(e.getKey(), rv.getValue())))).collect(collector);
+
+        HashMap<ColumnId, ColumnReplacementValues> newReplacements = new HashMap<>();
+        
+        for (int row = 0; row < length; row++)
+        {
+            if (toFind.isEmpty())
+                break;
+            
+            ComparableValue existingKeyValue = keyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(keyColumn.getFirst().getType().getCollapsed(row));
+            
+            ComparableValue newKeyValue = newKeyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(newKeyColumn.getType().getCollapsed(row));
+            NavigableSet<Pair<ColumnId, ComparableValue>> matchingValues = toFind.get(existingKeyValue);
+            if (!matchingValues.isEmpty())
+            {
+                for (Pair<ColumnId, ComparableValue> matchingValue : matchingValues)
+                {
+                    Column column = src.getData().getColumn(matchingValue.getFirst());
+                    DataType columnType = column.getType();
+                    newReplacements.computeIfAbsent(matchingValue.getFirst(), k -> new ColumnReplacementValues(columnType, ImmutableList.of())).replacementValues.put(newKeyValue, matchingValue.getSecond());
+                }
+                matchingValues.clear();
+            }
+        }
+        
+        return new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType()), ImmutableMap.copyOf(newReplacements));
+    }
+    
+    @Pure
+    @OnThread(Tag.Any)
+    public @Nullable Table getSrcTable()
+    {
+        return src;
     }
 
     private class ReplacedColumn extends Column
@@ -230,6 +299,26 @@ edit : editHeader editColumn*;
         {
             super(recordSet, original.getName());
             this.original = original;
+        }
+
+        @Override
+        public @OnThread(Tag.Any) EditableStatus getEditableStatus()
+        {
+            return new EditableStatus(true, rowIndex -> {
+                // Check if that row has valid identifier for replacement.
+                if (keyColumn == null)
+                    return true; // Row number is always valid
+                try
+                {
+                    // If there's an error, an exception will be thrown:
+                    keyColumn.getFirst().getType().getCollapsed(rowIndex);
+                    return true;
+                }
+                catch (UserException e)
+                {
+                    return false;
+                }
+            });
         }
 
         @Override

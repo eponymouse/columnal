@@ -65,7 +65,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
     private final @Nullable RecordSet dataWithColumns;
     private final SortList sortList;
 
-    public EditSortDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
+    public EditSortDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, @Nullable ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
         super(parent);
         setResizable(true);
@@ -82,7 +82,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
         dataWithColumns = d;
 
-        sortList = new SortList(originalSortBy);
+        sortList = new SortList(originalSortBy == null ? ImmutableList.of() : originalSortBy);
         sortList.getNode().setMinWidth(250.0);
         sortList.getNode().setMinHeight(150.0);
         sortList.getNode().setPrefWidth(300.0);
@@ -110,6 +110,12 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         setOnHiding(e -> {
             parent.disablePickingMode();
         });
+        
+        if (originalSortBy == null)
+        {
+            // runAfter to avoid focus stealing:
+            FXUtility.runAfter(() -> sortList.addToEnd(new Pair<>(new ColumnId(""), Direction.ASCENDING), true));
+        }
     }
 
     @OnThread(Tag.FXPlatform)

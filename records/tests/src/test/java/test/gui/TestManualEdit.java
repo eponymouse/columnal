@@ -11,7 +11,9 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
@@ -21,7 +23,6 @@ import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.gui.MainWindow.MainWindowActions;
@@ -29,18 +30,10 @@ import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
-import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.Sort;
-import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
-import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.NumericLiteral;
+import records.transformations.Sort.Direction;
 import test.TestUtil;
-import test.gen.GenImmediateData;
-import test.gen.GenImmediateData.MustIncludeNumber;
-import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
@@ -53,7 +46,6 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -61,16 +53,12 @@ import utility.Utility;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, EnterStructuredValueTrait
@@ -102,9 +90,6 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         });
         RecordSet srcRS = new KnownLengthRecordSet(makeColumns, length);
         
-        // Null means use row number
-        @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : srcRS.getColumns().get(r.nextInt(numColumns));
-        
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeMaker.getTypeManager(), srcRS);
         TestUtil.sleep(5000);
@@ -122,7 +107,14 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         push(KeyCode.ENTER);
         ColumnId initialSortBy = srcRS.getColumnIds().get(r.nextInt(numColumns)); 
         write(initialSortBy.getRaw());
-        push(KeyCode.ENTER);
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn();
+
+        Sort sort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
+        assertEquals(ImmutableList.of(new Pair<>(initialSortBy, Direction.ASCENDING)), sort.getSortBy());
+
+        // Null means use row number
+        @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : sort.getData().getColumns().get(r.nextInt(numColumns));
         
         @SuppressWarnings("units")
         Supplier<@TableDataRowIndex Integer> makeRowIndex = () -> r.nextInt(length);
@@ -131,12 +123,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         HashMap<ColumnId, TreeMap<ComparableValue, ComparableValue>> replacementsSoFar = new HashMap<>();
 
-        TableId sortId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> t.getId()).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find sort"));
+        TableId sortId = sort.getId();
         
         // There's two ways to create a new manual edit.  One is to just create it using the menu.  The other is to try to edit an existing transformation, and follow the popup which appears
         if (r.nextBoolean())
         {
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, makeRowIndex.get(), makeColIndex.get());
+            fail("TODO edit the sort");
         }
         else
         {
@@ -155,6 +148,17 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             push(KeyCode.ENTER);
             TestUtil.delay(1000);
         }
+        
+        if (replaceKeyColumn == null)
+            clickOn(".id-manual-edit-byrownum");
+        else
+        {
+            clickOn(".id-manual-edit-bycolumn");
+            push(KeyCode.TAB);
+            write(replaceKeyColumn.getName().getRaw());
+        }
+        clickOn(".ok-button");
+        sleep(1000);
 
         ManualEdit manualEdit = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).map(t -> (ManualEdit)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
         TableDisplay manualEditDisplay = TestUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> manualEdit.getDisplay()));
@@ -165,22 +169,40 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @TableDataRowIndex int row = makeRowIndex.get();
             @TableDataColIndex int col = makeColIndex.get();
             
-            @Value Object replaceKey;
+            @Nullable @Value Object replaceKey;
             if (replaceKeyColumn == null)
-                replaceKey = DataTypeUtility.value(new BigDecimal(r.nextInt(length)));
+                replaceKey = DataTypeUtility.value(new BigDecimal(row));
             else
-                replaceKey = replaceKeyColumn.getType().getCollapsed(r.nextInt(length));
+                replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
             
             @Value Object value = columnTypes.get(col).makeValue();
-            replacementsSoFar.computeIfAbsent(srcRS.getColumnIds().get(col), k -> new TreeMap<>())
-                .put(new ComparableValue(replaceKey), new ComparableValue(value));
+            if (replaceKey != null)
+            {
+                replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
+                        .put(new ComparableValue(replaceKey), new ComparableValue(value));
+            }
             
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEdit.getId(), row, col);
+            sleep(500);
+            assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
             push(KeyCode.ENTER);
-            enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
-            push(KeyCode.ENTER);
+            // If key has an error, we should get a dialog.
+            if (replaceKey == null)
+            {
+                sleep(500);
+                assertTrue("Alert should be showing about invalid key", lookup(".alert").tryQuery().isPresent());
+                clickOn(".ok-button");
+                assertFalse("Alert still showing after OK", lookup(".alert").tryQuery().isPresent());
+            }
+            else
+            {
+                assertFalse("False alert showing, but valid key", lookup(".alert").tryQuery().isPresent());
+                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
+                push(KeyCode.ENTER);
+            }
         }
         // TODO also change original data and/or sort order and check they updated.
+        fail("TODO change original data and/or sort");
             
         // Now check output values by getting them from clipboard:
         TestUtil.sleep(500);
@@ -190,7 +212,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(clip.isPresent());
-        // Need to fish out first column from clip, then compare item:
+        fail("TODO compare expected and actual");
         // TODO
         //List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
         //TestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));

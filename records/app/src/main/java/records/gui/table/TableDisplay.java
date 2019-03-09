@@ -4,7 +4,6 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -63,6 +62,7 @@ import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Filter;
+import records.transformations.ManualEdit;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
@@ -1049,7 +1049,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
         else if (table instanceof Sort)
         {
-            TableHat.edit_Sort(null, parent, (Sort)table);
+            TableHat.editSort(null, parent, (Sort)table);
+        }
+        else if (table instanceof ManualEdit)
+        {
+            TableHat.editManualEdit(parent, (ManualEdit)table);
         }
         // For other tables, do nothing
     }

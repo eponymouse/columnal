@@ -1,7 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
-import javafx.application.Platform;
+import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -11,11 +11,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
+import utility.FunctionInt;
 import utility.Pair;
-import utility.Workers;
-import utility.Workers.Priority;
-import utility.gui.FXUtility;
+import utility.SimulationFunctionInt;
+import utility.SimulationSupplierInt;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,11 +92,26 @@ public abstract class Column
     {
         return recordSet.getLength();
     }
+    
+    @OnThread(Tag.Any)
+    public static class EditableStatus
+    {
+        // If false, definitely not editable.  If true, run checkEditable
+        public final boolean editable;
+        // Return true to continue the edit, false to abandon:
+        public final @Nullable SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkEditable;
+
+        public EditableStatus(boolean editable, @Nullable SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkEditable)
+        {
+            this.editable = editable;
+            this.checkEditable = checkEditable;
+        }
+    }
 
     @OnThread(Tag.Any)
-    public boolean isEditable()
+    public EditableStatus getEditableStatus()
     {
-        return false;
+        return new EditableStatus(false, null);
     }
 
     // For testing: return copy of column with length trimmed to shrunkLength

@@ -1358,7 +1358,7 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static List<Either<String, @Value Object>> getCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
+    public static List<Either<String, @Value Object>> getAllCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
     {
         List<Either<String, @Value Object>> r = new ArrayList<>();
         for (int i = 0; i < size; i++)
@@ -1373,6 +1373,19 @@ public class TestUtil
             }
         }
         return r;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static Either<String, @Value Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
+    {
+        try
+        {
+            return Either.right(type.getCollapsed(index));
+        }
+        catch (InvalidImmediateValueException e)
+        {
+            return Either.left(e.getInvalid());
+        }
     }
 
     // Adds event filters on all nodes under the target location,

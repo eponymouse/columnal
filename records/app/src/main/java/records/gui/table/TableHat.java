@@ -12,18 +12,24 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.RecordSet;
 import records.data.Table;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.Transformation;
 import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.EditExpressionDialog;
 import records.gui.EditSortDialog;
 import records.gui.EntireTableSelection;
 import records.gui.HideColumnsDialog;
+import records.gui.PickManualEditIdentifierDialog;
 import records.gui.PickTableDialog;
 import records.gui.TableListDialog;
 import records.gui.View;
@@ -37,6 +43,7 @@ import records.transformations.Check;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
+import records.transformations.ManualEdit;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.expression.Expression;
@@ -55,6 +62,7 @@ import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,7 +110,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 {
                     if (mouseButton == MouseButton.PRIMARY)
                     {
-                        edit_Sort(screenPoint, parent, sort);
+                        editSort(screenPoint, parent, sort);
                     }
                 }
             });
@@ -311,16 +319,42 @@ class TableHat extends FloatingItem<TableHatDisplay>
         this.tableDisplay = Utility.later(tableDisplay);
     }
 
-    protected static void edit_Sort(@Nullable Point2D screenPoint, View parent, Sort sort)
+    protected static void editSort(@Nullable Point2D screenPoint, View parent, Sort sort)
     {
         new EditSortDialog(parent, screenPoint,
             parent.getManager().getSingleTableOrNull(sort.getSource()),
             sort,
-            sort.getSortBy()).showAndWait().ifPresent(newSort -> {
+            sort.getSortBy().isEmpty() ? null : sort.getSortBy()).showAndWait().ifPresent(newSort -> {
                 Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
                     parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
                 ));
         });
+    }
+    
+    protected static void editManualEdit(View parent, ManualEdit manualEdit)
+    {
+        new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), hasColumn(manualEdit.getSrcTable())).showAndWait().ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
+            ManualEdit swapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
+            parent.getManager().edit(manualEdit.getId(), () -> swapped, TableAndColumnRenames.EMPTY);
+        })));
+    }
+
+    private static Predicate<ColumnId> hasColumn(@Nullable Table srcTable)
+    {
+        if (srcTable != null)
+        {
+            try
+            {
+                RecordSet rs = srcTable.getData();
+                return rs.getColumnIds()::contains;
+            }
+            catch (InternalException | UserException e)
+            {
+                if (e instanceof InternalException)
+                    Log.log(e);
+            }
+        }
+        return c -> false;
     }
 
     @Override

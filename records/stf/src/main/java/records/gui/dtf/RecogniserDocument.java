@@ -1,18 +1,32 @@
 package records.gui.dtf;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.error.InternalException;
 import records.gui.dtf.Recogniser.ErrorDetails;
 import records.gui.dtf.Recogniser.ParseProgress;
 import records.gui.dtf.Recogniser.SuccessDetails;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
+import utility.FunctionInt;
 import utility.Pair;
+import utility.SimulationSupplier;
+import utility.SimulationSupplierInt;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.util.OptionalInt;
 import java.util.Set;
@@ -24,19 +38,21 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private final FXPlatformBiConsumer<String, @Nullable V> saveChange;
     private final FXPlatformRunnable relinquishFocus;
     private final Class<V> itemClass;
+    private final @Nullable SimulationSupplierInt<Boolean> checkEditable;
     private OptionalInt curErrorPosition = OptionalInt.empty();
     private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
     private @Nullable FXPlatformRunnable onFocusLost;
     private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
-    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformRunnable relinquishFocus)
+    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformRunnable relinquishFocus)
     {
         super(initialContent);
         this.itemClass = valueClass;
         this.recogniser = recogniser;
         this.saveChange = saveChange;
         this.relinquishFocus = relinquishFocus;
+        this.checkEditable = checkStartEdit;
         recognise(false);
         valueOnFocusGain = initialContent;
     }
@@ -44,6 +60,34 @@ public final class RecogniserDocument<V> extends DisplayDocument
     @Override
     void focusChanged(boolean focused)
     {
+        if (focused && checkEditable != null)
+        {
+            @Nullable SimulationSupplierInt<Boolean> checkEditableFinal = checkEditable;
+            Workers.onWorkerThread("Check editable", Priority.FETCH, () -> {
+                try
+                {
+                    if (!checkEditableFinal.get())
+                    {
+                        // Cancel the edit:
+                        Platform.runLater(() -> {
+                            replaceText(0, getLength(), valueOnFocusGain);
+                            defocus();
+                            Alert alert = new Alert(AlertType.ERROR, "Cannot edit value on a row with an error in the identifier column.", ButtonType.OK);
+                            alert.getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
+                            alert.showAndWait();
+                            // Restore focus to reasonable position:
+                            defocus();
+                        });
+                    }
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    // Just have to ignore...
+                }
+            });
+        }
+        
         super.focusChanged(focused);
         if (!focused)
         {
@@ -88,7 +132,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
 
     private static Stream<Pair<Set<String>, String>> makeStyledSpans(OptionalInt curErrorPosition, String text)
     {
-        if (!curErrorPosition.isPresent())
+        if (!curErrorPosition.isPresent() || curErrorPosition.getAsInt() >= text.length())
         {
             return Stream.of(new Pair<>(ImmutableSet.of(), text));
         }

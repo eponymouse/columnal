@@ -344,6 +344,7 @@ public class GUI
     {
         RadioButton item = new RadioButton(TranslationUtility.getString(labelKey));
         item.setToggleGroup(toggleGroup);
+        item.getStyleClass().add(makeId(labelKey));
         item.getStyleClass().addAll(styleClasses);
         return item;
     }

@@ -221,7 +221,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
     private <@NonNull @Value T extends @NonNull @Value Object> RecogniserDocument<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, null, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }

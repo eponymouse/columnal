@@ -4,22 +4,18 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import org.testfx.api.FxRobotInterface;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
-import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
-import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -27,10 +23,8 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.assertTrue;
@@ -126,7 +120,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
 
         for (int i = 0; i < columns.size(); i++)
         {
-            TestUtil.assertValueListEitherEqual("Column " + columns.get(i).name, columns.get(i).data, TestUtil.getCollapsedData(actualColumns.get(i).getType(), columns.get(i).data.size()));
+            TestUtil.assertValueListEitherEqual("Column " + columns.get(i).name, columns.get(i).data, TestUtil.getAllCollapsedData(actualColumns.get(i).getType(), columns.get(i).data.size()));
         }
     }
 }

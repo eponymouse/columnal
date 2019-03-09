@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Column;
+import records.data.Column.EditableStatus;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -44,15 +45,8 @@ import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.TaggedValue;
-import utility.Utility;
+import utility.*;
 import utility.Utility.ListEx;
-import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -152,7 +146,7 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
+        return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify)) {
             @Override
             protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
             {
@@ -360,11 +354,11 @@ public class TableDisplayUtility
         }
         
         @OnThread(Tag.Any)
-        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
+        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
-            MakeEditorKit<@Value T> makeEditorKit = (int rowIndex, Pair<String, @Nullable T> value, FXPlatformConsumer<CellPosition> relinquishFocus) -> {
+            MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable T> value, FXPlatformConsumer<CellPosition> relinquishFocus) -> {
                 FXPlatformBiConsumer<String, @Nullable @Value T> saveChange = (String s, @Value T v) -> {};
-                if (isEditable)
+                if (editableStatus.editable)
                     saveChange = new FXPlatformBiConsumer<String, @Nullable @Value T>()
                     {
                         @Override
@@ -376,9 +370,11 @@ public class TableDisplayUtility
                     };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
                 Document editorKit;
-                if (isEditable)
+                if (editableStatus.editable)
                 {
-                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                    SimulationSupplierInt<Boolean> checkEditable = makeCheckRow(editableStatus, rowIndex);
+
+                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, recogniser, checkEditable, saveChange, relinquishFocusRunnable); // stfStyles));
                 }
                 else
                 {
@@ -388,13 +384,27 @@ public class TableDisplayUtility
             };
             return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
         }
+
+        private @Nullable SimulationSupplierInt<Boolean> makeCheckRow(EditableStatus editableStatus, @TableDataRowIndex int rowIndex)
+        {
+            SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkRowEditable = editableStatus.checkEditable;
+            return checkRowEditable == null ? null : new SimulationSupplierInt<Boolean>()
+            {
+                @Override
+                @OnThread(Tag.Simulation)
+                public Boolean get() throws InternalException
+                {
+                    return checkRowEditable.apply(rowIndex);
+                }
+            };
+        }
     }
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
+    public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), getTablePos, onModify);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue), getTablePos, onModify);
     }
 
     @OnThread(Tag.Any)

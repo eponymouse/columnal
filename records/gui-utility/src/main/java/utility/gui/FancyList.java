@@ -420,7 +420,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         return index < 0 ? false : selection.get(index);
     }
     
-    protected void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
+    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
     {
         cells.add(new Cell(content, editImmediately));
         updateChildren();
