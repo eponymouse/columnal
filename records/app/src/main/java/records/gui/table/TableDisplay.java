@@ -1,15 +1,20 @@
 package records.gui.table;
 
+import annotation.qual.Value;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -63,6 +68,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Filter;
 import records.transformations.ManualEdit;
+import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
@@ -762,6 +768,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public CellPosition getMostRecentPosition()
     {
         return mostRecentBounds.get();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value)
+    {
+        Alert alert = new Alert(AlertType.CONFIRMATION, "Transformation results cannot be edited.  Add an edit transformation to allow editing of specific items?", ButtonType.YES, ButtonType.CANCEL);
+        alert.getDialogPane().lookupButton(ButtonType.YES).getStyleClass().add("yes-button");
+        if (alert.showAndWait().equals(Optional.of(ButtonType.YES)))
+        {
+            CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
+            Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Creating edit", () -> {
+                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().edit(null, () -> new ManualEdit(parent.getManager(), new InitialLoadDetails(null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))), null);
+                Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit));
+            }));
+        }
     }
 
     public ColumnHeaderOps getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)

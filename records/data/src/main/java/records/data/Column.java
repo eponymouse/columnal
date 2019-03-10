@@ -111,7 +111,7 @@ public abstract class Column
     @OnThread(Tag.Any)
     public EditableStatus getEditableStatus()
     {
-        return new EditableStatus(false, null);
+        return new EditableStatus(true, null);
     }
 
     // For testing: return copy of column with length trimmed to shrunkLength

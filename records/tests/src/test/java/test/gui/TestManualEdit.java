@@ -128,8 +128,33 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // There's two ways to create a new manual edit.  One is to just create it using the menu.  The other is to try to edit an existing transformation, and follow the popup which appears
         if (r.nextBoolean())
         {
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, makeRowIndex.get(), makeColIndex.get());
-            fail("TODO edit the sort");
+            @TableDataRowIndex int row = makeRowIndex.get();
+            @TableDataColIndex int col = makeColIndex.get();
+
+            @Nullable @Value Object replaceKey;
+            if (replaceKeyColumn == null)
+                replaceKey = DataTypeUtility.value(new BigDecimal(row));
+            else
+                replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
+
+            @Value Object value = columnTypes.get(col).makeValue();
+            if (replaceKey != null)
+            {
+                replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
+                        .put(new ComparableValue(replaceKey), new ComparableValue(value));
+            }
+            
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
+            push(KeyCode.ENTER);
+
+            enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
+            push(KeyCode.ENTER);
+            
+            assertTrue("Alert should be showing asking whether to create manual edit", lookup(".alert").tryQuery().isPresent());
+            clickOn(".yes-button");
+            sleep(500);
+            assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
+            // Now fall through to fill in same details as creating directly...
         }
         else
         {
@@ -181,7 +206,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
                         .put(new ComparableValue(replaceKey), new ComparableValue(value));
             }
-            
+
+            assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEdit.getId(), row, col);
             sleep(500);
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());

@@ -94,11 +94,11 @@ public class Filter extends Transformation
                         @SuppressWarnings({"nullness", "initialization"})
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                         {
-                            return c.getType().copyReorder((i, prog) ->
+                            return addManualEditSet(getName(), c.getType().copyReorder((i, prog) ->
                             {
                                 fillIndexMapTo(i, columnLookup, data, prog);
                                 return DataTypeUtility.value(indexMap.getInt(i));
-                            });
+                            }));
                         }
 
                         @Override

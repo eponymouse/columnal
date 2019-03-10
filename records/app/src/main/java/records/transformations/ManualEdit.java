@@ -26,6 +26,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
@@ -40,6 +41,7 @@ import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -196,7 +198,7 @@ edit : editHeader editColumn*;
                 {
                     r.raw("REPLACEMENT");
                     r.data(keyType.fromCollapsed((i, prog) -> k.getValue()), 0);
-                    r.data(crv.dataType.fromCollapsed((i, prog) -> v.getValue()), 0);
+                    r.data(crv.dataType.fromCollapsed((i, prog) -> v.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, val -> val.getValue())), 0);
                     r.nl();
                 }
                 catch (InternalException | UserException e)
@@ -252,10 +254,10 @@ edit : editHeader editColumn*;
         
         // Need to go through existing replacements and find the value in the new column:
 
-        Collector<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>, ?, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>>> collector = Multimaps.<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>, ComparableValue, Pair<ColumnId, ComparableValue>, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>>>toMultimap(p -> p.getFirst(), p -> p.getSecond(), () -> TreeMultimap.<ComparableValue, Pair<ColumnId, ComparableValue>>create(Comparator.<ComparableValue>naturalOrder(), Pair.<ColumnId, ComparableValue>comparator()));
+        Collector<Pair<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>, ?, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>> collector = Multimaps.<Pair<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>, ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>, TreeMultimap<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>>toMultimap(p -> p.getFirst(), p -> p.getSecond(), () -> TreeMultimap.<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>create(Comparator.<ComparableValue>naturalOrder(), Pair.<ColumnId, ComparableEither<String, ComparableValue>>comparator()));
         
         // Each item is (value in identifier column, (target column, value to change to))
-        TreeMultimap<ComparableValue, Pair<ColumnId, ComparableValue>> toFind = replacements.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>>flatMap(e -> e.getValue().replacementValues.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableValue>>>map(rv -> new Pair<ComparableValue, Pair<ColumnId, ComparableValue>>(rv.getKey(), new Pair<ColumnId, ComparableValue>(e.getKey(), rv.getValue())))).collect(collector);
+        TreeMultimap<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>> toFind = replacements.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>>flatMap(e -> e.getValue().replacementValues.entrySet().stream().<Pair<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>>map(rv -> new Pair<ComparableValue, Pair<ColumnId, ComparableEither<String, ComparableValue>>>(rv.getKey(), new Pair<ColumnId, ComparableEither<String, ComparableValue>>(e.getKey(), rv.getValue())))).collect(collector);
 
         HashMap<ColumnId, ColumnReplacementValues> newReplacements = new HashMap<>();
         
@@ -267,10 +269,10 @@ edit : editHeader editColumn*;
             ComparableValue existingKeyValue = keyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(keyColumn.getFirst().getType().getCollapsed(row));
             
             ComparableValue newKeyValue = newKeyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(newKeyColumn.getType().getCollapsed(row));
-            NavigableSet<Pair<ColumnId, ComparableValue>> matchingValues = toFind.get(existingKeyValue);
+            NavigableSet<Pair<ColumnId, ComparableEither<String, ComparableValue>>> matchingValues = toFind.get(existingKeyValue);
             if (!matchingValues.isEmpty())
             {
-                for (Pair<ColumnId, ComparableValue> matchingValue : matchingValues)
+                for (Pair<ColumnId, ComparableEither<String, ComparableValue>> matchingValue : matchingValues)
                 {
                     Column column = src.getData().getColumn(matchingValue.getFirst());
                     DataType columnType = column.getType();
@@ -335,9 +337,9 @@ edit : editHeader editColumn*;
                 else
                 {
                     dataType = originalType.fromCollapsed((i, prog) -> {
-                        ComparableValue replaced = columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
+                        ComparableEither<String, ComparableValue> replaced = columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
                         if (replaced != null)
-                            return replaced.getValue();
+                            return replaced.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, v -> v.getValue());
                         else
                             return originalType.getCollapsed(i);
                             // TODO override set as well as get
@@ -445,11 +447,11 @@ edit : editHeader editColumn*;
         
         // The key is either a value in ManualEdit.this.replacementKey column
         // or if that is null, it's a row number.
-        // Keys must be comparable for TreeMap, values are to
+        // Keys must be comparable for TreeMap, values are comparable to
         // help with equals definition.
-        private final TreeMap<ComparableValue, ComparableValue> replacementValues;
+        private final TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> replacementValues;
 
-        public ColumnReplacementValues(DataType dataType, List<Pair<@Value Object, @Value Object>> replacementValues)
+        public ColumnReplacementValues(DataType dataType, List<Pair<@Value Object, Either<String, @Value Object>>> replacementValues)
         {
             this.dataType = dataType;
             this.replacementValues = new TreeMap<>();
@@ -500,11 +502,11 @@ edit : editHeader editColumn*;
             {
                 ColumnId columnId = new ColumnId(editColumnContext.editColumnHeader().column.getText());
                 DataType dataType = mgr.getTypeManager().loadTypeUse(editColumnContext.editColumnHeader().type().TYPE().getText());
-                List<Pair<@Value Object, @Value Object>> replacementValues = new ArrayList<>();
+                List<Pair<@Value Object, Either<String, @Value Object>>> replacementValues = new ArrayList<>();
                 for (EditColumnDataContext editColumnDatum : editColumnContext.editColumnData())
                 {
                     @Value Object key = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(0).getText(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
-                    @Value Object value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(1).getText(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(dataType, p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
+                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(1).getText(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(dataType, p, false));
                     replacementValues.add(new Pair<>(key, value));
                 }
                 

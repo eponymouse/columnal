@@ -140,4 +140,10 @@ public final class TextFileColumn extends Column
         // If we are direct from text file, we must be new:
         return true;
     }
+
+    @OnThread(Tag.Any)
+    public EditableStatus getEditableStatus()
+    {
+        return new EditableStatus(false, null);
+    }
 }

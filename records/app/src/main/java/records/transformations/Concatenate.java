@@ -183,7 +183,7 @@ public class Concatenate extends Transformation
                         {
                             if (type == null)
                             {
-                                type = DataTypeValue.copySeveral(colDetails.getValue().dataType, (concatenatedRow, prog) ->
+                                type = addManualEditSet(getName(), DataTypeValue.copySeveral(colDetails.getValue().dataType, (concatenatedRow, prog) ->
                                 {
                                     for (int srcTableIndex = 0; srcTableIndex < ends.size(); srcTableIndex++)
                                     {
@@ -209,7 +209,7 @@ public class Concatenate extends Transformation
                                         }
                                     }
                                     throw new InternalException("Attempting to access beyond end of concatenated tables: index" + (concatenatedRow + 1) + " but only length " + ends.get(ends.size() - 1));
-                                });
+                                }));
                             }
                             return type;
                         }
@@ -231,7 +231,7 @@ public class Concatenate extends Transformation
                     @Override
                     public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                     {
-                        return DataTypeValue.text((concatenatedRow, prog) -> {
+                        return addManualEditSet(getName(), DataTypeValue.text((concatenatedRow, prog) -> {
                             for (int srcTableIndex = 0; srcTableIndex < ends.size(); srcTableIndex++)
                             {
                                 if (concatenatedRow < ends.get(srcTableIndex))
@@ -240,7 +240,7 @@ public class Concatenate extends Transformation
                                 }
                             }
                             throw new InternalException("Attempting to access beyond end of concatenated tables: index" + (concatenatedRow + 1) + " but only length " + ends.get(ends.size() - 1));
-                        });
+                        }));
                     }
 
                     @Override

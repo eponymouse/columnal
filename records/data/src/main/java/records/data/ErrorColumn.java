@@ -43,4 +43,10 @@ public class ErrorColumn extends Column
     {
         return false;
     }
+
+    @OnThread(Tag.Any)
+    public EditableStatus getEditableStatus()
+    {
+        return new EditableStatus(false, null);
+    }
 }

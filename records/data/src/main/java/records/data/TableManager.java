@@ -7,6 +7,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.Saver;
 import records.data.Table.TableDisplayBase;
@@ -315,7 +316,7 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId affectedTableId, @Nullable TableMaker makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
+    public @PolyNull Table edit(@Nullable TableId affectedTableId, @PolyNull TableMaker makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
     {
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;
@@ -368,6 +369,8 @@ public class TableManager
             savedToReRun.complete(reRun);
         }
 
+        @SuppressWarnings("nullness")
+        @PolyNull Table newTable = null;
         if (makeReplacement != null)
         {
             synchronized (this)
@@ -375,12 +378,15 @@ public class TableManager
                 if (affectedTableId != null)
                     removeAndSerialise(affectedTableId, new Table.BlankSaver(), renames);
             }
-            record(makeReplacement.make());
+            newTable = makeReplacement.make();
+            record(newTable);
         }
 
         savedToReRun.thenAccept(ss -> {
             reAddAll(ss);
         });
+        
+        return newTable;
     }
 
     public void fetchIdsAndEdges(Map<TableId, Collection<TableId>> edges, HashSet<TableId> allIds)

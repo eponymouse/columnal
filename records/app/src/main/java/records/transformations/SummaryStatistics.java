@@ -216,7 +216,7 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public DataTypeValue getType() throws InternalException, UserException
                     {
-                        return orig.getType().fromCollapsed(this::getWithProgress);
+                        return addManualEditSet(getName(), orig.getType().fromCollapsed(this::getWithProgress));
                     }
 
                     @Override

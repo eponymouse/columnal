@@ -168,11 +168,11 @@ public class Sort extends Transformation
                     @SuppressWarnings({"nullness", "initialization"})
                     public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                     {
-                        return c.getType().copyReorder((i, prog) ->
+                        return addManualEditSet(getName(), c.getType().copyReorder((i, prog) ->
                         {
                             fillSortMapTo(i, prog);
                             return DataTypeUtility.value(sortMap.getInt(i));
-                        });
+                        }));
                     }
 
                     @Override

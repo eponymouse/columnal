@@ -22,6 +22,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.datatype.DataType;
 import records.gui.DataDisplay;
 import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
@@ -287,6 +288,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     public @OnThread(Tag.Any) CellPosition getMostRecentPosition()
     {
         return mostRecentBounds.get();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, Object> value)
+    {
+        // Not applicable for CheckDisplay, so do nothing
     }
 
     @Override

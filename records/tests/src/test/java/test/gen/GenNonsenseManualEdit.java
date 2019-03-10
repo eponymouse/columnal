@@ -21,6 +21,7 @@ import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 
 import java.util.HashMap;
@@ -58,7 +59,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
                 TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(random, status);
                 mgr.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
               
-                ImmutableList<Pair<@Value Object, @Value Object>> ps = TestUtil.<Pair<@Value Object, @Value Object>>makeList(random, 1, 5, () -> new Pair<>(replacingColumn.makeValue(), typeAndValueGen.makeValue()));
+                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = TestUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(replacingColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
                 
                 replacements.put(columnId, new ColumnReplacementValues(typeAndValueGen.getType(), ps));
             }

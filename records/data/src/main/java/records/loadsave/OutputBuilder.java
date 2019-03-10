@@ -324,12 +324,13 @@ public class OutputBuilder
                     if (!alreadyRoundBracketed)
                         raw("(");
                     boolean first = true;
-                    for (DataType dataType : types)
+                    for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
                     {
+                        DataType dataType = types.get(tupleIndex);
                         if (!first)
                             raw(",");
                         first = false;
-                        dataValue(dataType, g.get(index));
+                        dataValue(dataType, g.get(index)[tupleIndex]);
                     }
                     if (!alreadyRoundBracketed)
                         raw(")");

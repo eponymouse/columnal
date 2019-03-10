@@ -498,4 +498,80 @@ public final class DataTypeValue extends DataType
             return innerGet.getWithProgress(src.getSecond(), prog == null ? null : prog);
         };
     }
+    
+    public static interface OverrideSet
+    {
+        public void set(int index, Either<String, Object> value);
+    }
+
+    /**
+     * A copy of this DataTypeValue with the given set operation
+     */
+    public DataTypeValue withSet(OverrideSet set) throws InternalException
+    {
+        return applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
+        {
+            private <T> GetValue<T> overrideSet(GetValue<T> g)
+            {
+                return new GetValue<T>()
+                {
+                    @NonNull
+                    @Override
+                    public T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    {
+                        return g.getWithProgress(index, progressListener);
+                    }
+
+                    @Override
+                    @SuppressWarnings("nullness") // I guess checker thinks T could be @Nullable
+                    public @OnThread(Tag.Simulation) void set(int index, Either<String, T> value) throws InternalException, UserException
+                    {
+                        set.set(index, value.<Object>map(t -> t));
+                    }
+                };
+            }
+            
+            @Override
+            public DataTypeValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
+            {
+                return DataTypeValue.number(displayInfo, overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue text(GetValue<@Value String> g) throws InternalException
+            {
+                return DataTypeValue.text(overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue bool(GetValue<@Value Boolean> g) throws InternalException
+            {
+                return DataTypeValue.bool(overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
+            {
+                return DataTypeValue.date(dateTimeInfo, overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            {
+                return DataTypeValue.tagged(typeName, typeVars, tagTypes, overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException
+            {
+                return DataTypeValue.tuple(types, overrideSet(g));
+            }
+
+            @Override
+            public DataTypeValue array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            {
+                return DataTypeValue.arrayV(inner, overrideSet(g));
+            }
+        });
+    }
 }

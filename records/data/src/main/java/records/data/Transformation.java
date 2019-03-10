@@ -3,14 +3,20 @@ package records.data;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import javafx.application.Platform;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.OverrideSet;
 import records.error.InternalException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import records.loadsave.OutputBuilder.QuoteBehaviour;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.io.File;
@@ -121,5 +127,23 @@ public abstract class Transformation extends Table
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         return new TableOperations(getManager().getRenameTableOperation(this), c -> null, null, null, null);
+    }
+    
+    @OnThread(Tag.Any)
+    protected final DataTypeValue addManualEditSet(@UnknownInitialization(Transformation.class) Transformation this, ColumnId columnId, DataTypeValue original) throws InternalException
+    {
+        return original.withSet(new OverrideSet()
+        {
+            @Override
+            public void set(int index, Either<String, Object> value)
+            {
+                // Need to ask the user if they want a manual edit
+                Platform.runLater(() -> {
+                    TableDisplayBase display = Utility.later(Transformation.this).getDisplay();
+                    if (display != null)
+                        display.promptForTransformationEdit(index, new Pair<>(columnId, original), value);
+                });
+            }
+        });
     }
 }

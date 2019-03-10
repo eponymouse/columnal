@@ -23,6 +23,7 @@ import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -339,6 +340,17 @@ public abstract class Table
 
         @OnThread(Tag.FXPlatform)
         public CellPosition getBottomRightIncl();
+
+        /**
+         * The user has made an edit in a transformation;
+         * prompt them to ask if they want a manual edit, and
+         * if yes, pop it in.
+         * @param index The edited row index
+         * @param column The edited column name and type
+         * @param value The resulting value.
+         */
+        @OnThread(Tag.FXPlatform)
+        void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value);
     }
 
     @OnThread(Tag.Any)

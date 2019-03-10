@@ -99,7 +99,7 @@ public class Calculate extends Transformation
                         @Override
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                         {
-                            return c.getType();
+                            return addManualEditSet(getName(), c.getType());
                         }
 
                         @Override
