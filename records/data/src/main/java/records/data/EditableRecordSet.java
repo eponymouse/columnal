@@ -162,7 +162,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public EditableColumn array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 List<Either<String, ListEx>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)

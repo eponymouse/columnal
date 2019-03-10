@@ -40,61 +40,56 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     private final DataTypeValue type;
 
     // Constructor for array version
-    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable BeforeGet<ArrayColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
+    public ArrayColumnStorage(DataType innerToCopy, @Nullable BeforeGet<ArrayColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
         super(isImmediateData);
-        if (innerToCopy == null)
-            this.type = DataTypeValue.arrayV();
-        else
+        DataType innerFinal = innerToCopy;
+        this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<Pair<Integer, DataTypeValue>>()
         {
-            DataType innerFinal = innerToCopy;
-            this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<Pair<Integer, DataTypeValue>>()
+            @Override
+            public Pair<Integer, DataTypeValue> _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
             {
-                @Override
-                public Pair<Integer, DataTypeValue> _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                try
                 {
-                    try
+                    ListEx list = storage.get(i);
+                    return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
+                }
+                catch (ClassCastException e)
+                {
+                    throw new InternalException("Incorrect type in array storage", e);
+                }
+            }
+
+            @Override
+            public void _beforeGet(int i, @Nullable ProgressListener prog) throws InternalException, UserException
+            {
+                if (beforeGet != null)
+                    beforeGet.beforeGet(Utility.later(ArrayColumnStorage.this), i, prog);
+            }
+
+            @Override
+            public void _set(int index, @Nullable Pair<Integer, DataTypeValue> v) throws InternalException, UserException
+            {
+                storage.set(index, new ListEx()
+                {
+                    @Override
+                    public int size() throws InternalException, UserException
                     {
-                        ListEx list = storage.get(i);
-                        return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
+                        if (v == null)
+                            throw new InternalException("Attempting to fetch value for error row");
+                        return v.getFirst();
                     }
-                    catch (ClassCastException e)
+
+                    @Override
+                    public @Value Object get(int index) throws InternalException, UserException
                     {
-                        throw new InternalException("Incorrect type in array storage", e);
+                        if (v == null)
+                            throw new InternalException("Attempting to fetch value for error row");
+                        return v.getSecond().getCollapsed(index);
                     }
-                }
-
-                @Override
-                public void _beforeGet(int i, @Nullable ProgressListener prog) throws InternalException, UserException
-                {
-                    if (beforeGet != null)
-                        beforeGet.beforeGet(Utility.later(ArrayColumnStorage.this), i, prog);
-                }
-
-                @Override
-                public void _set(int index, @Nullable Pair<Integer, DataTypeValue> v) throws InternalException, UserException
-                {
-                    storage.set(index, new ListEx()
-                    {
-                        @Override
-                        public int size() throws InternalException, UserException
-                        {
-                            if (v == null)
-                                throw new InternalException("Attempting to fetch value for error row");
-                            return v.getFirst();
-                        }
-
-                        @Override
-                        public @Value Object get(int index) throws InternalException, UserException
-                        {
-                            if (v == null)
-                                throw new InternalException("Attempting to fetch value for error row");
-                            return v.getSecond().getCollapsed(index);
-                        }
-                    });
-                }
-            });
-        }
+                });
+            }
+        });
     }
 
     @Override

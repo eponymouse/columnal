@@ -173,7 +173,7 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
+            public ColumnStorage<?> array(DataType inner) throws InternalException
             {
                 return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet, isImmediateData);
             }

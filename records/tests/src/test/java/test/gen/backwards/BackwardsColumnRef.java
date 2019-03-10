@@ -92,7 +92,7 @@ public class BackwardsColumnRef extends BackwardsProvider
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public Column array(@Nullable DataType inner) throws InternalException, UserException
+                public Column array(DataType inner) throws InternalException, UserException
                 {
                     return new MemoryArrayColumn(rs, name, inner, Collections.singletonList(Either.right((ListEx)value)), new ListExList(Collections.emptyList()));
                 }

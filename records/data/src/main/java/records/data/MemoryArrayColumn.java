@@ -25,7 +25,7 @@ public class MemoryArrayColumn extends EditableColumn
     private final ArrayColumnStorage storage;
     private final @Value ListEx defaultValue;
 
-    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<Either<String, ListEx>> values, ListEx defaultValue) throws InternalException
+    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<Either<String, ListEx>> values, ListEx defaultValue) throws InternalException
     {
         super(recordSet, title);
         this.defaultValue = DataTypeUtility.value(defaultValue);

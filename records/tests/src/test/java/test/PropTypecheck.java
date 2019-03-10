@@ -309,12 +309,9 @@ public class PropTypecheck
             }
 
             @Override
-            public DataType array(@Nullable DataType inner) throws InternalException, UserException
+            public DataType array(DataType inner) throws InternalException, UserException
             {
-                if (inner == null || r.nextInt(3) == 0)
-                    return DataType.array();
-                else
-                    return DataType.array(blankArray(inner, r));
+                return DataType.array(blankArray(inner, r));
             }
         });
     }
@@ -360,12 +357,9 @@ public class PropTypecheck
             }
 
             @Override
-            public DataTypeValue array(@Nullable DataType inner) throws InternalException, UserException
+            public DataTypeValue array(DataType inner) throws InternalException, UserException
             {
-                if (inner == null)
-                    return DataTypeValue.arrayV();
-                else
-                    return DataTypeValue.arrayV(inner, (i, prog) -> {throw new InternalException("");});
+                return DataTypeValue.arrayV(inner, (i, prog) -> {throw new InternalException("");});
             }
         });
     }

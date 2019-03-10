@@ -258,15 +258,12 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue array(@Nullable DataType inner) throws InternalException
+            public DataTypeValue array(DataType inner) throws InternalException
             {
                 GetValue<@Value ListEx> getList = castTo(ListEx.class);
-                if (inner == null)
-                    return DataTypeValue.arrayV();
-                DataType innerFinal = inner;
                 return DataTypeValue.arrayV(inner, (i, prog) -> {
                     @NonNull @Value ListEx list = getList.getWithProgress(i, prog);
-                    return new Pair<>(list.size(), innerFinal.fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
+                    return new Pair<>(list.size(), inner.fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
                 });
             }
         });
@@ -322,11 +319,6 @@ public class DataType implements StyledShowable
             this.typeVariableSubstitutions = typeVariableSubstitutions;
             this.tagTypes = tagTypes;
         }
-    }
-    
-    public static DataType array()
-    {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList());
     }
 
     public static DataType array(DataType inner)
@@ -1028,23 +1020,13 @@ public class DataType implements StyledShowable
                 }
 
                 @Override
-                public @Nullable DataType array(DataType a, DataType b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException
+                public @Nullable DataType array(DataType a, DataType b, DataType innerA, DataType innerB) throws InternalException, UserException
                 {
-                    @Nullable DataType innerR;
-                    // If innerA is null, means empty array:
-                    if (innerA == null)
-                        innerR = innerB;
-                    // Same for innerB
-                    else if (innerB == null)
-                        innerR = innerA;
-                    else
-                    {
-                        innerR = checkSame(innerA, innerB, onError);
+                    DataType innerR = checkSame(innerA, innerB, onError);
                         // At this point, if innerR is null, it means error, not empty array, so we must return null:
-                        if (innerR == null)
-                            return null;
-                    }
-                    return innerR == null ? DataType.array() : DataType.array(innerR);
+                    if (innerR == null)
+                        return null;
+                    return DataType.array(innerR);
                 }
 
                 @Override
@@ -2075,8 +2057,7 @@ public class DataType implements StyledShowable
 
         R tagged(T a, T b, TypeId typeNameA, ImmutableList<Either<Unit, DataType>> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<Either<Unit, DataType>> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
         R tuple(T a, T b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException;
-        // If null, array is empty and thus of unknown type
-        R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
+        R array(T a, T b, DataType innerA, DataType innerB) throws InternalException, UserException;
 
         R differentKind(T a, T b) throws InternalException, UserException;
     }

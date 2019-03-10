@@ -77,12 +77,6 @@ public final class DataTypeValue extends DataType
         return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null, null);
     }
 
-    // Makes an empty array type, with empty content.
-    public static DataTypeValue arrayV()
-    {
-        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.emptyList(), null, null, null, null, null, null, null);
-    }
-
     public static DataTypeValue arrayV(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
     {
         return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, null, getContent);
@@ -272,8 +266,8 @@ public final class DataTypeValue extends DataType
         R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
-        // of each entry (but is null when the array is empty)
-        R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
+        // of each entry
+        R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
     }
 
     public static interface DataTypeVisitorGet<R> extends DataTypeVisitorGetEx<R, UserException>
