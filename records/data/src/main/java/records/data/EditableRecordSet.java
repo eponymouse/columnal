@@ -139,19 +139,14 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+            public EditableColumn tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
             {
                 List<Either<String, @Value Object @Value []>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     try
                     {
-                        @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
-                        for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
-                        {
-                            array[tupleIndex] = types.get(tupleIndex).getCollapsed(index);
-                        }
-                        r.add(Either.right(array));
+                        r.add(Either.right(Utility.castTuple(g.get(index), types.size())));
                     }
                     catch (InvalidImmediateValueException e)
                     {

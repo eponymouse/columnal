@@ -214,10 +214,10 @@ public class PropTypecheck
         
         List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType type = DataType.tuple(all);
-        DataTypeValue typeV = DataTypeValue.tupleV(Utility.mapListEx(all, t -> toValue(t)));
+        DataTypeValue typeV = DataTypeValue.tuple(all,(i, prog) -> {throw new InternalException("");});
         List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
-        DataTypeValue typeSV = DataTypeValue.tupleV(Utility.mapListEx(allSwapped, t -> toValue(t)));
+        DataTypeValue typeSV = DataTypeValue.tuple(allSwapped, (i, prog) -> {throw new InternalException("");});
         // Swapped is same as unswapped only if typeA and typeB are same:
         checkSameRelations(typeMaker.getTypeManager(), type, typeS, typeV, typeSV, DataType.checkSame(typeA, typeB, s -> {}) != null);
     }
@@ -356,7 +356,7 @@ public class PropTypecheck
             @Override
             public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return DataTypeValue.tupleV(Utility.mapListEx(inner, t -> toValue(t)));
+                return DataTypeValue.tuple(inner, (i, prog) -> {throw new InternalException("");});
             }
 
             @Override

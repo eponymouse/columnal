@@ -1,6 +1,7 @@
 package records.data;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
@@ -36,9 +37,14 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         return errorEntries.get(row);
     }
     
-    protected final void setError(int row, String error)
+    protected final void setError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row, String error)
     {
         errorEntries.put(row, error);
+    }
+    
+    protected final void unsetError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row)
+    {
+        errorEntries.remove(row);
     }
     
     private final HashMap<Integer, String> mapErrors(Function<Integer, @Nullable Integer> rowChange)

@@ -520,44 +520,11 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> tuple(ImmutableList<DataTypeValue> types) throws InternalException
+            public GetValueAndComponent<?> tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> tupleGet) throws InternalException
             {
-                List<GetValueAndComponent<?>> gvacs = new ArrayList<>(types.size());
-                for (DataTypeValue type : types)
-                {
-                    gvacs.add(valueAndComponent(type));
-                }
-                GetValue<@Value Object @Value[]> tupleGet = new GetValue<@Value Object @Value[]>()
-                {
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public @Value Object @Value @NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-                    {
-                        @Value Object[] r = new @Value Object[types.size()];
-                        for (int i = 0; i < r.length; i++)
-                        {
-                            r[i] = gvacs.get(i).g.getWithProgress(index, progressListener);
-                        }
-                        return DataTypeUtility.value(r);
-                    }
+                ImmutableList<Recogniser<@Value ?>> recognisers = Utility.<DataType, Recogniser<@Value ?>>mapListInt(types, t -> recogniser(t).recogniser);
 
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    @SuppressWarnings("unchecked")
-                    public void set(int index, Either<String, @Value Object @Value[]> errOrValue) throws InternalException, UserException
-                    {
-                        
-                        for (int i = 0; i < gvacs.size(); i++)
-                        {
-                            int iFinal = i;
-                            // Cast because we can't express type safety:
-                            ((GetValue)gvacs.get(i).g).set(index, errOrValue.map(v -> v[iFinal]));
-                        }
-                    }
-                };
-
-
-                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
+                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(recognisers));
             }
 
             @Override

@@ -34,12 +34,13 @@ public final class DataTypeValue extends DataType
     private final @Nullable GetValue<@Value TemporalAccessor> getDate;
     private final @Nullable GetValue<@Value Boolean> getBoolean;
     private final @Nullable GetValue<Integer> getTag;
+    private final @Nullable GetValue<@Value Object @Value[]> getTuple;
     // Returns the length of the array at that index and accessor:
     private final @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent;
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
     {
         super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes);
         this.getNumber = getNumber;
@@ -47,48 +48,49 @@ public final class DataTypeValue extends DataType
         this.getDate = getDate;
         this.getBoolean = getBoolean;
         this.getTag = getTag;
+        this.getTuple = getTuple;
         this.getArrayContent = getArrayContent;
     }
     
     public static DataTypeValue bool(GetValue<@Value Boolean> getValue)
     {
-        return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null);
+        return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null, null);
     }
 
     public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.<TagType<DataType>>toImmutableList())), null, null, null, null, null, getTag, null);
+        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.<TagType<DataType>>toImmutableList())), null, null, null, null, null, getTag, null, null);
     }
 
     public static DataTypeValue text(GetValue<@Value String> getText)
     {
-        return new DataTypeValue(Kind.TEXT, null, null, null, null, null, getText, null, null, null, null);
+        return new DataTypeValue(Kind.TEXT, null, null, null, null, null, getText, null, null, null, null, null);
     }
 
     public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> getDate)
     {
-        return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, null, getDate, null, null, null);
+        return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, null, getDate, null, null, null, null);
     }
 
     public static DataTypeValue number(NumberInfo numberInfo, GetValue<@Value Number> getNumber)
     {
-        return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null);
+        return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null, null);
     }
 
     // Makes an empty array type, with empty content.
     public static DataTypeValue arrayV()
     {
-        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.emptyList(), null, null, null, null, null, null);
+        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.emptyList(), null, null, null, null, null, null, null);
     }
 
     public static DataTypeValue arrayV(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
     {
-        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, getContent);
+        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, null, getContent);
     }
 
-    public static DataTypeValue tupleV(List<DataTypeValue> types)
+    public static DataTypeValue tuple(List<DataType> types, GetValue<@Value Object @Value[]> getContent)
     {
-        return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, null);
+        return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, getContent, null);
     }
 
     public void setCollapsed(int rowIndex, Either<String, @Value Object> value) throws InternalException, UserException
@@ -156,13 +158,10 @@ public final class DataTypeValue extends DataType
             }
 
             @Override
-            public Void tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public Void tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
             {
-                for (int i = 0; i < types.size(); i++)
-                {
-                    int iFinal = i;
-                    types.get(i).setCollapsed(rowIndex, value.<@Value Object>map(v -> ((@Value Object[]) v)[iFinal]));
-                }
+                g.set(rowIndex, value.<@Value Object @Value []>mapInt(v -> Utility.castTuple(v, types.size())));
                 return null;
             }
 
@@ -250,7 +249,7 @@ public final class DataTypeValue extends DataType
         }
 
         @Override
-        public R tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+        public R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tuple type");
         }
@@ -270,7 +269,7 @@ public final class DataTypeValue extends DataType
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
         R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
-        R tuple(ImmutableList<DataTypeValue> types) throws InternalException, E;
+        R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
         // of each entry (but is null when the array is empty)
@@ -300,7 +299,7 @@ public final class DataTypeValue extends DataType
             case TAGGED:
                 return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, (ImmutableList<TagType<DataTypeValue>>)(ImmutableList)tagTypes, getTag);
             case TUPLE:
-                return visitor.tuple((ImmutableList<DataTypeValue>)(ImmutableList)memberType);
+                return visitor.tuple(memberType, getTuple);
             case ARRAY:
                 DataType arrayType = memberType.get(0);
                 return visitor.array(arrayType, getArrayContent);
@@ -373,14 +372,9 @@ public final class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+            public @Value Object tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[] >g) throws InternalException, UserException
             {
-                @Value Object [] array = new Object[types.size()];
-                for (int i = 0; i < types.size(); i++)
-                {
-                    array[i] = types.get(i).applyGet(this);
-                }
-                return DataTypeUtility.value(array);
+                return g.get(index);
             }
 
             @Override
@@ -487,6 +481,7 @@ public final class DataTypeValue extends DataType
             DataTypeValue.<@Value TemporalAccessor>several(getOriginalValueAndIndex, dtv -> dtv.getDate),
             DataTypeValue.<@Value Boolean>several(getOriginalValueAndIndex, dtv -> dtv.getBoolean),
             several(getOriginalValueAndIndex, dtv -> dtv.getTag),
+                DataTypeValue.<@Value Object @Value[]>several(getOriginalValueAndIndex, dtv -> dtv.getTuple),
             several(getOriginalValueAndIndex, dtv -> dtv.getArrayContent));
 
     }

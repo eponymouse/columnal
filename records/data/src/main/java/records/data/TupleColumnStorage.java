@@ -1,11 +1,15 @@
 package records.data;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -41,7 +45,39 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
             buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy, beforeGet, isImmediateData));
         }
         storage = ImmutableList.copyOf(buildList);
-        type = DataTypeValue.tupleV(Utility.<ColumnStorage<?>, DataTypeValue>mapList(storage, s -> s.getType()));
+        type = DataTypeValue.tuple(Utility.<ColumnStorage<?>, DataType>mapList(storage, s -> s.getType()), new GetValue<@Value Object @Value[]>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public @Value Object @Value [] getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException
+            {
+                @Value Object[] tuple = new @Value Object[storage.size()];
+                for (int i = 0; i < storage.size(); i++)
+                {
+                    ColumnStorage<?> columnStorage = storage.get(i);
+                    tuple[i] = columnStorage.getType().getCollapsed(i);
+                }
+                return DataTypeUtility.value(tuple);
+            }
+
+            @Override
+            public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Object[]> value) throws InternalException, UserException
+            {
+                value.eitherEx_(err -> {
+                    setError(index, err);
+                    for (ColumnStorage<?> columnStorage : storage)
+                    {
+                        columnStorage.getType().setCollapsed(index, Either.left(err));
+                    }
+                }, tuple -> {
+                    unsetError(index);
+                    for (int i = 0; i < storage.size(); i++)
+                    {
+                        storage.get(i).getType().setCollapsed(index, Either.right(tuple[i]));
+                    }
+                });
+            }
+        });
     }
 
     @Override

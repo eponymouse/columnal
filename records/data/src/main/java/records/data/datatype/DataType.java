@@ -253,16 +253,7 @@ public class DataType implements StyledShowable
             @SuppressWarnings("value")
             public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException
             {
-                List<DataTypeValue> innerValues = new ArrayList<>();
-                for (int type = 0; type < inner.size(); type++)
-                {
-                    int typeFinal = type;
-                    innerValues.add(inner.get(type).fromCollapsed((i, prog) -> {
-                        Object[] tuple = castTo(Object[].class).getWithProgress(i, prog);
-                        return tuple[typeFinal];
-                    }));
-                }
-                return DataTypeValue.tupleV(innerValues);
+                return DataTypeValue.tuple(inner, (i, prog) -> Utility.castTuple(get.getWithProgress(i, prog), inner.size()));
             }
 
             @Override

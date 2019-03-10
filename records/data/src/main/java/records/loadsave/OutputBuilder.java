@@ -319,17 +319,17 @@ public class OutputBuilder
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public UnitType tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+                public UnitType tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
                 {
                     if (!alreadyRoundBracketed)
                         raw("(");
                     boolean first = true;
-                    for (DataTypeValue dataTypeValue : types)
+                    for (DataType dataType : types)
                     {
                         if (!first)
                             raw(",");
                         first = false;
-                        data(dataTypeValue, index, true, false);
+                        dataValue(dataType, g.get(index));
                     }
                     if (!alreadyRoundBracketed)
                         raw(")");
