@@ -735,7 +735,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
-                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType(), columns.get(i).getType().getCollapsed(row), null)));
+                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType().getType(), columns.get(i).getType().getCollapsed(row), null)));
                     if (i < columns.size() - 1)
                         out.write(",");
                 }
@@ -833,7 +833,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         DataType type = null;
         try
         {
-            type = table.getData().getColumn(c).getType();
+            type = table.getData().getColumn(c).getType().getType();
             if (type.isNumber())
             {
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "sum", c, newId -> {

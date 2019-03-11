@@ -45,7 +45,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
             buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy, beforeGet, isImmediateData));
         }
         storage = ImmutableList.copyOf(buildList);
-        type = DataTypeValue.tuple(Utility.<ColumnStorage<?>, DataType>mapList(storage, s -> s.getType()), new GetValue<@Value Object @Value[]>()
+        type = DataTypeValue.tuple(Utility.<ColumnStorage<?>, DataType>mapList(storage, s -> s.getType().getType()), new GetValue<@Value Object @Value[]>()
         {
             @Override
             @OnThread(Tag.Simulation)

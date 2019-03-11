@@ -312,7 +312,7 @@ public class Concatenate extends Transformation
                     ms = HashMultiset.create();
                     r.put(c.getName(), ms);
                 }
-                ms.add(c.getType());
+                ms.add(c.getType().getType());
             }
         }
         return r;

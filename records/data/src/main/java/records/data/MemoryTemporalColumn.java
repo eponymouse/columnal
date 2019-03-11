@@ -43,7 +43,7 @@ public class MemoryTemporalColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryTemporalColumn(rs, getName(), getType().getDateTimeInfo(), storage.getAllCollapsed(0, shrunkLength), defaultValue);
+        return new MemoryTemporalColumn(rs, getName(), getType().getType().getDateTimeInfo(), storage.getAllCollapsed(0, shrunkLength), defaultValue);
     }
 
     public void add(Either<String, TemporalAccessor> value) throws InternalException

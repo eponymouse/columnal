@@ -279,7 +279,7 @@ public abstract class RecordSet
                 Column themCol = recordSet.getColumn(usCol.getName()); // Throws if not there
                 DataTypeValue us = usCol.getType();
                 DataTypeValue them = themCol.getType();
-                if (DataType.checkSame(us, them, s -> {}) == null)
+                if (DataType.checkSame(us.getType(), them.getType(), s -> {}) == null)
                     return false;
                 for (int i = 0; i < length; i++)
                 {

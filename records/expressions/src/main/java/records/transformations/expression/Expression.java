@@ -934,7 +934,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                         case CORRESPONDING_ROW:
                             return new Pair<>(rs.getFirst(), columnType);
                         case WHOLE_COLUMN:
-                            return new Pair<>(rs.getFirst(), DataTypeValue.arrayV(columnType, (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                            return new Pair<>(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }

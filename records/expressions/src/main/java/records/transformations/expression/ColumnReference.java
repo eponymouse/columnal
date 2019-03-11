@@ -80,7 +80,7 @@ public class ColumnReference extends NonOperatorExpression
         }
         resolvedTableName = col.getFirst();
         column = col.getSecond();
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column));
+        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column.getType()));
     }
 
     @Override

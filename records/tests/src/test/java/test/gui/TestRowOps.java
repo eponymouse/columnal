@@ -281,7 +281,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             else
             {
                 @NonNull @Value Object defaultValue = defaultValue_;
-                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(columnType, defaultValue, null));
+                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(columnType.getType(), defaultValue, null));
                 expectedSrcContent.add(colData.mapSecond(d -> {
                     ArrayList<String> xs = new ArrayList<>(d);
                     xs.add(targetNewRow, defaultAsString);
@@ -334,7 +334,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         return recordSet.getColumns().stream().<Pair<DataType, @Value Object>>map(c -> {
             try
             {
-                return new Pair<DataType, @Value Object>(c.getType(), c.getType().getCollapsed(targetRow));
+                return new Pair<DataType, @Value Object>(c.getType().getType(), c.getType().getCollapsed(targetRow));
             }
             catch (InternalException | UserException e)
             {

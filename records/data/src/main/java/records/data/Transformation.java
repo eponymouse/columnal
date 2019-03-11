@@ -141,7 +141,7 @@ public abstract class Transformation extends Table
                 Platform.runLater(() -> {
                     TableDisplayBase display = Utility.later(Transformation.this).getDisplay();
                     if (display != null)
-                        display.promptForTransformationEdit(index, new Pair<>(columnId, original), value);
+                        display.promptForTransformationEdit(index, new Pair<>(columnId, original.getType()), value);
                 });
             }
         });

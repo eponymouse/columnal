@@ -227,7 +227,7 @@ public class PropRunTransformation
         {
             try
             {
-                return c.getType().isNumber();
+                return c.getType().getType().isNumber();
             } catch (InternalException | UserException e)
             {
                 throw new RuntimeException(e);

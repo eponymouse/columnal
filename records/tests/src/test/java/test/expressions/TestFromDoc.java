@@ -281,7 +281,7 @@ public class TestFromDoc
                 if (columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW)
                     return new Pair<>(tableId, type);
                 else
-                    return new Pair<>(tableId, DataTypeValue.arrayV(type, (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                    return new Pair<>(tableId, DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
             }
             catch (Exception e)
             {

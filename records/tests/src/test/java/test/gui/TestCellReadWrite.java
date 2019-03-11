@@ -87,7 +87,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             TestUtil.delay(2000);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
-            String valueFromData = DataTypeUtility.valueToString(columnDTV, columnDTV.getCollapsed(row), null);
+            String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), columnDTV.getCollapsed(row), null);
             assertEquals(valueFromData, copiedFromTable);
         }
     }
@@ -137,8 +137,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             push(KeyCode.ENTER);
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
-            @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType());
-            enterStructuredValue(columnDTV, value, r, false);
+            @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType().getType());
+            enterStructuredValue(columnDTV.getType(), value, r, false);
             push(KeyCode.ESCAPE);
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);
@@ -149,7 +149,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             TestUtil.delay(10000);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             
-            String valueEntered = DataTypeUtility.valueToString(columnDTV, value, null);
+            String valueEntered = DataTypeUtility.valueToString(columnDTV.getType(), value, null);
             assertEquals(valueEntered, copiedFromTable);
             writtenData.put(new Location(table.getId(), row, column), valueEntered);
         }

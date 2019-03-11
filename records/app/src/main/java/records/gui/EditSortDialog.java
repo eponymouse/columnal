@@ -445,7 +445,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             return null;
         try
         {
-            return c.getType();
+            return c.getType().getType();
         }
         catch (InternalException | UserException e)
         {

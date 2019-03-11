@@ -94,9 +94,9 @@ public class Filter extends Transformation
                         @SuppressWarnings({"nullness", "initialization"})
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                         {
-                            return addManualEditSet(getName(), c.getType().copyReorder((i, prog) ->
+                            return addManualEditSet(getName(), c.getType().copyReorder(i ->
                             {
-                                fillIndexMapTo(i, columnLookup, data, prog);
+                                fillIndexMapTo(i, columnLookup, data);
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             }));
                         }
@@ -117,7 +117,7 @@ public class Filter extends Transformation
                         if (index < indexMap.filled())
                             return true;
 
-                        Utility.later(Filter.this).fillIndexMapTo(index, columnLookup, data,null);
+                        Utility.later(Filter.this).fillIndexMapTo(index, columnLookup, data);
                         return index < indexMap.filled();
                     }
                 };
@@ -132,7 +132,7 @@ public class Filter extends Transformation
         this.recordSet = theRecordSet;
     }
 
-    private void fillIndexMapTo(int index, ColumnLookup data, RecordSet recordSet, @Nullable ProgressListener prog) throws UserException, InternalException
+    private void fillIndexMapTo(int index, ColumnLookup data, RecordSet recordSet) throws UserException, InternalException
     {
         if (type == null)
         {
@@ -171,8 +171,8 @@ public class Filter extends Transformation
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;
 
-            if (prog != null)
-                prog.progressUpdate((double)(indexMap.filled() - start) / (double)(index - start));
+            //if (prog != null)
+                //prog.progressUpdate((double)(indexMap.filled() - start) / (double)(index - start));
         }
     }
     

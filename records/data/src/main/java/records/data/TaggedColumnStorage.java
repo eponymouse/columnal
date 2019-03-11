@@ -59,7 +59,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
                 tagTypes.add(new TagType<>(tagType.getName(), null));
             }
         }
-        dataType = DataTypeValue.tagged(typeName, typeVars, Utility.<TagType<ColumnStorage<?>>, TagType<DataType>>mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.<DataType>map(t -> t.getType())), new GetValueOrError<TaggedValue>()
+        dataType = DataTypeValue.tagged(typeName, typeVars, Utility.<TagType<ColumnStorage<?>>, TagType<DataType>>mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.<DataType>map(t -> t.getType().getType())), new GetValueOrError<TaggedValue>()
         {
             @Override
             protected @OnThread(Tag.Simulation) void _beforeGet(int i, @Nullable ProgressListener prog) throws UserException, InternalException

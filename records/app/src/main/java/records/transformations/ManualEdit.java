@@ -96,7 +96,7 @@ public class ManualEdit extends Transformation
                 {
                     throw new UserException("Could not find identifier column " + replacementKey.getFirst().getRaw());
                 }
-                keyColumn = new Pair<>(keyCol, keyCol.getType());
+                keyColumn = new Pair<>(keyCol, keyCol.getType().getType());
                 if (!keyColumn.getSecond().equals(replacementKey.getSecond()))
                 {
                     throw new UserException("Last recorded type of identifier column " + replacementKey.getFirst().getRaw() + " does not match actual column type.");
@@ -275,14 +275,14 @@ edit : editHeader editColumn*;
                 for (Pair<ColumnId, ComparableEither<String, ComparableValue>> matchingValue : matchingValues)
                 {
                     Column column = src.getData().getColumn(matchingValue.getFirst());
-                    DataType columnType = column.getType();
+                    DataType columnType = column.getType().getType();
                     newReplacements.computeIfAbsent(matchingValue.getFirst(), k -> new ColumnReplacementValues(columnType, ImmutableList.of())).replacementValues.put(newKeyValue, matchingValue.getSecond());
                 }
                 matchingValues.clear();
             }
         }
         
-        return new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType()), ImmutableMap.copyOf(newReplacements));
+        return new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType().getType()), ImmutableMap.copyOf(newReplacements));
     }
     
     @Pure
@@ -389,9 +389,9 @@ edit : editHeader editColumn*;
                     public DataTypeValue array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
                     {
                         if (inner == null)
-                            return DataTypeValue.arrayV();
+                            return DataTypeValue.array();
                             
-                        return DataTypeValue.arrayV(inner, replace(g, obj -> {
+                        return DataTypeValue.array(inner, replace(g, obj -> {
                             @Value ListEx list = Utility.cast(obj, ListEx.class);
                             return new Pair<>(list.size(), inner.fromCollapsed((i, prog) -> list.get(i)));
                         }));

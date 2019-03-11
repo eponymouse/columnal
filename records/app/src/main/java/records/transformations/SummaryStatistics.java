@@ -217,7 +217,7 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public DataTypeValue getType() throws InternalException, UserException
                     {
-                        return addManualEditSet(getName(), orig.getType().fromCollapsed(this::getWithProgress));
+                        return addManualEditSet(getName(), orig.getType().getType().fromCollapsed(this::getWithProgress));
                     }
 
                     @Override
@@ -862,9 +862,9 @@ public class SummaryStatistics extends Transformation
                     case CORRESPONDING_ROW:
                         if (grouped)
                         {
-                            return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> {
+                            return new Pair<>(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
                                 Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
-                                return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
+                                return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
                             }));
                         }
                         else
@@ -873,7 +873,7 @@ public class SummaryStatistics extends Transformation
                             return new Pair<>(table.getId(), columnFinal.getType());
                         }
                     case WHOLE_COLUMN:
-                        return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
+                        return new Pair<>(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
                 }
             }
             catch (InternalException e)

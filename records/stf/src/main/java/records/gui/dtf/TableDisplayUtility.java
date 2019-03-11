@@ -146,14 +146,14 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify)) {
+        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify)) {
             @Override
             protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
             {
                 Label typeLabel = null;
                 try
                 {
-                    typeLabel = GUI.labelRaw(column.getType().toDisplay(false), "stable-view-column-type");
+                    typeLabel = GUI.labelRaw(column.getType().getType().toDisplay(false), "stable-view-column-type");
                 }
                 catch (UserException | InternalException e)
                 {
@@ -404,7 +404,7 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue), getTablePos, onModify);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify);
     }
 
     @OnThread(Tag.Any)
@@ -464,25 +464,25 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(dataTypeValue, Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
+                return new GetValueAndComponent<@Value Number>(dataTypeValue.getType(), Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value String>(dataTypeValue, String.class, g, new StringRecogniser());
+                return new GetValueAndComponent<@Value String>(dataTypeValue.getType(), String.class, g, new StringRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value Boolean>(dataTypeValue, Boolean.class, g, new BooleanRecogniser());
+                return new GetValueAndComponent<@Value Boolean>(dataTypeValue.getType(), Boolean.class, g, new BooleanRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue, TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
+                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue.getType(), TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
                 
                 //switch (dateTimeInfo.getType())
                 //{
@@ -513,7 +513,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
             {
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue, TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser)))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser)))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -523,14 +523,14 @@ public class TableDisplayUtility
             {
                 ImmutableList<Recogniser<@Value ?>> recognisers = Utility.<DataType, Recogniser<@Value ?>>mapListInt(types, t -> recogniser(t).recogniser);
 
-                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(recognisers));
+                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue.getType(), (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(recognisers));
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
             public GetValueAndComponent<?> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, ListEx.class, g, new ListRecogniser(recogniser(inner).recogniser));
+                return new GetValueAndComponent<@Value ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner).recogniser));
                     /*
                 (parents, value) ->
                 {

@@ -168,9 +168,9 @@ public class Sort extends Transformation
                     @SuppressWarnings({"nullness", "initialization"})
                     public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                     {
-                        return addManualEditSet(getName(), c.getType().copyReorder((i, prog) ->
+                        return addManualEditSet(getName(), c.getType().copyReorder(i ->
                         {
-                            fillSortMapTo(i, prog);
+                            fillSortMapTo(i);
                             return DataTypeUtility.value(sortMap.getInt(i));
                         }));
                     }
@@ -209,7 +209,7 @@ public class Sort extends Transformation
         this.sortBy = theSortBy != null ? ImmutableList.copyOf(theSortBy) : null;
     }
 
-    private void fillSortMapTo(int target, @Nullable ProgressListener prog) throws InternalException, UserException
+    private void fillSortMapTo(int target) throws InternalException, UserException
     {
         if (sortMap == null)
             throw new InternalException("Trying to fill null sort map; error in initialisation carried forward.");
@@ -251,8 +251,8 @@ public class Sort extends Transformation
                 throw new InternalException("Not enough items available to fill source list");
             }
 
-            if (prog != null)
-                prog.progressUpdate((double)(dest - destStart) / (double)(target - dest));
+            //if (prog != null)
+                //prog.progressUpdate((double)(dest - destStart) / (double)(target - dest));
         }
     }
 

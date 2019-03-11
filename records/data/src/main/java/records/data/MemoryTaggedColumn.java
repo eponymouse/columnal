@@ -50,7 +50,7 @@ public class MemoryTaggedColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
+        List<TagType<DataType>> tags = getType().getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
             public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException

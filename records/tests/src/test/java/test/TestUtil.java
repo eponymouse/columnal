@@ -1514,7 +1514,7 @@ public class TestUtil
                         case CORRESPONDING_ROW:
                             return new Pair<>(new TableId("SingleTableLookup"), column.getType());
                         case WHOLE_COLUMN:
-                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.arrayV(column.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }

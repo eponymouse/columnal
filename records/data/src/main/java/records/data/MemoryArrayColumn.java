@@ -43,7 +43,7 @@ public class MemoryArrayColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getMemberType().get(0), storage.getAllCollapsed(0, shrunkLength), defaultValue);
+        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getType().getMemberType().get(0), storage.getAllCollapsed(0, shrunkLength), defaultValue);
         return shrunk;
     }
 

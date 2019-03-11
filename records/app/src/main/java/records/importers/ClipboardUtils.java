@@ -143,16 +143,16 @@ public class ClipboardUtils
         Workers.onWorkerThread("Copying to clipboard", Priority.FETCH, () -> {
             OutputBuilder b = new OutputBuilder();
             b.t(MainLexer.UNITS).begin().nl();
-            b.raw(unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond())))).nl();
+            b.raw(unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond().getType())))).nl();
             b.end().t(MainLexer.UNITS).nl();
             b.t(MainLexer.TYPES).begin().nl();
-            b.raw(typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond())))).nl();
+            b.raw(typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond().getType())))).nl();
             b.end().t(MainLexer.TYPES).nl();
             b.t(MainLexer.FORMAT).begin().nl();
             for (Pair<ColumnId, DataTypeValue> c : columns)
             {
                 b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(c.getFirst()).t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
-                FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().save(b));
+                FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().getType().save(b));
                 b.nl();
             }
             b.end().t(MainLexer.FORMAT).nl();
@@ -171,7 +171,7 @@ public class ClipboardUtils
                             plainText.append("\t");
                         try
                         {
-                            plainText.append(DataTypeUtility.valueToString(c.getSecond(), c.getSecond().getCollapsed(i), null));
+                            plainText.append(DataTypeUtility.valueToString(c.getSecond().getType(), c.getSecond().getCollapsed(i), null));
                         }
                         catch (InvalidImmediateValueException e)
                         {

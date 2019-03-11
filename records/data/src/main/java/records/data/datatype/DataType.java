@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ArrayColumnStorage;
@@ -108,7 +107,7 @@ import static records.data.datatype.DataType.DateTimeInfo.F.*;
  *            | Tuple [Type]
  *            | Array Type
  */
-public class DataType implements StyledShowable
+public final class DataType implements StyledShowable
 {
     @OnThread(Tag.Simulation)
     public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws InternalException
@@ -251,7 +250,7 @@ public class DataType implements StyledShowable
             public DataTypeValue array(DataType inner) throws InternalException
             {
                 GetValue<@Value ListEx> getList = castTo(ListEx.class);
-                return DataTypeValue.arrayV(inner, getList);
+                return DataTypeValue.array(inner, getList);
             }
         });
     }

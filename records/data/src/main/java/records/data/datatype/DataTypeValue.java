@@ -4,8 +4,13 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.datatype.DataType.DataTypeVisitorEx;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataType.TagTypeDetails;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -20,7 +25,6 @@ import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -28,8 +32,9 @@ import java.util.function.Function;
  * The data-type of a homogeneously-typed list of values,
  * including a facility to get the item at a particular index.
  */
-public final class DataTypeValue extends DataType
+public final class DataTypeValue
 {
+    private final DataType dataType;
     private final @Nullable GetValue<@Value Number> getNumber;
     private final @Nullable GetValue<@Value String> getText;
     private final @Nullable GetValue<@Value TemporalAccessor> getDate;
@@ -39,10 +44,9 @@ public final class DataTypeValue extends DataType
     private final @Nullable GetValue<@Value ListEx> getArrayContent;
 
     // package-visible
-    // @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<@Value TaggedValue> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<@Value ListEx> getArrayContent)
+    DataTypeValue(DataType dataType, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<@Value TaggedValue> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<@Value ListEx> getArrayContent)
     {
-        super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes);
+        this.dataType = dataType;
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -54,37 +58,37 @@ public final class DataTypeValue extends DataType
     
     public static DataTypeValue bool(GetValue<@Value Boolean> getValue)
     {
-        return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null, null);
+        return new DataTypeValue(DataType.BOOLEAN,null, null, null, getValue, null, null, null);
     }
 
     public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.<TagType<DataType>>toImmutableList())), null, null, null, null, null, getTag, null, null);
+        return new DataTypeValue(DataType.tagged(name, tagTypeVariableSubsts, tagTypes),null, null, null, null, getTag, null, null);
     }
 
     public static DataTypeValue text(GetValue<@Value String> getText)
     {
-        return new DataTypeValue(Kind.TEXT, null, null, null, null, null, getText, null, null, null, null, null);
+        return new DataTypeValue(DataType.TEXT, null, getText, null, null, null, null, null);
     }
 
     public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> getDate)
     {
-        return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, null, getDate, null, null, null, null);
+        return new DataTypeValue(DataType.date(dateTimeInfo),null, null, getDate, null, null, null, null);
     }
 
     public static DataTypeValue number(NumberInfo numberInfo, GetValue<@Value Number> getNumber)
     {
-        return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null, null);
+        return new DataTypeValue(DataType.number(numberInfo),getNumber, null, null, null, null, null, null);
     }
 
-    public static DataTypeValue arrayV(DataType innerType, GetValue<@Value ListEx> getContent)
+    public static DataTypeValue array(DataType innerType, GetValue<@Value ListEx> getContent)
     {
-        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, null, getContent);
+        return new DataTypeValue(DataType.array(innerType),null, null, null, null, null, null, getContent);
     }
 
     public static DataTypeValue tuple(List<DataType> types, GetValue<@Value Object @Value[]> getContent)
     {
-        return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, getContent, null);
+        return new DataTypeValue(DataType.tuple(types), null, null, null, null, null, getContent, null);
     }
 
     public void setCollapsed(int rowIndex, Either<String, @Value Object> value) throws InternalException, UserException
@@ -154,6 +158,12 @@ public final class DataTypeValue extends DataType
                 return null;
             }
         });
+    }
+
+    @Pure
+    public DataType getType()
+    {
+        return dataType;
     }
 
     public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
@@ -262,26 +272,56 @@ public final class DataTypeValue extends DataType
     @OnThread(Tag.Any)
     public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E
     {
-        switch (kind)
+        return dataType.apply(new DataTypeVisitorEx<R, E>()
         {
-            case NUMBER:
+            @Override
+            public R number(NumberInfo numberInfo) throws InternalException, E
+            {
                 return visitor.number(getNumber, numberInfo);
-            case TEXT:
+            }
+
+            @Override
+            public R text() throws InternalException, E
+            {
                 return visitor.text(getText);
-            case DATETIME:
+            }
+
+            @Override
+            public R date(DateTimeInfo dateTimeInfo) throws InternalException, E
+            {
                 return visitor.date(dateTimeInfo, getDate);
-            case BOOLEAN:
+            }
+
+            @Override
+            public R bool() throws InternalException, E
+            {
                 return visitor.bool(getBoolean);
-            case TAGGED:
-                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, tagTypes, getTag);
-            case TUPLE:
-                return visitor.tuple(memberType, getTuple);
-            case ARRAY:
-                DataType arrayType = memberType.get(0);
-                return visitor.array(arrayType, getArrayContent);
-            default:
-                throw new InternalException("Missing kind case");
-        }
+            }
+
+            @Override
+            public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E
+            {
+                return visitor.tagged(typeName, typeVars, tags, getTag);
+            }
+
+            @Override
+            public R tuple(ImmutableList<DataType> inner) throws InternalException, E
+            {
+                return visitor.tuple(inner, getTuple);
+            }
+
+            @Override
+            public R array(DataType inner) throws InternalException, E
+            {
+                return visitor.array(inner, getArrayContent);
+            }
+
+            @Override
+            public R function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, E
+            {
+                throw new InternalException("Cannot store collections of functions");
+            }
+        });
     }
 /*
     public int getArrayLength(int index) throws InternalException, UserException
@@ -387,75 +427,20 @@ public final class DataTypeValue extends DataType
      */
     public static DataTypeValue copySeveral(DataType original, SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
     {
-        TagTypeDetails newTagTypes = null;
-        if (original.tagTypes != null && original.tagTypeVariableSubstitutions != null && original.taggedTypeName != null)
-        {
-            ImmutableList.Builder<TagType<DataType>> tagTypes = ImmutableList.builder();
-            for (int tagIndex = 0; tagIndex < original.tagTypes.size(); tagIndex++)
-            {
-                TagType<DataType> t = original.tagTypes.get(tagIndex);
-                int tagIndexFinal = tagIndex;
-                DataType inner = t.getInner();
-                if (inner == null)
-                    tagTypes.add(new TagType<>(t.getName(), null));
-                else
-                    tagTypes.add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, i ->
-                    {
-                        @NonNull Pair<DataTypeValue, Integer> destinationParent = getOriginalValueAndIndex.apply(i);
-                        @Nullable List<TagType<DataType>> destinationTagTypes = destinationParent.getFirst().tagTypes;
-                        if (destinationTagTypes == null)
-                            throw new InternalException("Joining together columns but other column not tagged");
-                        DataTypeValue innerDTV = (DataTypeValue) destinationTagTypes.get(tagIndexFinal).getInner();
-                        if (innerDTV == null)
-                            throw new InternalException("Joining together columns but tag types don't match across types");
-                        return new Pair<DataTypeValue, Integer>(innerDTV, destinationParent.getSecond());
-                    })));
-            }
-            newTagTypes = new TagTypeDetails(original.taggedTypeName, original.tagTypeVariableSubstitutions, tagTypes.build());
-        }
-
-        final @Nullable List<DataType> memberTypes;
-        if (original.memberType == null)
-            memberTypes = null;
-        else
-        {
-            ArrayList<DataType> r = new ArrayList<>(original.memberType.size());
-            // If it's a tuple, we should map each member element across
-            if (original.isTuple())
-            {
-                for (int memberTypeIndex = 0; memberTypeIndex < original.memberType.size(); memberTypeIndex++)
-                {
-                    DataType type = original.memberType.get(memberTypeIndex);
-                    int memberTypeIndexFinal = memberTypeIndex;
-                    r.add(((DataTypeValue) type).copySeveral(type, i -> getOriginalValueAndIndex.apply(i).mapFirstEx(dtv -> {
-                        if (dtv.memberType == null)
-                            throw new InternalException("copySeveral: original " + original + " had memberType but given target does not: " + dtv);
-                        return (DataTypeValue)dtv.memberType.get(memberTypeIndexFinal);
-                    })));
-                }
-            }
-            else
-            {
-                // If it's an array, just keep the original inner type:
-                r.addAll(original.memberType);
-            }
-            memberTypes = r;
-        }
-        return new DataTypeValue(original.kind, original.numberInfo, original.dateTimeInfo, newTagTypes,
-            memberTypes,
+        return new DataTypeValue(original,
             DataTypeValue.<@Value Number>several(getOriginalValueAndIndex, dtv -> dtv.getNumber),
             DataTypeValue.<@Value String>several(getOriginalValueAndIndex, dtv -> dtv.getText),
             DataTypeValue.<@Value TemporalAccessor>several(getOriginalValueAndIndex, dtv -> dtv.getDate),
             DataTypeValue.<@Value Boolean>several(getOriginalValueAndIndex, dtv -> dtv.getBoolean),
             several(getOriginalValueAndIndex, dtv -> dtv.getTag),
-                DataTypeValue.<@Value Object @Value[]>several(getOriginalValueAndIndex, dtv -> dtv.getTuple),
+            DataTypeValue.<@Value Object @Value[]>several(getOriginalValueAndIndex, dtv -> dtv.getTuple),
             several(getOriginalValueAndIndex, dtv -> dtv.getArrayContent));
 
     }
 
-    public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
+    public DataTypeValue copyReorder(SimulationFunction<Integer, Integer> mapToOriginalIndex) throws InternalException
     {
-        return copySeveral(this, i -> new Pair<DataTypeValue, Integer>(this, getOriginalIndex.getWithProgress(i, null)));
+        return copySeveral(dataType, i -> new Pair<DataTypeValue, Integer>(this, mapToOriginalIndex.apply(i)));
     }
 
     private static <T> @Nullable GetValue<@Value T> several(SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<@Value T>> g)
@@ -543,7 +528,7 @@ public final class DataTypeValue extends DataType
             @Override
             public DataTypeValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
-                return DataTypeValue.arrayV(inner, overrideSet(g));
+                return DataTypeValue.array(inner, overrideSet(g));
             }
         });
     }

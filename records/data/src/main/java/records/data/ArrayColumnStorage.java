@@ -11,7 +11,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.SimulationRunnable;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -45,7 +44,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     {
         super(isImmediateData);
         DataType innerFinal = innerToCopy;
-        this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<@Value ListEx>()
+        this.type = DataTypeValue.array(innerToCopy, new GetValueOrError<@Value ListEx>()
         {
             @Override
             public @Value ListEx _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
