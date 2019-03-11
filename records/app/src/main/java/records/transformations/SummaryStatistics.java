@@ -12,6 +12,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.ListExDTV;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
@@ -863,7 +864,7 @@ public class SummaryStatistics extends Transformation
                         {
                             return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> {
                                 Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
-                                return new Pair<Integer, DataTypeValue>(splitInfo.getSecond().getIndexes().length, columnFinal.getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j])));
+                                return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
                             }));
                         }
                         else
@@ -872,7 +873,7 @@ public class SummaryStatistics extends Transformation
                             return new Pair<>(table.getId(), columnFinal.getType());
                         }
                     case WHOLE_COLUMN:
-                        return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType())));
+                        return new Pair<>(table.getId(), DataTypeValue.arrayV(column.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
                 }
             }
             catch (InternalException e)

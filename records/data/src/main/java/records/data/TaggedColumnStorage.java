@@ -59,7 +59,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
                 tagTypes.add(new TagType<>(tagType.getName(), null));
             }
         }
-        dataType = DataTypeValue.tagged(typeName, typeVars, Utility.mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.map(t -> t.getType())), new GetValueOrError<Integer>()
+        dataType = DataTypeValue.tagged(typeName, typeVars, Utility.<TagType<ColumnStorage<?>>, TagType<DataType>>mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.<DataType>map(t -> t.getType())), new GetValueOrError<TaggedValue>()
         {
             @Override
             protected @OnThread(Tag.Simulation) void _beforeGet(int i, @Nullable ProgressListener prog) throws UserException, InternalException
@@ -69,15 +69,21 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> i
             }
 
             @Override
-            public Integer _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+            public TaggedValue _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
             {
-                return tagStore.getInt(i);
+                int tagIndex = tagStore.getInt(i);
+                ColumnStorage<?> innerStorage = tagTypes.get(tagIndex).getInner();
+                if (innerStorage == null)
+                    return new TaggedValue(tagIndex, null);
+                else
+                    return new TaggedValue(tagIndex, innerStorage.getType().getCollapsed(i));
             }
 
             @Override
-            public void _set(int index, @Nullable Integer newTag) throws InternalException, UserException
+            public void _set(int index, @Nullable TaggedValue newValue) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
+                Integer newTag = newValue == null ? null : newValue.getTagIndex();
                 if (newTag != null && newTag.intValue() == oldTag)
                     return; // No need to change anything here.
 

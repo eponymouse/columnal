@@ -183,7 +183,7 @@ public class Concatenate extends Transformation
                         {
                             if (type == null)
                             {
-                                type = addManualEditSet(getName(), DataTypeValue.copySeveral(colDetails.getValue().dataType, (concatenatedRow, prog) ->
+                                type = addManualEditSet(getName(), DataTypeValue.copySeveral(colDetails.getValue().dataType, concatenatedRow ->
                                 {
                                     for (int srcTableIndex = 0; srcTableIndex < ends.size(); srcTableIndex++)
                                     {

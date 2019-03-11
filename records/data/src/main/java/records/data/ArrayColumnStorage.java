@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -35,7 +36,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
 {
     // We are a column storage.  Each element here is one row, which is also
     // a list because it is an array.  We are a list of lists (column of arrays)
-    private final ArrayList<ListEx> storage = new ArrayList<>();
+    private final ArrayList<@Value ListEx> storage = new ArrayList<>();
     @OnThread(Tag.Any)
     private final DataTypeValue type;
 
@@ -44,20 +45,12 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     {
         super(isImmediateData);
         DataType innerFinal = innerToCopy;
-        this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<Pair<Integer, DataTypeValue>>()
+        this.type = DataTypeValue.arrayV(innerToCopy, new GetValueOrError<@Value ListEx>()
         {
             @Override
-            public Pair<Integer, DataTypeValue> _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+            public @Value ListEx _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
             {
-                try
-                {
-                    ListEx list = storage.get(i);
-                    return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
-                }
-                catch (ClassCastException e)
-                {
-                    throw new InternalException("Incorrect type in array storage", e);
-                }
+                return storage.get(i);
             }
 
             @Override
@@ -68,26 +61,9 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
             }
 
             @Override
-            public void _set(int index, @Nullable Pair<Integer, DataTypeValue> v) throws InternalException, UserException
+            public void _set(int index, @Nullable @Value ListEx v) throws InternalException, UserException
             {
-                storage.set(index, new ListEx()
-                {
-                    @Override
-                    public int size() throws InternalException, UserException
-                    {
-                        if (v == null)
-                            throw new InternalException("Attempting to fetch value for error row");
-                        return v.getFirst();
-                    }
-
-                    @Override
-                    public @Value Object get(int index) throws InternalException, UserException
-                    {
-                        if (v == null)
-                            throw new InternalException("Attempting to fetch value for error row");
-                        return v.getSecond().getCollapsed(index);
-                    }
-                });
+                storage.set(index, v == null ? ListEx.empty() : v);
             }
         });
     }
@@ -108,10 +84,10 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     {
         for (Either<String, ListEx> item : Utility.iterableStream(items))
         {
-            storage.add(item.either(err -> {
+            storage.add(DataTypeUtility.value(item.<ListEx>either(err -> {
                 setError(storage.size(), err);
                 return ListEx.empty();
-            }, l -> l));
+            }, l -> l)));
         }
     }
 
@@ -131,7 +107,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
         {
             if (item == null)
                 item = ListEx.empty();
-            storage.add(curIndex, item);
+            storage.add(curIndex, DataTypeUtility.value(item));
             curIndex += 1;
         }
         int count = items.size();
@@ -141,7 +117,7 @@ public class ArrayColumnStorage extends SparseErrorColumnStorage<ListEx> impleme
     @Override
     public SimulationRunnable _removeRows(int index, int count) throws InternalException
     {
-        List<ListEx> old = new ArrayList<>(storage.subList(index, index + count));
+        List<@Value ListEx> old = new ArrayList<>(storage.subList(index, index + count));
         storage.subList(index, index + count).clear();
         return () -> storage.addAll(index, old);
     }

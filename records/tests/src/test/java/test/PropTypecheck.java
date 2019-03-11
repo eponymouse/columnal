@@ -347,7 +347,7 @@ public class PropTypecheck
             @Override
             public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tt -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : toValue(tt.getInner()))), (i, prog) -> {throw new InternalException("");});
+                return DataTypeValue.tagged(typeName, typeVars, tags, (i, prog) -> {throw new InternalException("");});
             }
 
             @Override

@@ -235,17 +235,7 @@ public class DataType implements StyledShowable
             public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
-                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListInt(tags, tag -> {
-                    @Nullable DataType inner = tag.getInner();
-                    return new TagType<>(tag.getName(), inner == null ? null : inner.fromCollapsed(
-                        (i, prog) -> {
-                            @Nullable @Value Object innerValue = getTaggedValue.getWithProgress(i, prog).getInner();
-                            if (innerValue == null)
-                                throw new InternalException("Unexpected null inner value for tag " + typeName + " " + tags.get(i));
-                            return innerValue;
-                        }
-                    ));
-                }), (i, prog) -> getTaggedValue.getWithProgress(i, prog).getTagIndex());
+                return DataTypeValue.tagged(typeName, typeVars, tags, getTaggedValue);
             }
 
             @Override
@@ -261,10 +251,7 @@ public class DataType implements StyledShowable
             public DataTypeValue array(DataType inner) throws InternalException
             {
                 GetValue<@Value ListEx> getList = castTo(ListEx.class);
-                return DataTypeValue.arrayV(inner, (i, prog) -> {
-                    @NonNull @Value ListEx list = getList.getWithProgress(i, prog);
-                    return new Pair<>(list.size(), inner.fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
-                });
+                return DataTypeValue.arrayV(inner, getList);
             }
         });
     }

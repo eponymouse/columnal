@@ -9,6 +9,7 @@ import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.ListExDTV;
 import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.explanation.Explanation;
@@ -207,7 +208,7 @@ public class Check extends Transformation
                                     return new Pair<>(column.getFirst(), column.getSecond().getType());
                             case WHOLE_COLUMN:
                                 Column columnFinal = column.getSecond();
-                                return new Pair<>(column.getFirst(), DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> new Pair<>(columnFinal.getLength(), columnFinal.getType())));
+                                return new Pair<>(column.getFirst(), DataTypeValue.arrayV(columnFinal.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
                             default:
                                 throw new InternalException("Unknown reference type: " + columnReferenceType);
                         }

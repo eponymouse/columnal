@@ -17,6 +17,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.ListExDTV;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -58,7 +59,6 @@ import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
-import utility.FXPlatformBiFunction;
 import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -928,12 +928,13 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 if (rs != null)
                 {
                     Column column = rs.getSecond().getColumn(columnId);
+                    DataTypeValue columnType = column.getType();
                     switch (columnReferenceType)
                     {
                         case CORRESPONDING_ROW:
-                            return new Pair<>(rs.getFirst(), column.getType());
+                            return new Pair<>(rs.getFirst(), columnType);
                         case WHOLE_COLUMN:
-                            return new Pair<>(rs.getFirst(), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType())));
+                            return new Pair<>(rs.getFirst(), DataTypeValue.arrayV(columnType, (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }
@@ -946,6 +947,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             return null;
         }
+
     }
     
     // Styles the string to look like a user-typed part of the expression
@@ -995,4 +997,5 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             builder.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         }
     }
+
 }

@@ -449,44 +449,6 @@ public class DataTypeUtility
         return elementType.fromCollapsed((i, prog) -> listEx.get(i));
     }
 
-    public static GetValue<TaggedValue> toTagged(GetValue<Integer> g, ImmutableList<TagType<DataTypeValue>> tagTypes)
-    {
-        return new GetValue<TaggedValue>()
-        {
-            @Override
-            public TaggedValue getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-            {
-                int tagIndex = g.getWithProgress(index, progressListener);
-                @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
-                if (inner == null)
-                {
-                    return new TaggedValue(tagIndex, null);
-                }
-                else
-                {
-                    @Value Object innerVal = inner.getCollapsed(index);
-                    return new TaggedValue(tagIndex, innerVal);
-                }
-            }
-
-            @Override
-            public @OnThread(Tag.Simulation) void set(int index, Either<String, TaggedValue> errOrValue) throws InternalException, UserException
-            {
-                g.set(index, errOrValue.map(v -> v.getTagIndex()));
-                errOrValue.eitherEx_(err -> {}, value -> {
-                    @Nullable DataTypeValue inner = tagTypes.get(value.getTagIndex()).getInner();
-                    if (inner != null)
-                    {
-                        @Nullable @Value Object innerVal = value.getInner();
-                        if (innerVal == null)
-                            throw new InternalException("Inner type present but not inner value " + tagTypes + " #" + value.getTagIndex());
-                        inner.setCollapsed(index, Either.right(innerVal));
-                    }
-                });
-            }
-        };
-    }
-
     public static <DT extends DataType> TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
     {
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
@@ -554,38 +516,6 @@ public class DataTypeUtility
                 return DataTypeUtility.value(Collections.emptyList());
             }
         });
-    }
-
-    public static GetValue<@Value ListEx> toListEx(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> g)
-    {
-        return new GetValue<@Value ListEx>()
-        {
-            @Override
-            public @Value ListEx getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-            {
-                Pair<Integer, DataTypeValue> p = g.getWithProgress(index, progressListener);
-                return DataTypeUtility.value(new ListEx()
-                {
-                    @Override
-                    public int size() throws InternalException, UserException
-                    {
-                        return p.getFirst();
-                    }
-
-                    @Override
-                    public @Value Object get(int index) throws InternalException, UserException
-                    {
-                        return p.getSecond().getCollapsed(index);
-                    }
-                });
-            }
-
-            @Override
-            public @OnThread(Tag.Simulation) void set(int index, Either<String,ListEx> value) throws InternalException, UserException
-            {
-                g.set(index, value.mapEx(v -> new Pair<>(v.size(), innerType.fromCollapsed((i, prog) -> v.get(i)))));
-            }
-        };
     }
 
     // Fetches a ListEx from the simulation thread and returns it as a flat list on the FX thread.

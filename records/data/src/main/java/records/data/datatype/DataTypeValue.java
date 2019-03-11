@@ -13,6 +13,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -33,14 +34,13 @@ public final class DataTypeValue extends DataType
     private final @Nullable GetValue<@Value String> getText;
     private final @Nullable GetValue<@Value TemporalAccessor> getDate;
     private final @Nullable GetValue<@Value Boolean> getBoolean;
-    private final @Nullable GetValue<Integer> getTag;
+    private final @Nullable GetValue<@Value TaggedValue> getTag;
     private final @Nullable GetValue<@Value Object @Value[]> getTuple;
-    // Returns the length of the array at that index and accessor:
-    private final @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent;
+    private final @Nullable GetValue<@Value ListEx> getArrayContent;
 
     // package-visible
-    @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
+    // @SuppressWarnings("unchecked")
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<@Value TaggedValue> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<@Value ListEx> getArrayContent)
     {
         super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes);
         this.getNumber = getNumber;
@@ -57,7 +57,7 @@ public final class DataTypeValue extends DataType
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null, null);
     }
 
-    public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
+    public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> getTag)
     {
         return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.<TagType<DataType>>toImmutableList())), null, null, null, null, null, getTag, null, null);
     }
@@ -77,7 +77,7 @@ public final class DataTypeValue extends DataType
         return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null, null);
     }
 
-    public static DataTypeValue arrayV(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
+    public static DataTypeValue arrayV(DataType innerType, GetValue<@Value ListEx> getContent)
     {
         return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, null, getContent);
     }
@@ -132,22 +132,9 @@ public final class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
             {
-                
-                g.set(rowIndex, value.map(v -> ((TaggedValue)v).getTagIndex()));
-                value.eitherEx_(err -> {}, orig -> {
-                    TaggedValue taggedValue = (TaggedValue) orig;
-
-                    @Nullable DataTypeValue innerType = tagTypes.get(taggedValue.getTagIndex()).getInner();
-                    if (innerType != null)
-                    {
-                        @Nullable @Value Object innerValue = taggedValue.getInner();
-                        if (innerValue == null)
-                            throw new InternalException("Inner value present but no slot for it");
-                        innerType.setCollapsed(rowIndex, Either.right(innerValue));
-                    }
-                });
+                set(g, TaggedValue.class);
                 return null;
             }
 
@@ -161,14 +148,9 @@ public final class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public Void array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
             {
-                if (inner == null)
-                    throw new InternalException("Attempting to set value in empty array");
-                g.set(rowIndex, value.mapEx(v -> {
-                    ListEx listEx = (ListEx)v;
-                    return new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx));
-                }));
+                set(g, ListEx.class);
                 return null;
             }
         });
@@ -225,7 +207,7 @@ public final class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags, GetValue<@Value TaggedValue> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -249,7 +231,7 @@ public final class DataTypeValue extends DataType
         }
 
         @Override
-        public R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+        public R array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected array type");
         }
@@ -262,12 +244,12 @@ public final class DataTypeValue extends DataType
         R bool(GetValue<@Value Boolean> g) throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, E;
         R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException, E;
 
-        // Each item is a pair of size and accessor.  The inner type gives the type
+        // Each item is an array.  The inner type gives the type
         // of each entry
-        R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
+        R array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, E;
     }
 
     public static interface DataTypeVisitorGet<R> extends DataTypeVisitorGetEx<R, UserException>
@@ -276,7 +258,7 @@ public final class DataTypeValue extends DataType
     }
     
 
-    @SuppressWarnings({"nullness", "unchecked"})
+    @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E
     {
@@ -291,7 +273,7 @@ public final class DataTypeValue extends DataType
             case BOOLEAN:
                 return visitor.bool(getBoolean);
             case TAGGED:
-                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, (ImmutableList<TagType<DataTypeValue>>)(ImmutableList)tagTypes, getTag);
+                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, tagTypes, getTag);
             case TUPLE:
                 return visitor.tuple(memberType, getTuple);
             case ARRAY:
@@ -309,16 +291,16 @@ public final class DataTypeValue extends DataType
         return getArrayLength.apply(index);
     }*/
 
-    public static interface GetValue<T>
+    public static interface GetValue<@Value T>
     {
         @OnThread(Tag.Simulation)
-        @NonNull T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
+        @NonNull @Value T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
 
         @OnThread(Tag.Simulation)
-        default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
+        default @NonNull @Value T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
 
         @OnThread(Tag.Simulation)
-        default void set(int index, Either<String, T> value) throws InternalException, UserException
+        default void set(int index, Either<String, @Value T> value) throws InternalException, UserException
         {
             throw new InternalException("Attempted to set value for uneditable column: " + getClass());
         };
@@ -357,11 +339,9 @@ public final class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
             {
-                Integer tagIndex = g.get(index);
-                @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();;
-                return new TaggedValue(tagIndex, inner == null ? null : inner.applyGet(this));
+                return g.get(index);
             }
 
             @Override
@@ -373,16 +353,9 @@ public final class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public @Value Object array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
             {
-                List<@Value Object> l = new ArrayList<>();
-                @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
-                for (int indexInArray = 0; indexInArray < details.getFirst(); indexInArray++)
-                {
-                    // Need to look for indexInArray, not index, to get full list:
-                    l.add(details.getSecond().getCollapsed(indexInArray));
-                }
-                return DataTypeUtility.value(l);
+                return g.get(index);
             }
 
             @Override
@@ -412,7 +385,7 @@ public final class DataTypeValue extends DataType
      *                                 to ask for that in that DataTypeValue.  Any DataTypeValue returned
      *                                 must be of the same type as original.
      */
-    public static DataTypeValue copySeveral(DataType original, GetValue<Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
+    public static DataTypeValue copySeveral(DataType original, SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
     {
         TagTypeDetails newTagTypes = null;
         if (original.tagTypes != null && original.tagTypeVariableSubstitutions != null && original.taggedTypeName != null)
@@ -426,9 +399,9 @@ public final class DataTypeValue extends DataType
                 if (inner == null)
                     tagTypes.add(new TagType<>(t.getName(), null));
                 else
-                    tagTypes.add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, (i, prog) ->
+                    tagTypes.add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, i ->
                     {
-                        @NonNull Pair<DataTypeValue, Integer> destinationParent = getOriginalValueAndIndex.get(i);
+                        @NonNull Pair<DataTypeValue, Integer> destinationParent = getOriginalValueAndIndex.apply(i);
                         @Nullable List<TagType<DataType>> destinationTagTypes = destinationParent.getFirst().tagTypes;
                         if (destinationTagTypes == null)
                             throw new InternalException("Joining together columns but other column not tagged");
@@ -454,7 +427,7 @@ public final class DataTypeValue extends DataType
                 {
                     DataType type = original.memberType.get(memberTypeIndex);
                     int memberTypeIndexFinal = memberTypeIndex;
-                    r.add(((DataTypeValue) type).copySeveral(type, (i, prog) -> getOriginalValueAndIndex.getWithProgress(i, prog).mapFirstEx(dtv -> {
+                    r.add(((DataTypeValue) type).copySeveral(type, i -> getOriginalValueAndIndex.apply(i).mapFirstEx(dtv -> {
                         if (dtv.memberType == null)
                             throw new InternalException("copySeveral: original " + original + " had memberType but given target does not: " + dtv);
                         return (DataTypeValue)dtv.memberType.get(memberTypeIndexFinal);
@@ -482,17 +455,17 @@ public final class DataTypeValue extends DataType
 
     public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
     {
-        return copySeveral(this, (i, prog) -> new Pair<DataTypeValue, Integer>(this, getOriginalIndex.getWithProgress(i, prog)));
+        return copySeveral(this, i -> new Pair<DataTypeValue, Integer>(this, getOriginalIndex.getWithProgress(i, null)));
     }
 
-    private static <T> @Nullable GetValue<T> several(GetValue<Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<T>> g)
+    private static <T> @Nullable GetValue<@Value T> several(SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<@Value T>> g)
     {
         if (g == null)
             return null;
-        @NonNull Function<DataTypeValue, @Nullable GetValue<T>> gFinal = g;
+        @NonNull Function<DataTypeValue, @Nullable GetValue<@Value T>> gFinal = g;
         return (int destIndex, final @Nullable ProgressListener prog) -> {
-            @OnThread(Tag.Simulation) @NonNull Pair<DataTypeValue, Integer> src = getOriginalIndex.getWithProgress(destIndex, prog);
-            @Nullable GetValue<T> innerGet = gFinal.apply(src.getFirst());
+            @OnThread(Tag.Simulation) @NonNull Pair<DataTypeValue, Integer> src = getOriginalIndex.apply(destIndex);
+            @Nullable GetValue<@Value T> innerGet = gFinal.apply(src.getFirst());
             if (innerGet == null)
                 throw new InternalException("Inner get in several was null");
             return innerGet.getWithProgress(src.getSecond(), prog == null ? null : prog);
@@ -501,7 +474,8 @@ public final class DataTypeValue extends DataType
     
     public static interface OverrideSet
     {
-        public void set(int index, Either<String, Object> value);
+        @OnThread(Tag.Simulation)
+        public void set(int index, Either<String, @Value Object> value);
     }
 
     /**
@@ -511,22 +485,21 @@ public final class DataTypeValue extends DataType
     {
         return applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
         {
-            private <T> GetValue<T> overrideSet(GetValue<T> g)
+            private <@NonNull @Value T> GetValue<@NonNull @Value T> overrideSet(GetValue<@NonNull @Value T> g)
             {
-                return new GetValue<T>()
+                return new GetValue<@NonNull @Value T>()
                 {
-                    @NonNull
                     @Override
-                    public T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    public @NonNull @Value T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
                         return g.getWithProgress(index, progressListener);
                     }
 
                     @Override
-                    @SuppressWarnings("nullness") // I guess checker thinks T could be @Nullable
-                    public @OnThread(Tag.Simulation) void set(int index, Either<String, T> value) throws InternalException, UserException
+                    // @SuppressWarnings("nullness") // I guess checker thinks T could be @Nullable
+                    public @OnThread(Tag.Simulation) void set(int index, Either<String, @NonNull @Value T> value) throws InternalException, UserException
                     {
-                        set.set(index, value.<Object>map(t -> t));
+                        set.set(index, value.<@Value Object>map(t -> t));
                     }
                 };
             }
@@ -556,7 +529,7 @@ public final class DataTypeValue extends DataType
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException
             {
                 return DataTypeValue.tagged(typeName, typeVars, tagTypes, overrideSet(g));
             }
@@ -568,7 +541,7 @@ public final class DataTypeValue extends DataType
             }
 
             @Override
-            public DataTypeValue array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            public DataTypeValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
                 return DataTypeValue.arrayV(inner, overrideSet(g));
             }

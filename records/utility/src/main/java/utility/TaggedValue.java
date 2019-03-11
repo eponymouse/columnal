@@ -10,7 +10,7 @@ import threadchecker.Tag;
  * Created by neil on 10/01/2017.
  */
 @OnThread(Tag.Any)
-public @Value class TaggedValue
+public final @Value class TaggedValue
 {
     private final int tagIndex;
     private @Nullable @Value Object innerItem;

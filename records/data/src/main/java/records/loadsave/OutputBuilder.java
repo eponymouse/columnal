@@ -25,6 +25,7 @@ import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
+import utility.Utility.ListEx;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -287,15 +288,21 @@ public class OutputBuilder
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
                 {
-                    TagType<DataTypeValue> t = tagTypes.get(g.get(index));
-                    @Nullable DataTypeValue inner = t.getInner();
+                    TaggedValue v = g.get(index);
+                    TagType<DataType> t = tagTypes.get(v.getTagIndex());
+                    @Nullable DataType innerType = t.getInner();
                     raw(t.getName());
-                    if (inner != null)
+                    if (innerType != null)
                     {
                         raw("(");
-                        data(inner, index, true, true);
+                        data(innerType.fromCollapsed((i, prog) -> {
+                            @Value Object innerValue = v.getInner();
+                            if (innerValue == null)
+                                throw new InternalException("Missing inner value required by type: " + typeName + " tag " + v.getTagIndex());
+                            return innerValue;
+                        }), 0, true, true);
                         raw(")");
                     }
                     return UnitType.UNIT;
@@ -339,15 +346,15 @@ public class OutputBuilder
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public UnitType array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+                public UnitType array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
                 {
                     raw("[");
-                    @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
-                    for (int i = 0; i < details.getFirst(); i++)
+                    @NonNull ListEx details = g.get(index);
+                    for (int i = 0; i < details.size(); i++)
                     {
                         if (i > 0)
                             raw(",");
-                        data(details.getSecond(), i, true, false);
+                        data(inner.fromCollapsed((j, prog) -> details.get(j)), i, true, false);
                     }
                     raw("]");
                     return UnitType.UNIT;

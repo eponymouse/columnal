@@ -511,10 +511,9 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
             {
-                GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue, TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser)))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue, TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t).recogniser)))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -529,14 +528,9 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            public GetValueAndComponent<?> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
-                if (inner == null)
-                    throw new InternalException("Can't make components for the empty list type");
-
-                @NonNull DataType innerType = inner;
-                
-                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, ListEx.class, DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner).recogniser));
+                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, ListEx.class, g, new ListRecogniser(recogniser(inner).recogniser));
                     /*
                 (parents, value) ->
                 {

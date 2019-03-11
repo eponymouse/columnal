@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -137,7 +138,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         };
     }
     
-    protected abstract class GetValueOrError<V> implements GetValue<V>
+    protected abstract class GetValueOrError<@Value V> implements GetValue<@Value V>
     {
         @OnThread(Tag.Any)
         public GetValueOrError()
@@ -146,7 +147,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
 
         @NonNull
         @Override
-        public final V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+        public final @Value V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
         {
             // Must do this first in case it finds an error:
             _beforeGet(index, progressListener);
@@ -167,16 +168,16 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
 
         @Override
         @OnThread(Tag.Simulation)
-        public final void set(int index, Either<String, V> value) throws InternalException, UserException
+        public final void set(int index, Either<String, @Value V> value) throws InternalException, UserException
         {
             value.eitherEx_(err -> {setError(index, err); _set(index, null);},
                 v -> {errorEntries.remove(index); _set(index, v);});
         }
 
         @OnThread(Tag.Simulation)
-        protected abstract @NonNull V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
+        protected abstract @NonNull @Value V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
 
         @OnThread(Tag.Simulation)
-        protected abstract void _set(int index, @Nullable V value) throws InternalException, UserException;
+        protected abstract void _set(int index, @Nullable @Value V value) throws InternalException, UserException;
     }
 }

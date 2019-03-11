@@ -19,6 +19,7 @@ import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.ListExDTV;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -280,7 +281,7 @@ public class TestFromDoc
                 if (columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW)
                     return new Pair<>(tableId, type);
                 else
-                    return new Pair<>(tableId, DataTypeValue.arrayV(type, (i, prog) -> new Pair<>(column.getLength(), type)));
+                    return new Pair<>(tableId, DataTypeValue.arrayV(type, (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
             }
             catch (Exception e)
             {

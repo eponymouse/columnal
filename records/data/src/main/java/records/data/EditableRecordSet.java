@@ -119,23 +119,21 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
             {
                 List<Either<String, TaggedValue>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
                     try
                     {
-                        int tagIndex = g.get(i);
-                        @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
-                        r.add(Either.right(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i))));
+                        r.add(Either.right(g.get(i)));
                     }
                     catch (InvalidImmediateValueException e)
                     {
                         r.add(Either.left(e.getInvalid()));
                     }
                 }
-                return new MemoryTaggedColumn(rs, original.getName(), typeName, typeVars, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
+                return new MemoryTaggedColumn(rs, original.getName(), typeName, typeVars, tagTypes, r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
             }
 
             @Override
@@ -162,7 +160,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public EditableColumn array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
             {
                 List<Either<String, ListEx>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
@@ -170,11 +168,11 @@ public class EditableRecordSet extends RecordSet
                     try
                     {
                         List<Object> array = new ArrayList<>();
-                        @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
-                        for (int indexInArray = 0; indexInArray < details.getFirst(); indexInArray++)
+                        @NonNull @Value ListEx details = g.get(index);
+                        for (int indexInArray = 0; indexInArray < details.size(); indexInArray++)
                         {
                             // Need to look for indexInArray, not index, to get full list:
-                            array.add(details.getSecond().getCollapsed(indexInArray));
+                            array.add(details.get(indexInArray));
                         }
                         r.add(Either.right(DataTypeUtility.value(array)));
                     }

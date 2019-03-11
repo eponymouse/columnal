@@ -135,7 +135,7 @@ public abstract class Transformation extends Table
         return original.withSet(new OverrideSet()
         {
             @Override
-            public void set(int index, Either<String, Object> value)
+            public void set(int index, Either<String, @Value Object> value)
             {
                 // Need to ask the user if they want a manual edit
                 Platform.runLater(() -> {

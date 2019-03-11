@@ -43,6 +43,7 @@ import records.data.*;
 import records.data.Table.FullSaver;
 import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.ListExDTV;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
@@ -1513,7 +1514,7 @@ public class TestUtil
                         case CORRESPONDING_ROW:
                             return new Pair<>(new TableId("SingleTableLookup"), column.getType());
                         case WHOLE_COLUMN:
-                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.arrayV(column.getType(), (i, prog) -> new Pair<>(column.getLength(), column.getType())));
+                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.arrayV(column.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }
