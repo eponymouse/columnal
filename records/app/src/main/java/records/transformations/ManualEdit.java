@@ -344,7 +344,6 @@ edit : editHeader editColumn*;
                         return replaced.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, v -> v.getValue());
                     else
                         return originalType.getCollapsed(i);
-                        // TODO override set as well as get
                 });
                 
                 dataType = getType.withSet((index, value) -> {
@@ -354,7 +353,8 @@ edit : editHeader editColumn*;
                         getReplacementKeyForRow(index),
                         value.<ComparableEither<String, ComparableValue>>either(err -> ComparableEither.<String, ComparableValue>left(err), v -> ComparableEither.<String, ComparableValue>right(new ComparableValue(v)))
                     ));
-                    // TODO need to update dependent tables
+                    // Notify dependents:
+                    recordSet.modified(getName(), index);
                 });
                         
                         /*

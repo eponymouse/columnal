@@ -27,6 +27,7 @@ import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
@@ -57,6 +58,10 @@ import utility.SimulationFunction;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -193,8 +198,25 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         ManualEdit manualEdit = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).map(t -> (ManualEdit)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
         TableDisplay manualEditDisplay = TestUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> manualEdit.getDisplay()));
+
+        // Add a second sort transformation, sorting the edit:
+        targetSortPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEdit.getId()));
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetSortPos);
+        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
+        TestUtil.delay(100);
+        clickOn(".id-new-transform");
+        TestUtil.delay(100);
+        clickOn(".id-transform-sort");
+        TestUtil.delay(100);
+        write(manualEdit.getId().getRaw());
+        push(KeyCode.ENTER);
+        ColumnId secondSortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
+        write(secondSortBy.getRaw());
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn();
         
-        int numFurtherEdits = 1 + r.nextInt(10);
+        // Now make the further manual edits:
+        int numFurtherEdits = r.nextInt(10);
         for (int i = 0; i < numFurtherEdits; i++)
         {
             @TableDataRowIndex int row = makeRowIndex.get();
@@ -236,7 +258,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         if (r.nextInt(3) == 1)
         {
-            // Change sort order:
+            // Change sort order of source:
             clickOn(".edit-sort-by");
             clickOn(".small-delete-button");
             clickOn(".fancy-list-add");
@@ -251,29 +273,78 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         // Now check output values by getting them from clipboard:
         TestUtil.sleep(500);
-        showContextMenu(".table-display-table-title.transformation-table-title")
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
+        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
 
-        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
-        assertTrue(clip.isPresent());
+        Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        assertTrue(editViaClip.isPresent());
         ImmutableList<LoadedColumnInfo> expected = makeExpected(sort.getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, null);
         
         assertEquals(replacementsSoFar, manualEdit._test_getReplacements());
-        checkEqual(expected, clip.get());
+        checkEqual(expected, editViaClip.get());
         checkEqual(expected, getGraphicalContent(mainWindowActions, manualEdit));
         
-        fail("TODO add sort after manual edit and check that, too");
+        // Copy the values from the resulting sort:
+        Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && !t.getId().equals(sort.getId())).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
+        TableDisplay secondSortDisplay = (TableDisplay) TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
+        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+                .clickOn(".id-tableDisplay-menu-copyValues");
+        TestUtil.sleep(1000);
+
+        Optional<ImmutableList<LoadedColumnInfo>> secondSortViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        assertTrue(secondSortViaClip.isPresent());
+        ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(manualEdit.getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, secondSortBy);
+
+        checkEqual(expectedSecondSort, secondSortViaClip.get());
+        checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
     }
 
     @OnThread(Tag.Simulation)
     private ImmutableList<LoadedColumnInfo> makeExpected(RecordSet original, @Nullable ColumnId replacementIdentifier, HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacements, @Nullable ColumnId sortBy) throws UserException, InternalException
     {
+        int length = original.getLength();
+        // Maps original indexes to sorted indexes
+        ArrayList<Integer> sortMap = new ArrayList<>(new AbstractList<Integer>()
+        {
+            @Override
+            public Integer get(int index)
+            {
+                return index;
+            }
+
+            @Override
+            public int size()
+            {
+                return length;
+            }
+        });
+
+        if (sortBy != null)
+        {
+            DataTypeValue sortByColumn = original.getColumn(sortBy).getType();
+            Collections.sort(sortMap, Comparator.<Integer, ComparableEither<String, ComparableValue>>comparing(i -> {
+                try
+                {
+                    return ComparableEither.fromEither(TestUtil.getSingleCollapsedData(sortByColumn, i).map(ComparableValue::new));
+                }
+                catch (InternalException | UserException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }));
+        }
+        
         return Utility.mapListExI(original.getColumns(), column -> {
             TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> colReplacements = replacements.getOrDefault(column.getName(), new TreeMap<>());
             ImmutableList.Builder<Either<String, @Value Object>> columnValues = ImmutableList.builderWithExpectedSize(original.getLength());
-            for (int row = 0; row < original.getLength(); row++)
+            for (int rowWithoutSort = 0; rowWithoutSort < original.getLength(); rowWithoutSort++)
             {
+                // We must map backwards to original row:
+                int rowWithoutSortFinal = rowWithoutSort;
+                int row = sortMap.get(rowWithoutSort);//Utility.findFirstIndex(sortMap, i -> i == rowWithoutSortFinal).orElseThrow(() -> new RuntimeException("Invalid sortMap"));
                 Either<String, @Value Object> rowKey = replacementIdentifier == null ? Either.<String, @Value Object>right(DataTypeUtility.value(row)) : TestUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
                 @Nullable ComparableEither<String, ComparableValue> replacement = rowKey.<@Nullable ComparableEither<String, ComparableValue>>either(err -> null, k -> colReplacements.get(new ComparableValue(k)));
                 if (replacement != null)
