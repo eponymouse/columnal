@@ -21,10 +21,15 @@ import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
+import records.error.InternalException;
+import records.error.UserException;
+import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
@@ -45,6 +50,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -105,13 +111,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // Select the single listed table:
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        ColumnId initialSortBy = srcRS.getColumnIds().get(r.nextInt(numColumns)); 
-        write(initialSortBy.getRaw());
+        ColumnId sortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
+        write(sortBy.getRaw());
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
 
         Sort sort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
-        assertEquals(ImmutableList.of(new Pair<>(initialSortBy, Direction.ASCENDING)), sort.getSortBy());
+        assertEquals(ImmutableList.of(new Pair<>(sortBy, Direction.ASCENDING)), sort.getSortBy());
 
         // Null means use row number
         @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : sort.getData().getColumns().get(r.nextInt(numColumns));
@@ -121,7 +127,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         @SuppressWarnings("units")
         Supplier<@TableDataColIndex Integer> makeColIndex = () -> r.nextInt(numColumns);
 
-        HashMap<ColumnId, TreeMap<ComparableValue, ComparableValue>> replacementsSoFar = new HashMap<>();
+        HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacementsSoFar = new HashMap<>();
 
         TableId sortId = sort.getId();
         
@@ -141,7 +147,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             if (replaceKey != null)
             {
                 replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
-                        .put(new ComparableValue(replaceKey), new ComparableValue(value));
+                        .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
             }
             
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
@@ -204,7 +210,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             if (replaceKey != null)
             {
                 replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
-                        .put(new ComparableValue(replaceKey), new ComparableValue(value));
+                        .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
             }
 
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
@@ -227,9 +233,22 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 push(KeyCode.ENTER);
             }
         }
-        // TODO also change original data and/or sort order and check they updated.
-        fail("TODO change original data and/or sort");
-            
+        
+        if (r.nextInt(3) == 1)
+        {
+            // Change sort order:
+            clickOn(".edit-sort-by");
+            clickOn(".small-delete-button");
+            clickOn(".fancy-list-add");
+            sortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
+            write(sortBy.getRaw());
+            clickOn(".ok-button");
+        }
+        if (r.nextBoolean())
+        {
+            fail("TODO change original data");
+        }
+        
         // Now check output values by getting them from clipboard:
         TestUtil.sleep(500);
         showContextMenu(".table-display-table-title.transformation-table-title")
@@ -238,9 +257,71 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(clip.isPresent());
-        fail("TODO compare expected and actual");
-        // TODO
-        //List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
-        //TestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
+        ImmutableList<LoadedColumnInfo> expected = makeExpected(sort.getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, null);
+        
+        assertEquals(replacementsSoFar, manualEdit._test_getReplacements());
+        checkEqual(expected, clip.get());
+        checkEqual(expected, getGraphicalContent(mainWindowActions, manualEdit));
+        
+        fail("TODO add sort after manual edit and check that, too");
+    }
+
+    @OnThread(Tag.Simulation)
+    private ImmutableList<LoadedColumnInfo> makeExpected(RecordSet original, @Nullable ColumnId replacementIdentifier, HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacements, @Nullable ColumnId sortBy) throws UserException, InternalException
+    {
+        return Utility.mapListExI(original.getColumns(), column -> {
+            TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> colReplacements = replacements.getOrDefault(column.getName(), new TreeMap<>());
+            ImmutableList.Builder<Either<String, @Value Object>> columnValues = ImmutableList.builderWithExpectedSize(original.getLength());
+            for (int row = 0; row < original.getLength(); row++)
+            {
+                Either<String, @Value Object> rowKey = replacementIdentifier == null ? Either.<String, @Value Object>right(DataTypeUtility.value(row)) : TestUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
+                @Nullable ComparableEither<String, ComparableValue> replacement = rowKey.<@Nullable ComparableEither<String, ComparableValue>>either(err -> null, k -> colReplacements.get(new ComparableValue(k)));
+                if (replacement != null)
+                    columnValues.add(replacement.<@Value Object>map(r -> r.getValue()));
+                else
+                    columnValues.add(TestUtil.getSingleCollapsedData(column.getType(), row));
+                    
+            }
+            
+            return new LoadedColumnInfo(column.getName(), column.getType().getType(), columnValues.build());
+        });
+    }
+
+    @OnThread(Tag.Simulation)
+    private void checkEqual(ImmutableList<LoadedColumnInfo> expected, ImmutableList<LoadedColumnInfo> actual) throws InternalException, UserException
+    {
+        assertEquals(expected.size(), actual.size());
+        for (int colIndex = 0; colIndex < expected.size(); colIndex++)
+        {
+            LoadedColumnInfo expCol = expected.get(colIndex);
+            LoadedColumnInfo actCol = actual.get(colIndex);
+            
+            assertEquals(expCol.columnName, actCol.columnName);
+            assertEquals(expCol.dataType, actCol.dataType);
+            TestUtil.assertValueListEitherEqual("Column " + expCol.columnName + " (" + colIndex + ")", expCol.dataValues, actCol.dataValues);
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    @SuppressWarnings("units")
+    private ImmutableList<LoadedColumnInfo> getGraphicalContent(MainWindowActions mainWindowActions, Table table) throws InternalException, UserException
+    {
+        RecordSet tableData = table.getData();
+        return Utility.mapListExI_Index(tableData.getColumns(), (colIndex, column) -> {
+            TableDisplay tableDisplay = TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
+            ImmutableList.Builder<Either<String, @Value Object>> values = ImmutableList.builder();
+            for (int row = 0; row < tableData.getLength(); row++)
+            {
+                int rowFinal = row;
+                values.add(TestUtil.checkNonNull(TestUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
+                    VersionedSTF cell = mainWindowActions._test_getDataCell(tableDisplay._test_getDataPosition(rowFinal, colIndex));
+                    if (cell == null)
+                        return null;
+                    return column.getType().getType().loadSingleItem(cell._test_getGraphicalText());
+                })));
+            }
+            
+            return new LoadedColumnInfo(column.getName(), column.getType().getType(), values.build());
+        });
     }
 }

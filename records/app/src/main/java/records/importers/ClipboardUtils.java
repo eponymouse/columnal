@@ -57,7 +57,7 @@ public class ClipboardUtils
         public final DataType dataType;
         public final ImmutableList<Either<String, @Value Object>> dataValues;
 
-        LoadedColumnInfo(@Nullable ColumnId columnName, DataType dataType, ImmutableList<Either<String, @Value Object>> dataValues)
+        public LoadedColumnInfo(@Nullable ColumnId columnName, DataType dataType, ImmutableList<Either<String, @Value Object>> dataValues)
         {
             this.columnName = columnName;
             this.dataType = dataType;

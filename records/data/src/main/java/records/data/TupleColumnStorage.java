@@ -55,7 +55,7 @@ public class TupleColumnStorage extends SparseErrorColumnStorage<Object[]> imple
                 for (int i = 0; i < storage.size(); i++)
                 {
                     ColumnStorage<?> columnStorage = storage.get(i);
-                    tuple[i] = columnStorage.getType().getCollapsed(i);
+                    tuple[i] = columnStorage.getType().getCollapsed(index);
                 }
                 return DataTypeUtility.value(tuple);
             }

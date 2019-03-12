@@ -36,6 +36,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
+import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.DataParser.*;
 import records.grammar.FormatLexer;
@@ -1374,6 +1375,18 @@ public final class DataType implements StyledShowable
             }
             throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
         });
+    }
+    
+    public Either<String, @Value Object> loadSingleItem(String content) throws InternalException
+    {
+        try
+        {
+            return Utility.<Either<String, @Value Object>, DataParser>parseAsOne(content, DataLexer::new, DataParser::new, p -> loadSingleItem(this, p, false));
+        }
+        catch (UserException e)
+        {
+            return Either.left(content);
+        }
     }
 
     @OnThread(Tag.Any)

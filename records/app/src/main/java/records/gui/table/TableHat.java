@@ -113,7 +113,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         editSort(screenPoint, parent, sort);
                     }
                 }
-            });
+            }).withStyle(new StyledCSS("edit-sort-by"));
             content = StyledString.concat(
                 collapsedContent = StyledString.s("Sort"),
                 StyledString.s(" "),

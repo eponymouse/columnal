@@ -46,6 +46,7 @@ import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,13 +74,13 @@ public class ManualEdit extends Transformation
     @OnThread(Tag.Any)
     private final Either<StyledString, RecordSet> recordSet;
     @OnThread(Tag.Any)
-    private final ImmutableMap<ColumnId, ColumnReplacementValues> replacements;
+    private final HashMap<ColumnId, ColumnReplacementValues> replacements;
 
     public ManualEdit(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, @Nullable Pair<ColumnId, DataType> replacementKey, ImmutableMap<ColumnId, ColumnReplacementValues> replacements) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
-        this.replacements = replacements;
+        this.replacements = new HashMap<>(replacements);
 
         Table srcTable = null;
         Either<StyledString, RecordSet> data;
@@ -292,6 +293,13 @@ edit : editHeader editColumn*;
         return src;
     }
 
+    public HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> _test_getReplacements()
+    {
+        HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> r = new HashMap<>();
+        replacements.forEach((c, crv) -> r.put(c, crv.replacementValues));
+        return r;
+    }
+
     private class ReplacedColumn extends Column
     {
         private final Column original;
@@ -328,23 +336,26 @@ edit : editHeader editColumn*;
         {
             if (dataType == null)
             {
-                ColumnReplacementValues columnReplacements = replacements.get(getName());
                 DataTypeValue originalType = original.getType();
-                if (columnReplacements == null)
-                {
-                    dataType = originalType;
-                }
-                else
-                {
-                    dataType = originalType.fromCollapsed((i, prog) -> {
-                        ComparableEither<String, ComparableValue> replaced = columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
-                        if (replaced != null)
-                            return replaced.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, v -> v.getValue());
-                        else
-                            return originalType.getCollapsed(i);
-                            // TODO override set as well as get
-                    });
-                }
+                DataTypeValue getType = originalType.getType().fromCollapsed((i, prog) -> {
+                    ColumnReplacementValues columnReplacements = replacements.get(getName());
+                    @Nullable ComparableEither<String, ComparableValue> replaced = columnReplacements == null ? null : columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
+                    if (replaced != null)
+                        return replaced.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, v -> v.getValue());
+                    else
+                        return originalType.getCollapsed(i);
+                        // TODO override set as well as get
+                });
+                
+                dataType = getType.withSet((index, value) -> {
+                    ColumnReplacementValues columnReplacements = replacements.computeIfAbsent(getName(), k -> new ColumnReplacementValues(getType.getType(), ImmutableList.of()));
+                    FXUtility.alertOnError_("Error looking up identifier value to store edit against", () ->
+                    columnReplacements.replacementValues.put(
+                        getReplacementKeyForRow(index),
+                        value.<ComparableEither<String, ComparableValue>>either(err -> ComparableEither.<String, ComparableValue>left(err), v -> ComparableEither.<String, ComparableValue>right(new ComparableValue(v)))
+                    ));
+                    // TODO need to update dependent tables
+                });
                         
                         /*
                         original.getType().applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
@@ -439,7 +450,15 @@ edit : editHeader editColumn*;
             return replacements.containsKey(getName());
         }
     }
-    
+
+    private ComparableValue getReplacementKeyForRow(int index) throws InternalException, UserException
+    {
+        if (keyColumn == null)
+            return new ComparableValue(DataTypeUtility.value(index));
+        return new ComparableValue(keyColumn.getFirst().getType().getCollapsed(index));
+    }
+
+    @OnThread(Tag.Simulation)
     public static class ColumnReplacementValues
     {
         // Must be exactly equal to the source column's type
@@ -455,6 +474,10 @@ edit : editHeader editColumn*;
         {
             this.dataType = dataType;
             this.replacementValues = new TreeMap<>();
+            for (Pair<@Value Object, Either<String, @Value Object>> replacementValue : replacementValues)
+            {
+                this.replacementValues.put(new ComparableValue(replacementValue.getFirst()), replacementValue.getSecond().<ComparableEither<String, ComparableValue>>either(l -> ComparableEither.<String, ComparableValue>left(l), r -> ComparableEither.<String, ComparableValue>right(new ComparableValue(r))));
+            }
         }
 
         @Override

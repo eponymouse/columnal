@@ -956,5 +956,14 @@ public class DataTypeUtility
         {
             return value;
         }
+
+        // For debugging:
+        @Override
+        public String toString()
+        {
+            return "ComparableValue{" +
+                    "value=" + DataTypeUtility._test_valueToString(value) +
+                    '}';
+        }
     }
 }
