@@ -38,7 +38,7 @@ import java.util.stream.Stream;
  * data set.  Hidden is decided by black-list.
  */
 @OnThread(Tag.Simulation)
-public class HideColumns extends Transformation
+public class HideColumns extends Transformation implements SingleSourceTransformation
 {
     public static final String NAME = "drop.columns";
     @OnThread(Tag.Any)
@@ -161,9 +161,15 @@ public class HideColumns extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new HideColumns(getManager(), getDetailsForCopy(), newSrcTableId, hideIds);
     }
 
     @OnThread(Tag.Any)

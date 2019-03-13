@@ -51,7 +51,7 @@ import java.util.stream.Stream;
  * by evaluating an expression for each.
  */
 @OnThread(Tag.Simulation)
-public class Calculate extends Transformation
+public class Calculate extends Transformation implements SingleSourceTransformation
 {
     // If any columns overlap the source table's columns, they are shown in that position.
     // If they are new, they are shown at the end, in the order provided by this list
@@ -213,9 +213,15 @@ public class Calculate extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new Calculate(getManager(), getDetailsForCopy(), newSrcTableId, newColumns);
     }
 
     private void deleteColumn(ColumnId columnId)

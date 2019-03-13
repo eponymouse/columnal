@@ -3,16 +3,8 @@ package records.transformations;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.Column;
+import records.data.*;
 import records.data.Column.ProgressListener;
-import records.data.NumericColumnStorage;
-import records.data.RecordSet;
-import records.data.Table;
-import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -51,7 +43,7 @@ import java.util.stream.Stream;
  * Created by neil on 23/11/2016.
  */
 @OnThread(Tag.Simulation)
-public class Filter extends Transformation
+public class Filter extends Transformation implements SingleSourceTransformation
 {
     private static final String PREFIX = "KEEPIF";
     public static final String NAME = "filter";
@@ -217,9 +209,15 @@ public class Filter extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new Filter(getManager(), getDetailsForCopy(), newSrcTableId, filterExpression);
     }
 
     public static class Info extends SingleSourceTransformationInfo

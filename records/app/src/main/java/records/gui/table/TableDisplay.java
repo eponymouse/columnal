@@ -931,7 +931,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -940,7 +940,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
-                        calc.getSource(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
+                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
                 })
             );
         });
@@ -948,7 +948,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), new ColumnId(""), null, agg.getColumnLookup(), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), new ColumnId(""), null, agg.getColumnLookup(), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -957,7 +957,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                     FXUtility.alertOnError_("Error adding column", () -> {
                         parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(),
-                                agg.getSource(), Utility.appendToList(agg.getColumnExpressions(), p), agg.getSplitBy()), null);
+                                agg.getSrcTableId(), Utility.appendToList(agg.getColumnExpressions(), p), agg.getSplitBy()), null);
                     })
             );
         });
@@ -1053,14 +1053,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             Filter filter = (Filter)table;
             new EditExpressionDialog(parent, 
-                parent.getManager().getSingleTableOrNull(filter.getSource()),
+                parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
                 filter.getFilterExpression(),
-                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSource()),
+                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()),
                 DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
                 
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                        table.getDetailsForCopy(), filter.getSource(), newExp), null);
+                        table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null);
             })));    
         }
         else if (table instanceof SummaryStatistics)

@@ -47,7 +47,7 @@ import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
-public class Check extends Transformation
+public class Check extends Transformation implements SingleSourceTransformation
 {
     public static final String NAME = "check";
     private static final String PREFIX = "CHECK";
@@ -275,9 +275,15 @@ public class Check extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new Check(getManager(), getDetailsForCopy(), newSrcTableId, checkType, checkExpression);
     }
 
     @OnThread(Tag.Any)

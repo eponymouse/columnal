@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class SummaryStatistics extends Transformation
+public class SummaryStatistics extends Transformation implements SingleSourceTransformation
 {
     public static final String NAME = "aggregate";
     private final @Nullable Table src;
@@ -442,11 +442,17 @@ public class SummaryStatistics extends Transformation
     }
     
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
     }
-    
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new SummaryStatistics(getManager(), getDetailsForCopy(), newSrcTableId, summaries, splitBy);
+    }
+
     @Override
     @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()

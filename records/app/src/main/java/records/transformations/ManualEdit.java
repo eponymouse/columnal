@@ -12,15 +12,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.Table;
-import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
+import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
@@ -61,7 +53,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
-public class ManualEdit extends Transformation
+public class ManualEdit extends Transformation implements SingleSourceTransformation
 {
     public static final String NAME = "correct";
     
@@ -73,7 +65,7 @@ public class ManualEdit extends Transformation
     private final @Nullable Pair<Column, DataType> keyColumn;
     @OnThread(Tag.Any)
     private final Either<StyledString, RecordSet> recordSet;
-    @OnThread(Tag.Any)
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private final HashMap<ColumnId, ColumnReplacementValues> replacements;
 
     public ManualEdit(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, @Nullable Pair<ColumnId, DataType> replacementKey, ImmutableMap<ColumnId, ColumnReplacementValues> replacements) throws InternalException
@@ -144,7 +136,7 @@ public class ManualEdit extends Transformation
 
     @Override
     @OnThread(Tag.Simulation)
-    protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected synchronized List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         /*
         editKW : {_input.LT(1).getText().equals("EDIT")}? ATOM;
@@ -214,13 +206,13 @@ edit : editHeader editColumn*;
     }
 
     @Override
-    protected int transformationHashCode()
+    protected synchronized int transformationHashCode()
     {
         return Objects.hash(srcTableId, keyColumn, replacements);
     }
 
     @Override
-    protected boolean transformationEquals(Transformation obj)
+    protected synchronized boolean transformationEquals(Transformation obj)
     {
         if (!(obj instanceof ManualEdit))
             return false;
@@ -244,7 +236,7 @@ edit : editHeader editColumn*;
     }
     
     @OnThread(Tag.Simulation)
-    public ManualEdit swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
+    public synchronized ManualEdit swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
     {
         if (src == null)
             throw new UserException("Cannot modify manual edit when original table is missing.");
@@ -293,11 +285,24 @@ edit : editHeader editColumn*;
         return src;
     }
 
-    public HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> _test_getReplacements()
+    @Pure
+    @OnThread(Tag.Any)
+    public TableId getSrcTableId()
+    {
+        return srcTableId;
+    }
+
+    public synchronized HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> _test_getReplacements()
     {
         HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> r = new HashMap<>();
         replacements.forEach((c, crv) -> r.put(c, crv.replacementValues));
         return r;
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized int getReplacementCount()
+    {
+        return replacements.values().stream().mapToInt(crv -> crv.replacementValues.size()).sum();
     }
 
     private class ReplacedColumn extends Column
@@ -456,6 +461,13 @@ edit : editHeader editColumn*;
         if (keyColumn == null)
             return new ComparableValue(DataTypeUtility.value(index));
         return new ComparableValue(keyColumn.getFirst().getType().getCollapsed(index));
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public synchronized Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new ManualEdit(getManager(), getDetailsForCopy(), newSrcTableId, keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), ImmutableMap.copyOf(replacements));
     }
 
     @OnThread(Tag.Simulation)

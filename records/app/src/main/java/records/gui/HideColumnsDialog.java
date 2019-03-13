@@ -2,7 +2,6 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
-import javafx.stage.Window;
 import records.data.ColumnId;
 import records.data.TableManager;
 import records.data.TableManager.TableMaker;
@@ -23,7 +22,7 @@ public class HideColumnsDialog extends LightDialog<TableMaker>
     {
         super(parent);
 
-        HideColumnsPanel hideColumnsPanel = new HideColumnsPanel(tableManager, hideColumns.getSource(), hideColumns.getHiddenColumns());
+        HideColumnsPanel hideColumnsPanel = new HideColumnsPanel(tableManager, hideColumns.getSrcTableId(), hideColumns.getHiddenColumns());
         getDialogPane().setContent(hideColumnsPanel.getNode());
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         
@@ -31,7 +30,7 @@ public class HideColumnsDialog extends LightDialog<TableMaker>
             if (bt == ButtonType.OK)
             {
                 ImmutableList<ColumnId> newHidden = hideColumnsPanel.getHiddenColumns();
-                TableMaker tableMaker = () -> new HideColumns(tableManager, hideColumns.getDetailsForCopy(), hideColumns.getSource(), newHidden);
+                TableMaker tableMaker = () -> new HideColumns(tableManager, hideColumns.getDetailsForCopy(), hideColumns.getSrcTableId(), newHidden);
                 return tableMaker;
             }
             return null;

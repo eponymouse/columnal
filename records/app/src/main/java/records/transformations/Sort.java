@@ -70,7 +70,7 @@ import java.util.stream.Stream;
  *   - Errors in every place if the sort-by columns can't be found.
  */
 @OnThread(Tag.Simulation)
-public class Sort extends Transformation
+public class Sort extends Transformation implements SingleSourceTransformation
 {
 
     public static final String NAME = "sort";
@@ -326,11 +326,17 @@ public class Sort extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public TableId getSource()
+    public TableId getSrcTableId()
     {
         return srcTableId;
     }
-    
+
+    @Override
+    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    {
+        return new Sort(getManager(), getDetailsForCopy(), newSrcTableId, originalSortBy);
+    }
+
     @Override
     @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()

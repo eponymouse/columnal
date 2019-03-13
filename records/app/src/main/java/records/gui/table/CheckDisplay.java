@@ -26,7 +26,6 @@ import records.data.datatype.DataType;
 import records.gui.DataDisplay;
 import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
@@ -46,7 +45,6 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.transformations.Check;
-import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -58,7 +56,6 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -128,7 +125,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 @Nullable Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
-                    explanationDisplay = new ExplanationDisplay(check.getSource(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
+                    explanationDisplay = new ExplanationDisplay(check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
                         Table t = parent.getManager().getSingleTableOrNull(l.tableId);
                         if (t != null && l.rowIndex.isPresent() && t.getDisplay() instanceof DataDisplay)
                         {

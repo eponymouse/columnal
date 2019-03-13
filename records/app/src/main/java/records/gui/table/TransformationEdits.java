@@ -39,11 +39,11 @@ public class TransformationEdits
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
         // expression may still be null
         
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSource()), null).showAndWait().ifPresent(newDetails -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
-                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
+                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSrcTableId(), newColumns), null)
                 );
             });
         });
@@ -52,8 +52,8 @@ public class TransformationEdits
     @OnThread(Tag.FXPlatform)
     static void editAggregateSplitBy(View parent, SummaryStatistics aggregate)
     {
-        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSource()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-            FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSource(), aggregate.getColumnExpressions(), splitBy), null));
+        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
+            FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
         }));
     }
 
@@ -65,7 +65,7 @@ public class TransformationEdits
         Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
         if (expression != null)
         {
-            new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSource()), columnId, expression, agg.getColumnLookup(), null).showAndWait().ifPresent(newDetails -> {
+            new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, agg.getColumnLookup(), null).showAndWait().ifPresent(newDetails -> {
                 ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
                 boolean added = false;
                 for (Pair<ColumnId, Expression> oldColumn : oldColumns)
@@ -81,7 +81,7 @@ public class TransformationEdits
                 }
                 Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                     FXUtility.alertOnError_("Error saving column", () ->
-                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSource(), newColumns.build(), agg.getSplitBy()), null)
+                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), agg.getSplitBy()), null)
                     );
                 });
             });
