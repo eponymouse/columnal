@@ -206,17 +206,17 @@ public class PropTypecheck
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
     @SuppressWarnings("unchecked")
     @Property
-    public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
+    public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
         DataType typeA = typeMaker.makeType().getDataType();
         DataType typeB = typeMaker.makeType().getDataType();
+
+        List<DataType> typeRest = TestUtil.makeList(new SourceOfRandomness(r), 0, 10, () -> typeMaker.makeType().getDataType());
         
         List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
-        DataType type = DataType.tuple(all);
-        DataTypeValue typeV = DataTypeValue.tuple(all,(i, prog) -> {throw new InternalException("");});
+        DataType type = DataType.tuple(all);;
         List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
-        DataTypeValue typeSV = DataTypeValue.tuple(allSwapped, (i, prog) -> {throw new InternalException("");});
         // Swapped is same as unswapped only if typeA and typeB are same:
         checkSameRelations(typeMaker.getTypeManager(), type, typeS, DataType.checkSame(typeA, typeB, s -> {}) != null);
     }
@@ -403,19 +403,5 @@ public class PropTypecheck
     private @Nullable DataType unifyList(TypeManager typeManager, DataType... types) throws InternalException, UserException
     {
         return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromDataType(null, t))).<@Nullable DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<@Nullable DataType>either(e -> null, x -> x));
-    }
-
-    public static class DataTypeListGenerator extends Generator<List>
-    {
-        public DataTypeListGenerator()
-        {
-            super(List.class);
-        }
-
-        @Override
-        public List generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
-        {
-            return TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenDataType(), sourceOfRandomness, generationStatus);
-        }
     }
 }

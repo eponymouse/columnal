@@ -162,11 +162,11 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     protected JellyType genTagged(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition = null;
-        List<TaggedTypeDefinition> pool;
+        List<TaggedTypeDefinition> pool = new ArrayList<>();
         if (typeKinds.contains(TypeKinds.BUILTIN_TAGGED))
-            pool = new ArrayList<>(typeManager.getKnownTaggedTypes().values());
-        else
-            pool = new ArrayList<>(typeManager.getUserTaggedTypes().values());
+            pool.addAll(typeManager.getKnownTaggedTypes().values());
+        
+        pool.addAll(typeManager.getUserTaggedTypes().values());
         
         if (mustHaveValues)
         {
