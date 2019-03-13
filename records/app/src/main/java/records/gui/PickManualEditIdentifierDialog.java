@@ -16,6 +16,7 @@ import utility.gui.DimmableParent;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
+import utility.gui.TranslationUtility;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -59,7 +60,7 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
             if (columnIdExists.test(columnId))
                 return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>of(columnId));
             else
-                return Either.left("Column not found: " + columnId.getRaw());
+                return Either.left(TranslationUtility.getString("manual.edit.column.not.found", columnId.getRaw()));
         }
         else
         {
