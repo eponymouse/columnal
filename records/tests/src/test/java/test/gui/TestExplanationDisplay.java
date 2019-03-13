@@ -164,7 +164,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         TextFlow textFlow = lookup(".explanation-flow").query();
         assertNotNull(textFlow);
         String allText = TestUtil.fx(() -> textFlow.getChildren().stream().filter(t -> t instanceof Text).map(t -> ((Text)t).getText()).collect(Collectors.joining()));
-        String[] splitText = allText.split("\n", -1);
+        String[] splitText = allText.split("\n(\u21aa )?", -1);
         assertArrayEquals(lines, splitText);
     }
 
