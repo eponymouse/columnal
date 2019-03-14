@@ -157,6 +157,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
                         .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
             }
+            else
+            {
+                // Trying to edit row with error key, so
+                // not clear what should happen.  Just leave it...
+                return;
+            }
             
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
             push(KeyCode.ENTER);
@@ -264,7 +270,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         {
             // Change sort order of source:
             clickOn(".edit-sort-by");
+            sleep(200);
             clickOn(".small-delete");
+            sleep(200);
             clickOn(".id-fancylist-add");
             sortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
             write(sortBy.getRaw());

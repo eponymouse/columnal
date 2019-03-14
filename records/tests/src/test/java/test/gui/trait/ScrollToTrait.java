@@ -116,28 +116,38 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     @OnThread(Tag.Any)
     default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
     {
+        Random r = new Random(target.rowIndex * 100 + target.rowIndex);
         Log.debug("Moving to position " + target);
-        
-        int pageHeight = TestUtil.fx(() -> virtualGrid.calcPageHeight());
-        
-        push(KeyCode.CONTROL, KeyCode.HOME);
-        // First go to correct row:
-        for (int i = 0; i < target.rowIndex / pageHeight; i++)
+        // Lots of tests use this method, so to speed things up,
+        // we usually skip the GUI step and call a direct method:
+        if (r.nextInt(10) != 1)
         {
-            push(KeyCode.PAGE_DOWN);
+            TestUtil.fx_(() -> virtualGrid._test_keyboardMoveTo(target));
         }
-        for (int i = 0; i < target.rowIndex % pageHeight; i++)
+        else
         {
-            push(KeyCode.DOWN);
-        }
-        
-        int maxAttempts = target.columnIndex + 1;
-        int attempts = 0;
-        
-        while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex && attempts++ < maxAttempts)
-        
-        {
-            push(KeyCode.RIGHT);
+
+            int pageHeight = TestUtil.fx(() -> virtualGrid.calcPageHeight());
+
+            push(KeyCode.CONTROL, KeyCode.HOME);
+            // First go to correct row:
+            for (int i = 0; i < target.rowIndex / pageHeight; i++)
+            {
+                push(KeyCode.PAGE_DOWN);
+            }
+            for (int i = 0; i < target.rowIndex % pageHeight; i++)
+            {
+                push(KeyCode.DOWN);
+            }
+
+            int maxAttempts = target.columnIndex + 1;
+            int attempts = 0;
+
+            while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex && attempts++ < maxAttempts)
+
+            {
+                push(KeyCode.RIGHT);
+            }
         }
         // Wait for smooth scroll to finish:
         TestUtil.sleep(300);

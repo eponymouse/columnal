@@ -1241,13 +1241,7 @@ public final class VirtualGrid implements ScrollBindable
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME, KeyCombination.CONTROL_DOWN), e -> {
-                        for (GridArea gridArea : gridAreas)
-                        {
-                            @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(CellPosition.ORIGIN);
-                            if (possibleSel != null)
-                                select(possibleSel);
-                        }
-                        select(new EmptyCellSelection(CellPosition.ORIGIN));
+                        FXUtility.keyboard(this).ctrlHome();
                         e.consume();
                     }),
                     bindS(KeyCode.HOME, (shift, c) -> c.home(shift)),
@@ -1280,7 +1274,18 @@ public final class VirtualGrid implements ScrollBindable
                     })
             ));
         }
-        
+
+        private void ctrlHome()
+        {
+            for (GridArea gridArea : gridAreas)
+            {
+                @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(CellPosition.ORIGIN);
+                if (possibleSel != null)
+                    select(possibleSel);
+            }
+            select(new EmptyCellSelection(CellPosition.ORIGIN));
+        }
+
         private void setNudgeScroll(boolean enabled)
         {
             Log.debug("Setting nudge scroll enable: " + enabled);
@@ -2086,5 +2091,21 @@ public final class VirtualGrid implements ScrollBindable
     public void gotoRow(Window window)
     {
         Optional.ofNullable(selection.get()).ifPresent(s -> s.gotoRow(window));
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void _test_keyboardMoveTo(CellPosition target)
+    {
+        container.ctrlHome();
+        for (int i = 0; i < target.rowIndex; i++)
+        {
+            container.move(false, 1, 0);
+        }
+        int attempts = 0;
+        int maxAttempts = target.columnIndex + 1;
+        while (_test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE) < target.columnIndex && attempts++ < maxAttempts)
+        {
+            container.move(false, 0, 1);
+        }
     }
 }
