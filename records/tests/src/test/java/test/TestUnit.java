@@ -205,7 +205,7 @@ public class TestUnit
             @Override
             public boolean matches(Object o)
             {
-                int cmp = Utility.compareNumbers(o, n);
+                int cmp = Utility.compareNumbers((Number)o, n);
                 return cmp == 0 || Utility.compareNumbers(cmp < 0 ? Utility.addSubtractNumbers(n, (Number) o, false) : Utility.addSubtractNumbers((Number) o, n, false), d("0.0001")) < 0;
             }
         };

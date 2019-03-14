@@ -85,7 +85,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
         @Value Object lhsValue = lhsOutcome.value;
         ValueResult rhsOutcome = rhs.calculateValue(state);
         @Value Object rhsValue = rhsOutcome.value;
-        boolean match = Utility.compareNumbers(value, lhsValue, new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
+        boolean match = Utility.compareNumbers(Utility.cast(value, Number.class), Utility.cast(lhsValue, Number.class), new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
         return explanation(DataTypeUtility.value(match), ExecutionType.MATCH, state, ImmutableList.of(lhsOutcome, rhsOutcome), ImmutableList.of(), false);
     }
 

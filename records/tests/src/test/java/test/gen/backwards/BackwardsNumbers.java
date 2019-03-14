@@ -96,7 +96,7 @@ public class BackwardsNumbers extends BackwardsProvider
                         }
                         while (Utility.compareNumbers(denominator, 0) == 0);
                         @Value Number numerator = Utility.multiplyNumbers((Number) targetValue, DataTypeUtility.value(denominator));
-                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, DataTypeUtility.value(denominator)), targetValue) != 0)
+                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, DataTypeUtility.value(denominator)), (Number)targetValue) != 0)
                         {
                             // Divide won't come out right: just divide by 1:
                             return new DivideExpression(parent.make(type, targetValue, maxLevels - 1), new NumericLiteral(1, parent.makeUnitExpression(Unit.SCALAR)));

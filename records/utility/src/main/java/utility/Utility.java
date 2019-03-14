@@ -283,7 +283,7 @@ public class Utility
     {
         int cmp;
         if (ax instanceof Number)
-            cmp = compareNumbers(ax, bx, epsilon);
+            cmp = compareNumbers(Utility.cast(ax, Number.class), Utility.cast(bx, Number.class), epsilon);
         else if (ax instanceof List)
             cmp = compareLists((List<@NonNull @Value ?>)ax, (List<@NonNull @Value ?>)bx, epsilon);
         else if (ax instanceof ListEx)
@@ -1576,15 +1576,14 @@ public class Utility
         return new ReadState(src, charset, headerRows);
     }
 
-    public static int compareNumbers(final Object a, final Object b)
+    public static int compareNumbers(final Number a, final Number b)
     {
         return compareNumbers(a, b, null);
     }
     
     public static enum EpsilonType { ABSOLUTE, RELATIVE };
 
-    // Params passed as Object to avoid double cast
-    public static int compareNumbers(final Object a, final Object b, @Nullable Pair<EpsilonType, BigDecimal> epsilon)
+    public static int compareNumbers(final Number a, final Number b, @Nullable Pair<EpsilonType, BigDecimal> epsilon)
     {
         if (a instanceof BigDecimal || b instanceof BigDecimal || epsilon != null)
         {
@@ -1606,8 +1605,8 @@ public class Utility
                 {
                     if (epsilon.getFirst() == EpsilonType.RELATIVE)
                     {
-                        if (da.equals(db) || (!da.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(da, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) == -1)
-                                || (!db.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(db, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) == -1))
+                        if (da.equals(db) || (!da.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(da, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) < 0 )
+                                || (!db.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(db, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon.getSecond()) < 0))
                             return 0;
                     }
                     else if (epsilon.getFirst() == EpsilonType.ABSOLUTE)
@@ -1626,7 +1625,7 @@ public class Utility
         else
         {
             // Standard numbers, compare as longs:
-            return Long.compare(((Number)a).longValue(), ((Number)b).longValue());
+            return Long.compare(a.longValue(), b.longValue());
         }
 
     }
