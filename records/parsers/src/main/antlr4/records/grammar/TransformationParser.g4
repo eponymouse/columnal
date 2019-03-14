@@ -55,7 +55,7 @@ editKW : {_input.LT(1).getText().equals("EDIT")}? ATOM;
 editHeader : editKW (key=item type | NEWLINE);
 editColumnKW : {_input.LT(1).getText().equals("EDITCOLUMN")}? ATOM;
 editColumnHeader : editColumnKW column=item type;
-editColumnDataKW : {_input.LT(1).getText().equals("REPLACEMEMT")}? ATOM;
+editColumnDataKW : {_input.LT(1).getText().equals("REPLACEMENT")}? ATOM;
 editColumnData : editColumnDataKW value value NEWLINE;
 editColumn : editColumnHeader editColumnData*;
 edit : editHeader editColumn*;
