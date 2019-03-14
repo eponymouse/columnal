@@ -53,6 +53,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ComparableEither;
 import utility.Either;
+import utility.ExSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -120,12 +121,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         write(sortBy.getRaw());
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
-
-        Sort sort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
-        assertEquals(ImmutableList.of(new Pair<>(sortBy, Direction.ASCENDING)), sort.getSortBy());
+        
+        // The ID is fixed but the table is not, so we use ID 
+        TableId sortId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort).findFirst().orElseThrow(() -> new RuntimeException("No edit")).getId();
+        
+        ExSupplier<Sort> findFirstSort = () -> (Sort)mainWindowActions._test_getTableManager().getSingleTableOrThrow(sortId);
+        assertEquals(ImmutableList.of(new Pair<>(sortBy, Direction.ASCENDING)), findFirstSort.get().getSortBy());
 
         // Null means use row number
-        @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : sort.getData().getColumns().get(r.nextInt(numColumns));
+        @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : findFirstSort.get().getData().getColumns().get(r.nextInt(numColumns));
         
         @SuppressWarnings("units")
         Supplier<@TableDataRowIndex Integer> makeRowIndex = () -> r.nextInt(length);
@@ -134,7 +138,6 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacementsSoFar = new HashMap<>();
 
-        TableId sortId = sort.getId();
         
         // There's two ways to create a new manual edit.  One is to just create it using the menu.  The other is to try to edit an existing transformation, and follow the popup which appears
         if (r.nextBoolean())
@@ -151,7 +154,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @Value Object value = columnTypes.get(col).makeValue();
             if (replaceKey != null)
             {
-                replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
+                replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
                         .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
             }
             
@@ -196,11 +199,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         clickOn(".ok-button");
         sleep(1000);
 
-        ManualEdit manualEdit = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).map(t -> (ManualEdit)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
-        TableDisplay manualEditDisplay = TestUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> manualEdit.getDisplay()));
+        TableId manualEditId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).findFirst().orElseThrow(() -> new RuntimeException("No edit")).getId();
+        ExSupplier<ManualEdit> findManualEdit = () -> (ManualEdit) mainWindowActions._test_getTableManager().getSingleTableOrThrow(manualEditId);
+        TableDisplay manualEditDisplay = TestUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
 
         // Add a second sort transformation, sorting the edit:
-        targetSortPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEdit.getId()));
+        targetSortPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEditId));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetSortPos);
         clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
         TestUtil.delay(100);
@@ -208,7 +212,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         TestUtil.delay(100);
         clickOn(".id-transform-sort");
         TestUtil.delay(100);
-        write(manualEdit.getId().getRaw());
+        write(manualEditId.getRaw());
         push(KeyCode.ENTER);
         ColumnId secondSortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
         write(secondSortBy.getRaw());
@@ -231,12 +235,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @Value Object value = columnTypes.get(col).makeValue();
             if (replaceKey != null)
             {
-                replacementsSoFar.computeIfAbsent(sort.getData().getColumnIds().get(col), k -> new TreeMap<>())
+                replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
                         .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
             }
 
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEdit.getId(), row, col);
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, row, col);
             sleep(500);
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
             push(KeyCode.ENTER);
@@ -260,15 +264,30 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         {
             // Change sort order of source:
             clickOn(".edit-sort-by");
-            clickOn(".small-delete-button");
-            clickOn(".fancy-list-add");
+            clickOn(".small-delete");
+            clickOn(".id-fancylist-add");
             sortBy = srcRS.getColumnIds().get(r.nextInt(numColumns));
             write(sortBy.getRaw());
             clickOn(".ok-button");
+            sleep(1000);
         }
         if (r.nextBoolean())
         {
-            fail("TODO change original data");
+            // Change original data:
+            int numChanges = r.nextInt(10);
+            for (int i = 0; i < numChanges; i++)
+            {
+                @TableDataRowIndex int row = makeRowIndex.get();
+                @TableDataColIndex int col = makeColIndex.get();
+                @Value Object value = columnTypes.get(col).makeValue();
+                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), findFirstSort.get().getSrcTableId(), row, col);
+                sleep(500);
+                assertFalse("Alert should not be showing", lookup(".alert").tryQuery().isPresent());
+                push(KeyCode.ENTER);
+                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
+                push(KeyCode.ENTER);
+            }
+            sleep(1000);
         }
         
         // Now check output values by getting them from clipboard:
@@ -276,18 +295,18 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
+        TestUtil.sleep(2000);
 
         Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
-        ImmutableList<LoadedColumnInfo> expected = makeExpected(sort.getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, null);
+        ImmutableList<LoadedColumnInfo> expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
         
-        assertEquals(replacementsSoFar, manualEdit._test_getReplacements());
+        assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
         checkEqual(expected, editViaClip.get());
-        checkEqual(expected, getGraphicalContent(mainWindowActions, manualEdit));
+        checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
         
         // Copy the values from the resulting sort:
-        Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && !t.getId().equals(sort.getId())).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
+        Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && !t.getId().equals(sortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
         TableDisplay secondSortDisplay = (TableDisplay) TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
@@ -296,7 +315,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         Optional<ImmutableList<LoadedColumnInfo>> secondSortViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(secondSortViaClip.isPresent());
-        ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(manualEdit.getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, secondSortBy);
+        ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(findManualEdit.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, secondSortBy);
 
         checkEqual(expectedSecondSort, secondSortViaClip.get());
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
@@ -384,11 +403,16 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             for (int row = 0; row < tableData.getLength(); row++)
             {
                 int rowFinal = row;
+                Either<String, @Value Object> internalContent = TestUtil.getSingleCollapsedData(column.getType(), rowFinal);
                 values.add(TestUtil.checkNonNull(TestUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
                     VersionedSTF cell = mainWindowActions._test_getDataCell(tableDisplay._test_getDataPosition(rowFinal, colIndex));
                     if (cell == null)
                         return null;
-                    return column.getType().getType().loadSingleItem(cell._test_getGraphicalText());
+                    String content = cell._test_getGraphicalText();
+                    // Bit of a hack, but need to deal with truncated numbers, so we get direct content if truncated:
+                    if (column.getType().getType().isNumber() && content.contains("\u2026"))
+                        return internalContent;
+                    return column.getType().getType().loadSingleItem(content);
                 })));
             }
             

@@ -189,9 +189,11 @@ edit : editHeader editColumn*;
             crv.replacementValues.forEach((k, v) -> {
                 try
                 {
-                    r.raw("REPLACEMENT");
+                    r.raw("REPLACEMENT @VALUE ");
                     r.data(keyType.fromCollapsed((i, prog) -> k.getValue()), 0);
+                    r.raw(" @ENDVALUE @VALUE ");
                     r.data(crv.dataType.fromCollapsed((i, prog) -> v.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, val -> val.getValue())), 0);
+                    r.raw(" @ENDVALUE");
                     r.nl();
                 }
                 catch (InternalException | UserException e)
@@ -344,7 +346,16 @@ edit : editHeader editColumn*;
                 DataTypeValue originalType = original.getType();
                 DataTypeValue getType = originalType.getType().fromCollapsed((i, prog) -> {
                     ColumnReplacementValues columnReplacements = replacements.get(getName());
-                    @Nullable ComparableEither<String, ComparableValue> replaced = columnReplacements == null ? null : columnReplacements.replacementValues.get(new ComparableValue(DataTypeUtility.value(i)));
+                    @Nullable ComparableEither<String, ComparableValue> replaced = null;
+                    try
+                    {
+                        @Value Object replaceKey = keyColumn == null ? DataTypeUtility.value(i) : keyColumn.getFirst().getType().getCollapsed(i);
+                        replaced = columnReplacements == null ? null : columnReplacements.replacementValues.get(new ComparableValue(replaceKey));
+                    }
+                    catch (UserException e)
+                    {
+                        // If error in fetching key, don't replace.
+                    }
                     if (replaced != null)
                         return replaced.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, v -> v.getValue());
                     else
@@ -540,8 +551,8 @@ edit : editHeader editColumn*;
                 List<Pair<@Value Object, Either<String, @Value Object>>> replacementValues = new ArrayList<>();
                 for (EditColumnDataContext editColumnDatum : editColumnContext.editColumnData())
                 {
-                    @Value Object key = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(0).getText(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
-                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(1).getText(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(dataType, p, false));
+                    @Value Object key = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(0).VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
+                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(1).VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(dataType, p, false));
                     replacementValues.add(new Pair<>(key, value));
                 }
                 
