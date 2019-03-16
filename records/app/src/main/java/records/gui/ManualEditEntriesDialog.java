@@ -9,32 +9,24 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
-import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.ManualEditEntriesDialog.Entry;
+import records.gui.table.TableDisplay;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ComparableEither;
-import utility.Either;
-import utility.ExFunction;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformSupplier;
-import utility.Pair;
-import utility.SimulationSupplier;
-import utility.Workers;
+import utility.*;
 import utility.Workers.Priority;
 import utility.gui.DimmableParent;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -62,11 +54,17 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
                     {
                         String keyValue = DataTypeUtility.valueToString(keyColumn == null ? DataType.NUMBER /* row number */ : lookupColumnType.apply(keyColumn), initialContent.identifierValue.getValue(), null);
                         String replacementValue = initialContent.replacementValue.eitherEx(err -> err, v -> DataTypeUtility.valueToString(lookupColumnType.apply(initialContent.replacementColumn), v.getValue(), null));
+                        FXPlatformRunnable jumpTo = () -> {
+                            ImmutableList<Entry> items = getItems();
+                            ManualEditEntriesDialog.this.setResult(new Pair<>(Optional.of(new Pair<>(initialContent.identifierValue, initialContent.getReplacementColumn())), () -> fromEntries(items, lookupColumnType)));
+                            ManualEditEntriesDialog.this.close();
+                        };
+                        
                         Platform.runLater(() ->
                             content.getChildren().setAll(new HBox(
-                                new Label(keyValue),
-                                new Label(initialContent.replacementColumn.getRaw()),
-                                new Label(replacementValue)
+                                hyperLink(new Label(keyValue), jumpTo),
+                                hyperLink(new Label(initialContent.replacementColumn.getRaw()), jumpTo),
+                                hyperLink(new Label(replacementValue), jumpTo)
                         )));
                     }
                     catch (UserException | InternalException e)
@@ -91,10 +89,20 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         });
     }
 
+    private static Label hyperLink(Label label, FXPlatformRunnable jumpTo)
+    {
+        label.getStyleClass().add("jump-to-link");
+        label.setOnMouseClicked(e -> {
+            jumpTo.run();
+        });
+        return label;
+    }
+
     @OnThread(Tag.Simulation)
     public static ImmutableList<Entry> getEntries(ManualEdit manualEdit)
     {
-        return manualEdit.getReplacements().entrySet().stream().flatMap(e -> e.getValue().streamAll().map(r -> new Entry(r.getFirst(), e.getKey(), r.getSecond()))).collect(ImmutableList.<Entry>toImmutableList());
+        return manualEdit.getReplacements().entrySet().stream().flatMap(e -> e.getValue().streamAll().map(r -> new Entry(r.getFirst(), e.getKey(), r.getSecond())
+        )).collect(ImmutableList.<Entry>toImmutableList());
     }
     
     @OnThread(Tag.Simulation)

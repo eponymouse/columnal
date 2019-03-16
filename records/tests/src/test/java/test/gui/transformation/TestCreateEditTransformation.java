@@ -601,7 +601,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         @SuppressWarnings("nullness")
         TableDisplay display = (TableDisplay)TestUtil.fx(() -> srcTable.getDisplay());
         @SuppressWarnings("units")
-        CellPosition actualFailPosition = TestUtil.fx(() -> display._test_getDataPosition(0 /* TODO */, srcColumns.indexOf(srcColumn)));
+        CellPosition actualFailPosition = TestUtil.fx(() -> display.getDataPosition(0, srcColumns.indexOf(srcColumn)));
         assertEquals(actualFailPosition, TestUtil.fx(() -> virtualGrid._test_getSelection().get().getActivateTarget()));
     }
 }

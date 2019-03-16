@@ -12,10 +12,8 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
@@ -27,7 +25,6 @@ import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
@@ -36,6 +33,7 @@ import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.ManualEditEntriesDialog;
+import records.gui.ManualEditEntriesDialog.Entry;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
@@ -62,7 +60,6 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.gui.FancyList;
-import utility.gui.FancyList.FancyListScrollPane;
 
 import java.math.BigDecimal;
 import java.util.AbstractList;
@@ -75,7 +72,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -85,8 +81,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
-            @When(seed=1L) @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
-            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+            @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
+            @From(GenRandom.class) Random r) throws Exception
     {
         int length = 1 + r.nextInt(50);
         int numColumns = 1 + r.nextInt(5);
@@ -359,10 +355,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         sleep(500);
         FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TestUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
         
+        Supplier<List<ManualEditEntriesDialog.Entry>> getEntries = () -> replacementsSoFar.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(e2 -> new ManualEditEntriesDialog.Entry(e2.getKey(), e.getKey(), e2.getValue()))).collect(ImmutableList.toImmutableList());
+        
         // Pick a few to delete:
         for (int i = 0; i < 3 && !replacementsSoFar.isEmpty(); i++)
         {
-            List<ManualEditEntriesDialog.Entry> possibleItems = replacementsSoFar.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(e2 -> new ManualEditEntriesDialog.Entry(e2.getKey(), e.getKey(), e2.getValue()))).collect(ImmutableList.toImmutableList());
+            List<ManualEditEntriesDialog.Entry> possibleItems = getEntries.get();
             
             ManualEditEntriesDialog.Entry toDelete = possibleItems.get(r.nextInt(possibleItems.size()));
 
@@ -375,8 +373,40 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 replacementsSoFar.remove(toDelete.getReplacementColumn());
         }
         
-        // TODO try using the hyperlink functionality to close the dialog, on random chance.
-        clickOn(".close-button");
+        if (r.nextBoolean() && !replacementsSoFar.isEmpty())
+        {
+            // Try using the hyperlink functionality to close the dialog, on random chance:
+            List<Entry> entries = getEntries.get();
+            Entry toClick = entries.get(r.nextInt(entries.size()));
+            @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
+            clickOn(TestUtil.fx(() -> cell.lookup(".jump-to-link")));
+            sleep(500);
+            @TableDataColIndex int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
+            int row = -1;
+            if (replaceKeyColumn == null)
+                row = ((Number)toClick.getIdentifierValue().getValue()).intValue();
+            else
+            {
+                DataTypeValue keyColType = replaceKeyColumn.getType();
+
+                int len = findManualEdit.get().getData().getLength();
+                for (int i = 0; i < len; i++)
+                {
+                    if (Utility.compareValues(keyColType.getCollapsed(i), toClick.getIdentifierValue().getValue()) == 0)
+                    {
+                        row = i;
+                        break;
+                    }
+                }
+            }
+            assertNotEquals(-1, row);
+            @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
+            assertEquals(TestUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TestUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
+        }
+        else
+        {
+            clickOn(".close-button");
+        }
         sleep(1000);
 
         // Check everything is up to date after deletions:
@@ -477,7 +507,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 int rowFinal = row;
                 Either<String, @Value Object> internalContent = TestUtil.getSingleCollapsedData(column.getType(), rowFinal);
                 values.add(TestUtil.checkNonNull(TestUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
-                    VersionedSTF cell = mainWindowActions._test_getDataCell(tableDisplay._test_getDataPosition(rowFinal, colIndex));
+                    VersionedSTF cell = mainWindowActions._test_getDataCell(tableDisplay.getDataPosition(rowFinal, colIndex));
                     if (cell == null)
                         return null;
                     String content = cell._test_getGraphicalText();

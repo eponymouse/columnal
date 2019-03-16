@@ -19,6 +19,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.DataItemPosition;
 import records.data.RecordSet;
 import records.data.SingleSourceTransformation;
 import records.data.Table;
@@ -26,6 +27,7 @@ import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.Transformation;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditExpressionDialog;
@@ -60,7 +62,9 @@ import styled.StyledString;
 import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
+import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
@@ -326,10 +330,50 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                         parent.getManager().edit(manualEdit.getId(), () -> manualEdit.swapReplacementsTo(newValues), null);
                                     }
                                 }));
+                                
+                                p.getFirst().ifPresent(jumpTo -> {
+                                    TableDisplay tableDisplayCast = (TableDisplay) FXUtility.mouse(tableDisplay);
+                                    Utility.findFirstIndex(tableDisplayCast.getDisplayColumns(), c -> c.getColumnId().equals(jumpTo.getSecond())).ifPresent(colIndex -> {
+                                        Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
+                                            int rowIndex = -1;
+                                            try
+                                            {
+                                                RecordSet manualEditData = manualEdit.getData();
+                                                int length = manualEditData.getLength();
+                                                @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
+                                                if (keyColumnId == null)
+                                                {
+                                                    rowIndex = ((Number)jumpTo.getFirst().getValue()).intValue();
+                                                }
+                                                else
+                                                {
+                                                    DataTypeValue keyColumn = manualEditData.getColumn(keyColumnId).getType();
+                                                    for (int row = 0; row < length; row++)
+                                                    {
+                                                        if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
+                                                            rowIndex = row;
+                                                    }
+                                                }
+                                                int rowIndexFinal = rowIndex;
+                                                if (rowIndexFinal != -1)
+                                                {
+                                                    Platform.runLater(() -> {
+                                                        CellPosition cellPosition = tableDisplayCast.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
+                                                        parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                    });
+                                                }
+                                            }
+                                            catch (InternalException | UserException e)
+                                            {
+                                                if (e instanceof InternalException)
+                                                    Log.log(e);
+                                            }
+                                        });
+                                    });
+                                });
                             });
                         });
                     });
-                // TODO jump if hyperlink clicked.
                 }
             };
             

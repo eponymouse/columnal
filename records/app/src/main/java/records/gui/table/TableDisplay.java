@@ -202,16 +202,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
-    protected CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    public CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
 
-    public CellPosition _test_getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
-    {
-        return getDataPosition(rowIndex, columnIndex);
-    }
-    
     private TableDisplayUtility.GetDataPosition makeGetDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {
         return new GetDataPosition()

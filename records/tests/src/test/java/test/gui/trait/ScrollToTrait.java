@@ -171,7 +171,10 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         assertNotNull(tableDisplay);
         if (tableDisplay == null)
             throw new RuntimeException("Impossible");
-        keyboardMoveTo(virtualGrid, TestUtil.fx(() -> tableDisplay._test_getDataPosition(usingMenu ? DataItemPosition.row(0) : row, col)));
+        keyboardMoveTo(virtualGrid, TestUtil.fx(() -> {
+            @TableDataRowIndex int rowIndex = usingMenu ? DataItemPosition.row(0) : row;
+            return tableDisplay.getDataPosition(rowIndex, col);
+        }));
         if (usingMenu)
         {
             clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
@@ -181,7 +184,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         }
         // Wait for complete refresh:
         TestUtil.sleep(1000);
-        return TestUtil.fx(() -> tableDisplay._test_getDataPosition(row, col));
+        return TestUtil.fx(() -> tableDisplay.getDataPosition(row, col));
     }
 
     default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
