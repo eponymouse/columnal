@@ -99,12 +99,17 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         while (r.nextInt(2) == 1 && !pickFrom.isEmpty());
 
         TextField prevFocus = null;
+        boolean needToAdd = false;
         for (Pair<ColumnId, Direction> pickedColumn : pickedColumns)
         {
-            scrollTo(".id-fancylist-add");
-            moveAndDismissPopupsAtPos(point(".id-fancylist-add"));
-            clickOn(".id-fancylist-add");
-            sleep(300);
+            if (needToAdd)
+            {
+                scrollTo(".id-fancylist-add");
+                moveAndDismissPopupsAtPos(point(".id-fancylist-add"));
+                clickOn(".id-fancylist-add");
+                sleep(300);
+            }
+            needToAdd = true;
             TextField focused = TestUtil.checkNonNull(getFocusOwner(TextField.class));
             assertNotEquals(prevFocus, focused);
             prevFocus = focused;
