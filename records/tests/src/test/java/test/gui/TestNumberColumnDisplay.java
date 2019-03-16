@@ -107,14 +107,17 @@ public class TestNumberColumnDisplay extends FXApplicationTest
             {
                 // Click twice to edit:
                 clickOn(cell);
-                TestUtil.sleep(400);
+                sleep(200);
                 push(KeyCode.ENTER);
+                sleep(200);
                 VersionedSTF cellFinal = cell;
                 cellText = TestUtil.fx(() -> getText(cellFinal));
             }
             else
                 cellText = null;
             assertEquals("Row " + i, actualValues.get(i), cellText);
+            push(KeyCode.ESCAPE);
+            sleep(200);
         }
         
         // Clicking away from the edges is obvious.  For far sides of ellipsis, we do basic thing: click lands
@@ -199,16 +202,11 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     cellText = null;
                 assertEquals("Row " + i, actual, cellText);
                 
-                // Now click cell before us to make sure text goes back:
-                @Nullable VersionedSTF cellBefore = cells.get((i + cells.size() - 1) % cells.size());
-                assertNotNull(cellBefore);
-                if (cellBefore != null)
-                {
-                    clickOn(cellBefore);
-                    // Wait for batched re-layout:
-                    TestUtil.sleep(1000);
-                    assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
-                }
+                // Now exit to make sure text goes back:
+                push(KeyCode.ESCAPE);
+                // Wait for batched re-layout:
+                TestUtil.sleep(1000);
+                assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
             }
         }
 
