@@ -591,17 +591,14 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         assertEquals(expectedPass ? "OK" : "Fail", TestUtil.fx(() -> label.getText()));
 
-        // Test out the clicking to see the failure location:
+        // Test out the clicking to see the explanation:
         keyboardMoveTo(virtualGrid, labelPos);
+        assertNull(lookup(".explanation-flow").tryQuery().orElse(null));
         if (r.nextBoolean())
             clickOn(label);
         else
             push(KeyCode.ENTER);
-        sleep(200);
-        @SuppressWarnings("nullness")
-        TableDisplay display = (TableDisplay)TestUtil.fx(() -> srcTable.getDisplay());
-        @SuppressWarnings("units")
-        CellPosition actualFailPosition = TestUtil.fx(() -> display.getDataPosition(0, srcColumns.indexOf(srcColumn)));
-        assertEquals(actualFailPosition, TestUtil.fx(() -> virtualGrid._test_getSelection().get().getActivateTarget()));
+        sleep(500);
+        assertNotNull(lookup(".explanation-flow").tryQuery().orElse(null));
     }
 }

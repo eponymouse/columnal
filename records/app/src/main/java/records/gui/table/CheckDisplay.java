@@ -155,7 +155,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @Override
             public void keyboardActivate(CellPosition cellPosition)
             {
-                showExplanation();
+                FXUtility.runAfter(() -> showExplanation());
             }
         };
         floatingSupplier.addItem(resultFloatingItem);
