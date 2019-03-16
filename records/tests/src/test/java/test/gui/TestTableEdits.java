@@ -203,7 +203,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals(new ColumnId("B"), columns.get(1).getName());
             // Check that the third column has right details:
             assertEquals(columnDetails.columnId, columns.get(2).getName());
-            assertEquals(columnDetails.dataType, columns.get(2).getType());
+            assertEquals(columnDetails.dataType, columns.get(2).getType().getType());
             TestUtil.assertValueEqual("", columns.get(2) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(2).getDefaultValue());
         }
     }
@@ -254,7 +254,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals("Position " + pos, new ColumnId("B"), columns.get(pos).getName());
             // Check that the new column has right details:
             assertEquals(columnDetails.columnId, columns.get(newPosition).getName());
-            assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
+            assertEquals(columnDetails.dataType, columns.get(newPosition).getType().getType());
             TestUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
     }
