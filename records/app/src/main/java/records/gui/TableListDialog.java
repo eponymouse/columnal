@@ -70,7 +70,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
     {
         public TableList(ImmutableList<TableId> originalItems)
         {
-            super(originalItems, true, true, true);
+            super(originalItems, true, true, () -> new TableId(""));
             getStyleClass().add("table-list");
         }
         

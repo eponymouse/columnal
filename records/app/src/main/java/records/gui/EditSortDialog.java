@@ -123,7 +123,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
     {
         public SortList(ImmutableList<Pair<ColumnId, Direction>> initialItems)
         {
-            super(initialItems, true, true, true);
+            super(initialItems, true, true, () -> new Pair<>(new ColumnId(""), Direction.ASCENDING));
             getStyleClass().add("sort-list");
             listenForCellChange(c -> {
                 updateButtonWidths();

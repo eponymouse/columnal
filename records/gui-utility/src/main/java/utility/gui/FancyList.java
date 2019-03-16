@@ -25,6 +25,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -36,6 +37,8 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -51,11 +54,20 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     private boolean hoverOverSelection = false;
     private final boolean allowReordering;
     private final boolean allowDeleting;
-    private final ScrollPaneFill scrollPane = new ScrollPaneFill(children);
+    private final ScrollPaneFill scrollPane = new FancyListScrollPane(children);
     private final BorderPane bottomPane = new BorderPane();
     protected final @Nullable Button addButton;
 
-    public FancyList(ImmutableList<T> initialItems, boolean allowDeleting, boolean allowReordering, boolean allowInsertion)
+    /**
+     * 
+     * @param initialItems
+     * @param allowDeleting
+     * @param allowReordering
+     * @param makeNewItem If non-null, add button is shown and this
+     *                    will be called to make a new value.  If null,
+     *                    insertion is not allowed.
+     */
+    public FancyList(ImmutableList<T> initialItems, boolean allowDeleting, boolean allowReordering, @Nullable FXPlatformSupplier<T> makeNewItem)
     {
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
@@ -102,10 +114,10 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         {
             cells.add(new Cell(initialItem, false));
         }
-        if (allowInsertion)
+        if (makeNewItem != null)
         {
             addButton = GUI.button("fancylist.add", () -> {
-                addToEnd(null, true);
+                addToEnd(makeNewItem.get(), true);
             });
             bottomPane.setCenter(addButton);
             BorderPane.setMargin(addButton, new Insets(6));
@@ -191,9 +203,14 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         return builder.build();
     }
 
-    // For overriding in subclasses:
+    /**
+     * Given initial content (and a flag to indicate whether the item should be focused for editing),
+     * gets a graphical item to display, and a function which
+     * can be called in future to get the latest value from the
+     * graphical component.
+     */
     @OnThread(Tag.FXPlatform)
-    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
+    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(T initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
     {
@@ -262,6 +279,20 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         updateChildren();
     }
 
+    public @Nullable Node _test_scrollToItem(T scrollTo)
+    {
+        // Find the item:
+        Node content = cells.stream().filter(cell -> Objects.equals(cell.value.get(), scrollTo)).findFirst().orElse(null);
+        
+        if (content != null)
+        {
+            double allContentHeight = children.getHeight();
+            scrollPane.setVvalue((content.localToScene(content.getBoundsInLocal()).getMinY() - scrollPane.localToScene(scrollPane.getBoundsInLocal()).getMinY()) / allContentHeight);
+        }
+        
+        return content;
+    }
+
     /**
      * Gets the nearest gap before/after a cell to the given scene X/Y position.  The first component
      * of the pair is the cell above (may be blank if at top of list), the second component is the
@@ -308,7 +339,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         protected final CELL_CONTENT content;
         private final FXPlatformSupplier<T> value;
         
-        public Cell(@Nullable T initialContent, boolean editImmediately)
+        public Cell(T initialContent, boolean editImmediately)
         {
             getStyleClass().add("fancy-list-cell");
             deleteButton = new SmallDeleteButton();
@@ -420,7 +451,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         return index < 0 ? false : selection.get(index);
     }
     
-    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
+    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, T content, boolean editImmediately)
     {
         cells.add(new Cell(content, editImmediately));
         updateChildren();
@@ -429,5 +460,21 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     protected void listenForCellChange(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, FXPlatformConsumer<Change<? extends Cell>> listener)
     {
         FXUtility.listen(cells, listener);
+    }
+
+    // Just used for testing, to get reference to parent.
+    public class FancyListScrollPane extends ScrollPaneFill
+    {
+        public FancyListScrollPane(Node content)
+        {
+            super(content);
+        }
+        
+        @OnThread(Tag.Any)
+        @Pure
+        public FancyList<T, CELL_CONTENT> _test_getList()
+        {
+            return FancyList.this;
+        }
     }
 }

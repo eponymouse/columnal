@@ -3,8 +3,6 @@ package records.transformations;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 import log.Log;
@@ -27,7 +25,6 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.EditColumnContext;
 import records.grammar.TransformationParser.EditColumnDataContext;
 import records.grammar.TransformationParser.EditContext;
-import records.gui.PickManualEditIdentifierDialog;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
@@ -238,6 +235,12 @@ edit : editHeader editColumn*;
     }
     
     @OnThread(Tag.Simulation)
+    public synchronized ManualEdit swapReplacementsTo(ImmutableMap<ColumnId, ColumnReplacementValues> newReplacements) throws InternalException
+    {
+        return new ManualEdit(getManager(), getDetailsForCopy(), getSrcTableId(), keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), newReplacements);
+    }
+    
+    @OnThread(Tag.Simulation)
     public synchronized ManualEdit swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
     {
         if (src == null)
@@ -305,6 +308,21 @@ edit : editHeader editColumn*;
     public synchronized int getReplacementCount()
     {
         return replacements.values().stream().mapToInt(crv -> crv.replacementValues.size()).sum();
+    }
+
+    /**
+     * Note -- this is an expensive operation, so call sparingly.
+     */
+    public synchronized ImmutableMap<ColumnId, ColumnReplacementValues> getReplacements()
+    {
+        ImmutableMap.Builder<ColumnId, ColumnReplacementValues> r = ImmutableMap.builderWithExpectedSize(replacements.size());
+        
+        replacements.forEach((c, crv) -> {
+            ColumnReplacementValues crvCopy = crv.makeCopy();
+            r.put(c, crvCopy);
+        });
+        
+        return r.build();
     }
 
     private class ReplacedColumn extends Column
@@ -519,6 +537,16 @@ edit : editHeader editColumn*;
                 return false;
             ColumnReplacementValues crv = (ColumnReplacementValues) obj;
             return Objects.equals(dataType, crv.dataType) && Objects.equals(replacementValues, crv.replacementValues);
+        }
+
+        public ColumnReplacementValues makeCopy()
+        {
+            return new ColumnReplacementValues(dataType, replacementValues.entrySet().stream().<Pair<@Value Object, Either<String, @Value Object>>>map(e -> new Pair<@Value Object, Either<String, @Value Object>>(e.getKey().getValue(), e.getValue().<@Value Object>map(v -> v.getValue()))).collect(ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>toImmutableList()));
+        }
+
+        public Stream<Pair<ComparableValue, ComparableEither<String, ComparableValue>>> streamAll()
+        {
+            return replacementValues.entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue()));
         }
     }
 

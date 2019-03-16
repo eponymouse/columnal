@@ -9,15 +9,18 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataItemPosition;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
@@ -32,6 +35,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.ManualEditEntriesDialog;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
@@ -57,6 +61,8 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FancyList;
+import utility.gui.FancyList.FancyListScrollPane;
 
 import java.math.BigDecimal;
 import java.util.AbstractList;
@@ -69,13 +75,14 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, EnterStructuredValueTrait
 {
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
             @When(seed=1L) @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
@@ -140,6 +147,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         
         // There's two ways to create a new manual edit.  One is to just create it using the menu.  The other is to try to edit an existing transformation, and follow the popup which appears
+        boolean madeManualEdit = false;
         if (r.nextBoolean())
         {
             @TableDataRowIndex int row = makeRowIndex.get();
@@ -152,31 +160,37 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
 
             @Value Object value = columnTypes.get(col).makeValue();
-            if (replaceKey != null)
+            // Only works if value is different:
+            if (TestUtil.getSingleCollapsedData(findFirstSort.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, value)) != 0)
             {
-                replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
-                        .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
-            }
-            else
-            {
-                // Trying to edit row with error key, so
-                // not clear what should happen.  Just leave it...
-                return;
-            }
-            
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
-            push(KeyCode.ENTER);
+                if (replaceKey != null)
+                {
+                    replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
+                            .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
+                }
+                else
+                {
+                    // Trying to edit row with error key, so
+                    // not clear what should happen.  Just leave it...
+                    return;
+                }
 
-            enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
-            push(KeyCode.ENTER);
-            
-            assertTrue("Alert should be showing asking whether to create manual edit", lookup(".alert").tryQuery().isPresent());
-            clickOn(".yes-button");
-            sleep(500);
-            assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
-            // Now fall through to fill in same details as creating directly...
+                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
+                push(KeyCode.ENTER);
+
+                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
+                push(KeyCode.ENTER);
+
+                assertTrue("Alert should be showing asking whether to create manual edit", lookup(".alert").tryQuery().isPresent());
+                clickOn(".yes-button");
+                sleep(500);
+                assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
+                // Now fall through to fill in same details as creating directly...
+                madeManualEdit = true;
+            }
         }
-        else
+        
+        if (!madeManualEdit)
         {
             // Let's create it directly.
             CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
@@ -239,15 +253,22 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
             
             @Value Object value = columnTypes.get(col).makeValue();
+            ComparableEither<String, ComparableValue> toEnter = ComparableEither.right(new ComparableValue(value));
+            if (TestUtil.getSingleCollapsedData(findFirstSort.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, value)) == 0)
+            {
+                // Make error instead:
+                toEnter = ComparableEither.left("@" + r.nextInt());
+            }
             if (replaceKey != null)
             {
                 replacementsSoFar.computeIfAbsent(findFirstSort.get().getData().getColumnIds().get(col), k -> new TreeMap<>())
-                        .put(new ComparableValue(replaceKey), ComparableEither.right(new ComparableValue(value)));
+                        .put(new ComparableValue(replaceKey), toEnter);
             }
 
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, row, col);
             sleep(500);
+
             assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
             push(KeyCode.ENTER);
             // If key has an error, we should get a dialog.
@@ -261,7 +282,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             else
             {
                 assertFalse("False alert showing, but valid key", lookup(".alert").tryQuery().isPresent());
-                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
+                toEnter.eitherEx_(s -> {
+                    push(TestUtil.ctrlCmd(), KeyCode.A);
+                    push(KeyCode.DELETE);
+                    push(KeyCode.HOME);
+                    write(s);
+                }, v -> enterStructuredValue(columnTypes.get(col).getDataType(), v.getValue(), r, false));
                 push(KeyCode.ENTER);
             }
         }
@@ -327,6 +353,44 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         checkEqual(expectedSecondSort, secondSortViaClip.get());
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
+        
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, DataItemPosition.row(0), DataItemPosition.col(1));
+        clickOn(".manual-edit-entries");
+        sleep(500);
+        FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TestUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
+        
+        // Pick a few to delete:
+        for (int i = 0; i < 3 && !replacementsSoFar.isEmpty(); i++)
+        {
+            List<ManualEditEntriesDialog.Entry> possibleItems = replacementsSoFar.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(e2 -> new ManualEditEntriesDialog.Entry(e2.getKey(), e.getKey(), e2.getValue()))).collect(ImmutableList.toImmutableList());
+            
+            ManualEditEntriesDialog.Entry toDelete = possibleItems.get(r.nextInt(possibleItems.size()));
+
+            @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
+            clickOn(TestUtil.fx(() -> cell.lookup(".small-delete")));
+
+            TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> map = TestUtil.checkNonNull(replacementsSoFar.get(toDelete.getReplacementColumn()));
+            map.remove(toDelete.getIdentifierValue());
+            if (map.isEmpty())
+                replacementsSoFar.remove(toDelete.getReplacementColumn());
+        }
+        
+        // TODO try using the hyperlink functionality to close the dialog, on random chance.
+        clickOn(".close-button");
+        sleep(1000);
+
+        // Check everything is up to date after deletions:
+        assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
+
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
+        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+                .clickOn(".id-tableDisplay-menu-copyValues");
+        
+        editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        assertTrue(editViaClip.isPresent());
+        expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
+        checkEqual(expected, editViaClip.get());
+        checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
     }
 
     @OnThread(Tag.Simulation)

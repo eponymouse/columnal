@@ -1,6 +1,8 @@
 package records.gui.table;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
@@ -30,6 +32,8 @@ import records.gui.EditExpressionDialog;
 import records.gui.EditSortDialog;
 import records.gui.EntireTableSelection;
 import records.gui.HideColumnsDialog;
+import records.gui.ManualEditEntriesDialog;
+import records.gui.ManualEditEntriesDialog.Entry;
 import records.gui.PickManualEditIdentifierDialog;
 import records.gui.PickTableDialog;
 import records.gui.TableListDialog;
@@ -45,6 +49,7 @@ import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
 import records.transformations.ManualEdit;
+import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.expression.Expression;
@@ -55,6 +60,7 @@ import styled.StyledString;
 import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
@@ -307,7 +313,23 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 @Override
                 protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                 {
-                    // TODO show the edits in an editable fancy list, where each item can be deleted, or click on the hyperlink to go to the edit if valid.
+                    Workers.onWorkerThread("Fetching manual edit entries", Priority.FETCH, () -> {
+                        ImmutableList<Entry> entries = ManualEditEntriesDialog.getEntries(manualEdit);
+                        Platform.runLater(() -> {
+                            ExFunction<ColumnId, DataType> lookupColumnType = c -> manualEdit.getData().getColumn(c).getType().getType();
+                            new ManualEditEntriesDialog(parent, manualEdit.getReplacementIdentifier().orElse(null), lookupColumnType, entries).showAndWait().ifPresent(p -> {
+                                // Need to change the values
+                                Workers.onWorkerThread("Removing manual edit entries", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting manual edits", () -> {
+                                    ImmutableMap<ColumnId, ColumnReplacementValues> newValues = p.getSecond().get();
+                                    if (!newValues.equals(manualEdit.getReplacements()))
+                                    {
+                                        parent.getManager().edit(manualEdit.getId(), () -> manualEdit.swapReplacementsTo(newValues), null);
+                                    }
+                                }));
+                            });
+                        });
+                    });
+                // TODO jump if hyperlink clicked.
                 }
             };
             
@@ -315,7 +337,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s("Edit "),
                 editSourceLink(parent, manualEdit),
                 StyledString.s(" to change "),
-                StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList)    
+                StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries"))    
             );
         }
         else

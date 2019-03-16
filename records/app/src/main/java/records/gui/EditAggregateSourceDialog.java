@@ -97,7 +97,7 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
     {
         public SplitList(ImmutableList<ColumnId> initialItems)
         {
-            super(initialItems, true, true, true);
+            super(initialItems, true, true, () -> new ColumnId(""));
             getStyleClass().add("split-list");
             
             if (initialItems.isEmpty())
