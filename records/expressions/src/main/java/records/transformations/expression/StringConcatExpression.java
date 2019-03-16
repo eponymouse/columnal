@@ -162,6 +162,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
             if (Utility.cast(last.value, Boolean.class) == false)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
+            threadedState = last.evaluateState;
         }
 
 
