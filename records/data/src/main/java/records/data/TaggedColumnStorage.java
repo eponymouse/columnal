@@ -83,17 +83,27 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             public void _set(int index, @Nullable TaggedValue newValue) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
-                Integer newTag = newValue == null ? null : newValue.getTagIndex();
-                if (newTag != null && newTag.intValue() == oldTag)
-                    return; // No need to change anything here.
+                @Nullable Integer newTag = newValue == null ? null : newValue.getTagIndex();
 
                 tagStore.set(OptionalInt.of(index), newTag == null ? 0 : newTag);
 
                 for (int tagIndex = 0; tagIndex < tagTypes.size(); tagIndex++)
                 {
                     ColumnStorage<?> colStore = tagTypes.get(tagIndex).getInner();
-                    if (!Objects.equals((Integer)tagIndex, newTag) && colStore != null)
-                        colStore.getType().setCollapsed(index, Either.left("Attempting to fetch tagged inner value for invalid row"));
+                    if (colStore != null)
+                    {
+                        // Remember that newTag may be null, hence this comparison of boxed integers:
+                        if (Objects.equals((Integer) tagIndex, newTag) && newValue != null)
+                        {
+                            @Value Object newValueInner = newValue.getInner();
+                            if (newValueInner == null)
+                                throw new InternalException("Found blank inner value for tag which expects an inner value, tag " + tagIndex + " type: " + typeName);
+                            colStore.getType().setCollapsed(index, Either.right(newValueInner));
+                        }
+                        else
+                            colStore.getType().setCollapsed(index, Either.left("Attempting to fetch tagged inner value for invalid row"));
+                    }
+                    
                 }
             }
         });
