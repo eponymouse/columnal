@@ -37,7 +37,7 @@ import static test.TestUtil.fx_;
 @OnThread(Tag.Simulation)
 public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait
 {
-    private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(13), CellPosition.col(9));
+    private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(15), CellPosition.col(9));
     
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
