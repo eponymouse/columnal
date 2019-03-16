@@ -65,10 +65,5 @@ public class TableNameTextField extends ErrorableTextField<TableId>
         Nodes.addInputMap(getNode(), InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
             defocus.run();
         }));
-
-        FXUtility.addChangeListenerPlatformNN(getNode().focusedProperty(), f -> {
-            if (f)
-                Log.logStackTrace("Table name field gained focus");
-        });
     }
 }
