@@ -105,7 +105,12 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public synchronized void record(Table table)
     {
-        usedIds.computeIfAbsent(table.getId(), x -> Sets.<Table>newIdentityHashSet()).add(table);
+        Set<Table> tablesForId = usedIds.computeIfAbsent(table.getId(), x -> Sets.<Table>newIdentityHashSet());
+        if (!tablesForId.isEmpty())
+        {
+            Log.logStackTrace("Adding duplicate table for table ID: " + table.getId());
+        }
+        tablesForId.add(table);
         if (table instanceof DataSource)
         {
             if (sources.add((DataSource)table))
@@ -343,7 +348,7 @@ public class TableManager
             for (int i = processFrom; i < linearised.size(); i++)
             {
                 // Don't include the original changed transformation itself, unless it got renamed:
-                if (!affected.contains(linearised.get(i)) || renames.isRenamingTableId(linearised.get(i)))
+                if (!affected.contains(linearised.get(i)) || (makeReplacement == null && renames.isRenamingTableId(linearised.get(i))))
                 {
                     // Add job:
                     toSave.incrementAndGet();
