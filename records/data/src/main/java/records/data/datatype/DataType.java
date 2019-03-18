@@ -1381,7 +1381,11 @@ public final class DataType implements StyledShowable
     {
         try
         {
-            return Utility.<Either<String, @Value Object>, DataParser>parseAsOne(content, DataLexer::new, DataParser::new, p -> loadSingleItem(this, p, false));
+            return Utility.<Either<String, @Value Object>, DataParser>parseAsOne(content, DataLexer::new, DataParser::new, p -> {
+                Either<String, @Value Object> item = loadSingleItem(this, p, false);
+                p.eof();
+                return item;
+            });
         }
         catch (UserException e)
         {

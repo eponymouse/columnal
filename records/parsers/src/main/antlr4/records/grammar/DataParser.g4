@@ -45,5 +45,6 @@ openSquareOrInvalid : openSquare | invalidItem;
 endRow : NEWLINE;
 startRow : WS?;
 whitespace: WS?;
+eof : EOF;
 
 //data : (blank | row)*;

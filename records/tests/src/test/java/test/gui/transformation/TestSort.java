@@ -20,7 +20,10 @@ import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.Table;
 import records.data.datatype.DataTypeUtility;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
@@ -142,17 +145,28 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
+        List<Map<ColumnId, Either<String, @Value Object>>> sorted = new ArrayList<>();
+        int length = original.data().getData().getLength();
+        for (int i = 0; i < length; i++)
+        {
+            sorted.add(getRow(clip.get(), i));
+        }
+        checkSorted(original.data().getData().getLength(), pickedColumns, sorted);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void checkSorted(int length, List<Pair<ColumnId, Direction>> sortBy, List<Map<ColumnId, Either<String, @Value Object>>> actual) throws UserException, InternalException
+    {
         // No point checking order if 1 row or less:
-        if (original.data().getData().getLength() > 1)
+        if (length > 1)
         {
             // Need to check that items are in the right order:
-            Map<ColumnId, Either<String, @Value Object>> prev = getRow(clip.get(), 0);
-            int length = original.data().getData().getLength();
+            Map<ColumnId, Either<String, @Value Object>> prev = actual.get(0);
             for (int i = 1; i < length; i++)
             {
-                Map<ColumnId, Either<String, @Value Object>> cur = getRow(clip.get(), i);
+                Map<ColumnId, Either<String, @Value Object>> cur = actual.get(i);
 
-                for (Pair<ColumnId, Direction> pickedColumn : pickedColumns)
+                for (Pair<ColumnId, Direction> pickedColumn : sortBy)
                 {
                     Either<String, @Value Object> prevVal = TestUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
                     Either<String, @Value Object> curVal = TestUtil.checkNonNull(cur.get(pickedColumn.getFirst()));

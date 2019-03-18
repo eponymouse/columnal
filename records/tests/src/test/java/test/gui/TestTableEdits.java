@@ -49,6 +49,7 @@ import test.gui.trait.EnterColumnDetailsTrait;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
+import test.gui.transformation.TestSort;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -61,8 +62,12 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -80,6 +85,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     private final List<Boolean> booleans = Arrays.asList(true, false, false);
     @OnThread(Tag.Any)
     private final List<Integer> numbers = Arrays.asList(5, 4, 3);
+    @OnThread(Tag.Any)
+    private final ImmutableList<Pair<ColumnId, Direction>> sortBy = ImmutableList.of(new Pair<>(new ColumnId("B"), Direction.ASCENDING), new Pair<>(new ColumnId("A"), Direction.DESCENDING));
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
@@ -113,7 +120,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), ImmutableList.of(new Pair<>(new ColumnId("B"), Direction.ASCENDING), new Pair<>(new ColumnId("A"), Direction.DESCENDING)));
+                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), sortBy);
                 dummyManager.record(sort);
                 @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
@@ -315,6 +322,17 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         DataTypeAndValueMaker swappedType = dataTypeMaker.makeType();
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(dataTypeMaker.getTypeManager());
         boolean changeBooleanA = r.nextBoolean(); // Otherwise, numeric B
+
+        // Put a value of new type in as error before changing.
+        @Value Object swappedValue = swappedType.makeValue();
+        int swappedValueIndex = r.nextInt(originalRows);
+        CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBooleanA ? 0 : 1);
+        clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
+        push(KeyCode.ENTER);
+        enterStructuredValue(swappedType.getDataType(), swappedValue, r, false);
+        push(KeyCode.ENTER);
+        
+        
         assertNull(lookup(".type-editor").tryQuery().orElse(null));
         clickOnItemInBounds(
             r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
@@ -322,27 +340,19 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         );
         assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
         sleep(300);
-        Log.debug("About to click type editor");
-        TestUtil.fx_(() -> dumpScreenshot());
         clickOn(".type-editor");
         sleep(300);
         push(TestUtil.ctrlCmd(), KeyCode.A);
-        Log.debug("Selected all");
-        TestUtil.fx_(() -> dumpScreenshot());
         sleep(300);
         push(KeyCode.DELETE);
         sleep(300);
         // Clicking ok while blank type shouldn't work, dialog should stay showing:
-        Log.debug("Trying OK");
-        TestUtil.fx_(() -> dumpScreenshot());
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
         assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
         
-        Log.debug("####\nClicking on type editor.\n####\n");
         clickOn(".type-editor");
         sleep(300);
-        TestUtil.fx_(() -> dumpScreenshot());
         enterType(TypeExpression.fromDataType(swappedType.getDataType()), r);
         // Should be fine this time with valid type:
         moveAndDismissPopupsAtPos(point(".ok-button"));
@@ -358,14 +368,14 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         ColumnId changedColumnId = new ColumnId(changeBooleanA ? "A" : "B");
         assertEquals(swappedType.getDataType(), findSort.get().getData().getColumn(changedColumnId).getType().getType());
         
-        // TODO put a value of new type in as error before changing.
-        
         // Work out what values we now expect in that column:
         List<Either<String, @Value Object>> expectedAfterChange;
+        boolean sameTypeAfterSwap;
         if (changeBooleanA)
         {
             // true/false never valid as another type so unless we changed to boolean, all errors:
-            if (swappedType.getDataType().equals(DataType.BOOLEAN))
+            sameTypeAfterSwap = swappedType.getDataType().equals(DataType.BOOLEAN);
+            if (sameTypeAfterSwap)
             {
                 expectedAfterChange = Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.<String, @Value Object>right(DataTypeUtility.value(b)));
             }
@@ -377,7 +387,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         else
         {
             // Numbers not valid unless we swapped to another numeric type:
-            if (swappedType.getDataType().isNumber())
+            sameTypeAfterSwap = swappedType.getDataType().isNumber();
+            if (sameTypeAfterSwap)
             {
                 expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n)));
             }
@@ -386,10 +397,64 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.left(Integer.toString(n)));
             }
         }
+        expectedAfterChange = new ArrayList<>(expectedAfterChange);
+        expectedAfterChange.set(swappedValueIndex, Either.right(swappedValue));
         
-        TestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), findOriginal.get().getData().getLength()));
+        TestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
+        
+        // Check the sorted values:
+        List<Map<ColumnId, Either<String, @Value Object>>> actualSortData = new AbstractList<Map<ColumnId, Either<String, @Value Object>>>()
+        {
+            RecordSet recordSet = findSort.get().getData();
+            int length = recordSet.getLength();
+            
+            @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
+            public Map<ColumnId, Either<String, @Value Object>> get(int index)
+            {
+                try
+                {
+                    Map<ColumnId, Either<String, @Value Object>> map = new HashMap<>();
+                    for (Column column : recordSet.getColumns())
+                    {
+                        map.put(column.getName(), TestUtil.getSingleCollapsedData(column.getType(), index));
+                    }
+                    return map;
+                }
+                catch (InternalException | UserException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public int size()
+            {
+                return length;
+            }
+        };
+        TestSort.checkSorted(originalRows, sortBy, actualSortData);
         
         // Now change type back:
-        // TODO
+        clickOnItemInBounds(
+                r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
+                virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBooleanA ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBooleanA ? 0 : 1))
+        );
+        sleep(300);
+        clickOn(".type-editor");
+        sleep(300);
+        push(TestUtil.ctrlCmd(), KeyCode.A);
+        sleep(300);
+        push(KeyCode.DELETE);
+        sleep(300);
+        enterType(TypeExpression.fromDataType(changeBooleanA ? DataType.BOOLEAN : DataType.NUMBER), r);
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn();
+        sleep(500);
+        
+        // Now check the values:
+        List<@NonNull Either<String, @Value Object>> expectedAtEnd = new ArrayList<>(changeBooleanA ? Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.right(DataTypeUtility.value(b))) : Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n))));
+        expectedAtEnd.set(swappedValueIndex, sameTypeAfterSwap ? Either.<String, @Value Object>right(swappedValue) : Either.<String, @Value Object>left(DataTypeUtility.valueToString(swappedType.getDataType(), swappedValue, null)));
+        TestUtil.assertValueListEitherEqual("", expectedAtEnd, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), booleans.size()));
     }
 }
