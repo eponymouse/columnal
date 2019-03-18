@@ -369,7 +369,7 @@ public class ExpressionEditorUtil
             }
             else if (e.getCode() == KeyCode.A && e.isShortcutDown())
             {
-                node.getParent().getEditor().selectAllSiblings(node);
+                node.getParent().getEditor().<E, P>selectAllSiblings(null);
             }
             else if (e.getCode() == KeyCode.DOWN && !e.isShiftDown())
             {
@@ -382,7 +382,7 @@ public class ExpressionEditorUtil
             if ((e.isShortcutDown() && e.getCode() == KeyCode.A) || e.getCode() == KeyCode.F9)
             {
                 node.getParent().getEditor().selectOnly(node);
-                node.getParent().getEditor().selectAllSiblings(node);
+                node.getParent().getEditor().<E, P>selectAllSiblings(null);
                 e.consume();
             }
             // Important not to consume by default!

@@ -500,15 +500,23 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         ensureSelectionIncludes(src);
     }
 
-    public <E extends StyledShowable, P extends ClipboardSaver> void selectAllSiblings(ConsecutiveChild<E, P> src)
+    // If src is null, select all at top level
+    public <E extends StyledShowable, P extends ClipboardSaver> void selectAllSiblings(@Nullable ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
 
         clearSelection();
-        ImmutableList<ConsecutiveChild<@NonNull E, P>> siblings = src.getParent().getAllChildren();
-        ConsecutiveChild<@NonNull E, P> end = siblings.get(siblings.size() - 1);
-        selection = new SelectionInfo<>(src.getParent(), siblings.get(0), end, SelectionCaret.END);
+        if (src != null)
+        {
+            ImmutableList<ConsecutiveChild<@NonNull E, P>> siblings = src.getParent().getAllChildren();
+            selection = new SelectionInfo<>(src.getParent(), siblings.get(0), siblings.get(siblings.size() - 1), SelectionCaret.END);
+        }
+        else
+        {
+            ImmutableList<ConsecutiveChild<EXPRESSION, SAVER>> siblings = getAllChildren();
+            selection = new SelectionInfo<>(this, siblings.get(0), siblings.get(siblings.size() - 1), SelectionCaret.END);
+        }
         selection.markSelection(true, this::clearSelection);
     }
     
