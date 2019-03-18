@@ -1,9 +1,11 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -12,12 +14,15 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
+import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
@@ -28,15 +33,20 @@ import records.gui.grid.VirtualGrid;
 import records.gui.table.TableDisplay;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
+import records.transformations.expression.type.TypeExpression;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenColumnId;
 import test.gen.GenRandom;
 import test.gen.GenTableId;
+import test.gen.type.GenDataType;
+import test.gen.type.GenDataTypeMaker;
+import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterColumnDetailsTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
@@ -45,6 +55,8 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationSupplier;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -58,13 +70,16 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait
+public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait, PopupTrait
 {
+    @OnThread(Tag.Any)
+    private final List<Boolean> booleans = Arrays.asList(true, false, false);
+    @OnThread(Tag.Any)
+    private final List<Integer> numbers = Arrays.asList(5, 4, 3);
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
@@ -92,8 +107,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {
             try
             {
-                SimulationFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("A"), Stream.of(true, false, false).map(b -> Either.<String, Boolean>right(b)).collect(Collectors.toList()), false);
-                SimulationFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, Stream.of(5, 4, 3).map(n -> Either.<String, Number>right(n)).collect(Collectors.toList()), 6);
+                SimulationFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("A"), booleans.stream().map(b -> Either.<String, Boolean>right(b)).collect(Collectors.toList()), false);
+                SimulationFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, numbers.stream().map(n -> Either.<String, Number>right(n)).collect(Collectors.toList()), 6);
                 ImmutableList<SimulationFunction<RecordSet, EditableColumn>> columns = ImmutableList.of(a, b);
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
@@ -291,5 +306,90 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertNotNull(tableNameTextField);
         assertEquals(table.getId().getRaw(), TestUtil.fx(() -> tableNameTextField.getText()));
         // TODO check drag overlays
+    }
+    
+    @Property(trials = 5)
+    @OnThread(Tag.Simulation)
+    public void testChangeColumnType(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
+    {
+        DataTypeAndValueMaker swappedType = dataTypeMaker.makeType();
+        tableManager.getTypeManager()._test_copyTaggedTypesFrom(dataTypeMaker.getTypeManager());
+        boolean changeBooleanA = r.nextBoolean(); // Otherwise, numeric B
+        assertNull(lookup(".type-editor").tryQuery().orElse(null));
+        clickOnItemInBounds(
+            r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
+            virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBooleanA ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBooleanA ? 0 : 1))
+        );
+        assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
+        sleep(300);
+        Log.debug("About to click type editor");
+        TestUtil.fx_(() -> dumpScreenshot());
+        clickOn(".type-editor");
+        sleep(300);
+        push(TestUtil.ctrlCmd(), KeyCode.A);
+        Log.debug("Selected all");
+        TestUtil.fx_(() -> dumpScreenshot());
+        sleep(300);
+        push(KeyCode.DELETE);
+        sleep(300);
+        // Clicking ok while blank type shouldn't work, dialog should stay showing:
+        Log.debug("Trying OK");
+        TestUtil.fx_(() -> dumpScreenshot());
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn();
+        assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
+        
+        Log.debug("####\nClicking on type editor.\n####\n");
+        clickOn(".type-editor");
+        sleep(300);
+        TestUtil.fx_(() -> dumpScreenshot());
+        enterType(TypeExpression.fromDataType(swappedType.getDataType()), r);
+        // Should be fine this time with valid type:
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn();
+        sleep(500);
+        assertNull(lookup(".type-editor").tryQuery().orElse(null));
+
+        SimulationSupplier<DataSource> findOriginal = () -> tableManager.getAllTables().stream().filter(t -> t instanceof DataSource).map(t -> (DataSource)t).findFirst().orElseThrow(() -> new RuntimeException("Could not find data source"));
+        
+        SimulationSupplier<Sort> findSort = () -> tableManager.getAllTables().stream().filter(t -> t instanceof Sort).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("Could not find sort"));
+        
+        // Check the type propagated to the sorted transformation
+        ColumnId changedColumnId = new ColumnId(changeBooleanA ? "A" : "B");
+        assertEquals(swappedType.getDataType(), findSort.get().getData().getColumn(changedColumnId).getType().getType());
+        
+        // TODO put a value of new type in as error before changing.
+        
+        // Work out what values we now expect in that column:
+        List<Either<String, @Value Object>> expectedAfterChange;
+        if (changeBooleanA)
+        {
+            // true/false never valid as another type so unless we changed to boolean, all errors:
+            if (swappedType.getDataType().equals(DataType.BOOLEAN))
+            {
+                expectedAfterChange = Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.<String, @Value Object>right(DataTypeUtility.value(b)));
+            }
+            else
+            {
+                expectedAfterChange = Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.left(Boolean.toString(b)));
+            }
+        }
+        else
+        {
+            // Numbers not valid unless we swapped to another numeric type:
+            if (swappedType.getDataType().isNumber())
+            {
+                expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n)));
+            }
+            else
+            {
+                expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.left(Integer.toString(n)));
+            }
+        }
+        
+        TestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), findOriginal.get().getData().getLength()));
+        
+        // Now change type back:
+        // TODO
     }
 }

@@ -69,7 +69,7 @@ public class EditableRecordSet extends RecordSet
         this(Utility.<Column, SimulationFunction<RecordSet, EditableColumn>>mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
+    public static SimulationFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
     {
         @Nullable @Value Object defaultValue = (original instanceof EditableColumn) ? ((EditableColumn)original).getDefaultValue() : null;
 
