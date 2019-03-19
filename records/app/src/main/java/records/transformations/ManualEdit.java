@@ -25,6 +25,7 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.EditColumnContext;
 import records.grammar.TransformationParser.EditColumnDataContext;
 import records.grammar.TransformationParser.EditContext;
+import records.grammar.TransformationParser.ValueContext;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
@@ -56,6 +57,8 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
     
     private final TableId srcTableId;
     private final @Nullable Table src;
+    // Kept for saving, in case issue with loading column for keyColumn
+    private final @Nullable Pair<ColumnId, DataType> originalKeyColumn;
     // If null, we use the row number as the replacement key.
     // We cache the type to avoid checked exceptions fetching it from the column
     @OnThread(Tag.Any)
@@ -69,6 +72,7 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
+        this.originalKeyColumn = replacementKey;
         this.replacements = new HashMap<>(replacements);
 
         Table srcTable = null;
@@ -148,13 +152,13 @@ edit : editHeader editColumn*;
         OutputBuilder r = new OutputBuilder();
         r.raw("EDIT");
         DataType keyType;
-        if (keyColumn != null)
+        if (originalKeyColumn != null)
         {
-            r.quote(keyColumn.getFirst().getName());
+            r.quote(originalKeyColumn.getFirst());
             r.t(TransformationLexer.TYPE_BEGIN, TransformationLexer.VOCABULARY);
             try
             {
-                keyType = keyColumn.getSecond();
+                keyType = originalKeyColumn.getSecond();
                 keyType.save(r);
             }
             catch (InternalException e)
@@ -188,8 +192,14 @@ edit : editHeader editColumn*;
                 {
                     r.raw("REPLACEMENT @VALUE ");
                     r.data(keyType.fromCollapsed((i, prog) -> k.getValue()), 0);
-                    r.raw(" @ENDVALUE @VALUE ");
-                    r.data(crv.dataType.fromCollapsed((i, prog) -> v.<@Value Object>eitherEx(err -> {throw new InvalidImmediateValueException(StyledString.s(err), err);}, val -> val.getValue())), 0);
+                    r.raw("@ENDVALUE ");
+                    v.eitherEx_(err -> {
+                        r.raw("@INVALIDVALUE ");
+                        r.s(err);
+                    }, val -> {
+                        r.raw("@VALUE ");
+                        r.data(crv.dataType.fromCollapsed((i, prog) -> val.getValue()), 0);
+                    });
                     r.raw(" @ENDVALUE");
                     r.nl();
                 }
@@ -580,7 +590,8 @@ edit : editHeader editColumn*;
                 for (EditColumnDataContext editColumnDatum : editColumnContext.editColumnData())
                 {
                     @Value Object key = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(0).VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
-                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(1).VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(dataType, p, false));
+                    ValueContext dataValue = editColumnDatum.value(1);
+                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(dataValue.VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> dataValue.INVALID_VALUE_BEGIN() != null ? Either.<String, @Value Object>left(p.string().STRING().getText()) : DataType.loadSingleItem(dataType, p, false));
                     replacementValues.add(new Pair<>(key, value));
                 }
                 
