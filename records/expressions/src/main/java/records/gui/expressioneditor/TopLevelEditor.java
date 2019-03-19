@@ -833,6 +833,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void hidePopup(boolean immediately)
         {
+            Log.debug("Hiding ErrorMessagePopup, immediate: " + immediately);
             // Whether we hide immediately or not, stop any current animation:
             cancelHideAnimation();
 
@@ -863,6 +864,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             // Shouldn't be non-null already, but just in case:
             if (!isShowing())
             {
+                Log.debug("Showing ErrorMessagePopup");
                 show(scrollPane);
                 //org.scenicview.ScenicView.show(getScene());
             }

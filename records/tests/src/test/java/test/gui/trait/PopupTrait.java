@@ -30,6 +30,7 @@ public interface PopupTrait extends FxRobotInterface
         int attempts = 0;
         while (popupAtMousePos.get() && ++attempts < 10)
         {
+            System.out.println("Middle clicking to dismiss popup");
             clickOn(MouseButton.MIDDLE);
             TestUtil.delay(50);
         }
