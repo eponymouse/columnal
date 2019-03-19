@@ -57,7 +57,15 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
                 ColumnId columnId = TestUtil.generateColumnId(random);
 
                 TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(random, status);
-                mgr.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
+                try
+                {
+                    mgr.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
+                }
+                catch (IllegalStateException e)
+                {
+                    // Duplicate types; just skip
+                    continue;
+                }
               
                 ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = TestUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(replacingColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
                 

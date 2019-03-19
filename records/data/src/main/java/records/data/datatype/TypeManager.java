@@ -356,7 +356,7 @@ public class TypeManager
         return unitManager;
     }
 
-    public void _test_copyTaggedTypesFrom(TypeManager typeManager)
+    public void _test_copyTaggedTypesFrom(TypeManager typeManager) throws IllegalStateException
     {
         for (TaggedTypeDefinition taggedTypeDefinition : typeManager.userTypes.values())
         {
@@ -364,6 +364,13 @@ public class TypeManager
             {
                 userTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
                 allKnownTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
+            }
+            else
+            {
+                if (!taggedTypeDefinition.equals(userTypes.get(taggedTypeDefinition.getTaggedTypeName())))
+                {
+                    throw new IllegalStateException("Two user types have same name but different definitions; abort!");
+                }
             }
         }
         
