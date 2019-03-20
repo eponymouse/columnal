@@ -1,11 +1,13 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.ColumnId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -14,6 +16,7 @@ import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -23,11 +26,15 @@ import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
+import utility.ExSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -42,6 +49,9 @@ public class GenNonsenseExpression extends Generator<Expression>
 {
     private final GenUnit genUnit = new GenUnit();
     private TableManager tableManager = DummyManager.make();
+    // An identifier that is a column must be a column throughout, so we need to keep track:
+    // Maps to true if column reference, false if not.
+    private final HashMap<String, Boolean> columnReferences = new HashMap<>();
     
     public GenNonsenseExpression()
     {
@@ -56,6 +66,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     @Override
     public Expression generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
+        columnReferences.clear();
         return genDepth(sourceOfRandomness, 0, generationStatus);
     }
 
@@ -139,26 +150,51 @@ public class GenNonsenseExpression extends Generator<Expression>
         try
         {
             // Call targets:
-            ArrayList<Expression> items = new ArrayList<>(Arrays.asList(
-                new ConstructorExpression(genTag(r).getSecond()),
-                new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
-                new IdentExpression(TestUtil.generateVarName(r))
+            ArrayList<ExSupplier<Expression>> items = new ArrayList<ExSupplier<Expression>>(Arrays.<ExSupplier<Expression>>asList(
+                () -> new ConstructorExpression(genTag(r).getSecond()),
+                () -> new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
+                () -> {
+                    while (true)
+                    {
+                        @ExpressionIdentifier String ident = TestUtil.generateVarName(r);
+                        if (columnReferences.getOrDefault(ident, false))
+                        {
+                            if (!onlyCallTargets)
+                                return new ColumnReference(new ColumnId(ident), ColumnReferenceType.CORRESPONDING_ROW);
+                        } else
+                        {
+                            columnReferences.put(ident, false);
+                            return new IdentExpression(ident);
+                        }
+                    }
+                }
             ));
             // Although unfinished is a valid call target, it doesn't survive a
             // round trip, so we put it below:
             
             if (!onlyCallTargets)
             {
-                items.addAll(Arrays.asList(
-                    InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
-                    new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
-                    new BooleanLiteral(r.nextBoolean()),
-                    new StringLiteral(TestUtil.makeStringV(r, gs)),
-                    new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW)  
+                items.addAll(Arrays.<ExSupplier<Expression>>asList(
+                    () -> InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
+                    () -> new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
+                    () -> new BooleanLiteral(r.nextBoolean()),
+                    () -> new StringLiteral(TestUtil.makeStringV(r, gs)),
+                    () -> {
+                        ColumnId columnId = TestUtil.generateColumnId(r);
+                        if (columnReferences.getOrDefault(columnId.getRaw(), true))
+                        {
+                            columnReferences.put(columnId.getRaw(), true);
+                            return new ColumnReference(columnId, r.nextBoolean() ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
+                        }
+                        else
+                        {
+                            return new IdentExpression(TestUtil.checkNonNull(IdentifierUtility.asExpressionIdentifier(columnId.getRaw())));
+                        }
+                    }  
                 ));
             }
             
-            return r.<Expression>choose(items);
+            return r.<ExSupplier<Expression>>choose(items).get();
         }
         catch (UserException | InternalException e)
         {
