@@ -7,7 +7,9 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.TableAndColumnRenames;
 import records.data.unit.Unit;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -35,14 +37,16 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
-public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, Context>
+public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, Context, ImmutableList<@Recorded TypeExpression>>
 {
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfo(ImmutableList.of(new Pair<Operator, @Localized String>(Operator.COMMA, Utility.universal(""))), TypeSaver::makeNary)
     );
 
-    private static @Nullable ImmutableList<@Recorded TypeExpression> makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, ConsecutiveChild<TypeExpression, TypeSaver>>> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets, ErrorDisplayerRecord errorDisplayerRecord)
+    private static @Nullable @Recorded TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, ConsecutiveChild<TypeExpression, TypeSaver>>> operators, BracketAndNodes<TypeExpression, TypeSaver, ImmutableList<@Recorded TypeExpression>> brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
+        return brackets.applyBrackets.apply(typeExpressions);
+        /*
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED && typeExpressions.size() > 1)
         {
             return typeExpressions;
@@ -65,6 +69,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             else
                 return ImmutableList.<@Recorded TypeExpression>of(errorDisplayerRecord.<InvalidOpTypeExpression>recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(items.build())));
         }
+        */
     }
     
     public TypeSaver(ConsecutiveBase<TypeExpression, TypeSaver> parent, boolean showFoundErrors)
@@ -80,7 +85,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         
         if (keyword == Keyword.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<TypeExpression, TypeSaver>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close),
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<TypeExpression, TypeSaver, ImmutableList<@Recorded TypeExpression>>(tupleOrSingle(), errorDisplayer, close),
                     (bracketed, bracketEnd) -> {
                         ArrayList<Either<@Recorded TypeExpression, OpAndNode>> precedingItems = currentScopes.peek().items;
                         // Type applications are a special case:
@@ -112,7 +117,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(makeList(), errorDisplayer, close), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword)));
         }
         else
         {
@@ -125,6 +130,80 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             cur.terminator.terminate(brackets -> makeExpression(cur.openingNode, brackets.end, cur.items, brackets), keyword, errorDisplayer, withContext);
         }
     }
+
+    private ApplyBrackets<ImmutableList<@Recorded TypeExpression>, TypeExpression> tupleOrSingle()
+    {
+        return new ApplyBrackets<ImmutableList<TypeExpression>, TypeExpression>()
+        {
+            @Override
+            public @PolyNull @Recorded TypeExpression apply(@PolyNull ImmutableList<@Recorded TypeExpression> items)
+            {
+                if (items == null)
+                    return null;
+                else if (items.size() == 1)
+                    return items.get(0);
+                else
+                    return new TupleTypeExpression(items); // TODO record
+            }
+
+            @Override
+            public @PolyNull @Recorded TypeExpression applySingle(@PolyNull TypeExpression singleItem)
+            {
+                return singleItem;
+            }
+        };
+    }
+
+    private ApplyBrackets<ImmutableList<@Recorded TypeExpression>, TypeExpression> makeList()
+    {
+        return new ApplyBrackets<ImmutableList<TypeExpression>, TypeExpression>()
+        {
+            @Override
+            public @Recorded @PolyNull TypeExpression apply(@PolyNull ImmutableList<TypeExpression> items)
+            {
+                if (items == null)
+                    return null;
+                else if (items.size() == 1)
+                    return new ListTypeExpression(items.get(0));
+                else
+                    return new ListTypeExpression(new InvalidOpTypeExpression(items));
+            }
+
+            @Override
+            public @Recorded @PolyNull TypeExpression applySingle(@PolyNull TypeExpression singleItem)
+            {
+                if (singleItem == null)
+                    return null;
+                else
+                    return new ListTypeExpression(singleItem);
+            }
+        };
+    }
+
+    @Override
+    protected ApplyBrackets<ImmutableList<@Recorded TypeExpression>, TypeExpression> expectSingle(@UnknownInitialization(Object.class) TypeSaver this)
+    {
+        return new ApplyBrackets<ImmutableList<TypeExpression>, TypeExpression>()
+        {
+            @Override
+            public @PolyNull @Recorded TypeExpression apply(@PolyNull ImmutableList<TypeExpression> items)
+            {
+                if (items == null)
+                    return null;
+                else if (items.size() == 1)
+                    return items.get(0);
+                else
+                    return new InvalidOpTypeExpression(items);
+            }
+
+            @Override
+            public @PolyNull @Recorded TypeExpression applySingle(@PolyNull TypeExpression singleItem)
+            {
+                return singleItem;
+            }
+        };
+    }
+    
 
     @Override
     public void saveOperand(TypeExpression singleItem, ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, FXPlatformConsumer<Context> withContext)
@@ -183,7 +262,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Recorded TypeExpression makeExpression(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver> brackets)
+    protected @Recorded TypeExpression makeExpression(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, ImmutableList<@Recorded TypeExpression>> brackets)
     {
         if (content.isEmpty())
             return record(start, end, new InvalidOpTypeExpression(ImmutableList.of()));
@@ -218,27 +297,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                    return record(brackets.start, brackets.end, new ListTypeExpression(validOperands.get(0)));
-                else
-                    return validOperands.get(0);
+                return brackets.applyBrackets.apply(ImmutableList.copyOf(validOperands));
             }
             
             // Now we need to check the operators can work together as one group:
             @Nullable TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
                     makeInvalidOp(brackets.start, brackets.end, arg)
-                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (BracketedStatus br, ImmutableList<@Recorded TypeExpression> args) -> {
-                if (args == null)
-                    return null;
-                else if (br == BracketedStatus.DIRECT_ROUND_BRACKETED && args.size() > 1)
-                    return errorDisplayerRecord.recordType(brackets.start, brackets.end, new TupleTypeExpression(args));
-                else if (br == BracketedStatus.DIRECT_SQUARE_BRACKETED && args.size() == 1)
-                    return errorDisplayerRecord.recordType(brackets.start, brackets.end, new ListTypeExpression(args.get(0)));
-                else if (args.size() == 1)
-                    return args.get(0);
-                else
-                    return errorDisplayerRecord.recordType(brackets.start, brackets.end, new InvalidOpTypeExpression(args));
-            });
+                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
             {
                 return record(start, end, e);

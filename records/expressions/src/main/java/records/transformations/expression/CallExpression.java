@@ -296,7 +296,7 @@ public class CallExpression extends Expression
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         r.addAll(function.loadAsConsecutive(BracketedStatus.MISC));
-        roundBracket(BracketedStatus.MISC, true, r, () -> r.addAll(new TupleExpression(arguments).loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
+        r.addAll(new TupleExpression(arguments).loadAsConsecutive(BracketedStatus.MISC));
         return r.stream();
     }
 

@@ -7,8 +7,10 @@ import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.ExpressionSaver.Context;
@@ -39,7 +41,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context> implements ErrorAndTypeRecorder
+public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context, ImmutableList<@Recorded Expression>> implements ErrorAndTypeRecorder
 {
     class Context {}   
     
@@ -52,7 +54,55 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     private ExpressionSaver()
     {
     }
+
+    @Override
+    protected ApplyBrackets<ImmutableList<@Recorded Expression>, Expression> expectSingle(@UnknownInitialization(Object.class) ExpressionSaver this)
+    {
+        return new ApplyBrackets<ImmutableList<@Recorded Expression>, Expression>()
+        {
+            @Override
+            public @PolyNull @Recorded Expression apply(@PolyNull ImmutableList<@Recorded Expression> items)
+            {
+                if (items == null)
+                    return null;
+                else if (items.size() == 1)
+                    return items.get(0);
+                else
+                    return new InvalidOperatorExpression(items); // TODO record
+            }
+
+            @Override
+            public @PolyNull @Recorded Expression applySingle(@PolyNull Expression singleItem)
+            {
+                return singleItem;
+            }
+        };
+    }
     
+    private ApplyBrackets<ImmutableList<@Recorded Expression>, Expression> makeList()
+    {
+        return new ApplyBrackets<ImmutableList<Expression>, Expression>()
+        {
+            @Override
+            public @PolyNull @Recorded Expression apply(@PolyNull ImmutableList<Expression> items)
+            {
+                if (items == null)
+                    return null;
+                else
+                    return new ArrayExpression(items); // TODO record
+            }
+
+            @Override
+            public @PolyNull @Recorded Expression applySingle(@PolyNull Expression singleItem)
+            {
+                if (singleItem == null)
+                    return null;
+                else
+                    return new ArrayExpression(ImmutableList.of(singleItem));
+            }
+        };
+    }
+
     // Note: if we are copying to clipboard, callback will not be called
     public void saveKeyword(Keyword keyword, ConsecutiveChild<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
@@ -64,24 +114,63 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else if (keyword == Keyword.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close), (bracketed, bracketEnd) -> {
-                ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
-                // Function calls are a special case:
-                if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionOps::isCallTarget, op -> false))
+            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<ImmutableList<@Recorded Expression>, Expression>> applyBrackets = c -> new ApplyBrackets<ImmutableList<Expression>, Expression>()
+            {
+                @Override
+                public @Recorded @PolyNull Expression apply(@PolyNull ImmutableList<Expression> items)
                 {
-                    @Nullable @Recorded Expression callTarget = precedingItems.remove(precedingItems.size() - 1).<@Nullable @Recorded Expression>either(e -> e, op -> null);
-                    // Shouldn't ever be null:
-                    if (callTarget != null)
-                    {
-                        return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed instanceof TupleExpression ? ((TupleExpression)bracketed).getMembers() : ImmutableList.of(bracketed))));
-                    }
+                    if (items == null)
+                        return null;
+                    else if (items.size() == 1)
+                        return items.get(0);
+                    else
+                        return new TupleExpression(items); // TODO record
                 }
+
+                @Override
+                public @PolyNull @Recorded Expression applySingle(@PolyNull Expression singleItem)
+                {
+                    return singleItem;
+                }
+            };
+            ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
+            // Function calls are a special case:
+            if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionOps::isCallTarget, op -> false))
+            {
+                @Nullable @Recorded Expression callTarget = precedingItems.remove(precedingItems.size() - 1).<@Nullable @Recorded Expression>either(e -> e, op -> null);
+                // Shouldn't ever be null:
+                if (callTarget != null)
+                {
+                    applyBrackets = c -> new ApplyBrackets<ImmutableList<@Recorded Expression>, Expression>()
+                    {
+                        @Override
+                        public @PolyNull Expression apply(@PolyNull ImmutableList<@Recorded Expression> args)
+                        {
+                            if (args == null)
+                                return null;
+                            else
+                                return errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, c, new CallExpression(callTarget, args));
+                        }
+
+                        @Override
+                        public @PolyNull Expression applySingle(@PolyNull Expression singleItem)
+                        {
+                            if (singleItem == null)
+                                return null;
+                            else
+                                return apply(ImmutableList.of(singleItem));
+                        }
+                    };
+                }
+            }
+            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<ImmutableList<@Recorded Expression>, Expression>> applyBracketsFinal = applyBrackets;
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), errorDisplayer, close), (bracketed, bracketEnd) -> {
                 return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
             }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<Expression, ExpressionSaver, ImmutableList<@Recorded Expression>>(makeList(), errorDisplayer, close), (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword)));
         }
         else if (keyword == Keyword.IF)
         {
@@ -116,20 +205,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
+    protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, ImmutableList<@Recorded Expression>> brackets)
     {
         if (content.isEmpty())
         {
-            if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                return errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of()));
-            else
-                return errorDisplayerRecord.record(start, end, new InvalidIdentExpression(""));
-        }
-
-        UnaryOperator<@Recorded Expression> applyBrackets = UnaryOperator.identity();
-        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-        {
-            applyBrackets = x -> errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(x)));
+            return brackets.applyBrackets.apply(ImmutableList.of());
         }
         
         CollectedItems collectedItems = processItems(content);
@@ -143,42 +223,18 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                e = applyBrackets.apply(validOperands.get(0));
+                e = brackets.applyBrackets.apply(ImmutableList.copyOf(validOperands));
             }
             else
             {
                 // Now we need to check the operators can work together as one group:
-
-                e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (BracketedStatus brs, ImmutableList<@Recorded Expression> commaSepArgs) ->
-                {
-                    if (commaSepArgs == null)
-                    {
-                        return null;
-                    }
-                    else if (brs == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                    {
-                        return errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(commaSepArgs)); 
-                    }
-                    else if (brs == BracketedStatus.DIRECT_ROUND_BRACKETED && commaSepArgs.size() > 1)
-                    {
-                        return errorDisplayerRecord.record(brackets.start, brackets.end, new TupleExpression(commaSepArgs));
-                    }
-                    else if (commaSepArgs.size() == 1)
-                    {
-                        return commaSepArgs.get(0);
-                    }
-                    else
-                    {
-                        // This shouldn't happen!  But play safe:
-                        return errorDisplayerRecord.record(brackets.start, brackets.end, new InvalidOperatorExpression(commaSepArgs));
-                    }
-                });
+                e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             }            
         }
         
         if (e == null)
         {
-            e = applyBrackets.apply(collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new));
+            e = brackets.applyBrackets.apply(ImmutableList.of(collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new)));
         }
         
         return e;
@@ -389,9 +445,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new Terminator()
         {
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+        public void terminate(FetchContent<Expression, ExpressionSaver, ImmutableList<@Recorded Expression>> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
         {
-            BracketAndNodes<Expression, ExpressionSaver> brackets = miscBrackets(start, keywordErrorDisplayer);
+            BracketAndNodes<Expression, ExpressionSaver, ImmutableList<@Recorded Expression>> brackets = miscBrackets(start, keywordErrorDisplayer);
             
             for (Choice choice : choices)
             {
@@ -556,14 +612,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 public OperatorSection makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
                 {
                     return new NaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets, edr) -> {
-                        switch (brackets.bracketedStatus)
-                        {
-                            // Commas valid only inside square and round brackets:
-                            case DIRECT_SQUARE_BRACKETED:
-                            case DIRECT_ROUND_BRACKETED:
-                                return args;
-                        }
-                        return null;
+                        return brackets.applyBrackets.apply(args);
                     }, initialIndex, initialOperator);
 
                 }

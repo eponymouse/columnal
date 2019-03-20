@@ -130,8 +130,7 @@ public class TupleExpression extends Expression
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        if (bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED)
-            r.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
+        r.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
         for (int i = 0; i < members.size(); i++)
         {
             if (i > 0)
@@ -139,8 +138,7 @@ public class TupleExpression extends Expression
             Expression item = members.get(i);
             r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
         }
-        if (bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED)
-            r.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
+        r.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         return r.stream();
     }
 

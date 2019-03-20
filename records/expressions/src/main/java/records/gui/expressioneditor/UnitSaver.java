@@ -7,7 +7,9 @@ import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
@@ -25,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Context>// implements ErrorAndTypeRecorder
+public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Context, Void>// implements ErrorAndTypeRecorder
 {
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfo(ImmutableList.of(
@@ -49,12 +51,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
+    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
+    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
@@ -64,12 +66,35 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             ));
     };
 
+    @Override
+    public ApplyBrackets<Void, UnitExpression> expectSingle(@UnknownInitialization(Object.class) UnitSaver this)
+    {
+        return new ApplyBrackets<Void, UnitExpression>()
+        {
+            @Override
+            public @PolyNull @Recorded UnitExpression apply(@PolyNull Void items)
+            {
+                // Should not be possible anyway
+                if (items == null)
+                    return null;
+                else
+                    throw new IllegalStateException();
+            }
+
+            @Override
+            public @PolyNull @Recorded UnitExpression applySingle(@PolyNull UnitExpression singleItem)
+            {
+                return singleItem;
+            }
+        };
+    }
+
     //UnitManager getUnitManager();
 
     class Context {}
     
     @Override
-    protected @Recorded UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver> brackets)
+    protected @Recorded UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets)
     {
         if (content.isEmpty())
             return record(start, end, new InvalidOperatorUnitExpression(ImmutableList.of()));
@@ -103,7 +128,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             // Now we need to check the operators can work together as one group:
             @Nullable UnitExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> arg) ->
                     makeInvalidOp(brackets.start, brackets.end, arg)
-                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (BracketedStatus brs, ImmutableList<@Recorded UnitExpression> arg) -> Utility.<ImmutableList<@Recorded UnitExpression>, @Recorded UnitExpression>onNullable(arg, l -> l.get(0)));
+                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
             {
                 return record(start, end, e);
@@ -144,9 +169,9 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             currentScopes.push(new Scope(errorDisplayer, new Terminator()
             {
                 @Override
-                public void terminate(FetchContent<UnitExpression, UnitSaver> makeContent, @Nullable UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
                 {
-                    BracketAndNodes<UnitExpression, UnitSaver> brackets = new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, keywordErrorDisplayer);
+                    BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = new BracketAndNodes<>(expectSingle(), errorDisplayer, keywordErrorDisplayer);
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
@@ -177,7 +202,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             {
                 addTopLevelScope(errorDisplayer.getParent());
             }
-            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver> brackets) -> makeExpression(brackets.start, brackets.end, cur.items, brackets), bracket, errorDisplayer, withContext);
+            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(brackets.start, brackets.end, cur.items, brackets), bracket, errorDisplayer, withContext);
         }
     }
 
