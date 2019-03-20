@@ -249,6 +249,14 @@ public class MatchExpression extends NonOperatorExpression
                 return Stream.concat(pattern.allVariableReferences(), guard.allVariableReferences());
         }
 
+        public Stream<ColumnReference> allColumnReferences()
+        {
+            if (guard == null)
+                return pattern.allColumnReferences();
+            else
+                return Stream.concat(pattern.allColumnReferences(), guard.allColumnReferences());
+        }
+
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
@@ -391,7 +399,9 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.<ColumnReference>concat(expression.allColumnReferences(), clauses.stream().<ColumnReference>flatMap(c -> c.outcome.allColumnReferences()));
+        return Stream.<ColumnReference>concat(expression.allColumnReferences(), 
+            clauses.stream().<ColumnReference>flatMap(c -> 
+                Stream.<ColumnReference>concat(c.patterns.stream().<ColumnReference>flatMap(p -> p.allColumnReferences()), c.outcome.allColumnReferences())));
     }
 
     @Override

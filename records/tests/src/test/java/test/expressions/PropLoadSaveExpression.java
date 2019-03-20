@@ -9,16 +9,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
+import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
 import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditor;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -29,6 +35,9 @@ import test.gen.GenNonsenseExpression;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
+
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -84,7 +93,24 @@ public class PropLoadSaveExpression extends FXApplicationTest
     private void testNoOpEdit(Expression expression)
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(TestUtil.dummyColumnLookup()), new ReadOnlyObjectWrapper<@Nullable DataType>(null), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()),  e -> {
+        // To preserve column references we have to have them in the lookup:
+        ColumnLookup columnLookup = new ColumnLookup()
+        {
+            @Override
+            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            {
+                return null;
+            }
+
+            @Override
+            public Stream<ColumnReference> getAvailableColumnReferences()
+            {
+                return expression.allColumnReferences().distinct();
+            }
+        };
+        
+        
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(null), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()),  e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
