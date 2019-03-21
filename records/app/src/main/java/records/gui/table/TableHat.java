@@ -350,8 +350,15 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                     DataTypeValue keyColumn = manualEditData.getColumn(keyColumnId).getType();
                                                     for (int row = 0; row < length; row++)
                                                     {
-                                                        if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
-                                                            rowIndex = row;
+                                                        try
+                                                        {
+                                                            if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
+                                                                rowIndex = row;
+                                                        }
+                                                        catch (UserException e)
+                                                        {
+                                                            // Ignore fetch issues, just check following value.
+                                                        }
                                                     }
                                                 }
                                                 int rowIndexFinal = rowIndex;

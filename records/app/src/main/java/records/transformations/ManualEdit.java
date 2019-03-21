@@ -275,15 +275,15 @@ edit : editHeader editColumn*;
                 break;
             
             ComparableValue existingKeyValue = keyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(keyColumn.getFirst().getType().getCollapsed(row));
-            
-            ComparableValue newKeyValue = newKeyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(newKeyColumn.getType().getCollapsed(row));
             NavigableSet<Pair<ColumnId, ComparableEither<String, ComparableValue>>> matchingValues = toFind.get(existingKeyValue);
+            
             if (!matchingValues.isEmpty())
             {
                 for (Pair<ColumnId, ComparableEither<String, ComparableValue>> matchingValue : matchingValues)
                 {
                     Column column = src.getData().getColumn(matchingValue.getFirst());
                     DataType columnType = column.getType().getType();
+                    ComparableValue newKeyValue = newKeyColumn == null ? new ComparableValue(DataTypeUtility.value(row)) : new ComparableValue(newKeyColumn.getType().getCollapsed(row));
                     newReplacements.computeIfAbsent(matchingValue.getFirst(), k -> new ColumnReplacementValues(columnType, ImmutableList.of())).replacementValues.put(newKeyValue, matchingValue.getSecond());
                 }
                 matchingValues.clear();
