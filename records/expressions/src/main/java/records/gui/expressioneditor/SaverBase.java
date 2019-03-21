@@ -88,7 +88,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     public static interface MakeNarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
     {
-        // Only called if the list is valid (one more expression than operators, strictly interleaved
+        // Only called if the list is valid (one more expression than operators, strictly interleaved)
         public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators);
     }
 
@@ -113,7 +113,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             this.operators = operators;
             this.makeExpression = Either.left((ImmutableList<@Recorded EXPRESSION> es, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> ops, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketAndNodes, ErrorDisplayerRecord _err) -> {
-                EXPRESSION expression = makeExpression.makeNary(es, ops);
+                @Nullable EXPRESSION expression = makeExpression.makeNary(es, ops);
                 if (expression == null)
                     return null;
                 else
@@ -412,11 +412,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
     }
     
-    protected abstract ApplyBrackets<BRACKET_CONTENT, EXPRESSION> expectSingle(@UnknownInitialization(Object.class) SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> this);
+    protected abstract ApplyBrackets<BRACKET_CONTENT, EXPRESSION> expectSingle(@UnknownInitialization(Object.class) SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end);
     
     public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> miscBrackets(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
-        return new BracketAndNodes<>(expectSingle(), start, end);
+        return new BracketAndNodes<>(expectSingle(errorDisplayerRecord, start, end), start, end);
     }
     
     public Function<ConsecutiveChild<EXPRESSION, SAVER>, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> miscBrackets(ConsecutiveChild<EXPRESSION, SAVER> start)
@@ -460,7 +460,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (isShowingErrors())
                     end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
-                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(new BracketAndNodes<>(expectSingle(), start, end))));
+                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(new BracketAndNodes<>(expectSingle(errorDisplayerRecord, start, end), start, end))));
                 if (terminator != null)
                     currentScopesFinal.peek().items.add(Either.left(thisSaver.record(start, end, thisSaver.keywordToInvalid(terminator))));
             }
@@ -487,7 +487,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         Scope closed = currentScopes.pop();
-        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = new BracketAndNodes<>(expectSingle(), closed.openingNode, errorDisplayer);
+        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = new BracketAndNodes<>(expectSingle(errorDisplayerRecord, closed.openingNode, errorDisplayer), closed.openingNode, errorDisplayer);
         return makeExpression(closed.openingNode, errorDisplayer, closed.items, brackets);
     }
 
@@ -617,7 +617,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         public @PolyNull @Recorded EXPRESSION apply(@PolyNull BRACKET_CONTENT items);
         
-        public @PolyNull @Recorded EXPRESSION applySingle(@PolyNull EXPRESSION singleItem);
+        public @PolyNull @Recorded EXPRESSION applySingle(@PolyNull @Recorded EXPRESSION singleItem);
     }
     
     /**

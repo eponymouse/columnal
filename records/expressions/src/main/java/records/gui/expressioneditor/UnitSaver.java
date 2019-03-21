@@ -67,7 +67,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     };
 
     @Override
-    public ApplyBrackets<Void, UnitExpression> expectSingle(@UnknownInitialization(Object.class) UnitSaver this)
+    public ApplyBrackets<Void, UnitExpression> expectSingle(@UnknownInitialization(Object.class) UnitSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end)
     {
         return new ApplyBrackets<Void, UnitExpression>()
         {
@@ -82,7 +82,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             }
 
             @Override
-            public @PolyNull @Recorded UnitExpression applySingle(@PolyNull UnitExpression singleItem)
+            public @PolyNull @Recorded UnitExpression applySingle(@PolyNull @Recorded UnitExpression singleItem)
             {
                 return singleItem;
             }
@@ -171,7 +171,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                 @Override
                 public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
                 {
-                    BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = new BracketAndNodes<>(expectSingle(), errorDisplayer, keywordErrorDisplayer);
+                    BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = new BracketAndNodes<>(expectSingle(errorDisplayerRecord, errorDisplayer, keywordErrorDisplayer), errorDisplayer, keywordErrorDisplayer);
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
