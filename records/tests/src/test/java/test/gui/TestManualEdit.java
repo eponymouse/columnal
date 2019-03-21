@@ -29,6 +29,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
@@ -78,7 +80,7 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, EnterStructuredValueTrait
 {
-    @Property(trials = 5)
+    @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
             @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
@@ -133,9 +135,39 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         // Null means use row number
         @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : findFirstSort.get().getData().getColumns().get(r.nextInt(numColumns));
+
+        ArrayList<Integer> rowIndexesWithUniqueKey = new ArrayList<>();
+        // Each value is a list of row indexes
+        TreeMap<ComparableValue, List<Integer>> freqCount = new TreeMap<>();
+        if (replaceKeyColumn != null)
+        {
+            for (int i = 0; i < replaceKeyColumn.getLength(); i++)
+            {
+                try
+                {
+                    freqCount.computeIfAbsent(new ComparableValue(replaceKeyColumn.getType().getCollapsed(i)), k -> new ArrayList<>()).add(i);
+                }
+                catch (InvalidImmediateValueException e)
+                {
+                    // Ignore this; not a key that can be matched anyway, so just don't add to map.
+                }
+            }
+            freqCount.forEach((k, rowIndexes) -> {
+                if (rowIndexes.size() == 1)
+                    rowIndexesWithUniqueKey.add(rowIndexes.get(0));
+            });
+        }
         
+        
+        
+        // Pass true if you require a row with a unique replacement key 
         @SuppressWarnings("units")
-        Supplier<@TableDataRowIndex Integer> makeRowIndex = () -> r.nextInt(length);
+        Function<Boolean, @TableDataRowIndex Integer> makeRowIndex = unique -> {
+            if (unique)
+                return rowIndexesWithUniqueKey.get(r.nextInt(rowIndexesWithUniqueKey.size()));
+            else
+                return r.nextInt(length);
+        };
         @SuppressWarnings("units")
         Supplier<@TableDataColIndex Integer> makeColIndex = () -> r.nextInt(numColumns);
 
@@ -146,7 +178,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         boolean madeManualEdit = false;
         if (r.nextBoolean())
         {
-            @TableDataRowIndex int row = makeRowIndex.get();
+            @TableDataRowIndex int row = makeRowIndex.apply(true);
             @TableDataColIndex int col = makeColIndex.get();
 
             @Nullable @Value Object replaceKey;
@@ -239,7 +271,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         int numFurtherEdits = r.nextInt(10);
         for (int i = 0; i < numFurtherEdits; i++)
         {
-            @TableDataRowIndex int row = makeRowIndex.get();
+            @TableDataRowIndex int row = makeRowIndex.apply(true);
             @TableDataColIndex int col = makeColIndex.get();
             
             @Nullable @Value Object replaceKey;
@@ -270,8 +302,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             // If key has an error, we should get a dialog.
             if (replaceKey == null)
             {
-                sleep(500);
-                assertTrue("Alert should be showing about invalid key", lookup(".alert").tryQuery().isPresent());
+                sleep(1500);
+                assertTrue("Alert should be showing about invalid key for column " + (replaceKeyColumn == null ? " <row>" : replaceKeyColumn.getName().getRaw()), lookup(".alert").tryQuery().isPresent());
                 clickOn(".ok-button");
                 assertFalse("Alert still showing after OK", lookup(".alert").tryQuery().isPresent());
             }
@@ -285,6 +317,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                     write(s);
                 }, v -> enterStructuredValue(columnTypes.get(col).getDataType(), v.getValue(), r, false));
                 push(KeyCode.ENTER);
+                TestUtil.fx_(() -> dumpScreenshot());
             }
         }
         
@@ -307,9 +340,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             int numChanges = r.nextInt(10);
             for (int i = 0; i < numChanges; i++)
             {
-                @TableDataRowIndex int row = makeRowIndex.get();
+                @TableDataRowIndex int row = makeRowIndex.apply(false);
                 @TableDataColIndex int col = makeColIndex.get();
                 @Value Object value = columnTypes.get(col).makeValue();
+                if (replaceKeyColumn != null && findManualEdit.get().getData().getColumns().get(col).getName().equals(replaceKeyColumn.getName()))
+                {
+                    // Don't introduce duplicate keys:
+                    if (freqCount.containsKey(new ComparableValue(value)))
+                        continue;
+                }
                 keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), findFirstSort.get().getSrcTableId(), row, col);
                 sleep(500);
                 assertFalse("Alert should not be showing", lookup(".alert").tryQuery().isPresent());
@@ -325,14 +364,14 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(2000);
+        TestUtil.sleep(1000);
 
         Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
         ImmutableList<LoadedColumnInfo> expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
         
         assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
-        checkEqual(expected, editViaClip.get());
+        checkEqual(expected, editViaClip);
         checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
         
         // Copy the values from the resulting sort:
@@ -347,7 +386,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         assertTrue(secondSortViaClip.isPresent());
         ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(findManualEdit.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, secondSortBy);
 
-        checkEqual(expectedSecondSort, secondSortViaClip.get());
+        checkEqual(expectedSecondSort, secondSortViaClip);
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
         
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, DataItemPosition.row(0), DataItemPosition.col(1));
@@ -381,6 +420,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
             clickOn(TestUtil.fx(() -> cell.lookup(".jump-to-link")));
             sleep(500);
+            assertNull(lookup(".fancy-list").tryQuery().orElse(null));
             @TableDataColIndex int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
             int row = -1;
             if (replaceKeyColumn == null)
@@ -392,16 +432,23 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 int len = findManualEdit.get().getData().getLength();
                 for (int i = 0; i < len; i++)
                 {
-                    if (Utility.compareValues(keyColType.getCollapsed(i), toClick.getIdentifierValue().getValue()) == 0)
+                    try
                     {
-                        row = i;
-                        break;
+                        if (Utility.compareValues(keyColType.getCollapsed(i), toClick.getIdentifierValue().getValue()) == 0)
+                        {
+                            row = i;
+                            break;
+                        }
+                    }
+                    catch (InvalidImmediateValueException e)
+                    {
+                        // Can't be this one; keep going
                     }
                 }
             }
             assertNotEquals(-1, row);
             @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
-            assertEquals(TestUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TestUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
+            assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumn == null ? "<row>" : replaceKeyColumn.getName()), TestUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TestUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
         }
         else
         {
@@ -419,7 +466,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
         expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
-        checkEqual(expected, editViaClip.get());
+        checkEqual(expected, editViaClip);
         checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
     }
 
@@ -480,13 +527,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     }
 
     @OnThread(Tag.Simulation)
-    private void checkEqual(ImmutableList<LoadedColumnInfo> expected, ImmutableList<LoadedColumnInfo> actual) throws InternalException, UserException
+    private void checkEqual(ImmutableList<LoadedColumnInfo> expected, Optional<ImmutableList<LoadedColumnInfo>> actual) throws InternalException, UserException
     {
-        assertEquals(expected.size(), actual.size());
+        if (!actual.isPresent())
+            return; // Missing data, so can't compare
+        assertEquals(expected.size(), actual.get().size());
         for (int colIndex = 0; colIndex < expected.size(); colIndex++)
         {
             LoadedColumnInfo expCol = expected.get(colIndex);
-            LoadedColumnInfo actCol = actual.get(colIndex);
+            LoadedColumnInfo actCol = actual.get().get(colIndex);
             
             assertEquals(expCol.columnName, actCol.columnName);
             assertEquals(expCol.dataType, actCol.dataType);
@@ -496,29 +545,48 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
     @OnThread(Tag.Simulation)
     @SuppressWarnings("units")
-    private ImmutableList<LoadedColumnInfo> getGraphicalContent(MainWindowActions mainWindowActions, Table table) throws InternalException, UserException
+    private Optional<ImmutableList<LoadedColumnInfo>> getGraphicalContent(MainWindowActions mainWindowActions, Table table) throws InternalException, UserException
     {
         RecordSet tableData = table.getData();
-        return Utility.mapListExI_Index(tableData.getColumns(), (colIndex, column) -> {
-            TableDisplay tableDisplay = TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
-            ImmutableList.Builder<Either<String, @Value Object>> values = ImmutableList.builder();
-            for (int row = 0; row < tableData.getLength(); row++)
-            {
-                int rowFinal = row;
-                Either<String, @Value Object> internalContent = TestUtil.getSingleCollapsedData(column.getType(), rowFinal);
-                values.add(TestUtil.checkNonNull(TestUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
-                    VersionedSTF cell = mainWindowActions._test_getDataCell(tableDisplay.getDataPosition(rowFinal, colIndex));
-                    if (cell == null)
-                        return null;
-                    String content = cell._test_getGraphicalText();
-                    // Bit of a hack, but need to deal with truncated numbers, so we get direct content if truncated:
-                    if (column.getType().getType().isNumber() && content.contains("\u2026"))
-                        return internalContent;
-                    return column.getType().getType().loadSingleItem(content);
-                })));
-            }
-            
-            return new LoadedColumnInfo(column.getName(), column.getType().getType(), values.build());
-        });
+        // Horribly hacky:
+        @OnThread(Tag.Any)
+        class MissingCellException extends RuntimeException {}
+        
+        try
+        {
+            return Optional.of(Utility.mapListExI_Index(tableData.getColumns(), (colIndex, column) -> {
+                TableDisplay tableDisplay = TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
+                ImmutableList.Builder<Either<String, @Value Object>> values = ImmutableList.builder();
+                for (int row = 0; row < tableData.getLength(); row++)
+                {
+                    int rowFinal = row;
+                    Either<String, @Value Object> internalContent = TestUtil.getSingleCollapsedData(column.getType(), rowFinal);
+                    @Nullable Either<String, @Value Object> cellValue = TestUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
+                        CellPosition dataPosition = tableDisplay.getDataPosition(rowFinal, colIndex);
+                        VersionedSTF cell = mainWindowActions._test_getDataCell(dataPosition);
+                        if (cell == null)
+                        {
+                            System.err.println("No cell found for " + rowFinal + ", " + colIndex + " which resolves to " + dataPosition);
+                            return null;
+                        }
+                        String content = cell._test_getGraphicalText();
+                        // Bit of a hack, but need to deal with truncated numbers, so we get direct content if truncated:
+                        if (column.getType().getType().isNumber() && content.contains("\u2026"))
+                            return internalContent;
+                        return column.getType().getType().loadSingleItem(content);
+                    });
+                    if (cellValue == null)
+                        throw new MissingCellException();
+                    values.add(cellValue);
+                }
+
+                return new LoadedColumnInfo(column.getName(), column.getType().getType(), values.build());
+            }));
+        }
+        catch (MissingCellException e)
+        {
+            // If any are missing, we can't sensibly proceed:
+            return Optional.empty();
+        }
     }
 }
