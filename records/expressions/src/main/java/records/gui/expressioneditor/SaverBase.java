@@ -397,26 +397,28 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         public final ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets;
         public final ConsecutiveChild<EXPRESSION, SAVER> start;
         public final ConsecutiveChild<EXPRESSION, SAVER> end;
-        
+        private final ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION>> alternateBrackets;
 
-        public BracketAndNodes(ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets, ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
+
+        public BracketAndNodes(ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets, ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION>> alternateBrackets)
         {
             this.applyBrackets = applyBrackets;
             this.start = start;
             this.end = end;
+            this.alternateBrackets = alternateBrackets;
         }
 
-        public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> withBrackets(ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets)
+        public ImmutableList<BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> alternateBrackets()
         {
-            return new BracketAndNodes<>(applyBrackets, start, end);
+            return Utility.mapListI(alternateBrackets, apply -> new BracketAndNodes<>(apply, start, end, ImmutableList.of()));
         }
     }
     
-    protected abstract ApplyBrackets<BRACKET_CONTENT, EXPRESSION> expectSingle(@UnknownInitialization(Object.class) SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end);
+    protected abstract BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> expectSingle(@UnknownInitialization(Object.class) SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end);
     
     public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> miscBrackets(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
-        return new BracketAndNodes<>(expectSingle(errorDisplayerRecord, start, end), start, end);
+        return expectSingle(errorDisplayerRecord, start, end);
     }
     
     public Function<ConsecutiveChild<EXPRESSION, SAVER>, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> miscBrackets(ConsecutiveChild<EXPRESSION, SAVER> start)
@@ -460,7 +462,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (isShowingErrors())
                     end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
-                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(new BracketAndNodes<>(expectSingle(errorDisplayerRecord, start, end), start, end))));
+                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(expectSingle(errorDisplayerRecord, start, end))));
                 if (terminator != null)
                     currentScopesFinal.peek().items.add(Either.left(thisSaver.record(start, end, thisSaver.keywordToInvalid(terminator))));
             }
@@ -487,7 +489,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         Scope closed = currentScopes.pop();
-        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = new BracketAndNodes<>(expectSingle(errorDisplayerRecord, closed.openingNode, errorDisplayer), closed.openingNode, errorDisplayer);
+        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(errorDisplayerRecord, closed.openingNode, errorDisplayer);
         return makeExpression(closed.openingNode, errorDisplayer, closed.items, brackets);
     }
 
@@ -678,29 +680,20 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 return single;
 
             // Maybe with the possibility of different brackets?
-            /* TODO
-            if (brackets.bracketedStatus == BracketedStatus.MISC || brackets.bracketedStatus == BracketedStatus.TOP_LEVEL)
+            List<@Recorded EXPRESSION> possibles = new ArrayList<>();
+            for (BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> alternateBracket : brackets.alternateBrackets())
             {
-                List<Pair<BracketedStatus, ImmutableList<@Recorded EXPRESSION>>> possibles = new ArrayList<>();
-                for (BracketedStatus status : Arrays.asList(BracketedStatus.DIRECT_ROUND_BRACKETED, BracketedStatus.DIRECT_SQUARE_BRACKETED))
-                {
-                    @Nullable ImmutableList<@Recorded EXPRESSION> possible = operatorSections.get(0).makeExpression(expressionExps, brackets.withStatus(status));
-                    if (possible != null)
-                        possibles.add(new Pair<>(status, possible));
-                }
-                if (!possibles.isEmpty())
-                {
-                    @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
-                    errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorDisplayerRecord.getRecorder().<@Recorded EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Utility.<Pair<BracketedStatus, ImmutableList<@Recorded EXPRESSION>>, QuickFix<@Recorded EXPRESSION, SAVER>>mapList(possibles, e -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> {
-                        @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                        @Recorded EXPRESSION r = applyBrackets.apply(e.getFirst(), e.getSecond());
-                        return r;
-                    })));
-                    return invalidOpExpression;
-                }
+                @Nullable @Recorded EXPRESSION possible = operatorSections.get(0).makeExpression(expressionExps, alternateBracket);
+                if (possible != null)
+                    possibles.add(possible);
             }
-            */
+            if (!possibles.isEmpty())
+            {
+                @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
+                errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
+                errorDisplayerRecord.getRecorder().<@Recorded EXPRESSION, SAVER>recordQuickFixes(invalidOpExpression, Utility.<@Recorded EXPRESSION, QuickFix<@Recorded EXPRESSION, SAVER>>mapList(possibles, fixed -> new QuickFix<@Recorded EXPRESSION, SAVER>("fix.bracketAs", invalidOpExpression, () -> fixed)));
+                return invalidOpExpression;
+            }
         }
 
         @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
@@ -715,9 +708,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // The sections either side match up, and the middle is same or lower precedence, so we can bracket
             // the middle and put it into one valid expression.  Hurrah!
-            /* TODO
+            ConsecutiveChild<EXPRESSION, SAVER> middleStart = recorderFor(expressionExps.get(operatorSections.get(1).getFirstOperandIndex())).start;
+            ConsecutiveChild<EXPRESSION, SAVER> middleEnd = recorderFor(expressionExps.get(operatorSections.get(1).getLastOperandIndex())).end;
             @SuppressWarnings("recorded")
-            @Nullable @Recorded EXPRESSION middle = applyBrackets.apply(BracketedStatus.MISC, operatorSections.get(1).makeExpression(expressionExps, brackets));
+            @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, expectSingle(errorDisplayerRecord, middleStart, middleEnd));
             if (middle != null)
             {
                 @Nullable @Recorded EXPRESSION replacement = ((NaryOperatorSection) operatorSections.get(0)).makeExpressionMiddleMerge(
@@ -735,7 +729,6 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     ));
                 }
             }
-            */
         }
         else
         {
@@ -749,10 +742,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (operatorSection.operatorSetPrecedence != precedence)
                     break;
 
-                // We try all the bracketing states, preferring un-bracketed, for valid replacements: 
-                /* TODO
+                // We try all the bracketing states, preferring un-bracketed, for valid replacements:
+                ConsecutiveChild<EXPRESSION, SAVER> secStart = recorderFor(expressionExps.get(operatorSection.getFirstOperandIndex())).start;
+                ConsecutiveChild<EXPRESSION, SAVER> secEnd = recorderFor(expressionExps.get(operatorSection.getLastOperandIndex())).end;
                 @SuppressWarnings("recorded")
-                @Nullable @Recorded EXPRESSION sectionExpression = applyBrackets.apply(BracketedStatus.MISC, operatorSection.makeExpression(expressionExps, brackets));
+                @Nullable @Recorded EXPRESSION sectionExpression = operatorSection.makeExpression(expressionExps, expectSingle(errorDisplayerRecord, secStart, secEnd));
                 if (sectionExpression == null)
                     continue;
 
@@ -804,7 +798,6 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         })
                     ));
                 }
-                */
             }
         }
 

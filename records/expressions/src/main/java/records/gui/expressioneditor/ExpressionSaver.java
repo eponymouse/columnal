@@ -67,9 +67,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected ApplyBrackets<BracketContent, Expression> expectSingle(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
+    protected BracketAndNodes<Expression, ExpressionSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
     {
-        return new ApplyBrackets<BracketContent, Expression>()
+        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, Expression>()
         {
             @Override
             public @PolyNull @Recorded Expression apply(@PolyNull BracketContent items)
@@ -87,7 +87,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 return singleItem;
             }
-        };
+        }, start, end, ImmutableList.of(tupleBracket(errorDisplayerRecord, start, end)));
     }
     
     private ApplyBrackets<BracketContent, Expression> makeList(ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
@@ -125,25 +125,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else if (keyword == Keyword.OPEN_ROUND)
         {
-            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> new ApplyBrackets<BracketContent, Expression>()
-            {
-                @Override
-                public @Recorded @PolyNull Expression apply(@PolyNull BracketContent items)
-                {
-                    if (items == null)
-                        return null;
-                    else if (items.expressions.size() == 1)
-                        return items.expressions.get(0);
-                    else
-                        return errorDisplayerRecord.record(errorDisplayer, c, new TupleExpression(items.expressions));
-                }
-
-                @Override
-                public @PolyNull @Recorded Expression applySingle(@PolyNull @Recorded Expression singleItem)
-                {
-                    return singleItem;
-                }
-            };
+            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> tupleBracket(errorDisplayerRecord, errorDisplayer, c);
             ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
             // Function calls are a special case:
             if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionOps::isCallTarget, op -> false))
@@ -175,7 +157,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
             }
             Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), errorDisplayer, close), (bracketed, bracketEnd) -> {
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), errorDisplayer, close, ImmutableList.of()), (bracketed, bracketEnd) -> {
                 return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
             }, prefixKeyword)));
         }
@@ -183,7 +165,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             currentScopes.push(new Scope(errorDisplayer,
                 expect(Keyword.CLOSE_SQUARE,
-                    close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(errorDisplayerRecord, errorDisplayer, close), errorDisplayer, close),
+                    close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(errorDisplayerRecord, errorDisplayer, close), errorDisplayer, close, ImmutableList.of()),
                     (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword)));
         }
         else if (keyword == Keyword.IF)
@@ -223,6 +205,29 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
             }, keyword, errorDisplayer, withContext);
         }
+    }
+
+    private ApplyBrackets<BracketContent, Expression> tupleBracket(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
+    {
+        return new ApplyBrackets<BracketContent, Expression>()
+        {
+            @Override
+            public @Recorded @PolyNull Expression apply(@PolyNull BracketContent items)
+            {
+                if (items == null)
+                    return null;
+                else if (items.expressions.size() == 1)
+                    return items.expressions.get(0);
+                else
+                    return errorDisplayerRecord.record(start, end, new TupleExpression(items.expressions));
+            }
+
+            @Override
+            public @PolyNull @Recorded Expression applySingle(@PolyNull @Recorded Expression singleItem)
+            {
+                return singleItem;
+            }
+        };
     }
 
     @Override

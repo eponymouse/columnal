@@ -833,7 +833,6 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void hidePopup(boolean immediately)
         {
-            Log.debug("Hiding ErrorMessagePopup, immediate: " + immediately);
             // Whether we hide immediately or not, stop any current animation:
             cancelHideAnimation();
 
