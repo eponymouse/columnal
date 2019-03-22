@@ -73,7 +73,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 3)
     public void testDeleteAfterSpareKeyword(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("@invalidops(1, @unfinished \"+\", 2, @invalidops(@unfinished \"^aif\", @unfinished \"\"))", 2, 4, "1 + 2", r);
+        testDeleteBackspace("@invalidops(1, @unfinished \"+\", 2, @invalidops(@unfinished \"^aif\", @invalidops ()))", 2, 4, "1 + 2", r);
     }
 
     @Property(trials = 3)
