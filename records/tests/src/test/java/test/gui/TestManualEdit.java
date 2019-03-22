@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -89,8 +90,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         int length = 1 + r.nextInt(50);
         int numColumns = 1 + r.nextInt(5);
         List<DataTypeAndValueMaker> columnTypes = Utility.replicateM_Ex(numColumns, () -> typeMaker.makeType());
+        HashSet<ColumnId> usedColumnIds = new HashSet<>();
         List<SimulationFunction<RecordSet, EditableColumn>> makeColumns = Utility.<DataTypeAndValueMaker, SimulationFunction<RecordSet, EditableColumn>>mapListEx(columnTypes, columnType -> {
-            ColumnId columnId = TestUtil.generateColumnId(new SourceOfRandomness(r));
+            ColumnId columnId;
+            do
+            {
+                columnId = TestUtil.generateColumnId(new SourceOfRandomness(r));
+            }
+            while (usedColumnIds.contains(columnId));
+            usedColumnIds.add(columnId);
 
             ImmutableList<Either<String, @Value Object>> values = Utility.<Either<String, @Value Object>>replicateM_Ex(length, () -> {
                 if (r.nextInt(5) == 1)
@@ -158,7 +166,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             });
         }
         
-        
+        // Can happen e.g. with boolean keys, just going to have to give up:
+        if (rowIndexesWithUniqueKey.isEmpty())
+            return;
         
         // Pass true if you require a row with a unique replacement key 
         @SuppressWarnings("units")
