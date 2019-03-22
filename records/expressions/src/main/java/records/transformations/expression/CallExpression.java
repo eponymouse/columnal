@@ -130,48 +130,31 @@ public class CallExpression extends Expression
                 Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
-                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference) param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
                 {
-                    ColumnReference colRef = (ColumnReference)param;
+                    ColumnReference colRef = (ColumnReference) param;
                     // Offer to turn a this-row column reference into whole column:
                     onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
-                        new QuickFix<>("fix.wholeColumn", this, () -> {
-                            @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                            CallExpression newCall = new CallExpression(function, ImmutableList.of(new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN)));
-                            return newCall;
-                        }
-                        )
-                    ));
-                }
-                if (prunedParam instanceof TupleTypeExp && param instanceof TupleExpression)
-                {
-                    // Offer to turn tuple into a list:
-                    Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
-                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
-                            new QuickFix<>("fix.squareBracketAs", this, () -> {
+                            new QuickFix<>("fix.wholeColumn", this, () -> {
                                 @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                                CallExpression newCall = new CallExpression(function, ImmutableList.of(replacementParam));
+                                        CallExpression newCall = new CallExpression(function, ImmutableList.of(new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN)));
                                 return newCall;
-                            })
+                            }
+                            )
                     ));
                 }
-                // Although we may want to pass a tuple as a single-item list, it's much less likely
-                // than the missing list brackets case, hence the else here:
-                else if (!TypeExp.isList(prunedParam))
-                {
-                    // Offer to make a list:
-                    @SuppressWarnings("recorded")
-                    Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
-                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
-                        new QuickFix<>("fix.singleItemList", this, () -> {
+            }
+            else if (takesList && arguments.size() > 1)
+            {
+                // Offer to turn tuple into a list:
+                Expression replacementParam = new ArrayExpression(arguments);
+                onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
+                        new QuickFix<>("fix.squareBracketAs", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                             CallExpression newCall = new CallExpression(function, ImmutableList.of(replacementParam));
                             return newCall;
                         })
-                    ));
-                }
-                
-                
+                ));
             }
             
             return null;

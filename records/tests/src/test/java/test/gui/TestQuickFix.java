@@ -237,7 +237,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "sum", "@call @function sum(@entire ACC1)");
+        testSimpleFix("sum(ACC1)", "ACC1", "@call @function sum(@entire ACC1)");
     }
     
     @Ignore // Not sure if this fix is even worth implementing
