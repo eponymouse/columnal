@@ -125,7 +125,7 @@ public class CallExpression extends Expression
             // to list if possible (and not, if not)
             @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
             boolean takesList = functionArgTypeExp != null && functionArgTypeExp.size() == 1 && TypeExp.isList(functionArgTypeExp.get(0));
-            if (takesList)
+            if (takesList && arguments.size() == 1)
             {
                 Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
