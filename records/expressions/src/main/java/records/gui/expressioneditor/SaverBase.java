@@ -617,9 +617,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     public interface ApplyBrackets<BRACKET_CONTENT, EXPRESSION>
     {
-        public @PolyNull @Recorded EXPRESSION apply(@PolyNull BRACKET_CONTENT items);
+        public @Nullable @Recorded EXPRESSION apply(@NonNull BRACKET_CONTENT items);
         
-        public @PolyNull @Recorded EXPRESSION applySingle(@PolyNull @Recorded EXPRESSION singleItem);
+        public @NonNull @Recorded EXPRESSION applySingle(@NonNull @Recorded EXPRESSION singleItem);
     }
     
     /**

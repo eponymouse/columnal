@@ -8,6 +8,7 @@ import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
@@ -72,17 +73,14 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new BracketAndNodes<>(new ApplyBrackets<Void, UnitExpression>()
         {
             @Override
-            public @PolyNull @Recorded UnitExpression apply(@PolyNull Void items)
+            public @Nullable @Recorded UnitExpression apply(@NonNull Void items)
             {
                 // Should not be possible anyway
-                if (items == null)
-                    return null;
-                else
-                    throw new IllegalStateException();
+                throw new IllegalStateException();
             }
 
             @Override
-            public @PolyNull @Recorded UnitExpression applySingle(@PolyNull @Recorded UnitExpression singleItem)
+            public @NonNull @Recorded UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
             {
                 return singleItem;
             }

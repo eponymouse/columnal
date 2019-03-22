@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.TableAndColumnRenames;
@@ -126,18 +127,16 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         return new ApplyBrackets<BracketContent, TypeExpression>()
         {
             @Override
-            public @PolyNull @Recorded TypeExpression apply(@PolyNull BracketContent items)
+            public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
             {
-                if (items == null)
-                    return null;
-                else if (items.typeExpressions.size() == 1)
+                if (items.typeExpressions.size() == 1)
                     return items.typeExpressions.get(0);
                 else
                     return errorDisplayerRecord.recordType(start, end, new TupleTypeExpression(items.typeExpressions));
             }
 
             @Override
-            public @PolyNull @Recorded TypeExpression applySingle(@PolyNull @Recorded TypeExpression singleItem)
+            public @NonNull @Recorded TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {
                 return singleItem;
             }
@@ -149,23 +148,18 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         return new ApplyBrackets<BracketContent, TypeExpression>()
         {
             @Override
-            public @Recorded @PolyNull TypeExpression apply(@PolyNull BracketContent items)
+            public @Recorded @Nullable TypeExpression apply(@NonNull BracketContent items)
             {
-                if (items == null)
-                    return null;
-                else if (items.typeExpressions.size() == 1)
+                if (items.typeExpressions.size() == 1)
                     return errorDisplayerRecord.recordType(start, end, new ListTypeExpression(items.typeExpressions.get(0)));
                 else
                     return errorDisplayerRecord.recordType(start, end, new ListTypeExpression(new InvalidOpTypeExpression(items.typeExpressions)));
             }
 
             @Override
-            public @Recorded @PolyNull TypeExpression applySingle(@PolyNull TypeExpression singleItem)
+            public @Recorded @NonNull TypeExpression applySingle(@NonNull TypeExpression singleItem)
             {
-                if (singleItem == null)
-                    return null;
-                else
-                    return errorDisplayerRecord.recordType(start, end, new ListTypeExpression(singleItem));
+                return errorDisplayerRecord.recordType(start, end, new ListTypeExpression(singleItem));
             }
         };
     }
@@ -176,18 +170,16 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression>()
         {
             @Override
-            public @PolyNull @Recorded TypeExpression apply(@PolyNull BracketContent items)
+            public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
             {
-                if (items == null)
-                    return null;
-                else if (items.typeExpressions.size() == 1)
+                if (items.typeExpressions.size() == 1)
                     return items.typeExpressions.get(0);
                 else
-                    return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(items.typeExpressions));
+                    return null;
             }
 
             @Override
-            public @PolyNull @Recorded TypeExpression applySingle(@PolyNull @Recorded TypeExpression singleItem)
+            public @NonNull @Recorded TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {
                 return singleItem;
             }
@@ -287,7 +279,8 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                return brackets.applyBrackets.apply(new BracketContent(ImmutableList.copyOf(validOperands)));
+                @Recorded TypeExpression bracketedValid = brackets.applyBrackets.applySingle(validOperands.get(0));
+                return bracketedValid;
             }
             
             // Now we need to check the operators can work together as one group:
