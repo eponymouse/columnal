@@ -219,7 +219,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         if (content.isEmpty())
         {
-            return brackets.applyBrackets.applySingle(new InvalidIdentExpression(""));
+            @Nullable @Recorded Expression bracketedEmpty = brackets.applyBrackets.apply(new BracketContent(ImmutableList.of()));
+            if (bracketedEmpty != null)
+                return bracketedEmpty;
+            else
+                return errorDisplayerRecord.record(brackets.start, brackets.end, new InvalidOperatorExpression(ImmutableList.of()));
         }
         
         CollectedItems collectedItems = processItems(content);
