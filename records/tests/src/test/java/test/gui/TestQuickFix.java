@@ -217,6 +217,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     }
     
     @Test
+    @Ignore // Not sure this is a fix worth suggesting when there is only one argument
     public void testListBracketFix1()
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
