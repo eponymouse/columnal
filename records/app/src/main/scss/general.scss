@@ -52,7 +52,10 @@
     -fx-vgap: 0.6em;
     -fx-hgap: 0.5em;
 }
-
+.errorable-text-field {
+    -fx-border-color: transparent;
+    -fx-border-width: 2px;
+}
 .errorable-text-field:has-warnings {
     -fx-border-color: orange;
     -fx-border-width: 2px;
@@ -88,6 +91,11 @@
     .popup-error-pane {
         -fx-padding: 0.5em 1em 0.5em 1em;
     }
+    
+    .errorable-sub-explanation {
+        -fx-fill: grey(60%);
+        -fx-font-size: 80%;
+    }
 }
 
 .help-box {
@@ -117,7 +125,7 @@
                 -fx-font-weight: bold;
             }
             .more {
-                -fx-font-size: 70%;
+                -fx-font-size: 80%;
                 -fx-fill: hsb(0, 0%, 60%);
             }
         }

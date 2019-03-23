@@ -25,6 +25,7 @@ import org.controlsfx.control.PopOver.ArrowLocation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.FixList.FixInfo;
+import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -39,6 +40,7 @@ import utility.gui.TranslationUtility;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
@@ -116,10 +118,10 @@ public class ErrorableTextField<T>
         {
             popOver.setTitle(TranslationUtility.getString(hasError ? "error.popup.title.error" : "error.popup.title.warnings"));
             //popOver.setHeaderAlwaysVisible(true);
-            popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.<String>concat(
-                Utility.<String>streamNullable(result.getError()),
-                result.getWarnings().stream()
-            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.<FixInfo>copyOf(Utility.<QuickFix, FixInfo>mapList(result.getFixes(), f -> new FixInfo(f.fixDescription, ImmutableList.of(), () -> setText(f.fixedValue)))))));
+            popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.<Text>concat(
+                Optional.ofNullable(result.getError()).map(e -> e.toGUI().stream()).orElse(Stream.of()),
+                    result.getWarnings().stream().<Text>map(Text::new)
+            ).toArray(Node[]::new)), new FixList(ImmutableList.<FixInfo>copyOf(Utility.<QuickFix, FixInfo>mapList(result.getFixes(), f -> new FixInfo(f.fixDescription, ImmutableList.of(), () -> setText(f.fixedValue)))))));
 
             if (!popOver.isShowing())
             {
@@ -212,24 +214,21 @@ public class ErrorableTextField<T>
 
     public static class ConversionResult<@NonNull T>
     {
-        private final boolean success;
         private final @Nullable T value;
-        private final @Nullable @Localized String error;
+        private final @Nullable StyledString error;
         private final ImmutableList<QuickFix> fixes;
         private final List<@Localized String> warnings;
 
         private ConversionResult(T value, @Localized String... warnings)
         {
-            this.success = true;
             this.value = value;
             this.error = null;
             this.warnings = Arrays.asList(warnings);
             this.fixes = ImmutableList.of();
         }
 
-        private ConversionResult(@Localized String error, QuickFix... fixes)
+        private ConversionResult(StyledString error, QuickFix... fixes)
         {
-            this.success = false;
             this.value = null;
             this.error = error;
             this.warnings = Collections.emptyList();
@@ -242,7 +241,7 @@ public class ErrorableTextField<T>
         }
 
         @Pure
-        public @Nullable @Localized String getError()
+        public @Nullable StyledString getError()
         {
             return error;
         }
@@ -257,7 +256,7 @@ public class ErrorableTextField<T>
             return new ConversionResult<T>(value, warnings);
         }
 
-        public static <T> ConversionResult<T> error(@Localized String error, QuickFix... fixes)
+        public static <T> ConversionResult<T> error(StyledString error, QuickFix... fixes)
         {
             return new ConversionResult<T>(error, fixes);
         }
@@ -289,11 +288,11 @@ public class ErrorableTextField<T>
         }
         catch (InternalException e)
         {
-            return new ConversionResult<T>("Internal Error: " + e.getLocalizedMessage());
+            return new ConversionResult<T>(StyledString.concat(StyledString.s("Internal Error: "), e.getStyledMessage()));
         }
         catch (UserException e)
         {
-            return new ConversionResult<T>(e.getLocalizedMessage());
+            return new ConversionResult<T>(e.getStyledMessage());
         }
     }
 
@@ -315,11 +314,11 @@ public class ErrorableTextField<T>
                 if (i == 0 && validCodepoint.test(codepoint, false))
                 {
                     // Would be valid, just not at the start:
-                    return ConversionResult.error(TranslationUtility.getString("error.illegalCharacter.start", Utility.codePointToString(codepoint) + " [\\u" + Integer.toHexString(codepoint) + "]"));
+                    return ConversionResult.error(StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(codepoint)), StyledString.s("\n"), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))));
                 }
                 // Not valid anywhere; offer to remove in case it's an unprintable or awkward character:
                 return ConversionResult.error(
-                    TranslationUtility.getString("error.illegalCharacter", Utility.codePointToString(codepoint) + " [\\u" + Integer.toHexString(codepoint) + "]"),
+                    StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(codepoint)), StyledString.s("\n"), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))),
                     new QuickFix(StyledString.s(TranslationUtility.getString("error.illegalCharacter.remove")), new String(codePoints, 0, i) + new String(codePoints, i + 1, codePoints.length - i - 1))
                 );
             }

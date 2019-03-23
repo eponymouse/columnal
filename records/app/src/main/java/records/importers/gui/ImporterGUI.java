@@ -22,6 +22,7 @@ import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
 import records.importers.ChoiceDetails;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -79,7 +80,7 @@ public class ImporterGUI
             {
                 final @NonNull Function<String, Either<@Localized String, @NonNull C>> stringEntry = choiceDetails.stringEntry;
                 ErrorableTextField<@NonNull C> field = new ErrorableTextField<@NonNull C>(s -> {
-                    return stringEntry.apply(s).<ConversionResult<@NonNull C>>either(e -> ConversionResult.<@NonNull C>error(e), v -> ConversionResult.<@NonNull C>success(v));
+                    return stringEntry.apply(s).<ConversionResult<@NonNull C>>either(e -> ConversionResult.<@NonNull C>error(StyledString.s(e)), v -> ConversionResult.<@NonNull C>success(v));
                 });
                 fieldValue = field.valueProperty();
                 choiceNode = new HBox(combo, field.getNode());

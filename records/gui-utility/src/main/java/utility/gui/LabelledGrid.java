@@ -28,7 +28,7 @@ public class LabelledGrid extends GridPane
         private final @Nullable HelpBox helpBox;
         private final @Nullable Node item;
 
-        public Row(Labeled label, @Nullable HelpBox helpBox, Node item)
+        public Row(Node label, @Nullable HelpBox helpBox, Node item)
         {
             setHalignment(label, HPos.RIGHT);
             this.lhs = label;

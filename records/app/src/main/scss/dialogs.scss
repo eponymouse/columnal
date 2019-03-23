@@ -178,6 +178,9 @@
     -fx-background-insets: 0, 1;
     -fx-background-color: grey(70%), $light-dialog-background-dark;
     -fx-padding: 10px;
+    .label {
+        -fx-text-alignment: right;
+    }
 }
 .edit-column-top-message {
     -fx-border-width: 0 0 1 0;

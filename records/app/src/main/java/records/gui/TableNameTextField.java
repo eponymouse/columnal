@@ -39,7 +39,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
                 if (blankAllowed)
                     return ConversionResult.success(new TableId(s));
                 else
-                    return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.error.missing"));
+                    return ConversionResult.<@NonNull TableId>error(TranslationUtility.getStyledString("table.name.error.missing"));
             }
             TableId tableId = new TableId(s);
             //System.err.println("Comparing \"" + s + "\" with " + Utility.listToString(Utility.mapList(tableManager.getAllTables(), t -> "\"" + t.getId().getRaw() + "\"")));
@@ -54,7 +54,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
             }
             else
             {
-                return ConversionResult.<TableId>error(TranslationUtility.getString("table.name.exists", s));
+                return ConversionResult.<TableId>error(TranslationUtility.getStyledString("table.name.exists", s));
             }
         });
         getStyleClass().add("table-name-text-field");

@@ -23,13 +23,12 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
         super(s -> {
             s = GrammarUtility.collapseSpaces(s);
             if (s.isEmpty())
-                return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.error.missing"));
+                return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getStyledString("column.name.error.missing"));
             return checkAlphabet(s, ColumnId::validCharacter, ColumnId::new);
         });
         getStyleClass().add("column-name-text-field");
         if (initial != null)
             setText(initial.getRaw());
-        setPromptText(TranslationUtility.getString("column.name.prompt"));
     }
 
     @Override

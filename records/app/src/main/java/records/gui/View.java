@@ -786,7 +786,7 @@ public class View extends StackPane implements DimmableParent
             switch (choice.get().getSecond())
             {
                 case DATA:
-                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), new ColumnId("A"), null, true).showAndWait();
+                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), null, null, true).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error creating first column", () -> {

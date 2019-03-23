@@ -28,6 +28,7 @@ import records.grammar.AcceleratorBaseVisitor;
 import records.grammar.AcceleratorLexer;
 import records.grammar.AcceleratorParser;
 import records.grammar.AcceleratorParser.AcceleratorContext;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -155,6 +156,13 @@ public class TranslationUtility
         }
         else
             return new Pair<>(original, null);
+    }
+
+    @SuppressWarnings("i18n") // Because we return key if there's an issue
+    @OnThread(Tag.Any)
+    public static StyledString getStyledString(@LocalizableKey String key, String... values)
+    {
+        return StyledString.s(getString(key, values));
     }
 
     /**

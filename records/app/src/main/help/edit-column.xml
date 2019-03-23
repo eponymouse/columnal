@@ -7,7 +7,7 @@
         <full>
             <p>Every column must have a name, and you cannot have duplicate column names within a single table.</p>
             <p>Column names must start with a letter, optionally followed by a succession
-            of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning and end.</p>
+            of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning or end.</p>
         </full>
     </help>
     <help id="column-type" title="Column Type">
@@ -35,8 +35,8 @@
         <short>The name of the table being created.</short>
         <full>
             <p>Every table must have a name, and tables may not share the same name.</p>
-            <p>Column names must start with a letter, optionally followed by a succession
-                of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning and end.</p>
+            <p>Table names must start with a letter, optionally followed by a succession
+                of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning or end.</p>
         </full>
     </help>
 </dialog>

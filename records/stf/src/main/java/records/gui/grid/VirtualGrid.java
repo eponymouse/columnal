@@ -207,6 +207,7 @@ public final class VirtualGrid implements ScrollBindable
     private @Nullable GridAreaHighlight highlightedGridArea;
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
+    private boolean suppressSelectionUpdate = false;
 
     public static interface VirtualGridManager
     {
@@ -388,6 +389,8 @@ public final class VirtualGrid implements ScrollBindable
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldVal, @Nullable CellSelection s)
             {
+                if (suppressSelectionUpdate)
+                    return;
                 if (s != null)
                 {
                     FXUtility.mouse(VirtualGrid.this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
@@ -2096,6 +2099,7 @@ public final class VirtualGrid implements ScrollBindable
     @OnThread(Tag.FXPlatform)
     public void _test_keyboardMoveTo(CellPosition target)
     {
+        suppressSelectionUpdate = true;
         container.ctrlHome();
         for (int i = 0; i < target.rowIndex; i++)
         {
@@ -2107,5 +2111,9 @@ public final class VirtualGrid implements ScrollBindable
         {
             container.move(false, 0, 1);
         }
+        // Update:
+        suppressSelectionUpdate = false;
+        container.move(false, 1, 0);
+        container.move(false, -1, 0);
     }
 }

@@ -1,11 +1,17 @@
 package records.gui;
 
+import annotation.help.qual.HelpKey;
 import annotation.qual.Value;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -38,6 +44,8 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 import utility.gui.TranslationUtility;
+
+import java.util.ArrayList;
 
 /**
  * Edits an immediate column, which has a name, type, and default value
@@ -74,23 +82,14 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     public EditImmediateColumnDialog(DimmableParent parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
     {
         super(parent, true);
+        setResizable(true);
 
+        AlignedLabels alignedLabels = new AlignedLabels();
         LabelledGrid content = new LabelledGrid();
         content.getStyleClass().add("edit-column-details");
 
-        if (creatingNewTable)
-        {
-            tableNameTextField = new TableNameTextField(tableManager, null, true, this::focusColumnNameField);
-            tableNameTextField.setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
-            content.addRow(GUI.labelledGridRow("edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
-        }
-        else
-        {
-            tableNameTextField = null;
-        }
-        
         columnNameTextField = new ColumnNameTextField(initial);
-        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
+        content.addRow(labelledGridRow(alignedLabels, "edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
         DocumentTextField defaultValueField = new DocumentTextField(null);
         defaultValueField.getStyleClass().add("default-value");
@@ -113,26 +112,44 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             if (scene != null && scene.getWindow() != null)
                 scene.getWindow().sizeToScene();
         });
-        content.addRow(GUI.labelledGridRow("edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
-        content.addRow(GUI.labelledGridRow("edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
+        content.addRow(labelledGridRow(alignedLabels, "edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
+        content.addRow(labelledGridRow(alignedLabels, "edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
         
         Label explanation = new Label(
             (creatingNewTable ? (TranslationUtility.getString("newcolumn.newTableExplanation") + "  ") : Utility.universal(""))
                 + TranslationUtility.getString("newcolumn.newColumnExplanation")
         );
         explanation.setWrapText(true);
-        
-        getDialogPane().setContent(GUI.vbox("edit-column-content",
-            explanation,
-            content,
-            getErrorLabel()
-        ));
+        explanation.setPrefWidth(450.0);
+
+        VBox vbox = GUI.vbox("edit-column-content",
+                explanation,
+                content,
+                getErrorLabel()
+        );
+
+        if (creatingNewTable)
+        {
+            tableNameTextField = new TableNameTextField(tableManager, null, true, this::focusColumnNameField);
+            tableNameTextField.setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
+            LabelledGrid topGrid = new LabelledGrid();
+            topGrid.getStyleClass().add("edit-column-details");
+            topGrid.addRow(labelledGridRow(alignedLabels, "edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
+            vbox.getChildren().add(0, topGrid);
+        }
+        else
+        {
+            tableNameTextField = null;
+        }
+
+
+        getDialogPane().setContent(vbox);
         
         FXUtility.preventCloseOnEscape(getDialogPane());
 
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(tableNameTextField != null ? tableNameTextField::requestFocusWhenInScene : columnNameTextField::requestFocusWhenInScene);
+            FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
@@ -230,5 +247,48 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     {
         return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }
-*/    
+*/
+    public static LabelledGrid.Row labelledGridRow(AlignedLabels alignedLabels, @LocalizableKey String labelKey, @HelpKey String helpId, Node node)
+    {
+        return new LabelledGrid.Row(alignedLabels.addLabel(labelKey), GUI.helpBox(helpId, node), node);
+    }
+
+    // This is a real hack.  We want to line up the labels, so we make each label a stack pane
+    // containing all the labels, but only the one we want to show there is visible.  That way
+    // they all have the same widths.
+    @OnThread(Tag.FXPlatform)
+    private class AlignedLabels
+    {
+        private final ArrayList<StackPane> stackPanes = new ArrayList<>();
+        private final ArrayList<@Localized String> labelTexts = new ArrayList<>();
+        
+        StackPane addLabel(@LocalizableKey String labelKey)
+        {
+            // Add this text to existing panes:
+            @Localized String labelText = TranslationUtility.getString(labelKey);
+            for (StackPane existingPane : stackPanes)
+            {
+                Label l = new Label(labelText);
+                StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+                l.setVisible(false);
+                existingPane.getChildren().add(0, l);
+            }
+            // Now make a new pane with the existing and new:
+            StackPane stackPane = new StackPane();
+            for (String existingText : labelTexts)
+            {
+                Label l = new Label(existingText);
+                StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+                l.setVisible(false);
+                stackPane.getChildren().add(l);
+            }
+            Label l = new Label(labelText);
+            StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+            stackPane.getChildren().add(l);
+            
+            labelTexts.add(labelText);
+            stackPanes.add(stackPane);
+            return stackPane;
+        }
+    }
 }
