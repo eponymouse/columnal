@@ -338,8 +338,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                             int rowIndex = -1;
                                             try
                                             {
-                                                RecordSet manualEditData = manualEdit.getData();
-                                                int length = manualEditData.getLength();
+                                                Table srcTable = manualEdit.getSrcTable();
+                                                if (srcTable == null)
+                                                    return; // Give up
+                                                RecordSet srcData = srcTable.getData();
+                                                int length = srcData.getLength();
                                                 @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
                                                 if (keyColumnId == null)
                                                 {
@@ -347,7 +350,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                 }
                                                 else
                                                 {
-                                                    DataTypeValue keyColumn = manualEditData.getColumn(keyColumnId).getType();
+                                                    DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
                                                     for (int row = 0; row < length; row++)
                                                     {
                                                         try
