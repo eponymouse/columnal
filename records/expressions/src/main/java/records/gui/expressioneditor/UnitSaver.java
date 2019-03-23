@@ -243,7 +243,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         {
             @Nullable
             @Override
-            public UnitExpression apply(@NonNull Void items)
+            public @Recorded UnitExpression apply(@NonNull Void items)
             {
                 // Can't happen
                 throw new IllegalStateException();
@@ -251,7 +251,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
             @NonNull
             @Override
-            public UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
+            public @Recorded UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
             {
                 return singleItem;
             }

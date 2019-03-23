@@ -319,14 +319,14 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         {
             @Nullable
             @Override
-            public TypeExpression apply(@NonNull BracketContent items)
+            public @Recorded TypeExpression apply(@NonNull BracketContent items)
             {
-                return new InvalidOpTypeExpression(items.typeExpressions);
+                return record(closed.start, closed.end, new InvalidOpTypeExpression(items.typeExpressions));
             }
 
             @NonNull
             @Override
-            public TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
+            public @Recorded TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {
                 return singleItem;
             }

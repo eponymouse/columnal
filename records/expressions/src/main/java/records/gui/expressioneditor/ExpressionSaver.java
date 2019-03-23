@@ -204,14 +204,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             @Nullable
             @Override
-            public Expression apply(@NonNull BracketContent items)
+            public @Recorded Expression apply(@NonNull BracketContent items)
             {
-                return new InvalidOperatorExpression(items.expressions);
+                return record(closed.start, closed.end, new InvalidOperatorExpression(items.expressions));
             }
 
             @NonNull
             @Override
-            public Expression applySingle(@NonNull Expression singleItem)
+            public @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
             {
                 return singleItem;
             }
