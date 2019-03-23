@@ -2,8 +2,12 @@ package test.gui.trait;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.stage.PopupWindow;
+import javafx.stage.Window;
+import log.Log;
+import org.controlsfx.control.PopOver;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.PointQuery;
 import test.TestUtil;
@@ -27,6 +31,10 @@ public interface PopupTrait extends FxRobotInterface
             });
         };
         moveTo(p);
+        // Popup windows don't seem to report their locations accurately (on JavaFX 8), and I can't find
+        // a work-around for this, so just speculatively middle click once anyway.
+        // Ideally, middle clicking does nothing on non-popups so this should always work:
+        clickOn(MouseButton.MIDDLE);
         int attempts = 0;
         while (popupAtMousePos.get() && ++attempts < 10)
         {
