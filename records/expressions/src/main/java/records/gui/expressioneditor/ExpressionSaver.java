@@ -117,6 +117,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else if (keyword == Keyword.OPEN_ROUND)
         {
+            Supplier<ImmutableList<@Recorded Expression>> invalidPrefix = prefixKeyword;
             Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> tupleBracket(errorDisplayerRecord, errorDisplayer, c);
             ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
             // Function calls are a special case:
@@ -140,12 +141,15 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                             return errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, c, new CallExpression(callTarget, ImmutableList.<@Recorded Expression>of(singleItem)));
                         }
                     };
+                    invalidPrefix = () -> {
+                        return Utility.prependToList(callTarget, prefixKeyword.get());
+                    };
                 }
             }
             Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
             currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), errorDisplayer, close, ImmutableList.of()), (bracketed, bracketEnd) -> {
                 return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
-            }, prefixKeyword)));
+            }, invalidPrefix)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
@@ -191,6 +195,27 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
             }, keyword, errorDisplayer, withContext);
         }
+    }
+
+    @Override
+    protected BracketAndNodes<Expression, ExpressionSaver, BracketContent> unclosedBrackets(BracketAndNodes<Expression, ExpressionSaver, BracketContent> closed)
+    {
+        return new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(new ApplyBrackets<BracketContent, Expression>()
+        {
+            @Nullable
+            @Override
+            public Expression apply(@NonNull BracketContent items)
+            {
+                return new InvalidOperatorExpression(items.expressions);
+            }
+
+            @NonNull
+            @Override
+            public Expression applySingle(@NonNull Expression singleItem)
+            {
+                return singleItem;
+            }
+        }, closed.start, closed.end, ImmutableList.of(closed.applyBrackets));
     }
 
     private ApplyBrackets<BracketContent, Expression> tupleBracket(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)

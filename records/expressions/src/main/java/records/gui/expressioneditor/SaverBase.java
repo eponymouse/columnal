@@ -827,7 +827,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> items = ImmutableList.builder();
                     items.addAll(Utility.<@Recorded EXPRESSION, Either<OpAndNode, @Recorded EXPRESSION>>mapListI(prefixItemsOnFailedClose.get(), (@Recorded EXPRESSION e) -> Either.<OpAndNode, @Recorded EXPRESSION>right(e)));
-                    items.add(Either.right(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer))));
+                    items.add(Either.right(makeContent.fetchContent(unclosedBrackets(makeBrackets.apply(keywordErrorDisplayer)))));
                     if (terminator != null)
                         items.add(Either.right(record(keywordErrorDisplayer, keywordErrorDisplayer, keywordToInvalid(terminator))));
                     @Recorded EXPRESSION invalid = makeInvalidOp(start, keywordErrorDisplayer, items.build());
@@ -835,7 +835,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 }
             }};
     }
-    
+
+    protected abstract BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT> unclosedBrackets(BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT> closed);
+
     public final @Nullable Map<DataFormat, Object> finishClipboard()
     {
         if (currentScopes.isEmpty())

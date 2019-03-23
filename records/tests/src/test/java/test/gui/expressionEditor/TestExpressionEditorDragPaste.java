@@ -228,7 +228,7 @@ public class TestExpressionEditorDragPaste extends FXApplicationTest implements 
     public void testFuncArgToInvalid() throws Exception
     {
         testSimple("@call @function abs(3)",
-            2, 3, 0, "@invalidops(3, @unfinished \")\", @function abs, @invalidops(@unfinished \"(\", @unfinished \"\"))");
+            2, 3, 0, "@invalidops(3, @unfinished \")\", @invalidops(@function abs, @unfinished \"(\", @invalidops()))");
     }
 
     @Test

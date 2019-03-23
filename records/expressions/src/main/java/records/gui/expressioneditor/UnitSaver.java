@@ -235,4 +235,26 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                 DataFormat.PLAIN_TEXT, expression.save(false, true)
         );
     }
+
+    @Override
+    protected BracketAndNodes<UnitExpression, UnitSaver, Void> unclosedBrackets(BracketAndNodes<UnitExpression, UnitSaver, Void> closed)
+    {
+        return new BracketAndNodes<>(new ApplyBrackets<Void, UnitExpression>()
+        {
+            @Nullable
+            @Override
+            public UnitExpression apply(@NonNull Void items)
+            {
+                // Can't happen
+                throw new IllegalStateException();
+            }
+
+            @NonNull
+            @Override
+            public UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
+            {
+                return singleItem;
+            }
+        }, closed.start, closed.end, ImmutableList.of(closed.applyBrackets));
+    }
 }

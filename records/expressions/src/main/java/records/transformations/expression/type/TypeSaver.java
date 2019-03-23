@@ -312,6 +312,27 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         );
     }
 
+    @Override
+    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent> unclosedBrackets(BracketAndNodes<TypeExpression, TypeSaver, BracketContent> closed)
+    {
+        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression>()
+        {
+            @Nullable
+            @Override
+            public TypeExpression apply(@NonNull BracketContent items)
+            {
+                return new InvalidOpTypeExpression(items.typeExpressions);
+            }
+
+            @NonNull
+            @Override
+            public TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
+            {
+                return singleItem;
+            }
+        }, closed.start, closed.end, ImmutableList.of(closed.applyBrackets));
+    }
+
     private class FetchMake implements FetchContent<TypeExpression, TypeSaver, BracketContent>
     {
         private final Scope cur;
