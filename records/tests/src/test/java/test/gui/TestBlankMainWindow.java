@@ -143,8 +143,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         makeNewDataEntryTable(targetPos);
 
         TestUtil.sleep(1000);
-        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
-        assertEquals(1, (int)TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+        assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
+        assertNotEquals(new TableId(""), mainWindowActions._test_getTableManager().getAllTables().get(0).getId());
+        assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().get(0).getData().getColumns().size());
     }
 
     @OnThread(Tag.Any)

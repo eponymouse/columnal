@@ -92,7 +92,7 @@ public abstract class Table
     protected Table(TableManager mgr, InitialLoadDetails initialLoadDetails)
     {
         this.mgr = mgr;
-        if (initialLoadDetails.tableId == null)
+        if (initialLoadDetails.tableId == null || initialLoadDetails.tableId.getRaw().isEmpty())
             this.id = mgr.registerNextFreeId();
         else
         {
