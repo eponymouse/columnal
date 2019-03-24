@@ -364,6 +364,13 @@ public class FXUtility
         list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(c));
     }
 
+    @OnThread(Tag.FXPlatform)
+    public static <T> void listenAndCallNow(ObservableList<T> list, FXPlatformConsumer<List<T>> listener)
+    {
+        list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(list));
+        listener.consume(list);
+    }
+
     public static void forcePrefSize(@UnknownInitialization(Region.class) Region region)
     {
         region.setMinWidth(Region.USE_PREF_SIZE);

@@ -2,33 +2,28 @@ package utility.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.Optional;
@@ -69,6 +64,22 @@ public abstract class LightDialog<R> extends Dialog<R>
                 @Nullable Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().flatMap(b -> Utility.streamNullable(dialogPane.lookupButton(b))).findFirst().orElse(null);
                 if (button != null)
                     button.requestFocus();
+            }
+        });
+        
+        // Fire buttons on mouse release as if there is a popup showing,
+        // we miss the click event:
+        FXUtility.listenAndCallNow(getDialogPane().getButtonTypes(), buttons -> {
+            for (ButtonType buttonType : buttons)
+            {
+                Node n = getDialogPane().lookupButton(buttonType);
+                if (n != null && n instanceof Button)
+                {
+                    ((Button)n).setOnMouseReleased(ev -> {
+                        ((Button)n).fire();
+                    });
+                    
+                }
             }
         });
         
