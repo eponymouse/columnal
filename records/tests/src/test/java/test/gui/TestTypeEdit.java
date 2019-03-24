@@ -218,7 +218,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void testNoOpEditType(@When(seed=4347785124544398707L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=-1315802034941967645L) @From(GenRandom.class) Random random) throws Exception
+    public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
 

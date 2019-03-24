@@ -506,7 +506,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     }
     
     @Property(trials = 5)
-    public void testCheck(@When(seed=1L) @From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
         TestUtil.sleep(1000);

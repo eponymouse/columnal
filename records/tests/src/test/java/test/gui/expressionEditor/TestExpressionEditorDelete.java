@@ -59,7 +59,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     }
     
     @Property(trials = 3)
-    public void testDeleteAfterOperand(@When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterOperand(@From(GenRandom.class) Random r) throws Exception
     {
         testBackspace("true & false", 3, "true & fals", r);
     }
