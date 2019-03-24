@@ -3,6 +3,8 @@ package records.gui.dtf;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
+import com.sun.javafx.tk.TKPulseListener;
+import com.sun.javafx.tk.Toolkit;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -593,7 +595,16 @@ public class DocumentTextField extends Region implements DocumentListener
             {
                 if (!updateCaretShapeQueued)
                 {
-                    FXUtility.runAfter(this::updateCaretShape);
+                    //TODO In Java 9, use public toolkit
+                    Toolkit.getToolkit().addSceneTkPulseListener(new TKPulseListener()
+                    {
+                        @Override
+                        public void pulse()
+                        {
+                            FXUtility.runAfter(CaretAndSelectionNodes.this::updateCaretShape);
+                            Toolkit.getToolkit().removeSceneTkPulseListener(this);
+                        }
+                    });
                     updateCaretShapeQueued = true;
                 }
             }
