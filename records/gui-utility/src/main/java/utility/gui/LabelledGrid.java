@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.RadioButton;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -34,6 +35,7 @@ public class LabelledGrid extends GridPane
             this.lhs = label;
             this.helpBox = helpBox;
             this.item = item;
+            GridPane.setHgrow(item, Priority.ALWAYS);
         }
         
         public Row(RadioButton radio, @Nullable HelpBox helpBox)
