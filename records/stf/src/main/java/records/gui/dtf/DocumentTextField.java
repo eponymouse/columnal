@@ -187,15 +187,17 @@ public class DocumentTextField extends Region implements DocumentListener
         }
         else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED)
         {
-            if (keyEvent.getCode() == KeyCode.RIGHT && caretPosition.getPosition() + 1 <= document.getLength())
+            if (keyEvent.getCode() == KeyCode.RIGHT)
             {
-                caretPosition.moveBy(1);
+                if (caretPosition.getPosition() + 1 <= document.getLength())
+                    caretPosition.moveBy(1);
                 if (!keyEvent.isShiftDown())
                     moveAnchorToCaret();
             }
-            if (keyEvent.getCode() == KeyCode.LEFT && caretPosition.getPosition() - 1 >= 0)
+            if (keyEvent.getCode() == KeyCode.LEFT)
             {
-                caretPosition.moveBy(-1);
+                if (caretPosition.getPosition() - 1 >= 0)
+                    caretPosition.moveBy(-1);
                 if (!keyEvent.isShiftDown())
                     moveAnchorToCaret();
             }
@@ -234,6 +236,13 @@ public class DocumentTextField extends Region implements DocumentListener
                 if (!keyEvent.isShiftDown())
                     moveAnchorToCaret();
             }
+            if (keyEvent.getCode() == KeyCode.END)
+            {
+                caretPosition.moveTo(document.getLength());
+                if (!keyEvent.isShiftDown())
+                    moveAnchorToCaret();
+            }
+            
             if (keyEvent.getCode() == KeyCode.A && keyEvent.isShortcutDown())
             {
                 anchorPosition.moveTo(0);

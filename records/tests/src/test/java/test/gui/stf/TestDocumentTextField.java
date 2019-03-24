@@ -3,6 +3,7 @@ package test.gui.stf;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -17,6 +18,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.gui.dtf.DisplayDocument;
 import records.gui.dtf.DocumentTextField;
@@ -60,16 +62,8 @@ public class TestDocumentTextField extends FXApplicationTest
         if (s.length() > 100)
             s = s.substring(0, s.length() % 100);
 
-        String sFinal = s;
-        TestUtil.fx_(() ->{
-            windowToUse.setScene(new Scene(field));
-            windowToUse.show();
-            windowToUse.sizeToScene();
-            field.setDocument(new DisplayDocument(sFinal));
-        });
-        assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
-        assertThat(TestUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
-        
+        initialiseField(s);
+
         String unfocused = getText();
         // While unfocused, could be truncated for efficiency:
         assertThat(s, Matchers.startsWith(unfocused));
@@ -116,6 +110,7 @@ public class TestDocumentTextField extends FXApplicationTest
 
         for (int i = 0; i < 5; i++)
         {
+            editPositions = calcEditPositions(s);
             int aPos = s.isEmpty() ? 0 : editPositions.get(r.nextInt(editPositions.size()));
             int bPos = s.isEmpty() ? 0 : editPositions.get(r.nextInt(editPositions.size()));
             Optional<Point2D> aClick = TestUtil.fx(() ->
@@ -148,7 +143,125 @@ public class TestDocumentTextField extends FXApplicationTest
             release(KeyCode.SHIFT);
             assertEquals("Selecting " + aPos + " to " + bPos, aPos, getFieldAnchorPos());
             assertEquals("Selecting " + aPos + " to " + bPos, bPos, getFieldCaretPos());
+
+            if (aPos == 0 && bPos == 0)
+                continue;
+            int start = Math.min(aPos, bPos);
+            int end = Math.max(aPos, bPos);
+            String beforeDelete = s;
+            String msg = "Deleting " + start + " to " + end + " from {{" + beforeDelete + "}}";
+            switch (r.nextInt(4))
+            {
+                case 0:
+                    if (start != end || start > 0)
+                    {
+                        push(KeyCode.BACK_SPACE);
+                        if (start == end)
+                            start -= 1;
+                        s = s.substring(0, start) + s.substring(end);
+
+                        assertEquals(msg, s, getText());
+                        assertEquals(msg, start, getFieldCaretPos());
+                        assertEquals(msg, start, getFieldAnchorPos());
+                    }
+                    break;
+                case 1:
+                    if (start != end || end < s.length())
+                    {
+                        push(KeyCode.DELETE);
+                        if (start == end)
+                            end += 1;
+                        s = s.substring(0, start) + s.substring(end);
+                        assertEquals(msg, s, getText());
+                        assertEquals(msg, start, getFieldCaretPos());
+                        assertEquals(msg, start, getFieldAnchorPos());
+                    }
+                    break;
+            }
         }
+    }
+
+    private void initialiseField(String initialText)
+    {
+        TestUtil.fx_(() ->{
+            windowToUse.setScene(new Scene(field));
+            windowToUse.show();
+            windowToUse.sizeToScene();
+            field.setDocument(new DisplayDocument(initialText));
+        });
+        assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
+        assertThat(TestUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
+    }
+
+    @Test
+    public void testDelete1()
+    {
+        initialiseField("");
+        clickOn(field);
+        write("13abcd");
+        push(KeyCode.HOME);
+        push(KeyCode.RIGHT);
+        push(KeyCode.RIGHT);
+        push(KeyCode.SHIFT, KeyCode.RIGHT);
+        push(KeyCode.SHIFT, KeyCode.RIGHT);
+        push(KeyCode.SHIFT, KeyCode.RIGHT);
+        push(KeyCode.SHIFT, KeyCode.RIGHT);
+        push(KeyCode.BACK_SPACE);
+        assertEquals("13", getText());
+    }
+    
+    @Property(trials=5)
+    public void testMove(@From(GenString.class) String s, @From(GenRandom.class) Random r)
+    {
+        s = removeNonPrintable(s);
+
+        if (s.length() > 100)
+            s = s.substring(0, s.length() % 100);
+
+        initialiseField(s);
+        clickOn(field);
+        push(KeyCode.HOME);
+        int caret = 0;
+        int anchor = 0;
+        for (int i = 0; i < 20; i++)
+        {
+            boolean withShift = r.nextBoolean();
+            final String message;
+            final int expectedCaret;
+            if (withShift)
+                press(KeyCode.SHIFT);
+            switch (r.nextInt(4))
+            {
+                case 0:
+                    message = "Pushing left from " + caret + " / " + s.length();
+                    push(KeyCode.LEFT);
+                    expectedCaret = Math.max(0, caret - 1);
+                    break;
+                case 1:
+                    message = "Pushing right from " + caret + " / " + s.length();
+                    push(KeyCode.RIGHT);
+                    expectedCaret = Math.min(caret + 1, s.length());
+                    break;
+                case 2:
+                    message = "Pushing home from " + caret + " / " + s.length();
+                    push(KeyCode.HOME);
+                    expectedCaret = 0;
+                    break;
+                default:
+                    message = "Pushing end from " + caret + " / " + s.length();
+                    push(KeyCode.END);
+                    expectedCaret = s.length();
+                    break;
+            }
+            if (withShift)
+                release(KeyCode.SHIFT);
+            assertEquals(message, expectedCaret, getFieldCaretPos());
+            assertEquals(message, withShift ? anchor : expectedCaret, getFieldAnchorPos());
+            caret = expectedCaret;
+            if (!withShift)
+                anchor = caret;
+        }
+
     }
 
     @OnThread(Tag.Any)
@@ -211,6 +324,7 @@ public class TestDocumentTextField extends FXApplicationTest
         for (int i = 0; i < 50; i++)
         {
             push(KeyCode.RIGHT);
+            sleep(300);
 
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
@@ -219,6 +333,7 @@ public class TestDocumentTextField extends FXApplicationTest
         for (int i = 0; i < 40; i++)
         {
             push(KeyCode.LEFT);
+            sleep(300);
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
             assertTrue(fieldBounds.contains(FXUtility.getCentre(caretBounds)));
