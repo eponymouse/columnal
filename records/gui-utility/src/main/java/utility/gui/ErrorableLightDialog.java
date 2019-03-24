@@ -11,6 +11,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.ErrorableTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -20,6 +21,7 @@ import utility.Either;
  * either an error or the result.  Prevents OK button doing anything if we are currently
  * in the error state.
  */
+@OnThread(Tag.FXPlatform)
 public abstract class ErrorableLightDialog<R> extends LightDialog<R>
 {
     private final ErrorLabel errorLabel = new ErrorLabel();
@@ -34,7 +36,7 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
             FXUtility.mouse(this).calculateResult().either_(err -> {
                 result = null;
-                errorLabel.setText(err);
+                errorLabel.setText("Error: " + err);
                 e.consume(); // Prevent OK doing anything
             }, r -> {result = r;});
         });
@@ -58,9 +60,21 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
     // Given back as Node because it's only meant for adding to GUI.  Subclasses don't set
     // the text, we do.
     @OnThread(Tag.FXPlatform)
-    public final Node getErrorLabel(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R>this)
+    protected final Node getErrorLabel(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R>this)
     {
         return errorLabel;
+    }
+    
+    protected void clearErrorLabel(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R> this)
+    {
+        errorLabel.setText("");
+    }
+
+    protected void clearErrorLabelOnChange(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R> this, ErrorableTextField<?> field)
+    {
+        field.onTextChange(() -> {
+            clearErrorLabel();
+        });
     }
 
     /**

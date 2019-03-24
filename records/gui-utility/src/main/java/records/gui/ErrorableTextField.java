@@ -32,6 +32,7 @@ import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -212,6 +213,11 @@ public class ErrorableTextField<T>
         return field.isFocused();
     }
 
+    public void onTextChange(FXPlatformRunnable onChange)
+    {
+        FXUtility.addChangeListenerPlatform(field.textProperty(), t -> onChange.run());
+    }
+
     public static class ConversionResult<@NonNull T>
     {
         private final @Nullable T value;
@@ -314,11 +320,11 @@ public class ErrorableTextField<T>
                 if (i == 0 && validCodepoint.test(codepoint, false))
                 {
                     // Would be valid, just not at the start:
-                    return ConversionResult.error(StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(codepoint)), StyledString.s("\n"), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))));
+                    return ConversionResult.error(StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(codepoint)), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))));
                 }
                 // Not valid anywhere; offer to remove in case it's an unprintable or awkward character:
                 return ConversionResult.error(
-                    StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(codepoint)), StyledString.s("\n"), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))),
+                    StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(codepoint)), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(codepoint)).withStyle(new StyledCSS("errorable-sub-explanation"))),
                     new QuickFix(StyledString.s(TranslationUtility.getString("error.illegalCharacter.remove")), new String(codePoints, 0, i) + new String(codePoints, i + 1, codePoints.length - i - 1))
                 );
             }

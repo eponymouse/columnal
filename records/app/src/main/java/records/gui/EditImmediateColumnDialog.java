@@ -90,8 +90,16 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(labelledGridRow(alignedLabels, "edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
+        clearErrorLabelOnChange(columnNameTextField);
         
-        DocumentTextField defaultValueField = new DocumentTextField(null);
+        DocumentTextField defaultValueField = new DocumentTextField(null) {
+            @Override
+            public @OnThread(Tag.FXPlatform) void documentChanged()
+            {
+                super.documentChanged();
+                clearErrorLabel();
+            }
+        };
         defaultValueField.getStyleClass().add("default-value");
         TypeExpression typeExpression = new InvalidIdentTypeExpression("");
         if (dataType != null)
@@ -106,6 +114,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             }
         }
         typeEditor = new TypeEditor(tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()), typeExpression, t -> {
+            clearErrorLabel();
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
@@ -136,6 +145,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             topGrid.getStyleClass().add("edit-column-details");
             topGrid.addRow(labelledGridRow(alignedLabels, "edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
             vbox.getChildren().add(0, topGrid);
+            clearErrorLabelOnChange(tableNameTextField);
         }
         else
         {

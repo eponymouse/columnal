@@ -61,7 +61,7 @@
     -fx-border-width: 2px;
 }
 .errorable-text-field:has-error {
-    -fx-border-color: red;
+    -fx-border-color: $error-outline;
     -fx-border-width: 2px;
 }
 
@@ -81,7 +81,7 @@
 
 .errorable-text-field-popup {
     .errorable-text-field:has-error & .border {
-        -fx-stroke: red;
+        -fx-stroke: $error-outline;
         -fx-stroke-width: 2;
     }
     .errorable-text-field:has-warnings & .border {
@@ -173,8 +173,19 @@
          }
     }
 }
-.fix-list-heading, .quick-fix-row > .label {
-    -fx-text-fill: black;
+.fix-list-heading {
+    -fx-text-fill: grey(40%);
+}
+.quick-fix-row {
+    -fx-padding: 0 0 0 2em;
+    -fx-cursor: hand;
+    .styled-text {
+        -fx-underline: true;
+        -fx-fill: grey(40%);
+    }
+}
+.error-label {
+    -fx-fill: $error-text;
 }
 
 .styled-text {
