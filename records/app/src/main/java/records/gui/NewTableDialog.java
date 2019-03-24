@@ -8,9 +8,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import records.gui.DataOrTransformChoice.DataOrTransform;
+import records.gui.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -22,42 +21,45 @@ import utility.gui.LightDialog;
 import java.util.Optional;
 
 /**
+ * The dialog that allows picking between making new data source
+ * and making new transform.
+ * 
  * Returns a pair of mouse screen position, and choice
  */
 @OnThread(Tag.FXPlatform)
-public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTransform>>
+public class NewTableDialog extends LightDialog<Pair<Point2D, DataOrTransform>>
 {
     private static final double WIDTH = 380;
     private static final double HEIGHT = 260;
 
-    public DataOrTransformChoice(DimmableParent parent, boolean transformIsValid)
+    public NewTableDialog(DimmableParent parent, boolean transformIsValid)
     {
         super(parent);
         
-        @UnknownInitialization(Dialog.class) DataOrTransformChoice us = DataOrTransformChoice.this;
-        Button transformButton = new ExplainedButton("new.transform", "new.transform.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+        @UnknownInitialization(Dialog.class) NewTableDialog us = NewTableDialog.this;
+        Button transformButton = new ExplainedButton("new.transform", "new.transform.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.TRANSFORM));
             close();
         });
         transformButton.setDisable(!transformIsValid);
         VBox.setVgrow(transformButton, Priority.ALWAYS);
-        Button checkButton = new ExplainedButton("new.check", "new.check.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+        Button checkButton = new ExplainedButton("new.check", "new.check.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.CHECK));
             close();
         });
         checkButton.setDisable(!transformIsValid);
 
-        Button immediateDataButton = new ExplainedButton("new.data", "new.data.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+        Button immediateDataButton = new ExplainedButton("new.data", "new.data.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.DATA));
             close();
         });
         setOnShown(e -> immediateDataButton.requestFocus());
         VBox.setVgrow(immediateDataButton, Priority.ALWAYS);
-        Button importFromFile = new ExplainedButton("import.file", "import.file.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+        Button importFromFile = new ExplainedButton("import.file", "import.file.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.IMPORT_FILE));
             close();
         });
-        Button importFromLink = new ExplainedButton("import.url", "import.url.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+        Button importFromLink = new ExplainedButton("import.url", "import.url.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.IMPORT_URL));
             close();
         });

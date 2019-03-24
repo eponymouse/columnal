@@ -36,10 +36,9 @@ import records.data.Table.InitialLoadDetails;
 import records.data.Table.FullSaver;
 import records.data.Table.TableDisplayBase;
 import records.data.TableManager.TableManagerListener;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DataOrTransformChoice.DataOrTransform;
+import records.gui.NewTableDialog.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
@@ -55,7 +54,6 @@ import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
-import records.transformations.expression.Expression.MultipleTableLookup;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -777,7 +775,7 @@ public class View extends StackPane implements DimmableParent
         blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
         virtualGrid.setEffectOnNonOverlays(blur);
         Window window = thisView.getWindow();
-        Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(thisView, !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
+        Optional<Pair<Point2D, DataOrTransform>> choice = new NewTableDialog(thisView, !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
 
         if (choice.isPresent())
         {
