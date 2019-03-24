@@ -118,7 +118,7 @@ public class DocumentTextField extends Region implements DocumentListener
             //|| (mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
             || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED)
         {
-            Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
+            //Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
             // Position the caret at the clicked position:
 
             HitInfo hitInfo = hitTest(mouseEvent.getX(), mouseEvent.getY());
@@ -126,10 +126,17 @@ public class DocumentTextField extends Region implements DocumentListener
                 return;
             // Focusing may change content so important to hit-test first:
             requestFocus();
-            // And important to map caret pos after change:
-            caretPosition.moveTo(document.mapCaretPos(hitInfo.getInsertionIndex()));
-            if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED && !mouseEvent.isShiftDown())
-                moveAnchorToCaret();
+            if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED && mouseEvent.getClickCount() == 2 && mouseEvent.isStillSincePress())
+            {
+                selectAll();
+            }
+            else
+            {
+                // And important to map caret pos after change:
+                caretPosition.moveTo(document.mapCaretPos(hitInfo.getInsertionIndex()));
+                if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED && !mouseEvent.isShiftDown())
+                    moveAnchorToCaret();
+            }
         }
     }
 
@@ -495,7 +502,13 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         return expanded;
     }
-    
+
+    public void selectAll()
+    {
+        anchorPosition.moveTo(0);
+        caretPosition.moveTo(document.getLength());
+    }
+
     private class DisplayContent extends Region
     {
         private final TextFlow textFlow;

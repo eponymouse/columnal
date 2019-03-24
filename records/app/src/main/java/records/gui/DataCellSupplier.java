@@ -82,7 +82,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             }
             else
             {
-                stf.home();
+                stf.selectAll();
             }
             stf.requestFocus();
         }
