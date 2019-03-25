@@ -29,32 +29,31 @@
             <Directory Id='AppDataFolder'>
                 <Directory Id='INSTALLDIR' Name='Columnal'/>
             </Directory>
+
+            <Directory Id="ProgramMenuFolder" Name="Programs">
+                <Directory Id="ProgramMenuDir" Name="Columnal">
+                    <Component Id="ProgramMenuShortcut" Guid="4957b0df-b044-4a0e-a280-1be911c0ca49">
+                        <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+                        <RegistryKey Root="HKCU" Key="Software\Columnal\Columnal"
+                                     Action="none">
+                            <RegistryValue Name="MenuShortcut" Value="1" Type="integer" KeyPath="yes"/>
+                        </RegistryKey>
+                        <Shortcut Id="MenuShortcut"
+                                  Name="Columnal" WorkingDirectory="INSTALLDIR"
+                                  Target="[#Launcher]"/> <!-- Icon="Icon.ico"  -->
+                    </Component>
+                </Directory>
+            </Directory>
         </Directory>
 
         <Component Id='CompLauncher' Directory="INSTALLDIR">
             <File Id='Launcher' Name='Columnal.exe' DiskId='1' Source='Columnal.exe' KeyPath='yes' />
         </Component>
-        <!-- TODO fix start menu shortcut -->
-<!--
-        <Directory Id="ProgramMenuFolder" Name="Programs">
-            <Directory Id="ProgramMenuDir" Name="!(loc.SOFTWARE)">
-                <Component Id="ProgramMenuShortcut" Guid="4957b0df-b044-4a0e-a280-1be911c0ca49">
-                    <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
-                    <RegistryKey Root="HKCU" Key="Software\Columnal\Columnal"
-                                 Action="none">
-                        <RegistryValue Name="MenuShortcut" Value="1" Type="integer" KeyPath="yes"/>
-                    </RegistryKey>
-                    <Shortcut Id="MenuShortcut"
-                              Name="Columnal" WorkingDirectory="INSTALLDIR"
-                              Icon="Icon.ico" Target="[#Launcher]"/>
-                </Component>
-            </Directory>
-        </Directory>
--->
+        
         <Feature Title='Columnal' Id='FeatureCore' Level='1' ConfigurableDirectory="INSTALLDIR">
             <ComponentGroupRef Id='JREFiles' />
             <ComponentRef Id='CompLauncher' />
-            <!-- <ComponentRef Id='ProgramMenuShortcut' /> -->
+            <ComponentRef Id='ProgramMenuShortcut' />
         </Feature>
 
         <!-- <Icon Id="Icon.ico" SourceFile="" /> -->
