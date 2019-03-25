@@ -418,6 +418,50 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <!-- TODO add step to run launch4j automatically -->
+                                
+                                <property name="wix_bin" value="C:/Program Files (x86)/WiX Toolset v3.10/bin"/>
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe">
+                                    <arg line="-arch x64"/>
+                                    <arg line="main.wxs"/>
+                                </exec>
+
+                                <copy todir="../installers/windows_msi/SourceDir/jre">
+                                    <fileset dir="S:/java/x64/jre1.8.0_191"/>
+                                </copy>
+
+                                <!-- The heat tool scans all the files in the JRE and generates
+                                     a WiX file that has a list of all the files -->
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/heat.exe">
+                                    <arg line="dir SourceDir -cg JREFiles -dr INSTALLDIR -ke -gg -srd -sfrag -template fragment -out jre-files.wxs"/>
+                                </exec>
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe">
+                                    <arg line="-arch x64"/>
+                                    <arg line="jre-files.wxs"/>
+                                </exec>
+
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/light.exe">
+                                    <arg line="-ext WixUIExtension main.wixobj jre-files.wixobj -o columnal.msi"/>
+                                </exec>
+                                
+
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
         </plugins>
     </build>
     

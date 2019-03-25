@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+
+    <Product Version='19.3.25' Id='61f10c31-9b3c-4561-b47d-a7b5d9a386d4'
+             Name='Columnal' UpgradeCode='365af26c-7f60-4f62-a734-607da8d2e637'
+             Language='1033' Codepage='1252' Manufacturer='Eponymouse'>
+
+        <Package Id='*' Keywords='Installer' Description="Columnal Installer"
+                 Manufacturer='Eponymouse'
+                 InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+        <!-- Embeds all the files to install inside the MSI -->
+        <Media Id='1' Cabinet='Columnal.cab' EmbedCab='yes' />
+
+        <Property Id="REINSTALLMODE" Value="amus" />
+        <MajorUpgrade AllowDowngrades="yes" />
+
+        <Property Id="ALLUSERS" Secure="no" />
+
+        <Property Id="SOFTWARE" Value="Columnal"/>
+        <Property Id="SOFTWAREVERSION" Value="2019.3.25"/>
+        <Property Id="WixAppFolder" Value="WixPerUserFolder"/>
+        <WixVariable Id="WixUISupportPerMachine" Value="1" />
+        <WixVariable Id="WixUISupportPerUser" Value="1" />
+        <UIRef Id="WixUI_Minimal" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='AppDataFolder'>
+                <Directory Id='INSTALLDIR' Name='Columnal'/>
+            </Directory>
+        </Directory>
+
+        <Component Id='CompLauncher' Directory="INSTALLDIR">
+            <File Id='Launcher' Name='Columnal.exe' DiskId='1' Source='Columnal.exe' KeyPath='yes' />
+        </Component>
+        <!-- TODO fix start menu shortcut -->
+<!--
+        <Directory Id="ProgramMenuFolder" Name="Programs">
+            <Directory Id="ProgramMenuDir" Name="!(loc.SOFTWARE)">
+                <Component Id="ProgramMenuShortcut" Guid="4957b0df-b044-4a0e-a280-1be911c0ca49">
+                    <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+                    <RegistryKey Root="HKCU" Key="Software\Columnal\Columnal"
+                                 Action="none">
+                        <RegistryValue Name="MenuShortcut" Value="1" Type="integer" KeyPath="yes"/>
+                    </RegistryKey>
+                    <Shortcut Id="MenuShortcut"
+                              Name="Columnal" WorkingDirectory="INSTALLDIR"
+                              Icon="Icon.ico" Target="[#Launcher]"/>
+                </Component>
+            </Directory>
+        </Directory>
+-->
+        <Feature Title='Columnal' Id='FeatureCore' Level='1' ConfigurableDirectory="INSTALLDIR">
+            <ComponentGroupRef Id='JREFiles' />
+            <ComponentRef Id='CompLauncher' />
+            <!-- <ComponentRef Id='ProgramMenuShortcut' /> -->
+        </Feature>
+
+        <!-- <Icon Id="Icon.ico" SourceFile="" /> -->
+        <!-- <WixVariable Id="WixUIBannerBmp" Value=""/> -->
+        <!-- <WixVariable Id="WixUIDialogBmp" Value=""/> -->
+    </Product>
+</Wix>
