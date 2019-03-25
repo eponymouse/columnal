@@ -333,12 +333,22 @@ class Window
     boolean isShowing(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void hide(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void sizeToScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
+    void setScene(@UnknownInitialization(javafx.stage.Window.class) Window this, javafx.scene.Scene scene);
+    
+    void setX(@UnknownInitialization(javafx.stage.Window.class) Window this, double x);
+    
+    void setY(@UnknownInitialization(javafx.stage.Window.class) Window this, double y);
     
     void setOnHiding(@UnknownInitialization(javafx.stage.Window.class) Window this, EventHandler<WindowEvent> e);
 
     <T extends Event> void addEventFilter(@UnknownInitialization(javafx.stage.Window.class) Window this,
                 final EventType<T> eventType,
                 @UnknownInitialization final EventHandler<? super T> eventFilter);
+}
+class Stage
+{
+    void setAlwaysOnTop(@UnknownInitialization(javafx.stage.Stage.class) Stage this, boolean onTop);
+    void setScene(@UnknownInitialization(javafx.stage.Stage.class) Stage this, javafx.scene.Scene scene);
 }
 class PopupWindow
 {

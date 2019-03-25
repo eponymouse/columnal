@@ -19,6 +19,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
@@ -38,7 +39,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -55,7 +55,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import records.error.InternalException;
@@ -748,6 +747,29 @@ public class FXUtility
             .sorted(Comparator.comparing(d -> -1.0 * d.getWidth() * d.getHeight()))
             .findFirst().orElse(null);
         
+    }
+
+    public static void enableWindowMove(@UnknownInitialization Window window, Node root)
+    {
+        root.addEventHandler(MouseEvent.ANY, new EventHandler<MouseEvent>()
+        {
+            private double[] pressedDelta = new double[2];
+
+            @Override
+            public void handle(MouseEvent event)
+            {
+                if (event.getEventType() == MouseEvent.MOUSE_PRESSED)
+                {
+                    pressedDelta[0] = event.getScreenX() - mouse(window).getX();
+                    pressedDelta[1] = event.getScreenY() - mouse(window).getY();
+                }
+                else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED)
+                {
+                    mouse(window).setX(event.getScreenX() - pressedDelta[0]);
+                    mouse(window).setY(event.getScreenY() - pressedDelta[1]);
+                }
+            }
+        });
     }
 
     public static interface DragHandler

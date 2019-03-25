@@ -115,7 +115,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         destData = new RecordSetDataDisplay(suggestedName, destGrid.getFloatingSupplier(), true, destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
-        DataCellSupplier destDataCellSupplier = new DataCellSupplier();
+        DataCellSupplier destDataCellSupplier = new DataCellSupplier(destGrid);
         destGrid.addNodeSupplier(destDataCellSupplier);
         destDataCellSupplier.addGrid(destData, destData.getDataGridCellInfo());
         //destGrid.setEditable(false);
@@ -125,7 +125,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         destGrid.bindVisibleRowsTo(srcGrid);
         srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcRecordSet, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
-        DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
+        DataCellSupplier srcDataCellSupplier = new DataCellSupplier(srcGrid);
         srcGrid.addNodeSupplier(srcDataCellSupplier);
         srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
 

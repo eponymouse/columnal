@@ -105,7 +105,7 @@ public class GUI
     }
 
     @NonNull
-    private static String makeId(@LocalizableKey String msgKey)
+    public static String makeId(@LocalizableKey String msgKey)
     {
         return "id-" + msgKey.replace(".", "-");
     }
@@ -175,7 +175,7 @@ public class GUI
     /**
      * Makes a BorderPane with given top, center and bottom, other items left null.
      */
-    public static BorderPane borderTopCenterBottom(Node top, Node center, Node bottom, String... styleClasses)
+    public static BorderPane borderTopCenterBottom(@Nullable Node top, @Nullable Node center, @Nullable Node bottom, String... styleClasses)
     {
         BorderPane borderPane = new BorderPane(center, top, null, bottom, null);
         borderPane.getStyleClass().addAll(styleClasses);

@@ -99,5 +99,15 @@
         }
     }
     -fx-padding: 6 10 6 10;
-    
+}
+
+.guidance-root {
+    -fx-padding: 1em;
+    -fx-cursor: move;
+    .button {
+        -fx-cursor: default;
+    }
+}
+.guidance-highlight {
+    -fx-background-color: blue;
 }

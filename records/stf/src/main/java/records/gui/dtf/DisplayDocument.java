@@ -87,7 +87,7 @@ public class DisplayDocument extends Document
     }
 
     @Override
-    String getText(@UnknownInitialization(DisplayDocument.class) DisplayDocument this)
+    public String getText(@UnknownInitialization(DisplayDocument.class) DisplayDocument this)
     {
         return content;
     }

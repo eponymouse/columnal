@@ -89,7 +89,7 @@ public class View extends StackPane implements DimmableParent
     private final Pane overlayPane;
     private final Pane snapGuidePane;
     // The STF supplier for the main pane:
-    private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
+    private final DataCellSupplier dataCellSupplier;
     // The supplier for buttons to add rows and columns:
     private final ExpandTableArrowSupplier expandTableArrowSupplier;
     // The supplier for row labels:
@@ -676,6 +676,7 @@ public class View extends StackPane implements DimmableParent
             10, 20, "main-view-grid");
         expandTableArrowSupplier = new ExpandTableArrowSupplier();
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
+        this.dataCellSupplier = new DataCellSupplier(mainPane);
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
         this.rowLabelSupplier = new RowLabelSupplier(mainPane);

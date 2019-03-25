@@ -70,7 +70,7 @@ public abstract class Document
 
     abstract boolean isEditable();
 
-    abstract String getText();
+    public abstract String getText();
     
     abstract boolean hasError();
 
@@ -89,7 +89,7 @@ public abstract class Document
     static interface DocumentListener
     {
         @OnThread(Tag.FXPlatform)
-        public void documentChanged();
+        public void documentChanged(Document document);
     }
     
     final void addListener(DocumentListener listener)
@@ -106,7 +106,7 @@ public abstract class Document
     {
         for (DocumentListener listener : listeners)
         {
-            listener.documentChanged();
+            listener.documentChanged(this);
         }
     }
 }

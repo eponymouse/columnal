@@ -24,6 +24,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
+import records.gui.dtf.Document;
 import records.gui.expressioneditor.TypeEditor;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.RecogniserDocument;
@@ -94,9 +95,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         DocumentTextField defaultValueField = new DocumentTextField(null) {
             @Override
-            public @OnThread(Tag.FXPlatform) void documentChanged()
+            public @OnThread(Tag.FXPlatform) void documentChanged(Document document)
             {
-                super.documentChanged();
+                super.documentChanged(document);
                 clearErrorLabel();
             }
         };

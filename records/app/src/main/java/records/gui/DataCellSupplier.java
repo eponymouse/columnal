@@ -3,9 +3,12 @@ package records.gui;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.effect.GaussianBlur;
+import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
@@ -13,13 +16,25 @@ import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.dtf.Document;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.ReadOnlyDocument;
+import records.gui.grid.CellSelection;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.ListenerOutcome;
+import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import records.gui.guidance.GuidanceWindow;
+import records.gui.guidance.GuidanceWindow.Condition;
+import records.gui.guidance.GuidanceWindow.Guidance;
+import records.gui.guidance.GuidanceWindow.LookupCondition;
+import records.gui.guidance.GuidanceWindow.LookupKeyCondition;
+import records.gui.guidance.GuidanceWindow.WindowCondition;
 import records.gui.stable.ColumnDetails;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -29,9 +44,13 @@ import java.util.Optional;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
-    public DataCellSupplier()
+    private final IdentityHashSet<Document> shownGuidanceFor = new IdentityHashSet<>();
+    private final VirtualGrid virtualGrid;
+
+    public DataCellSupplier(VirtualGrid virtualGrid)
     {
         super(Arrays.asList(CellStyle.values()));
+        this.virtualGrid = virtualGrid;
     }
     
     @Override
@@ -168,7 +187,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
-    public static class VersionedSTF extends DocumentTextField
+    public class VersionedSTF extends DocumentTextField
     {
         @OnThread(Tag.FXPlatform)
         private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
@@ -201,8 +220,74 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             super.setDocument(editorKit);
             currentVersion = new WeakReference<>(columns);
         }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void documentChanged(Document document)
+        {
+            super.documentChanged(document);
+            if (document.getText().startsWith("="))
+            {
+                if (!shownGuidanceFor.contains(document))
+                {
+                    shownGuidanceFor.add(document);
+                    Scene scene = getScene();
+                    if (scene != null)
+                    {
+                        Window window = scene.getWindow();
+                        if (window != null)
+                        {
+                            new GuidanceWindow(makeTransformGuidance(document.getText().substring(1)), window).show();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                shownGuidanceFor.remove(document);
+            }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private Guidance makeTransformGuidance(String content)
+    {
+        // Introduction:
+        return new Guidance(StyledString.s("Data tables cannot contain formulas.  To perform a calculation, create a Calculate transformation."), "guidance.show.me", () ->
+        // Empty cell
+        new Guidance(StyledString.s("To create a transformation, click on an empty cell."), new EmptyCellSelectedCondition(), null, () ->
+        // New... button        
+        new Guidance(StyledString.s("Click the New... button."), new LookupKeyCondition("new.transform"), null, () ->
+        // Transform        
+        new Guidance(StyledString.s("Click the Transform button."), new LookupCondition(".pick-transformation-tile-pane"), ".id-new-transform", () ->
+        // Calculate
+        new Guidance(StyledString.s("Click the Calculate button."), new LookupKeyCondition("edit.column.expression"), ".id-transform-calculate", () -> {
+            // TODO click original table, enter expression
+            return null;
+        })))));
     }
     
+    private class EmptyCellSelectedCondition implements Condition
+    {
+        @Override
+        public @OnThread(Tag.FXPlatform) void onSatisfied(FXPlatformRunnable runOnceSatsified)
+        {
+            virtualGrid.addSelectionListener(new SelectionListener()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+                {
+                    if (newSelection != null && newSelection.isExactly(newSelection.getActivateTarget()))
+                    {
+                        FXUtility.runAfter(runOnceSatsified);
+                        return new Pair<>(ListenerOutcome.REMOVE, null);
+                    }
+
+                    return new Pair<>(ListenerOutcome.KEEP, null);
+                }
+            });
+        }
+    }
+
     public static void startPreload()
     {
         // All done in static initialiser, nothing else to do here.

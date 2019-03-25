@@ -283,7 +283,7 @@ public class DocumentTextField extends Region implements DocumentListener
         caretPosition = this.document.trackPosition(0, Bias.FORWARD, this::queueUpdateCaretShape);
         anchorPosition = this.document.trackPosition(0, Bias.FORWARD, this::queueUpdateCaretShape);
         moveAnchorToCaret();
-        documentChanged();
+        documentChanged(this.document);
     }
     
     private void queueUpdateCaretShape()
@@ -294,7 +294,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public void documentChanged()
+    public void documentChanged(Document document)
     {
         displayContent.textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());

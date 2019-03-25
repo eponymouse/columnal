@@ -64,7 +64,7 @@ public class ReadOnlyDocument extends Document
     }
 
     @Override
-    String getText()
+    public String getText()
     {
         return content.stream().map(p -> p.getSecond()).collect(Collectors.joining());
     }
