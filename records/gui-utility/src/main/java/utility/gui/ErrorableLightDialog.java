@@ -36,7 +36,7 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
             FXUtility.mouse(this).calculateResult().either_(err -> {
                 result = null;
-                errorLabel.setText("Error: " + err);
+                errorLabel.setText(TranslationUtility.getString("error.colon", err));
                 e.consume(); // Prevent OK doing anything
             }, r -> {result = r;});
         });
