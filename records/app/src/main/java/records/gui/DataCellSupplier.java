@@ -17,6 +17,8 @@ import records.gui.dtf.Document;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.ReadOnlyDocument;
 import records.gui.grid.CellSelection;
+import records.gui.grid.GridArea;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
@@ -27,8 +29,8 @@ import records.gui.guidance.GuidanceWindow.Condition;
 import records.gui.guidance.GuidanceWindow.Guidance;
 import records.gui.guidance.GuidanceWindow.LookupCondition;
 import records.gui.guidance.GuidanceWindow.LookupKeyCondition;
-import records.gui.guidance.GuidanceWindow.WindowCondition;
 import records.gui.stable.ColumnDetails;
+import records.gui.table.TableDisplay;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -225,7 +227,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         public @OnThread(Tag.FXPlatform) void documentChanged(Document document)
         {
             super.documentChanged(document);
-            if (document.getText().startsWith("="))
+            if (document.getText().startsWith("=") && isFocused())
             {
                 if (!shownGuidanceFor.contains(document))
                 {
@@ -236,7 +238,8 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
                         Window window = scene.getWindow();
                         if (window != null)
                         {
-                            new GuidanceWindow(makeTransformGuidance(document.getText().substring(1)), window).show();
+                            GridArea gridArea = getGridFor(VersionedSTF.this);
+                            new GuidanceWindow(makeTransformGuidance(window, virtualGrid, gridArea instanceof TableDisplay ? (TableDisplay)gridArea : null, document.getText().substring(1)), window).show();
                         }
                     }
                 }
@@ -249,21 +252,24 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @OnThread(Tag.FXPlatform)
-    private Guidance makeTransformGuidance(String content)
+    private Guidance makeTransformGuidance(Window mainWindow, VirtualGrid virtualGrid, @Nullable TableDisplay srcTable, String content)
     {
+        // TODO make them choose upfront calculate vs aggregate?
+        
         // Introduction:
         return new Guidance(StyledString.s("Data tables cannot contain formulas.  To perform a calculation, create a Calculate transformation."), "guidance.show.me", () ->
         // Empty cell
-        new Guidance(StyledString.s("To create a transformation, click on an empty cell."), new EmptyCellSelectedCondition(), null, () ->
+        new Guidance(StyledString.s("To create a transformation, click on an empty cell."), new EmptyCellSelectedCondition(), (String)null, () ->
         // New... button        
-        new Guidance(StyledString.s("Click the New... button."), new LookupKeyCondition("new.transform"), null, () ->
+        new Guidance(StyledString.s("Click the New... button."), new LookupKeyCondition("new.transform"), ".id-create-table", () ->
         // Transform        
         new Guidance(StyledString.s("Click the Transform button."), new LookupCondition(".pick-transformation-tile-pane"), ".id-new-transform", () ->
         // Calculate
-        new Guidance(StyledString.s("Click the Calculate button."), new LookupKeyCondition("edit.column.expression"), ".id-transform-calculate", () -> {
-            // TODO click original table, enter expression
-            return null;
-        })))));
+        new Guidance(StyledString.s("Click the Calculate button."), new LookupCondition(".pick-table-dialog"), ".id-transform-calculate", () ->
+        // Click source table
+        new Guidance(StyledString.s("Click on the table you want to use in the calculation"), new LookupCondition(".expression-editor"), () -> srcTable == null ? null : new Pair<>(mainWindow, virtualGrid.getRectangleBoundsScreen(new RectangleBounds(srcTable.getMostRecentPosition(), srcTable.getBottomRightIncl()))), () ->
+        // Enter the formula
+        new Guidance(StyledString.s("Enter the column name and expression you want to calculate, then click Ok."), new LookupCondition(".expression-editor", false), (String)null, () -> null)))))));
     }
     
     private class EmptyCellSelectedCondition implements Condition

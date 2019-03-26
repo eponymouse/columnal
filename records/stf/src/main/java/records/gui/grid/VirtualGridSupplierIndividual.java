@@ -351,4 +351,10 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     {
         return visibleItems.values().stream().map(d -> d.node).filter(findIf);
     }
+    
+    // Uses identity to compare the cells
+    protected @Nullable GridArea getGridFor(T cell)
+    {
+        return visibleItems.values().stream().filter(d -> d.node == cell).map(d -> d.originator.getFirst()).findFirst().orElse(null);
+    }
 }

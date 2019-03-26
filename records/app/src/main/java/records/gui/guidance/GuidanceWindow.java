@@ -3,28 +3,23 @@ package records.gui.guidance;
 import javafx.animation.Animation;
 import javafx.animation.FillTransition;
 import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.animation.Transition;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
-import javafx.scene.effect.ColorAdjust;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -45,10 +40,10 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.ResizableRectangle;
-import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 @OnThread(Tag.FXPlatform)
 public final class GuidanceWindow extends Stage
@@ -73,7 +68,7 @@ public final class GuidanceWindow extends Stage
         Scene scene = new Scene(rootStack);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         setScene(scene);
-        cancel = GUI.button(ButtonType.CANCEL.getText(), this::hide);
+        cancel = GUI.button(ButtonType.CLOSE.getText(), this::hide);
         ButtonBar.setButtonData(cancel, ButtonData.CANCEL_CLOSE);
         buttonBar.getButtons().add(cancel);
         setAlwaysOnTop(true);
@@ -141,13 +136,22 @@ public final class GuidanceWindow extends Stage
     public static class Guidance
     {
         private final StyledString content;
-        private final @Nullable String lookupToHighlight;
+        private final @Nullable TargetFinder lookupToHighlight;
         private final Condition conditionToAdvance;
         private final FXPlatformSupplier<@Nullable Guidance> next;
         private final @Nullable Button extraButton;
-        private final ArrayList<Stage> highlightWindows = new ArrayList<>();
+        private final ArrayList<Popup> highlightWindows = new ArrayList<>();
         
         public Guidance(StyledString content, Condition conditionToAdvance, @Nullable String lookupToHighlight, FXPlatformSupplier<@Nullable Guidance> next)
+        {
+            this.content = content;
+            this.conditionToAdvance = conditionToAdvance;
+            this.lookupToHighlight = lookupToHighlight == null ? null : nodeFinder(lookupToHighlight);
+            this.extraButton = null;
+            this.next = next;
+        }
+
+        public Guidance(StyledString content, Condition conditionToAdvance, TargetFinder lookupToHighlight, FXPlatformSupplier<@Nullable Guidance> next)
         {
             this.content = content;
             this.conditionToAdvance = conditionToAdvance;
@@ -176,7 +180,7 @@ public final class GuidanceWindow extends Stage
         public void setHighlight(boolean on)
         {
             // Always remove previous highlight if any:
-            for (Stage highlightWindow : highlightWindows)
+            for (Popup highlightWindow : highlightWindows)
             {
                 highlightWindow.hide();
             }
@@ -184,55 +188,62 @@ public final class GuidanceWindow extends Stage
             
             if (on && lookupToHighlight != null)
             {
-                Node node = findNode(lookupToHighlight);
-                if (node != null)
+                @Nullable Pair<Window, Bounds> lookupBounds = lookupToHighlight.findSceneAndScreenBounds();
+                
+                if (lookupBounds != null)
                 {
-                    Rectangle2D screenBounds = FXUtility.boundsToRect(node.localToScreen(node.getBoundsInLocal()));
+                    Rectangle2D screenBounds = FXUtility.boundsToRect(lookupBounds.getSecond());
+                    List<Rectangle> rectangles = new ArrayList<>();
                     for (int i = 0; i < 4; i++)
                     {
-                        Stage highlight = new Stage(StageStyle.TRANSPARENT);
-                        highlight.setAlwaysOnTop(true);
-                        StackPane stackPane = new StackPane();
-                        stackPane.getStyleClass().add("guidance-highlight");
-                        Scene scene = new Scene(stackPane);
-                        scene.getStylesheets().add(FXUtility.getStylesheet("mainview.css"));
-                        highlight.setScene(scene);
+                        Popup highlight = new Popup();
+                        Rectangle r = new ResizableRectangle();
+                        highlight.getContent().setAll(r);
+                        r.setFill(Color.BLUE);
+                        rectangles.add(r);
                         highlightWindows.add(highlight);
                     }
                     
                     final double thick = 3;
                     final double margin = 2;
+                    
+                    // Sizing window doesn't work for Popup so we must size rectangle instead
 
                     // Top
                     highlightWindows.get(0).setX(screenBounds.getMinX() - thick - margin);
                     highlightWindows.get(0).setY(screenBounds.getMinY() - thick - margin);
-                    highlightWindows.get(0).setWidth(screenBounds.getWidth() + 2 * margin + 2 * thick);
-                    highlightWindows.get(0).setHeight(thick);
+                    rectangles.get(0).setWidth(screenBounds.getWidth() + 2 * margin + 2 * thick);
+                    rectangles.get(0).setHeight(thick);
 
                     // Bottom
                     highlightWindows.get(1).setX(screenBounds.getMinX() - thick - margin);
                     highlightWindows.get(1).setY(screenBounds.getMaxY() + margin);
-                    highlightWindows.get(1).setWidth(screenBounds.getWidth() + 2 * margin + 2 * thick);
-                    highlightWindows.get(1).setHeight(thick);
+                    rectangles.get(1).setWidth(screenBounds.getWidth() + 2 * margin + 2 * thick);
+                    rectangles.get(1).setHeight(thick);
 
                     // Left
                     highlightWindows.get(2).setX(screenBounds.getMinX() - thick - margin);
                     highlightWindows.get(2).setY(screenBounds.getMinY() - margin);
-                    highlightWindows.get(2).setWidth(thick);
-                    highlightWindows.get(2).setHeight(screenBounds.getHeight() + 2 * margin);
+                    rectangles.get(2).setWidth(thick);
+                    rectangles.get(2).setHeight(screenBounds.getHeight() + 2 * margin);
                     
                     // Right
                     highlightWindows.get(3).setX(screenBounds.getMaxX() + margin);
                     highlightWindows.get(3).setY(screenBounds.getMinY() - margin);
-                    highlightWindows.get(3).setWidth(thick);
-                    highlightWindows.get(3).setHeight(screenBounds.getHeight() + 2 * margin);
+                    rectangles.get(3).setWidth(thick);
+                    rectangles.get(3).setHeight(screenBounds.getHeight() + 2 * margin);
 
-                    for (Stage highlightWindow : highlightWindows)
+                    for (Popup highlightWindow : highlightWindows)
                     {
-                        highlightWindow.show();
+                        highlightWindow.show(lookupBounds.getFirst());
                     }
                 }
             }
+        }
+
+        public static interface TargetFinder
+        {
+            public @Nullable Pair<Window, Bounds> findSceneAndScreenBounds();
         }
     }
     
@@ -283,18 +294,26 @@ public final class GuidanceWindow extends Stage
     public static class LookupCondition implements Condition
     {
         private final String nodeLookup;
+        private final boolean targetShow;
         private @MonotonicNonNull Timeline timeline;
 
-        public LookupCondition(String nodeLookup)
+        public LookupCondition(String nodeLookup, boolean showing)
         {
             this.nodeLookup = nodeLookup;
+            this.targetShow = showing;
+        }
+        
+        public LookupCondition(String nodeLookup)
+        {
+            this(nodeLookup, true);
         }
 
         @Override
         public void onSatisfied(FXPlatformRunnable runAfter)
         {
-            timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
-                if (findNode(nodeLookup) != null)
+            timeline = new Timeline(new KeyFrame(Duration.millis(300), e -> {
+                boolean showing = findNode(nodeLookup) != null;
+                if (showing == targetShow)
                 {
                     if (timeline != null)
                         timeline.stop();
@@ -309,19 +328,29 @@ public final class GuidanceWindow extends Stage
 
     private static @Nullable Node findNode(String nodeLookup)
     {
-        Node foundNode = null;
         @SuppressWarnings("deprecation")
         Iterator<Window> it = Window.impl_getWindows();
         while (it.hasNext())
         {
             Window window = it.next();
-            foundNode = window.getScene().lookup(nodeLookup);
+            Node foundNode = window.getScene().lookup(nodeLookup);
             if (foundNode != null)
             {
-                break;
+                return foundNode;
             }
         }
-        return foundNode;
+        return null;
+    }
+    
+    private static GuidanceWindow.Guidance.TargetFinder nodeFinder(String nodeLookup)
+    {
+        return () -> {
+            Node node = findNode(nodeLookup);
+            if (node == null || node.getScene() == null || node.getScene().getWindow() == null)
+                return null;
+            else
+                return new Pair<>(node.getScene().getWindow(), node.localToScreen(node.getBoundsInLocal()));
+        };
     }
 
     private static @Nullable Window findWindow(Class<? extends Window> windowClass)
