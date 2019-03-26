@@ -68,7 +68,7 @@ public final class GuidanceWindow extends Stage
         Scene scene = new Scene(rootStack);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         setScene(scene);
-        cancel = GUI.button(ButtonType.CLOSE.getText(), this::hide);
+        cancel = GUI.button("close", this::hide);
         ButtonBar.setButtonData(cancel, ButtonData.CANCEL_CLOSE);
         buttonBar.getButtons().add(cancel);
         setAlwaysOnTop(true);
