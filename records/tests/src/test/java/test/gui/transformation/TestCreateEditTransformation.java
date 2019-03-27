@@ -526,9 +526,15 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             return;
         
         @Value Object containedItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        boolean allEqualToContained = true;
+        for (int row = 0; row < srcColumn.getLength(); row++)
+        {
+            if (Utility.compareValues(containedItem, srcColumn.getType().getCollapsed(row)) != 0)
+                allEqualToContained = false;
+        }
         
         final Expression checkExpression;
-        final boolean expectedPass = checkType == CheckType.ANY_ROW;
+        final boolean expectedPass = checkType == CheckType.ANY_ROW || (checkType == CheckType.ALL_ROWS && allEqualToContained);
         Expression containedItemExpression = Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType().getType(), containedItem, null, true), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
         if (r.nextInt(3) == 0)
         {
@@ -591,14 +597,17 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         assertEquals(expectedPass ? "OK" : "Fail", TestUtil.fx(() -> label.getText()));
 
-        // Test out the clicking to see the explanation:
-        keyboardMoveTo(virtualGrid, labelPos);
-        assertNull(lookup(".explanation-flow").tryQuery().orElse(null));
-        if (r.nextBoolean())
-            clickOn(label);
-        else
-            push(KeyCode.ENTER);
-        sleep(500);
-        assertNotNull(lookup(".explanation-flow").tryQuery().orElse(null));
+        if (!expectedPass)
+        {
+            // Test out the clicking to see the explanation:
+            keyboardMoveTo(virtualGrid, labelPos);
+            assertNull(lookup(".explanation-flow").tryQuery().orElse(null));
+            if (r.nextBoolean())
+                clickOn(label);
+            else
+                push(KeyCode.ENTER);
+            sleep(500);
+            assertNotNull(lookup(".explanation-flow").tryQuery().orElse(null));
+        }
     }
 }
