@@ -1,6 +1,7 @@
 package test.functions;
 
 import annotation.qual.Value;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -68,6 +69,13 @@ public class PropStringFunctions
     @OnThread(Tag.Simulation)
     public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
     {
+        // We don't want any spaces besides the ones we add!
+        while (!orig.isEmpty() && CharMatcher.whitespace().matches(orig.charAt(0)))
+            orig = orig.substring(1);
+        while (!orig.isEmpty() && CharMatcher.whitespace().matches(orig.charAt(orig.length() - 1)))
+            orig = orig.substring(0, orig.length() - 1);
+
+
         StringTrim function = new StringTrim();
         @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
         if (checked == null)
@@ -77,7 +85,7 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.TEXT, checked.getSecond());
-            String SPACES = " \n\t\r\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200A\u2028\u2029\u205f\u3000";
+            String SPACES = " \n\t\r\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200A\u2028\u2029\u202f\u205f\u3000";
             String withSpaces = orig;
             int before = r.nextInt(4);
             int after = r.nextInt(4);
