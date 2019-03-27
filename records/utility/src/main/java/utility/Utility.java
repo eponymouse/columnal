@@ -285,15 +285,22 @@ public class Utility
         if (ax instanceof Number)
             cmp = compareNumbers(Utility.cast(ax, Number.class), Utility.cast(bx, Number.class), epsilon);
         else if (ax instanceof List)
-            cmp = compareLists((List<@NonNull @Value ?>)ax, (List<@NonNull @Value ?>)bx, epsilon);
+            cmp = compareLists((List<@NonNull @Value ?>)Utility.cast(ax, List.class), (List<@NonNull @Value ?>)Utility.cast(bx, List.class), epsilon);
         else if (ax instanceof ListEx)
             cmp = compareLists(Utility.cast(ax, ListEx.class), Utility.cast(bx, ListEx.class), epsilon);
         else if (ax instanceof Comparable)
         {
             // Need to be declaration to use annotation:
-            @SuppressWarnings("unchecked")
-            int cmpTmp = ((Comparable<Object>) ax).compareTo(bx);
-            cmp = cmpTmp;
+            try
+            {
+                @SuppressWarnings("unchecked")
+                int cmpTmp = ((Comparable<Object>) ax).compareTo(bx);
+                cmp = cmpTmp;
+            }
+            catch (ClassCastException e)
+            {
+                throw new InternalException("Mismatched internal types", e);
+            }
         }
         else if (ax instanceof TaggedValue)
         {
