@@ -26,6 +26,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -300,7 +301,7 @@ public abstract class DataDisplay extends HeadedDisplay
                     displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
                         rowIndexWithinTable,
                         b -> {},
-                        c -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits))),
+                            (k, c) -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex + CellPosition.row(k == KeyCode.ENTER ? 1 : 0), c.columnIndex, dataSelectionLimits))),
                         (rowIndex, colIndex, doc) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));

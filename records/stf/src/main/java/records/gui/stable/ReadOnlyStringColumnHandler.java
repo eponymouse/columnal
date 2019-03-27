@@ -2,12 +2,14 @@ package records.gui.stable;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
+import javafx.scene.input.KeyCode;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.gui.dtf.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
@@ -20,7 +22,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(s)));
     }

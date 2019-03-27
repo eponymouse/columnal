@@ -7,6 +7,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -107,7 +108,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+                        public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
                             setCellContent.loadedValue(rowIndex, columnIndexFinal, new ReadOnlyDocument("Error: " + e.getLocalizedMessage(), true));
                         }
@@ -356,7 +357,7 @@ public class TableDisplayUtility
         @OnThread(Tag.Any)
         public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
-            MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable T> value, FXPlatformConsumer<CellPosition> relinquishFocus) -> {
+            MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable T> value, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) -> {
                 FXPlatformBiConsumer<String, @Nullable @Value T> saveChange = (String s, @Value T v) -> {};
                 if (editableStatus.editable)
                     saveChange = new FXPlatformBiConsumer<String, @Nullable @Value T>()
@@ -368,7 +369,7 @@ public class TableDisplayUtility
                             onModify.run();
                         }
                     };
-                FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
+                FXPlatformConsumer<KeyCode> relinquishFocusRunnable = keyCode -> relinquishFocus.consume(keyCode, getDataPosition.getDataPosition(rowIndex, columnIndex));
                 Document editorKit;
                 if (editableStatus.editable)
                 {

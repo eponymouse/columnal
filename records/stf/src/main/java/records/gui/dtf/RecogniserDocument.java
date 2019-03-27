@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.input.KeyCode;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
@@ -17,15 +18,7 @@ import records.error.InternalException;
 import records.gui.dtf.Recogniser.ErrorDetails;
 import records.gui.dtf.Recogniser.ParseProgress;
 import records.gui.dtf.Recogniser.SuccessDetails;
-import utility.Either;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
-import utility.FunctionInt;
-import utility.Pair;
-import utility.SimulationSupplier;
-import utility.SimulationSupplierInt;
-import utility.Workers;
+import utility.*;
 import utility.Workers.Priority;
 
 import java.util.OptionalInt;
@@ -36,7 +29,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
 {
     private final Recogniser<V> recogniser;
     private final FXPlatformBiConsumer<String, @Nullable V> saveChange;
-    private final FXPlatformRunnable relinquishFocus;
+    private final FXPlatformConsumer<KeyCode> relinquishFocus;
     private final Class<V> itemClass;
     private final @Nullable SimulationSupplierInt<Boolean> checkEditable;
     private OptionalInt curErrorPosition = OptionalInt.empty();
@@ -45,7 +38,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private @Nullable FXPlatformRunnable onFocusLost;
     private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
-    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformRunnable relinquishFocus)
+    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus)
     {
         super(initialContent);
         this.itemClass = valueClass;
@@ -71,12 +64,12 @@ public final class RecogniserDocument<V> extends DisplayDocument
                         // Cancel the edit:
                         Platform.runLater(() -> {
                             replaceText(0, getLength(), valueOnFocusGain);
-                            defocus();
+                            defocus(KeyCode.ESCAPE);
                             Alert alert = new Alert(AlertType.ERROR, "Cannot edit value on a row with an error in the identifier column.", ButtonType.OK);
                             alert.getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
                             alert.showAndWait();
                             // Restore focus to reasonable position:
-                            defocus();
+                            defocus(KeyCode.ESCAPE);
                         });
                     }
                 }
@@ -153,9 +146,9 @@ public final class RecogniserDocument<V> extends DisplayDocument
     }
 
     @Override
-    void defocus()
+    void defocus(KeyCode defocusCause)
     {
-        relinquishFocus.run();
+        relinquishFocus.consume(defocusCause);
     }
 
     public Either<ErrorDetails, V> getLatestValue()

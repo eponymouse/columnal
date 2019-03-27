@@ -264,7 +264,7 @@ public class DocumentTextField extends Region implements DocumentListener
             
             if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.TAB)
             {
-                document.defocus();
+                document.defocus(keyEvent.getCode());
             }
         }
     }

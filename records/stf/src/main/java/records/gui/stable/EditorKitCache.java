@@ -7,6 +7,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.scene.input.KeyCode;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -30,6 +31,7 @@ import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -97,7 +99,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public Document makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
+        public Document makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -132,7 +134,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         try
         {
@@ -265,9 +267,9 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
         private final FXPlatformConsumer<Boolean> onFocusChange;
-        private final FXPlatformConsumer<CellPosition> relinquishFocus;
+        private final FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus;
 
-        public DisplayCacheItem(@TableDataRowIndex int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
+        public DisplayCacheItem(@TableDataRowIndex int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
         {
             this.rowIndex = index;
             loader = new ValueLoader(index, Utility.later(this));

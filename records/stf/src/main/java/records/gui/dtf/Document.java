@@ -1,6 +1,7 @@
 package records.gui.dtf;
 
 import com.google.common.collect.ImmutableList;
+import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.dtf.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
@@ -77,7 +78,7 @@ public abstract class Document
     abstract void focusChanged(boolean focused);
     
     // Bit weird in Document, but it's easiest that way
-    void defocus()
+    void defocus(KeyCode defocusCause)
     {
     }
 
