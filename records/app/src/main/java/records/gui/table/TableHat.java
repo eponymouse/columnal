@@ -322,6 +322,10 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         Platform.runLater(() -> {
                             ExFunction<ColumnId, DataType> lookupColumnType = c -> manualEdit.getData().getColumn(c).getType().getType();
                             new ManualEditEntriesDialog(parent, manualEdit.getReplacementIdentifier().orElse(null), lookupColumnType, entries).showAndWait().ifPresent(p -> {
+                                // We store this before editing as it will generate a new table display:
+                                TableDisplay tableDisplayCast = (TableDisplay) FXUtility.mouse(tableDisplay);
+                                ImmutableList<ColumnId> displayColumns = Utility.mapListI(tableDisplayCast.getDisplayColumns(), d -> d.getColumnId());
+                                
                                 // Need to change the values
                                 Workers.onWorkerThread("Removing manual edit entries", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting manual edits", () -> {
                                     ImmutableMap<ColumnId, ColumnReplacementValues> newValues = p.getSecond().get();
@@ -331,9 +335,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                     }
                                 }));
                                 
-                                p.getFirst().ifPresent(jumpTo -> {
-                                    TableDisplay tableDisplayCast = (TableDisplay) FXUtility.mouse(tableDisplay);
-                                    Utility.findFirstIndex(tableDisplayCast.getDisplayColumns(), c -> c.getColumnId().equals(jumpTo.getSecond())).ifPresent(colIndex -> {
+                                // This is a hack; we need to wait until the new table display is shown for the manual edit before
+                                // querying it, especially because we need its known rows count to be accurate.  So we wait, but if the
+                                // system is loaded, it's possible this may not jump to the location:
+                                FXUtility.runAfterDelay(Duration.millis(500), () -> p.getFirst().ifPresent(jumpTo -> {
+                                    Utility.findFirstIndex(displayColumns, c -> c.equals(jumpTo.getSecond())).ifPresent(colIndex -> {
                                         Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
                                             int rowIndex = -1;
                                             try
@@ -368,8 +374,13 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                 if (rowIndexFinal != -1)
                                                 {
                                                     Platform.runLater(() -> {
-                                                        CellPosition cellPosition = tableDisplayCast.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
-                                                        parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                        Table latestManualEdit = parent.getManager().getSingleTableOrNull(manualEdit.getId());
+                                                        if (latestManualEdit != null && latestManualEdit.getDisplay() instanceof TableDisplay)
+                                                        {
+                                                            TableDisplay latestTableDisplay = (TableDisplay) latestManualEdit.getDisplay();
+                                                            CellPosition cellPosition = latestTableDisplay.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
+                                                            parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                        }
                                                     });
                                                 }
                                             }
@@ -380,7 +391,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                             }
                                         });
                                     });
-                                });
+                                }));
                             });
                         });
                     });

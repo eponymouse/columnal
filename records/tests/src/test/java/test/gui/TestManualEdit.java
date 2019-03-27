@@ -9,6 +9,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -81,6 +82,7 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, EnterStructuredValueTrait
 {
+    @SuppressWarnings("nullness") // TODO remove this laziness and fix
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
@@ -142,18 +144,19 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         assertEquals(ImmutableList.of(new Pair<>(sortBy, Direction.ASCENDING)), findFirstSort.get().getSortBy());
 
         // Null means use row number
-        @Nullable Column replaceKeyColumn = r.nextInt(5) == 1 ? null : findFirstSort.get().getData().getColumns().get(r.nextInt(numColumns));
+        int replaceKeyColumIndex = r.nextInt(numColumns);
+        ExSupplier<@Nullable Column> findReplaceKeyColumn = r.nextInt(5) == 1 ? () -> null : () -> findFirstSort.get().getData().getColumns().get(replaceKeyColumIndex);
 
         ArrayList<Integer> rowIndexesWithUniqueKey = new ArrayList<>();
         // Each value is a list of row indexes
         TreeMap<ComparableValue, List<Integer>> freqCount = new TreeMap<>();
-        if (replaceKeyColumn != null)
+        if (findReplaceKeyColumn.get() != null)
         {
-            for (int i = 0; i < replaceKeyColumn.getLength(); i++)
+            for (int i = 0; i < findReplaceKeyColumn.get().getLength(); i++)
             {
                 try
                 {
-                    freqCount.computeIfAbsent(new ComparableValue(replaceKeyColumn.getType().getCollapsed(i)), k -> new ArrayList<>()).add(i);
+                    freqCount.computeIfAbsent(new ComparableValue(findReplaceKeyColumn.get().getType().getCollapsed(i)), k -> new ArrayList<>()).add(i);
                 }
                 catch (InvalidImmediateValueException e)
                 {
@@ -192,10 +195,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @TableDataColIndex int col = makeColIndex.get();
 
             @Nullable @Value Object replaceKey;
-            if (replaceKeyColumn == null)
+            if (findReplaceKeyColumn.get() == null)
                 replaceKey = DataTypeUtility.value(new BigDecimal(row));
             else
-                replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
+                replaceKey = TestUtil.getSingleCollapsedData(findReplaceKeyColumn.get().getType(), row).leftToNull();
 
             @Value Object value = columnTypes.get(col).makeValue();
             // Only works if value is different:
@@ -246,13 +249,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             TestUtil.delay(1000);
         }
         
-        if (replaceKeyColumn == null)
+        if (findReplaceKeyColumn.get() == null)
             clickOn(".id-manual-edit-byrownum");
         else
         {
             clickOn(".id-manual-edit-bycolumn");
             push(KeyCode.TAB);
-            write(replaceKeyColumn.getName().getRaw());
+            write(findReplaceKeyColumn.get().getName().getRaw());
         }
         clickOn(".ok-button");
         sleep(1000);
@@ -285,10 +288,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @TableDataColIndex int col = makeColIndex.get();
             
             @Nullable @Value Object replaceKey;
-            if (replaceKeyColumn == null)
+            if (findReplaceKeyColumn.get() == null)
                 replaceKey = DataTypeUtility.value(new BigDecimal(row));
             else
-                replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
+                replaceKey = TestUtil.getSingleCollapsedData(findReplaceKeyColumn.get().getType(), row).leftToNull();
             
             @Value Object value = columnTypes.get(col).makeValue();
             ComparableEither<String, ComparableValue> toEnter = ComparableEither.right(new ComparableValue(value));
@@ -313,7 +316,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             if (replaceKey == null)
             {
                 sleep(1500);
-                assertTrue("Alert should be showing about invalid key for column " + (replaceKeyColumn == null ? " <row>" : replaceKeyColumn.getName().getRaw()), lookup(".alert").tryQuery().isPresent());
+                assertTrue("Alert should be showing about invalid key for column " + (findReplaceKeyColumn.get() == null ? " <row>" : findReplaceKeyColumn.get().getName().getRaw()), lookup(".alert").tryQuery().isPresent());
                 clickOn(".ok-button");
                 assertFalse("Alert still showing after OK", lookup(".alert").tryQuery().isPresent());
             }
@@ -327,7 +330,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                     write(s);
                 }, v -> enterStructuredValue(columnTypes.get(col).getDataType(), v.getValue(), r, false));
                 push(KeyCode.ENTER);
-                TestUtil.fx_(() -> dumpScreenshot());
+                //TestUtil.fx_(() -> dumpScreenshot());
             }
         }
         
@@ -353,7 +356,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 @TableDataRowIndex int row = makeRowIndex.apply(false);
                 @TableDataColIndex int col = makeColIndex.get();
                 @Value Object value = columnTypes.get(col).makeValue();
-                if (replaceKeyColumn != null && findManualEdit.get().getData().getColumns().get(col).getName().equals(replaceKeyColumn.getName()))
+                if (findReplaceKeyColumn.get() != null && findManualEdit.get().getData().getColumns().get(col).getName().equals(findReplaceKeyColumn.get().getName()))
                 {
                     // Don't introduce duplicate keys:
                     if (freqCount.containsKey(new ComparableValue(value)))
@@ -378,7 +381,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
-        ImmutableList<LoadedColumnInfo> expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
+        ImmutableList<LoadedColumnInfo> expected = makeExpected(findFirstSort.get().getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), replacementsSoFar, sortBy);
         
         assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
         checkEqual(expected, editViaClip);
@@ -394,13 +397,16 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         Optional<ImmutableList<LoadedColumnInfo>> secondSortViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(secondSortViaClip.isPresent());
-        ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(findManualEdit.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, secondSortBy);
+        ImmutableList<LoadedColumnInfo> expectedSecondSort = makeExpected(findManualEdit.get().getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), replacementsSoFar, secondSortBy);
 
         checkEqual(expectedSecondSort, secondSortViaClip);
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
         
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, DataItemPosition.row(0), DataItemPosition.col(1));
-        clickOn(".manual-edit-entries");
+        // Note -- this has been flaky in the past because when the text link is wrapped, the bounds are unreliable for clicking;
+        // a click on the centre can click where the link is not present.  Bottom left seems like best bet since if it does wrap,
+        // it will occupy the start of the last line...
+        clickOn(point(".manual-edit-entries").atPosition(Pos.BOTTOM_LEFT).query().add(2, -2));
         sleep(500);
         FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TestUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
         
@@ -429,15 +435,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             Entry toClick = entries.get(r.nextInt(entries.size()));
             @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
             clickOn(TestUtil.fx(() -> cell.lookup(".jump-to-link")));
-            sleep(500);
+            sleep(700);
             assertNull(lookup(".fancy-list").tryQuery().orElse(null));
             @TableDataColIndex int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
             int row = -1;
-            if (replaceKeyColumn == null)
+            if (findReplaceKeyColumn.get() == null)
                 row = ((Number)toClick.getIdentifierValue().getValue()).intValue();
             else
             {
-                DataTypeValue keyColType = replaceKeyColumn.getType();
+                DataTypeValue keyColType = findReplaceKeyColumn.get().getType();
 
                 int len = findManualEdit.get().getData().getLength();
                 for (int i = 0; i < len; i++)
@@ -458,7 +464,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             }
             assertNotEquals(-1, row);
             @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
-            assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumn == null ? "<row>" : replaceKeyColumn.getName()), TestUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TestUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
+            assertEquals("Clicking on " + toClick + " key: " + (findReplaceKeyColumn.get() == null ? "<row>" : findReplaceKeyColumn.get().getName()) + " row: " + row + " col: " + col, TestUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TestUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
+            assertNull(lookup(".id-create-table").match(Node::isVisible).tryQuery().orElse(null));
         }
         else
         {
@@ -475,7 +482,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
-        expected = makeExpected(findFirstSort.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, sortBy);
+        expected = makeExpected(findFirstSort.get().getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), replacementsSoFar, sortBy);
         checkEqual(expected, editViaClip);
         checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
     }

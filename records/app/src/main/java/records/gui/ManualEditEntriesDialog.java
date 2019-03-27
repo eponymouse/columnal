@@ -172,5 +172,17 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         {
             return Objects.hash(identifierValue, replacementColumn, replacementValue);
         }
+
+        // Used for debugging:
+
+        @Override
+        public String toString()
+        {
+            return "Entry{" +
+                "identifierValue=" + identifierValue +
+                ", replacementColumn=" + replacementColumn +
+                ", replacementValue=" + replacementValue +
+                '}';
+        }
     }
 }
