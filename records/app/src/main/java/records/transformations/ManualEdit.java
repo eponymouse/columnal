@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
@@ -104,6 +105,12 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
                 public boolean indexValid(int index) throws UserException, InternalException
                 {
                     return srcData.indexValid(index);
+                }
+
+                @Override
+                public @TableDataRowIndex int getLength() throws UserException, InternalException
+                {
+                    return srcData.getLength();
                 }
             });
         }
