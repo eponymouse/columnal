@@ -135,7 +135,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     private static enum UnitAlphabet implements Alphabet
     {
         WORD(c -> Character.isAlphabetic(c) || Character.getType(c) == Character.CURRENCY_SYMBOL || c == ' '),
-        DIGIT(Character::isDigit),
+        DIGIT(c -> Character.isDigit(c) || c == '-'),
         BRACKET(Alphabet.containsCodepoint("(){}")) {
             @Override
             public boolean requiresNewSlot(String current, int nextCodepoint)
