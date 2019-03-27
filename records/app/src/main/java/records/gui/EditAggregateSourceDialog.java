@@ -154,7 +154,7 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
                 FXUtility.onceNotNull(columnField.sceneProperty(), s -> FXUtility.runAfter(columnField::requestFocus));
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
-                (s, q) -> {
+                (s, p, q) -> {
                     try
                     {
                         if (srcTable == null)

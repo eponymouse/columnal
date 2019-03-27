@@ -193,7 +193,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
-                (s, q) -> Utility.streamNullable(srcTable).flatMap(t -> {
+                (s, p, q) -> Utility.streamNullable(srcTable).flatMap(t -> {
                     try
                     {
                         return t.getData().getColumns().stream();

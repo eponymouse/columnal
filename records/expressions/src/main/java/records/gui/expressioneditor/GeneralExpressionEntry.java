@@ -159,7 +159,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     }
 
     @RequiresNonNull({"unitCompletion", "stringCompletion", "varDeclCompletion", "parent", "availableColumns"})
-    private Stream<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
+    private Stream<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, int caretPos, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Keyword keyword : Keyword.values())
@@ -254,7 +254,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             });
         }
         */
-        r.removeIf(c -> c.shouldShow(text) == ShowStatus.NO_MATCH);
+        r.removeIf(c -> c.shouldShow(text, caretPos) == ShowStatus.NO_MATCH);
         return r.stream();
     }
 
@@ -325,7 +325,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             if (input.equals(fullText))
                 return ShowStatus.DIRECT_MATCH;
@@ -378,7 +378,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             if (input.equals(function.getName() + "("))
                 return ShowStatus.DIRECT_MATCH;
@@ -424,7 +424,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             // To allow "1.", we add zero at the end before parsing:
             try
@@ -470,7 +470,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             return GrammarUtility.validIdentifier(input.trim()) ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
         }
@@ -533,6 +533,16 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         {
             return Stream.of(GeneralExpressionEntry.load(keyword));
         }
+
+        @Override
+        public ShowStatus shouldShow(String input, int caretPos)
+        {
+            if (keyword == Keyword.IF)
+                Log.debug("shouldShow if for {{{" + input + "}}} " + caretPos);
+            if (keyword.getContent().startsWith("@") && keyword.getContent().substring(1).startsWith(input.substring(0, caretPos)))
+                return ShowStatus.RELATED_MATCH;
+            return super.shouldShow(input, caretPos);
+        }
     }
 
     private static class OperatorCompletion extends SimpleCompletion
@@ -573,7 +583,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             ShowStatus fallback = ShowStatus.NO_MATCH;
             for (String possible : ImmutableList.of(getScopedName(), tagInfo.getTagInfo().getName()))
@@ -841,7 +851,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             return input.startsWith("_") && (input.length() == "_".length() || Character.isLetter(input.codePointAt("_".length())))
                 ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;

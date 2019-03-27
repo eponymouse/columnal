@@ -101,6 +101,11 @@ public class AutoComplete<C extends Completion>
          */
         public boolean requiresNewSlot(String existing, int newCodepoint);
     }
+    
+    public interface CompletionCalculator<C extends Completion>
+    {
+        Stream<C> calculateCompletions(String textFieldContent, int caretPos, CompletionQuery completionQuery) throws InternalException, UserException; 
+    }
 
     /**
      *
@@ -119,7 +124,7 @@ public class AutoComplete<C extends Completion>
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
+    public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
         this.textField = textField;
         this.onSelect = onSelect;
@@ -134,7 +139,7 @@ public class AutoComplete<C extends Completion>
             {
                 AutoComplete<C> usInit = FXUtility.mouse(this);
                 usInit.createWindow();
-                usInit.window.updateCompletions(calculateCompletions, textField.getText());
+                usInit.window.updateCompletions(calculateCompletions, textField.getText(), textField.getCaretPosition());
                 // We use runAfter because completing previous field can focus us before it has its text
                 // in place, so the showOnFocus call returns the wrong value.  The user won't notice
                 // big difference if auto complete appears a fraction later, so we don't lose anything:
@@ -157,7 +162,7 @@ public class AutoComplete<C extends Completion>
                     // Update completions in case it was recently changed
                     // e.g. they pressed closing bracket and that has been removed and
                     // is causing us to move focus:
-                    window.updateCompletions(calculateCompletions, textField.getText());
+                    window.updateCompletions(calculateCompletions, textField.getText(), textField.getCaretPosition());
                     C completion = getCompletionIfFocusLeftNow();
                     if (completion != null)
                     {
@@ -244,7 +249,7 @@ public class AutoComplete<C extends Completion>
 
             int[] codepoints = text.codePoints().toArray();
             updatePos.consume(""); // Just in case
-            List<C> available = window == null ? ImmutableList.of() : window.updateCompletions(calculateCompletions, text.trim());
+            List<C> available = window == null ? ImmutableList.of() : window.updateCompletions(calculateCompletions, text.trim(), textField.getCaretPosition());
 
             // Show if not already showing:
             Pair<Double, Double> pos = calculatePosition();
@@ -269,7 +274,7 @@ public class AutoComplete<C extends Completion>
                 ImmutableList<C> completionWithoutLast = ImmutableList.of();
                 try
                 {
-                    completionWithoutLast = calculateCompletions.apply(prefix, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
+                    completionWithoutLast = calculateCompletions.calculateCompletions(prefix, prefix.length(), CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
                 }
                 catch (InternalException | UserException e)
                 {
@@ -278,7 +283,7 @@ public class AutoComplete<C extends Completion>
                 if (codepoints.length >= 1 &&
                         (inNextAlphabet.requiresNewSlot(prefix, cur)
                                 || (completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
-                                && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix) == ShowStatus.DIRECT_MATCH))
+                                && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix, prefix.length()) == ShowStatus.DIRECT_MATCH))
                         ))
                 {
                     try
@@ -287,8 +292,8 @@ public class AutoComplete<C extends Completion>
                         {
                             // No completions feature the character and it is in the following alphabet, so
                             // complete the top one (if any are available) and move character to next slot
-                            List<C> completionsWithoutLast = calculateCompletions.apply(prefix, CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
-                            @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(prefix).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
+                            List<C> completionsWithoutLast = calculateCompletions.calculateCompletions(prefix, prefix.length(), CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
+                            @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(prefix, prefix.length()).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
                             int caretPos = prospectiveCaret.orElse(change.getCaretPosition());
                             OptionalInt position = caretPos > prefix.length() && textField.isFocused() ? OptionalInt.of(caretPos - prefix.length()) : OptionalInt.empty();
                             @Nullable String newContent = onSelect.nonAlphabetCharacter(prefix, completion, Utility.codePointToString(cur) + suffix, position);
@@ -320,7 +325,7 @@ public class AutoComplete<C extends Completion>
                 boolean haveSelected = false;
                 for (C completion : available)
                 {
-                    ShowStatus completionAction = completion.shouldShow(text);
+                    ShowStatus completionAction = completion.shouldShow(text, text.length());
                     //Log.debug("Completion for \"" + text + "\": " + completionAction);
                     // TODO check if we are actually a single completion
                     if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
@@ -445,7 +450,7 @@ public class AutoComplete<C extends Completion>
         {
             // Say it's the only completion, because otherwise e.g. column completions
             // won't fire because there are always two of them:
-            if (completion.shouldShow(textField.getText()).viableNow())
+            if (completion.shouldShow(textField.getText(), textField.getLength()).viableNow())
             {
                 return completion;
             }
@@ -549,7 +554,7 @@ public class AutoComplete<C extends Completion>
          * Given the current input, what is the relation
          * of this completion?
          */
-        public abstract ShowStatus shouldShow(String input);
+        public abstract ShowStatus shouldShow(String input, int caretPos);
 
         /**
          * Given current input, if there is one DIRECT_MATCH
@@ -599,7 +604,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             if (input.isEmpty())
                 return ShowStatus.START_DIRECT_MATCH;
@@ -640,7 +645,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             if (input.equals(completion))
                 return ShowStatus.DIRECT_MATCH;
@@ -756,7 +761,7 @@ public class AutoComplete<C extends Completion>
         @Override
         public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter, OptionalInt positionCaret)
         {
-            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter, positionCaret);
+            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore, textBefore.length()).viableNow() ? selectedItem : null, textAfter, positionCaret);
         }
 
         @Override
@@ -994,12 +999,12 @@ public class AutoComplete<C extends Completion>
             }
         }
 
-        private List<C> updateCompletions(ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, String text)
+        private List<C> updateCompletions(CompletionCalculator<C> calculateCompletions, String text, int caretPos)
         {
             try
             {
-                List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
-                        .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplaySortKey(text)))
+                List<C> calculated = calculateCompletions.calculateCompletions(text, caretPos, CompletionQuery.CONTINUED_ENTRY)
+                        .sorted(Comparator.comparing((C c) -> c.shouldShow(text, caretPos)).thenComparing((C c) -> c.getDisplaySortKey(text)))
                         .collect(Collectors.<C>toList());
                 this.completions.getItems().setAll(calculated);
             }

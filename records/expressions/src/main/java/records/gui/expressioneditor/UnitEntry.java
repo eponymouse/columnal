@@ -9,6 +9,7 @@ import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
+import records.gui.expressioneditor.AutoComplete.CompletionCalculator;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
@@ -41,7 +42,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
     {
         super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
-        ExBiFunction<String, CompletionQuery, Stream<Completion>> getSuggestions = this::getSuggestions;
+        CompletionCalculator<Completion> getSuggestions = this::getSuggestions;
         this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.DISALLOW, UnitExpressionOps::requiresNewSlot);
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
@@ -51,7 +52,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
         autoComplete.setContentDirect(initialContent, false);
     }
 
-    private Stream<Completion> getSuggestions(String current, CompletionQuery completionQuery)
+    private Stream<Completion> getSuggestions(String current, int caretPos, CompletionQuery completionQuery)
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(endCompletion);
@@ -68,7 +69,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
         {
             r.add(new RigidCompletion(unitBracket));
         }
-        r.removeIf(c -> c.shouldShow(current) == ShowStatus.NO_MATCH);
+        r.removeIf(c -> c.shouldShow(current, caretPos) == ShowStatus.NO_MATCH);
         return r.stream();
     }
 
@@ -141,7 +142,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             // To allow "+" or "-", we add zero at the end before parsing:
             return Utility.parseIntegerOpt(input + "0").isPresent() ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;

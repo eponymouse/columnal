@@ -91,9 +91,9 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
         autoComplete.setContentDirect(initialContent, false);
     }
 
-    private Stream<Completion> calculateCompletions(String s, CompletionQuery completionQuery)
+    private Stream<Completion> calculateCompletions(String s, int caretPos, CompletionQuery completionQuery)
     {
-        return allCompletions.stream().filter(c -> c.shouldShow(s) != ShowStatus.NO_MATCH);
+        return allCompletions.stream().filter(c -> c.shouldShow(s, caretPos) != ShowStatus.NO_MATCH);
     }
 
     private CompletionListener<Completion> getListener()

@@ -42,7 +42,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
         EndCompletion currentCompletion = new EndCompletion(ending);
-        this.autoComplete = new AutoComplete<EndCompletion>(textField, (s, q) ->
+        this.autoComplete = new AutoComplete<EndCompletion>(textField, (s, c, q) ->
         {
             return Stream.of(currentCompletion);
         }, new SimpleCompletionListener<EndCompletion>()
@@ -231,7 +231,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         }
 
         @Override
-        public ShowStatus shouldShow(String input)
+        public ShowStatus shouldShow(String input, int caretPos)
         {
             if (input.endsWith(ending))
                 return ShowStatus.DIRECT_MATCH;
