@@ -12,6 +12,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -76,7 +77,8 @@ public abstract class LightDialog<R> extends Dialog<R>
                 if (n != null && n instanceof Button)
                 {
                     ((Button)n).setOnMouseReleased(ev -> {
-                        ((Button)n).fire();
+                        if (ev.getButton() == MouseButton.PRIMARY)
+                            ((Button)n).fire();
                     });
                     
                 }
