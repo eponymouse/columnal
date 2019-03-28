@@ -249,7 +249,7 @@ public class AutoComplete<C extends Completion>
 
             int[] codepoints = text.codePoints().toArray();
             updatePos.consume(""); // Just in case
-            List<C> available = window == null ? ImmutableList.of() : window.updateCompletions(calculateCompletions, text.trim(), textField.getCaretPosition());
+            List<C> available = window == null ? ImmutableList.of() : window.updateCompletions(calculateCompletions, text.trim(), Math.min(text.trim().length(), textField.getCaretPosition()));
 
             // Show if not already showing:
             Pair<Double, Double> pos = calculatePosition();
