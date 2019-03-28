@@ -735,7 +735,7 @@ public class AutoComplete<C extends Completion>
 
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String keyboardSelect(String currentText, C selectedItem);
+        @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem);
 
         // Selected because completesOnExactly returned true
         // Returns the new text for the textfield, or null if keep as-is
@@ -765,9 +765,9 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public @Nullable String keyboardSelect(String currentText, C selectedItem)
+        public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem)
         {
-            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
+            return selected(textBeforeCaret, selectedItem, textAfterCaret, isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
 
         @Override
@@ -964,7 +964,8 @@ public class AutoComplete<C extends Completion>
                 if (isShowing() && selectedItem != null)
                 {
                     e.consume();
-                    @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
+                    String curText = textField.getText();
+                    @Nullable String newContent = onSelect.keyboardSelect(curText.substring(0, textField.getCaretPosition()), curText.substring(textField.getCaretPosition()), selectedItem);
                     if (newContent != null)
                         setContentDirect(newContent, true);
                     hide();

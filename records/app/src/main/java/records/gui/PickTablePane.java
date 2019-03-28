@@ -92,9 +92,9 @@ public class PickTablePane extends BorderPane
             }
 
             @Override
-            public String keyboardSelect(String currentText, TableCompletion selectedItem)
+            public String keyboardSelect(String textBefore, String textAfter, TableCompletion selectedItem)
             {
-                return doubleClick(currentText, selectedItem);
+                return doubleClick(textBefore + textAfter, selectedItem);
             }
 
             @Override

@@ -207,9 +207,9 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
                 }
 
                 @Override
-                public String keyboardSelect(String currentText, ColumnCompletion selectedItem)
+                public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem)
                 {
-                    return doubleClick(currentText, selectedItem);
+                    return doubleClick(textBefore + textAfter, selectedItem);
                 }
 
                 @Override
