@@ -2,9 +2,12 @@ package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import javafx.scene.Node;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.expressioneditor.ClipboardSaver;
 import styled.StyledShowable;
 import utility.Either;
+import utility.FXPlatformConsumer;
+import utility.Utility;
 import utility.gui.ScrollPaneFill;
 
 /**
@@ -20,16 +23,19 @@ import utility.gui.ScrollPaneFill;
  */
 public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer>
 {
-    private final EditorContent content;
+    protected final EditorContent content;
     private final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
 
     // package-visible
-    TopLevelEditor(String originalContent, LEXER lexer)
+    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull EXPRESSION> onChange)
     {
         content = new EditorContent(originalContent, lexer);
-        display = new EditorDisplay();
+        display = new EditorDisplay(content);
         scrollPane = new ScrollPaneFill(display);
+        content.addChangeListener(() -> {
+            onChange.consume(Utility.later(this).save());
+        });
     }
 
     public static enum Focus { LEFT, RIGHT };

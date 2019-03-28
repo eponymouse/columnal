@@ -19,12 +19,12 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
 {
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer());
+        super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer(), onChangeHandler);
     }
 
     @Override
     public Expression save()
     {
-        return new InvalidIdentExpression("TODOLEX");
+        return new InvalidIdentExpression("TODOLEX: " + content.getText());
     }
 }
