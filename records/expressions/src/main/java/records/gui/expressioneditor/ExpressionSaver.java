@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 
 public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context, BracketContent> implements ErrorAndTypeRecorder
 {
-    class Context {}
+    public class Context {}
     
     public class BracketContent
     {

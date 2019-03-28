@@ -452,7 +452,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         @SuppressWarnings("nullness") // Pending fix for Checker Framework #2052
         final @NonNull Stack<Scope> currentScopesFinal = this.currentScopes;
-        currentScopesFinal.push(new Scope(parent.getAllChildren().get(0), new Terminator()
+        @SuppressWarnings("nullness")
+        @NonNull ConsecutiveChild<@NonNull EXPRESSION, SAVER> openingNode = null; //parent.getAllChildren().get(0);
+        currentScopesFinal.push(new Scope(openingNode, new Terminator()
         {
             @Override
             public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)

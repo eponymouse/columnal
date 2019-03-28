@@ -21,10 +21,4 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     {
         super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer(), onChangeHandler);
     }
-
-    @Override
-    public Expression save()
-    {
-        return new InvalidIdentExpression("TODOLEX: " + content.getText());
-    }
 }

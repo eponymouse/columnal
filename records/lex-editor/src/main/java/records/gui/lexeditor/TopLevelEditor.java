@@ -21,15 +21,17 @@ import utility.gui.ScrollPaneFill;
  * @param <EXPRESSION>
  * @param <LEXER>
  */
-public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer>
+public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION>>
 {
     protected final EditorContent content;
     private final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
+    private final LEXER lexer;
 
     // package-visible
     TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull EXPRESSION> onChange)
     {
+        this.lexer = lexer;
         content = new EditorContent(originalContent, lexer);
         display = new EditorDisplay(content);
         scrollPane = new ScrollPaneFill(display);
@@ -46,7 +48,10 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER ex
         display.requestFocus();
     }
 
-    public abstract @Recorded EXPRESSION save();
+    public @Recorded EXPRESSION save()
+    {
+        return lexer.getSaved();
+    }
 
     public final Node getContainer()
     {

@@ -13,11 +13,11 @@ public class EditorContent
     private String curContent;
     private int[] validCaretPositions; // Should always be at least one
     private int curCaretPosition;
-    private final Lexer lexer;
+    private final Lexer<?> lexer;
     private final ArrayList<FXPlatformConsumer<Integer>> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
     
-    public EditorContent(String originalContent, Lexer lexer)
+    public EditorContent(String originalContent, Lexer<?> lexer)
     {
         this.lexer = lexer;
         this.curContent = this.lexer.process(originalContent).getFirst();

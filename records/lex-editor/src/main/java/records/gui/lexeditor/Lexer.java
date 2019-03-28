@@ -1,9 +1,12 @@
 package records.gui.lexeditor;
 
+import styled.StyledShowable;
 import utility.Pair;
 
-public interface Lexer
+public interface Lexer<EXPRESSION extends StyledShowable>
 {
+    EXPRESSION getSaved();
+
     public interface CaretPosMapper
     {
         public int mapCaretPos(int pos);
