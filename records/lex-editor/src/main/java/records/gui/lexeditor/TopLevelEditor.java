@@ -36,9 +36,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         content = new EditorContent(originalContent, lexer);
         display = new EditorDisplay(content);
         scrollPane = new ScrollPaneFill(display);
+        scrollPane.getStyleClass().add("top-level-editor");
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
         });
+    }
+
+    public String _test_getRawText()
+    {
+        return content.getText();
     }
 
     public static enum Focus { LEFT, RIGHT };

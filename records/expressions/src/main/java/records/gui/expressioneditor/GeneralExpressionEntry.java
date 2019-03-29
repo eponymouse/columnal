@@ -39,6 +39,8 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.Utility;
@@ -916,6 +918,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
      * An Op, unlike a Keyword, may have a longer alternative available, so should not
      * complete on direct match (unless it is the only possible direct match).
      */
+    @OnThread(Tag.Any)
     public static enum Op
     {
         AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
@@ -972,6 +975,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
      * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
      * item, and thus always completes immediately when directly matched.
      */
+    @OnThread(Tag.Any)
     public static enum Keyword
     {
         OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), QUEST("?"),
