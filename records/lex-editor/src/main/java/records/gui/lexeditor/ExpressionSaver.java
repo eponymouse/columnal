@@ -1,4 +1,4 @@
-package records.gui.expressioneditor;
+package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
@@ -10,13 +10,11 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.TableAndColumnRenames;
-import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
-import records.gui.expressioneditor.ExpressionSaver.BracketContent;
-import records.gui.expressioneditor.ExpressionSaver.Context;
+import records.gui.expressioneditor.ExpressionOps;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -38,11 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context, BracketContent> implements ErrorAndTypeRecorder
+public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, ExpressionSaver.Context, ExpressionSaver.BracketContent> implements ErrorAndTypeRecorder
 {
     public class Context {}
     
@@ -56,18 +53,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
     }
     
-    public ExpressionSaver(ConsecutiveBase<Expression, ExpressionSaver> parent, boolean showFoundErrors)
-    {
-        super(parent, showFoundErrors);
-    }
-    
     // Only used when getting the operators
-    private ExpressionSaver()
+    public ExpressionSaver()
     {
     }
 
     @Override
-    protected BracketAndNodes<Expression, ExpressionSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
+    protected BracketAndNodes<Expression, ExpressionSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class)ExpressionSaver this, EditorLocationAndErrorRecorder locationRecorder, Span location)
     {
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, Expression>()
         {
@@ -85,40 +77,40 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 return singleItem;
             }
-        }, start, end, ImmutableList.of(tupleBracket(errorDisplayerRecord, start, end), makeList(errorDisplayerRecord, start, end)));
+        }, location, ImmutableList.of(tupleBracket(locationRecorder, location), makeList(locationRecorder, location)));
     }
     
-    private ApplyBrackets<BracketContent, Expression> makeList(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
+    private ApplyBrackets<BracketContent, Expression> makeList(@UnknownInitialization(Object.class)ExpressionSaver this, EditorLocationAndErrorRecorder locationRecorder, Span location)
     {
         return new ApplyBrackets<BracketContent, Expression>()
         {
             @Override
             public @Nullable @Recorded Expression apply(@NonNull BracketContent items)
             {
-                return errorDisplayerRecord.record(start, end, new ArrayExpression(items.expressions));
+                return locationRecorder.record(location, new ArrayExpression(items.expressions));
             }
 
             @Override
             public @NonNull @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
             {
-                return errorDisplayerRecord.record(start, end, new ArrayExpression(ImmutableList.<@Recorded Expression>of(singleItem)));
+                return locationRecorder.record(location, new ArrayExpression(ImmutableList.<@Recorded Expression>of(singleItem)));
             }
         };
     }
 
     // Note: if we are copying to clipboard, callback will not be called
-    public void saveKeyword(Keyword keyword, ConsecutiveChild<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveKeyword(Keyword keyword, Span errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        Supplier<ImmutableList<@Recorded Expression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, errorDisplayer, new InvalidIdentExpression(keyword.getContent())));
+        Supplier<ImmutableList<@Recorded Expression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, new InvalidIdentExpression(keyword.getContent())));
         
         if (keyword == Keyword.QUEST)
         {
-            saveOperand(new ImplicitLambdaArg(), errorDisplayer, errorDisplayer, withContext);
+            saveOperand(new ImplicitLambdaArg(), errorDisplayer, withContext);
         }
         else if (keyword == Keyword.OPEN_ROUND)
         {
             Supplier<ImmutableList<@Recorded Expression>> invalidPrefix = prefixKeyword;
-            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> tupleBracket(errorDisplayerRecord, errorDisplayer, c);
+            Function<Span, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> tupleBracket(locationRecorder, Span.fromTo(errorDisplayer, c));
             ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
             // Function calls are a special case:
             if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionOps::isCallTarget, op -> false))
@@ -132,13 +124,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                         @Override
                         public @Nullable @Recorded Expression apply(@NonNull BracketContent args)
                         {
-                            return errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, c, new CallExpression(callTarget, args.expressions));
+                            return locationRecorder.record(Span.fromTo(locationRecorder.recorderFor(callTarget), c), new CallExpression(callTarget, args.expressions));
                         }
 
                         @Override
                         public @NonNull @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
                         {
-                            return errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, c, new CallExpression(callTarget, ImmutableList.<@Recorded Expression>of(singleItem)));
+                            return locationRecorder.record(Span.fromTo(locationRecorder.recorderFor(callTarget), c), new CallExpression(callTarget, ImmutableList.<@Recorded Expression>of(singleItem)));
                         }
                     };
                     invalidPrefix = () -> {
@@ -146,37 +138,37 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     };
                 }
             }
-            Function<ConsecutiveChild<Expression, ExpressionSaver>, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), errorDisplayer, close, ImmutableList.of()), (bracketed, bracketEnd) -> {
-                return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
+            Function<Span, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (bracketed, bracketEnd) -> {
+                return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(Span.fromTo(errorDisplayer, bracketEnd), bracketed));
             }, invalidPrefix)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
             currentScopes.push(new Scope(errorDisplayer,
                 expect(Keyword.CLOSE_SQUARE,
-                    close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(errorDisplayerRecord, errorDisplayer, close), errorDisplayer, close, ImmutableList.of()),
+                    close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()),
                     (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword)));
         }
         else if (keyword == Keyword.IF)
         {
             ImmutableList.Builder<@Recorded Expression> invalid = ImmutableList.builder();
             invalid.addAll(prefixKeyword.get());
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, miscBrackets(errorDisplayer), (condition, conditionEnd) -> {
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, miscBracketsFrom(errorDisplayer), (condition, conditionEnd) -> {
                 invalid.add(condition);
-                invalid.add(record(conditionEnd, conditionEnd, new InvalidIdentExpression(Keyword.THEN.getContent())));
-                return Either.right(expect(Keyword.ELSE, miscBrackets(conditionEnd), (thenPart, thenEnd) -> {
+                invalid.add(record(conditionEnd, new InvalidIdentExpression(Keyword.THEN.getContent())));
+                return Either.right(expect(Keyword.ELSE, miscBracketsFrom(conditionEnd), (thenPart, thenEnd) -> {
                     invalid.add(thenPart);
-                    invalid.add(record(thenEnd, thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
-                    return Either.right(expect(Keyword.ENDIF, miscBrackets(thenEnd), (elsePart, elseEnd) -> {
-                        return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
+                    invalid.add(record(thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
+                    return Either.right(expect(Keyword.ENDIF, miscBracketsFrom(thenEnd), (elsePart, elseEnd) -> {
+                        return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(Span.fromTo(errorDisplayer, elseEnd), new IfThenElseExpression(condition, thenPart, elsePart)));
                     }, invalid::build));
                 }, invalid::build));
             }, invalid::build)));
         }
         else if (keyword == Keyword.MATCH)
         {            
-            currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new Case(errorDisplayer)), Stream.<Supplier<@Recorded Expression>>of(() -> record(errorDisplayer, errorDisplayer, new InvalidIdentExpression(keyword.getContent()))))));
+            currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new Case(errorDisplayer)), Stream.<Supplier<@Recorded Expression>>of(() -> record(errorDisplayer, new InvalidIdentExpression(keyword.getContent()))))));
         }
         else
         {
@@ -184,14 +176,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             Scope cur = currentScopes.pop();
             if (currentScopes.size() == 0)
             {
-                addTopLevelScope(errorDisplayer.getParent());
+                addTopLevelScope();
             }
             cur.terminator.terminate(new FetchContent<Expression, ExpressionSaver, BracketContent>()
             {
                 @Override
                 public @Recorded Expression fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
                 {
-                    return ExpressionSaver.this.makeExpression(cur.openingNode, brackets.end, cur.items, brackets);
+                    return ExpressionSaver.this.makeExpression(Span.fromTo(cur.openingNode, brackets.location), cur.items, brackets);
                 }
             }, keyword, errorDisplayer, withContext);
         }
@@ -206,7 +198,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @Override
             public @Recorded Expression apply(@NonNull BracketContent items)
             {
-                return record(closed.start, closed.end, new InvalidOperatorExpression(items.expressions));
+                return record(closed.location, new InvalidOperatorExpression(items.expressions));
             }
 
             @NonNull
@@ -215,10 +207,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 return singleItem;
             }
-        }, closed.start, closed.end, ImmutableList.of(closed.applyBrackets));
+        }, closed.location, ImmutableList.of(closed.applyBrackets));
     }
 
-    private ApplyBrackets<BracketContent, Expression> tupleBracket(@UnknownInitialization(Object.class) ExpressionSaver this, ErrorDisplayerRecord errorDisplayerRecord, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end)
+    private ApplyBrackets<BracketContent, Expression> tupleBracket(@UnknownInitialization(Object.class)ExpressionSaver this, EditorLocationAndErrorRecorder locationRecorder, Span location)
     {
         return new ApplyBrackets<BracketContent, Expression>()
         {
@@ -228,7 +220,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 if (items.expressions.size() == 1)
                     return items.expressions.get(0);
                 else
-                    return errorDisplayerRecord.record(start, end, new TupleExpression(items.expressions));
+                    return locationRecorder.record(location, new TupleExpression(items.expressions));
             }
 
             @Override
@@ -240,7 +232,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
+    protected @Recorded Expression makeExpression(Span location, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
     {
         if (content.isEmpty())
         {
@@ -248,7 +240,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             if (bracketedEmpty != null)
                 return bracketedEmpty;
             else
-                return errorDisplayerRecord.record(brackets.start, brackets.end, new InvalidOperatorExpression(ImmutableList.of()));
+                return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
         }
         
         CollectedItems collectedItems = processItems(content);
@@ -267,13 +259,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 // Now we need to check the operators can work together as one group:
-                e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
+                e = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             }            
         }
         
         if (e == null)
         {
-            @Recorded Expression invalid = collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new);
+            @Recorded Expression invalid = collectedItems.makeInvalid(location, InvalidOperatorExpression::new);
             e = brackets.applyBrackets.applySingle(invalid);
         }
         
@@ -287,10 +279,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeInvalidOp(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<OpAndNode, @Recorded Expression>> items)
+    protected @Recorded Expression makeInvalidOp(Span location, ImmutableList<Either<OpAndNode, @Recorded Expression>> items)
     {
-        InvalidOperatorExpression invalidOperatorExpression = new InvalidOperatorExpression(Utility.<Either<OpAndNode, @Recorded Expression>, @Recorded Expression>mapListI(items, x -> x.<@Recorded Expression>either(op -> errorDisplayerRecord.record(op.sourceNode, op.sourceNode, new InvalidIdentExpression(op.op.getContent())), y -> y)));
-        return errorDisplayerRecord.record(start, end, invalidOperatorExpression);
+        InvalidOperatorExpression invalidOperatorExpression = new InvalidOperatorExpression(Utility.<Either<OpAndNode, @Recorded Expression>, @Recorded Expression>mapListI(items, x -> x.<@Recorded Expression>either(op -> locationRecorder.record(op.sourceNode, new InvalidIdentExpression(op.op.getContent())), y -> y)));
+        return locationRecorder.record(location, invalidOperatorExpression);
     }
 
     @Override
@@ -309,13 +301,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             this.keyword = keyword;
         }
 
-        public abstract Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid);
+        public abstract Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid);
     }
     
     // Looks for @case
     private class Case extends Choice
     {
-        private final ConsecutiveChild<Expression, ExpressionSaver> matchKeyword;
+        private final Span matchKeyword;
         // If null, we are the first case.  Otherwise we are a later case,
         // in which case we are Right with the given patterns
         private final @Nullable Pair<@Recorded Expression, ImmutableList<Pattern>> matchAndPatterns;
@@ -323,7 +315,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         private final ImmutableList<MatchClause> previousClauses;
         
         // Looks for first @case after a @match
-        public Case(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword)
+        public Case(Span matchKeyword)
         {
             super(Keyword.CASE);
             this.matchKeyword = matchKeyword;
@@ -332,7 +324,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         
         // Matches a later @case, meaning we follow a @then and an outcome
-        public Case(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> patternsForCur)
+        public Case(Span matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> patternsForCur)
         {
             super(Keyword.CASE);
             this.matchKeyword = matchKeyword;
@@ -341,7 +333,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             final @Recorded Expression m;
             final ImmutableList<MatchClause> newClauses;
@@ -369,12 +361,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // Looks for @given to add a guard
     private class Given extends Choice
     {
-        private final ConsecutiveChild<Expression, ExpressionSaver> matchKeyword;
+        private final Span matchKeyword;
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
 
-        public Given(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases)
+        public Given(Span matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases)
         {
             super(Keyword.GIVEN);
             this.matchKeyword = matchKeyword;
@@ -384,7 +376,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             // Expression here is the pattern, which comes before the guard:
             return Either.right(expectOneOf(node, ImmutableList.of(
@@ -397,13 +389,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // Looks for @orcase
     private class OrCase extends Choice
     {
-        private final ConsecutiveChild<Expression, ExpressionSaver> matchKeyword;
+        private final Span matchKeyword;
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
         private final @Nullable @Recorded Expression curMatch; // if null, nothing so far, if non-null we are a guard
 
-        private OrCase(ConsecutiveChild<Expression, ExpressionSaver> matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, @Nullable @Recorded Expression curMatch)
+        private OrCase(Span matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, @Nullable @Recorded Expression curMatch)
         {
             super(Keyword.ORCASE);
             this.matchKeyword = matchKeyword;
@@ -414,7 +406,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             ImmutableList<Pattern> newCases = Utility.appendToList(previousCases, curMatch == null ?
                 // We are the pattern:
@@ -433,7 +425,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // Looks for @then (in match expressions; if-then-else is handled separately) 
     private class Then extends Choice
     {
-        private final ConsecutiveChild<Expression, ExpressionSaver> matchKeywordNode;
+        private final Span matchKeywordNode;
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousPatterns;
@@ -441,7 +433,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
 
         // Preceding keyword may be CASE, GIVEN or ORCASE:
-        private Then(ConsecutiveChild<Expression, ExpressionSaver> matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
+        private Then(Span matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
         {
             super(Keyword.THEN);
             this.matchKeywordNode = matchKeywordNode;
@@ -452,7 +444,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             final ImmutableList<Pattern> newPatterns;
             if (precedingKeyword == Keyword.GIVEN)
@@ -469,10 +461,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 new Case(matchKeywordNode, matchFrom, previousClauses, newPatterns),
                 new Choice(Keyword.ENDMATCH) {
                     @Override
-                    public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+                    public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, Span node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
                     {
                         MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, new MatchClause(newPatterns, lastExpression)));
-                        return Either.<@Recorded Expression, Terminator>left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
+                        return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(Span.fromTo(matchKeywordNode, node), matchExpression));
                     }
                 }
             ), prefixIfInvalid));
@@ -480,14 +472,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
     
 
-    public Terminator expectOneOf(ConsecutiveChild<Expression, ExpressionSaver> start, ImmutableList<Choice> choices, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+    public Terminator expectOneOf(Span start, ImmutableList<Choice> choices, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
     {
         return new Terminator()
         {
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, Span keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
         {
-            BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets = miscBrackets(start, keywordErrorDisplayer);
+            BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets = miscBrackets(Span.fromTo(start, keywordErrorDisplayer));
             
             for (Choice choice : choices)
             {
@@ -495,29 +487,28 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 {
                     // All is well:
                     @Recorded Expression expressionBefore = makeContent.fetchContent(brackets);
-                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.<Supplier<@Recorded Expression>>concat(prefixIfInvalid, Stream.<Supplier<@Recorded Expression>>of(() -> expressionBefore, () -> record(keywordErrorDisplayer, keywordErrorDisplayer, new InvalidIdentExpression(choice.keyword.getContent())))));
+                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.<Supplier<@Recorded Expression>>concat(prefixIfInvalid, Stream.<Supplier<@Recorded Expression>>of(() -> expressionBefore, () -> record(keywordErrorDisplayer, new InvalidIdentExpression(choice.keyword.getContent())))));
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
                     return;
                 }
             }
             
             // Error!
-            if (isShowingErrors())
-                keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
+            locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.<@Recorded Expression>map(s -> s.get()).collect(Collectors.<@Recorded Expression>toList()));
             items.add(makeContent.fetchContent(brackets));
             if (terminator != null)
-                items.add(errorDisplayerRecord.record(keywordErrorDisplayer, keywordErrorDisplayer, new InvalidIdentExpression(terminator.getContent())));
-            @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.<InvalidOperatorExpression>recordG(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
+                items.add(locationRecorder.record(keywordErrorDisplayer, new InvalidIdentExpression(terminator.getContent())));
+            @Recorded InvalidOperatorExpression invalid = locationRecorder.<InvalidOperatorExpression>recordG(Span.fromTo(start, keywordErrorDisplayer), new InvalidOperatorExpression(items.build()));
             currentScopes.peek().items.add(Either.left(invalid));
         }};
     }
 
 
     @Override
-    public void saveOperand(@UnknownIfRecorded Expression singleItem, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression,ExpressionSaver> end, FXPlatformConsumer<Context> withContext)
+    public void saveOperand(@UnknownIfRecorded Expression singleItem, Span location, FXPlatformConsumer<Context> withContext)
     {
         ArrayList<Either<@Recorded Expression, OpAndNode>> curItems = currentScopes.peek().items;
         if (singleItem instanceof UnitLiteralExpression && curItems.size() >= 1)
@@ -526,13 +517,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @Nullable @Recorded NumericLiteral num = recent.<@Nullable @Recorded NumericLiteral>either(e -> e instanceof NumericLiteral ? (NumericLiteral)e : null, o -> null);
             if (num != null && num.getUnitExpression() == null)
             {
-                Span<Expression, ExpressionSaver> recorder = errorDisplayerRecord.recorderFor(num);
-                curItems.set(curItems.size() - 1, Either.left(errorDisplayerRecord.record(recorder.start, recorder.end, new NumericLiteral(num.getNumber(), ((UnitLiteralExpression)singleItem).getUnit()))));
+                Span recorder = locationRecorder.recorderFor(num);
+                curItems.set(curItems.size() - 1, Either.left(locationRecorder.record(recorder, new NumericLiteral(num.getNumber(), ((UnitLiteralExpression)singleItem).getUnit()))));
                 return;
             }
         }
         
-        super.saveOperand(singleItem, start, end, withContext);
+        super.saveOperand(singleItem, location, withContext);
     }
 
     @Override
@@ -543,7 +534,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             @Recorded NumericLiteral numericLiteral = (NumericLiteral) followingOperand;
             if (operator.op == Op.SUBTRACT)
-                return () -> record(operator.sourceNode, errorDisplayerRecord.recorderFor(numericLiteral).end, new NumericLiteral(Utility.negate(numericLiteral.getNumber()), numericLiteral.getUnitExpression()));
+                return () -> record(Span.fromTo(operator.sourceNode, locationRecorder.recorderFor(numericLiteral)), new NumericLiteral(Utility.negate(numericLiteral.getNumber()), numericLiteral.getUnitExpression()));
             else
                 return () -> numericLiteral; // No change needed for unary plus
         }
@@ -649,9 +640,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 , (lhs, _n, rhs, _b, _e) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
+                public OperatorSection makeOperatorSection(EditorLocationAndErrorRecorder locationRecorder, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets, edr) -> {
+                    return new NaryOperatorSection(locationRecorder, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets, edr) -> {
                         return brackets.applyBrackets.apply(new BracketContent(args));
                     }, initialIndex, initialOperator);
 
@@ -660,77 +651,77 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         )
     );
 
-    private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops)
+    private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> ops)
     {
         return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.getFirst().equals(Op.ADD) ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
     }
 
-    private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops)
+    private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> _ops)
     {
         return new TimesExpression(args);
     }
 
-    private static Expression makeStringConcat(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops)
+    private static Expression makeStringConcat(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> _ops)
     {
         return new StringConcatExpression(args);
     }
 
-    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops)
+    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> _ops)
     {
         return new EqualExpression(args);
     }
 
-    private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops)
+    private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> ops)
     {
         return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.getFirst().equals(Op.LESS_THAN) ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO));
     }
 
-    private static Expression makeComparisonGreater(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops)
+    private static Expression makeComparisonGreater(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> ops)
     {
         return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.getFirst().equals(Op.GREATER_THAN) ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO));
     }
 
-    private static Expression makeAnd(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops)
+    private static Expression makeAnd(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> _ops)
     {
         return new AndExpression(args);
     }
 
-    private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops)
+    private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<Pair<Op, Span>> _ops)
     {
         return new OrExpression(args);
     }
 
     @Override
-    protected Span<Expression, ExpressionSaver> recorderFor(@Recorded Expression expression)
+    protected Span recorderFor(@Recorded Expression expression)
     {
-        return errorDisplayerRecord.recorderFor(expression);
+        return locationRecorder.recorderFor(expression);
     }
 
     @Override
     @OnThread(Tag.Any)
     public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
     {
-        errorDisplayerRecord.getRecorder().recordError(src, error);
+        locationRecorder.getRecorder().recordError(src, error);
     }
     
     @Override
     @OnThread(Tag.Any)
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
     {
-        errorDisplayerRecord.getRecorder().recordQuickFixes(src, quickFixes);
+        locationRecorder.getRecorder().recordQuickFixes(src, quickFixes);
     }
 
     @Override
     @OnThread(Tag.Any)
     public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
     {
-        return errorDisplayerRecord.getRecorder().recordTypeNN(expression, typeExp);
+        return locationRecorder.getRecorder().recordTypeNN(expression, typeExp);
     }
 
     @Override
-    protected @Recorded Expression record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, Expression expression)
+    protected @Recorded Expression record(Span location, Expression expression)
     {
-        return errorDisplayerRecord.record(start, end, expression);
+        return locationRecorder.record(location, expression);
     }
     
     public static ImmutableList<ImmutableList<OperatorExpressionInfo>> getOperators()

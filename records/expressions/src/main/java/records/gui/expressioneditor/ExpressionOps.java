@@ -16,7 +16,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
+public class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 {
     private static final Set<Integer> OPERATOR_ALPHABET = makeAlphabet();
 

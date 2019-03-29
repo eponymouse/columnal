@@ -53,7 +53,7 @@ public class OrExpression extends NaryOpShortCircuitExpression
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(TypeExp.bool(this), dataLookup, state, LocationInfo.UNIT_DEFAULT, onError, (typeAndExpression) -> {
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
         }));
     }
 

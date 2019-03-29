@@ -134,7 +134,7 @@ public class CallExpression extends Expression
                 {
                     ColumnReference colRef = (ColumnReference) param;
                     // Offer to turn a this-row column reference into whole column:
-                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
+                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
                             new QuickFix<>("fix.wholeColumn", this, () -> {
                                 @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                                         CallExpression newCall = new CallExpression(function, ImmutableList.of(new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN)));
@@ -148,7 +148,7 @@ public class CallExpression extends Expression
             {
                 // Offer to turn tuple into a list:
                 Expression replacementParam = new ArrayExpression(arguments);
-                onError.recordQuickFixes(this, Collections.<QuickFix<Expression, ExpressionSaver>>singletonList(
+                onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
                         new QuickFix<>("fix.squareBracketAs", this, () -> {
                             @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                             CallExpression newCall = new CallExpression(function, ImmutableList.of(replacementParam));

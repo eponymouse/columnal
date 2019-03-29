@@ -903,7 +903,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return getAllChildren().stream().anyMatch(c -> c.isFocused());
     }
 
-    public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SAVER> start, @Nullable ConsecutiveChild<EXPRESSION, SAVER> end, StyledString error, List<QuickFix<EXPRESSION, SAVER>> quickFixes)
+    public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SAVER> start, @Nullable ConsecutiveChild<EXPRESSION, SAVER> end, StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         Log.debug("Showing " + error.toPlain() + " from " + start + " to " + end + "; " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         boolean inSpan = start == null;

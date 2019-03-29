@@ -137,7 +137,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionSaver>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression>> quickFixes)
     {
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent);
     }

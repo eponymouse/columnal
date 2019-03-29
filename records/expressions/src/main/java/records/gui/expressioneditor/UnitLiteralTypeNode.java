@@ -98,7 +98,7 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<TypeExpression, TypeSaver>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<TypeExpression>> quickFixes)
     {
         // TODO
     }

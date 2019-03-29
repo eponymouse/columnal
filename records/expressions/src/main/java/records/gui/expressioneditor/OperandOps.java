@@ -213,6 +213,12 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SAVER extends Cli
     {
         return "id-munged-" + replacement.toString().codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
     }
+
+    @OnThread(Tag.Any)
+    public static String makeCssClass(String replacement)
+    {
+        return "id-munged-" + replacement.codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
+    }
     
     public static interface Alphabet
     {

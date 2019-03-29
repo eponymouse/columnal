@@ -120,7 +120,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SAVER>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         container.setError(true);
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent());

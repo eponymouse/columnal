@@ -473,7 +473,7 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < immPatternExpressions.size(); i++)
         {
             Expression expression = immPatternExpressions.get(i);
-            List<QuickFix<Expression, ExpressionSaver>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
+            List<QuickFix<Expression>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {
                 // Must show an error to get the quick fixes to show:

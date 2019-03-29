@@ -34,7 +34,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     }
 
     @Override
-    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
     {
         // Ignore them, just interested in errors
     }

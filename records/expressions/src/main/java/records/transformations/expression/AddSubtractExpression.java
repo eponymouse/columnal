@@ -87,10 +87,10 @@ public class AddSubtractExpression extends NaryOpTotalExpression
         type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
-                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, ImmutableList.of());
+                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
             @Nullable StyledString err = ourType == null || p.expressionTypes.stream().filter(Optional::isPresent).count() <= 1
                     ? null : StyledString.concat(StyledString.s("You can only add/subtract numbers (with identical units), but found "), ourType.toStyledString());
-            ImmutableList.Builder<QuickFix<Expression,ExpressionSaver>> fixes = ImmutableList.builder();
+            ImmutableList.Builder<QuickFix<Expression>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
             
             // Note: we don't unify here because we don't want to alter the type.  We could try a 
@@ -98,13 +98,13 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             // the quick fix if it is definitely a string, for which we can use equals:
             if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(AddSubtractOp.ADD)))
             {
-                fixes.add(new QuickFix<Expression,ExpressionSaver>("fix.stringConcat", this, () -> new StringConcatExpression(expressions)));
+                fixes.add(new QuickFix<Expression>("fix.stringConcat", this, () -> new StringConcatExpression(expressions)));
             }
 
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p));
-            ImmutableList<QuickFix<Expression, ExpressionSaver>> builtFixes = fixes.build();
-            return err == null && builtFixes.isEmpty() ? null : new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(err, builtFixes);
+            ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
+            return err == null && builtFixes.isEmpty() ? null : new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes);
         }));
         return type;
     }

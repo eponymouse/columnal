@@ -105,7 +105,7 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression>> quickFixes)
     {
     }
 

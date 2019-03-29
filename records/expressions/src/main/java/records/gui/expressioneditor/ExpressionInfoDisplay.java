@@ -169,9 +169,9 @@ public class ExpressionInfoDisplay
     
     
     @SuppressWarnings("keyfor") // Don't really understand why
-    public <EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SAVER>> fixes, ConsecutiveBase<EXPRESSION, SAVER> editor)
+    public <EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION>> fixes, ConsecutiveBase<EXPRESSION, SAVER> editor)
     {
-        this.fixes = Utility.<FixInfo>concatI(this.fixes, Utility.<QuickFix<EXPRESSION, SAVER>, FixInfo>mapListI(fixes, q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
+        this.fixes = Utility.<FixInfo>concatI(this.fixes, Utility.<QuickFix<EXPRESSION>, FixInfo>mapListI(fixes, q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
             Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
                 popup.hidePopup(true);

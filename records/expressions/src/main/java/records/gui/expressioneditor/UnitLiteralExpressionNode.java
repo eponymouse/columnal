@@ -99,7 +99,7 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression>> quickFixes)
     {
         // TODO
     }

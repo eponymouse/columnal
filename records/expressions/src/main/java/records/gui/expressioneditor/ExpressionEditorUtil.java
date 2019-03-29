@@ -167,23 +167,23 @@ public class ExpressionEditorUtil
 
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionSaver>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
     {
-        List<QuickFix<Expression,ExpressionSaver>> quickFixes = new ArrayList<>();
+        List<QuickFix<Expression>> quickFixes = new ArrayList<>();
         FXPlatformSupplierInt<Expression> makeTypeFix = () -> {
             return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
         };
-        quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
+        quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, functionLookup, JellyType.fromConcrete(fixFinal), src)));
+            quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, functionLookup, JellyType.fromConcrete(fixFinal), src)));
         }
         return quickFixes;
     }
 
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionSaver>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
+    public static List<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
     {
         // Must be a units issue.  Check if fixing a numeric literal involved would make
         // the units match all non-literal units:
@@ -238,7 +238,7 @@ public class ExpressionEditorUtil
                 Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    return Collections.singletonList(new QuickFix<Expression,ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {
+                    return Collections.singletonList(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {
                         return literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0));
                     }));
                 }

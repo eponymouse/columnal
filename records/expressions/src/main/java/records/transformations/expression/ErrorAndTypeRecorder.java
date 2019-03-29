@@ -91,7 +91,7 @@ public interface ErrorAndTypeRecorder
     // TODO make the String @Localized
     public <EXPRESSION> void recordError(EXPRESSION src, StyledString error);
     
-    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes);
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
     public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<StyledString, TypeExp> typeOrError, ExpressionKind expressionKind, TypeState typeState)
     {

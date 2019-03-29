@@ -243,7 +243,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
@@ -280,7 +280,7 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
+                @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
                 if (errorAndQuickFix != null)
                     onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
                 StyledString error = null;

@@ -17,7 +17,7 @@ import java.util.List;
 public interface ErrorDisplayer<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     // TODO make the String @Localized
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes);
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes);
     
     public void showType(String type);
 

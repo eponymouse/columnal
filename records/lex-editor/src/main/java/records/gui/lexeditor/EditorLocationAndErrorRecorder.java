@@ -1,16 +1,16 @@
-package records.gui.expressioneditor;
+package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.EvaluateState.TypeLookup;
-import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeSaver;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -18,107 +18,121 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
+ * This class keeps track of mapping expressions back to their source location in a graphical editor.
+ * 
+ * It is uncoupled from actually recording the error, which is handled in the {@link ErrorAndTypeRecorder} class.
+ * 
  * For displaying semantic errors (which occur on a particular expression)
  */
-public class ErrorDisplayerRecord
+public class EditorLocationAndErrorRecorder
 {
     // A semantic error matches an expression which may span multiple children.
-    public static class Span<E extends StyledShowable, S extends ClipboardSaver>
+    public static class Span
     {
-        public final ConsecutiveChild<E, S> start;
-        public final ConsecutiveChild<E, S> end;
+        public final @SourceLocation int start;
+        public final @SourceLocation int end;
         
-        public Span(ConsecutiveChild<E, S> start, ConsecutiveChild<E, S> end)
+        public Span(@SourceLocation int start, @SourceLocation int end)
         {
             this.start = start;
             this.end = end;
         }
 
-        public void addErrorAndFixes(StyledString styledString, List<QuickFix<E>> quickFixes)
+        public static Span fromTo(Span start, Span end)
         {
-            start.getParent().addErrorAndFixes(start, end, styledString, quickFixes);
+            return new Span(start.start, end.end);
         }
+        
+        @SuppressWarnings("units")
+        public static final Span START = new Span(0, 0);
     }
-    
     
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<Expression, Span<Expression, ExpressionSaver>> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, Span<UnitExpression, UnitSaver>> unitDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<TypeExpression, Span<TypeExpression, TypeSaver>> typeDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, Span> expressionDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<UnitExpression, Span> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<TypeExpression, Span> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
-    private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?>>>> pending = new IdentityHashMap<>();
-    
-    // false to turn off errors, e.g. while saving for copying to clipboard.
-    private final boolean showErrors;
-
-    public ErrorDisplayerRecord(boolean showErrors)
+    private static interface UnresolvedErrorDetails
     {
-        this.showErrors = showErrors;
+        public ErrorDetails resolve() throws InternalException;
+    }
+    
+    public static class ErrorDetails
+    {
+        public final Span location;
+        public final StyledString error;
+        public final ImmutableList<TextQuickFix> quickFixes;
+
+        public ErrorDetails(Span location, StyledString error, ImmutableList<TextQuickFix> quickFixes)
+        {
+            this.location = location;
+            this.error = error;
+            this.quickFixes = quickFixes;
+        }
+    }
+    
+    private final ArrayList<UnresolvedErrorDetails> errorsToShow = new ArrayList<>();
+    
+    public EditorLocationAndErrorRecorder()
+    {
     }
 
     // Non-generic version that avoids type checker arguments.
-    public @NonNull @Recorded Expression record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull Expression e)
+    public @NonNull @Recorded Expression record(Span location,  @NonNull Expression e)
     {
-        return this.<Expression>recordG(start, end, e);
+        return this.<Expression>recordG(location, e);
     }
     
     // Generic version that lets you return a particular expression
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION recordG(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION recordG(Span location,  @NonNull EXPRESSION e)
     {
-        expressionDisplayers.put(e, new Span<>(start, end));
-        Pair<StyledString, List<QuickFix<?>>> pendingItem = pending.remove(e);
-        if (pendingItem != null)
-        {
-            showError(e, pendingItem.getFirst(), (List) pendingItem.getSecond());
-            
-        }
+        expressionDisplayers.put(e, location);
         return e;
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, @NonNull UNIT_EXPRESSION e)
+    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(Span location, @NonNull UNIT_EXPRESSION e)
     {
-        unitDisplayers.put(e, new Span<>(start, end));
+        unitDisplayers.put(e, location);
         return e;
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, @NonNull TYPE_EXPRESSION e)
+    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(Span location, @NonNull TYPE_EXPRESSION e)
     {
-        typeDisplayers.put(e, new Span<>(start, end));
+        typeDisplayers.put(e, location);
         return e;
     }
 
-    private void showError(Expression e, @Nullable StyledString s, List<QuickFix<Expression>> quickFixes)
+    private void showUnresolvedError(Expression e, @Nullable StyledString error, ImmutableList<QuickFix<Expression>> quickFixes)
     {
-        if (!showErrors)
-            return;
-        
-        @Nullable Span<Expression, ExpressionSaver> d = expressionDisplayers.get(e);
-        if (d != null)
-        {
-            d.addErrorAndFixes(s == null ? StyledString.s("") : s, quickFixes);
-        }
-        else
-        {
-            pending.compute(e, (_k, p) -> {
-                if (p == null)
-                    return new Pair<>(s == null ? StyledString.s("") : s, ImmutableList.copyOf(quickFixes));
-                else
-                    return new Pair<>(s == null ? p.getFirst() : StyledString.concat(p.getFirst(), s), Utility.concatI(p.getSecond(), quickFixes));
-            });
-        }
+        errorsToShow.add(() -> {
+            @Nullable Span resolvedLocation = expressionDisplayers.get(e);
+            if (resolvedLocation != null)
+            {
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(resolvedLocation, q)));
+            }
+            else
+            {
+                throw new InternalException("Could not resolve location for expression: " + e);
+            }
+        });
+    }
+    
+    public void addErrorAndFixes(Span showFor, StyledString error, ImmutableList<TextQuickFix> quickFixes)
+    {
+        errorsToShow.add(() -> new ErrorDetails(showFor, error, quickFixes));
     }
     
     /*
@@ -166,7 +180,7 @@ public class ErrorDisplayerRecord
             {
                 if (src instanceof Expression)
                 {
-                    ErrorDisplayerRecord.this.showError((Expression) src, error, ImmutableList.of());
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((Expression) src, error, ImmutableList.of());
                 }
             }
 
@@ -176,7 +190,7 @@ public class ErrorDisplayerRecord
             {
                 if (src instanceof Expression && !quickFixes.isEmpty())
                 {
-                    ErrorDisplayerRecord.this.showError((Expression) src, null, (List) quickFixes);
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((Expression) src, null, ImmutableList.copyOf((List<QuickFix<Expression>>)(List)quickFixes));
                 }
             }
 
@@ -184,32 +198,27 @@ public class ErrorDisplayerRecord
             @SuppressWarnings("recorded")
             public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
             {
-                ErrorDisplayerRecord.this.recordType(expression, Either.right(typeExp));
+                EditorLocationAndErrorRecorder.this.recordType(expression, Either.right(typeExp));
                 return typeExp;
             }
         };
     }
 
     @SuppressWarnings("nullness")
-    public Span<Expression, ExpressionSaver> recorderFor(@Recorded Expression expression)
+    public Span recorderFor(@Recorded Expression expression)
     {
         return expressionDisplayers.get(expression);
     }
 
     @SuppressWarnings("nullness")
-    public Span<TypeExpression, TypeSaver> recorderFor(@Recorded TypeExpression expression)
+    public Span recorderFor(@Recorded TypeExpression expression)
     {
         return typeDisplayers.get(expression);
     }
 
     @SuppressWarnings("nullness")
-    public Span<UnitExpression, UnitSaver> recorderFor(@Recorded UnitExpression expression)
+    public Span recorderFor(@Recorded UnitExpression expression)
     {
         return unitDisplayers.get(expression);
-    }
-
-    public boolean isShowingErrors()
-    {
-        return showErrors;
     }
 }
