@@ -1,6 +1,7 @@
 package records.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.Value;
 import annotation.units.SourceLocation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.GrammarUtility;
@@ -10,9 +11,13 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.InvalidIdentExpression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.Utility;
+
+import java.util.Optional;
 
 public class ExpressionLexer implements Lexer<Expression>
 {
@@ -60,6 +65,32 @@ public class ExpressionLexer implements Lexer<Expression>
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), new Span(curIndex, endQuote + 1), c -> {});
                     curIndex = endQuote + 1;
+                    continue nextToken;
+                }
+            }
+            
+            if (content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
+            {
+                @SourceLocation int numberStart = curIndex;
+                // Before dot:
+                do
+                {
+                    curIndex += 1;
+                }
+                while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9');
+                
+                if (curIndex < content.length() && content.charAt(curIndex) == '.')
+                {
+                    do
+                    {
+                        curIndex += 1;
+                    }
+                    while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9');
+                }
+                Optional<@Value Number> number = Utility.parseNumberOpt(content.substring(numberStart, curIndex));
+                if (number.isPresent())
+                {
+                    saver.saveOperand(new NumericLiteral(number.get(), null), new Span(numberStart, curIndex), c -> {});
                     continue nextToken;
                 }
             }
