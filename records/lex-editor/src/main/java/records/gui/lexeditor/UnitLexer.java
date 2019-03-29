@@ -1,6 +1,7 @@
 package records.gui.lexeditor;
 
 import annotation.identifier.qual.UnitIdentifier;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
@@ -13,10 +14,11 @@ import utility.Pair;
 
 public class UnitLexer implements Lexer<UnitExpression>
 {
-    private UnitExpression saved = new InvalidSingleUnitExpression("");
+    @SuppressWarnings("recorded")
+    private @Recorded UnitExpression saved = new InvalidSingleUnitExpression("");
     
     @Override
-    public UnitExpression getSaved()
+    public @Recorded UnitExpression getSaved()
     {
         return saved;
     }

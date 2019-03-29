@@ -1,6 +1,7 @@
 package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.expressioneditor.ClipboardSaver;
@@ -29,7 +30,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private final LEXER lexer;
 
     // package-visible
-    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull EXPRESSION> onChange)
+    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange)
     {
         this.lexer = lexer;
         content = new EditorContent(originalContent, lexer);
@@ -48,7 +49,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         display.requestFocus();
     }
 
-    public @Recorded EXPRESSION save()
+    public @Recorded @NonNull EXPRESSION save()
     {
         return lexer.getSaved();
     }

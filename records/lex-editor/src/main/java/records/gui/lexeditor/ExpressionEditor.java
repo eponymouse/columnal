@@ -1,5 +1,6 @@
 package records.gui.lexeditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.input.DataFormat;
@@ -21,7 +22,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
 {
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
         super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer(), onChangeHandler);
     }

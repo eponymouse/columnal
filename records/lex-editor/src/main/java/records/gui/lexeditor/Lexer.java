@@ -1,11 +1,12 @@
 package records.gui.lexeditor;
 
+import annotation.recorded.qual.Recorded;
 import styled.StyledShowable;
 import utility.Pair;
 
 public interface Lexer<EXPRESSION extends StyledShowable>
 {
-    EXPRESSION getSaved();
+    @Recorded EXPRESSION getSaved();
 
     public interface CaretPosMapper
     {

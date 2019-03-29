@@ -1,6 +1,7 @@
 package records.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
@@ -13,10 +14,11 @@ import utility.Pair;
 
 public class TypeLexer implements Lexer<TypeExpression>
 {
-    private TypeExpression saved = new InvalidIdentTypeExpression("");
+    @SuppressWarnings("recorded")
+    private @Recorded TypeExpression saved = new InvalidIdentTypeExpression("");
     
     @Override
-    public TypeExpression getSaved()
+    public @Recorded TypeExpression getSaved()
     {
         return saved;
     }

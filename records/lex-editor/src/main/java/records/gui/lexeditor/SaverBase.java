@@ -673,7 +673,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             {
                 @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                 locationRecorder.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                locationRecorder.getRecorder().recordQuickFixes(invalidOpExpression, Utility.<@Recorded EXPRESSION, QuickFix<EXPRESSION>>mapList(possibles, fixed -> new QuickFix<EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> fixed)));
+                locationRecorder.getRecorder().<@Recorded EXPRESSION>recordQuickFixes(invalidOpExpression, Utility.<@Recorded EXPRESSION, QuickFix<@Recorded EXPRESSION>>mapList(possibles, fixed -> new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> fixed)));
                 return invalidOpExpression;
             }
         }
@@ -706,8 +706,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 {
                     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
                     @NonNull @Recorded EXPRESSION replacementFinal = replacement;
-                    locationRecorder.getRecorder().<@Recorded EXPRESSION>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<EXPRESSION>>singletonList(
-                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
+                    locationRecorder.getRecorder().<@Recorded EXPRESSION>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION>>singletonList(
+                        new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
                 }
             }
@@ -772,8 +772,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
                 if (replacement != null)
                 {
-                    locationRecorder.getRecorder().recordQuickFixes(invalidOpExpression, Collections.<QuickFix<EXPRESSION>>singletonList(
-                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacement)
+                    locationRecorder.getRecorder().recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION>>singletonList(
+                        new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> replacement)
                     ));
                 }
             }

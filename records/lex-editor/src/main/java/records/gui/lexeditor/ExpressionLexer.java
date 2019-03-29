@@ -2,6 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -26,7 +27,8 @@ import java.util.function.Function;
 
 public class ExpressionLexer implements Lexer<Expression>
 {
-    private Expression saved = new InvalidIdentExpression("");
+    @SuppressWarnings("recorded")
+    private @Recorded Expression saved = new InvalidIdentExpression("");
 
     @SuppressWarnings("units")
     @Override
@@ -134,7 +136,7 @@ public class ExpressionLexer implements Lexer<Expression>
     }
 
     @Override
-    public Expression getSaved()
+    public @Recorded Expression getSaved()
     {
         return saved;
     }
