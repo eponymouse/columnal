@@ -57,7 +57,19 @@ public class IdentifierUtility
         Lexer lexer = new ExpressionLexer(inputStream);
         Token token = lexer.nextToken();
         if (token.getType() == ExpressionLexer.IDENT)
-            return new Pair<>(token.getText(), startFrom + token.getStopIndex());
+            return new Pair<>(token.getText(), startFrom + token.getStopIndex() + 1);
+        else
+            return null;
+    }
+
+    @SuppressWarnings("identifier")
+    public static @Nullable Pair<@UnitIdentifier String, Integer> consumeUnitIdentifier(String content, int startFrom)
+    {
+        CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
+        Lexer lexer = new UnitLexer(inputStream);
+        Token token = lexer.nextToken();
+        if (token.getType() == UnitLexer.IDENT)
+            return new Pair<>(token.getText(), startFrom + token.getStopIndex() + 1);
         else
             return null;
     }

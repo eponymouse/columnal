@@ -16,6 +16,7 @@ import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TemporalLiteral;
+import records.transformations.expression.UnitLiteralExpression;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -115,7 +116,7 @@ public class ExpressionLexer implements Lexer<Expression>
             {
                 saver.saveOperand(new IdentExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
                 curIndex = parsed.getSecond();
-                continue;
+                continue nextToken;
             }
             
             
@@ -145,7 +146,12 @@ public class ExpressionLexer implements Lexer<Expression>
             new Pair<>("datetime{", c -> new TemporalLiteral(DateTimeType.DATETIME, c)),
             new Pair<>("datetimezoned{", c -> new TemporalLiteral(DateTimeType.DATETIMEZONED, c)),
             new Pair<>("dateym{", c -> new TemporalLiteral(DateTimeType.YEARMONTH, c)),
-            new Pair<>("time{", c -> new TemporalLiteral(DateTimeType.TIMEOFDAY, c))
+            new Pair<>("time{", c -> new TemporalLiteral(DateTimeType.TIMEOFDAY, c)),
+            new Pair<>("{", c -> {
+                UnitLexer unitLexer = new UnitLexer();
+                unitLexer.process(c);
+                return new UnitLiteralExpression(unitLexer.getSaved());
+            })
         );
     }
     
