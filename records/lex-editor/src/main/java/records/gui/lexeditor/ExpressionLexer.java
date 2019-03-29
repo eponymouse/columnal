@@ -3,7 +3,9 @@ package records.gui.lexeditor;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.SourceLocation;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
@@ -13,11 +15,13 @@ import records.transformations.expression.IdentExpression;
 import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TemporalLiteral;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 public class ExpressionLexer implements Lexer<Expression>
 {
@@ -94,6 +98,17 @@ public class ExpressionLexer implements Lexer<Expression>
                     continue nextToken;
                 }
             }
+
+            for (Pair<String, Function<String, Expression>> nestedLiteral : getNestedLiterals())
+            {
+                @Nullable Pair<String, Integer> nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex);
+                if (nestedOutcome != null)
+                {
+                    saver.saveOperand(nestedLiteral.getSecond().apply(nestedOutcome.getFirst()), new Span(curIndex, nestedOutcome.getSecond()), c -> {});
+                    curIndex = nestedOutcome.getSecond();
+                    continue nextToken;
+                }
+            }
             
             @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
@@ -122,4 +137,36 @@ public class ExpressionLexer implements Lexer<Expression>
     {
         return saved;
     }
+    
+    private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()
+    {
+        return ImmutableList.of(
+            new Pair<>("date{", c -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, c)),
+            new Pair<>("datetime{", c -> new TemporalLiteral(DateTimeType.DATETIME, c)),
+            new Pair<>("datetimezoned{", c -> new TemporalLiteral(DateTimeType.DATETIMEZONED, c)),
+            new Pair<>("dateym{", c -> new TemporalLiteral(DateTimeType.YEARMONTH, c)),
+            new Pair<>("time{", c -> new TemporalLiteral(DateTimeType.TIMEOFDAY, c))
+        );
+    }
+    
+    private @Nullable Pair<String, Integer> tryNestedLiteral(String prefixInclCurly, String content, int curIndex)
+    {
+        if (content.startsWith(prefixInclCurly, curIndex))
+        {
+            curIndex += prefixInclCurly.length();
+            int startIndex = curIndex;
+            int openCount = 1;
+            while (curIndex < content.length() && openCount > 0)
+            {
+                if (content.charAt(curIndex) == '{')
+                    openCount += 1;
+                else if (content.charAt(curIndex) == '}')
+                    openCount -= 1;
+                curIndex += 1;
+            }
+            if (openCount == 0)
+                return new Pair<>(content.substring(startIndex, curIndex - 1), curIndex);
+        }
+        return null;
+    }    
 }
