@@ -9,7 +9,8 @@ import javafx.scene.control.ComboBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
-import records.gui.expressioneditor.ExpressionEditor;
+import records.gui.lexeditor.ExpressionEditor;
+import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.transformations.Check.CheckType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -92,7 +93,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(expressionEditor::focusWhenShown);
+            FXUtility.runAfter(() -> expressionEditor.focus(Focus.LEFT));
         });
         setOnHiding(e -> {
             expressionEditor.cleanup();

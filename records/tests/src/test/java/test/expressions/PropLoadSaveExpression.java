@@ -18,9 +18,8 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditor.ColumnAvailability;
+import records.gui.lexeditor.ExpressionEditor;
 import records.transformations.expression.BracketedStatus;
-import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
@@ -110,7 +109,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         };
         
         
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(null), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()),  e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(null), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));

@@ -31,6 +31,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -44,6 +45,8 @@ import java.util.stream.Stream;
 
 public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context, BracketContent> implements ErrorAndTypeRecorder
 {
+    public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
+    
     public class Context {}
     
     public class BracketContent
@@ -742,7 +745,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
     {
         return ImmutableMap.of(
-            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY),
+            EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY),
             DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY)
         );
     }

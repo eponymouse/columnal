@@ -7,7 +7,8 @@ import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
-import records.gui.expressioneditor.ExpressionEditor;
+import records.gui.lexeditor.ExpressionEditor;
+import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.function.FunctionList;
@@ -44,7 +45,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(expressionEditor::focusWhenShown);
+            FXUtility.runAfter(() -> expressionEditor.focus(Focus.LEFT));
         });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
