@@ -14,18 +14,9 @@ import utility.Pair;
 
 public class TypeLexer implements Lexer<TypeExpression>
 {
-    @SuppressWarnings("recorded")
-    private @Recorded TypeExpression saved = new InvalidIdentTypeExpression("");
-    
-    @Override
-    public @Recorded TypeExpression getSaved()
-    {
-        return saved;
-    }
-
     @SuppressWarnings("units")
     @Override
-    public Pair<String, CaretPosMapper> process(String content)
+    public LexerResult<TypeExpression> process(String content)
     {
         TypeSaver saver = new TypeSaver();
         int curIndex = 0;
@@ -60,13 +51,7 @@ public class TypeLexer implements Lexer<TypeExpression>
             
             curIndex += 1;
         }
-        saved = saver.finish(new Span(curIndex, curIndex));
-        return new Pair<>(content, i -> i);
-    }
-
-    @Override
-    public int[] getCaretPositions()
-    {
-        return new int[0];
+        TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors());
     }
 }

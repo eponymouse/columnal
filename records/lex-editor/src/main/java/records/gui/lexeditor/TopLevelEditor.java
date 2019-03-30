@@ -2,14 +2,43 @@ package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
+import annotation.units.SourceLocation;
+import com.google.common.collect.ImmutableList;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.scene.Node;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.control.PopOver;
+import records.error.InternalException;
+import records.gui.FixList;
+import records.gui.FixList.FixInfo;
 import records.gui.expressioneditor.ClipboardSaver;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.Lexer.LexerResult;
 import styled.StyledShowable;
+import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * An editor is a wrapper around an editable TextFlow.  The distinctive feature is that
@@ -24,21 +53,31 @@ import utility.gui.ScrollPaneFill;
  */
 public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION>>
 {
-    protected final EditorContent content;
+    protected final EditorContent<EXPRESSION> content;
     private final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
-    private final LEXER lexer;
+    private final ErrorMessagePopup errorMessagePopup;
 
     // package-visible
     TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange)
     {
-        this.lexer = lexer;
-        content = new EditorContent(originalContent, lexer);
+        content = new EditorContent<>(originalContent, lexer);
         display = new EditorDisplay(content);
         scrollPane = new ScrollPaneFill(display);
         scrollPane.getStyleClass().add("top-level-editor");
+        errorMessagePopup = new ErrorMessagePopup();
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
+        });
+        content.addCaretPositionListener(c -> {
+            ImmutableList<ErrorDetails> errors = content.getErrors();
+            for (ErrorDetails error : errors)
+            {
+                if (error.location.contains(c))
+                {
+                    errorMessagePopup.keyboardFocusEntered(new ErrorInfo(error), ImmutableList.of());
+                }
+            }
         });
     }
 
@@ -57,7 +96,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
     public @Recorded @NonNull EXPRESSION save()
     {
-        return lexer.getSaved();
+        return content.getLexerResult().result;
     }
 
     public final Node getContainer()
@@ -74,4 +113,283 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     {
         // By default, do nothing
     }
+
+    private class ErrorInfo
+    {
+        private final Span location;
+        private final StyledString errorMessage;
+        private final ImmutableList<FixInfo> fixes;
+
+        /*
+        public ErrorInfo(StyledString errorMessage, ImmutableList<FixInfo> fixes)
+        {
+            this.errorMessage = errorMessage;
+            this.fixes = fixes;
+        }
+        */
+
+        public ErrorInfo(ErrorDetails errorDetails)
+        {
+            this.location = errorDetails.location;
+            this.errorMessage = errorDetails.error;
+            this.fixes = Utility.mapListI(errorDetails.quickFixes, f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
+                try
+                {
+                    Pair<Span, String> replacement = f.getReplacement();
+                    content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
+            }));
+        }
+    }
+
+    // Interface to access a singleton-per-editor error-displayer.
+    // Lets us hide the other functionality from people using the class
+    /*
+    @OnThread(Tag.FXPlatform)
+    public static interface ErrorMessageDisplayer
+    {
+        void mouseHoverEnded(Node hoverEndedOn);
+
+        void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn);
+
+        //void updateError(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos, Node... possibleHoverNodes);
+
+        void hidePopup(boolean immediate);
+
+        void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, ImmutableList<ErrorInfo> adjacentErrors);
+
+        void keyboardFocusExited(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos);
+    }
+    */
+
+
+    /**
+     * A popup to show error messages.  This is shared between all the items in the same top-level editor.
+     *
+     * The rules for anchoring and showing are as follows:
+     *   - If there is no mouse hover, the error for the current keyboard position is shown, if any.
+     *   - If keyboard moves, the mouse hover is cancelled until mouse moves.
+     *   - If mouse moves to hover over an error, this is shown instead of keyboard error.
+     *   - Quick fixes are only shown for the keyboard position.  If mouse hover has fixes, says "click to show fixes".
+     *     (Because moving mouse away may cancel that message, frustrating to users if they go to try to click.
+     *     Clicking causes keyboard focus which is more persistent.)
+     */
+    @OnThread(Tag.FXPlatform)
+    private class ErrorMessagePopup extends PopOver //implements ErrorMessageDisplayer
+    {
+        private @Nullable ErrorInfo keyboardErrorInfo;
+        private @Nullable ErrorInfo mouseErrorInfo;
+
+        private final TextFlow errorLabel;
+        private final FixList fixList;
+
+        // null when definitely stopped.
+        private @Nullable Animation hidingAnimation;
+
+        public ErrorMessagePopup()
+        {
+            setDetachable(false);
+            getStyleClass().add("expression-info-popup");
+            setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+            // If we let the position vary to fit on screen, we end up with the popup bouncing in and out
+            // as the mouse hovers on item then on popup then hides.  Better to let the item be off-screen
+            // and let the user realise they need to move things about a bit:
+            setAutoFix(false);
+            // It's the skin that binds the height, so we must unbind after the skin is set:
+            FXUtility.onceNotNull(skinProperty(), skin -> {
+                // By default, the min width and height are the same, to allow for arrow + corners.
+                // But we know arrow is on bottom, so we don't need such a large min height:
+                getRoot().minHeightProperty().unbind();
+                getRoot().setMinHeight(20.0);
+            });
+
+            //Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
+            errorLabel = new TextFlow();
+            errorLabel.getStyleClass().add("expression-info-error");
+            errorLabel.managedProperty().bind(errorLabel.visibleProperty());
+
+            fixList = new FixList(ImmutableList.of());
+
+            BorderPane container = new BorderPane(errorLabel, null, null, fixList, null);
+            container.getStyleClass().add("expression-info-content");
+
+            setContentNode(container);
+            //FXUtility.addChangeListenerPlatformNN(detachedProperty(), b -> updateShowHide(false));
+            container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    // Will come back if user hovers or moves keyboard:
+                    keyboardErrorInfo = null;
+                    mouseErrorInfo = null;
+                    FXUtility.mouse(this).updateShowHide(true);
+                    e.consume();
+                }
+            });
+            container.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
+                FXUtility.mouse(this).cancelHideAnimation();
+            });
+            container.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
+                if (keyboardErrorInfo == null)
+                    FXUtility.mouse(this).hidePopup(false);
+            });
+
+        }
+
+        // Can't have an ensuresnull check
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void hidePopup(boolean immediately)
+        {
+            // Whether we hide immediately or not, stop any current animation:
+            cancelHideAnimation();
+
+            if (immediately)
+            {
+                super.hide(Duration.ZERO);
+            }
+            else
+            {
+
+                hidingAnimation = new Timeline(
+                        new KeyFrame(Duration.ZERO, new KeyValue(opacityProperty(), 1.0)),
+                        new KeyFrame(Duration.millis(2000), new KeyValue(opacityProperty(), 0.0))
+                );
+                hidingAnimation.setOnFinished(e -> {
+                    if (isShowing())
+                    {
+                        super.hide(Duration.ZERO);
+                    }
+                });
+                hidingAnimation.playFromStart();
+            }
+        }
+
+
+        private void showPopup()
+        {
+            // Shouldn't be non-null already, but just in case:
+            if (!isShowing())
+            {
+                Log.debug("Showing ErrorMessagePopup");
+                show(scrollPane);
+                //org.scenicview.ScenicView.show(getScene());
+            }
+        }
+
+        private void cancelHideAnimation()
+        {
+            if (hidingAnimation != null)
+            {
+                hidingAnimation.stop();
+                hidingAnimation = null;
+            }
+            setOpacity(1.0);
+        }
+
+        // Updates its showing status based on all the relevant variables
+        private void updateShowHide(boolean hideImmediately)
+        {
+            //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
+            @Nullable ErrorInfo errorInfo = null;
+            if (keyboardErrorInfo != null)
+                errorInfo = keyboardErrorInfo;
+            else if (mouseErrorInfo != null)
+                errorInfo = mouseErrorInfo;
+
+            if (errorInfo != null)
+            {
+                // Make sure to cancel any hide animation:
+                cancelHideAnimation();
+                show(errorInfo);
+                showPopup();
+            }
+            else
+            {
+                hidePopup(hideImmediately);
+            }
+        }
+
+        private void show(ErrorInfo errorInfo)
+        {
+            errorLabel.getChildren().setAll(errorInfo.errorMessage.toGUI().toArray(new Node[0]));
+            errorLabel.setVisible(!errorInfo.errorMessage.toPlain().isEmpty());
+            fixList.setFixes(errorInfo.fixes);
+        }
+
+        /*
+        @Override
+        public void updateError(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos, Node... possibleHoverNodes)
+        {
+            if (this.keyboardErrorInfo != null && this.keyboardErrorInfo.getSecond() == keyboardFocus)
+            {
+                // Update keyboard error
+                this.keyboardErrorInfo = errorInfo == null ? null : this.keyboardErrorInfo.replaceFirst(errorInfo);
+            }
+
+            // Can happen after a save; error was wiped but
+            // keyboard focus remains:
+            if (this.keyboardErrorInfo == null && errorInfo != null &&  keyboardFocus.isFocused())
+            {
+                this.keyboardErrorInfo = new Pair<>(errorInfo, keyboardFocus);
+            }
+
+            // Not else; both may happen:
+            List<Node> hoverNodes = Arrays.asList(possibleHoverNodes);
+            if (this.mouseErrorInfo != null && Utility.containsRef(hoverNodes, this.mouseErrorInfo.getSecond()))
+            {
+                // Update mouse error
+                this.mouseErrorInfo = errorInfo == null ? null : this.mouseErrorInfo.replaceFirst(errorInfo);
+            }
+
+            updateShowHide(true);
+        }
+        */
+
+        //@Override
+        @OnThread(Tag.FXPlatform)
+        public void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, ImmutableList<ErrorInfo> adjacentErrors)
+        {
+            if (errorInfo == null && !adjacentErrors.isEmpty())
+            {
+                errorInfo = adjacentErrors.get(0);
+            }
+
+            keyboardErrorInfo = errorInfo;
+
+            updateShowHide(true);
+        }
+
+        //@Override
+        public void keyboardFocusExited(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos)
+        {
+            // We may get the new focus then a relinquish of the old one,
+            // so need to make sure the relinquish doesn't overwrite the new focus:
+            if (keyboardErrorInfo != null && !keyboardErrorInfo.location.contains(newCaretPos))
+            {
+                keyboardErrorInfo = null;
+
+                updateShowHide(true);
+            }
+        }
+
+        //@Override
+        public void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn)
+        {
+            mouseErrorInfo = errorInfo;
+
+            updateShowHide(true);
+        }
+
+        //@Override
+        public void mouseHoverEnded(Node hoverEndedOn)
+        {
+            mouseErrorInfo = null;
+
+            updateShowHide(false);
+        }
+    }
+
 }

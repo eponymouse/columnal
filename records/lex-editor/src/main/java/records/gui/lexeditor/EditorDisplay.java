@@ -4,16 +4,19 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.lang3.SystemUtils;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.gui.FXUtility;
 
 
 public class EditorDisplay extends TextFlow
 {
-    private final EditorContent content;
+    private final EditorContent<?> content;
     
-    public EditorDisplay(EditorContent theContent)
+    public EditorDisplay(EditorContent<?> theContent)
     {
         this.content = theContent;
+        getStyleClass().add("editor-display");
         
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             FXUtility.mouse(this).requestFocus();
@@ -45,5 +48,13 @@ public class EditorDisplay extends TextFlow
                 // TODO move anchor to caret
             }
         });
+    }
+
+    // How many right presses (positive) or left (negative) to
+    // reach nearest end of given content?
+    @OnThread(Tag.FXPlatform)
+    public int _test_getCaretMoveDistance(String targetContent)
+    {
+        return content._test_getCaretMoveDistance(targetContent);
     }
 }

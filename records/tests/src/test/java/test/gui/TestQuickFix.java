@@ -35,6 +35,8 @@ import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.OperandOps;
 import records.gui.grid.RectangleBounds;
+import records.gui.lexeditor.EditorContent;
+import records.gui.lexeditor.EditorDisplay;
 import records.transformations.Calculate;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionList;
@@ -313,8 +315,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             // Move field so that errors show up (cancel masking on new fields):
             push(KeyCode.HOME);
             
-            TextField targetField = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>tryQuery().orElse(null);
-            assertNotNull("Fields: " + lookup(".entry-field").queryAll().stream().map(t -> TestUtil.fx(() -> ((TextField)t).getText())).collect(Collectors.joining("\n")), targetField);
+            EditorDisplay targetField = lookup(".editor-display").<EditorDisplay>tryQuery().orElse(null);
+            assertNotNull("Editor Display", targetField);
             if (targetField == null) return;
             @NonNull Node targetFinal = targetField;
             if (!TestUtil.fx(() -> targetFinal.isFocused()))
@@ -325,15 +327,22 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(targetField);
-                // Note that the field may not get focus if
-                // if is a keyword, but the blank next to it
-                // should get focused.
-                if (Character.isLetterOrDigit(fixFieldContent.codePointAt(0)))
-                {
-                    boolean focused = TestUtil.fx(() -> targetField.isFocused());
-                    assertTrue("Focus owner is: " + TestUtil.fx(() -> Optional.ofNullable(fxGetRealFocusedWindow().getScene()).map(Scene::getFocusOwner)).orElse(null), focused);
-                }
             }
+            // Now need to move to right position:
+            int moveDist = TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
+            while (moveDist > 0)
+            {
+                push(KeyCode.RIGHT);
+                moveDist -=1;
+            }
+            while (moveDist < 0)
+            {
+                push(KeyCode.LEFT);
+                moveDist +=1;
+            }
+            // Check we're actually now in bounds:
+            assertEquals(0, TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
+            
             TestUtil.delay(500);
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);

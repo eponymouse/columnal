@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -34,8 +35,9 @@ import java.util.List;
 public class EditorLocationAndErrorRecorder
 {
     // A semantic error matches an expression which may span multiple children.
-    public static class Span
+    public static final class Span
     {
+        // Start is inclusive, end is exclusive
         public final @SourceLocation int start;
         public final @SourceLocation int end;
         
@@ -52,6 +54,11 @@ public class EditorLocationAndErrorRecorder
         
         @SuppressWarnings("units")
         public static final Span START = new Span(0, 0);
+
+        public boolean contains(@SourceLocation int position)
+        {
+            return start <= position && position < end;
+        }
     }
     
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
@@ -220,5 +227,24 @@ public class EditorLocationAndErrorRecorder
     public Span recorderFor(@Recorded UnitExpression expression)
     {
         return unitDisplayers.get(expression);
+    }
+
+    public ImmutableList<ErrorDetails> getErrors()
+    {
+        ImmutableList.Builder<ErrorDetails> r = ImmutableList.builderWithExpectedSize(errorsToShow.size());
+
+        for (UnresolvedErrorDetails unresolvedErrorDetails : errorsToShow)
+        {
+            try
+            {
+                r.add(unresolvedErrorDetails.resolve());
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+        }
+        
+        return r.build();
     }
 }

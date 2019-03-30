@@ -27,12 +27,9 @@ import java.util.function.Function;
 
 public class ExpressionLexer implements Lexer<Expression>
 {
-    @SuppressWarnings("recorded")
-    private @Recorded Expression saved = new InvalidIdentExpression("");
-
     @SuppressWarnings("units")
     @Override
-    public Pair<String, CaretPosMapper> process(String content)
+    public LexerResult<Expression> process(String content)
     {
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
@@ -124,23 +121,10 @@ public class ExpressionLexer implements Lexer<Expression>
             
             curIndex += 1;
         }
-        this.saved = saver.finish(new Span(curIndex, curIndex));
-        // TODO also display the errors
-        return new Pair<>(content, i -> i);
+        Expression saved = saver.finish(new Span(curIndex, curIndex));
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors());
     }
 
-    @Override
-    public int[] getCaretPositions()
-    {
-        return new int[] {0}; // TODO
-    }
-
-    @Override
-    public @Recorded Expression getSaved()
-    {
-        return saved;
-    }
-    
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()
     {
         return ImmutableList.of(
@@ -151,8 +135,8 @@ public class ExpressionLexer implements Lexer<Expression>
             new Pair<>("time{", c -> new TemporalLiteral(DateTimeType.TIMEOFDAY, c)),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
-                unitLexer.process(c);
-                return new UnitLiteralExpression(unitLexer.getSaved());
+                // TODO also save positions, content, etc
+                return new UnitLiteralExpression(unitLexer.process(c).result);
             })
         );
     }

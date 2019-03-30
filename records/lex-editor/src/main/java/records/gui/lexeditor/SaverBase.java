@@ -13,6 +13,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ClipboardSaver;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
@@ -824,4 +825,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     }
 
     protected abstract Map<DataFormat, Object> toClipboard(@UnknownIfRecorded EXPRESSION expression);
+    
+    public ImmutableList<ErrorDetails> getErrors()
+    {
+        return locationRecorder.getErrors();
+    }
 }

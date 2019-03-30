@@ -14,18 +14,9 @@ import utility.Pair;
 
 public class UnitLexer implements Lexer<UnitExpression>
 {
-    @SuppressWarnings("recorded")
-    private @Recorded UnitExpression saved = new InvalidSingleUnitExpression("");
-    
-    @Override
-    public @Recorded UnitExpression getSaved()
-    {
-        return saved;
-    }
-
     @SuppressWarnings("units")
     @Override
-    public Pair<String, CaretPosMapper> process(String content)
+    public LexerResult<UnitExpression> process(String content)
     {
         UnitSaver saver = new UnitSaver();
         int curIndex = 0;
@@ -60,13 +51,7 @@ public class UnitLexer implements Lexer<UnitExpression>
             
             curIndex += 1;
         }
-        saved = saver.finish(new Span(curIndex, curIndex));
-        return new Pair<>(content, i -> i);
-    }
-
-    @Override
-    public int[] getCaretPositions()
-    {
-        return new int[0];
+        UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors());
     }
 }
