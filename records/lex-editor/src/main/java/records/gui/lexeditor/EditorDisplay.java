@@ -1,26 +1,37 @@
 package records.gui.lexeditor;
 
 import annotation.units.SourceLocation;
+import com.google.common.collect.ImmutableList;
+import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.AutoComplete;
+import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.HelpfulTextFlow;
 
 import java.util.OptionalInt;
 
 @OnThread(Tag.FXPlatform)
-public final class EditorDisplay extends TextFlow
+public final class EditorDisplay extends HelpfulTextFlow
 {
-    private final EditorContent<?> content;
+    private final EditorContent<?, ?> content;
+    private final LexAutoComplete autoComplete;
     
-    public EditorDisplay(EditorContent<?> theContent, FXPlatformConsumer<Integer> triggerFix)
+    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix)
     {
+        this.autoComplete = Utility.later(new LexAutoComplete(this));
         this.content = theContent;
         getStyleClass().add("editor-display");
         
@@ -48,6 +59,10 @@ public final class EditorDisplay extends TextFlow
                 case RIGHT:
                     if (caretPosIndex + 1 < caretPositions.length)
                         content.positionCaret(caretPositions[caretPosIndex + 1]);
+                    break;
+                case DOWN:
+                    if (autoComplete.isShowing())
+                        autoComplete.down();
                     break;
             }
             keyEvent.consume();
@@ -87,6 +102,14 @@ public final class EditorDisplay extends TextFlow
     {
         getChildren().setAll(new Text(content.getText()));
     }
+    
+    void showCompletions(@Nullable ImmutableList<LexCompletion> completions)
+    {
+        if (completions != null)
+            autoComplete.show(completions);
+        else
+            autoComplete.hide();
+    }
 
     // How many right presses (positive) or left (negative) to
     // reach nearest end of given content?
@@ -94,5 +117,10 @@ public final class EditorDisplay extends TextFlow
     public int _test_getCaretMoveDistance(String targetContent)
     {
         return content._test_getCaretMoveDistance(targetContent);
+    }
+
+    public Point2D getCaretBottomOnScreen()
+    {
+        return localToScreen(getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
 }

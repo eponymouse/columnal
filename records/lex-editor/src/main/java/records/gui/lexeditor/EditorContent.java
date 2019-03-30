@@ -13,16 +13,16 @@ import utility.Utility;
 
 import java.util.ArrayList;
 
-public class EditorContent<EXPRESSION extends StyledShowable>
+public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
-    private LexerResult<EXPRESSION> curContent;
+    private LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> curContent;
     private @SourceLocation int curCaretPosition;
-    private final Lexer<EXPRESSION> lexer;
+    private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
     private final ArrayList<FXPlatformConsumer<@SourceLocation Integer>> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
     
     @SuppressWarnings("units")
-    public EditorContent(String originalContent, Lexer<EXPRESSION> lexer)
+    public EditorContent(String originalContent, Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer)
     {
         this.lexer = lexer;
         this.curContent = this.lexer.process(originalContent);
@@ -78,7 +78,7 @@ public class EditorContent<EXPRESSION extends StyledShowable>
         this.contentListeners.add(listener);
     }
     
-    public LexerResult<EXPRESSION> getLexerResult()
+    public LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> getLexerResult()
     {
         return curContent;
     }

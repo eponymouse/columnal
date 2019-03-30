@@ -53,9 +53,9 @@ import java.util.function.Function;
  * @param <EXPRESSION>
  * @param <LEXER>
  */
-public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION>>
+public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT>, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
-    protected final EditorContent<EXPRESSION> content;
+    protected final EditorContent<EXPRESSION, CODE_COMPLETION_CONTEXT> content;
     private final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
     private final ErrorMessagePopup errorMessagePopup;
@@ -72,6 +72,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             onChange.consume(Utility.later(this).save());
         });
         content.addCaretPositionListener(errorMessagePopup::caretMoved);
+        content.addCaretPositionListener((@SourceLocation Integer n) -> {
+            display.showCompletions(content.getLexerResult().getCompletionsFor(n));
+        });
     }
 
     public String _test_getRawText()

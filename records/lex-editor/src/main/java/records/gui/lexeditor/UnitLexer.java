@@ -2,6 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
@@ -13,11 +14,11 @@ import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.IdentifierUtility;
 import utility.Pair;
 
-public class UnitLexer implements Lexer<UnitExpression>
+public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
 {
     @SuppressWarnings("units")
     @Override
-    public LexerResult<UnitExpression> process(String content)
+    public LexerResult<UnitExpression, CodeCompletionContext> process(String content)
     {
         UnitSaver saver = new UnitSaver();
         int curIndex = 0;
@@ -62,6 +63,6 @@ public class UnitLexer implements Lexer<UnitExpression>
             curIndex += 1;
         }
         UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors());
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of());
     }
 }

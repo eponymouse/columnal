@@ -25,7 +25,7 @@ import styled.StyledShowable;
 import utility.FXPlatformConsumer;
 import utility.gui.FXUtility;
 
-public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer>
+public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer, ExpressionCompletionContext>
 {
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     

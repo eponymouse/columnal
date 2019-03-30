@@ -20,6 +20,7 @@ import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -30,13 +31,14 @@ import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.TransparentBuilder;
 import utility.gui.TranslationUtility;
 
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class ExpressionLexer implements Lexer<Expression>
+public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionContext>
 {
     private final ObservableObjectValue<ColumnLookup> columnLookup;
     private final TypeManager typeManager;
@@ -51,21 +53,33 @@ public class ExpressionLexer implements Lexer<Expression>
 
     @SuppressWarnings("units")
     @Override
-    public LexerResult<Expression> process(String content)
+    public LexerResult<Expression, ExpressionCompletionContext> process(String content)
     {
+        ImmutableList.Builder<AutoCompleteDetails<ExpressionCompletionContext>> completions = ImmutableList.builder();
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
         BitSet missingSpots = new BitSet();
         StringBuilder s = new StringBuilder();
+        boolean prevWasIdent = false;
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
             if (content.startsWith(" ", curIndex))
             {
-                missingSpots.set(curIndex);
+                // Keep single space after ident as it may continue ident:
+                if (prevWasIdent)
+                {
+                    s.append(" ");
+                }
+                else
+                {
+                    missingSpots.set(curIndex);
+                }
+                prevWasIdent = false;
                 curIndex += 1;
                 continue nextToken;
             }
+            prevWasIdent = false;
             
             for (Keyword keyword : Keyword.values())
             {
@@ -99,6 +113,15 @@ public class ExpressionLexer implements Lexer<Expression>
                     curIndex = endQuote + 1;
                     continue nextToken;
                 }
+                else
+                {
+                    // Unterminated string:
+                    saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Missing closing quote around text"), ImmutableList.of());
+                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), new Span(curIndex, content.length()), c -> {});
+                    s.append(content.substring(curIndex, content.length()));
+                    curIndex = content.length();
+                    continue nextToken;
+                }
             }
             
             if (content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
@@ -130,7 +153,7 @@ public class ExpressionLexer implements Lexer<Expression>
 
             for (Pair<String, Function<String, Expression>> nestedLiteral : getNestedLiterals())
             {
-                @Nullable Pair<String, Integer> nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex);
+                @Nullable Pair<String, Integer> nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, saver.locationRecorder);
                 if (nestedOutcome != null)
                 {
                     saver.saveOperand(nestedLiteral.getSecond().apply(nestedOutcome.getFirst()), new Span(curIndex, nestedOutcome.getSecond()), c -> {});
@@ -143,8 +166,20 @@ public class ExpressionLexer implements Lexer<Expression>
             @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
+                prevWasIdent = true;
                 @ExpressionIdentifier String text = parsed.getFirst();
                 Span location = new Span(curIndex, parsed.getSecond());
+                
+                ImmutableList.Builder<LexCompletion> identCompletions = ImmutableList.builder();
+                
+                // Add completions even if one is already spotted:
+                for (StandardFunctionDefinition function : allFunctions)
+                {
+                    identCompletions.add(new LexCompletion(function.getName() + "()"));
+                }
+                
+                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
+                
                 /*
                 if (text.startsWith("_"))
                 {
@@ -249,9 +284,10 @@ public class ExpressionLexer implements Lexer<Expression>
                 Log.log(e);
             saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
         }
+        
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
-        }, saver.getErrors());
+        }, saver.getErrors(), completions.build());
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()
@@ -262,6 +298,11 @@ public class ExpressionLexer implements Lexer<Expression>
             new Pair<>("datetimezoned{", c -> new TemporalLiteral(DateTimeType.DATETIMEZONED, c)),
             new Pair<>("dateym{", c -> new TemporalLiteral(DateTimeType.YEARMONTH, c)),
             new Pair<>("time{", c -> new TemporalLiteral(DateTimeType.TIMEOFDAY, c)),
+            new Pair<>("type{", c -> {
+                TypeLexer typeLexer = new TypeLexer();
+                // TODO also save positions, content, etc
+                return new TypeLiteralExpression(typeLexer.process(c).result);
+            }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
                 // TODO also save positions, content, etc
@@ -270,12 +311,13 @@ public class ExpressionLexer implements Lexer<Expression>
         );
     }
     
-    private @Nullable Pair<String, Integer> tryNestedLiteral(String prefixInclCurly, String content, int curIndex)
+    @SuppressWarnings("units")
+    private @Nullable Pair<String, Integer> tryNestedLiteral(String prefixInclCurly, String content, @SourceLocation int curIndex, EditorLocationAndErrorRecorder locationRecorder)
     {
         if (content.startsWith(prefixInclCurly, curIndex))
         {
             curIndex += prefixInclCurly.length();
-            int startIndex = curIndex;
+            @SourceLocation int startIndex = curIndex;
             int openCount = 1;
             while (curIndex < content.length() && openCount > 0)
             {
@@ -287,6 +329,11 @@ public class ExpressionLexer implements Lexer<Expression>
             }
             if (openCount == 0)
                 return new Pair<>(content.substring(startIndex, curIndex - 1), curIndex);
+            else
+            {
+                locationRecorder.addErrorAndFixes(new Span(startIndex, content.length()), StyledString.s("Started " + prefixInclCurly + " but no matching closing }"), ImmutableList.of());
+                return new Pair<>(content.substring(startIndex), content.length());
+            }        
         }
         return null;
     }    

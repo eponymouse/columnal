@@ -13,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -50,6 +51,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.HelpfulTextFlow;
 import utility.gui.ResizableRectangle;
 
 import java.lang.reflect.InvocationTargetException;
@@ -147,7 +149,7 @@ public class DocumentTextField extends Region implements DocumentListener
         TextLayout textLayout;
         try
         {
-            textLayout = getTextLayout();
+            textLayout = displayContent.textFlow.getInternalTextLayout();
         }
         catch (Exception e)
         {
@@ -203,7 +205,7 @@ public class DocumentTextField extends Region implements DocumentListener
             }
             if (keyEvent.getCode() == KeyCode.UP)
             {
-                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.TOP).getFirst();
+                Point2D p = displayContent.textFlow.getClickPosFor(caretPosition.getPosition(), VPos.TOP, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
                 if (hitInfo != null)
                 {
@@ -222,7 +224,7 @@ public class DocumentTextField extends Region implements DocumentListener
             }
             if (keyEvent.getCode() == KeyCode.DOWN)
             {
-                Point2D p = getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM).getFirst();
+                Point2D p = displayContent.textFlow.getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
                 if (hitInfo != null)
                     caretPosition.moveTo(hitInfo.getInsertionIndex());
@@ -345,53 +347,8 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public Optional<Point2D> _test_getClickPosFor(int targetPos)
     {
-        Pair<Point2D, Boolean> clickPos = getClickPosFor(targetPos, VPos.CENTER);
+        Pair<Point2D, Boolean> clickPos = displayContent.textFlow.getClickPosFor(targetPos, VPos.CENTER, new Dimension2D(-horizTranslation, -vertTranslation));
         return clickPos.getSecond() ? Optional.of(clickPos.getFirst()) : Optional.empty();
-    }
-
-    /**
-     * Gets the click position of the target caret position, in DocumentTextField coordinates.
-     * 
-     * @param targetPos The target caret pos (like a character index)
-     * @param vPos The vertical position within the caret: top of it, middle of it, bottom of it?
-     * @return The click position, plus a boolean indicating whether or not it is in bounds.
-     */
-    private Pair<Point2D, Boolean> getClickPosFor(int targetPos, VPos vPos)
-    {
-        try
-        {
-            TextLayout textLayout = getTextLayout();
-            Bounds bounds = new Path(textLayout.getCaretShape(targetPos, true, 1.0f - (float)horizTranslation, (float)-vertTranslation)).getBoundsInLocal();
-            Point2D p;
-            switch (vPos)
-            {
-                case TOP:
-                    p = new Point2D((bounds.getMinX() + bounds.getMaxX()) / 2.0, bounds.getMinY());
-                    break;
-                case BOTTOM:
-                    p = new Point2D((bounds.getMinX() + bounds.getMaxX()) / 2.0, bounds.getMaxY());
-                    break;
-                case CENTER:
-                default:
-                    p = FXUtility.getCentre(bounds);
-                    break;
-            }
-            return new Pair<>(p, getBoundsInLocal().contains(p));
-        }
-        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NullPointerException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private TextLayout getTextLayout() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
-    {
-        // TODO stop using reflection in Java 9, just call the methods directly
-        Method method = displayContent.textFlow.getClass().getDeclaredMethod("getTextLayout");
-        method.setAccessible(true);
-        @SuppressWarnings("nullness")
-        @NonNull TextLayout textLayout = (TextLayout) method.invoke(displayContent.textFlow);
-        return textLayout;
     }
 
     public boolean isEditable()
@@ -408,7 +365,7 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         try
         {
-            TextLayout textLayout = getTextLayout();
+            TextLayout textLayout = displayContent.textFlow.getInternalTextLayout();
             int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
             caretPosition.moveTo(isFocused() ? index : document.mapCaretPos(index));
             moveAnchorToCaret();
@@ -428,7 +385,7 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         try
         {
-            Path path = new Path(getTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
+            Path path = new Path(displayContent.textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
             Bounds actualBounds = localToScreen(path.getBoundsInLocal());
             Rectangle2D clipped = FXUtility.intersectRect(
                     FXUtility.boundsToRect(actualBounds),
@@ -522,7 +479,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     private class DisplayContent extends Region
     {
-        private final TextFlow textFlow;
+        private final HelpfulTextFlow textFlow;
 
         // We only need these when we are focused, and only one field
         // can ever be focused at once.  So these are null while
@@ -626,9 +583,9 @@ public class DocumentTextField extends Region implements DocumentListener
                 updateCaretShapeQueued = false;
                 try
                 {
-                    selectionShape.getElements().setAll(getTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
+                    selectionShape.getElements().setAll(textFlow.getInternalTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
                     inverter.getElements().setAll(selectionShape.getElements());
-                    caretShape.getElements().setAll(getTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
+                    caretShape.getElements().setAll(textFlow.getInternalTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
                     if (isFocused())
                         caretBlink.playFromStart();
                 }
@@ -651,7 +608,7 @@ public class DocumentTextField extends Region implements DocumentListener
             clip.heightProperty().bind(heightProperty());
             setClip(clip);
             setMouseTransparent(true);
-            textFlow = new TextFlow();
+            textFlow = new HelpfulTextFlow();
             textFlow.getStyleClass().add("document-text-flow");
             textFlow.setMouseTransparent(true);
             textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));

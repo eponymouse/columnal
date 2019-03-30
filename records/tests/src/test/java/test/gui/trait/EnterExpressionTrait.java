@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
+import records.gui.lexeditor.LexAutoComplete;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -138,7 +139,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 write(name, DELAY);
                 if (r.nextBoolean())
                 {
-                    scrollAutoCompleteToOption(name + "(...)");
+                    scrollAutoCompleteToOption(name + "()");
                     push(KeyCode.ENTER);
                     // Get rid of brackets; if in a call expression, we will add them again:
                     push(KeyCode.BACK_SPACE);
@@ -148,7 +149,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             else
             {
                 write(name.substring(0, 1 + r.nextInt(name.length() - 1)));
-                scrollAutoCompleteToOption(name + "(...)");
+                scrollAutoCompleteToOption(name + "()");
                 push(KeyCode.ENTER);
                 // Get rid of brackets; if in a call expression, we will add them again:
                 push(KeyCode.BACK_SPACE);
@@ -297,10 +298,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     @OnThread(Tag.Any)
     default void scrollAutoCompleteToOption(String content)
     {
-        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof AutoComplete.AutoCompleteWindow).collect(Collectors.toList());
+        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoComplete.LexAutoCompleteWindow).collect(Collectors.toList());
         assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
-        
-        AutoCompleteWindow autoComplete = ((AutoCompleteWindow)window(w -> w instanceof AutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
+
+        LexAutoComplete.LexAutoCompleteWindow autoComplete = ((LexAutoComplete.LexAutoCompleteWindow)window(w -> w instanceof LexAutoComplete.LexAutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
         
         // Move to top:
         String prev = "\u0000";
