@@ -8,7 +8,10 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableId;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
@@ -17,19 +20,16 @@ import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
-import records.transformations.expression.Expression;
+import records.jellytype.JellyType;
+import records.transformations.expression.*;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.InvalidIdentExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TemporalLiteral;
-import records.transformations.expression.TypeState;
-import records.transformations.expression.UnitLiteralExpression;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.BitSet;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -37,11 +37,13 @@ public class ExpressionLexer implements Lexer<Expression>
 {
     private final ObservableObjectValue<ColumnLookup> columnLookup;
     private final TypeManager typeManager;
+    private ImmutableList<StandardFunctionDefinition> allFunctions;
 
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager)
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager,  ImmutableList<StandardFunctionDefinition> functions)
     {
         this.columnLookup = columnLookup;
         this.typeManager = typeManager;
+        this.allFunctions = functions;
     }
 
     @SuppressWarnings("units")
@@ -50,12 +52,14 @@ public class ExpressionLexer implements Lexer<Expression>
     {
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
+        BitSet missingSpots = new BitSet();
         StringBuilder s = new StringBuilder();
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
             if (content.startsWith(" ", curIndex))
             {
+                missingSpots.set(curIndex);
                 curIndex += 1;
                 continue nextToken;
             }
@@ -136,7 +140,90 @@ public class ExpressionLexer implements Lexer<Expression>
             @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
-                saver.saveOperand(new IdentExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
+                @ExpressionIdentifier String text = parsed.getFirst();
+                Span location = new Span(curIndex, parsed.getSecond());
+                /*
+                if (text.startsWith("_"))
+                {
+                    if (text.equals("_"))
+                        saver.saveOperand(new MatchAnythingExpression(), this, this, this::afterSave);
+                    else
+                    {
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String minusLeadingUnderscore = text.substring(1);
+                        saver.saveOperand(new VarDeclExpression(minusLeadingUnderscore), this, this, this::afterSave);
+                    }
+                }
+                else*/
+                if (text.equals("true") || text.equals("false"))
+                {
+                    saver.saveOperand(new BooleanLiteral(text.equals("true")), location, c -> {});
+                }
+                else
+                {
+                    boolean wasColumn = false;
+                    for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+                    {
+                        TableId tableId = availableColumn.getTableId();
+                        String columnIdRaw = availableColumn.getColumnId().getRaw();
+                        if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
+                                (
+                                        (tableId == null && columnIdRaw.equals(text))
+                                                || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
+                                ))
+                        {
+                            saver.saveOperand(new ColumnReference(availableColumn), location, c -> {
+                            });
+                            wasColumn = true;
+                            break;
+                        }
+                        else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
+                                text.startsWith("@entire ") &&
+                                ((tableId == null && ("@entire " + columnIdRaw).equals(text))
+                                        || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
+                        {
+                            saver.saveOperand(new ColumnReference(availableColumn), location, c -> {
+                            });
+                            wasColumn = true;
+                            break;
+                        }
+                    }
+
+                    if (!wasColumn)
+                    {
+                        boolean wasFunction = false;
+                        for (StandardFunctionDefinition function : allFunctions)
+                        {
+                            if (function.getName().equals(text))
+                            {
+                                saver.saveOperand(new StandardFunction(function), location, c -> {});
+                                wasFunction = true;
+                                break;
+                            }
+                        }
+
+                        if (!wasFunction)
+                        {
+                            boolean wasTagged = false;
+                            for (TaggedTypeDefinition taggedType : typeManager.getKnownTaggedTypes().values())
+                            {
+                                for (TagType<JellyType> tag : taggedType.getTags())
+                                {
+                                    if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + ":" + tag.getName()))
+                                    {
+                                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), location, c -> {});
+                                        wasTagged = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!wasTagged)
+                                saver.saveOperand(new IdentExpression(parsed.getFirst()), location, c -> {
+                                });
+                        }
+                    }
+                }
                 s.append(content.substring(curIndex, parsed.getSecond()));
                 curIndex = parsed.getSecond();
                 continue nextToken;
@@ -157,7 +244,9 @@ public class ExpressionLexer implements Lexer<Expression>
                 Log.log(e);
             saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
         }
-        return new LexerResult<>(saved, s.toString(), i -> i, saver.getErrors());
+        return new LexerResult<>(saved, s.toString(), i -> {
+            return i - missingSpots.get(0, i).cardinality();
+        }, saver.getErrors());
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()

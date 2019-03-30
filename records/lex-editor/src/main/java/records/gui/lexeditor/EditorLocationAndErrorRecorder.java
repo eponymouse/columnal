@@ -3,10 +3,13 @@ package records.gui.lexeditor;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.error.InternalException;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
@@ -128,7 +131,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable Span resolvedLocation = expressionDisplayers.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.MISC, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {

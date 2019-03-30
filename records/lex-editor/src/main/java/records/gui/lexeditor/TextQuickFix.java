@@ -18,6 +18,8 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.util.function.Function;
+
 /**
  * A quick fix for an error.  Has a title to display, and a thunk to run
  * to get a replacement chunk for the error source.
@@ -65,11 +67,11 @@ public final class TextQuickFix
         this.makeReplacement = makeReplacement;
     }
     
-    public TextQuickFix(Span location, QuickFix<? extends StyledShowable> treeFix)
+    public <EXPRESSION extends StyledShowable> TextQuickFix(Span location, Function<EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
     {
         this(treeFix.getTitle(), treeFix.getCssClasses(), location, () -> {
-            StyledShowable s = treeFix.getReplacement().getSecond();
-            return new Pair<>(s.toString(), s.toStyledString());
+            EXPRESSION s = treeFix.getReplacement().getSecond();
+            return new Pair<>(toText.apply(s), s.toStyledString());
         });
     }
 
