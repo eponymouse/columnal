@@ -128,7 +128,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnitLiteralFix6()
     {
-        testFix("@matchACC1@case3{1}@then52@case12{1}@orcase14{1}@then63@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12{1} @orcase 14{1} @then 63 @endmatch");
+        testFix("@matchACC1@case3{1}@then52@case12{1}@orcase14{1}@then63@endmatch", "3{1}", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12{1} @orcase 14{1} @then 63 @endmatch");
     }
 
     @Test

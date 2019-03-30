@@ -518,7 +518,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             if (num != null && num.getUnitExpression() == null)
             {
                 Span recorder = locationRecorder.recorderFor(num);
-                curItems.set(curItems.size() - 1, Either.left(locationRecorder.record(recorder, new NumericLiteral(num.getNumber(), ((UnitLiteralExpression)singleItem).getUnit()))));
+                curItems.set(curItems.size() - 1, Either.left(locationRecorder.record(Span.fromTo(recorder, location), new NumericLiteral(num.getNumber(), ((UnitLiteralExpression)singleItem).getUnit()))));
                 return;
             }
         }

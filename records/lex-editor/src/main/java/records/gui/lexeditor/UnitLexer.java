@@ -9,6 +9,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.IdentifierUtility;
 import utility.Pair;
 
@@ -39,6 +40,15 @@ public class UnitLexer implements Lexer<UnitExpression>
                     curIndex += op.getContent().length();
                     continue nextToken;
                 }
+            }
+            
+            if (content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
+            {
+                int startIndex = curIndex;
+                while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
+                    curIndex += 1;
+                saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(content.substring(startIndex, curIndex))), new Span(startIndex, curIndex), c -> {});
+                continue nextToken;
             }
 
             @Nullable Pair<@UnitIdentifier String, Integer> parsed = IdentifierUtility.consumeUnitIdentifier(content, curIndex);

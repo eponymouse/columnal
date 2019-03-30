@@ -60,7 +60,13 @@ public class EditorLocationAndErrorRecorder
 
         public boolean contains(@SourceLocation int position)
         {
-            return start <= position && position < end;
+            return start <= position && position <= end;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "[" + start + "->" + end + "]";
         }
     }
     
