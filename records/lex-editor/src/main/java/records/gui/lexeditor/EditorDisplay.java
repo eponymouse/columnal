@@ -34,6 +34,7 @@ public final class EditorDisplay extends HelpfulTextFlow
         this.autoComplete = Utility.later(new LexAutoComplete(this));
         this.content = theContent;
         getStyleClass().add("editor-display");
+        setFocusTraversable(true);
         
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             FXUtility.mouse(this).requestFocus();

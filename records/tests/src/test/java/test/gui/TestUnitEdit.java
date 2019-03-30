@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
@@ -24,6 +25,7 @@ import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenUnitDefinition;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -35,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
+public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, PopupTrait
 {
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
@@ -49,6 +51,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
         clickOn(".id-units-userDeclared-add");
         TestUtil.delay(200);
         enterUnitDetails(unitDetails);
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
@@ -130,7 +133,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
         TestUtil.delay(500);
         
         // No edit
-        
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
@@ -165,6 +168,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
 
         enterUnitDetails(after);
 
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");

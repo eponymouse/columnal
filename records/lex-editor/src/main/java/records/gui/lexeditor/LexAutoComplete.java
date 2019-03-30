@@ -7,6 +7,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.Skinnable;
+import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -70,6 +71,13 @@ public class LexAutoComplete
             setAutoFix(false);
             setHideOnEscape(false);
             setSkin(new LexAutoCompleteSkin());
+            listView.setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    hide();
+                    e.consume();
+                }
+            });
         }
 
         public void setCompletions(ImmutableList<LexCompletion> completions)
