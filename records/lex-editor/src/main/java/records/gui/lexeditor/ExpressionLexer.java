@@ -25,9 +25,12 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import styled.StyledCSS;
+import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.BitSet;
 import java.util.Optional;
@@ -229,7 +232,9 @@ public class ExpressionLexer implements Lexer<Expression>
                 continue nextToken;
             }
             
-            // TODO give unrecognised char error
+            Span invalidCharLocation = new Span(curIndex, curIndex + 1);
+            saver.saveOperand(new InvalidIdentExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             s.append(content.charAt(curIndex));
             curIndex += 1;
         }

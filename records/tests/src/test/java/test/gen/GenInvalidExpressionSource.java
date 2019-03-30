@@ -22,9 +22,9 @@ public class GenInvalidExpressionSource extends Generator<String>
     {
         ImmutableList<Supplier<String>> tokenMakers = ImmutableList.of(
             ts(random, Arrays.stream(Keyword.values()).map(o -> o.getContent()).toArray(String[]::new)),
-            ts(random, Arrays.stream(Op.values()).map(o -> o.getContent()).toArray(String[]::new)),
+            ts(random, Arrays.stream(Op.values()).filter(o -> o != Op.ADD).map(o -> o.getContent()).toArray(String[]::new)),
             ts(random, "a", "z"),
-            ts(random, "0", "9", "1.2")
+            ts(random, "1", "9", "1.2")
         );
         
         int totalTokens = random.nextInt(20);
