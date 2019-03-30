@@ -128,7 +128,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable Span resolvedLocation = expressionDisplayers.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(resolvedLocation, q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), q)));
             }
             else
             {

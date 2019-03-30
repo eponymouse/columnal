@@ -32,10 +32,14 @@ public class EditorContent<EXPRESSION extends StyledShowable>
     public void positionCaret(Focus side)
     {
         if (side == Focus.LEFT && curContent.caretPositions.length > 0)
-            curCaretPosition = curContent.caretPositions[0];
+            positionCaret(curContent.caretPositions[0]);
         else if (side == Focus.RIGHT && curContent.caretPositions.length > 0)
-            curCaretPosition = curContent.caretPositions[curContent.caretPositions.length - 1];
-
+            positionCaret(curContent.caretPositions[curContent.caretPositions.length - 1]);
+    }
+    
+    public void positionCaret(@SourceLocation int pos)
+    {
+        curCaretPosition = pos;
         for (FXPlatformConsumer<@SourceLocation Integer> caretPositionListener : caretPositionListeners)
         {
             caretPositionListener.consume(curCaretPosition);
@@ -114,5 +118,22 @@ public class EditorContent<EXPRESSION extends StyledShowable>
     public ImmutableList<ErrorDetails> getErrors()
     {
         return curContent.errors;
+    }
+
+    public @SourceLocation int[] getValidCaretPositions()
+    {
+        return curContent.caretPositions;
+    }
+
+    // Note: this is not the caret position, but instead an index
+    // into the getValidCaretPositions array.
+    public int getCaretPosAsValidIndex()
+    {
+        for (int i = 0; i < curContent.caretPositions.length; i++)
+        {
+            if (curCaretPosition == curContent.caretPositions[i])
+                return i;
+        }
+        return 0;
     }
 }

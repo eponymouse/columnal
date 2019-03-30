@@ -5,18 +5,26 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.value.ObservableObjectValue;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TypeManager;
+import records.error.ExceptionWithStyle;
+import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TemporalLiteral;
+import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitLiteralExpression;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -27,6 +35,15 @@ import java.util.function.Function;
 
 public class ExpressionLexer implements Lexer<Expression>
 {
+    private final ObservableObjectValue<ColumnLookup> columnLookup;
+    private final TypeManager typeManager;
+
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager)
+    {
+        this.columnLookup = columnLookup;
+        this.typeManager = typeManager;
+    }
+
     @SuppressWarnings("units")
     @Override
     public LexerResult<Expression> process(String content)
@@ -122,6 +139,16 @@ public class ExpressionLexer implements Lexer<Expression>
             curIndex += 1;
         }
         Expression saved = saver.finish(new Span(curIndex, curIndex));
+        try
+        {
+            saved.checkExpression(columnLookup.get(), new TypeState(typeManager.getUnitManager(), typeManager), saver.locationRecorder.getRecorder());
+        }
+        catch (InternalException | UserException e)
+        {
+            if (e instanceof InternalException)
+                Log.log(e);
+            saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
+        }
         return new LexerResult<>(saved, content, i -> i, saver.getErrors());
     }
 

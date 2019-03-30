@@ -1,19 +1,25 @@
 package records.gui.lexeditor;
 
+import annotation.units.SourceLocation;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.lang3.SystemUtils;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.gui.FXUtility;
 
+import java.util.OptionalInt;
 
-public class EditorDisplay extends TextFlow
+@OnThread(Tag.FXPlatform)
+public final class EditorDisplay extends TextFlow
 {
     private final EditorContent<?> content;
     
-    public EditorDisplay(EditorContent<?> theContent)
+    public EditorDisplay(EditorContent<?> theContent, FXPlatformConsumer<Integer> triggerFix)
     {
         this.content = theContent;
         getStyleClass().add("editor-display");
@@ -21,6 +27,30 @@ public class EditorDisplay extends TextFlow
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             FXUtility.mouse(this).requestFocus();
             event.consume();
+        });
+        
+        addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
+            OptionalInt fKey = FXUtility.FKeyNumber(keyEvent.getCode());
+            if (keyEvent.isShiftDown() && fKey.isPresent())
+            {
+                // 1 is F1, but should trigger fix zero:
+                triggerFix.consume(fKey.getAsInt() - 1);
+            }
+            
+            @SourceLocation int[] caretPositions = content.getValidCaretPositions();
+            int caretPosIndex = content.getCaretPosAsValidIndex();
+            switch (keyEvent.getCode())
+            {
+                case LEFT:
+                    if (caretPosIndex > 0)
+                        content.positionCaret(caretPositions[caretPosIndex - 1]);
+                    break;
+                case RIGHT:
+                    if (caretPosIndex + 1 < caretPositions.length)
+                        content.positionCaret(caretPositions[caretPosIndex + 1]);
+                    break;
+            }
+            keyEvent.consume();
         });
         
         addEventHandler(KeyEvent.KEY_TYPED, keyEvent -> {
@@ -48,6 +78,14 @@ public class EditorDisplay extends TextFlow
                 // TODO move anchor to caret
             }
         });
+        
+        content.addChangeListener(() -> render());
+        content.addCaretPositionListener(c -> render());
+    }
+
+    private void render()
+    {
+        getChildren().setAll(new Text(content.getText()));
     }
 
     // How many right presses (positive) or left (negative) to

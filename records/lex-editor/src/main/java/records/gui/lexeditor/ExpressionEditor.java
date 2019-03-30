@@ -24,6 +24,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer(), onChangeHandler);
+        super(startingValue == null ? "" : startingValue.toString(), new ExpressionLexer(columnLookup, typeManager), onChangeHandler);
     }
 }

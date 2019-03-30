@@ -37,8 +37,10 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * An editor is a wrapper around an editable TextFlow.  The distinctive feature is that
@@ -61,24 +63,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     // package-visible
     TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange)
     {
+        errorMessagePopup = new ErrorMessagePopup();
         content = new EditorContent<>(originalContent, lexer);
-        display = new EditorDisplay(content);
+        display = new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n));
         scrollPane = new ScrollPaneFill(display);
         scrollPane.getStyleClass().add("top-level-editor");
-        errorMessagePopup = new ErrorMessagePopup();
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
         });
-        content.addCaretPositionListener(c -> {
-            ImmutableList<ErrorDetails> errors = content.getErrors();
-            for (ErrorDetails error : errors)
-            {
-                if (error.location.contains(c))
-                {
-                    errorMessagePopup.keyboardFocusEntered(new ErrorInfo(error), ImmutableList.of());
-                }
-            }
-        });
+        content.addCaretPositionListener(errorMessagePopup::caretMoved);
     }
 
     public String _test_getRawText()
@@ -132,18 +125,23 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         {
             this.location = errorDetails.location;
             this.errorMessage = errorDetails.error;
-            this.fixes = Utility.mapListI(errorDetails.quickFixes, f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
-                try
-                {
-                    Pair<Span, String> replacement = f.getReplacement();
-                    content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
-                }
-                catch (InternalException e)
-                {
-                    Log.log(e);
-                }
-            }));
+            this.fixes = Utility.mapListI(errorDetails.quickFixes, makeFixInfo());
         }
+    }
+
+    private Function<@NonNull TextQuickFix, @NonNull FixInfo> makeFixInfo()
+    {
+        return f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
+            try
+            {
+                Pair<Span, String> replacement = f.getReplacement();
+                content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+        });
     }
 
     // Interface to access a singleton-per-editor error-displayer.
@@ -181,8 +179,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     @OnThread(Tag.FXPlatform)
     private class ErrorMessagePopup extends PopOver //implements ErrorMessageDisplayer
     {
-        private @Nullable ErrorInfo keyboardErrorInfo;
-        private @Nullable ErrorInfo mouseErrorInfo;
+        private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> keyboardErrorInfo;
+        private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> mouseErrorInfo;
 
         private final TextFlow errorLabel;
         private final FixList fixList;
@@ -293,7 +291,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         private void updateShowHide(boolean hideImmediately)
         {
             //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
-            @Nullable ErrorInfo errorInfo = null;
+            @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo = null;
             if (keyboardErrorInfo != null)
                 errorInfo = keyboardErrorInfo;
             else if (mouseErrorInfo != null)
@@ -312,11 +310,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         }
 
-        private void show(ErrorInfo errorInfo)
+        private void show(Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
         {
-            errorLabel.getChildren().setAll(errorInfo.errorMessage.toGUI().toArray(new Node[0]));
-            errorLabel.setVisible(!errorInfo.errorMessage.toPlain().isEmpty());
-            fixList.setFixes(errorInfo.fixes);
+            errorLabel.getChildren().setAll(errorInfo.getFirst().toGUI().toArray(new Node[0]));
+            errorLabel.setVisible(!errorInfo.getFirst().toPlain().isEmpty());
+            fixList.setFixes(Utility.mapListI(errorInfo.getSecond(), makeFixInfo()));
         }
 
         /*
@@ -347,38 +345,33 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             updateShowHide(true);
         }
         */
-
-        //@Override
-        @OnThread(Tag.FXPlatform)
-        public void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, ImmutableList<ErrorInfo> adjacentErrors)
+        
+        public void caretMoved(@SourceLocation int newCaretPos)
         {
-            if (errorInfo == null && !adjacentErrors.isEmpty())
+            ImmutableList<ErrorDetails> allErrors = content.getErrors();
+            ArrayList<StyledString> errors = new ArrayList<>();
+            ImmutableList.Builder<TextQuickFix> fixes = ImmutableList.builder();
+            for (ErrorDetails error : allErrors)
             {
-                errorInfo = adjacentErrors.get(0);
+                if (error.location.contains(newCaretPos))
+                {
+                    errors.add(error.error);
+                    fixes.addAll(error.quickFixes);
+                }
             }
-
-            keyboardErrorInfo = errorInfo;
-
-            updateShowHide(true);
-        }
-
-        //@Override
-        public void keyboardFocusExited(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos)
-        {
-            // We may get the new focus then a relinquish of the old one,
-            // so need to make sure the relinquish doesn't overwrite the new focus:
-            if (keyboardErrorInfo != null && !keyboardErrorInfo.location.contains(newCaretPos))
-            {
+            
+            if (errors.isEmpty())
                 keyboardErrorInfo = null;
-
-                updateShowHide(true);
-            }
+            else
+                keyboardErrorInfo = new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build());
+            
+            updateShowHide(true);
         }
 
         //@Override
         public void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn)
         {
-            mouseErrorInfo = errorInfo;
+            //mouseErrorInfo = errorInfo;
 
             updateShowHide(true);
         }
@@ -389,6 +382,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             mouseErrorInfo = null;
 
             updateShowHide(false);
+        }
+
+        public void triggerFix(int fixIndex)
+        {
+            if (fixIndex >= 0 && fixIndex < fixList.getFixes().size())
+            {
+                fixList.getFixes().get(fixIndex).executeFix.run();
+                hidePopup(true);
+            }
         }
     }
 

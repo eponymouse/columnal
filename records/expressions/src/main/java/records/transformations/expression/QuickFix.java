@@ -95,6 +95,11 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
         return new Pair<>(replacementTarget, makeReplacement.get());
     }
 
+    public EXPRESSION getReplacementTarget()
+    {
+        return replacementTarget;
+    }
+
     @OnThread(Tag.FXPlatform)
     public ImmutableList<String> getCssClasses()
     {

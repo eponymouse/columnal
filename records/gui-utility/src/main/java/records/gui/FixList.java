@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -24,6 +25,7 @@ import utility.gui.GUI;
 public class FixList extends VBox
 {
     private int selectedIndex; // TODO add support for keyboard selection
+    private ImmutableList<FixInfo> fixes;
 
     @OnThread(Tag.FXPlatform)
     public FixList(ImmutableList<FixInfo> fixes)
@@ -35,8 +37,10 @@ public class FixList extends VBox
         setFixes(fixes);
     }
 
+    @EnsuresNonNull("this.fixes")
     public void setFixes(@UnknownInitialization(VBox.class) FixList this, ImmutableList<FixInfo> fixes)
     {
+        this.fixes = fixes;
         getChildren().clear();
         if (!fixes.isEmpty())
         {
@@ -50,7 +54,12 @@ public class FixList extends VBox
             getChildren().add(fixRow);
         }
     }
-    
+
+    public ImmutableList<FixInfo> getFixes()
+    {
+        return fixes;
+    }
+
     public static class FixInfo
     {
         private final StyledString label;

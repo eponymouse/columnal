@@ -73,7 +73,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @OnThread(Tag.Simulation)
     public void testStringAdditionFix1()
     {
-        testFix("\"A\"+\"B\"", "A", "", "\"A\" ; \"B\"");
+        testFix("\"A\"+\"B\"", "A", "", "\"A\";\"B\"");
     }
     
     @Test
