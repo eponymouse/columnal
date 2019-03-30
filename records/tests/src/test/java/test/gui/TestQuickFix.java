@@ -374,7 +374,10 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             if (calculate == null)
                 return;
             assertEquals(1, calculate.getCalculatedColumns().size());
-            assertEquals(result, calculate.getCalculatedColumns().values().iterator().next().toString());
+            assertEquals(
+                Expression.parse(null, result, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())),
+                    
+                Expression.parse(null, calculate.getCalculatedColumns().values().iterator().next().toString(), typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
         }
         catch (Exception e)
         {

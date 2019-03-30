@@ -50,6 +50,7 @@ public class ExpressionLexer implements Lexer<Expression>
     {
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
+        StringBuilder s = new StringBuilder();
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
@@ -64,6 +65,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 if (content.startsWith(keyword.getContent(), curIndex))
                 {
                     saver.saveKeyword(keyword, new Span(curIndex, curIndex + keyword.getContent().length()), c -> {});
+                    s.append(keyword.getContent());
                     curIndex += keyword.getContent().length();
                     continue nextToken;
                 }
@@ -73,6 +75,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 if (content.startsWith(op.getContent(), curIndex))
                 {
                     saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
+                    s.append(op.getContent());
                     curIndex += op.getContent().length();
                     continue nextToken;
                 }
@@ -85,6 +88,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 if (endQuote != -1)
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), new Span(curIndex, endQuote + 1), c -> {});
+                    s.append(content.substring(curIndex, endQuote + 1));
                     curIndex = endQuote + 1;
                     continue nextToken;
                 }
@@ -112,6 +116,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 if (number.isPresent())
                 {
                     saver.saveOperand(new NumericLiteral(number.get(), null), new Span(numberStart, curIndex), c -> {});
+                    s.append(content.substring(numberStart, curIndex));
                     continue nextToken;
                 }
             }
@@ -122,6 +127,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 if (nestedOutcome != null)
                 {
                     saver.saveOperand(nestedLiteral.getSecond().apply(nestedOutcome.getFirst()), new Span(curIndex, nestedOutcome.getSecond()), c -> {});
+                    s.append(content.substring(curIndex, nestedOutcome.getSecond()));
                     curIndex = nestedOutcome.getSecond();
                     continue nextToken;
                 }
@@ -131,11 +137,13 @@ public class ExpressionLexer implements Lexer<Expression>
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 saver.saveOperand(new IdentExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
+                s.append(content.substring(curIndex, parsed.getSecond()));
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
             
-            
+            // TODO give unrecognised char error
+            s.append(content.charAt(curIndex));
             curIndex += 1;
         }
         Expression saved = saver.finish(new Span(curIndex, curIndex));
@@ -149,7 +157,7 @@ public class ExpressionLexer implements Lexer<Expression>
                 Log.log(e);
             saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
         }
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors());
+        return new LexerResult<>(saved, s.toString(), i -> i, saver.getErrors());
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()
