@@ -66,7 +66,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         errorMessagePopup = new ErrorMessagePopup();
         content = new EditorContent<>(originalContent, lexer);
         display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n), this));
-        scrollPane = new ScrollPaneFill(display);
+        scrollPane = new ScrollPaneFill(display)  {
+            @Override
+            @OnThread(Tag.FX)
+            public void requestFocus()
+            {
+            }
+        };
         scrollPane.getStyleClass().add("top-level-editor");
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
