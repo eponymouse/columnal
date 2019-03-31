@@ -160,6 +160,6 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         if (!(focusOwner instanceof EditorDisplay))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
         EditorDisplay textField = (EditorDisplay) focusOwner;
-        return new Pair<>(textField, TestUtil.fx(() -> textField._test_getCaretPosition()));
+        return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
     }
 }

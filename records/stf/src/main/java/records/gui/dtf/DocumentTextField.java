@@ -27,6 +27,7 @@ import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TextEditorBase;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class DocumentTextField extends DisplayContent implements DocumentListener
+public class DocumentTextField extends TextEditorBase implements DocumentListener
 {
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
@@ -48,6 +49,7 @@ public class DocumentTextField extends DisplayContent implements DocumentListene
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         super(makeTextNodes(new ReadOnlyDocument("").getStyledSpans(false)));
+        this.scrollable = true;
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");

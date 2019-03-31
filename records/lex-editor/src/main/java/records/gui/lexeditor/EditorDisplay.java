@@ -25,11 +25,12 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.HelpfulTextFlow;
+import utility.gui.TextEditorBase;
 
 import java.util.OptionalInt;
 
 @OnThread(Tag.FXPlatform)
-public final class EditorDisplay extends HelpfulTextFlow
+public final class EditorDisplay extends TextEditorBase
 {
     private final EditorContent<?, ?> content;
     private final LexAutoComplete autoComplete;
@@ -37,6 +38,7 @@ public final class EditorDisplay extends HelpfulTextFlow
 
     public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
+        super(ImmutableList.of());
         this.autoComplete = Utility.later(new LexAutoComplete(this));
         this.content = theContent;
         this.editor = Utility.later(editor);
@@ -138,7 +140,7 @@ public final class EditorDisplay extends HelpfulTextFlow
 
     private void render()
     {
-        getChildren().setAll(new Text(content.getText()));
+        textFlow.getChildren().setAll(new Text(content.getText()));
     }
     
     void showCompletions(@Nullable ImmutableList<LexCompletion> completions)
@@ -159,12 +161,20 @@ public final class EditorDisplay extends HelpfulTextFlow
 
     public Point2D getCaretBottomOnScreen()
     {
-        return localToScreen(getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
+        return localToScreen(textFlow.getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
 
-    public int _test_getCaretPosition()
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public int getCaretPosition()
     {
         return content.getCaretPosition();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) int getAnchorPosition()
+    {
+        return getCaretPosition(); // TODO
     }
 
     @SuppressWarnings("units")

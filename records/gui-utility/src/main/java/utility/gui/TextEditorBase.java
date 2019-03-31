@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package utility.gui;
 
 import com.sun.javafx.scene.text.TextLayout;
 import com.sun.javafx.tk.TKPulseListener;
@@ -29,7 +29,10 @@ import utility.gui.ResizableRectangle;
 
 import java.util.List;
 
-public abstract class DisplayContent extends Region
+/**
+ * Base helper class for text editors
+ */
+public abstract class TextEditorBase extends Region
 {
     protected final HelpfulTextFlow textFlow;
     // Always positive, the amount of offset from the left edge back
@@ -39,6 +42,7 @@ public abstract class DisplayContent extends Region
     // to the real start of the content.
     protected double vertTranslation;
     protected boolean expanded;
+    protected boolean scrollable;
 
     // We only need these when we are focused, and only one field
     // can ever be focused at once.  So these are null while
@@ -116,7 +120,7 @@ public abstract class DisplayContent extends Region
             }
         }
 
-        protected void queueUpdateCaretShape()
+        public void queueUpdateCaretShape()
         {
             if (!updateCaretShapeQueued)
             {
@@ -160,8 +164,9 @@ public abstract class DisplayContent extends Region
     }
     protected @Nullable CaretAndSelectionNodes caretAndSelectionNodes;
     
-    public DisplayContent(List<Text> textNodes)
+    public TextEditorBase(List<Text> textNodes)
     {
+        getStyleClass().add("text-editor");
         ResizableRectangle clip = new ResizableRectangle();
         clip.widthProperty().bind(widthProperty());
         clip.heightProperty().bind(heightProperty());
@@ -208,34 +213,37 @@ public abstract class DisplayContent extends Region
 
             //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
             boolean focused = isFocused();
-            if (focused && caretBounds.getMinX() - 5 < 0)
+            if (scrollable)
             {
-                // Caret is off screen to the left:
-                horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
-            }
-            else if (focused && caretBounds.getMaxX() > getWidth() - 5)
-            {
-                // Caret is off screen to the right:
-                horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
-            }
-            else if (!focused)
-            {
-                horizTranslation = 0;
-            }
+                if (focused && caretBounds.getMinX() - 5 < 0)
+                {
+                    // Caret is off screen to the left:
+                    horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
+                }
+                else if (focused && caretBounds.getMaxX() > getWidth() - 5)
+                {
+                    // Caret is off screen to the right:
+                    horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
+                }
+                else if (!focused)
+                {
+                    horizTranslation = 0;
+                }
 
-            if (focused && caretBounds.getMinY() - 5 < 0)
-            {
-                // Caret is off screen to the top:
-                vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
-            }
-            else if (focused && caretBounds.getMaxY() > getHeight() - 5)
-            {
-                // Caret is off screen to the bottom:
-                vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
-            }
-            else if (!focused)
-            {
-                vertTranslation = 0;
+                if (focused && caretBounds.getMinY() - 5 < 0)
+                {
+                    // Caret is off screen to the top:
+                    vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
+                }
+                else if (focused && caretBounds.getMaxY() > getHeight() - 5)
+                {
+                    // Caret is off screen to the bottom:
+                    vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
+                }
+                else if (!focused)
+                {
+                    vertTranslation = 0;
+                }
             }
         }
 

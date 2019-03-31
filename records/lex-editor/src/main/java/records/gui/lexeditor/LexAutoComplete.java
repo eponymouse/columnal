@@ -74,6 +74,7 @@ public class LexAutoComplete
             this.listView = new ListView<>();
             this.pane = new BorderPane(listView);
             setAutoFix(false);
+            setAutoHide(false);
             setHideOnEscape(false);
             setSkin(new LexAutoCompleteSkin());
             listView.setOnMouseClicked(e -> {
