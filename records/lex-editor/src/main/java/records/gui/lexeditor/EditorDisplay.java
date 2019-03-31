@@ -48,6 +48,7 @@ public final class EditorDisplay extends TextEditorBase
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (!focused)
                 showCompletions(null);
+            focusChanged(focused);
         });
         
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
@@ -141,6 +142,8 @@ public final class EditorDisplay extends TextEditorBase
     private void render()
     {
         textFlow.getChildren().setAll(new Text(content.getText()));
+        if (caretAndSelectionNodes != null)
+            caretAndSelectionNodes.queueUpdateCaretShape();
     }
     
     void showCompletions(@Nullable ImmutableList<LexCompletion> completions)
