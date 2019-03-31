@@ -113,7 +113,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     
     public void cleanup()
     {
-        
+        errorMessagePopup.hidePopup(true);
     }
 
     protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
