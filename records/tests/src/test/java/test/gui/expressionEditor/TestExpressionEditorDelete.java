@@ -68,7 +68,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 3)
     public void testDeleteAfterInvalidOperator(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("@invalidops(true, \"&\")", 4, 1, "true", r);
+        testDeleteBackspace("@invalidops(true, @unfinished \"&\")", 4, 1, "true", r);
     }
 
     @Property(trials = 3)
@@ -92,13 +92,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator2b(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("a<b<=c", 3, 2, "a < b <= c", r);
+        testDeleteBackspace("a<b<=c", 3, 2, "a < bc", r);
     }
 
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator2c(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("a<b<=c", 3, 1, "a < b = c", r);
+        testDeleteBackspace("a<b<=c", 3, 1, "@invalidops(a, @unfinished \"<\", b, @unfinished \"=\", c)", r);
     }
     
     @Property(trials = 3)
@@ -195,6 +195,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
+        sleep(200);
 
         for (int i = 0; i < deleteCount; i++)
         {

@@ -165,7 +165,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     continue nextToken;
                 }
             }
-            
+
             @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
@@ -196,11 +196,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     }
                 }
                 else*/
-                if (text.equals("true") || text.equals("false"))
-                {
-                    saver.saveOperand(new BooleanLiteral(text.equals("true")), location, c -> {});
-                }
-                else
+                
                 {
                     boolean wasColumn = false;
                     for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
@@ -267,6 +263,16 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
                 s.append(content.substring(curIndex, parsed.getSecond()));
                 curIndex = parsed.getSecond();
+                continue nextToken;
+            }
+
+            boolean nextTrue = content.startsWith("true", curIndex);
+            boolean nextFalse = content.startsWith("false", curIndex);
+            if (nextTrue || nextFalse)
+            {
+                saver.saveOperand(new BooleanLiteral(nextTrue), new Span(curIndex, curIndex + (nextTrue ? 4 : 5)), c -> {});
+                s.append(nextTrue ? "true" : "false");
+                curIndex += nextTrue ? 4 : 5;
                 continue nextToken;
             }
             
