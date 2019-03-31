@@ -273,7 +273,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             s.append(content.charAt(curIndex));
             curIndex += 1;
         }
-        Expression saved = saver.finish(new Span(curIndex, curIndex));
+        @Recorded Expression saved = saver.finish(new Span(curIndex, curIndex));
         try
         {
             saved.checkExpression(columnLookup.get(), new TypeState(typeManager.getUnitManager(), typeManager), saver.locationRecorder.getRecorder());

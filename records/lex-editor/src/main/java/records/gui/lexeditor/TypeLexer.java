@@ -65,7 +65,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             
             curIndex += 1;
         }
-        TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
+        @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
         return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of());
     }
 }

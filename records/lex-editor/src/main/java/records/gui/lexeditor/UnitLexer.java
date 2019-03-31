@@ -62,7 +62,7 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             
             curIndex += 1;
         }
-        UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
+        @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
         return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of());
     }
 }

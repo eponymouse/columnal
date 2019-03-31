@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import test.TestUtil;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -21,8 +22,8 @@ public class GenInvalidExpressionSource extends Generator<String>
     public String generate(SourceOfRandomness random, GenerationStatus status)
     {
         ImmutableList<Supplier<String>> tokenMakers = ImmutableList.of(
-            ts(random, Arrays.stream(Keyword.values()).map(o -> o.getContent()).toArray(String[]::new)),
-            ts(random, Arrays.stream(Op.values()).filter(o -> o != Op.ADD).map(o -> o.getContent()).toArray(String[]::new)),
+            ts(random, TestUtil.fx(() -> Arrays.stream(Keyword.values()).map(o -> o.getContent()).toArray(String[]::new))),
+            ts(random, TestUtil.fx(() -> Arrays.stream(Op.values()).filter(o -> o != Op.ADD).map(o -> o.getContent()).toArray(String[]::new))),
             ts(random, "a", "z"),
             ts(random, "1", "9", "1.2")
         );

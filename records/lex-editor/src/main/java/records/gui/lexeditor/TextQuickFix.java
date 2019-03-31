@@ -1,9 +1,11 @@
 package records.gui.lexeditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
 import records.gui.expressioneditor.OperandOps;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
@@ -67,10 +69,10 @@ public final class TextQuickFix
         this.makeReplacement = makeReplacement;
     }
     
-    public <EXPRESSION extends StyledShowable> TextQuickFix(Span location, Function<EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
+    public <@NonNull EXPRESSION extends StyledShowable> TextQuickFix(Span location, Function<@UnknownIfRecorded EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
     {
         this(treeFix.getTitle(), treeFix.getCssClasses(), location, () -> {
-            EXPRESSION s = treeFix.getReplacement().getSecond();
+            @UnknownIfRecorded EXPRESSION s = treeFix.getReplacement().getSecond();
             return new Pair<>(toText.apply(s), s.toStyledString());
         });
     }
