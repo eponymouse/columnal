@@ -61,6 +61,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
         BitSet missingSpots = new BitSet();
+        BitSet suppressBracketMatching = new BitSet();
         StringBuilder s = new StringBuilder();
         boolean prevWasIdent = false;
         nextToken: while (curIndex < content.length())
@@ -113,6 +114,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), new Span(curIndex, endQuote + 1), c -> {});
                     s.append(content.substring(curIndex, endQuote + 1));
+                    suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + 1;
                     continue nextToken;
                 }
@@ -122,6 +124,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Missing closing quote around text"), ImmutableList.of());
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), new Span(curIndex, content.length()), c -> {});
                     s.append(content.substring(curIndex, content.length()));
+                    suppressBracketMatching.set(curIndex + 1, content.length() + 1);
                     curIndex = content.length();
                     continue nextToken;
                 }
@@ -294,10 +297,10 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 Log.log(e);
             saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
         }
-        
+
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
-        }, saver.getErrors(), completions.build());
+        }, saver.getErrors(), completions.build(), suppressBracketMatching);
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()

@@ -135,7 +135,7 @@ public final class EditorDisplay extends TextEditorBase
                     && character.charAt(0) != 0x7F
                     && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
             {
-                if ("({[".contains(character))
+                if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()))
                 {
                     if (character.equals("("))
                         this.content.replaceSelection("()");

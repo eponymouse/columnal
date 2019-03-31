@@ -14,6 +14,8 @@ import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.IdentifierUtility;
 import utility.Pair;
 
+import java.util.BitSet;
+
 public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
 {
     @SuppressWarnings("units")
@@ -63,6 +65,6 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of());
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet());
     }
 }

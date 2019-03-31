@@ -8,6 +8,8 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import styled.StyledShowable;
 
+import java.util.BitSet;
+
 public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
     public static class LexerResult<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
@@ -18,6 +20,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final @SourceLocation int[] caretPositions;
         public final ImmutableList<ErrorDetails> errors;
         public final ImmutableList<Lexer.AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> autoCompleteDetails;
+        public final BitSet suppressBracketMatching;
 
         /*
         public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, int[] caretPositions, ImmutableList<ErrorDetails> errors)
@@ -33,7 +36,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         // Temporary constructor to auto-fill caret positions
         // Remove once caret positions done properly
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -45,6 +48,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             }
             this.errors = errors;
             this.autoCompleteDetails = completeDetails;
+            this.suppressBracketMatching = suppressBracketMatching;
         }
         
         public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)

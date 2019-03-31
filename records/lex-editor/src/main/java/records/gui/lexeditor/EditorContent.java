@@ -144,4 +144,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         }
         return 0;
     }
+
+    public boolean suppressBracketMatch(int caretPosition)
+    {
+        return curContent.suppressBracketMatching.get(caretPosition);
+    }
 }
