@@ -139,4 +139,9 @@ public final class EditorDisplay extends HelpfulTextFlow
     {
         return localToScreen(getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
+
+    public int _test_getCaretPosition()
+    {
+        return content.getCaretPosition();
+    }
 }

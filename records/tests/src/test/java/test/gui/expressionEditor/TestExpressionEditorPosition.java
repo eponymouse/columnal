@@ -21,6 +21,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
+import records.gui.lexeditor.EditorDisplay;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.FocusOwnerTrait;
@@ -118,8 +119,8 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             // We check that if we go all-left then all-right, we reach a termination point
             // in each case (as opposed to looping forever somewhere in the middle)
             
-            Pair<TextField, Integer> curPosition = getPosition();
-            Pair<TextField, Integer> oldPosition = null;
+            Pair<EditorDisplay, Integer> curPosition = getPosition();
+            Pair<EditorDisplay, Integer> oldPosition = null;
             int maxRemaining = 3 * content.length() + 5;
             while (!curPosition.equals(oldPosition) && --maxRemaining > 0)
             {                
@@ -140,12 +141,6 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             }
             assertNotEquals(0, maxRemaining);
             
-            
-            TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
-            assertNotNull(editorPane);
-            if (editorPane == null) return;
-            TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
-
             // Dismiss dialog:
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
@@ -159,12 +154,12 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         }
     }
 
-    private Pair<TextField, Integer> getPosition()
+    private Pair<EditorDisplay, Integer> getPosition()
     {
         Node focusOwner = getFocusOwner();
-        if (!(focusOwner instanceof TextField))
+        if (!(focusOwner instanceof EditorDisplay))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
-        TextField textField = (TextField) focusOwner;
-        return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
+        EditorDisplay textField = (EditorDisplay) focusOwner;
+        return new Pair<>(textField, TestUtil.fx(() -> textField._test_getCaretPosition()));
     }
 }
