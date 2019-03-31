@@ -239,25 +239,6 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             // Focus expression editor:
             push(KeyCode.TAB);
             write(original);
-            TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
-            assertNotNull(editorPane);
-            if (editorPane == null) return;
-            TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
-            List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).map(h -> h.mapFirst(Label::getText)).collect(Collectors.toList());
-
-            // Dismiss before comparison to avoid issues with exception:
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
-            //TestUtil.sleep(2000);
-            moveTo(".cancel-button");
-            // Shouldn't really need this delay but test is flaky without it due to some JavaFX animation-related exceptions:
-            TestUtil.sleep(2000);
-            clickOn(".cancel-button");
-            
-            
-            Log.debug("Checking states");
-            assertEquals(Arrays.stream(states).collect(Collectors.toList()), actualHeaders);
-            Log.debug("Checked states");
             // TODO check error popup
             
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
