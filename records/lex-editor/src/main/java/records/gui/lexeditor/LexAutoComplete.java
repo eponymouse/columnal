@@ -8,6 +8,9 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.Skinnable;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -63,11 +66,13 @@ public class LexAutoComplete
     @OnThread(Tag.FXPlatform)
     public class LexAutoCompleteWindow extends PopupControl
     {
+        private final Pane pane;
         private final ListView<LexCompletion> listView;
         
         public LexAutoCompleteWindow()
         {
             this.listView = new ListView<>();
+            this.pane = new BorderPane(listView);
             setAutoFix(false);
             setHideOnEscape(false);
             setSkin(new LexAutoCompleteSkin());
@@ -103,7 +108,7 @@ public class LexAutoComplete
             @Override
             public Node getNode()
             {
-                return listView;
+                return pane;
             }
 
             @Override
