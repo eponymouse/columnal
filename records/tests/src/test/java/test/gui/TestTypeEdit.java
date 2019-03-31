@@ -38,6 +38,7 @@ import test.gen.GenRandom;
 import test.gen.GenTaggedTypeDefinition;
 import test.gui.trait.CheckWindowBoundsTrait;
 import test.gui.trait.EnterTypeTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
@@ -54,7 +55,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBoundsTrait, ScrollToTrait
+public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBoundsTrait, ScrollToTrait, PopupTrait
 {    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
@@ -71,6 +72,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             TestUtil.delay(200);
             Window dialog = fxGetRealFocusedWindow();
             enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
+            moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             TestUtil.sleep(500);
             assertNotEquals(dialog, fxGetRealFocusedWindow());
@@ -203,6 +205,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         Log.debug("Entering: " + tagType.getName());
         //TestUtil.fx_(() -> dumpScreenshot(getRealFocusedWindow()));
         scrollTo(".id-fancylist-add");
+        moveAndDismissPopupsAtPos(point(".id-fancylist-add"));
         clickOn(".id-fancylist-add");
         TestUtil.delay(500);
         write(tagType.getName(), 1);
@@ -267,6 +270,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             clickOn(".id-types-edit");
             enterTypeDetails(after, random, mainWindowActions._test_getTableManager().getTypeManager());
             TestUtil.delay(500);
+            moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             TestUtil.sleep(500);
             clickOn(".close-button");

@@ -35,7 +35,7 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.TypeEditor;
+import records.gui.lexeditor.TypeEditor;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -380,10 +380,10 @@ public class TypesDialog extends Dialog<Void>
                 }
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
-                this.innerType = new TypeEditor(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), startingExpression, latest -> {
+                this.innerType = new TypeEditor(typeManager, startingExpression, latest -> {
                     updateCurrentValue(latest);
                 });
-                innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));
+                //innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));
                 
                 setLeft(tagName);
                 setCenter(innerType.getContainer());

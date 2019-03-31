@@ -25,11 +25,11 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.dtf.Document;
-import records.gui.expressioneditor.TypeEditor;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.RecogniserDocument;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
+import records.gui.lexeditor.TypeEditor;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
@@ -114,7 +114,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 Log.log(e);
             }
         }
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()), typeExpression, t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, t -> {
             clearErrorLabel();
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);

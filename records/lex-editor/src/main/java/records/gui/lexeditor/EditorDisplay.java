@@ -17,6 +17,7 @@ import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.HelpfulTextFlow;
@@ -29,12 +30,17 @@ public final class EditorDisplay extends HelpfulTextFlow
     private final EditorContent<?, ?> content;
     private final LexAutoComplete autoComplete;
     
-    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix)
+    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, FXPlatformRunnable focusNext)
     {
         this.autoComplete = Utility.later(new LexAutoComplete(this));
         this.content = theContent;
         getStyleClass().add("editor-display");
         setFocusTraversable(true);
+        
+        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            if (!focused)
+                showCompletions(null);
+        });
         
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             FXUtility.mouse(this).requestFocus();
@@ -64,6 +70,15 @@ public final class EditorDisplay extends HelpfulTextFlow
                 case DOWN:
                     if (autoComplete.isShowing())
                         autoComplete.down();
+                    break;
+                case ESCAPE:
+                    showCompletions(null);
+                    break;
+                case TAB:
+                    if (autoComplete.isShowing())
+                        break; // TODO select completion
+                    else
+                        focusNext.run();
                     break;
             }
             keyEvent.consume();

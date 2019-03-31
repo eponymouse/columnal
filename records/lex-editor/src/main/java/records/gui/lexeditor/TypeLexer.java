@@ -8,13 +8,21 @@ import records.data.datatype.DataType;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
+import records.transformations.expression.type.UnitLiteralTypeExpression;
+import styled.StyledCSS;
+import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.Utility;
+import utility.gui.TranslationUtility;
+
+import java.util.BitSet;
 
 public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
 {
@@ -23,9 +31,30 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
     public LexerResult<TypeExpression, CodeCompletionContext> process(String content)
     {
         TypeSaver saver = new TypeSaver();
+        boolean prevWasIdent = false;
         int curIndex = 0;
+        StringBuilder s = new StringBuilder();
+        BitSet missingSpots = new BitSet();
         nextToken: while (curIndex < content.length())
         {
+            // Skip any extra spaces at the start of tokens:
+            if (content.startsWith(" ", curIndex))
+            {
+                // Keep single space after ident as it may continue ident:
+                if (prevWasIdent)
+                {
+                    s.append(" ");
+                }
+                else
+                {
+                    missingSpots.set(curIndex);
+                }
+                prevWasIdent = false;
+                curIndex += 1;
+                continue nextToken;
+            }
+            prevWasIdent = false;
+            
             for (Keyword bracket : Keyword.values())
             {
                 if (content.startsWith(bracket.getContent(), curIndex))
@@ -54,14 +83,40 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                     continue nextToken;
                 }
             }
+            
+            if (content.charAt(curIndex) == '{')
+            {
+                int end = content.indexOf('}', curIndex + 1);
+                if (end != -1)
+                {
+                    UnitLexer unitLexer = new UnitLexer();
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end));
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, end + 1), c -> {});
+                    curIndex = end + 1;
+                }
+                else
+                {
+                    saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Unit lacks closing }"), ImmutableList.of());
+                    UnitLexer unitLexer = new UnitLexer();
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()));
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, content.length()), c -> {});
+                    curIndex = content.length();
+                }
+                continue nextToken;
+            }
 
             @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
+                prevWasIdent = true;
                 saver.saveOperand(new IdentTypeExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
+
+            Span invalidCharLocation = new Span(curIndex, curIndex + 1);
+            saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             
             curIndex += 1;
         }
