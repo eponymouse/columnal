@@ -33,7 +33,7 @@ public final class EditorDisplay extends HelpfulTextFlow
 {
     private final EditorContent<?, ?> content;
     private final LexAutoComplete autoComplete;
-    private TopLevelEditor<?, ?, ?> editor;
+    private final TopLevelEditor<?, ?, ?> editor;
 
     public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
@@ -133,6 +133,7 @@ public final class EditorDisplay extends HelpfulTextFlow
         
         content.addChangeListener(() -> render());
         content.addCaretPositionListener(c -> render());
+        render();
     }
 
     private void render()
