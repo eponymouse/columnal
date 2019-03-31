@@ -193,7 +193,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     
                     assertTrue("Clicked on: " + clickOnScreenPos, TestUtil.fx(() -> cellFinal.isFocused()));
                     assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual, afterIndex, 
-                        (int)TestUtil.<Integer>fx(() -> cellFinal._test_getCaretPosition())
+                        (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
                     );
                     // Double-check cellText while we're here:
                     

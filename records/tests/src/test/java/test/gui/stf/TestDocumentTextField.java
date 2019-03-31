@@ -75,12 +75,12 @@ public class TestDocumentTextField extends FXApplicationTest
         assertEquals(s, focused);
         
         push(KeyCode.HOME);
-        assertEquals((Integer)0, TestUtil.<Integer>fx(() -> field._test_getCaretPosition()));
+        assertEquals((Integer)0, TestUtil.<Integer>fx(() -> field.getCaretPosition()));
         int moveRightTo = s.isEmpty() ? 0 : r.nextInt(Math.min(s.length(), 25));
         for (int i = 0; i < moveRightTo; i++)
         {
             push(KeyCode.RIGHT);
-            assertEquals(Integer.valueOf(i + 1), TestUtil.<Integer>fx(() -> field._test_getCaretPosition()));
+            assertEquals(Integer.valueOf(i + 1), TestUtil.<Integer>fx(() -> field.getCaretPosition()));
         }
         
         write("a z");
@@ -267,13 +267,13 @@ public class TestDocumentTextField extends FXApplicationTest
     @OnThread(Tag.Any)
     public int getFieldAnchorPos()
     {
-        return (int) TestUtil.<Integer>fx(() -> (Integer)field._test_getAnchorPosition());
+        return (int) TestUtil.<Integer>fx(() -> (Integer)field.getAnchorPosition());
     }
 
     @OnThread(Tag.Any)
     public int getFieldCaretPos()
     {
-        return (int) TestUtil.<Integer>fx(() -> (Integer)field._test_getCaretPosition());
+        return (int) TestUtil.<Integer>fx(() -> (Integer)field.getCaretPosition());
     }
 
     private List<Integer> calcEditPositions(String s)

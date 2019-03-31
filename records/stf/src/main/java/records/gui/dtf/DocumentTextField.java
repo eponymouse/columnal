@@ -3,44 +3,21 @@ package records.gui.dtf;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
-import com.sun.javafx.tk.TKPulseListener;
-import com.sun.javafx.tk.Toolkit;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
-import javafx.scene.effect.BlendMode;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.gui.dtf.Document.DocumentListener;
@@ -51,11 +28,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.HelpfulTextFlow;
-import utility.gui.ResizableRectangle;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -66,27 +39,18 @@ import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class DocumentTextField extends Region implements DocumentListener
+public class DocumentTextField extends DisplayContent implements DocumentListener
 {
-    private final DisplayContent displayContent;
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
-    // Always positive, the amount of offset from the left edge back
-    // to the real start of the content.
-    private double horizTranslation;
-    // Always positive, the amount of offset from the top edge up
-    // to the real start of the content.
-    private double vertTranslation;
-    private boolean expanded;
     
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
+        super(makeTextNodes(new ReadOnlyDocument("").getStyledSpans(false)));
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
         this.document = new ReadOnlyDocument("");
-        this.displayContent = new DisplayContent(document);
-        getChildren().setAll(displayContent);
         anchorPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
         caretPosition = document.trackPosition(0, Bias.FORWARD, FXUtility.mouse(this)::queueUpdateCaretShape);
         
@@ -109,7 +73,7 @@ public class DocumentTextField extends Region implements DocumentListener
                 onExpand.run();
             }
             
-            displayContent.focusChanged(focused);
+            Utility.later(this).focusChanged(focused);
         });
     }
     
@@ -149,7 +113,7 @@ public class DocumentTextField extends Region implements DocumentListener
         TextLayout textLayout;
         try
         {
-            textLayout = displayContent.textFlow.getInternalTextLayout();
+            textLayout = textFlow.getInternalTextLayout();
         }
         catch (Exception e)
         {
@@ -205,7 +169,7 @@ public class DocumentTextField extends Region implements DocumentListener
             }
             if (keyEvent.getCode() == KeyCode.UP)
             {
-                Point2D p = displayContent.textFlow.getClickPosFor(caretPosition.getPosition(), VPos.TOP, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
+                Point2D p = textFlow.getClickPosFor(caretPosition.getPosition(), VPos.TOP, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
                 if (hitInfo != null)
                 {
@@ -224,7 +188,7 @@ public class DocumentTextField extends Region implements DocumentListener
             }
             if (keyEvent.getCode() == KeyCode.DOWN)
             {
-                Point2D p = displayContent.textFlow.getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
+                Point2D p = textFlow.getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
                 if (hitInfo != null)
                     caretPosition.moveTo(hitInfo.getInsertionIndex());
@@ -290,17 +254,17 @@ public class DocumentTextField extends Region implements DocumentListener
     
     private void queueUpdateCaretShape()
     {
-        if (displayContent.caretAndSelectionNodes != null)
-            displayContent.caretAndSelectionNodes.queueUpdateCaretShape();
+        if (caretAndSelectionNodes != null)
+            caretAndSelectionNodes.queueUpdateCaretShape();
     }
 
     @Override
     @OnThread(Tag.FXPlatform)
     public void documentChanged(Document document)
     {
-        displayContent.textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
-        displayContent.requestLayout();
+        requestLayout();
     }
 
     private static List<Text> makeTextNodes(Stream<Pair<Set<String>, String>> styledSpans)
@@ -313,20 +277,17 @@ public class DocumentTextField extends Region implements DocumentListener
             return text;
         }).collect(ImmutableList.<Text>toImmutableList());
     }
-    
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected void layoutChildren()
-    {
-        displayContent.resizeRelocate(0, 0, getWidth(), getHeight());
-    }
 
-    public int _test_getAnchorPosition()
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public int getAnchorPosition()
     {
         return anchorPosition.getPosition();
     }
 
-    public int _test_getCaretPosition()
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public int getCaretPosition()
     {
         return caretPosition.getPosition();
     }
@@ -335,7 +296,7 @@ public class DocumentTextField extends Region implements DocumentListener
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
-        return displayContent.textFlow.prefHeight(-1);
+        return textFlow.prefHeight(-1);
     }
 
     @Override
@@ -347,7 +308,7 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public Optional<Point2D> _test_getClickPosFor(int targetPos)
     {
-        Pair<Point2D, Boolean> clickPos = displayContent.textFlow.getClickPosFor(targetPos, VPos.CENTER, new Dimension2D(-horizTranslation, -vertTranslation));
+        Pair<Point2D, Boolean> clickPos = textFlow.getClickPosFor(targetPos, VPos.CENTER, new Dimension2D(-horizTranslation, -vertTranslation));
         return clickPos.getSecond() ? Optional.of(clickPos.getFirst()) : Optional.empty();
     }
 
@@ -365,7 +326,7 @@ public class DocumentTextField extends Region implements DocumentListener
     {
         try
         {
-            TextLayout textLayout = displayContent.textFlow.getInternalTextLayout();
+            TextLayout textLayout = textFlow.getInternalTextLayout();
             int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
             caretPosition.moveTo(isFocused() ? index : document.mapCaretPos(index));
             moveAnchorToCaret();
@@ -378,14 +339,14 @@ public class DocumentTextField extends Region implements DocumentListener
     
     public String _test_getGraphicalText()
     {
-        return displayContent.textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
+        return textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
     }
 
     public Optional<Bounds> _test_getCharacterBoundsOnScreen(int charAfter)
     {
         try
         {
-            Path path = new Path(displayContent.textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
+            Path path = new Path(textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
             Bounds actualBounds = localToScreen(path.getBoundsInLocal());
             Rectangle2D clipped = FXUtility.intersectRect(
                     FXUtility.boundsToRect(actualBounds),
@@ -455,15 +416,15 @@ public class DocumentTextField extends Region implements DocumentListener
 
     public void refreshDocument(boolean focused)
     {
-        displayContent.textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
-        displayContent.requestLayout();
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
+        requestLayout();
     }
     
     private void setExpanded(boolean expanded)
     {
         FXUtility.setPseudoclass(this, "expanded", expanded);
         this.expanded = expanded;
-        displayContent.requestLayout();
+        requestLayout();
     }
 
     public boolean isExpanded()
@@ -477,254 +438,4 @@ public class DocumentTextField extends Region implements DocumentListener
         caretPosition.moveTo(document.getLength());
     }
 
-    private class DisplayContent extends Region
-    {
-        private final HelpfulTextFlow textFlow;
-
-        // We only need these when we are focused, and only one field
-        // can ever be focused at once.  So these are null while
-        // they are unneeded (while we are unfocused)
-        private class CaretAndSelectionNodes
-        {
-            private final Path caretShape;
-            private final Path selectionShape;
-            private final ResizableRectangle fadeOverlay;
-            private final Path inverter;
-            private final Pane selectionPane;
-            private final Pane inverterPane;
-
-            private final Animation caretBlink;
-            private boolean updateCaretShapeQueued;
-
-
-            public CaretAndSelectionNodes()
-            {
-                caretShape = new Path();
-                caretShape.setMouseTransparent(true);
-                caretShape.setManaged(false);
-                caretShape.getStyleClass().add("document-caret");
-                caretShape.setVisible(false);
-                selectionShape = new Path();
-                selectionShape.setMouseTransparent(true);
-                //selectionShape.setManaged(false);
-                selectionShape.getStyleClass().add("document-selection");
-                // The whole issue of the selection text inverting is quite screwed up.
-                // The obvious thing to do is to apply CSS styling to the selected text to
-                // make it white.  But doing this causes some slight (one pixel) display
-                // changes that look really terrible and draw the eye as you select the text.
-                // The movements aren't even in the selected part, they can be several lines down!
-                // So we must invert the text without altering the TextFlow at all.
-                // This can be done using JavaFX's blending modes, but it takes a lot of
-                // intricate effort to do this while also applying a coloured selection background.
-                // This implementation works, and that is good enough, despite it seeming over-the-top.
-                selectionPane = new Pane(selectionShape);
-                selectionPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-                selectionPane.setBlendMode(BlendMode.LIGHTEN);
-                inverter = new Path();
-                inverter.setMouseTransparent(true);
-                //inverter.setManaged(false);
-                inverter.setFill(Color.WHITE);
-                inverter.setStroke(null);
-                inverterPane = new Pane(inverter);
-                inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-                inverterPane.setBlendMode(BlendMode.DIFFERENCE);
-
-                selectionShape.visibleProperty().bind(DocumentTextField.this.focusedProperty());
-                fadeOverlay = new ResizableRectangle();
-                fadeOverlay.setMouseTransparent(true);
-                fadeOverlay.getStyleClass().add("fade-overlay");
-
-                caretBlink = new Timeline(
-                        new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
-                        new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
-                        new KeyFrame(Duration.seconds(1.2), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
-                );
-                caretBlink.setCycleCount(Animation.INDEFINITE);
-
-            }
-
-            public void focusChanged(boolean focused)
-            {
-                if (focused)
-                {
-                    caretBlink.playFromStart();
-                    queueUpdateCaretShape();
-                }
-                else
-                {
-                    caretBlink.stop();
-                    updateCaretShapeQueued = false;
-                }
-            }
-
-            private void queueUpdateCaretShape()
-            {
-                if (!updateCaretShapeQueued)
-                {
-                    //TODO In Java 9, use public toolkit
-                    Toolkit.getToolkit().addSceneTkPulseListener(new TKPulseListener()
-                    {
-                        @Override
-                        public void pulse()
-                        {
-                            FXUtility.runAfter(CaretAndSelectionNodes.this::updateCaretShape);
-                            Toolkit.getToolkit().removeSceneTkPulseListener(this);
-                        }
-                    });
-                    updateCaretShapeQueued = true;
-                }
-            }
-
-            private void updateCaretShape()
-            {
-                if (!updateCaretShapeQueued)
-                    return; // We may be a stale call just after losing focus
-                
-                updateCaretShapeQueued = false;
-                try
-                {
-                    selectionShape.getElements().setAll(textFlow.getInternalTextLayout().getRange(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), TextLayout.TYPE_TEXT, 0, 0));
-                    inverter.getElements().setAll(selectionShape.getElements());
-                    caretShape.getElements().setAll(textFlow.getInternalTextLayout().getCaretShape(caretPosition.getPosition(), true, 0, 0));
-                    if (isFocused())
-                        caretBlink.playFromStart();
-                }
-                catch (Exception e)
-                {
-                    selectionShape.getElements().clear();
-                    inverter.getElements().clear();
-                    caretShape.getElements().clear();
-                }
-                // Caret may have moved off-screen, which is detected and corrected in the layout:
-                displayContent.requestLayout();
-            }
-        }
-        private @Nullable CaretAndSelectionNodes caretAndSelectionNodes;
-        
-        public DisplayContent(Document document)
-        {
-            ResizableRectangle clip = new ResizableRectangle();
-            clip.widthProperty().bind(widthProperty());
-            clip.heightProperty().bind(heightProperty());
-            setClip(clip);
-            setMouseTransparent(true);
-            textFlow = new HelpfulTextFlow();
-            textFlow.getStyleClass().add("document-text-flow");
-            textFlow.setMouseTransparent(true);
-            textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(false)));
-            
-            getChildren().setAll(textFlow);
-
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        protected void layoutChildren()
-        {
-            if (expanded)
-            {
-                textFlow.setPrefWidth(getWidth());
-            }
-            else
-            {
-                textFlow.setPrefWidth(USE_COMPUTED_SIZE);
-            }
-
-            // 10 is fudge factor; if you set exactly its desired width,
-            // it can sometimes wrap the text anyway.
-            double wholeTextWidth = textFlow.prefWidth(-1) + 10;
-            double wholeTextHeight = textFlow.prefHeight(getWidth());
-
-            CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
-            if (cs != null)
-            {
-                Path caretShape = cs.caretShape;
-                Bounds caretLocalBounds = caretShape.getBoundsInLocal();
-                Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
-
-                //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
-                boolean focused = DocumentTextField.this.isFocused();
-                if (focused && caretBounds.getMinX() - 5 < 0)
-                {
-                    // Caret is off screen to the left:
-                    horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
-                }
-                else if (focused && caretBounds.getMaxX() > getWidth() - 5)
-                {
-                    // Caret is off screen to the right:
-                    horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
-                }
-                else if (!focused)
-                {
-                    horizTranslation = 0;
-                }
-
-                if (focused && caretBounds.getMinY() - 5 < 0)
-                {
-                    // Caret is off screen to the top:
-                    vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
-                }
-                else if (focused && caretBounds.getMaxY() > getHeight() - 5)
-                {
-                    // Caret is off screen to the bottom:
-                    vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
-                }
-                else if (!focused)
-                {
-                    vertTranslation = 0;
-                }
-            }
-
-            if (isExpanded())
-            {
-                textFlow.resizeRelocate(-horizTranslation, -vertTranslation, getWidth(), wholeTextHeight);
-            }
-            else
-            {
-                // We avoid needlessly making TextFlows which are thousands of pixels
-                // wide by restricting to our own width plus some.
-                // (We don't use our own width because this causes text wrapping
-                // of long words, but we actually want to see those truncated)
-                textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
-            }
-            //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
-            if (cs != null)
-            {
-                FXUtility.setPseudoclass(cs.fadeOverlay, "more-above", vertTranslation > 8);
-                FXUtility.setPseudoclass(cs.fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
-                cs.fadeOverlay.resize(getWidth(), getHeight());
-                cs.caretShape.setLayoutX(-horizTranslation);
-                cs.caretShape.setLayoutY(-vertTranslation);
-                cs.selectionShape.setLayoutX(-horizTranslation);
-                cs.selectionShape.setLayoutY(-vertTranslation);
-                cs.inverter.setLayoutX(-horizTranslation);
-                cs.inverter.setLayoutY(-vertTranslation);
-                cs.inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
-                cs.selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
-            }
-        }
-
-        @OnThread(value = Tag.FXPlatform)
-        public void focusChanged(boolean focused)
-        {
-            if (focused)
-            {
-                if (caretAndSelectionNodes == null)
-                    caretAndSelectionNodes = new CaretAndSelectionNodes();
-                CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
-                getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.fadeOverlay);
-                cs.focusChanged(true);
-                
-            }
-            else
-            {
-                if (caretAndSelectionNodes != null)
-                    caretAndSelectionNodes.focusChanged(false);
-                caretAndSelectionNodes = null;
-                horizTranslation = 0;
-                vertTranslation = 0;
-                getChildren().setAll(textFlow);
-            }
-        }
-    }
 }
