@@ -56,7 +56,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             TupleExpression t = (TupleExpression)expression;
             if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
+            {
                 write("(");
+                push(KeyCode.DELETE);
+            }
             ImmutableList<Expression> members = t.getMembers();
             for (int i = 0; i < members.size(); i++)
             {
@@ -72,6 +75,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             ArrayExpression t = (ArrayExpression)expression;
             write("[");
+            push(KeyCode.DELETE);
             ImmutableList<Expression> members = t._test_getElements();
             for (int i = 0; i < members.size(); i++)
             {
@@ -112,6 +116,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString(), DELAY);
+            if (expression.toString().contains("{"))
+                push(KeyCode.DELETE);
         }
         else if (c == ColumnReference.class)
         {
@@ -219,7 +225,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             NaryOpExpression n = (NaryOpExpression)expression;
             if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+            {
                 write("(");
+                push(KeyCode.DELETE);
+            }
             for (int i = 0; i < n.getChildren().size(); i++)
             {
                 enterExpression(typeManager, n.getChildren().get(i), EntryBracketStatus.SUB_EXPRESSION, r);
@@ -237,7 +246,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             BinaryOpExpression b = (BinaryOpExpression)expression;
             if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+            {
                 write("(");
+                push(KeyCode.DELETE);
+            }
             enterExpression(typeManager, b.getLHS(), EntryBracketStatus.SUB_EXPRESSION, r);
             write(b._test_getOperatorEntry());
             if (b._test_getOperatorEntry().equals("-") || b._test_getOperatorEntry().equals("+") || r.nextBoolean())
@@ -260,6 +272,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (c == TypeLiteralExpression.class)
         {
             write("type{", DELAY);
+            push(KeyCode.DELETE);
             TypeLiteralExpression f = (TypeLiteralExpression)expression; 
             enterType(f.getType(), r);
             write("}");

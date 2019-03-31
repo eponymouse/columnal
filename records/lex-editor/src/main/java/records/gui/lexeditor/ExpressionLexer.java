@@ -178,7 +178,8 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 // Add completions even if one is already spotted:
                 for (StandardFunctionDefinition function : allFunctions)
                 {
-                    identCompletions.add(new LexCompletion(function.getName() + "()"));
+                    if (function.getName().startsWith(parsed.getFirst()))
+                        identCompletions.add(new LexCompletion(curIndex, function.getName() + "()", function.getName().length() + 1));
                 }
                 
                 completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
@@ -261,7 +262,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         }
                     }
                 }
-                s.append(content.substring(curIndex, parsed.getSecond()));
+                s.append(text);
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }

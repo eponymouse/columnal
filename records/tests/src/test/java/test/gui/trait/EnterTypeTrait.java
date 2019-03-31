@@ -1,5 +1,6 @@
 package test.gui.trait;
 
+import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
 import records.transformations.expression.UnitExpression;
@@ -47,8 +48,10 @@ public interface EnterTypeTrait extends FxRobotInterface
             for (Either<UnitExpression, TypeExpression> arg : appl.getArgumentsOnly())
             {
                 write("(");
+                push(KeyCode.DELETE);
                 arg.eitherInt(unit -> {
                     write("{");
+                    push(KeyCode.DELETE);
                     write(unit.toString());
                     write("}");
                     return UnitType.UNIT;
@@ -63,6 +66,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         {
             TupleTypeExpression tuple = (TupleTypeExpression) typeExpression;
             write("(");
+            push(KeyCode.DELETE);
             for (int i = 0; i < tuple._test_getItems().size(); i++)
             {
                 TypeExpression item = tuple._test_getItems().get(i);
@@ -76,6 +80,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         {
             ListTypeExpression list = (ListTypeExpression) typeExpression;
             write("[");
+            push(KeyCode.DELETE);
             enterType(list._test_getContent(), r);
             write("]");
         }
@@ -87,6 +92,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             if (units != null)
             {
                 write("{");
+                push(KeyCode.DELETE);
                 write(units.save(false, true), DELAY);
                 write("}");
             }

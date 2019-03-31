@@ -26,7 +26,7 @@ public interface PopupTrait extends FxRobotInterface
         Supplier<Boolean> popupAtMousePos = () -> {
             return TestUtil.fx(() -> {
                 return Utility.filterClass(listWindows().stream(), PopupWindow.class).anyMatch(w -> {
-                    return new Rectangle2D(w.getX() - 5, w.getY() - 5, w.getWidth() + 10, w.getHeight() + 10).contains(p);
+                    return new Rectangle2D(w.getX() - 1, w.getY() - 1, w.getWidth() + 2, w.getHeight() + 2).contains(p);
                 });
             });
         };

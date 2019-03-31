@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.TopLevelEditor.Focus;
@@ -46,9 +47,15 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         }
     }
     
-    public int getCaretPosition()
+    public @SourceLocation int getCaretPosition()
     {
         return curCaretPosition;
+    }
+    
+    public void replaceSelection(String content)
+    {
+        // TODO should be anchor position
+        replaceText(Math.min(curCaretPosition, curCaretPosition), Math.max(curCaretPosition, curCaretPosition), content);
     }
     
     public void replaceText(int startIncl, int endExcl, String content)
@@ -58,6 +65,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
         this.curContent = lexer.process(newText);
         this.curCaretPosition = curContent.mapperToAdjusted.mapCaretPos(newCaretPos);
+        Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)
         {
             contentListener.run();

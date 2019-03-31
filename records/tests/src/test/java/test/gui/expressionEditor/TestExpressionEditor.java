@@ -263,19 +263,19 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testCall() throws Exception
     {
-        testSimple("@call @function first(1, 2)");
+        testSimple("@call @function first((1, 2))");
     }
 
     @Test
     public void testCall2() throws Exception
     {
-        testSimple("@call @function first(1,(2+3))");
+        testSimple("@call @function first((1,(2+3)))");
     }
 
     @Test
     public void testCall3() throws Exception
     {
-        testSimple("@call @function first(1,(2/3))");
+        testSimple("@call @function first((1,(2/3)))");
     }
 
     @Test

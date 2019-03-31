@@ -1,5 +1,6 @@
 package records.gui.lexeditor;
 
+import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -15,7 +16,10 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
+
+import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
 public class LexAutoComplete
@@ -53,13 +57,22 @@ public class LexAutoComplete
             window.listView.getSelectionModel().select(sel + 1);
     }
 
+    public Optional<LexCompletion> selectCompletion()
+    {
+        return Optional.ofNullable(window.listView.getSelectionModel().getSelectedItem());
+    }
+
     public static class LexCompletion
     {
-        private final String content;
+        public final @SourceLocation int startPos;
+        public final String content;
+        public final int relativeCaretPos;
 
-        public LexCompletion(String content)
+        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos)
         {
+            this.startPos = startPos;
             this.content = content;
+            this.relativeCaretPos = relativeCaretPos;
         }
     }
 
@@ -71,13 +84,20 @@ public class LexAutoComplete
         
         public LexAutoCompleteWindow()
         {
-            this.listView = new ListView<>();
+            this.listView = new ListView<LexCompletion>() {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public void requestFocus()
+                {
+                    // Can't be focused
+                }
+            };
             this.pane = new BorderPane(listView);
             setAutoFix(false);
             setAutoHide(false);
             setHideOnEscape(false);
             setSkin(new LexAutoCompleteSkin());
-            listView.setOnMouseClicked(e -> {
+            pane.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.MIDDLE)
                 {
                     hide();

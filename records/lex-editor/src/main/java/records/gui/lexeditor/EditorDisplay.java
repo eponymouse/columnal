@@ -92,15 +92,21 @@ public final class EditorDisplay extends TextEditorBase
                 case V:
                     if (keyEvent.isShortcutDown())
                     {
-                        content.replaceText(caretPosition, caretPosition, Clipboard.getSystemClipboard().getString());
+                        content.replaceSelection(Clipboard.getSystemClipboard().getString());
                     }
                     break;
                 case ESCAPE:
                     showCompletions(null);
                     break;
+                case ENTER:
+                    if (autoComplete.isShowing())
+                        triggerSelection();
+                    else
+                        return;
+                    break;
                 case TAB:
                     if (autoComplete.isShowing())
-                        break; // TODO select completion
+                        triggerSelection();
                     else
                         this.editor.parentFocusRightOfThis(Either.left(Focus.LEFT), true);
                     break;
@@ -129,14 +135,37 @@ public final class EditorDisplay extends TextEditorBase
                     && character.charAt(0) != 0x7F
                     && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
             {
-                this.content.replaceText(this.content.getCaretPosition(), this.content.getCaretPosition(), character);
-                // TODO move anchor to caret
+                if ("({[".contains(character))
+                {
+                    if (character.equals("("))
+                        this.content.replaceSelection("()");
+                    else if (character.equals("["))
+                        this.content.replaceSelection("[]");
+                    else
+                        this.content.replaceSelection("{}");
+                    @SuppressWarnings("units")
+                    @SourceLocation int one = 1;
+                    content.positionCaret(this.getCaretPosition() - one);
+                }
+                else
+                {
+                    this.content.replaceSelection(character);
+                }
             }
         });
         
         content.addChangeListener(() -> render());
         content.addCaretPositionListener(c -> render());
         render();
+    }
+
+    @SuppressWarnings("units")
+    private void triggerSelection()
+    {
+        autoComplete.selectCompletion().ifPresent(p -> {
+            content.replaceText(p.startPos, content.getCaretPosition(), p.content);
+            content.positionCaret(p.startPos + p.relativeCaretPos);
+        });
     }
 
     private void render()
@@ -169,7 +198,7 @@ public final class EditorDisplay extends TextEditorBase
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public int getCaretPosition()
+    public @SourceLocation int getCaretPosition()
     {
         return content.getCaretPosition();
     }
