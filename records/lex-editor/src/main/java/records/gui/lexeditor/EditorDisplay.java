@@ -5,17 +5,21 @@ import com.google.common.collect.ImmutableList;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.TopLevelEditor.Focus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Utility;
@@ -29,11 +33,13 @@ public final class EditorDisplay extends HelpfulTextFlow
 {
     private final EditorContent<?, ?> content;
     private final LexAutoComplete autoComplete;
-    
-    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, FXPlatformRunnable focusNext)
+    private TopLevelEditor<?, ?, ?> editor;
+
+    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
         this.autoComplete = Utility.later(new LexAutoComplete(this));
         this.content = theContent;
+        this.editor = Utility.later(editor);
         getStyleClass().add("editor-display");
         setFocusTraversable(true);
         
@@ -57,6 +63,7 @@ public final class EditorDisplay extends HelpfulTextFlow
             
             @SourceLocation int[] caretPositions = content.getValidCaretPositions();
             int caretPosIndex = content.getCaretPosAsValidIndex();
+            int caretPosition = content.getCaretPosition();
             switch (keyEvent.getCode())
             {
                 case LEFT:
@@ -71,6 +78,20 @@ public final class EditorDisplay extends HelpfulTextFlow
                     if (autoComplete.isShowing())
                         autoComplete.down();
                     break;
+                case BACK_SPACE:
+                    if (caretPosition > 0)
+                        content.replaceText(caretPosition - 1, caretPosition, "");
+                    break;
+                case DELETE:
+                    if (caretPosition < content.getText().length())
+                        content.replaceText(caretPosition, caretPosition + 1, "");
+                    break;
+                case V:
+                    if (keyEvent.isShortcutDown())
+                    {
+                        content.replaceText(caretPosition, caretPosition, Clipboard.getSystemClipboard().getString());
+                    }
+                    break;
                 case ESCAPE:
                     showCompletions(null);
                     break;
@@ -78,7 +99,7 @@ public final class EditorDisplay extends HelpfulTextFlow
                     if (autoComplete.isShowing())
                         break; // TODO select completion
                     else
-                        focusNext.run();
+                        this.editor.parentFocusRightOfThis(Either.left(Focus.LEFT), true);
                     break;
             }
             keyEvent.consume();
@@ -143,5 +164,16 @@ public final class EditorDisplay extends HelpfulTextFlow
     public int _test_getCaretPosition()
     {
         return content.getCaretPosition();
+    }
+
+    @SuppressWarnings("units")
+    public void _test_positionCaret(int caretPos)
+    {
+        content.positionCaret(caretPos);
+    }
+    
+    public TopLevelEditor<?, ?, ?> _test_getEditor()
+    {
+        return editor;
     }
 }

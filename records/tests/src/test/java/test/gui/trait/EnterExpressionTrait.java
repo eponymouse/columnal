@@ -256,8 +256,6 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             String ident = ((IdentExpression) expression).getText();
             write(ident, DELAY);
-            scrollAutoCompleteToOption(ident);
-            push(KeyCode.ENTER);
         }
         else if (c == TypeLiteralExpression.class)
         {

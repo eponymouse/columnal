@@ -34,7 +34,9 @@ import utility.Utility;
 import utility.Utility.TransparentBuilder;
 import utility.gui.TranslationUtility;
 
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -91,7 +93,8 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     continue nextToken;
                 }
             }
-            for (Op op : Op.values())
+            // Need to go through longest first:
+            for (Op op : Utility.iterableStream(Arrays.stream(Op.values()).sorted(Comparator.comparing(o -> -o.getContent().length()))))
             {
                 if (content.startsWith(op.getContent(), curIndex))
                 {

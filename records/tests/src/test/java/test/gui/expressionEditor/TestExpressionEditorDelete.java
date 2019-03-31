@@ -23,6 +23,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
+import records.gui.lexeditor.EditorDisplay;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
@@ -61,91 +62,103 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 3)
     public void testDeleteAfterOperand(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspace("true & false", 3, "true & fals", r);
+        testBackspace("true&false", 10, 1, "true & fals", r);
     }
 
     @Property(trials = 3)
     public void testDeleteAfterInvalidOperator(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("@invalidops(true, \"&\")", 0, 2, "true", r);
+        testDeleteBackspace("@invalidops(true, \"&\")", 4, 1, "true", r);
     }
 
     @Property(trials = 3)
     public void testDeleteAfterSpareKeyword(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("@invalidops(1, @unfinished \"+\", 2, @invalidops(@unfinished \"^aif\", @invalidops ()))", 2, 4, "1 + 2", r);
+        testDeleteBackspace("@invalidops(1, @unfinished \"+\", 2, @invalidops(@unfinished \"^aif\", @invalidops ()))", 3, 3, "1+2", r);
     }
 
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("1 + 2", 0, 2, "12", r);
+        testDeleteBackspace("1+2", 1, 1, "12", r);
     }
     
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator2(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("a < b <= c", 0, 2, "ab <= c", r);
+        testDeleteBackspace("a<b<=c", 1, 1, "ab <= c", r);
+    }
+    
+    @Property(trials = 3)
+    public void testDeleteAfterInfixOperator2b(@From(GenRandom.class) Random r) throws Exception
+    {
+        testDeleteBackspace("a<b<=c", 3, 2, "a < b <= c", r);
+    }
+
+    @Property(trials = 3)
+    public void testDeleteAfterInfixOperator2c(@From(GenRandom.class) Random r) throws Exception
+    {
+        testDeleteBackspace("a<b<=c", 3, 1, "a < b = c", r);
     }
     
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator3(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspace("\"a\" ; b", 2, "@invalidops(\"a\", b)", r);
+        testDeleteBackspace("\"a\";b", 3, 1, "@invalidops(\"a\", b)", r);
     }
     
     @Property(trials = 2)
     public void testRetypeInfix(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 2, 1, "+", r);
+        testBackspaceRetype("1+2", 2, 1, "+", r);
     }
 
     @Property(trials = 2)
     public void testRetypeInfix2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 <= 2", 2, 1, "<=", r);
+        testBackspaceRetype("1<=2", 3, 2, "<=", r);
     }
 
     @Property(trials = 2)
     public void testRetypeLeadingOperand(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 1, 1, "1", r);
+        testBackspaceRetype("1+2", 1, 1, "1", r);
     }
 
     @Property(trials = 2)
     public void testRetypeLeadingOperand2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1234 + 5678", 1, 4, "1234", r);
+        testBackspaceRetype("1234 + 5678", 4, 4, "1234", r);
     }
 
     @Property(trials = 2)
     public void testRetypeTrailingOperand(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("1 + 2", 3, 1, "2", r);
+        testBackspaceRetype("1+2", 3, 1, "2", r);
     }
 
     @Property(trials = 2)
     public void testRetypeTrailingOperand2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("123 + 456", 3, 3,"456", r);
+        testBackspaceRetype("123+456", 7, 3,"456", r);
     }
     
     @Property(trials = 2)
     public void testRetypeListTypeContent(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("type{[Text]}", 2, 4, "Text", r);
+        testBackspaceRetype("type{[Text]}", 10, 4, "Text", r);
     }
 
     @Property(trials = 2)
     public void testRetypeParameter(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call @function sum([2])", 5, 3, "[2]", r);
+        testBackspaceRetype("@call @function sum([2])", 7, 3, "[2]", r);
     }
 
     @Property(trials = 2)
     public void testRetypeParameter2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call @function sum([])", 4, 2, "[]", r);
+        testBackspaceRetype("@call @function sum([])", 6, 2, "[]", r);
     }
     
     // TODO more retype tests
@@ -153,28 +166,22 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 2)
     public void testPasteSeveral(@From(GenRandom.class) Random r) throws Exception
     {
-        testPaste("12", 0, 1, "+3+4-", "1+3+4-2", r);
+        testPaste("12", 1, "+3+4-", "1+3+4-2", r);
     }
 
-    private void testPaste(String original, int slotIndex, int subIndex, String paste, String expected, Random r) throws Exception
+    private void testPaste(String original, int caretPos, String paste, String expected, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        ExpressionEditor expressionEditor = enter(originalExp, r);
-
-        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
+        EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> {
-            children.get(slotIndex).focus(Focus.LEFT);
+            expressionEditor._test_positionCaret(caretPos);
             Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, paste));
         });
-        for (int i = 0; i < subIndex; i++)
-        {
-            push(KeyCode.RIGHT);
-        }
         push(KeyCode.SHORTCUT, KeyCode.V);
 
-        Expression after = TestUtil.fx(() -> expressionEditor.save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
         assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
@@ -185,18 +192,9 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     {
         DummyManager dummyManager = new DummyManager();
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        ExpressionEditor expressionEditor = enter(originalExp, r);
+        EditorDisplay expressionEditor = enter(originalExp, r);
 
-        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
-
-        if (deleteBefore == children.size())
-        {
-            TestUtil.fx_(() -> expressionEditor.focus(Focus.RIGHT));
-            if (r.nextBoolean())
-                push(KeyCode.RIGHT); // Move into empty slot.
-        }
-        else
-            TestUtil.fx_(() -> children.get(deleteBefore).focus(Focus.LEFT));
+        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
 
         for (int i = 0; i < deleteCount; i++)
         {
@@ -204,53 +202,44 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         }
         write(retype);
 
-        Expression after = TestUtil.fx(() -> expressionEditor.save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
         assertEquals(originalExp, after);
 
         clickOn(".cancel-button");
     }
 
-    private void testDeleteBackspace(String original, int deleteAfter, int deleteBefore, String expectedStr, Random r) throws Exception
+    private void testDeleteBackspace(String original, int deleteAfterPos, int deleteCount, String expectedStr, Random r) throws Exception
     {
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
-        testBackspace(original, deleteBefore, expectedStr, r);
+        testBackspace(original, deleteAfterPos + deleteCount, deleteCount, expectedStr, r);
         assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOn(".id-tableDisplay-menu-delete");
         TestUtil.sleep(300);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
-        testDelete(original, deleteAfter, expectedStr, r);
+        testDelete(original, deleteAfterPos, deleteCount, expectedStr, r);
     }
 
-    private void testBackspace(String original, int deleteBefore, String expectedStr, Random r) throws Exception
+    private void testBackspace(String original, int deleteBefore, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
         Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        ExpressionEditor expressionEditor = enter(originalExp, r);
+        EditorDisplay expressionEditor = enter(originalExp, r);
         
-        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor.save()));
+        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save()));
 
-        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
+        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
 
-        if (deleteBefore > children.size())
-            throw new RuntimeException("Target " + deleteBefore + " out of bounds: " + children.stream().map(c -> "  " + c.toString()).collect(Collectors.joining("\n")));
-        
-        if (deleteBefore == children.size())
+        for (int i = 0; i < deleteCount; i++)
         {
-            TestUtil.fx_(() -> expressionEditor.focus(Focus.RIGHT));
-            if (r.nextBoolean())
-                push(KeyCode.RIGHT); // Move into empty slot.
+            push(KeyCode.BACK_SPACE);
         }
-        else
-            TestUtil.fx_(() -> children.get(deleteBefore).focus(Focus.LEFT));
-
-        push(KeyCode.BACK_SPACE);
         
         TestUtil.sleep(1000);
 
-        Expression after = TestUtil.fx(() -> expressionEditor.save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
         assertEquals(expectedExp, after);
         
@@ -258,33 +247,27 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         clickOn();
     }
 
-    private void testDelete(String original, int deleteAfter, String expectedStr, Random r) throws Exception
+    private void testDelete(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
         Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        ExpressionEditor expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+        EditorDisplay expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
-        ImmutableList<ConsecutiveChild<?, ?>> children = TestUtil.fx(() -> expressionEditor._test_getAllChildren().collect(ImmutableList.toImmutableList()));
+        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 
-        if (deleteAfter == -1)
+        for (int i = 0; i < deleteCount; i++)
         {
-            TestUtil.fx_(() -> expressionEditor.focus(Focus.LEFT));
-            if (r.nextBoolean())
-                push(KeyCode.LEFT); // Move into empty slot.
+            push(KeyCode.DELETE);
         }
-        else
-            TestUtil.fx_(() -> children.get(deleteAfter).focus(Focus.RIGHT));
 
-        push(KeyCode.DELETE);
-
-        Expression after = TestUtil.fx(() -> expressionEditor.save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
         assertEquals(expectedExp, after);
 
         clickOn(".cancel-button");
     }
     
-    private ExpressionEditor enter(Expression expression, Random r) throws Exception
+    private EditorDisplay enter(Expression expression, Random r) throws Exception
     {
         Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
         for (int i = 0; i < 2; i++)
@@ -300,7 +283,6 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         
         enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
 
-        ExpressionEditor expressionEditor = (ExpressionEditor)lookup(".expression-editor").<TopLevelEditorFlowPane>query()._test_getEditor();
-        return expressionEditor;
+        return lookup(".editor-display").<EditorDisplay>query();
     }
 }
