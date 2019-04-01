@@ -5,6 +5,8 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
@@ -22,7 +24,9 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.stream.Stream;
 
 public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
 {
@@ -74,7 +78,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                 }
             }
 
-            for (DataType dataType : ImmutableList.of(DataType.NUMBER, DataType.BOOLEAN, DataType.TEXT))
+            for (DataType dataType : Utility.<DataType>iterableStream(Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.BOOLEAN, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))))))
             {
                 if (content.startsWith(dataType.toString(), curIndex))
                 {
