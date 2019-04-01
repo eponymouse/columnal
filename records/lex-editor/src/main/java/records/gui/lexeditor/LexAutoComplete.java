@@ -68,17 +68,27 @@ public class LexAutoComplete
         public final @SourceLocation int startPos;
         public final String content;
         public final int relativeCaretPos;
+        public final boolean selectIfOnly;
 
         public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos)
         {
             this.startPos = startPos;
             this.content = content;
             this.relativeCaretPos = relativeCaretPos;
+            this.selectIfOnly = false;
         }
 
         public LexCompletion(@SourceLocation int startPos, String content)
         {
             this(startPos, content, content.length());
+        }
+
+        public LexCompletion(@SourceLocation int startPos, String content, boolean selectIfOnly)
+        {
+            this.startPos = startPos;
+            this.content = content;
+            this.relativeCaretPos = content.length();
+            this.selectIfOnly = selectIfOnly;
         }
 
         // Used by ListView to display content:
@@ -125,6 +135,10 @@ public class LexAutoComplete
         public void setCompletions(ImmutableList<LexCompletion> completions)
         {
             this.listView.getItems().setAll(completions);
+            if (completions.size() == 1 && completions.get(0).selectIfOnly)
+            {
+                listView.getSelectionModel().select(0);
+            }
         }
 
         @OnThread(Tag.FXPlatform)

@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
@@ -189,6 +190,14 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null && availableColumn.getColumnId().getRaw().startsWith(parsed.getFirst()))
                         identCompletions.add(new LexCompletion(curIndex, availableColumn.getColumnId().getRaw()));
                 }
+                for (Keyword keyword : Keyword.values())
+                {
+                    if (keyword.getContent().startsWith("@"))
+                    {
+                        if (keyword.getContent().substring(1).startsWith(text))
+                            identCompletions.add(new LexCompletion(curIndex, keyword.getContent(), true));
+                    }
+                }
                 
                 completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
                 
@@ -273,6 +282,15 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 s.append(text);
                 curIndex = parsed.getSecond();
                 continue nextToken;
+            }
+            
+            if (content.startsWith("@", curIndex))
+            {
+                int nonLetter = CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('A', 'Z')).negate().indexIn(content, curIndex + 1);
+                String stem = content.substring(curIndex, nonLetter == -1 ? content.length() : nonLetter);
+                @SourceLocation int curIndexFinal = curIndex;
+                ImmutableList<LexCompletion> validKeywordCompletions = Arrays.stream(Keyword.values()).filter(k -> k.getContent().startsWith(stem)).map(k -> new LexCompletion(curIndexFinal, k.getContent(), true)).collect(ImmutableList.<LexCompletion>toImmutableList());
+                completions.add(new AutoCompleteDetails<>(new Span(curIndex, nonLetter == -1 ? content.length() : nonLetter), new ExpressionCompletionContext(validKeywordCompletions)));
             }
 
             boolean nextTrue = content.startsWith("true", curIndex);
