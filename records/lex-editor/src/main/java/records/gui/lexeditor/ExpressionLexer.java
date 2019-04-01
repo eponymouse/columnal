@@ -174,7 +174,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             {
                 prevWasIdent = true;
                 @ExpressionIdentifier String text = parsed.getFirst();
-                Span location = new Span(curIndex, parsed.getSecond());
+                Span location = new Span(curIndex, parsed.getSecond() + ((parsed.getSecond() < content.length() && content.charAt(parsed.getSecond()) == ' ') ? 1 : 0));
                 
                 ImmutableList.Builder<LexCompletion> identCompletions = ImmutableList.builder();
                 
