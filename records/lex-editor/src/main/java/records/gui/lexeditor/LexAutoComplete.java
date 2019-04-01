@@ -74,6 +74,13 @@ public class LexAutoComplete
             this.content = content;
             this.relativeCaretPos = relativeCaretPos;
         }
+
+        // Used by ListView to display content:
+        @Override
+        public String toString()
+        {
+            return content;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
