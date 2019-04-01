@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -161,7 +162,7 @@ public class NumericLiteral extends Literal
         return numberAsString();
     }
 
-    public @Nullable @Recorded UnitExpression getUnitExpression()
+    public @Nullable @Recorded @Pure UnitExpression getUnitExpression()
     {
         return unit;
     }

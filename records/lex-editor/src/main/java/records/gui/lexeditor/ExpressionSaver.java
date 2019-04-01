@@ -277,7 +277,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             
             // Now we need to check the operators can work together as one group:
             BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed = unbracketed(sinceLastCommaOperands);
-            Expression made = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators), unbracketed);
+            @Recorded Expression made = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators), unbracketed);
             if (made != null)
                 beforePrevCommas.add(made);
             else
@@ -295,20 +295,20 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return e;
     }
 
-    private BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed(List<Expression> operands)
+    private BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed(List<@Recorded Expression> operands)
     {
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, Expression>()
         {
             @Nullable
             @Override
-            public Expression apply(@NonNull BracketContent items)
+            public @Recorded Expression apply(@NonNull BracketContent items)
             {
                 return null;
             }
 
             @NonNull
             @Override
-            public Expression applySingle(@NonNull @Recorded Expression singleItem)
+            public @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
             {
                 return singleItem;
             }

@@ -1,18 +1,14 @@
 package test.gui.trait;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Test;
 import org.testfx.api.FxRobotInterface;
-import org.testfx.api.FxToolkit;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
-import records.gui.expressioneditor.AutoComplete;
-import records.gui.expressioneditor.AutoComplete.AutoCompleteWindow;
 import records.gui.lexeditor.LexAutoComplete;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -27,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -113,9 +108,22 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             */
             write('"');
         }
+        else if (NumericLiteral.class.isAssignableFrom(c))
+        {
+            NumericLiteral num = (NumericLiteral)expression;
+            write(num.editString());
+            @Recorded UnitExpression unitExpression = num.getUnitExpression();
+            if (unitExpression != null)
+            {
+                write("{");
+                push(KeyCode.DELETE);
+                write(unitExpression.toString());
+                write("}");
+            }
+        }
         else if (Literal.class.isAssignableFrom(c))
         {
-            write(expression.toString(), DELAY);
+            write(((Literal)expression).editString(), DELAY);
             if (expression.toString().contains("{"))
                 push(KeyCode.DELETE);
         }
