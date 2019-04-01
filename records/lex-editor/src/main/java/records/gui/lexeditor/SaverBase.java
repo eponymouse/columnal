@@ -53,7 +53,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     //    return ImmutableList.of();
     //}
 
-    private ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> interleave(ImmutableList<@Recorded EXPRESSION> expressions, ImmutableList<OpAndNode> ops)
+    protected ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> interleave(ImmutableList<@Recorded EXPRESSION> expressions, ImmutableList<OpAndNode> ops)
     {
         ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> r = ImmutableList.builder();
 
@@ -109,7 +109,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (expression == null)
                     return null;
                 else
-                    return record(bracketAndNodes.location, expression);
+                    return bracketAndNodes.applyBrackets.applySingle(record(bracketAndNodes.location, expression));
             });
         }
 

@@ -250,17 +250,40 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             ArrayList<@Recorded Expression> validOperands = collectedItems.getValidOperands();
             ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
-            
-            // Single expression?
-            if (validOperands.size() == 1 && validOperators.size() == 0)
+
+            ArrayList<@Recorded Expression> beforePrevCommas = new ArrayList<>();
+            ArrayList<@Recorded Expression> sinceLastCommaOperands = new ArrayList<>();
+            ArrayList<OpAndNode> sinceLastCommaOperators = new ArrayList<>();
+            // Split by commas
+            for (int i = 0; i < validOperands.size(); i++)
             {
-                e = brackets.applyBrackets.apply(new BracketContent(ImmutableList.copyOf(validOperands)));
+                sinceLastCommaOperands.add(validOperands.get(i));
+                if (i < validOperators.size() && validOperators.get(i).op == Op.COMMA)
+                {
+                    BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed = unbracketed(sinceLastCommaOperands);
+                    @Recorded Expression made = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators), unbracketed);
+                    if (made != null)
+                        beforePrevCommas.add(made);
+                    else
+                        beforePrevCommas.add(makeInvalidOp(unbracketed.location, interleave(ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators))));
+                    sinceLastCommaOperands.clear();
+                    sinceLastCommaOperators.clear();
+                }
+                else if (i < validOperators.size())
+                {
+                    sinceLastCommaOperators.add(validOperators.get(i));
+                }
             }
+            
+            // Now we need to check the operators can work together as one group:
+            BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed = unbracketed(sinceLastCommaOperands);
+            Expression made = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators), unbracketed);
+            if (made != null)
+                beforePrevCommas.add(made);
             else
-            {
-                // Now we need to check the operators can work together as one group:
-                e = makeExpressionWithOperators(OPERATORS, locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(location, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
-            }            
+                beforePrevCommas.add(makeInvalidOp(unbracketed.location, interleave(ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators))));
+            
+            e = brackets.applyBrackets.apply(new BracketContent(ImmutableList.copyOf(beforePrevCommas)));
         }
         
         if (e == null)
@@ -270,6 +293,26 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         
         return e;
+    }
+
+    private BracketAndNodes<Expression, ExpressionSaver, BracketContent> unbracketed(List<Expression> operands)
+    {
+        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, Expression>()
+        {
+            @Nullable
+            @Override
+            public Expression apply(@NonNull BracketContent items)
+            {
+                return null;
+            }
+
+            @NonNull
+            @Override
+            public Expression applySingle(@NonNull @Recorded Expression singleItem)
+            {
+                return singleItem;
+            }
+        }, Span.fromTo(recorderFor(operands.get(0)), recorderFor(operands.get(operands.size() - 1))), ImmutableList.of());
     }
 
     @Override

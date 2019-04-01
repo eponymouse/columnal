@@ -16,8 +16,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import records.error.InternalException;
 import records.gui.FixList;
@@ -81,6 +83,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         content.addCaretPositionListener((@SourceLocation Integer n) -> {
             display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
+        onChange.consume(save());
     }
 
     public String _test_getRawText()
@@ -101,7 +104,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         display.requestFocus();
     }
 
-    public @Recorded @NonNull EXPRESSION save()
+    public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         return content.getLexerResult().result;
     }
