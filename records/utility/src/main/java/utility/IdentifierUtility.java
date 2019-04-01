@@ -62,6 +62,24 @@ public class IdentifierUtility
             return null;
     }
 
+    public static @Nullable Pair<String, Integer> consumePossiblyScopedExpressionIdentifier(String content, int startFrom)
+    {
+        @Nullable Pair<@ExpressionIdentifier String, Integer> before = consumeExpressionIdentifier(content, startFrom);
+        if (before != null)
+        {
+            if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == ':')
+            {
+                @Nullable Pair<@ExpressionIdentifier String, Integer> after = consumeExpressionIdentifier(content, before.getSecond() + 1);
+                if (after != null)
+                {
+                    return new Pair<>(before.getFirst() + ":" + after.getFirst(), after.getSecond());
+                }
+            }
+            return new Pair<>(before.getFirst(), before.getSecond());
+        }
+        return null;
+    }
+
     @SuppressWarnings("identifier")
     public static @Nullable Pair<@UnitIdentifier String, Integer> consumeUnitIdentifier(String content, int startFrom)
     {

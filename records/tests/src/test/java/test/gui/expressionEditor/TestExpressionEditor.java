@@ -442,6 +442,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("(\"\"=\"\") & ([] <> [])");
     }
+
+    @Test
+    public void testTagNames() throws Exception
+    {
+        testSimple("@tag A:Single = @tag A:Single");
+    }
     
     @Test
     public void testOverlappingTagNames() throws Exception

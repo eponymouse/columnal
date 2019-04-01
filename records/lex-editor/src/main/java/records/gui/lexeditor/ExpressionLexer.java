@@ -169,11 +169,11 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
             }
 
-            @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
+            @Nullable Pair<String, Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 prevWasIdent = true;
-                @ExpressionIdentifier String text = parsed.getFirst();
+                String text = parsed.getFirst();
                 Span location = new Span(curIndex, parsed.getSecond() + ((parsed.getSecond() < content.length() && content.charAt(parsed.getSecond()) == ' ') ? 1 : 0));
                 
                 ImmutableList.Builder<LexCompletion> identCompletions = ImmutableList.builder();
@@ -260,7 +260,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                             }
 
                             if (!wasTagged)
-                                saver.saveOperand(new IdentExpression(parsed.getFirst()), location, c -> {
+                                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), location, c -> {
                                 });
                         }
                     }
