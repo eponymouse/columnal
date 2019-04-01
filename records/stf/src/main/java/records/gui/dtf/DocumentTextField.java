@@ -110,21 +110,6 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         }
     }
 
-    private @Nullable HitInfo hitTest(double x, double y)
-    {
-        TextLayout textLayout;
-        try
-        {
-            textLayout = textFlow.getInternalTextLayout();
-        }
-        catch (Exception e)
-        {
-            Log.log(e);
-            textLayout = null;
-        }
-        return textLayout == null ? null: textLayout.getHitInfo((float)(x + horizTranslation), (float)(y + vertTranslation));
-    }
-
     private void keyboardEvent(KeyEvent keyEvent)
     {
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED && isEditable())

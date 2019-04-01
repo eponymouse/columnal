@@ -2,6 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import com.sun.javafx.scene.text.HitInfo;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
@@ -51,10 +52,18 @@ public final class EditorDisplay extends TextEditorBase
             focusChanged(focused);
         });
         
-        addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+        addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
             FXUtility.mouse(this).requestFocus();
+            HitInfo hitInfo = hitTest(event.getX(), event.getY());
+            if (hitInfo != null)
+            {
+                @SuppressWarnings("units")
+                @SourceLocation int insertionIndex = hitInfo.getInsertionIndex();
+                content.positionCaret(insertionIndex, true);
+            }
             event.consume();
         });
+        addEventHandler(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
         
         addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
             OptionalInt fKey = FXUtility.FKeyNumber(keyEvent.getCode());

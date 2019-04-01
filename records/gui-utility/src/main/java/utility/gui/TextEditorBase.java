@@ -1,5 +1,6 @@
 package utility.gui;
 
+import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import com.sun.javafx.tk.TKPulseListener;
 import com.sun.javafx.tk.Toolkit;
@@ -19,6 +20,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -182,6 +184,22 @@ public abstract class TextEditorBase extends Region
     
     @OnThread(Tag.FXPlatform)
     public abstract int getCaretPosition();
+
+    @OnThread(Tag.FXPlatform)
+    protected @Nullable HitInfo hitTest(double x, double y)
+    {
+        TextLayout textLayout;
+        try
+        {
+            textLayout = textFlow.getInternalTextLayout();
+        }
+        catch (Exception e)
+        {
+            Log.log(e);
+            textLayout = null;
+        }
+        return textLayout == null ? null: textLayout.getHitInfo((float)(x + horizTranslation), (float)(y + vertTranslation));
+    }
 
     @OnThread(Tag.FXPlatform)
     public abstract int getAnchorPosition();
