@@ -229,6 +229,11 @@ public final class EditorDisplay extends TextEditorBase
         return localToScreen(textFlow.getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
 
+    public Point2D getCaretBottomOnScreen(int caretPos)
+    {
+        return localToScreen(textFlow.getClickPosFor(caretPos, VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
+    }
+
     @Override
     @OnThread(Tag.FXPlatform)
     public @SourceLocation int getCaretPosition()

@@ -36,7 +36,7 @@ public class LexAutoComplete
     public void show(ImmutableList<LexCompletion> completions)
     {
         window.setCompletions(completions);
-        Point2D caretBottom = editor.getCaretBottomOnScreen();
+        Point2D caretBottom = editor.getCaretBottomOnScreen(completions.stream().mapToInt(c -> c.startPos).min().orElse(editor.getCaretPosition()));
         window.show(editor, caretBottom.getX(), caretBottom.getY());
     }
     
