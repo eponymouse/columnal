@@ -76,6 +76,11 @@ public class LexAutoComplete
             this.relativeCaretPos = relativeCaretPos;
         }
 
+        public LexCompletion(@SourceLocation int startPos, String content)
+        {
+            this(startPos, content, content.length());
+        }
+
         // Used by ListView to display content:
         @Override
         public String toString()

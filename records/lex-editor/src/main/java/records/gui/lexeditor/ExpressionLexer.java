@@ -184,6 +184,11 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     if (function.getName().startsWith(parsed.getFirst()))
                         identCompletions.add(new LexCompletion(curIndex, function.getName() + "()", function.getName().length() + 1));
                 }
+                for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+                {
+                    if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null && availableColumn.getColumnId().getRaw().startsWith(parsed.getFirst()))
+                        identCompletions.add(new LexCompletion(curIndex, availableColumn.getColumnId().getRaw()));
+                }
                 
                 completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
                 
