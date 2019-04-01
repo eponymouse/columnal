@@ -103,11 +103,11 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                             }
                         }
                         return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(Span.fromTo(errorDisplayer, bracketEnd), bracketed));
-            }, prefixKeyword)));
+            }, prefixKeyword, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(makeList(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(makeList(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword, true)));
         }
         else
         {

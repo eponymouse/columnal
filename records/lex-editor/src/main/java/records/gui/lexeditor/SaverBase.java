@@ -67,6 +67,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return r.build();
     }
 
+    public boolean hasUnmatchedBrackets()
+    {
+        return hasUnmatchedBrackets;
+    }
+
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
@@ -418,6 +423,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected final Stack<Scope> currentScopes = new Stack<>();
     protected final EditorLocationAndErrorRecorder locationRecorder;
+    protected boolean hasUnmatchedBrackets = false;
     
     protected SaverBase()
     {
@@ -785,7 +791,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(KEYWORD expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose)
+    public Terminator expect(KEYWORD expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
     {
         return new Terminator() {
             @Override
@@ -799,6 +805,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 }
                 else
                 {
+                    if (isBracket)
+                        hasUnmatchedBrackets = true;
+                    
                     // Error!
                     locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
                     @Nullable Span start = currentScopes.peek().openingNode;

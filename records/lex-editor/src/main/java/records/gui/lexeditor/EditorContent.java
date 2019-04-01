@@ -149,4 +149,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         return curContent.suppressBracketMatching.get(caretPosition);
     }
+    
+    public boolean areBracketsBalanced()
+    {
+        return curContent.bracketsAreBalanced;
+    }
 }

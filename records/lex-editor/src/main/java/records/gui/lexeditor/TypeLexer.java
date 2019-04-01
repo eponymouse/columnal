@@ -125,6 +125,6 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet());
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

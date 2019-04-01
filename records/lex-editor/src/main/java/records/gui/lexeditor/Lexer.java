@@ -20,7 +20,10 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final @SourceLocation int[] caretPositions;
         public final ImmutableList<ErrorDetails> errors;
         public final ImmutableList<Lexer.AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> autoCompleteDetails;
+        // If a bit is set at a particular caret position, when the user
+        // types a ({[ opening bracket then do not insert the closing bracket.
         public final BitSet suppressBracketMatching;
+        public final boolean bracketsAreBalanced;
 
         /*
         public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, int[] caretPositions, ImmutableList<ErrorDetails> errors)
@@ -36,7 +39,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         // Temporary constructor to auto-fill caret positions
         // Remove once caret positions done properly
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -49,6 +52,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             this.errors = errors;
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
+            this.bracketsAreBalanced = bracketsBalanced;
         }
         
         public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)

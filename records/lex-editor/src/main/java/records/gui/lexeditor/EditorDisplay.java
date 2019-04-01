@@ -147,6 +147,13 @@ public final class EditorDisplay extends TextEditorBase
                     @SourceLocation int one = 1;
                     content.positionCaret(this.getCaretPosition() - one);
                 }
+                else if (")}]".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
+                {
+                    // Overtype instead
+                    @SuppressWarnings("units")
+                    @SourceLocation int one = 1;
+                    this.content.positionCaret(content.getCaretPosition() + one);
+                }
                 else
                 {
                     this.content.replaceSelection(character);

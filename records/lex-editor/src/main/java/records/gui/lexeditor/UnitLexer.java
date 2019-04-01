@@ -65,6 +65,6 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet());
+        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

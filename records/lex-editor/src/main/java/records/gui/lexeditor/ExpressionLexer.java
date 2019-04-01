@@ -300,7 +300,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
 
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
-        }, saver.getErrors(), completions.build(), suppressBracketMatching);
+        }, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()
