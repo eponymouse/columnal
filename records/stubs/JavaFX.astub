@@ -334,7 +334,7 @@ class Window
     void hide(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void sizeToScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void setScene(@UnknownInitialization(javafx.stage.Window.class) Window this, javafx.scene.Scene scene);
-    @Pure @Nullable Scene getScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
+    @Pure Scene getScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
     
     void setX(@UnknownInitialization(javafx.stage.Window.class) Window this, double x);
     

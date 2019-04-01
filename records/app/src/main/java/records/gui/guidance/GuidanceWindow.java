@@ -333,10 +333,14 @@ public final class GuidanceWindow extends Stage
         while (it.hasNext())
         {
             Window window = it.next();
-            Node foundNode = window.getScene().lookup(nodeLookup);
-            if (foundNode != null)
+            Scene scene = window.getScene();
+            if (scene != null)
             {
-                return foundNode;
+                Node foundNode = scene.lookup(nodeLookup);
+                if (foundNode != null)
+                {
+                    return foundNode;
+                }
             }
         }
         return null;
