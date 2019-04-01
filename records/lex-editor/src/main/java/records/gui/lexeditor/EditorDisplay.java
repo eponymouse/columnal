@@ -86,6 +86,14 @@ public final class EditorDisplay extends TextEditorBase
                     if (caretPosIndex + 1 < caretPositions.length)
                         content.positionCaret(caretPositions[caretPosIndex + 1], !keyEvent.isShiftDown());
                     break;
+                case HOME:
+                    if (caretPositions.length > 0)
+                        content.positionCaret(caretPositions[0], !keyEvent.isShiftDown());
+                    break;
+                case END:
+                    if (caretPositions.length > 0)
+                        content.positionCaret(caretPositions[caretPositions.length - 1], !keyEvent.isShiftDown());
+                    break;
                 case DOWN:
                     if (autoComplete.isShowing())
                         autoComplete.down();
