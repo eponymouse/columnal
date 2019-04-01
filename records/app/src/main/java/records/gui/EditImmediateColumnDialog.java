@@ -121,7 +121,14 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             Scene scene = getDialogPane().getScene();
             if (scene != null && scene.getWindow() != null)
                 scene.getWindow().sizeToScene();
-        });
+        }) {
+            @Override
+            protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
+            {
+                defaultValueField.selectAll();
+                defaultValueField.requestFocus();
+            }
+        };
         content.addRow(labelledGridRow(alignedLabels, "edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
         content.addRow(labelledGridRow(alignedLabels, "edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
         
