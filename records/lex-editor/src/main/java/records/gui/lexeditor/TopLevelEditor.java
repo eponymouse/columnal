@@ -63,7 +63,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private final ErrorMessagePopup errorMessagePopup;
 
     // package-visible
-    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange)
+    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... typeClasses)
     {
         errorMessagePopup = new ErrorMessagePopup();
         content = new EditorContent<>(originalContent, lexer);
@@ -76,6 +76,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         };
         scrollPane.getStyleClass().add("top-level-editor");
+        scrollPane.getStyleClass().addAll(typeClasses);
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
         });

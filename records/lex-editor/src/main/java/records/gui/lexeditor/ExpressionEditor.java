@@ -31,7 +31,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? "" : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)), onChangeHandler);
+        super(startingValue == null ? "" : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)), onChangeHandler, "expression-editor");
     }
 
     private static ImmutableList<StandardFunctionDefinition> getAllFunctions(FunctionLookup functionLookup)
