@@ -515,6 +515,30 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("[] ; [[[]]] ; [[], [[]], [[4],[],[1,2,3]]]");
     }
+
+    @Test
+    public void testSingletonList() throws Exception
+    {
+        testSimple("[1]");
+    }
+
+    @Test
+    public void testSingletonList2() throws Exception
+    {
+        testSimple("[1 / 2]");
+    }
+
+    @Test
+    public void testSingletonList2b() throws Exception
+    {
+        testSimple("[1 * 2]");
+    }
+
+    @Test
+    public void testSingletonList3() throws Exception
+    {
+        testSimple("[(1, 2)]");
+    }
     
     @Test
     public void testMatch() throws Exception
