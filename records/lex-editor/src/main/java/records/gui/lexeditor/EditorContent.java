@@ -18,6 +18,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 {
     private LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> curContent;
     private @SourceLocation int curCaretPosition;
+    private @SourceLocation int curAnchorPosition;
     private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
     private final ArrayList<FXPlatformConsumer<@SourceLocation Integer>> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
@@ -28,25 +29,33 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         this.lexer = lexer;
         this.curContent = this.lexer.process(originalContent);
         this.curCaretPosition = curContent.caretPositions.length > 0 ? curContent.caretPositions[0] : 0;
+        this.curAnchorPosition = curCaretPosition;
     }
 
     public void positionCaret(Focus side)
     {
         if (side == Focus.LEFT && curContent.caretPositions.length > 0)
-            positionCaret(curContent.caretPositions[0]);
+            positionCaret(curContent.caretPositions[0], true);
         else if (side == Focus.RIGHT && curContent.caretPositions.length > 0)
-            positionCaret(curContent.caretPositions[curContent.caretPositions.length - 1]);
+            positionCaret(curContent.caretPositions[curContent.caretPositions.length - 1], true);
     }
     
-    public void positionCaret(@SourceLocation int pos)
+    public void positionCaret(@SourceLocation int pos, boolean alsoSetAnchor)
     {
         curCaretPosition = pos;
+        if (alsoSetAnchor)
+            curAnchorPosition = pos;
         for (FXPlatformConsumer<@SourceLocation Integer> caretPositionListener : caretPositionListeners)
         {
             caretPositionListener.consume(curCaretPosition);
         }
     }
     
+    public @SourceLocation int getAnchorPosition()
+    {
+        return curAnchorPosition;
+    }
+
     public @SourceLocation int getCaretPosition()
     {
         return curCaretPosition;
@@ -54,8 +63,8 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     
     public void replaceSelection(String content)
     {
-        // TODO should be anchor position
-        replaceText(Math.min(curCaretPosition, curCaretPosition), Math.max(curCaretPosition, curCaretPosition), content);
+        replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content);
+        curAnchorPosition = curCaretPosition;
     }
     
     public void replaceText(int startIncl, int endExcl, String content)
@@ -65,6 +74,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
         this.curContent = lexer.process(newText);
         this.curCaretPosition = curContent.mapperToAdjusted.mapCaretPos(newCaretPos);
+        this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)
         {

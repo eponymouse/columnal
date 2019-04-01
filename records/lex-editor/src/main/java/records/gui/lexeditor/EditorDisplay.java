@@ -71,23 +71,33 @@ public final class EditorDisplay extends TextEditorBase
             {
                 case LEFT:
                     if (caretPosIndex > 0)
-                        content.positionCaret(caretPositions[caretPosIndex - 1]);
+                        content.positionCaret(caretPositions[caretPosIndex - 1], !keyEvent.isShiftDown());
                     break;
                 case RIGHT:
                     if (caretPosIndex + 1 < caretPositions.length)
-                        content.positionCaret(caretPositions[caretPosIndex + 1]);
+                        content.positionCaret(caretPositions[caretPosIndex + 1], !keyEvent.isShiftDown());
                     break;
                 case DOWN:
                     if (autoComplete.isShowing())
                         autoComplete.down();
                     break;
                 case BACK_SPACE:
-                    if (caretPosition > 0)
+                    if (caretPosition != content.getAnchorPosition())
+                        content.replaceSelection("");
+                    else if (caretPosition > 0)
                         content.replaceText(caretPosition - 1, caretPosition, "");
                     break;
                 case DELETE:
-                    if (caretPosition < content.getText().length())
+                    if (caretPosition != content.getAnchorPosition())
+                        content.replaceSelection("");
+                    else if (caretPosition < content.getText().length())
                         content.replaceText(caretPosition, caretPosition + 1, "");
+                    break;
+                case A:
+                    if (keyEvent.isShortcutDown())
+                    {
+                        selectAll();
+                    }
                     break;
                 case V:
                     if (keyEvent.isShortcutDown())
@@ -135,7 +145,7 @@ public final class EditorDisplay extends TextEditorBase
                     && character.charAt(0) != 0x7F
                     && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
             {
-                if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()))
+                if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
                 {
                     if (character.equals("("))
                         this.content.replaceSelection("()");
@@ -145,14 +155,14 @@ public final class EditorDisplay extends TextEditorBase
                         this.content.replaceSelection("{}");
                     @SuppressWarnings("units")
                     @SourceLocation int one = 1;
-                    content.positionCaret(this.getCaretPosition() - one);
+                    content.positionCaret(this.getCaretPosition() - one, true);
                 }
                 else if (")}]".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
                 {
                     // Overtype instead
                     @SuppressWarnings("units")
                     @SourceLocation int one = 1;
-                    this.content.positionCaret(content.getCaretPosition() + one);
+                    this.content.positionCaret(content.getCaretPosition() + one, true);
                 }
                 else
                 {
@@ -167,11 +177,18 @@ public final class EditorDisplay extends TextEditorBase
     }
 
     @SuppressWarnings("units")
+    private void selectAll()
+    {
+        content.positionCaret(0, true);
+        content.positionCaret(content.getText().length(), false);
+    }
+
+    @SuppressWarnings("units")
     private void triggerSelection()
     {
         autoComplete.selectCompletion().ifPresent(p -> {
             content.replaceText(p.startPos, content.getCaretPosition(), p.content);
-            content.positionCaret(p.startPos + p.relativeCaretPos);
+            content.positionCaret(p.startPos + p.relativeCaretPos, true);
         });
     }
 
@@ -213,13 +230,13 @@ public final class EditorDisplay extends TextEditorBase
     @Override
     public @OnThread(Tag.FXPlatform) int getAnchorPosition()
     {
-        return getCaretPosition(); // TODO
+        return content.getAnchorPosition();
     }
 
     @SuppressWarnings("units")
     public void _test_positionCaret(int caretPos)
     {
-        content.positionCaret(caretPos);
+        content.positionCaret(caretPos, true);
     }
     
     public TopLevelEditor<?, ?, ?> _test_getEditor()
