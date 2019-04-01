@@ -234,16 +234,20 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
             setContentNode(container);
             //FXUtility.addChangeListenerPlatformNN(detachedProperty(), b -> updateShowHide(false));
-            container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                if (e.getButton() == MouseButton.MIDDLE)
-                {
-                    // Will come back if user hovers or moves keyboard:
-                    keyboardErrorInfo = null;
-                    mouseErrorInfo = null;
-                    FXUtility.mouse(this).updateShowHide(true);
-                    e.consume();
-                }
-            });
+            // Have to put this on the scene because of all the window decorations and shadows:
+            if (getScene() != null)
+            {
+                getScene().addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getButton() == MouseButton.MIDDLE)
+                    {
+                        // Will come back if user hovers or moves keyboard:
+                        keyboardErrorInfo = null;
+                        mouseErrorInfo = null;
+                        FXUtility.mouse(this).updateShowHide(true);
+                        e.consume();
+                    }
+                });
+            }
             container.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
                 FXUtility.mouse(this).cancelHideAnimation();
             });

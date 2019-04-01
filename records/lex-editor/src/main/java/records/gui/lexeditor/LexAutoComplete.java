@@ -9,6 +9,7 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.Skinnable;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -104,13 +105,16 @@ public class LexAutoComplete
             setAutoHide(false);
             setHideOnEscape(false);
             setSkin(new LexAutoCompleteSkin());
-            pane.setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.MIDDLE)
-                {
-                    hide();
-                    e.consume();
-                }
-            });
+            if (getScene() != null)
+            {
+                getScene().addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getButton() == MouseButton.MIDDLE)
+                    {
+                        hide();
+                        e.consume();
+                    }
+                });
+            }
         }
 
         public void setCompletions(ImmutableList<LexCompletion> completions)
