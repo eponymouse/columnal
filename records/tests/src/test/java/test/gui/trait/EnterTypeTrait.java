@@ -52,7 +52,7 @@ public interface EnterTypeTrait extends FxRobotInterface
                 arg.eitherInt(unit -> {
                     write("{");
                     push(KeyCode.DELETE);
-                    write(unit.toString());
+                    enterUnit(unit, r);
                     write("}");
                     return UnitType.UNIT;
                 }, type -> {
@@ -93,7 +93,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             {
                 write("{");
                 push(KeyCode.DELETE);
-                write(units.save(false, true), DELAY);
+                enterUnit(units, r);
                 write("}");
             }
         }
@@ -115,6 +115,18 @@ public interface EnterTypeTrait extends FxRobotInterface
         else
         {
             throw new RuntimeException("Unknown TypeExpression sub type: " + typeExpression.getClass());
+        }
+    }
+
+    @OnThread(Tag.Any)
+    public default void enterUnit(UnitExpression unitExpression, Random r) throws InternalException
+    {
+        // Bit of a hack...
+        for (char c : unitExpression.save(false, true).toCharArray())
+        {
+            write(c);
+            if (c == '(')
+                push(KeyCode.DELETE);
         }
     }
 }

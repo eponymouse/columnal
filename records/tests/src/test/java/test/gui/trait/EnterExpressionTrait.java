@@ -117,7 +117,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 write("{");
                 push(KeyCode.DELETE);
-                write(unitExpression.toString());
+                enterUnit(unitExpression, r);
                 write("}");
             }
         }
