@@ -1305,6 +1305,18 @@ public class Utility
         };
     }
 
+    // In characters, how long is the common subsequence at the start of the strings?
+    public static int longestCommonStart(String a, String b)
+    {
+        int i = 0;
+        for (; i < a.length() && i < b.length(); i++)
+        {
+            if (a.charAt(i) != b.charAt(i))
+                break;
+        }
+        return i;
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);
@@ -1904,8 +1916,10 @@ public class Utility
     {
         CodePointCharStream inputStream = CharStreams.fromString(src);
         Lexer lexer = makeLexer.apply(inputStream);
+        DescriptiveErrorListener errorListener = new DescriptiveErrorListener();
+        lexer.addErrorListener(errorListener);
         Token token = lexer.nextToken();
-        return token.getType() == tokenType && token.getText().equals(src);
+        return errorListener.errors.isEmpty() && token.getType() == tokenType && token.getText().equals(src);
     }
     
     

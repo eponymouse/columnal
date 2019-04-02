@@ -62,20 +62,32 @@ public class LexAutoComplete
     {
         return Optional.ofNullable(window.listView.getSelectionModel().getSelectedItem());
     }
+    
+    public enum LexSelectionBehaviour
+    {
+        SELECT_IF_ONLY,
+        SELECT_IF_TOP,
+        NO_AUTO_SELECT;
+    }
 
     public static class LexCompletion
     {
         public final @SourceLocation int startPos;
         public final String content;
         public final int relativeCaretPos;
-        public final boolean selectIfOnly;
+        public final LexSelectionBehaviour selectionBehaviour;
 
-        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos)
+        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour)
         {
             this.startPos = startPos;
             this.content = content;
             this.relativeCaretPos = relativeCaretPos;
-            this.selectIfOnly = false;
+            this.selectionBehaviour = selectionBehaviour;
+        }
+
+        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos)
+        {
+            this(startPos, content, relativeCaretPos, LexSelectionBehaviour.NO_AUTO_SELECT);
         }
 
         public LexCompletion(@SourceLocation int startPos, String content)
@@ -83,12 +95,9 @@ public class LexAutoComplete
             this(startPos, content, content.length());
         }
 
-        public LexCompletion(@SourceLocation int startPos, String content, boolean selectIfOnly)
+        public LexCompletion(@SourceLocation int startPos, String content, LexSelectionBehaviour selectionBehaviour)
         {
-            this.startPos = startPos;
-            this.content = content;
-            this.relativeCaretPos = content.length();
-            this.selectIfOnly = selectIfOnly;
+            this(startPos, content, content.length(), selectionBehaviour);
         }
 
         // Used by ListView to display content:
@@ -135,7 +144,8 @@ public class LexAutoComplete
         public void setCompletions(ImmutableList<LexCompletion> completions)
         {
             this.listView.getItems().setAll(completions);
-            if (completions.size() == 1 && completions.get(0).selectIfOnly)
+            if ((completions.size() == 1 && completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_ONLY)
+                || (completions.size() >= 1 && completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_TOP))
             {
                 listView.getSelectionModel().select(0);
             }

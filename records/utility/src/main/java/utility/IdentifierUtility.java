@@ -11,6 +11,7 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser.IdentContext;
 import records.grammar.UnitLexer;
 import records.grammar.UnitParser.SingleUnitContext;
+import utility.Utility.DescriptiveErrorListener;
 
 public class IdentifierUtility
 {
@@ -55,8 +56,13 @@ public class IdentifierUtility
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         Lexer lexer = new ExpressionLexer(inputStream);
+        DescriptiveErrorListener errorListener = new DescriptiveErrorListener();
+        lexer.addErrorListener(errorListener);
         Token token = lexer.nextToken();
-        if (token.getType() == ExpressionLexer.IDENT)
+        // If there any errors, abort:
+        if (!errorListener.errors.isEmpty())
+            return null;
+        else if (token.getType() == ExpressionLexer.IDENT)
             return new Pair<>(token.getText(), startFrom + token.getStopIndex() + 1);
         else
             return null;

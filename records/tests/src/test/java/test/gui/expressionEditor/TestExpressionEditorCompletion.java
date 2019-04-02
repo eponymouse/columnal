@@ -21,7 +21,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.InvalidIdentExpression;
+import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -33,7 +33,6 @@ import utility.SimulationSupplier;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @OnThread(Tag.Simulation)
 public class TestExpressionEditorCompletion extends FXApplicationTest implements PopupTrait
@@ -53,7 +52,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), Expression.parse(null, expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
 
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
-        sleep(500);
+        sleep(1000);
         // Not much more to do -- just edit the expression 
         clickOn("My Calc");
         push(KeyCode.TAB);
@@ -134,6 +133,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("@i");
         push(KeyCode.ENTER);
         // It's going to be invalid due to the empty bits:
-        assertEquals(new IfThenElseExpression(new InvalidIdentExpression(""), new InvalidIdentExpression(""), new InvalidIdentExpression("")), finish());
+        assertEquals(new IfThenElseExpression(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
     }
 }

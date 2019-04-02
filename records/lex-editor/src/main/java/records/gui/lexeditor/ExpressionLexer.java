@@ -22,6 +22,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.LexAutoComplete.LexSelectionBehaviour;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -194,8 +195,11 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     if (keyword.getContent().startsWith("@"))
                     {
-                        if (keyword.getContent().substring(1).startsWith(text))
-                            identCompletions.add(new LexCompletion(curIndex, keyword.getContent(), true));
+                        int common = Utility.longestCommonStart(keyword.getContent().substring(1), text);
+                        if (common > 0)
+                        {
+                            completions.add(new AutoCompleteDetails<>(new Span(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(curIndex, keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY)))));
+                        }
                     }
                 }
                 
@@ -288,9 +292,21 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             {
                 int nonLetter = CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('A', 'Z')).negate().indexIn(content, curIndex + 1);
                 String stem = content.substring(curIndex, nonLetter == -1 ? content.length() : nonLetter);
-                @SourceLocation int curIndexFinal = curIndex;
-                ImmutableList<LexCompletion> validKeywordCompletions = Arrays.stream(Keyword.values()).filter(k -> k.getContent().startsWith(stem)).map(k -> new LexCompletion(curIndexFinal, k.getContent(), true)).collect(ImmutableList.<LexCompletion>toImmutableList());
-                completions.add(new AutoCompleteDetails<>(new Span(curIndex, nonLetter == -1 ? content.length() : nonLetter), new ExpressionCompletionContext(validKeywordCompletions)));
+
+                ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
+                if ("@i".startsWith(stem))
+                {
+                    validKeywordCompletions.add(new LexCompletion(curIndex, "@if@then@else@endif", 2, LexSelectionBehaviour.SELECT_IF_TOP));
+                }
+
+                for (Keyword keyword : Keyword.values())
+                {
+                    if (keyword.getContent().startsWith(stem))
+                    {
+                        validKeywordCompletions.add(new LexCompletion(curIndex, keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY));
+                    }
+                }
+                completions.add(new AutoCompleteDetails<>(new Span(curIndex, nonLetter == -1 ? content.length() : nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
             }
 
             boolean nextTrue = content.startsWith("true", curIndex);
