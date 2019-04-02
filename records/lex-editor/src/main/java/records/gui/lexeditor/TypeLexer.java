@@ -26,6 +26,7 @@ import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
@@ -77,8 +78,9 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                     continue nextToken;
                 }
             }
-
-            for (DataType dataType : Utility.<DataType>iterableStream(Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.BOOLEAN, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))))))
+            
+            // Important to try longest types first:
+            for (DataType dataType : Utility.<DataType>iterableStream(Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.BOOLEAN, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t)))).sorted(Comparator.comparing(t -> -t.toString().length()))))
             {
                 if (content.startsWith(dataType.toString(), curIndex))
                 {
