@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,19 +52,15 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             windowToUse.show();
         });
         clickOn(".top-level-editor");
-        write(invalid);
+        for (char c : invalid.toCharArray())
+        {
+            write(c);
+            if ("({[".contains("" + c))
+                push(KeyCode.DELETE);
+        }
         @Recorded @NonNull Expression savedInvalid = TestUtil.fx(() -> expressionEditorA.save());
         ExpressionEditor expressionEditorB = makeExpressionEditor(dummyManager, savedInvalid);
-        try
-        {
-            assertEquals(savedInvalid.toString(), invalid, TestUtil.fx(() -> expressionEditorB._test_getRawText()));
-        }
-        catch (AssertionError e)
-        {
-            // We try again without round brackets, as these can be
-            // introduced or removed when loading and saving partially-valid expressions
-            assertEquals(savedInvalid.toString(), invalid.replaceAll("[()]", ""), TestUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[()]", ""));
-        }
+        assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TestUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));
     }
 
     @OnThread(Tag.Any)
