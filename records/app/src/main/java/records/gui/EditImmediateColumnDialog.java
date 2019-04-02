@@ -119,8 +119,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
-            if (scene != null && scene.getWindow() != null)
-                scene.getWindow().sizeToScene();
+            // Warning: this can make the dialog bigger than the screen!
+            //if (scene != null && scene.getWindow() != null)
+                //scene.getWindow().sizeToScene();
         }) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
