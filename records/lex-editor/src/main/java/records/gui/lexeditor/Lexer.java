@@ -57,7 +57,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         
         public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)
         {
-            return autoCompleteDetails.stream().filter(a -> a.location.contains(pos)).findFirst().map(a -> a.codeCompletionContext.getCompletionsFor(pos)).orElse(ImmutableList.of());
+            return autoCompleteDetails.stream().filter(a -> a.location.contains(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletion>toImmutableList());
         }
     }
     
