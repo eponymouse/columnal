@@ -171,6 +171,26 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
             }
 
+            if (content.startsWith("_", curIndex))
+            {
+                @Nullable Pair<@ExpressionIdentifier String, Integer> varName = IdentifierUtility.consumeExpressionIdentifier(content, curIndex + 1);
+                if (varName == null)
+                {
+                    saver.saveOperand(new MatchAnythingExpression(), new Span(curIndex, curIndex + 1), c -> {
+                    });
+                    s.append("_");
+                    curIndex += 1;
+                    continue nextToken;
+                }
+                else
+                {
+                    saver.saveOperand(new VarDeclExpression(varName.getFirst()), new Span(curIndex, varName.getSecond()), c -> {});
+                    s.append("_" + varName.getFirst());
+                    curIndex = varName.getSecond();
+                    continue nextToken;
+                }
+            }
+
             @Nullable Pair<String, Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
@@ -205,19 +225,6 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 
                 completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
                 
-                /*
-                if (text.startsWith("_"))
-                {
-                    if (text.equals("_"))
-                        saver.saveOperand(new MatchAnythingExpression(), this, this, this::afterSave);
-                    else
-                    {
-                        @SuppressWarnings("identifier")
-                        @ExpressionIdentifier String minusLeadingUnderscore = text.substring(1);
-                        saver.saveOperand(new VarDeclExpression(minusLeadingUnderscore), this, this, this::afterSave);
-                    }
-                }
-                else*/
                 
                 {
                     boolean wasColumn = false;
