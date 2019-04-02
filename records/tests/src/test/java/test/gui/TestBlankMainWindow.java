@@ -46,6 +46,7 @@ import test.gen.type.GenDataType;
 import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
+import test.gen.type.GenDataTypeMaker.MustHaveValues;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gui.trait.ClickTableLocationTrait;
@@ -324,7 +325,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(@From(GenDataTypeMaker.class) @MustHaveValues GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             addColumnToEntryTable(dataTypeMaker.getTypeManager(), dataTypeMaker.makeType().getDataType());

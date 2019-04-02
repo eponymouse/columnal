@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.GeneratorConfiguration;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -24,13 +25,20 @@ import test.gen.type.GenDataTypeMaker.DataTypeMaker;
 import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
 import utility.Either;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.TYPE_USE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * Created by neil on 13/01/2017.
  */
 public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
 {
     private final GenJellyTypeMaker genJellyTypeMaker;
-    private final boolean mustHaveValues;
+    private boolean mustHaveValues;
     
     public class DataTypeAndValueMaker
     {
@@ -181,5 +189,16 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
         {
             super(new GenJellyTypeMaker.GenTaggedType(), true);
         }        
+    }
+
+    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
+    @Retention(RUNTIME)
+    @GeneratorConfiguration
+    public @interface MustHaveValues {
+    }
+    
+    public void configure(MustHaveValues mustHaveValues)
+    {
+        this.mustHaveValues = true;
     }
 }
