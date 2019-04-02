@@ -102,8 +102,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
                 selectAllCurrentTextField();
                 write(equiv.getFirst().toString());
                 push(KeyCode.TAB);
-                // Command-A doesn't work via robot:
-                push(KeyCode.F9);
+                push(KeyCode.SHORTCUT, KeyCode.A);
                 push(KeyCode.BACK_SPACE);
                 write(equiv.getSecond().toString());
             }
