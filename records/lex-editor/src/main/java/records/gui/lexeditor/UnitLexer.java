@@ -11,8 +11,12 @@ import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
+import styled.StyledCSS;
+import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.BitSet;
 
@@ -45,9 +49,15 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
                 }
             }
             
-            if (content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
+            if ((content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9') || 
+                (content.charAt(curIndex) == '-' && curIndex + 1 < content.length() && (content.charAt(curIndex + 1) >= '0' && content.charAt(curIndex + 1) <= '9')))
             {
                 int startIndex = curIndex;
+                // Minus only allowed at start:
+                if (content.charAt(curIndex) == '-')
+                {
+                    curIndex += 1;
+                }
                 while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
                     curIndex += 1;
                 saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(content.substring(startIndex, curIndex))), new Span(startIndex, curIndex), c -> {});
@@ -61,6 +71,10 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
+
+            Span invalidCharLocation = new Span(curIndex, curIndex + 1);
+            saver.saveOperand(new InvalidSingleUnitExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             
             curIndex += 1;
         }
