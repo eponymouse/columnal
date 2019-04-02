@@ -109,7 +109,7 @@ public class ColumnReference extends NonOperatorExpression
         
         if (!structured)
         {
-            return tableColonColumn;
+            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + tableColonColumn;
         }
         
         // Sanity check to avoid saving something we can't load:

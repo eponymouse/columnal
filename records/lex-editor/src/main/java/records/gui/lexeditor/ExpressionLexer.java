@@ -190,6 +190,30 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     continue nextToken;
                 }
             }
+            
+            if (content.startsWith("@entire", curIndex))
+            {
+                @Nullable Pair<String, Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + "@entire".length());
+                if (parsed != null)
+                {
+                    for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+                    {
+                        TableId tableId = availableColumn.getTableId();
+                        String columnIdRaw = availableColumn.getColumnId().getRaw();
+                        if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
+                                ((tableId == null && columnIdRaw.equals(parsed.getFirst()))
+                                || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(parsed.getFirst()))))
+                        {
+                            saver.saveOperand(new ColumnReference(availableColumn), new Span(curIndex, parsed.getSecond()), c -> {
+                            });
+                            s.append("@entire " + parsed.getFirst());
+                            curIndex = parsed.getSecond();
+                            continue nextToken;
+                        }
+                    }
+                    
+                }
+            }
 
             @Nullable Pair<String, Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
