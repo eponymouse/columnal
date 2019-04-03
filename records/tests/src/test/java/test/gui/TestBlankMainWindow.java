@@ -54,6 +54,7 @@ import test.gui.trait.ComboUtilTrait;
 import test.gui.trait.EnterStructuredValueTrait;
 import test.gui.trait.EnterTypeTrait;
 import test.gui.trait.FocusOwnerTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
@@ -78,7 +79,7 @@ import static org.junit.Assert.*;
  */
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait, TextFieldTrait
+public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait, TextFieldTrait, PopupTrait
 {
     public static final CellPosition NEW_TABLE_POS = new CellPosition(CellPosition.row(1), CellPosition.col(1));
     
@@ -359,6 +360,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             clickOn(".default-value");
             enterStructuredValue(dataType, value, new Random(1), false);
         }
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
         WaitForAsyncUtils.waitForFxEvents();
         try
