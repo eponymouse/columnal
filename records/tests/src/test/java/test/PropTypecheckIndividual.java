@@ -14,6 +14,7 @@ import records.data.KnownLengthRecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -53,6 +54,7 @@ import test.gen.type.GenDataTypeMaker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -367,7 +369,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
     {
-        TypeExp typeExp = e.checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
+        TypeExp typeExp = e.checkExpression(TestUtil.dummyColumnLookup(), new TypeState(typeManager.getUnitManager(), typeManager), new ErrorAndTypeRecorderStorer());
         if (typeExp == null)
             return null;
         else
@@ -477,7 +479,7 @@ public class PropTypecheckIndividual
         checkConcreteType(DataType.number(new NumberInfo(m)), "1 + 2{m}");
         checkConcreteType(DataType.number(new NumberInfo(m)), "1 * 2{m}");
         checkConcreteType(DataType.NUMBER, "1 * 2");
-        checkConcreteType(null, "@call @function abs(1) + 2{m}");
+        checkConcreteType((DataType)null, "@call @function abs(1) + 2{m}");
         checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1) * 2{m}");
         checkConcreteType(DataType.NUMBER, "@call @function abs(1)");
         checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1{m})");
@@ -486,7 +488,31 @@ public class PropTypecheckIndividual
 
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
     {
-        TypeManager typeManager = DummyManager.make().getTypeManager();
-        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
+        assertEquals(expression, dataType, checkConcrete(typeManager, Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+    }
+
+    private void checkConcreteType(ExFunction<TypeManager, DataType> dataType, String expression) throws InternalException, UserException
+    {
+        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
+        assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+    }
+
+    @Test
+    public void checkFromTextFunctions() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.BOOLEAN, "@call @function from text to(type{Boolean}, \"true\")");
+    }
+
+    @Test
+    public void checkFromTextFunctions2() throws UserException, InternalException
+    {
+        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call @function from text to(type{A}, \"Hello\")");
+    }
+    
+    @Test
+    public void checkNestedFunctions() throws UserException, InternalException
+    {
+        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call @function from text to(type{A}, @call @function from text to(type{Text}, \"Hello\"))");
     }
 }
