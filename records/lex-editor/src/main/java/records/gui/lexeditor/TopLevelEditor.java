@@ -75,6 +75,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
             }
         };
+        scrollPane.setPrefWidth(600.0);
         scrollPane.getStyleClass().add("top-level-editor");
         scrollPane.getStyleClass().addAll(typeClasses);
         content.addChangeListener(() -> {
