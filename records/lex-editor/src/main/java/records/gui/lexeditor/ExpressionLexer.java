@@ -64,13 +64,14 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         BitSet suppressBracketMatching = new BitSet();
         StringBuilder s = new StringBuilder();
         boolean prevWasIdent = false;
+        boolean preserveNextSpace = false;
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
             if (content.startsWith(" ", curIndex))
             {
                 // Keep single space after ident as it may continue ident:
-                if (prevWasIdent)
+                if (prevWasIdent || preserveNextSpace)
                 {
                     s.append(" ");
                 }
@@ -79,10 +80,12 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     missingSpots.set(curIndex);
                 }
                 prevWasIdent = false;
+                preserveNextSpace = false;
                 curIndex += 1;
                 continue nextToken;
             }
             prevWasIdent = false;
+            preserveNextSpace = false;
             
             for (Keyword keyword : Keyword.values())
             {
@@ -328,7 +331,8 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             if (content.startsWith("@", curIndex))
             {
                 int nonLetter = CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('A', 'Z')).negate().indexIn(content, curIndex + 1);
-                String stem = content.substring(curIndex, nonLetter == -1 ? content.length() : nonLetter);
+                nonLetter = nonLetter == -1 ? content.length() : nonLetter;
+                String stem = content.substring(curIndex, nonLetter);
 
                 ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
                 if ("@i".startsWith(stem))
@@ -343,7 +347,16 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         validKeywordCompletions.add(new LexCompletion(curIndex, keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY));
                     }
                 }
-                completions.add(new AutoCompleteDetails<>(new Span(curIndex, nonLetter == -1 ? content.length() : nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
+                completions.add(new AutoCompleteDetails<>(new Span(curIndex, nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
+                
+                // We skip to next non-letter to prevent trying to complete the keyword as a function:
+                String attemptedKeyword = content.substring(curIndex, nonLetter);
+                saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), new Span(curIndex, nonLetter), c -> {});
+                saver.locationRecorder.addErrorAndFixes(new Span(curIndex, nonLetter), StyledString.s("Unknown keyword: " + attemptedKeyword), ImmutableList.of());
+                s.append(attemptedKeyword);
+                curIndex = nonLetter;
+                preserveNextSpace = true;
+                continue nextToken;
             }
 
             boolean nextTrue = content.startsWith("true", curIndex);
