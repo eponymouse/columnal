@@ -140,7 +140,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
             Function<Span, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
             currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (bracketed, bracketEnd) -> {
-                return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(Span.fromTo(errorDisplayer, bracketEnd), bracketed));
+                return Either.<@Recorded Expression, Terminator>left(bracketed);
             }, invalidPrefix, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
