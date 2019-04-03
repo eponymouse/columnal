@@ -13,6 +13,7 @@ import records.data.TableId;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
@@ -36,10 +37,7 @@ import utility.Utility;
 import utility.Utility.TransparentBuilder;
 import utility.gui.TranslationUtility;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionContext>
@@ -235,6 +233,14 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null && availableColumn.getColumnId().getRaw().startsWith(parsed.getFirst()))
                         identCompletions.add(new LexCompletion(curIndex, availableColumn.getColumnId().getRaw()));
                 }
+                for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
+                {
+                    String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
+                    if (tag.tagName.startsWith(parsed.getFirst()) || (tag.typeName != null && fullName.startsWith(parsed.getFirst())))
+                    {
+                        identCompletions.add(new LexCompletion(curIndex, fullName + (tag.hasInner ? "()" : ""), fullName.length() + (tag.hasInner ? 1 : 0)));
+                    }
+                }
                 for (Keyword keyword : Keyword.values())
                 {
                     if (keyword.getContent().startsWith("@"))
@@ -371,6 +377,85 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
         }, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+    }
+    
+    class TagCompletion implements Comparable<TagCompletion>
+    {
+        // Non-null if needed to disambiguate, null if type name is unique
+        private final @Nullable TypeId typeName;
+        private final String tagName;
+        private final boolean hasInner;
+
+        public TagCompletion(@Nullable TypeId typeName, String tagName, boolean hasInner)
+        {
+            this.typeName = typeName;
+            this.tagName = tagName;
+            this.hasInner = hasInner;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TagCompletion that = (TagCompletion) o;
+            return Objects.equals(typeName, that.typeName) &&
+                    tagName.equals(that.tagName);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(typeName, tagName);
+        }
+
+        @Override
+        public int compareTo(TagCompletion o)
+        {
+            if (typeName == null && o.typeName != null)
+                return -1;
+            else if (typeName != null && o.typeName == null)
+                return 1;
+            else if (typeName != null && o.typeName != null)
+            {
+                int c = typeName.compareTo(o.typeName);
+                if (c != 0)
+                    return c;
+            }
+            return tagName.compareTo(o.tagName);
+        }
+    }
+
+    private Collection<TagCompletion> getTagCompletions(Map<TypeId, TaggedTypeDefinition> knownTaggedTypes)
+    {
+        // Optional.empty indicates a name clash for a simple key
+        TreeMap<TagCompletion, Optional<TaggedTypeDefinition>> completions = new TreeMap<>();
+
+        for (TaggedTypeDefinition value : knownTaggedTypes.values())
+        {
+            for (TagType<JellyType> tag : value.getTags())
+            {
+                // Try first without type:
+                TagCompletion simpleKey = new TagCompletion(null, tag.getName(), tag.getInner() != null);
+                TagCompletion fullKey = new TagCompletion(value.getTaggedTypeName(), tag.getName(), tag.getInner() != null);
+                completions.put(fullKey, Optional.of(value));
+                @Nullable Optional<TaggedTypeDefinition> prevSimple = completions.remove(simpleKey);
+                if (prevSimple == null)
+                {
+                    completions.put(simpleKey, Optional.of(value));
+                }
+                else
+                {
+                    if (prevSimple.isPresent())
+                    {
+                        // Note clash
+                        completions.put(simpleKey, Optional.empty());
+                    }
+                }
+            }
+            
+        }
+        return new ArrayList<TagCompletion>(completions.keySet());
     }
 
     private ImmutableList<Pair<String, Function<String, Expression>>> getNestedLiterals()

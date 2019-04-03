@@ -10,7 +10,7 @@ import threadchecker.Tag;
  * Created by neil on 14/11/2016.
  */
 @OnThread(Tag.Any)
-public class TypeId
+public class TypeId implements Comparable<TypeId>
 {
     private final @ExpressionIdentifier String typeId;
 
@@ -52,5 +52,11 @@ public class TypeId
     public @Localized @ExpressionIdentifier String getRaw()
     {
         return typeId;
+    }
+
+    @Override
+    public int compareTo(TypeId o)
+    {
+        return typeId.compareTo(o.typeId);
     }
 }

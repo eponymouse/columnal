@@ -175,10 +175,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             boolean multipleTagsOfThatName = typeManager.ambiguousTagName(tagName);
             
             if (multipleTagsOfThatName && tag.getTypeName() != null)
-                write(tag.getTypeName().getRaw() + ":");
+                tagName = tag.getTypeName().getRaw() + ":" + tagName;
             write(tagName, DELAY);
             if (r.nextBoolean())
             {
+                scrollAutoCompleteToOption(tagName + (tag._test_hasInner() ? "()" : ""));
                 push(KeyCode.ENTER);
                 if (tag._test_hasInner())
                 {
