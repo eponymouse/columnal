@@ -81,6 +81,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     {
         loadExpression("@unfinished \"\"");
         write("@el");
+        // Should be single completion that is auto-selected:
         push(KeyCode.ENTER);
         // Don't care exactly how it's saved, as long as keyword is in there:
         assertThat(finish().toString(), Matchers.containsString("^aelse"));
