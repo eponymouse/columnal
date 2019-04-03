@@ -112,29 +112,29 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
 
     private static TypeMatcher parseFunctionType(String functionName, List<String> typeArgs, List<String> constraints, List<String> unitArgs, String functionType)
     {
-        Map<String, Either<MutUnitVar, MutVar>> typeVars = new HashMap<>();
-        for (String typeArg : typeArgs)
-        {
-            TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
-            for (String constraint : constraints)
-            {
-                if (constraint.endsWith(" " + typeArg));
-                {
-                    typeClassRequirements = TypeClassRequirements.union(typeClassRequirements, 
-                        TypeClassRequirements.require(StringUtils.removeEnd(constraint, " " + typeArg), functionName)); 
-                }
-            }
-            
-            typeVars.put(typeArg, Either.right(new MutVar(null)));
-        }
-        for (String unitArg : unitArgs)
-        {
-            typeVars.put(unitArg, Either.left(new MutUnitVar()));
-        }
-        
         return typeManager -> {
             try
             {
+                Map<String, Either<MutUnitVar, MutVar>> typeVars = new HashMap<>();
+                for (String typeArg : typeArgs)
+                {
+                    TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
+                    for (String constraint : constraints)
+                    {
+                        if (constraint.endsWith(" " + typeArg));
+                        {
+                            typeClassRequirements = TypeClassRequirements.union(typeClassRequirements,
+                                TypeClassRequirements.require(StringUtils.removeEnd(constraint, " " + typeArg), functionName));
+                        }
+                    }
+
+                    typeVars.put(typeArg, Either.right(new MutVar(null)));
+                }
+                for (String unitArg : unitArgs)
+                {
+                    typeVars.put(unitArg, Either.left(new MutUnitVar()));
+                }
+                
                 return new Pair<>(JellyType.parse(functionType, typeManager).makeTypeExp(ImmutableMap.copyOf(typeVars)), typeVars);
             }
             catch (UserException | InternalException e)
