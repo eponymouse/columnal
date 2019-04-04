@@ -139,7 +139,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     
                 // Check that a no-op edit gives same expression:
                 if (i == 0)
+                {
+                    @SuppressWarnings("units") // Declaration just to allow suppression
+                    CellPosition _pos = keyboardMoveTo(view.getGrid(), view.getManager(), calculate.getId(), 0, expressionValue.recordSet.getColumns().size());
                     clickOn("DestCol");
+                }
             }
 
             // Now check values match:
