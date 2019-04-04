@@ -264,19 +264,29 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             return text;
         }).collect(ImmutableList.<Text>toImmutableList());
     }
-
-    @Override
+    
     @OnThread(Tag.FXPlatform)
     public int getAnchorPosition()
     {
         return anchorPosition.getPosition();
     }
-
-    @Override
+    
     @OnThread(Tag.FXPlatform)
     public int getCaretPosition()
     {
         return caretPosition.getPosition();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) int getDisplayCaretPosition()
+    {
+        return getCaretPosition();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) int getDisplayAnchorPosition()
+    {
+        return getAnchorPosition();
     }
 
     @Override

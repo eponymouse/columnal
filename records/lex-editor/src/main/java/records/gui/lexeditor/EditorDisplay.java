@@ -241,18 +241,30 @@ public final class EditorDisplay extends TextEditorBase
     {
         return localToScreen(textFlow.getClickPosFor(caretPos, VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
-
-    @Override
+    
     @OnThread(Tag.FXPlatform)
     public @SourceLocation int getCaretPosition()
     {
         return content.getCaretPosition();
     }
-
-    @Override
+    
     public @OnThread(Tag.FXPlatform) int getAnchorPosition()
     {
         return content.getAnchorPosition();
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public int getDisplayCaretPosition()
+    {
+        return content.getDisplayCaretPosition();
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public int getDisplayAnchorPosition()
+    {
+        return content.getDisplayAnchorPosition();
     }
 
     @SuppressWarnings("units")

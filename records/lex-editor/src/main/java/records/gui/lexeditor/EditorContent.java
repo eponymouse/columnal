@@ -171,4 +171,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         return curContent.bracketsAreBalanced;
     }
+
+    public int getDisplayCaretPosition()
+    {
+        return curContent.mapContentToDisplay.mapCaretPos(getCaretPosition());
+    }
+
+    public int getDisplayAnchorPosition()
+    {
+        return curContent.mapContentToDisplay.mapCaretPos(getAnchorPosition());
+    }
 }

@@ -440,6 +440,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     r += 1;
                 }
+                r += 1;
             }
             return r;
         }, i -> {

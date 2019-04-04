@@ -148,9 +148,9 @@ public abstract class TextEditorBase extends Region
             updateCaretShapeQueued = false;
             try
             {
-                selectionShape.getElements().setAll(textFlow.getInternalTextLayout().getRange(Math.min(getCaretPosition(), getAnchorPosition()), Math.max(getCaretPosition(), getAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
+                selectionShape.getElements().setAll(textFlow.getInternalTextLayout().getRange(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
                 inverter.getElements().setAll(selectionShape.getElements());
-                caretShape.getElements().setAll(textFlow.getInternalTextLayout().getCaretShape(getCaretPosition(), true, 0, 0));
+                caretShape.getElements().setAll(textFlow.getInternalTextLayout().getCaretShape(getDisplayCaretPosition(), true, 0, 0));
                 if (isFocused())
                     caretBlink.playFromStart();
             }
@@ -183,7 +183,7 @@ public abstract class TextEditorBase extends Region
     }
     
     @OnThread(Tag.FXPlatform)
-    public abstract int getCaretPosition();
+    public abstract int getDisplayCaretPosition();
 
     @OnThread(Tag.FXPlatform)
     protected @Nullable HitInfo hitTest(double x, double y)
@@ -202,7 +202,7 @@ public abstract class TextEditorBase extends Region
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract int getAnchorPosition();
+    public abstract int getDisplayAnchorPosition();
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
