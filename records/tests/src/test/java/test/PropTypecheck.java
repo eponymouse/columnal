@@ -80,8 +80,10 @@ public class PropTypecheck
     
     // This won't test tagged types very well, but it should do okay for numbers, etc
     @Property(trials=10000)
-    public void testTypeHashCodeAndEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException
+    public void testTypeHashCodeAndEquals(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
+        DataType a = typeMaker.makeType().getDataType();
+        DataType b = typeMaker.makeType().getDataType();
         assertTrue(a.equals(a));
         assertTrue(b.equals(b));
         assertEquals(a.hashCode(),a.hashCode());
