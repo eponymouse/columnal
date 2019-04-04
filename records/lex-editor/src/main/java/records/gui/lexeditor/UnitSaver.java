@@ -98,11 +98,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     class Context {}
     
     @Override
-    protected @Recorded UnitExpression makeExpression(Span location, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets)
+    protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets)
     {
         if (content.isEmpty())
-            return record(location, new InvalidOperatorUnitExpression(ImmutableList.of()));
-
+            return record(brackets.location, new InvalidOperatorUnitExpression(ImmutableList.of()));
+        Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
+        
         CollectedItems collectedItems = processItems(content);
 
         if (collectedItems.isValid())
@@ -205,7 +206,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             {
                 addTopLevelScope();
             }
-            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(brackets.location, cur.items, brackets), bracket, errorDisplayer, withContext);
+            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(cur.items, brackets), bracket, errorDisplayer, withContext);
         }
     }
 

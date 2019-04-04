@@ -243,10 +243,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Recorded TypeExpression makeExpression(Span location, List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets)
+    protected @Recorded TypeExpression makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets)
     {
         if (content.isEmpty())
-            return record(location, new InvalidOpTypeExpression(ImmutableList.of()));
+            return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));
+
+        Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
         
         content = new ArrayList<>(content);
 
@@ -344,7 +346,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         @Override
         public @Recorded TypeExpression fetchContent(BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets)
         {
-            return TypeSaver.this.makeExpression(Span.fromTo(cur.openingNode, brackets.location), cur.items, brackets);
+            return TypeSaver.this.makeExpression(cur.items, brackets);
         }
     }
 }

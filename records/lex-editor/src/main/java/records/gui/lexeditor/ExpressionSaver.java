@@ -183,7 +183,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public @Recorded Expression fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
                 {
-                    return ExpressionSaver.this.makeExpression(Span.fromTo(cur.openingNode, brackets.location), cur.items, brackets);
+                    return ExpressionSaver.this.makeExpression(cur.items, brackets);
                 }
             }, keyword, errorDisplayer, withContext);
         }
@@ -232,7 +232,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(Span location, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
+    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
     {
         if (content.isEmpty())
         {
@@ -242,7 +242,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
                 return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
         }
-        
+        Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1))); 
+
         CollectedItems collectedItems = processItems(content);
 
         @Nullable @Recorded Expression e = null;
@@ -705,7 +706,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public OperatorSection makeOperatorSection(EditorLocationAndErrorRecorder locationRecorder, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection(locationRecorder, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets, edr) -> {
+                    return new NaryOperatorSection(locationRecorder, operators, operatorSetPrecedence, (args, _ops, brackets, edr) -> {
                         return brackets.applyBrackets.apply(new BracketContent(args));
                     }, initialIndex, initialOperator);
 

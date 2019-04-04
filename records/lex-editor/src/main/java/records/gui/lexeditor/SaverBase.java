@@ -466,7 +466,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected abstract EXPRESSION opToInvalid(OP op);
 
-    protected abstract @Recorded EXPRESSION makeExpression(Span location, List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
+    protected Span getLocationForEither(Either<@Recorded EXPRESSION, OpAndNode> item)
+    {
+        return item.either(e -> recorderFor(e), op -> op.sourceNode);
+    }
+
+    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
     
     public final @Recorded EXPRESSION finish(Span errorDisplayer)
     {
@@ -474,12 +479,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(Span.fromTo(closed.openingNode, brackets.location), closed.items, brackets), null, closed.openingNode, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets), null, closed.openingNode, c -> {});
         }
 
         Scope closed = currentScopes.pop();
         BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(locationRecorder, Span.fromTo(closed.openingNode, errorDisplayer));
-        return makeExpression(Span.fromTo(closed.openingNode, errorDisplayer), closed.items, brackets);
+        return makeExpression(closed.items, brackets);
     }
 
     // Note: if we are copying to clipboard, callback will not be called
