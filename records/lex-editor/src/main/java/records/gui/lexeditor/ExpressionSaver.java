@@ -288,7 +288,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             e = brackets.applyBrackets.apply(bracketContent);
             if (e == null)
             {
-                List<Expression> possibles = new ArrayList<>();
+                List<@Recorded Expression> possibles = new ArrayList<>();
                 for (BracketAndNodes<Expression, ExpressionSaver, BracketContent> alternateBracket : brackets.alternateBrackets())
                 {
                     @Nullable @Recorded Expression possible = alternateBracket.applyBrackets.apply(bracketContent);
