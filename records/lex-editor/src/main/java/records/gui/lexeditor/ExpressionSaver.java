@@ -282,8 +282,28 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 beforePrevCommas.add(made);
             else
                 beforePrevCommas.add(makeInvalidOp(unbracketed.location, interleave(ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators))));
-            
-            e = brackets.applyBrackets.apply(new BracketContent(ImmutableList.copyOf(beforePrevCommas)));
+
+            BracketContent bracketContent = new BracketContent(ImmutableList.copyOf(beforePrevCommas));
+            e = brackets.applyBrackets.apply(bracketContent);
+            if (e == null)
+            {
+                List<Expression> possibles = new ArrayList<>();
+                for (BracketAndNodes<Expression, ExpressionSaver, BracketContent> alternateBracket : brackets.alternateBrackets())
+                {
+                    @Nullable @Recorded Expression possible = alternateBracket.applyBrackets.apply(bracketContent);
+                    if (possible != null)
+                    {
+                        possibles.add(possible);
+                    }
+                }
+                if (!possibles.isEmpty())
+                {
+                    @Recorded Expression invalidOpExpression = brackets.applyBrackets.applySingle(collectedItems.makeInvalid(location, InvalidOperatorExpression::new));
+                    locationRecorder.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
+                    locationRecorder.getRecorder().<@Recorded Expression>recordQuickFixes(invalidOpExpression, Utility.<@Recorded Expression, QuickFix<@Recorded Expression>>mapList(possibles, fixed -> new QuickFix<@Recorded Expression>("fix.bracketAs", invalidOpExpression, () -> fixed)));
+                    return invalidOpExpression;
+                }
+            }
         }
         
         if (e == null)
