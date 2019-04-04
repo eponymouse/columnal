@@ -211,7 +211,7 @@ public final class EditorDisplay extends TextEditorBase
 
     private void render()
     {
-        textFlow.getChildren().setAll(new Text(content.getText()));
+        textFlow.getChildren().setAll(content.getDisplayText());
         if (caretAndSelectionNodes != null)
             caretAndSelectionNodes.queueUpdateCaretShape();
     }

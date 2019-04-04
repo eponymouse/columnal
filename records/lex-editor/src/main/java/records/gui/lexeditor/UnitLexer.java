@@ -19,6 +19,7 @@ import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.BitSet;
+import java.util.stream.IntStream;
 
 public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
 {
@@ -79,6 +80,6 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, i -> i, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

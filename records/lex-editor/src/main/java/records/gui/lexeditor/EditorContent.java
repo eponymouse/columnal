@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+import javafx.scene.text.Text;
 import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult;
@@ -13,6 +14,7 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
@@ -89,6 +91,11 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public String getText()
     {
         return curContent.adjustedContent;
+    }
+    
+    public List<Text> getDisplayText()
+    {
+        return curContent.display.toGUI();
     }
 
     public void addChangeListener(FXPlatformRunnable listener)

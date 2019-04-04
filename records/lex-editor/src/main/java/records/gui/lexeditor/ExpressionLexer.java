@@ -6,6 +6,7 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -60,9 +61,13 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         ImmutableList.Builder<AutoCompleteDetails<ExpressionCompletionContext>> completions = ImmutableList.builder();
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
+        BitSet skipCaretPos = new BitSet();
         BitSet missingSpots = new BitSet();
         BitSet suppressBracketMatching = new BitSet();
+        // Index is in display string, not original (since it's added)
+        BitSet addedDisplayChars = new BitSet();
         StringBuilder s = new StringBuilder();
+        StyledString.Builder d = StyledString.builder();
         boolean prevWasIdent = false;
         boolean preserveNextSpace = false;
         nextToken: while (curIndex < content.length())
@@ -74,6 +79,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 if (prevWasIdent || preserveNextSpace)
                 {
                     s.append(" ");
+                    d.append(" ");
                 }
                 else
                 {
@@ -92,6 +98,20 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 if (content.startsWith(keyword.getContent(), curIndex))
                 {
                     saver.saveKeyword(keyword, new Span(curIndex, curIndex + keyword.getContent().length()), c -> {});
+                    if (keyword.getContent().startsWith("@"))
+                    {
+                        boolean addLeadingSpace = s.length() > 0;
+                        if (addLeadingSpace)
+                        {
+                            addedDisplayChars.set(s.length());
+                            d.append(" ");
+                        }
+                        skipCaretPos.set(s.length() + 1, s.length() + keyword.getContent().length());
+                        d.append(keyword.getContent() + " ");
+                        addedDisplayChars.set(s.length() + (addLeadingSpace ? 1 : 0) + keyword.getContent().length());
+                    }
+                    else
+                        d.append(keyword.getContent());
                     s.append(keyword.getContent());
                     curIndex += keyword.getContent().length();
                     continue nextToken;
@@ -103,6 +123,9 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 if (content.startsWith(op.getContent(), curIndex))
                 {
                     saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
+                    addedDisplayChars.set(s.length());
+                    addedDisplayChars.set(s.length() + 1 + op.getContent().length());
+                    d.append(" " + op.getContent() + " ");
                     s.append(op.getContent());
                     curIndex += op.getContent().length();
                     continue nextToken;
@@ -117,6 +140,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), new Span(curIndex, endQuote + 1), c -> {});
                     s.append(content.substring(curIndex, endQuote + 1));
+                    d.append(content.substring(curIndex, endQuote + 1));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + 1;
                     continue nextToken;
@@ -127,6 +151,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Missing closing quote around text"), ImmutableList.of());
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), new Span(curIndex, content.length()), c -> {});
                     s.append(content.substring(curIndex, content.length()));
+                    d.append(content.substring(curIndex, content.length()));
                     suppressBracketMatching.set(curIndex + 1, content.length() + 1);
                     curIndex = content.length();
                     continue nextToken;
@@ -156,6 +181,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperand(new NumericLiteral(number.get(), null), new Span(numberStart, curIndex), c -> {});
                     s.append(content.substring(numberStart, curIndex));
+                    d.append(content.substring(numberStart, curIndex));
                     continue nextToken;
                 }
             }
@@ -167,6 +193,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperand(nestedLiteral.getSecond().apply(nestedOutcome.getFirst()), new Span(curIndex, nestedOutcome.getSecond()), c -> {});
                     s.append(content.substring(curIndex, nestedOutcome.getSecond()));
+                    d.append(content.substring(curIndex, nestedOutcome.getSecond()));
                     curIndex = nestedOutcome.getSecond();
                     continue nextToken;
                 }
@@ -180,6 +207,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     saver.saveOperand(new MatchAnythingExpression(), new Span(curIndex, curIndex + 1), c -> {
                     });
                     s.append("_");
+                    d.append("_");
                     curIndex += 1;
                     continue nextToken;
                 }
@@ -187,6 +215,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperand(new VarDeclExpression(varName.getFirst()), new Span(curIndex, varName.getSecond()), c -> {});
                     s.append("_" + varName.getFirst());
+                    d.append("_" + varName.getFirst());
                     curIndex = varName.getSecond();
                     continue nextToken;
                 }
@@ -208,6 +237,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                             saver.saveOperand(new ColumnReference(availableColumn), new Span(curIndex, parsed.getSecond()), c -> {
                             });
                             s.append("@entire " + parsed.getFirst());
+                            d.append("@entire " + parsed.getFirst());
                             curIndex = parsed.getSecond();
                             continue nextToken;
                         }
@@ -324,6 +354,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     }
                 }
                 s.append(text);
+                d.append(text);
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
@@ -354,6 +385,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), new Span(curIndex, nonLetter), c -> {});
                 saver.locationRecorder.addErrorAndFixes(new Span(curIndex, nonLetter), StyledString.s("Unknown keyword: " + attemptedKeyword), ImmutableList.of());
                 s.append(attemptedKeyword);
+                d.append(attemptedKeyword);
                 curIndex = nonLetter;
                 preserveNextSpace = true;
                 continue nextToken;
@@ -365,6 +397,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             {
                 saver.saveOperand(new BooleanLiteral(nextTrue), new Span(curIndex, curIndex + (nextTrue ? 4 : 5)), c -> {});
                 s.append(nextTrue ? "true" : "false");
+                d.append(nextTrue ? "true" : "false");
                 curIndex += nextTrue ? 4 : 5;
                 continue nextToken;
             }
@@ -373,6 +406,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             saver.saveOperand(new InvalidIdentExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             s.append(content.charAt(curIndex));
+            d.append("" + content.charAt(curIndex));
             curIndex += 1;
         }
         @Recorded Expression saved = saver.finish(new Span(curIndex, curIndex));
@@ -386,12 +420,32 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 Log.log(e);
             saver.locationRecorder.addErrorAndFixes(new Span(0, curIndex), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of());
         }
+        
+        ArrayList<Integer> caretPos = new ArrayList<>();
+        for (int pos = 0; pos <= s.length(); pos++)
+        {
+            if (!skipCaretPos.get(pos))
+                caretPos.add(pos);
+        }
 
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
+        }, Ints.toArray(caretPos), d.build(), i -> {
+            // We look for the ith empty spot in addedDisplayChars
+            int r = 0;
+            for (int j = 0; j < i; j++)
+            {
+                while (addedDisplayChars.get(r))
+                {
+                    r += 1;
+                }
+            }
+            return r;
+        }, i -> {
+            return i - addedDisplayChars.get(0, i).cardinality();
         }, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
-    
+
     class TagCompletion implements Comparable<TagCompletion>
     {
         // Non-null if needed to disambiguate, null if type name is unique
@@ -466,7 +520,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     }
                 }
             }
-            
+
         }
         return new ArrayList<TagCompletion>(completions.keySet());
     }

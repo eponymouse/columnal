@@ -7,6 +7,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import styled.StyledShowable;
+import styled.StyledString;
 
 import java.util.BitSet;
 
@@ -16,8 +17,15 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
     {
         public final @Recorded EXPRESSION result;
         public final String adjustedContent;
+        // Maps position in parameter to process to adjustedContent
         public final CaretPosMapper mapperToAdjusted;
+        // Valid caret positions in adjustedContent
         public final @SourceLocation int[] caretPositions;
+        // The content to display in the TextFlow
+        public final StyledString display;
+        public final CaretPosMapper mapContentToDisplay;
+        public final CaretPosMapper mapDisplayToContent;
+        
         public final ImmutableList<ErrorDetails> errors;
         public final ImmutableList<Lexer.AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> autoCompleteDetails;
         // If a bit is set at a particular caret position, when the user
@@ -39,16 +47,15 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         // Temporary constructor to auto-fill caret positions
         // Remove once caret positions done properly
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, int[] caretPositions, StyledString display, CaretPosMapper mapContentToDisplay, CaretPosMapper mapDisplayToContent, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
             this.mapperToAdjusted = mapperToAdjusted;
-            this.caretPositions = new int[adjustedContent.length() + 1];
-            for (int i = 0; i < caretPositions.length; i++)
-            {
-                caretPositions[i] = i;
-            }
+            this.caretPositions = caretPositions;
+            this.display = display;
+            this.mapContentToDisplay = mapContentToDisplay;
+            this.mapDisplayToContent = mapDisplayToContent;
             this.errors = errors;
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;

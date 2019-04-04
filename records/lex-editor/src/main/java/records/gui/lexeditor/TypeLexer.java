@@ -27,6 +27,7 @@ import utility.gui.TranslationUtility;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
@@ -127,6 +128,6 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, i -> i, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

@@ -162,9 +162,9 @@ public final class StyledString
     }
 
     @OnThread(Tag.FXPlatform)
-    public List<Text> toGUI()
+    public ImmutableList<Text> toGUI()
     {
-        return Utility.mapList(members, p -> {
+        return Utility.mapListI(members, p -> {
             Text t = new Text(p.getSecond());
             t.getStyleClass().add("styled-text");
             p.getFirst().styleMembers.forEach(style -> style.style(t));
