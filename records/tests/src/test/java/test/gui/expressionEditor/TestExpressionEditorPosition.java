@@ -88,7 +88,38 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     {
         testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true @then sum(3 + \"az\") @else false @endif ", 0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39);
     }
+
+    @Test
+    public void testPosIncomplete1()
+    {
+        testCaretPositionsAndDisplay("1+", "1 + ", 0, 1, 2);
+    }
     
+    @Test
+    public void testPosIncomplete2()
+    {
+        testCaretPositionsAndDisplay("1<", "1 < ", 0, 1, 2);
+    }
+    
+    @Test
+    public void testPosIncomplete2b()
+    {
+        testCaretPositionsAndDisplay("1<=", "1 <= ", 0, 1, 2);
+    }
+    
+    @Test
+    public void testPosIncomplete3()
+    {
+        testCaretPositionsAndDisplay("@i", "@i", 0, 1, 2);
+    }
+
+    @Test
+    public void testPosIncomplete4()
+    {
+        testCaretPositionsAndDisplay("@if", "@if ", 0, 3);
+    }
+
+
     private void testCaretPositionsAndDisplay(String internalContent, String display, int... internalCaretPos)
     {
         try
