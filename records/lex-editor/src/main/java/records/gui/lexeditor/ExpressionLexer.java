@@ -125,6 +125,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
                     addedDisplayChars.set(s.length());
                     addedDisplayChars.set(s.length() + 1 + op.getContent().length());
+                    skipCaretPos.set(s.length() + 1, s.length() + op.getContent().length());
                     d.append(" " + op.getContent() + " ");
                     s.append(op.getContent());
                     curIndex += op.getContent().length();

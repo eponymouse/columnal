@@ -104,7 +104,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPosIncomplete2b()
     {
-        testCaretPositionsAndDisplay("1<=", "1 <= ", 0, 1, 2);
+        testCaretPositionsAndDisplay("1<=", "1 <= ", 0, 1, 3);
     }
     
     @Test
