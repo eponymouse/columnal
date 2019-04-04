@@ -146,6 +146,22 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // Null means use row number
         int replaceKeyColumIndex = r.nextInt(numColumns);
         ExSupplier<@Nullable Column> findReplaceKeyColumn = r.nextInt(5) == 1 ? () -> null : () -> findFirstSort.get().getData().getColumns().get(replaceKeyColumIndex);
+        
+        // Start by checking the original sort is correct:
+        TestUtil.sleep(500);
+        TableDisplayBase firstSortDisplay = TestUtil.fx(() -> findFirstSort.get().getDisplay());
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), firstSortDisplay.getMostRecentPosition());
+        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(firstSortDisplay.getMostRecentPosition(), firstSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+            .clickOn(".id-tableDisplay-menu-copyValues");
+        TestUtil.sleep(1000);
+
+        Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        assertTrue(editViaClip.isPresent());
+        ImmutableList<LoadedColumnInfo> expected = makeExpected(srcRS, findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), new HashMap<>(), sortBy);
+        checkEqual(expected, editViaClip);
+        checkEqual(expected, getGraphicalContent(mainWindowActions, findFirstSort.get()));
+
+        
 
         ArrayList<Integer> rowIndexesWithUniqueKey = new ArrayList<>();
         // Each value is a list of row indexes
@@ -216,7 +232,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                     return;
                 }
 
-                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
+                CellPosition cellPos = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), sortId, row, col);
+
+                VersionedSTF oldCell = TestUtil.fx(() -> mainWindowActions._test_getDataCell(cellPos));
+                String oldContent = TestUtil.fx(() -> oldCell._test_getGraphicalText());
+                if (!oldContent.contains("\u2026"))
+                    assertEquals(oldContent, TestUtil.getSingleCollapsedData(findFirstSort.get().getData().getColumns().get(col).getType(), row));
+                                
                 push(KeyCode.ENTER);
 
                 enterStructuredValue(columnTypes.get(col).getDataType(), value, r, false);
@@ -226,6 +248,13 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 clickOn(".yes-button");
                 sleep(500);
                 assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
+
+                sleep(1000);
+                VersionedSTF newCell = TestUtil.fx(() -> mainWindowActions._test_getDataCell(cellPos));
+                if (!oldContent.contains("\u2026"))
+                    assertEquals(oldContent, TestUtil.getSingleCollapsedData(findFirstSort.get().getData().getColumns().get(col).getType(), row));
+                assertEquals(oldContent, TestUtil.fx(() -> newCell._test_getGraphicalText()));
+                
                 // Now fall through to fill in same details as creating directly...
                 madeManualEdit = true;
             }
@@ -370,6 +399,19 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 push(KeyCode.ENTER);
             }
             sleep(1000);
+
+            // Check original sort again:
+            //TableDisplayBase firstSortDisplay = TestUtil.fx(() -> findFirstSort.get().getDisplay());
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), firstSortDisplay.getMostRecentPosition());
+            showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(firstSortDisplay.getMostRecentPosition(), firstSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+                .clickOn(".id-tableDisplay-menu-copyValues");
+            TestUtil.sleep(1000);
+
+            editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+            assertTrue(editViaClip.isPresent());
+            expected = makeExpected(srcRS, findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), new HashMap<>(), sortBy);
+            checkEqual(expected, editViaClip);
+            checkEqual(expected, getGraphicalContent(mainWindowActions, findFirstSort.get()));
         }
         
         // Now check output values by getting them from clipboard:
@@ -379,9 +421,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 .clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
 
-        Optional<ImmutableList<LoadedColumnInfo>> editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(editViaClip.isPresent());
-        ImmutableList<LoadedColumnInfo> expected = makeExpected(findFirstSort.get().getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), replacementsSoFar, sortBy);
+        expected = makeExpected(findFirstSort.get().getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), replacementsSoFar, sortBy);
         
         assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
         checkEqual(expected, editViaClip);
@@ -507,6 +549,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             }
         });
 
+        // We effectively pair each integer with the value from that row, then sort by the values and discard them.
+        // This leaves a sorted list of indexes into the original table.
         if (sortBy != null)
         {
             DataTypeValue sortByColumn = original.getColumn(sortBy).getType();

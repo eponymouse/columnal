@@ -460,7 +460,7 @@ public final class DataTypeValue
     public static interface OverrideSet
     {
         @OnThread(Tag.Simulation)
-        public void set(int index, Either<String, @Value Object> value);
+        public void set(int index, Either<String, @Value Object> value) throws UserException;
     }
 
     /**

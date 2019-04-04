@@ -19,6 +19,7 @@ import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
+import records.data.Transformation.SilentCancelEditException;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -32,6 +33,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.dtf.RecogniserDocument.Saver;
 import records.gui.dtf.recognisers.BooleanRecogniser;
 import records.gui.dtf.recognisers.ListRecogniser;
 import records.gui.dtf.recognisers.NumberRecogniser;
@@ -358,14 +360,23 @@ public class TableDisplayUtility
         public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
             MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable T> value, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) -> {
-                FXPlatformBiConsumer<String, @Nullable @Value T> saveChange = (String s, @Value T v) -> {};
+                Saver<@Value T> saveChange = (String s, @Nullable @Value T v, FXPlatformRunnable reset) -> {};
                 if (editableStatus.editable)
-                    saveChange = new FXPlatformBiConsumer<String, @Nullable @Value T>()
+                    saveChange = new Saver<@Value T>()
                     {
                         @Override
-                        public @OnThread(Tag.FXPlatform) void consume(String text, @Nullable @Value T v)
+                        public @OnThread(Tag.FXPlatform) void save(String text, @Nullable @Value T v, FXPlatformRunnable reset)
                         {
-                            Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v == null ? Either.left(text) : Either.right(v))));
+                            Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> {
+                                try
+                                {
+                                    g.set(rowIndex, v == null ? Either.left(text) : Either.right(v));
+                                }
+                                catch (SilentCancelEditException e)
+                                {
+                                    FXUtility.runFX(reset);
+                                }
+                            }));
                             onModify.run();
                         }
                     };

@@ -18,6 +18,8 @@ import records.error.InternalException;
 import records.gui.dtf.Recogniser.ErrorDetails;
 import records.gui.dtf.Recogniser.ParseProgress;
 import records.gui.dtf.Recogniser.SuccessDetails;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.*;
 import utility.Workers.Priority;
 
@@ -28,7 +30,7 @@ import java.util.stream.Stream;
 public final class RecogniserDocument<V> extends DisplayDocument
 {
     private final Recogniser<V> recogniser;
-    private final FXPlatformBiConsumer<String, @Nullable V> saveChange;
+    private final Saver<V> saveChange;
     private final FXPlatformConsumer<KeyCode> relinquishFocus;
     private final Class<V> itemClass;
     private final @Nullable SimulationSupplierInt<Boolean> checkEditable;
@@ -38,7 +40,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private @Nullable FXPlatformRunnable onFocusLost;
     private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
-    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, FXPlatformBiConsumer<String, @Nullable V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus)
+    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus)
     {
         super(initialContent);
         this.itemClass = valueClass;
@@ -46,8 +48,9 @@ public final class RecogniserDocument<V> extends DisplayDocument
         this.saveChange = saveChange;
         this.relinquishFocus = relinquishFocus;
         this.checkEditable = checkStartEdit;
-        recognise(false);
         valueOnFocusGain = initialContent;
+        recognise(false);
+        
     }
 
     @Override
@@ -95,21 +98,27 @@ public final class RecogniserDocument<V> extends DisplayDocument
     }
 
     @EnsuresNonNull({"latestValue", "unfocusedDocument"})
-    @RequiresNonNull({"recogniser", "saveChange", "curErrorPosition"})
+    @RequiresNonNull({"recogniser", "saveChange", "curErrorPosition", "valueOnFocusGain"})
     private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save)
     {
         String text = getText();
         latestValue = recogniser.process(ParseProgress.fromStart(text), false)
                         .flatMap(SuccessDetails::requireEnd);
+        FXPlatformRunnable reset = () -> {
+            Utility.later(this).replaceText(0, Utility.later(this).getLength(), valueOnFocusGain);
+            recognise(false);
+            if (onFocusLost != null)
+                onFocusLost.run();
+        };
         latestValue.ifLeft(err -> {
             curErrorPosition = OptionalInt.of(err.errorPosition);
             if (save)
-                saveChange.consume(text, null);
+                saveChange.save(text, null, reset);
         });
         latestValue.ifRight(x -> {
             curErrorPosition = OptionalInt.empty();
             if (save)
-                saveChange.consume(text, x.value);
+                saveChange.save(text, x.value, reset);
         });
         this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, text).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
     }
@@ -179,5 +188,11 @@ public final class RecogniserDocument<V> extends DisplayDocument
             return unfocusedDocument.getSecond().mapCaretPosition(pos);
         else
             return pos;
+    }
+    
+    public static interface Saver<V>
+    {
+        @OnThread(Tag.FXPlatform)
+        public void save(String text, @Nullable V recognisedValue, FXPlatformRunnable resetGraphics);
     }
 }

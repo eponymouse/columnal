@@ -10,6 +10,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.OverrideSet;
 import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import records.loadsave.OutputBuilder.QuoteBehaviour;
@@ -135,7 +136,7 @@ public abstract class Transformation extends Table
         return original.withSet(new OverrideSet()
         {
             @Override
-            public void set(int index, Either<String, @Value Object> value)
+            public void set(int index, Either<String, @Value Object> value) throws UserException
             {
                 // Need to ask the user if they want a manual edit
                 Platform.runLater(() -> {
@@ -143,7 +144,17 @@ public abstract class Transformation extends Table
                     if (display != null)
                         display.promptForTransformationEdit(index, new Pair<>(columnId, original.getType()), value);
                 });
+                
+                throw new SilentCancelEditException("Can't edit a transformation's data.");
             }
         });
+    }
+
+    public static class SilentCancelEditException extends UserException
+    {
+        public SilentCancelEditException(String message)
+        {
+            super(message);
+        }
     }
 }

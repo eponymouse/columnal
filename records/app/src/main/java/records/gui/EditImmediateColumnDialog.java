@@ -37,6 +37,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiFunction;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.DimmableParent;
 import utility.gui.ErrorableLightDialog;
@@ -257,7 +258,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
     private <@NonNull @Value T extends @NonNull @Value Object> RecogniserDocument<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, null, (String s, @Value T v) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, null, (String s, @Value T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }
