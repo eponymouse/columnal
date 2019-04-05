@@ -16,16 +16,8 @@ import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.DataItemPosition;
-import records.data.EditableColumn;
-import records.data.KnownLengthRecordSet;
-import records.data.RecordSet;
-import records.data.Table;
+import records.data.*;
 import records.data.Table.TableDisplayBase;
-import records.data.TableId;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
@@ -254,7 +246,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 VersionedSTF newCell = TestUtil.fx(() -> mainWindowActions._test_getDataCell(cellPos));
                 //if (!oldContent.contains("\u2026"))
                     //assertEquals(oldContent, TestUtil.getSingleCollapsedData(findFirstSort.get().getData().getColumns().get(col).getType(), row));
-                assertEquals(oldContent, TestUtil.fx(() -> newCell._test_getGraphicalText()));
+                assertEquals("Cell: " + newCell, oldContent, TestUtil.fx(() -> newCell._test_getGraphicalText()));
                 
                 // Now fall through to fill in same details as creating directly...
                 madeManualEdit = true;
