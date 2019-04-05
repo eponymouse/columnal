@@ -107,6 +107,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         FXPlatformRunnable reset = () -> {
             Utility.later(this).replaceText(0, Utility.later(this).getLength(), valueOnFocusGain);
             recognise(false);
+            Utility.later(this).notifyListeners();
             if (onFocusLost != null)
                 onFocusLost.run();
         };
