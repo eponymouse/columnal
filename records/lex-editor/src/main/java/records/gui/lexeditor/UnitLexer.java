@@ -25,7 +25,7 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
 {
     @SuppressWarnings("units")
     @Override
-    public LexerResult<UnitExpression, CodeCompletionContext> process(String content)
+    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
         UnitSaver saver = new UnitSaver();
         int curIndex = 0;
@@ -80,6 +80,6 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, i -> i, false, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

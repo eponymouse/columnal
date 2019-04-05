@@ -34,7 +34,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
 {
     @SuppressWarnings("units")
     @Override
-    public LexerResult<TypeExpression, CodeCompletionContext> process(String content)
+    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
         TypeSaver saver = new TypeSaver();
         boolean prevWasIdent = false;
@@ -97,7 +97,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                 if (end != -1)
                 {
                     UnitLexer unitLexer = new UnitLexer();
-                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end));
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, end + 1), c -> {});
                     curIndex = end + 1;
                 }
@@ -105,7 +105,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Unit lacks closing }"), ImmutableList.of());
                     UnitLexer unitLexer = new UnitLexer();
-                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()));
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, content.length()), c -> {});
                     curIndex = content.length();
                 }
@@ -128,6 +128,6 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, content, i -> i, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, i -> i, false, IntStream.range(0, content.length() + 1).toArray(), StyledString.s(content), i -> i, i -> i, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

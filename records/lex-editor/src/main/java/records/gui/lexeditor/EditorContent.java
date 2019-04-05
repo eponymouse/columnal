@@ -29,7 +29,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public EditorContent(String originalContent, Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer)
     {
         this.lexer = lexer;
-        this.curContent = this.lexer.process(originalContent);
+        this.curContent = this.lexer.process(originalContent, 0);
         this.curCaretPosition = curContent.caretPositions.length > 0 ? curContent.caretPositions[0] : 0;
         this.curAnchorPosition = curCaretPosition;
     }
@@ -74,7 +74,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
         @SuppressWarnings("units")
         @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
-        this.curContent = lexer.process(newText);
+        this.curContent = lexer.process(newText, newCaretPos);
         this.curCaretPosition = curContent.mapperToAdjusted.mapCaretPos(newCaretPos);
         this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);

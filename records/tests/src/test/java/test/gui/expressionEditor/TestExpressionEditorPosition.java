@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -90,6 +91,36 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Test
+    public void testPos4()
+    {
+        testCaretPositionsAndDisplay("ACC1>ACC2", "ACC1 > ACC2", 0,1,2,3,4, 5,6,7,8,9);
+    }
+
+    @Test
+    public void testPos5()
+    {
+        testCaretPositionsAndDisplay("Str>Str", "Str > Str", 0,1,2,3, 4,5,6,7);
+    }
+
+    @Test
+    public void testPos6()
+    {
+        testCaretPositionsAndDisplay("ACC1<>3{(m/s)/s}", "ACC1 <> 3{(m/s)/s}", 0,1,2,3,4, 6,7,8,9,10,11,12,13,14,15,16);
+    }
+
+    @Test
+    public void testPos7()
+    {
+        testCaretPositionsAndDisplay("abs(1+2)=sum([3/4])", "abs(1 + 2) = sum([3 / 4])", 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+    }
+
+    @Test
+    public void testPos8()
+    {
+        testCaretPositionsAndDisplay("from string to(type{Maybe(Number{1},Text})},\"Maybe Not\")", "from string to(type{Maybe(Number{1}, Text})}, \"Maybe Not\")", IntStream.range(0, 57).toArray());
+    }
+
+    @Test
     public void testPosIncomplete1()
     {
         testCaretPositionsAndDisplay("1+", "1 + ", 0, 1, 2);
@@ -133,6 +164,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
+            columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("Str"), Collections.emptyList(), ""));
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
@@ -163,30 +195,44 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     });
                 }
             });
-            
-            assertEquals(display, getDisplayText());
-            
-            push(KeyCode.HOME);
-            int curIndex = 0;
-            while (curIndex < internalCaretPos.length)
-            {
-                assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
-                curIndex += 1;
-                push(KeyCode.RIGHT);
-            }
-            push(KeyCode.END);
-            curIndex = internalCaretPos.length - 1;
-            while (curIndex >= 0)
-            {
-                assertEquals(internalCaretPos[curIndex], getPosition().getSecond().intValue());
-                curIndex -= 1;
-                push(KeyCode.LEFT);
-            }
 
-            // Dismiss dialog:
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
-            clickOn(".ok-button");
+            // Once for initial load, twice for opening editor again
+            for (int i = 0; i < 2; i++)
+            {
+                assertEquals(display, getDisplayText());
+
+                push(KeyCode.HOME);
+                int curIndex = 0;
+                while (curIndex < internalCaretPos.length)
+                {
+                    assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
+                    curIndex += 1;
+                    push(KeyCode.RIGHT);
+                }
+                push(KeyCode.END);
+                curIndex = internalCaretPos.length - 1;
+                while (curIndex >= 0)
+                {
+                    assertEquals(internalCaretPos[curIndex], getPosition().getSecond().intValue());
+                    curIndex -= 1;
+                    push(KeyCode.LEFT);
+                }
+
+                // Dismiss dialog:
+                push(KeyCode.ESCAPE);
+                push(KeyCode.ESCAPE);
+                clickOn(".ok-button");
+                
+                if (i == 0)
+                {
+                    // Bring editor up again:
+                    keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos.offsetByRowCols(1, columns.size()));
+                    push(KeyCode.ENTER);
+                    clickOn("DestCol");
+                    push(KeyCode.TAB);
+                }
+            }
+            
         }
         catch (Exception e)
         {

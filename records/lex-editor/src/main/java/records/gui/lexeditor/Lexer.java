@@ -19,6 +19,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final String adjustedContent;
         // Maps position in parameter to process to adjustedContent
         public final CaretPosMapper mapperToAdjusted;
+        public final boolean reLexOnCaretMove;
         // Valid caret positions in adjustedContent
         public final @SourceLocation int[] caretPositions;
         // The content to display in the TextFlow
@@ -47,10 +48,11 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         // Temporary constructor to auto-fill caret positions
         // Remove once caret positions done properly
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, int[] caretPositions, StyledString display, CaretPosMapper mapContentToDisplay, CaretPosMapper mapDisplayToContent, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, boolean reLexOnCaretMove, int[] caretPositions, StyledString display, CaretPosMapper mapContentToDisplay, CaretPosMapper mapDisplayToContent, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
+            this.reLexOnCaretMove = reLexOnCaretMove;
             this.mapperToAdjusted = mapperToAdjusted;
             this.caretPositions = caretPositions;
             this.display = display;
@@ -86,5 +88,5 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
     }
     
     // Takes latest content, lexes it, returns result
-    public LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content);
+    public LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, int caretPos);
 }

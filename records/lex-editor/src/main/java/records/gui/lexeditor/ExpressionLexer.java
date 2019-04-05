@@ -56,7 +56,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
 
     @SuppressWarnings("units")
     @Override
-    public LexerResult<Expression, ExpressionCompletionContext> process(String content)
+    public LexerResult<Expression, ExpressionCompletionContext> process(String content, int curCaretPos)
     {
         ImmutableList.Builder<AutoCompleteDetails<ExpressionCompletionContext>> completions = ImmutableList.builder();
         ExpressionSaver saver = new ExpressionSaver();
@@ -70,16 +70,19 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         StyledString.Builder d = StyledString.builder();
         boolean prevWasIdent = false;
         boolean preserveNextSpace = false;
+        boolean lexOnMove = false;
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
             if (content.startsWith(" ", curIndex))
             {
                 // Keep single space after ident as it may continue ident:
-                if (prevWasIdent || preserveNextSpace)
+                boolean spaceThenCaret = prevWasIdent && curIndex + 1 == curCaretPos;
+                if (spaceThenCaret || preserveNextSpace)
                 {
                     s.append(" ");
                     d.append(" ");
+                    lexOnMove = spaceThenCaret;
                 }
                 else
                 {
@@ -123,10 +126,12 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 if (content.startsWith(op.getContent(), curIndex))
                 {
                     saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
-                    addedDisplayChars.set(s.length());
-                    addedDisplayChars.set(s.length() + 1 + op.getContent().length());
+                    boolean addLeadingSpace = !op.getContent().equals(",");
+                    if (addLeadingSpace)
+                        addedDisplayChars.set(s.length());
+                    addedDisplayChars.set(s.length() + (addLeadingSpace ? 1 : 0) + op.getContent().length());
                     skipCaretPos.set(s.length() + 1, s.length() + op.getContent().length());
-                    d.append(" " + op.getContent() + " ");
+                    d.append((addLeadingSpace ? " " : "") + op.getContent() + " ");
                     s.append(op.getContent());
                     curIndex += op.getContent().length();
                     continue nextToken;
@@ -431,7 +436,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
 
         return new LexerResult<>(saved, s.toString(), i -> {
             return i - missingSpots.get(0, i).cardinality();
-        }, Ints.toArray(caretPos), d.build(), i -> {
+        }, lexOnMove, Ints.toArray(caretPos), d.build(), i -> {
             // We look for the ith empty spot in addedDisplayChars
             int r = 0;
             for (int j = 0; j < i; j++)
@@ -538,12 +543,12 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer();
                 // TODO also save positions, content, etc
-                return new TypeLiteralExpression(typeLexer.process(c).result);
+                return new TypeLiteralExpression(typeLexer.process(c, 0).result);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
                 // TODO also save positions, content, etc
-                return new UnitLiteralExpression(unitLexer.process(c).result);
+                return new UnitLiteralExpression(unitLexer.process(c, 0).result);
             })
         );
     }
