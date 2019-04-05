@@ -36,7 +36,6 @@ import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 import utility.gui.TranslationUtility;
 
 import java.util.*;
@@ -193,16 +192,16 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
             }
 
-            for (Pair<String, Function<String, LiteralOutcome>> nestedLiteral : getNestedLiterals())
+            for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals())
             {
-                @Nullable Pair<String, Integer> nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, saver.locationRecorder);
+                @Nullable NestedLiteralSource nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, saver.locationRecorder);
                 if (nestedOutcome != null)
                 {
-                    LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome.getFirst());
-                    saver.saveOperand(outcome.expression, new Span(curIndex, nestedOutcome.getSecond()), c -> {});
-                    s.append(nestedLiteral.getFirst() + outcome.internalContent + "}");
-                    d.append(nestedLiteral.getFirst()).append(outcome.displayContent).append("}");
-                    curIndex = nestedOutcome.getSecond();
+                    LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome);
+                    saver.saveOperand(outcome.expression, new Span(curIndex, nestedOutcome.positionAfter), c -> {});
+                    s.append(outcome.internalContent);
+                    d.append(outcome.displayContent);
+                    curIndex = nestedOutcome.positionAfter;
                     continue nextToken;
                 }
             }
@@ -539,45 +538,63 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         public final String internalContent;
         public final StyledString displayContent;
         public final Expression expression;
-
-        public LiteralOutcome(String internalContent, StyledString displayContent, Expression expression)
+        
+        public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
-            this.internalContent = internalContent;
-            this.displayContent = displayContent;
+            this.internalContent = source.prefix + source.innerContent + (source.terminatedProperly ? "}" : "");
+            this.displayContent = StyledString.s(internalContent);
             this.expression = expression;
         }
-        
-        public LiteralOutcome(Expression expression)
+
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix)
         {
-            this(expression.toString(), StyledString.s(expression.toString()), expression);
+            this.internalContent = prefix + internalContent + suffix;
+            this.displayContent = StyledString.concat(StyledString.s(prefix), displayContent, StyledString.s(suffix));
+            this.expression = expression;
         }
     }
 
-    private ImmutableList<Pair<String, Function<String, LiteralOutcome>>> getNestedLiterals()
+    private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals()
     {
         return ImmutableList.of(
-            new Pair<>("date{", c -> new LiteralOutcome(new TemporalLiteral(DateTimeType.YEARMONTHDAY, c))),
-            new Pair<>("datetime{", c -> new LiteralOutcome(new TemporalLiteral(DateTimeType.DATETIME, c))),
-            new Pair<>("datetimezoned{", c -> new LiteralOutcome(new TemporalLiteral(DateTimeType.DATETIMEZONED, c))),
-            new Pair<>("dateym{", c -> new LiteralOutcome(new TemporalLiteral(DateTimeType.YEARMONTH, c))),
-            new Pair<>("time{", c -> new LiteralOutcome(new TemporalLiteral(DateTimeType.TIMEOFDAY, c))),
+            new Pair<>("date{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTHDAY, c.innerContent))),
+            new Pair<>("datetime{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIME, c.innerContent))),
+            new Pair<>("datetimezoned{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIMEZONED, c.innerContent))),
+            new Pair<>("dateym{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTH, c.innerContent))),
+            new Pair<>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer();
                 // TODO also save positions, content, etc
-                LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c, 0);
-                return new LiteralOutcome(processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result));
+                LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "");
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
                 // TODO also save positions, content, etc
-                LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c, 0);
-                return new LiteralOutcome(processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result));
+                LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "");
             })
         );
     }
     
+    private static class NestedLiteralSource
+    {
+        private final String prefix;
+        private final String innerContent;
+        private final int positionAfter;
+        private final boolean terminatedProperly;
+
+        public NestedLiteralSource(String prefix, String innerContent, int positionAfter, boolean terminatedProperly)
+        {
+            this.prefix = prefix;
+            this.innerContent = innerContent;
+            this.positionAfter = positionAfter;
+            this.terminatedProperly = terminatedProperly;
+        }
+    }
+    
     @SuppressWarnings("units")
-    private @Nullable Pair<String, Integer> tryNestedLiteral(String prefixInclCurly, String content, @SourceLocation int curIndex, EditorLocationAndErrorRecorder locationRecorder)
+    private @Nullable NestedLiteralSource tryNestedLiteral(String prefixInclCurly, String content, @SourceLocation int curIndex, EditorLocationAndErrorRecorder locationRecorder)
     {
         if (content.startsWith(prefixInclCurly, curIndex))
         {
@@ -593,12 +610,12 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 curIndex += 1;
             }
             if (openCount == 0)
-                return new Pair<>(content.substring(startIndex, curIndex - 1), curIndex);
+                return new NestedLiteralSource(prefixInclCurly, content.substring(startIndex, curIndex - 1), curIndex, true);
             else
             {
                 locationRecorder.addErrorAndFixes(new Span(startIndex, content.length()), StyledString.s("Started " + prefixInclCurly + " but no matching closing }"), ImmutableList.of());
-                return new Pair<>(content.substring(startIndex), content.length());
-            }        
+                return new NestedLiteralSource(prefixInclCurly, content.substring(startIndex), content.length(), false);
+            }
         }
         return null;
     }    
