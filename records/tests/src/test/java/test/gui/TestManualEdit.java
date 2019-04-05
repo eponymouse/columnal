@@ -410,7 +410,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
             editViaClip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
             assertTrue(editViaClip.isPresent());
-            expected = makeExpected(srcRS, findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), new HashMap<>(), sortBy);
+            expected = makeExpected(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ImmediateDataSource).findFirst().orElseThrow(() -> new RuntimeException()).getData(), findReplaceKeyColumn.get() == null ? null : findReplaceKeyColumn.get().getName(), new HashMap<>(), sortBy);
             checkEqual(expected, editViaClip);
             checkEqual(expected, getGraphicalContent(mainWindowActions, findFirstSort.get()));
         }
