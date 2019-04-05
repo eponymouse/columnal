@@ -124,8 +124,13 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (TemporalLiteral.class.isAssignableFrom(c))
         {
             write(((Literal)expression).toString(), DELAY);
-            // Delete trailing curly:
-            push(KeyCode.DELETE);
+            // Delete trailing curly and other:
+            int opened = (int)expression.toString().codePoints().filter(ch -> ch == '{' || ch == '[' || ch == '(').count();
+            for (int i = 0; i < opened; i++)
+            {
+                push(KeyCode.DELETE);
+            }
+            
         }
         else if (Literal.class.isAssignableFrom(c))
         {
