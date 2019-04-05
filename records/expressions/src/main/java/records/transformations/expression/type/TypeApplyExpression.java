@@ -64,8 +64,9 @@ public class TypeApplyExpression extends TypeExpression
         sb.append(typeName);
         for (int i = 0; i < arguments.size(); i++)
         {
+            // Bit of a hack to look for TupleTypeExpression exactly...
             Either<UnitExpression, TypeExpression> e = arguments.get(i);
-            sb.append(e.<String>either(u -> "({" + u.save(structured,  true) + "})", x -> "(" + x.save(structured, renames) + ")"));
+            sb.append(e.<String>either(u -> "({" + u.save(structured,  true) + "})", x -> x instanceof TupleTypeExpression ? x.save(structured, renames) : "(" + x.save(structured, renames) + ")"));
         }
         return sb.toString();
     }
