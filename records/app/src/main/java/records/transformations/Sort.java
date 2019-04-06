@@ -29,6 +29,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
@@ -299,6 +300,10 @@ public class Sort extends Transformation implements SingleSourceTransformation
             try
             {
                 val = Either.right(c.getFirst().getType().getCollapsed(srcIndex));
+            }
+            catch (InvalidImmediateValueException e)
+            {
+                val = Either.left(e.getInvalid());
             }
             catch (InternalException | UserException e)
             {

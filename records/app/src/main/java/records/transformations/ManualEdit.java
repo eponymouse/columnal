@@ -48,6 +48,7 @@ import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -85,7 +86,7 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
             RecordSet srcData = srcTable.getData();
             if (replacementKey != null)
             {
-                // Check key exists and has same type:
+                // Check key exists and has same type and unique values for replacement keys:
                 Column keyCol = srcData.getColumnOrNull(replacementKey.getFirst());
                 if (keyCol == null)
                 {
@@ -95,6 +96,24 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
                 if (!keyColumn.getSecond().equals(replacementKey.getSecond()))
                 {
                     throw new UserException("Last recorded type of identifier column " + replacementKey.getFirst().getRaw() + " does not match actual column type.");
+                }
+                TreeSet<ComparableValue> keyValues = new TreeSet<>();
+                @TableDataRowIndex int srcDataLength = srcData.getLength();
+                DataTypeValue keyColType = keyCol.getType();
+                for (int i = 0; i < srcDataLength; i++)
+                {
+                    try
+                    {
+                        @Value Object value = keyColType.getCollapsed(i);
+                        if (!keyValues.add(new ComparableValue(value)))
+                        {
+                            throw new UserException("Duplicate keys: " + DataTypeUtility.valueToString(keyColType.getType(), value, null));
+                        }
+                    }
+                    catch (UserException e)
+                    {
+                        // We don't actually mind errors in the key column...
+                    }
                 }
             }
             
