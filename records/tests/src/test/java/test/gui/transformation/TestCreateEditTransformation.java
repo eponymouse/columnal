@@ -566,7 +566,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
 
         @SuppressWarnings("nullness")
-        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(0, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
+        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(4, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
 
         keyboardMoveTo(virtualGrid, targetPos);
         TestUtil.delay(300);
