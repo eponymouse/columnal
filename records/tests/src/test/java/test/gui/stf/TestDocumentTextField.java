@@ -297,7 +297,7 @@ public class TestDocumentTextField extends FXApplicationTest
     }
     
     @Property(trials=3)
-    public void testHorizScroll(@From(GenString.class) String s)
+    public void testHorizScroll(@When(seed=-3415317297380063618L) @From(GenString.class) String s)
     {
         s = removeNonPrintable(s);
         Assume.assumeFalse(s.isEmpty());
@@ -324,7 +324,7 @@ public class TestDocumentTextField extends FXApplicationTest
         for (int i = 0; i < 50; i++)
         {
             push(KeyCode.RIGHT);
-            sleep(300);
+            sleep(500);
 
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
@@ -333,7 +333,7 @@ public class TestDocumentTextField extends FXApplicationTest
         for (int i = 0; i < 40; i++)
         {
             push(KeyCode.LEFT);
-            sleep(300);
+            sleep(500);
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
             assertTrue(fieldBounds.contains(FXUtility.getCentre(caretBounds)));
