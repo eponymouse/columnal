@@ -78,6 +78,8 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         @SuppressWarnings("units")
         public @SourceLocation int mapDisplayToContent(@SourceLocation int displayPos)
         {
+            displayPos = Math.max(0, displayPos);
+            displayPos = Math.min(displayPos, display.toPlain().length());
             return displayPos - addedDisplayChars.get(0, displayPos).cardinality();
         }
     }
