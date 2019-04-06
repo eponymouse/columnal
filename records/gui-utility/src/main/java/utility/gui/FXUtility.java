@@ -1,6 +1,8 @@
 package utility.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.sun.javafx.tk.TKPulseListener;
+import com.sun.javafx.tk.Toolkit;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -768,6 +770,20 @@ public class FXUtility
                     mouse(window).setX(event.getScreenX() - pressedDelta[0]);
                     mouse(window).setY(event.getScreenY() - pressedDelta[1]);
                 }
+            }
+        });
+    }
+
+    public static void runAfterNextLayout(final FXPlatformRunnable action)
+    {
+        //TODO In Java 9, use public toolkit
+        Toolkit.getToolkit().addSceneTkPulseListener(new TKPulseListener()
+        {
+            @Override
+            public void pulse()
+            {
+                runAfter(action);
+                Toolkit.getToolkit().removeSceneTkPulseListener(this);
             }
         });
     }

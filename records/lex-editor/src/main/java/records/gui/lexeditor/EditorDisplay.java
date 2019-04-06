@@ -187,9 +187,9 @@ public final class EditorDisplay extends TextEditorBase
             }
         });
         
-        content.addChangeListener(() -> render());
-        content.addCaretPositionListener(c -> render());
-        render();
+        content.addChangeListener(() -> render(true));
+        content.addCaretPositionListener(c -> render(false));
+        render(true);
     }
 
     @SuppressWarnings("units")
@@ -208,9 +208,10 @@ public final class EditorDisplay extends TextEditorBase
         });
     }
 
-    private void render()
+    private void render(boolean contentChanged)
     {
-        textFlow.getChildren().setAll(content.getDisplayText());
+        if (contentChanged)
+            textFlow.getChildren().setAll(content.getDisplayText());
         if (caretAndSelectionNodes != null)
             caretAndSelectionNodes.queueUpdateCaretShape();
     }

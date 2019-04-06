@@ -2,7 +2,10 @@ package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
+import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import records.data.CellPosition;
@@ -16,6 +19,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.lexeditor.LexAutoComplete.LexAutoCompleteWindow;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -30,6 +34,8 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
+import utility.Utility;
+import utility.gui.FXUtility;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -71,16 +77,28 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     {
         loadExpression("@unfinished \"\"");
         write("My Nu");
+        checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
-    
+
+    private void checkPosition()
+    {
+        sleep(50);
+        ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
+        assertEquals(1, completions.size());
+        Node caret = lookup(".document-caret").query();
+        double caretBottom = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
+        MatcherAssert.assertThat(TestUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
+    }
+
     @Test
     public void testIsolatedKeyword() throws Exception
     {
         loadExpression("@unfinished \"\"");
         write("@el");
+        checkPosition();
         // Should be single completion that is auto-selected:
         push(KeyCode.ENTER);
         // Don't care exactly how it's saved, as long as keyword is in there:
@@ -93,6 +111,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@column My Number");
         push(KeyCode.HOME);
         write("@if ");
+        checkPosition();
         String finished = finish().toString();
         // Don't care exactly how it's saved:
         assertThat(finished, Matchers.containsString("^aif"));
@@ -105,6 +124,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@column My Number");
         push(KeyCode.HOME);
         write("if");
+        checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
         String finished = finish().toString();
@@ -119,6 +139,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@column My Number");
         push(KeyCode.HOME);
         write("@iftrue@then");
+        checkPosition();
         push(KeyCode.END);
         write("@else0@endif");
         String finished = finish().toString();
@@ -132,6 +153,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         // a complete if statement.
         loadExpression("@unfinished \"\"");
         write("@i");
+        checkPosition();
         push(KeyCode.ENTER);
         // It's going to be invalid due to the empty bits:
         assertEquals(new IfThenElseExpression(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());

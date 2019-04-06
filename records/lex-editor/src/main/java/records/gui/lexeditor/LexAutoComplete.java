@@ -2,6 +2,8 @@ package records.gui.lexeditor;
 
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
@@ -13,13 +15,16 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
+import java.util.List;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
@@ -27,23 +32,35 @@ public class LexAutoComplete
 {
     private final LexAutoCompleteWindow window = new LexAutoCompleteWindow();
     private final EditorDisplay editor;
+    private final Timeline updatePosition;
 
     public LexAutoComplete(@UnknownInitialization EditorDisplay editor)
     {
         this.editor = Utility.later(editor);
+        this.updatePosition = new Timeline(new KeyFrame(Duration.millis(250), e -> {
+            Utility.later(this).updateWindowPosition(Utility.later(this).window.listView.getItems());
+        }));
     }
 
-    public void show(ImmutableList<LexCompletion> completions)
+    public void show(List<LexCompletion> completions)
     {
         window.setCompletions(completions);
+        updateWindowPosition(completions);
+        FXUtility.runAfterNextLayout(() -> updateWindowPosition(completions));
+        updatePosition.playFromStart();
+    }
+
+    private void updateWindowPosition(List<LexCompletion> completions)
+    {
         Point2D caretBottom = editor.getCaretBottomOnScreen(completions.stream().mapToInt(c -> c.startPos).min().orElse(editor.getCaretPosition()));
         window.show(editor, caretBottom.getX(), caretBottom.getY());
     }
-    
+
     public void hide()
     {
         window.hide();
         window.setCompletions(ImmutableList.of());
+        updatePosition.stop();
     }
 
     public boolean isShowing()
@@ -141,7 +158,7 @@ public class LexAutoComplete
             }
         }
 
-        public void setCompletions(ImmutableList<LexCompletion> completions)
+        public void setCompletions(List<LexCompletion> completions)
         {
             this.listView.getItems().setAll(completions);
             if ((completions.size() == 1 && completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_ONLY)

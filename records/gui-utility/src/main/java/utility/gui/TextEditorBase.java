@@ -2,8 +2,6 @@ package utility.gui;
 
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
-import com.sun.javafx.tk.TKPulseListener;
-import com.sun.javafx.tk.Toolkit;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -25,9 +23,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.HelpfulTextFlow;
-import utility.gui.ResizableRectangle;
 
 import java.util.List;
 
@@ -126,16 +121,7 @@ public abstract class TextEditorBase extends Region
         {
             if (!updateCaretShapeQueued)
             {
-                //TODO In Java 9, use public toolkit
-                Toolkit.getToolkit().addSceneTkPulseListener(new TKPulseListener()
-                {
-                    @Override
-                    public void pulse()
-                    {
-                        FXUtility.runAfter(CaretAndSelectionNodes.this::updateCaretShape);
-                        Toolkit.getToolkit().removeSceneTkPulseListener(this);
-                    }
-                });
+                FXUtility.runAfterNextLayout(CaretAndSelectionNodes.this::updateCaretShape);
                 updateCaretShapeQueued = true;
             }
         }
