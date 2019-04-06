@@ -39,6 +39,7 @@ import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
+import test.gen.type.GenDataTypeMaker.MustHaveValues;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterStructuredValueTrait;
 import test.gui.trait.ListUtilTrait;
@@ -78,7 +79,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
-            @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
+            @MustHaveValues @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
             @From(GenRandom.class) Random r) throws Exception
     {
         int length = 1 + r.nextInt(50);
