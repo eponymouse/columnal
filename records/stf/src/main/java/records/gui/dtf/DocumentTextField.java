@@ -31,6 +31,7 @@ import utility.gui.TextEditorBase;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -287,6 +288,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     public @OnThread(Tag.FXPlatform) int getDisplayAnchorPosition()
     {
         return getAnchorPosition();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) BitSet getErrorCharacters()
+    {
+        return new BitSet();
     }
 
     @Override

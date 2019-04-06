@@ -187,4 +187,10 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         return curContent.mapDisplayToContent(graphicalIndex);
     }
+
+    @SuppressWarnings("units")
+    public int mapContentToDisplay(int contentIndex)
+    {
+        return curContent.mapContentToDisplay(contentIndex);
+    }
 }

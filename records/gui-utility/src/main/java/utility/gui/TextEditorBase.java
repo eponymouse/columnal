@@ -16,15 +16,23 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+import utility.Utility.IndexRange;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Base helper class for text editors
@@ -52,6 +60,7 @@ public abstract class TextEditorBase extends Region
         private final Path inverter;
         private final Pane selectionPane;
         private final Pane inverterPane;
+        private final Path errorUnderlines;
 
         private final Animation caretBlink;
         private boolean updateCaretShapeQueued;
@@ -101,6 +110,10 @@ public abstract class TextEditorBase extends Region
             );
             caretBlink.setCycleCount(Animation.INDEFINITE);
 
+            errorUnderlines = new Path();
+            errorUnderlines.setMouseTransparent(true);
+            errorUnderlines.setManaged(false);
+            errorUnderlines.getStyleClass().add("error-underline");
         }
 
         public void focusChanged(boolean focused)
@@ -134,9 +147,11 @@ public abstract class TextEditorBase extends Region
             updateCaretShapeQueued = false;
             try
             {
-                selectionShape.getElements().setAll(textFlow.getInternalTextLayout().getRange(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
+                TextLayout textLayout = textFlow.getInternalTextLayout();
+                selectionShape.getElements().setAll(textLayout.getRange(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
                 inverter.getElements().setAll(selectionShape.getElements());
-                caretShape.getElements().setAll(textFlow.getInternalTextLayout().getCaretShape(getDisplayCaretPosition(), true, 0, 0));
+                caretShape.getElements().setAll(textLayout.getCaretShape(getDisplayCaretPosition(), true, 0, 0));
+                errorUnderlines.getElements().setAll(makeSpans(getErrorCharacters()).stream().flatMap(r -> Arrays.<PathElement>stream(textLayout.getRange(r.start, r.end, TextLayout.TYPE_TEXT, 0, 0))).collect(Collectors.<PathElement>toList()));
                 if (isFocused())
                     caretBlink.playFromStart();
             }
@@ -149,11 +164,25 @@ public abstract class TextEditorBase extends Region
             // Caret may have moved off-screen, which is detected and corrected in the layout:
             requestLayout();
         }
+
+        private List<IndexRange> makeSpans(BitSet errorCharacters)
+        {
+            ArrayList<IndexRange> r = new ArrayList<>();
+            int spanStart = errorCharacters.nextSetBit(0);
+            while (spanStart != -1)
+            {
+                int spanEnd = errorCharacters.nextClearBit(spanStart);
+                r.add(new IndexRange(spanStart, spanEnd));
+                spanStart = errorCharacters.nextSetBit(spanEnd);
+            }
+            return r;
+        }
     }
-    protected @Nullable CaretAndSelectionNodes caretAndSelectionNodes;
+    protected final CaretAndSelectionNodes caretAndSelectionNodes;
     
     public TextEditorBase(List<Text> textNodes)
     {
+        this.caretAndSelectionNodes = new CaretAndSelectionNodes();
         getStyleClass().add("text-editor");
         ResizableRectangle clip = new ResizableRectangle();
         clip.widthProperty().bind(widthProperty());
@@ -189,6 +218,9 @@ public abstract class TextEditorBase extends Region
 
     @OnThread(Tag.FXPlatform)
     public abstract int getDisplayAnchorPosition();
+
+    @OnThread(Tag.FXPlatform)
+    public abstract BitSet getErrorCharacters();
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -283,23 +315,17 @@ public abstract class TextEditorBase extends Region
     @OnThread(value = Tag.FXPlatform)
     public void focusChanged(boolean focused)
     {
+        CaretAndSelectionNodes cs = caretAndSelectionNodes;
         if (focused)
         {
-            if (caretAndSelectionNodes == null)
-                caretAndSelectionNodes = new CaretAndSelectionNodes();
-            CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
-            getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.fadeOverlay);
+            getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.errorUnderlines, cs.fadeOverlay);
             cs.focusChanged(true);
-            
         }
         else
         {
-            if (caretAndSelectionNodes != null)
-                caretAndSelectionNodes.focusChanged(false);
-            caretAndSelectionNodes = null;
             horizTranslation = 0;
             vertTranslation = 0;
-            getChildren().setAll(textFlow);
+            getChildren().setAll(textFlow, cs.errorUnderlines);
         }
     }
 }

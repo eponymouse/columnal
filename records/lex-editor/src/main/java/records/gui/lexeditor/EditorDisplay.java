@@ -15,6 +15,7 @@ import javafx.scene.shape.Path;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import threadchecker.OnThread;
@@ -25,6 +26,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TextEditorBase;
 
+import java.util.BitSet;
 import java.util.OptionalInt;
 
 @OnThread(Tag.FXPlatform)
@@ -262,6 +264,17 @@ public final class EditorDisplay extends TextEditorBase
     public int getDisplayAnchorPosition()
     {
         return content.getDisplayAnchorPosition();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) BitSet getErrorCharacters()
+    {
+        BitSet errorChars = new BitSet();
+        for (ErrorDetails error : content.getErrors())
+        {
+            errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+        }
+        return errorChars;
     }
 
     @SuppressWarnings("units")
