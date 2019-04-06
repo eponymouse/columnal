@@ -62,7 +62,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         ExpressionSaver saver = new ExpressionSaver();
         @SourceLocation int curIndex = 0;
         BitSet skipCaretPos = new BitSet();
-        BitSet missingSpots = new BitSet();
+        BitSet removedChars = new BitSet();
         BitSet suppressBracketMatching = new BitSet();
         // Index is in display string, not original (since it's added)
         BitSet addedDisplayChars = new BitSet();
@@ -86,7 +86,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
                 else
                 {
-                    missingSpots.set(curIndex);
+                    removedChars.set(curIndex);
                 }
                 prevWasIdent = false;
                 preserveNextSpace = false;
@@ -201,6 +201,8 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     saver.saveOperand(outcome.expression, new Span(curIndex, nestedOutcome.positionAfter), c -> {});
                     s.append(outcome.internalContent);
                     d.append(outcome.displayContent);
+                    orShift(removedChars, outcome.removedChars, curIndex + nestedLiteral.getFirst().length());
+                    orShift(addedDisplayChars, outcome.addedDisplayChars, curIndex + nestedLiteral.getFirst().length());
                     curIndex = nestedOutcome.positionAfter;
                     continue nextToken;
                 }
@@ -435,23 +437,16 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 caretPos.add(pos);
         }
 
-        return new LexerResult<>(saved, s.toString(), i -> {
-            return i - missingSpots.get(0, i).cardinality();
-        }, lexOnMove, Ints.toArray(caretPos), d.build(), i -> {
-            // We look for the ith empty spot in addedDisplayChars
-            int r = 0;
-            for (int j = 0; j < i; j++)
-            {
-                while (addedDisplayChars.get(r))
-                {
-                    r += 1;
-                }
-                r += 1;
-            }
-            return r;
-        }, i -> {
-            return i - addedDisplayChars.get(0, i).cardinality();
-        }, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, s.toString(), removedChars, lexOnMove, Ints.toArray(caretPos), d.build(), addedDisplayChars, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+    }
+
+    // Effectively does: dest = dest | (src << shiftBy)
+    private void orShift(BitSet dest, BitSet src, int shiftBy)
+    {
+        for (int srcBit = src.nextSetBit(0); srcBit != -1; srcBit = src.nextSetBit(srcBit + 1))
+        {
+            dest.set(srcBit + shiftBy);
+        }
     }
 
     class TagCompletion implements Comparable<TagCompletion>
@@ -538,19 +533,25 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         public final String internalContent;
         public final StyledString displayContent;
         public final Expression expression;
+        public final BitSet removedChars;
+        public final BitSet addedDisplayChars;
         
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
             this.internalContent = source.prefix + source.innerContent + (source.terminatedProperly ? "}" : "");
             this.displayContent = StyledString.s(internalContent);
             this.expression = expression;
+            this.removedChars = new BitSet();
+            this.addedDisplayChars = new BitSet();
         }
 
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, BitSet removedChars, BitSet addedDisplayChars)
         {
             this.internalContent = prefix + internalContent + suffix;
             this.displayContent = StyledString.concat(StyledString.s(prefix), displayContent, StyledString.s(suffix));
             this.expression = expression;
+            this.removedChars = removedChars;
+            this.addedDisplayChars = addedDisplayChars;
         }
     }
 
@@ -564,15 +565,13 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             new Pair<>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer();
-                // TODO also save positions, content, etc
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "");
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.addedDisplayChars);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
-                // TODO also save positions, content, etc
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "");
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.addedDisplayChars);
             })
         );
     }

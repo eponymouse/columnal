@@ -75,7 +75,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         @SuppressWarnings("units")
         @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
         this.curContent = lexer.process(newText, newCaretPos);
-        this.curCaretPosition = curContent.mapperToAdjusted.mapCaretPos(newCaretPos);
+        this.curCaretPosition = curContent.mapOldCaretPos(newCaretPos);
         this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)
@@ -174,11 +174,11 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public int getDisplayCaretPosition()
     {
-        return curContent.mapContentToDisplay.mapCaretPos(getCaretPosition());
+        return curContent.mapContentToDisplay(getCaretPosition());
     }
 
     public int getDisplayAnchorPosition()
     {
-        return curContent.mapContentToDisplay.mapCaretPos(getAnchorPosition());
+        return curContent.mapContentToDisplay(getAnchorPosition());
     }
 }

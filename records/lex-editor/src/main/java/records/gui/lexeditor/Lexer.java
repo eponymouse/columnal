@@ -17,15 +17,13 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
     {
         public final @Recorded EXPRESSION result;
         public final String adjustedContent;
-        // Maps position in parameter to process to adjustedContent
-        public final CaretPosMapper mapperToAdjusted;
+        public final BitSet removedChars;
+        public final BitSet addedDisplayChars;
         public final boolean reLexOnCaretMove;
         // Valid caret positions in adjustedContent
         public final @SourceLocation int[] caretPositions;
         // The content to display in the TextFlow
         public final StyledString display;
-        public final CaretPosMapper mapContentToDisplay;
-        public final CaretPosMapper mapDisplayToContent;
         
         public final ImmutableList<ErrorDetails> errors;
         public final ImmutableList<Lexer.AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> autoCompleteDetails;
@@ -34,30 +32,16 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final BitSet suppressBracketMatching;
         public final boolean bracketsAreBalanced;
 
-        /*
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, int[] caretPositions, ImmutableList<ErrorDetails> errors)
-        {
-            this.result = result;
-            this.adjustedContent = adjustedContent;
-            this.mapperToAdjusted = mapperToAdjusted;
-            this.caretPositions = caretPositions;
-            this.errors = errors;
-        }
-        */
-
-        // Temporary constructor to auto-fill caret positions
-        // Remove once caret positions done properly
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, CaretPosMapper mapperToAdjusted, boolean reLexOnCaretMove, int[] caretPositions, StyledString display, CaretPosMapper mapContentToDisplay, CaretPosMapper mapDisplayToContent, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, BitSet removedChars, boolean reLexOnCaretMove, int[] caretPositions, StyledString display, BitSet addedDisplayChars, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
             this.reLexOnCaretMove = reLexOnCaretMove;
-            this.mapperToAdjusted = mapperToAdjusted;
+            this.removedChars = removedChars;
             this.caretPositions = caretPositions;
             this.display = display;
-            this.mapContentToDisplay = mapContentToDisplay;
-            this.mapDisplayToContent = mapDisplayToContent;
+            this.addedDisplayChars = addedDisplayChars;
             this.errors = errors;
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
@@ -67,6 +51,34 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)
         {
             return autoCompleteDetails.stream().filter(a -> a.location.contains(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletion>toImmutableList());
+        }
+        
+        @SuppressWarnings("units")
+        public @SourceLocation int mapOldCaretPos(@SourceLocation int pos)
+        {
+            return pos - removedChars.get(0, pos).cardinality();
+        }
+
+        @SuppressWarnings("units")
+        public @SourceLocation int mapContentToDisplay(@SourceLocation int contentPos)
+        {
+            // We look for the ith empty spot in addedDisplayChars
+            int r = 0;
+            for (int j = 0; j < contentPos; j++)
+            {
+                while (addedDisplayChars.get(r))
+                {
+                    r += 1;
+                }
+                r += 1;
+            }
+            return r;
+        }
+
+        @SuppressWarnings("units")
+        public @SourceLocation int mapDisplayToContent(@SourceLocation int displayPos)
+        {
+            return displayPos - addedDisplayChars.get(0, displayPos).cardinality();
         }
     }
     
