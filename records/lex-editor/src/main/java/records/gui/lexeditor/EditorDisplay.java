@@ -3,29 +3,26 @@ package records.gui.lexeditor;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.input.Clipboard;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.scene.shape.Path;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.expressioneditor.AutoComplete;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.HelpfulTextFlow;
 import utility.gui.TextEditorBase;
 
 import java.util.OptionalInt;
@@ -237,7 +234,7 @@ public final class EditorDisplay extends TextEditorBase
         return localToScreen(textFlow.getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
 
-    public Point2D getCaretBottomOnScreen(int caretPos)
+    public @Nullable Point2D getCaretBottomOnScreen(int caretPos)
     {
         return localToScreen(textFlow.getClickPosFor(caretPos, VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
@@ -276,5 +273,17 @@ public final class EditorDisplay extends TextEditorBase
     public TopLevelEditor<?, ?, ?> _test_getEditor()
     {
         return editor;
+    }
+
+    public Bounds _test_getCaretBounds(int pos)
+    {
+        try
+        {
+            return textFlow.localToScreen(new Path(textFlow.getInternalTextLayout().getCaretShape(pos, true, 0, 0)).getBoundsInParent());
+        }
+        catch (Exception e)
+        {
+            return new BoundingBox(0, 0, 0, 0);
+        }
     }
 }

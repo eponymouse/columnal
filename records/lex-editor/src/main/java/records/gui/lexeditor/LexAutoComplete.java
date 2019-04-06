@@ -6,6 +6,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
@@ -53,7 +54,12 @@ public class LexAutoComplete
     private void updateWindowPosition(List<LexCompletion> completions)
     {
         Point2D caretBottom = editor.getCaretBottomOnScreen(completions.stream().mapToInt(c -> c.startPos).min().orElse(editor.getCaretPosition()));
-        window.show(editor, caretBottom.getX(), caretBottom.getY());
+        ListCell listCell = (ListCell) window.listView.lookup(".list-cell");
+        double labelPad = listCell == null ? 0 : listCell.getPadding().getLeft();
+        if (caretBottom != null && !completions.isEmpty())
+            window.show(editor, caretBottom.getX() - labelPad - 1 /* window border */, caretBottom.getY());
+        else
+            hide();
     }
 
     public void hide()
@@ -172,6 +178,11 @@ public class LexAutoComplete
         public @Nullable String _test_getSelectedContent()
         {
             return Utility.onNullable(listView.getSelectionModel().getSelectedItem(), l -> l.content);
+        }
+
+        public List<LexCompletion> _test_getShowing()
+        {
+            return listView.getItems();
         }
 
         @OnThread(Tag.FX)

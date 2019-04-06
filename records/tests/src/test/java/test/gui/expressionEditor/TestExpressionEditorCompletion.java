@@ -2,11 +2,15 @@ package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.sun.javafx.scene.control.skin.LabeledText;
 import javafx.scene.Node;
+import javafx.scene.control.Labeled;
 import javafx.scene.input.KeyCode;
+import javafx.scene.text.Text;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -19,6 +23,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.LexAutoComplete.LexAutoCompleteWindow;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
@@ -36,6 +41,8 @@ import threadchecker.Tag;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+
+import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -91,6 +98,12 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         Node caret = lookup(".document-caret").query();
         double caretBottom = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
         MatcherAssert.assertThat(TestUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
+        int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
+        EditorDisplay editorDisplay = lookup(".editor-display").query();
+        double edX = TestUtil.fx(() -> editorDisplay._test_getCaretBounds(targetStartPos).getMaxX());
+        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getScene() == completions.get(0).getScene()).queryAll());
+        double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> t.localToScreen(t.getBoundsInLocal()).getMinX()).min()).orElse(-1);
+        MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 1));
     }
 
     @Test
@@ -111,7 +124,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@column My Number");
         push(KeyCode.HOME);
         write("@if ");
-        checkPosition();
         String finished = finish().toString();
         // Don't care exactly how it's saved:
         assertThat(finished, Matchers.containsString("^aif"));
