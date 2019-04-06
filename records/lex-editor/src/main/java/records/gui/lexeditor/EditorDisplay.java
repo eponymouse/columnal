@@ -57,9 +57,8 @@ public final class EditorDisplay extends TextEditorBase
             HitInfo hitInfo = hitTest(event.getX(), event.getY());
             if (hitInfo != null)
             {
-                @SuppressWarnings("units")
-                @SourceLocation int insertionIndex = Math.min(hitInfo.getInsertionIndex(), content.getText().length());
-                content.positionCaret(insertionIndex, true);
+                int insertionIndex = hitInfo.getInsertionIndex();
+                content.positionCaret(content.mapDisplayToContent(insertionIndex), true);
             }
             event.consume();
         });

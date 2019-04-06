@@ -1,7 +1,7 @@
 package test.gui.expressionEditor;
 
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
@@ -20,14 +20,13 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.expressioneditor.TopLevelEditor;
-import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ListUtilTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -43,10 +42,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait
+public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait, PopupTrait
 {    
     @Test
     public void testPosition1()
@@ -196,6 +196,8 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 }
             });
 
+            Point2D[] caretCentres = new Point2D[internalCaretPos.length];
+
             // Once for initial load, twice for opening editor again
             for (int i = 0; i < 2; i++)
             {
@@ -205,6 +207,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 int curIndex = 0;
                 while (curIndex < internalCaretPos.length)
                 {
+                    caretCentres[curIndex] = getCaretPosOnScreen();
                     assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
                     curIndex += 1;
                     push(KeyCode.RIGHT);
@@ -218,9 +221,18 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     push(KeyCode.LEFT);
                 }
 
+                for (int clickIndex = 0; clickIndex < caretCentres.length; clickIndex++)
+                {
+                    sleep(200);
+                    //System.out.println("Clicking on " + clickIndex + ": " + caretCentres[clickIndex]);
+                    //TestUtil.fx_(() -> dumpScreenshot());
+                    moveAndDismissPopupsAtPos(point(caretCentres[clickIndex]));
+                    clickOn(caretCentres[clickIndex].add(1, 0));
+                    assertEquals(internalCaretPos[clickIndex], getPosition().getSecond().intValue());
+                }
+
                 // Dismiss dialog:
-                push(KeyCode.ESCAPE);
-                push(KeyCode.ESCAPE);
+                moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
                 
                 if (i == 0)
@@ -335,6 +347,13 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
         EditorDisplay textField = (EditorDisplay) focusOwner;
         return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
+    }
+    
+    private Point2D getCaretPosOnScreen()
+    {
+        EditorDisplay editorDisplay = getPosition().getFirst();
+        Node caret = TestUtil.fx(() -> editorDisplay.lookup(".document-caret"));
+        return TestUtil.fx(() -> FXUtility.getCentre(caret.localToScreen(caret.getBoundsInLocal())));
     }
     
     private String getDisplayText()
