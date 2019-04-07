@@ -228,7 +228,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     //TestUtil.fx_(() -> dumpScreenshot());
                     moveAndDismissPopupsAtPos(point(caretCentres[clickIndex]));
                     clickOn(caretCentres[clickIndex].add(1, 0));
-                    assertEquals(internalCaretPos[clickIndex], getPosition().getSecond().intValue());
+                    assertEquals("Clicked: " + caretCentres[clickIndex].add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
                 }
 
                 // Dismiss dialog:
