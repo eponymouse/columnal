@@ -56,7 +56,7 @@ public class IfThenElseExpression extends NonOperatorExpression
             onError.recordError(condition, StyledString.s("Condition cannot be a pattern"));
             return null;
         }
-        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.bool(this), conditionType.typeExp)) == null)
+        if (onError.recordError(condition, TypeExp.unifyTypes(TypeExp.bool(this), conditionType.typeExp)) == null)
         {
             return null;
         }
