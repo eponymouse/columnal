@@ -38,6 +38,7 @@ import java.util.List;
 public class EditorLocationAndErrorRecorder
 {
     // A semantic error matches an expression which may span multiple children.
+    @OnThread(Tag.Any)
     public static final class Span
     {
         // Start is inclusive, end is exclusive
@@ -88,6 +89,8 @@ public class EditorLocationAndErrorRecorder
         public final Span location;
         public final StyledString error;
         public final ImmutableList<TextQuickFix> quickFixes;
+        // Note -- mutable field.
+        public boolean caretHasLeftSinceEdit;
 
         public ErrorDetails(Span location, StyledString error, ImmutableList<TextQuickFix> quickFixes)
         {

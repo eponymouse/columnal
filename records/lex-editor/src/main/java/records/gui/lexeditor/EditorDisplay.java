@@ -272,7 +272,8 @@ public final class EditorDisplay extends TextEditorBase
         BitSet errorChars = new BitSet();
         for (ErrorDetails error : content.getErrors())
         {
-            errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+            if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
+                errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
         }
         return errorChars;
     }
@@ -298,5 +299,19 @@ public final class EditorDisplay extends TextEditorBase
         {
             return new BoundingBox(0, 0, 0, 0);
         }
+    }
+    
+    public boolean hasErrors()
+    {
+        return !content.getErrors().isEmpty();
+    }
+    
+    public void showAllErrors()
+    {
+        for (ErrorDetails error : content.getErrors())
+        {
+            error.caretHasLeftSinceEdit = true;
+        }
+        render(false);
     }
 }

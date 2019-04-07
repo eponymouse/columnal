@@ -25,6 +25,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
@@ -34,20 +35,25 @@ import java.util.Optional;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
-public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expression>>
+public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnId, Expression>>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
+    private final ColumnNameTextField nameField;
 
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
 
-        ColumnNameTextField field = new ColumnNameTextField(initialName);
+        nameField = new ColumnNameTextField(initialName);
+        FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> notifyModified());
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+            curValue = e;
+            notifyModified();
+        }) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
@@ -58,7 +64,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         };
         curValue = expressionEditor.save();
         // Tab doesn't seem to work right by itself:
-        field.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+        nameField.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.TAB)
             {
                 expressionEditor.focus(Focus.LEFT);
@@ -69,7 +75,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         LabelledGrid content = new LabelledGrid();
         content.getStyleClass().add("edit-column-expression-content");
 
-        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", field.getNode()));
+        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", nameField.getNode()));
         
         content.addRow(GUI.labelledGridRow("edit.column.expression",
                 "edit-column/column-expression", expressionEditor.getContainer()));
@@ -83,16 +89,9 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
         FXUtility.preventCloseOnEscape(getDialogPane());
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
-        setResultConverter(bt -> {
-            @Nullable ColumnId columnId = field.valueProperty().getValue();
-            if (bt == ButtonType.OK && columnId != null)
-                return new Pair<>(columnId, curValue);
-            else
-                return null;
-        });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(field::requestFocusWhenInScene);
+            FXUtility.runAfter(nameField::requestFocusWhenInScene);
         });
         setOnHiding(e -> {
             expressionEditor.cleanup();
@@ -115,5 +114,32 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
                 oldContent
         ));
         BorderPane.setMargin(oldContent, new Insets(10, 0, 0, 0));
+    }
+
+    @Override
+    protected Validity checkValidity()
+    {
+        if (nameField.valueProperty().getValue() == null)
+            return Validity.IMPOSSIBLE_TO_SAVE;
+        else if (expressionEditor.hasErrors())
+            return Validity.ERROR_BUT_CAN_SAVE;
+        else
+            return Validity.NO_ERRORS;
+    }
+
+    @Override
+    protected @Nullable Pair<ColumnId, Expression> calculateResult()
+    {
+        @Nullable ColumnId name = nameField.valueProperty().getValue();
+        if (name == null)
+            return null;
+        else
+            return new Pair<>(name, curValue);
+    }
+
+    @Override
+    protected void showAllErrors()
+    {
+        expressionEditor.showAllErrors();
     }
 }

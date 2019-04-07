@@ -128,6 +128,17 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     {
         // By default, do nothing
     }
+    
+    // Do we have any errors (including those currently suppressed)
+    public boolean hasErrors()
+    {
+        return display.hasErrors();
+    }
+    
+    public void showAllErrors()
+    {
+        display.showAllErrors();
+    }
 
     private class ErrorInfo
     {
@@ -381,8 +392,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 if (error.location.contains(newCaretPos))
                 {
-                    errors.add(error.error);
-                    fixes.addAll(error.quickFixes);
+                    if (error.caretHasLeftSinceEdit)
+                    {
+                        errors.add(error.error);
+                        fixes.addAll(error.quickFixes);
+                    }
+                }
+                else
+                {
+                    error.caretHasLeftSinceEdit = true;
                 }
             }
             

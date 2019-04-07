@@ -1,10 +1,12 @@
 package test.gui.expressionEditor;
 
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Path;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
@@ -24,9 +26,11 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ListUtilTrait;
+import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -40,13 +44,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait
+public class TestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
     @OnThread(Tag.Any)
     private static class State
@@ -80,29 +82,32 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     public void test1()
     {
         // Check basic:
-        testError("1", false, h());
+        testError("1");
+    }
+
+    @Test
+    public void test1b()
+    {
+        // Check basic:
+        testError("1+", 2, 2);
     }
 
     @Test
     public void test2()
     {
-        // Don't want an error if we're still in the slot::
-        testError("foo", false, h());
+        testError("foo", 0, 3);
     }
 
     @Test
     public void test2A()
     {
-        // Error once we leave the slot:
-        testError("foo+1", false, red(), h(), h());
+        testError("foo+1", 0, 3);
     }
 
     @Test
     public void test2B()
     {
-        // Error once we leave the slot:
-        // (but no error in the blank operand added at the end)
-        testError("foo+", false, h(), red(), h());
+        testError("foo+", 0, 4);
     }
 
     @Test
@@ -110,23 +115,16 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("1+/3", false, h(), red(), red(), h());
+        testError("1+/3", 0, 3);
     }
 
     @Test
     public void test2D()
     {
         // Error once we leave the slot:
-        testError("foo*1", false, red(), h(), h());
+        testError("foo*1", 0, 3);
     }
 
-    @Test
-    public void test2E()
-    {
-        // Error once we leave the slot:
-        // (but no error in the blank operand added at the end)
-        testError("1+", false, h(), red(), h());
-    }
     
     /*
     @Test
@@ -209,8 +207,19 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         return new State("error", false);
     }
     
-    private void testError(String original, boolean errorPopupShowing, State... states)
+    // Checks that errors don't show up while still in the span,
+    // but do show up when you move out or when you click ok.
+    @SuppressWarnings("units")
+    private void testError(String expression, int... errorSpanEdges)
     {
+        // Must be start and end for each span:
+        assertEquals(0, errorSpanEdges.length % 2);
+        ArrayList<Span> errorSpans = new ArrayList<>();
+        for (int i = 0; i < errorSpanEdges.length; i += 2)
+        {
+            errorSpans.add(new Span(errorSpanEdges[i], errorSpanEdges[i + 1]));
+        }
+        
         try
         {
             UnitManager u = new UnitManager();
@@ -238,13 +247,49 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            write(original);
-            // TODO check error popup
+            write(expression);
+            boolean hasSpanNotContainingEnd = errorSpans.stream().anyMatch(s -> !s.contains(expression.length()));
+            assertErrorShowing(hasSpanNotContainingEnd, false);
             
-            // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
-            // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
-            TestUtil.sleep(2000);
-            WaitForAsyncUtils.clearExceptions();
+            if (errorSpans.isEmpty())
+            {
+                // Clicking OK should be fine:
+                moveAndDismissPopupsAtPos(point(".ok-button"));
+                clickOn(".ok-button");
+                sleep(300);
+                assertFalse(lookup(".expression-editor").tryQuery().isPresent());
+            }
+            else
+            {
+                // Can either provoke error by moving caret into a span or by
+                // clicking ok first time
+                if (hasSpanNotContainingEnd && expression.hashCode() % 2 == 0)
+                {
+                    // Move into span:
+                    boolean seenPopup = false;
+                    for (int i = 0; i < expression.length(); i++)
+                    {
+                        push(KeyCode.LEFT);
+                        if (isShowingErrorPopup())
+                        {
+                            seenPopup = true;
+                            break;
+                        }
+                    }
+                    assertTrue("Error popup showed somewhere", seenPopup);
+                }
+                else
+                {
+                    // Click ok and check dialog remains and error shows up
+                    moveAndDismissPopupsAtPos(point(".ok-button"));
+                    clickOn(".ok-button");
+                    sleep(300);
+                    assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                    assertErrorShowing(true, null);
+                    assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
+                }
+            }
+            
         }
         catch (Exception e)
         {
@@ -252,5 +297,19 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             // into unchecked for simpler signatures:
             throw new RuntimeException(e);
         }
+    }
+
+    private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
+    {
+        Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
+        Path errorUnderline = lookup(".error-underline").match(n -> TestUtil.<@Nullable Scene>fx(() -> n.getScene()) == dialogScene).query();
+        assertEquals("Underline showing", underlineShowing, TestUtil.fx(() -> errorUnderline.getElements().size()) > 0);
+        if (popupShowing != null)
+            assertEquals("Popup showing", popupShowing, isShowingErrorPopup());
+    }
+
+    private boolean isShowingErrorPopup()
+    {
+        return lookup(".expression-info-popup").tryQuery().isPresent();
     }
 }
