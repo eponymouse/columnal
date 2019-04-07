@@ -39,7 +39,7 @@ public final class EditorDisplay extends TextEditorBase
     public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
         super(ImmutableList.of());
-        this.autoComplete = Utility.later(new LexAutoComplete(this));
+        this.autoComplete = Utility.later(new LexAutoComplete(this, () -> Utility.later(this).triggerSelection()));
         this.content = theContent;
         this.editor = Utility.later(editor);
         getStyleClass().add("editor-display");

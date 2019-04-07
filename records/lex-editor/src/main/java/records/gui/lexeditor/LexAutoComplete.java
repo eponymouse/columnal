@@ -21,6 +21,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -34,10 +35,12 @@ public class LexAutoComplete
     private final LexAutoCompleteWindow window = new LexAutoCompleteWindow();
     private final EditorDisplay editor;
     private final Timeline updatePosition;
+    private final FXPlatformRunnable triggerCompletion;
 
-    public LexAutoComplete(@UnknownInitialization EditorDisplay editor)
+    public LexAutoComplete(@UnknownInitialization EditorDisplay editor, FXPlatformRunnable triggerCompletion)
     {
         this.editor = Utility.later(editor);
+        this.triggerCompletion = triggerCompletion;
         this.updatePosition = new Timeline(new KeyFrame(Duration.millis(250), e -> {
             Utility.later(this).updateWindowPosition(Utility.later(this).window.listView.getItems());
         }));
@@ -147,6 +150,16 @@ public class LexAutoComplete
                     // Can't be focused
                 }
             };
+            listView.setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
+                {
+                    @Nullable LexCompletion selected = listView.getSelectionModel().getSelectedItem();
+                    if (selected != null)
+                    {
+                        triggerCompletion.run();
+                    }
+                }
+            });
             this.pane = new BorderPane(listView);
             setAutoFix(false);
             setAutoHide(false);

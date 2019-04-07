@@ -5,12 +5,14 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.control.skin.LabeledText;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.ListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -80,13 +82,26 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     }
     
     @Test
-    public void testColumn() throws Exception
+    public void testColumn1() throws Exception
     {
         loadExpression("@unfinished \"\"");
         write("My Nu");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
+        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
+    }
+
+    @Ignore // TODO TestFX double-click doesn't seem to work right
+    @Test
+    public void testColumn1b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("My Nu");
+        checkPosition();
+        Node cell = lookup(".list-cell").match((ListCell c) -> "My Number".equals(TestUtil.fx(() -> c.getText()))).<Node>query();
+        TestUtil.checkNonNull(cell);
+        doubleClickOn(point(cell));
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
 
