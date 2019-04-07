@@ -336,7 +336,7 @@ public class TestDocumentTextField extends FXApplicationTest
             sleep(500);
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
-            assertTrue(fieldBounds.contains(FXUtility.getCentre(caretBounds)));
+            assertTrue(fieldBounds.intersects(caretBounds));
         }
         
         assertThat(allBounds.stream().distinct().count(), Matchers.greaterThan(10L));
