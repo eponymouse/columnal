@@ -328,7 +328,7 @@ public class TestDocumentTextField extends FXApplicationTest
 
             Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
-            assertTrue("Field: " + fieldBounds + " caret: " + caretBounds, fieldBounds.contains(FXUtility.getCentre(caretBounds)));
+            assertTrue("Field: " + fieldBounds + " caret: " + caretBounds, fieldBounds.intersects(caretBounds));
         }
         for (int i = 0; i < 40; i++)
         {
