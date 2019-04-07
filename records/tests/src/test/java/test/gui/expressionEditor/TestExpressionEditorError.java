@@ -108,7 +108,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     @Test
     public void test3()
     {
-        testError("@iftrue@then3@else5", e(19, 20, "endif"));
+        testError("@iftrue@then3@else5", e(19, 19, "endif"));
     }
 
     @Test

@@ -135,6 +135,7 @@ public abstract class TextEditorBase extends Region
             if (!updateCaretShapeQueued)
             {
                 FXUtility.runAfterNextLayout(CaretAndSelectionNodes.this::updateCaretShape);
+                requestLayout();
                 updateCaretShapeQueued = true;
             }
         }

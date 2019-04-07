@@ -112,7 +112,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         }
                         skipCaretPos.set(s.length() + 1, s.length() + keyword.getContent().length());
                         d.append(keyword.getContent() + " ");
-                        addedDisplayChars.set(s.length() + (addLeadingSpace ? 1 : 0) + keyword.getContent().length());
+                        addedDisplayChars.set(s.length() + keyword.getContent().length());
                     }
                     else
                         d.append(keyword.getContent());
@@ -414,7 +414,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             
             Span invalidCharLocation = new Span(curIndex, curIndex + 1);
             saver.saveOperand(new InvalidIdentExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
-            saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter.start", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
+            saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             s.append(content.charAt(curIndex));
             d.append("" + content.charAt(curIndex));
             curIndex += 1;
@@ -449,7 +449,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 Span insertTarget = LexerResult.findNthClearIndex(addedDisplayChars, error.location.start);
                 if (insertTarget.start == insertTarget.end)
                 {
-                    insertBit(addedDisplayChars, insertTarget.start);
+                    insertBit(addedDisplayChars, error.location.start);
                     display = StyledString.concat(display.substring(0, insertTarget.start), StyledString.s(" "), display.substring(insertTarget.start, display.getLength()));
                 }
             }

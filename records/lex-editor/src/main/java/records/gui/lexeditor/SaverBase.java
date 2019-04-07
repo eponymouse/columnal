@@ -479,12 +479,21 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets), null, closed.openingNode, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets), null, lastNode(closed).rhs(), c -> {});
         }
 
         Scope closed = currentScopes.pop();
         BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(locationRecorder, Span.fromTo(closed.openingNode, errorDisplayer));
         return makeExpression(closed.items, brackets);
+    }
+
+    private Span lastNode(Scope closed)
+    {
+        if (!closed.items.isEmpty())
+        {
+            return closed.items.get(closed.items.size() - 1).either(e -> recorderFor(e), op -> op.sourceNode);
+        }
+        return closed.openingNode;
     }
 
     // Note: if we are copying to clipboard, callback will not be called

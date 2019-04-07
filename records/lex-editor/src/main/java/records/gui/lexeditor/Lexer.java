@@ -81,14 +81,14 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             int start = 0;
             for (int j = 0; j < targetPos; j++)
             {
-                while (addedDisplayChars.get(start))
+                if (addedDisplayChars.get(j))
                 {
                     start += 1;
                 }
                 start += 1;
             }
             // It ends at the next empty spot:
-            return new Span(start, addedDisplayChars.nextClearBit(start));
+            return new Span(start, addedDisplayChars.nextClearBit(targetPos) - targetPos + start);
         }
 
         @SuppressWarnings("units")
