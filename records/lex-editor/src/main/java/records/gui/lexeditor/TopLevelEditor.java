@@ -9,6 +9,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.scene.Node;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -76,6 +77,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         };
         scrollPane.setPrefWidth(600.0);
+        scrollPane.setAlwaysFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("top-level-editor");
         scrollPane.getStyleClass().addAll(typeClasses);
         content.addChangeListener(() -> {
