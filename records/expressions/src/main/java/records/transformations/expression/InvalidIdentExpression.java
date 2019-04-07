@@ -42,9 +42,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, StyledString.s(
-            text.isEmpty() ? "Expression cannot be blank" :
-            "Invalid identifier: \"" + text + "\""));
+        // Lexer will have given error so no need for further error:
         return null;
     }
 
