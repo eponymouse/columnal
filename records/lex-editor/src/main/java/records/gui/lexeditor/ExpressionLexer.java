@@ -22,6 +22,7 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.LexAutoComplete.LexSelectionBehaviour;
@@ -437,7 +438,24 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 caretPos.add(pos);
         }
 
-        return new LexerResult<>(saved, s.toString(), removedChars, lexOnMove, Ints.toArray(caretPos), d.build(), addedDisplayChars, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        StyledString display = d.build();
+
+        for (ErrorDetails error : saver.getErrors())
+        {
+            // If an error only occupies one caret position, add an extra char there:
+            if (error.location.start == error.location.end)
+            {
+                // TODO don't we need to map this location according to how many inserted before?
+                Span insertTarget = LexerResult.findNthClearIndex(addedDisplayChars, error.location.start);
+                if (insertTarget.start == insertTarget.end)
+                {
+                    insertBit(addedDisplayChars, insertTarget.start);
+                    display = StyledString.concat(display.substring(0, insertTarget.start), StyledString.s(" "), display.substring(insertTarget.start, display.getLength()));
+                }
+            }
+        }
+        
+        return new LexerResult<>(saved, s.toString(), removedChars, lexOnMove, Ints.toArray(caretPos), display, addedDisplayChars, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     // Effectively does: dest = dest | (src << shiftBy)
@@ -447,6 +465,17 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         {
             dest.set(srcBit + shiftBy);
         }
+    }
+    
+    // Inserts a bit at the location, and shifts all higher bits up by one
+    private void insertBit(BitSet dest, int index)
+    {
+        // Move all higher bits up by one.  Important to go backwards:
+        for (int i = dest.length(); i >= index; i--)
+        {
+            dest.set(i + 1, dest.get(i));
+        }
+        dest.set(index);
     }
 
     class TagCompletion implements Comparable<TagCompletion>

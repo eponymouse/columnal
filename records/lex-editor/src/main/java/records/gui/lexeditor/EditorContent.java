@@ -6,6 +6,7 @@ import com.google.common.primitives.Ints;
 import javafx.scene.text.Text;
 import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledShowable;
@@ -174,12 +175,12 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public int getDisplayCaretPosition()
     {
-        return curContent.mapContentToDisplay(getCaretPosition());
+        return curContent.mapContentToDisplay(getCaretPosition()).start;
     }
 
     public int getDisplayAnchorPosition()
     {
-        return curContent.mapContentToDisplay(getAnchorPosition());
+        return curContent.mapContentToDisplay(getAnchorPosition()).start;
     }
 
     @SuppressWarnings("units")
@@ -187,9 +188,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         return curContent.mapDisplayToContent(graphicalIndex);
     }
-
+    
     @SuppressWarnings("units")
-    public int mapContentToDisplay(int contentIndex)
+    public Span mapContentToDisplay(int contentIndex)
     {
         return curContent.mapContentToDisplay(contentIndex);
     }

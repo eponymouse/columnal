@@ -273,7 +273,7 @@ public final class EditorDisplay extends TextEditorBase
         for (ErrorDetails error : content.getErrors())
         {
             if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
-                errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+                errorChars.set(content.mapContentToDisplay(error.location.start).start, content.mapContentToDisplay(error.location.end).end);
         }
         return errorChars;
     }
@@ -313,5 +313,10 @@ public final class EditorDisplay extends TextEditorBase
             error.caretHasLeftSinceEdit = true;
         }
         render(false);
+    }
+
+    public ImmutableList<ErrorDetails> _test_getErrors()
+    {
+        return content.getErrors();
     }
 }

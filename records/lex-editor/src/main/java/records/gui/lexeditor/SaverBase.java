@@ -587,7 +587,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         else
                         {
                             Span start = lastNodeSpan.get() != null ? lastNodeSpan.get() : op.sourceNode;
-                            invalidReason = new Pair<>(Span.fromTo(start,op.sourceNode), StyledString.s("Missing item between operators"));
+                            invalidReason = new Pair<>(Span.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators"));
                         }
                     }
                     lastWasOperand.set(false);
@@ -598,7 +598,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             // Must end with operand:
             if (!lastWasOperand.get() && lastNodeSpan.get() != null)
             {
-                invalidReason = new Pair<>(lastNodeSpan.get(), StyledString.s("Trailing operator missing."));
+                invalidReason = new Pair<>(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator."));
             }
         }
     }

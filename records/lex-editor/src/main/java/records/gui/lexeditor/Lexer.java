@@ -3,11 +3,13 @@ package records.gui.lexeditor;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.Utility;
 
 import java.util.BitSet;
 
@@ -46,6 +48,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
             this.bracketsAreBalanced = bracketsBalanced;
+            Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
         public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)
@@ -65,19 +68,27 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         }
 
         @SuppressWarnings("units")
-        public @SourceLocation int mapContentToDisplay(@SourceLocation int contentPos)
+        public Span mapContentToDisplay(@SourceLocation int contentPos)
+        {
+            return findNthClearIndex(addedDisplayChars, contentPos);
+        }
+
+        // Finds the Nth (N = targetPos) clear index in the given bitset.
+        @SuppressWarnings("units")
+        public static Span findNthClearIndex(BitSet addedDisplayChars, int targetPos)
         {
             // We look for the ith empty spot in addedDisplayChars
-            int r = 0;
-            for (int j = 0; j < contentPos; j++)
+            int start = 0;
+            for (int j = 0; j < targetPos; j++)
             {
-                while (addedDisplayChars.get(r))
+                while (addedDisplayChars.get(start))
                 {
-                    r += 1;
+                    start += 1;
                 }
-                r += 1;
+                start += 1;
             }
-            return r;
+            // It ends at the next empty spot:
+            return new Span(start, addedDisplayChars.nextClearBit(start));
         }
 
         @SuppressWarnings("units")

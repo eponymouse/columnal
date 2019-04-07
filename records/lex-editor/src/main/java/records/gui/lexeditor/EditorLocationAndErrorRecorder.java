@@ -27,6 +27,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class keeps track of mapping expressions back to their source location in a graphical editor.
@@ -39,9 +40,9 @@ public class EditorLocationAndErrorRecorder
 {
     // A semantic error matches an expression which may span multiple children.
     @OnThread(Tag.Any)
-    public static final class Span
+    public static final class Span implements Comparable<Span>
     {
-        // Start is inclusive, end is exclusive
+        // Start is inclusive char index, end is exclusive char index
         public final @SourceLocation int start;
         public final @SourceLocation int end;
         
@@ -59,6 +60,9 @@ public class EditorLocationAndErrorRecorder
         @SuppressWarnings("units")
         public static final Span START = new Span(0, 0);
 
+        // Errors show if you are at edge of them, so even if error ends
+        // before char N, if you are positioned just before char N, you will
+        // see the error.
         public boolean contains(@SourceLocation int position)
         {
             return start <= position && position <= end;
@@ -68,6 +72,42 @@ public class EditorLocationAndErrorRecorder
         public String toString()
         {
             return "[" + start + "->" + end + "]";
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Span span = (Span) o;
+            return start == span.start &&
+                    end == span.end;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(start, end);
+        }
+
+        @Override
+        public int compareTo(Span o)
+        {
+            int c = Integer.compare(start, o.start);
+            if (c != 0)
+                return 0;
+            else
+                return Integer.compare(end, o.end);
+        }
+
+        public Span lhs()
+        {
+            return new Span(start, start);
+        }
+
+        public Span rhs()
+        {
+            return new Span(end, end);
         }
     }
     
@@ -97,6 +137,16 @@ public class EditorLocationAndErrorRecorder
             this.location = location;
             this.error = error;
             this.quickFixes = quickFixes;
+        }
+
+        // Useful for debugging:
+        @Override
+        public String toString()
+        {
+            return "ErrorDetails{" +
+                    "location=" + location +
+                    ", error=" + error +
+                    '}';
         }
     }
     

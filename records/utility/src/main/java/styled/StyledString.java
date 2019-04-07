@@ -1,5 +1,6 @@
 package styled;
 
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.reflect.ImmutableTypeToInstanceMap;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
@@ -204,6 +205,40 @@ public final class StyledString
     public static StyledString squareBracket(StyledString inner)
     {
         return StyledString.concat(StyledString.s("["), inner, StyledString.s("]"));
+    }
+    
+    public int getLength()
+    {
+        return members.stream().mapToInt(p -> p.getSecond().length()).sum();
+    }
+    
+    public StyledString substring(int startIndexIncl, int endIndexExcl)
+    {
+        ImmutableList.Builder<Pair<ImmutableStyleMap, String>> r = ImmutableList.builder();
+        int curPos = 0;
+        int curIndex = 0;
+        while (curIndex < members.size() && curPos < startIndexIncl)
+        {
+            curPos += members.get(curIndex).getSecond().length();
+            
+            if (curPos > startIndexIncl)
+            {
+                // Add on the relevant part of the last segment:
+                int curPosFinal = curPos;
+                r.add(members.get(curIndex).mapSecond(s -> s.substring(s.length() - (curPosFinal - startIndexIncl))));
+            }
+            curIndex += 1;
+        }
+        // Now in the middle of the segment:
+        while (curIndex < members.size() && curPos < endIndexExcl)
+        {
+            int maxLen = endIndexExcl - curPos;
+            r.add(members.get(curIndex).mapSecond(s -> s.substring(0, Math.min(maxLen, s.length()))));
+            curPos += members.get(curIndex).getSecond().length();
+            curIndex += 1;
+        }
+        
+        return new StyledString(r.build());
     }
     
     @Override

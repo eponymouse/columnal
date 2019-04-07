@@ -1,5 +1,6 @@
 package test.gui.expressionEditor;
 
+import annotation.units.SourceLocation;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -9,6 +10,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Path;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.util.WaitForAsyncUtils;
@@ -26,6 +29,8 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
+import records.gui.lexeditor.EditorDisplay;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
@@ -37,10 +42,12 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,34 +57,6 @@ import static org.junit.Assert.*;
 @OnThread(Tag.Simulation)
 public class TestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
-    @OnThread(Tag.Any)
-    private static class State
-    {
-        // null means can be anything
-        public final @Nullable String headerText;
-        public final boolean errorColourHeader;
-
-        private State(@Nullable String headerText, boolean errorColourHeader)
-        {
-            this.headerText = headerText;
-            this.errorColourHeader = errorColourHeader;
-        }
-        
-        // Slight hack during testing to allow null to match anything:
-        public boolean equals(@Nullable Object o)
-        {
-            if (o instanceof Pair)
-            {
-                @SuppressWarnings("unchecked")
-                Pair<String, Boolean> p = (Pair<String, Boolean>)o;
-                if (headerText != null && !headerText.equals(p.getFirst()))
-                    return false;
-                return errorColourHeader == p.getSecond();
-            }
-            return false;
-        }
-    }
-    
     @Test
     public void test1()
     {
@@ -89,25 +68,25 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     public void test1b()
     {
         // Check basic:
-        testError("1+", 2, 2);
+        testError("1+", e(2, 2, "missing"));
     }
 
     @Test
     public void test2()
     {
-        testError("foo", 0, 3);
+        testError("foo", e(0, 3, "unknown"));
     }
 
     @Test
     public void test2A()
     {
-        testError("foo+1", 0, 3);
+        testError("foo+1", e(0, 3, "unknown"));
     }
 
     @Test
     public void test2B()
     {
-        testError("foo+", 0, 4);
+        testError("foo+", e(4, 4, "missing"));
     }
 
     @Test
@@ -115,111 +94,41 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("1+/3", 0, 3);
+        testError("1+/3", e(2, 2, "missing"));
     }
 
     @Test
     public void test2D()
     {
         // Error once we leave the slot:
-        testError("foo*1", 0, 3);
+        testError("foo*1", e(0, 3, "unknown"));
     }
 
     
-    /*
     @Test
     public void test3()
     {
-        testError("@if true @then 3 @else 5", false,
-            // if, condition
-            h(), h(),
-            // then, 3, endif
-            h(), h(), h()
-        );
+        testError("@iftrue@then3@else5", e(19, 20, "endif"));
     }
 
     @Test
     public void test3A()
     {
-        testError("@if # @then # @endif", false,
-                // if, condition
-                h(), red(),
-                // then, #
-                h(), red(),
-                // endif, blank (but unvisited)
-                h(), e());
+        testError("@if#@then#@else0@endif", e(3,4, "#"), e(9,10, "#"));
     }
 
     @Test
     public void test3B()
     {
-        testError("@if 3 @then 4 @else 5", false,
-                // if, condition (should be boolean)
-                h(), red(""),
-                // then, 4
-                h(), h(),
-                // else, 5
-                h(), h());
+        // Type error
+        testError("@if3@then4@else5@endif", e(3,4, "boolean"));
     }
 
-    @Test
-    public void test3C()
-    {
-        testError("@if 3 @then #", false,
-                // if, condition (type error)
-                h(), red(""),
-                // then, # (but focused)
-                h(), h(),
-                // else, blank (but unvisited)
-                h(), e());
-    }
-    */
-
-    private static State h()
-    {
-        return new State("", false);
-    }
-
-
-    private static State h(String s)
-    {
-        return new State(s, false);
-    }
-
-    private static State red(@Nullable String header)
-    {
-        return new State(header, true);
-    }
-
-    private static State red()
-    {
-        return red(null);
-    }
-
-
-    private static State eRed()
-    {
-        return new State("error", true);
-    }
-
-    private static State e()
-    {
-        return new State("error", false);
-    }
-    
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
     @SuppressWarnings("units")
-    private void testError(String expression, int... errorSpanEdges)
-    {
-        // Must be start and end for each span:
-        assertEquals(0, errorSpanEdges.length % 2);
-        ArrayList<Span> errorSpans = new ArrayList<>();
-        for (int i = 0; i < errorSpanEdges.length; i += 2)
-        {
-            errorSpans.add(new Span(errorSpanEdges[i], errorSpanEdges[i + 1]));
-        }
-        
+    private void testError(String expression, Error... errors)
+    {        
         try
         {
             UnitManager u = new UnitManager();
@@ -248,11 +157,10 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             // Focus expression editor:
             push(KeyCode.TAB);
             write(expression);
-            boolean hasSpanNotContainingEnd = errorSpans.stream().anyMatch(s -> !s.contains(expression.length()));
-            assertErrorShowing(hasSpanNotContainingEnd, false);
             
-            if (errorSpans.isEmpty())
+            if (errors.length == 0)
             {
+                assertErrorShowing(false, false);
                 // Clicking OK should be fine:
                 moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
@@ -261,6 +169,22 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             }
             else
             {
+                EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
+                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors()));
+                List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
+                assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
+                Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
+                Collections.sort(expectedErrors, Comparator.comparing(e -> e.location));
+                for (int i = 0; i < expectedErrors.size(); i++)
+                {
+                    assertEquals(actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
+                    MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), Matchers.containsString(expectedErrors.get(i).expectedMessagePart.toLowerCase()));
+                }
+
+                boolean hasSpanNotContainingEnd = Arrays.stream(errors).anyMatch(s -> !s.location.contains(expression.length()));
+                assertErrorShowing(hasSpanNotContainingEnd, false);
+
+
                 // Can either provoke error by moving caret into a span or by
                 // clicking ok first time
                 if (hasSpanNotContainingEnd && expression.hashCode() % 2 == 0)
@@ -311,5 +235,23 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     private boolean isShowingErrorPopup()
     {
         return lookup(".expression-info-popup").tryQuery().isPresent();
+    }
+    
+    private static class Error
+    {
+        private final Span location;
+        private final String expectedMessagePart;
+
+        public Error(@SourceLocation int start, @SourceLocation int end, String expectedMessagePart)
+        {
+            this.location = new Span(start, end);
+            this.expectedMessagePart = expectedMessagePart;
+        }
+    }
+    
+    @SuppressWarnings("units")
+    private static final Error e(int start, int end, String errorMessagePart)
+    {
+        return new Error(start, end, errorMessagePart);
     }
 }
