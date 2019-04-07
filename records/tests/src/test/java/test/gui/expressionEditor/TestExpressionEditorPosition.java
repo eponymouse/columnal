@@ -330,7 +330,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             // Dismiss dialog:
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
-            clickOn(".ok-button");
+            TestUtil.doubleOk(this);
         }
         catch (Exception e)
         {

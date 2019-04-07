@@ -365,8 +365,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             TestUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
-            moveAndDismissPopupsAtPos(point(".ok-button"));
-            clickOn();
+            TestUtil.doubleOk(this);
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
             @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);

@@ -75,8 +75,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     
     private Expression finish() throws UserException
     {
-        moveAndDismissPopupsAtPos(point(".ok-button"));
-        clickOn();
+        TestUtil.doubleOk(this);
         sleep(500);
         return TestUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
     }

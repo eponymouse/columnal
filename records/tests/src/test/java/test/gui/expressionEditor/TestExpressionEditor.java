@@ -118,8 +118,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             for (int i = 0; i < 2; i++)
             {
                 // Get rid of popups:
-                moveAndDismissPopupsAtPos(point(".ok-button"));
-                clickOn(MouseButton.PRIMARY);
+                TestUtil.doubleOk(this);
                 // Now close dialog, and check for equality;
                 View view = correctTargetWindow().lookup(".view").query();
                 if (view == null)

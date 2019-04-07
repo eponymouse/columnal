@@ -71,6 +71,7 @@ import records.typeExp.units.MutUnitVar;
 import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.GenString;
+import test.gui.trait.PopupTrait;
 import utility.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -1537,5 +1538,13 @@ public class TestUtil
             parent = parent.getParent();
         }
         return parent;
+    }
+    
+    public static void doubleOk(PopupTrait robot)
+    {
+        robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
+        robot.clickOn(".ok-button");
+        if (robot.lookup(".ok-button").tryQuery().isPresent())
+            robot.clickOn(".ok-button");
     }
 }
