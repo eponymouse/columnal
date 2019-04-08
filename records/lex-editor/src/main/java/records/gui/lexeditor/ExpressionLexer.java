@@ -457,11 +457,14 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
 
         // Important to go through in order so that later errors can be
         // adjusted correctly according to earlier errors.
-        for (ErrorDetails error : Utility.iterableStream(saver.getErrors().stream().sorted(Comparator.comparing(e -> e.location.start))))
+        ImmutableList<ErrorDetails> errors = saver.getErrors();
+        for (ErrorDetails error : Utility.iterableStream(errors.stream().sorted(Comparator.comparing(e -> e.location.start))))
         {
             // If an error only occupies one caret position, add an extra char there:
             if (error.location.start == error.location.end)
             {
+                int mappedPos = error.location.start - removedChars.get(0, error.location.start).cardinality();
+                
                 // Find caret pos:
                 int displayOffset = 0;
                 for (int i = 0; i < caretPos.size(); i++)
@@ -474,7 +477,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     {
                         CaretPos p = caretPos.get(i);
 
-                        if (p.positionInternal == error.location.start)
+                        if (p.positionInternal == mappedPos)
                         {
                             error.displayLocation = new Span(p.positionDisplay, p.positionDisplay + 1);
                             // Add space to display:
@@ -487,7 +490,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             }
         }
         
-        return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, saver.getErrors(), completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     private void addCaretPos(ArrayList<CaretPos> caretPos, CaretPos newPos)

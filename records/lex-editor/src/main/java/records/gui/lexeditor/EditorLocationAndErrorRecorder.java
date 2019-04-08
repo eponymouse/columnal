@@ -148,6 +148,7 @@ public class EditorLocationAndErrorRecorder
         {
             return "ErrorDetails{" +
                     "location=" + location +
+                    "//" + displayLocation +
                     ", error=" + error +
                     '}';
         }
