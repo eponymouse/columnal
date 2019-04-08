@@ -212,6 +212,16 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                     assertErrorShowing(true, null);
                     assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
                 }
+                
+                TestUtil.doubleOk(this);
+                assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                // Show again and check error is showing from the outset:
+                clickOn("DestCol");
+                sleep(500);
+                assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                assertErrorShowing(true, false);
+                TestUtil.doubleOk(this);
+                assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
             }
             
         }
@@ -226,7 +236,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
     {
         Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
-        Path errorUnderline = lookup(".error-underline").match(n -> TestUtil.<@Nullable Scene>fx(() -> n.getScene()) == dialogScene).query();
+        Path errorUnderline = lookup(".expression-editor .error-underline").query();
         assertEquals("Underline showing", underlineShowing, TestUtil.fx(() -> errorUnderline.getElements().size()) > 0);
         if (popupShowing != null)
             assertEquals("Popup showing", popupShowing, isShowingErrorPopup());

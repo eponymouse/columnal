@@ -194,7 +194,7 @@ public abstract class TextEditorBase extends Region
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(textNodes);
         
-        getChildren().setAll(textFlow);
+        getChildren().setAll(textFlow, caretAndSelectionNodes.errorUnderlines);
 
     }
     

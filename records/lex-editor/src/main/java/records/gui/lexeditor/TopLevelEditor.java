@@ -89,6 +89,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
         onChange.consume(save());
+        FXUtility.onceNotNull(display.sceneProperty(), s -> showAllErrors());
     }
 
     public String _test_getRawText()
@@ -135,7 +136,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return display.hasErrors();
     }
     
-    public void showAllErrors()
+    public void showAllErrors(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         display.showAllErrors();
     }
