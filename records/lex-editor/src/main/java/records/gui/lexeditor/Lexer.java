@@ -80,12 +80,15 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         }
         
         @SuppressWarnings("units")
-        public @SourceLocation int mapOldCaretPos(@SourceLocation int pos)
+        public @SourceLocation int mapOldPos(@SourceLocation int pos, boolean caretPos)
         {
             int mapped = pos - removedChars.get(0, pos).cardinality();
-            for (ErrorDetails error : errors)
+            if (caretPos)
             {
-                error.caretHasLeftSinceEdit = !error.location.contains(mapped);
+                for (ErrorDetails error : errors)
+                {
+                    error.caretHasLeftSinceEdit = !error.location.contains(mapped);
+                }
             }
             return mapped;
         }

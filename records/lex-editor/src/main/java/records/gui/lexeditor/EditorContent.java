@@ -49,12 +49,17 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         curCaretPosition = pos;
         if (alsoSetAnchor)
             curAnchorPosition = pos;
+        notifyCaretPositionListeners();
+    }
+
+    void notifyCaretPositionListeners()
+    {
         for (FXPlatformConsumer<@SourceLocation Integer> caretPositionListener : caretPositionListeners)
         {
             caretPositionListener.consume(curCaretPosition);
         }
     }
-    
+
     public @SourceLocation int getAnchorPosition()
     {
         return curAnchorPosition;
@@ -77,17 +82,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         @SuppressWarnings("units")
         @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
         this.curContent = lexer.process(newText, newCaretPos);
-        this.curCaretPosition = curContent.mapOldCaretPos(newCaretPos);
+        this.curCaretPosition = curContent.mapOldPos(newCaretPos, true);
         this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)
         {
             contentListener.run();
         }
-        for (FXPlatformConsumer<@SourceLocation Integer> caretPositionListener : caretPositionListeners)
-        {
-            caretPositionListener.consume(curCaretPosition);
-        }
+        notifyCaretPositionListeners();
     }
 
     public String getText()
@@ -192,6 +194,6 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     
     public int mapContentToDisplay(@SourceLocation int contentIndex)
     {
-        return curContent.mapContentToDisplay(curContent.mapOldCaretPos(contentIndex));
+        return curContent.mapContentToDisplay(curContent.mapOldPos(contentIndex, false));
     }
 }

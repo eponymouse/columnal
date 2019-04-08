@@ -12,6 +12,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
+import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -190,6 +191,16 @@ public final class EditorDisplay extends TextEditorBase
         render(true);
     }
 
+    @Override
+    public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
+    {
+        super.focusChanged(focused);
+        if (focused)
+            content.notifyCaretPositionListeners();
+        else
+            showAllErrors();
+    }
+
     @SuppressWarnings("units")
     private void selectAll()
     {
@@ -273,6 +284,7 @@ public final class EditorDisplay extends TextEditorBase
         {
             if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
             {
+                error.caretHasLeftSinceEdit = true;
                 if (error.displayLocation != null)
                     errorChars.set(error.displayLocation.start, error.displayLocation.end);
                 else
