@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
@@ -15,15 +16,38 @@ import java.util.BitSet;
 
 public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
-    public static class LexerResult<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+    static class LexerResult<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
     {
+        public static class CaretPos
+        {
+            public final @SourceLocation int positionInternal;
+            public final int positionDisplay;
+
+            @SuppressWarnings("units")
+            public CaretPos(int positionInternal, int positionDisplay)
+            {
+                this.positionInternal = positionInternal;
+                this.positionDisplay = positionDisplay;
+            }
+
+            @Override
+            public String toString()
+            {
+                return "(internal=" + positionInternal +
+                        ", display=" + positionDisplay +
+                        ')';
+            }
+        }
+        
+        // Save result of parsing the content.  Never null because we save invalid items:
         public final @Recorded EXPRESSION result;
+        // The internal canonical content after parsing:
         public final String adjustedContent;
+        // The removed characters (indexes in original string to process):
         public final BitSet removedChars;
-        public final BitSet addedDisplayChars;
         public final boolean reLexOnCaretMove;
-        // Valid caret positions in adjustedContent
-        public final @SourceLocation int[] caretPositions;
+        // Valid caret positions
+        public final ImmutableList<CaretPos> caretPositions;
         // The content to display in the TextFlow
         public final StyledString display;
         
@@ -35,7 +59,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final boolean bracketsAreBalanced;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, BitSet removedChars, boolean reLexOnCaretMove, int[] caretPositions, StyledString display, BitSet addedDisplayChars, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, BitSet removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, StyledString display, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -43,7 +67,6 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             this.removedChars = removedChars;
             this.caretPositions = caretPositions;
             this.display = display;
-            this.addedDisplayChars = addedDisplayChars;
             this.errors = errors;
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
@@ -67,10 +90,17 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             return mapped;
         }
 
-        @SuppressWarnings("units")
-        public Span mapContentToDisplay(@SourceLocation int contentPos)
+        public int mapContentToDisplay(@SourceLocation int contentPos)
         {
-            return findNthClearIndex(addedDisplayChars, contentPos);
+            // We assume that the position is a caret position when mapping from content
+            for (CaretPos caretPosition : caretPositions)
+            {
+                if (caretPosition.positionInternal == contentPos)
+                    return caretPosition.positionDisplay;
+            }
+            // Uh-oh!  Inaccurate, but will do as a fallback:
+            Log.logStackTrace("Trying to find non-caret content position " + contentPos + " in {{{" + adjustedContent + "}}} positions are: " + Utility.listToString(caretPositions));
+            return contentPos;
         }
 
         // Finds the Nth (N = targetPos) clear index in the given bitset.
@@ -91,12 +121,30 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             return new Span(start, addedDisplayChars.nextClearBit(targetPos) - targetPos + start);
         }
 
-        @SuppressWarnings("units")
-        public @SourceLocation int mapDisplayToContent(@SourceLocation int displayPos)
+        public @SourceLocation int mapDisplayToContent(int clickedCaret, boolean biasEarlier)
         {
-            displayPos = Math.max(0, displayPos);
-            displayPos = Math.min(displayPos, display.toPlain().length());
-            return displayPos - addedDisplayChars.get(0, displayPos).cardinality();
+            // Shouldn't happen, but try to stay sane:
+            if (caretPositions.isEmpty())
+            {
+                @SuppressWarnings("units")
+                @SourceLocation int zero = 0;
+                return zero;
+            }
+            // We need to find the nearest display caret position
+            // If it's a draw, use biasEarlier to pick
+            int prevDist = Math.abs(caretPositions.get(0).positionDisplay - clickedCaret);
+            for (int i = 1; i < caretPositions.size(); i++)
+            {
+                int curDist = Math.abs(caretPositions.get(i).positionDisplay - clickedCaret);
+                if (curDist > prevDist)
+                    return caretPositions.get(i - 1).positionInternal;
+                else if (curDist == prevDist)
+                    return caretPositions.get(biasEarlier ? i - 1 : i).positionInternal; 
+                    
+                prevDist = curDist;
+            }
+            // Must be last one then:
+            return caretPositions.get(caretPositions.size() - 1).positionInternal;
         }
     }
     

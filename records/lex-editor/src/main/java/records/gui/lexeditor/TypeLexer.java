@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -10,6 +11,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -149,6 +151,8 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             curIndex += 1;
         }
         @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
-        return new LexerResult<>(saved, s.toString(), missingSpots, false, IntStream.range(0, content.length() + 1).toArray(), d.build(), new BitSet(), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        @SuppressWarnings("units")
+        ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+        return new LexerResult<>(saved, s.toString(), missingSpots, false, caretPositions, d.build(), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

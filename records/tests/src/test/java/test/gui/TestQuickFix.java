@@ -312,8 +312,9 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             push(KeyCode.TAB);
             // Enter content:
             write(original, DELAY);
-            // Move field so that errors show up (cancel masking on new fields):
-            push(KeyCode.HOME);
+            // Click OK so that errors show up (cancel masking on new fields):
+            moveAndDismissPopupsAtPos(point(".ok-button"));
+            clickOn(".ok-button");
             
             EditorDisplay targetField = lookup(".editor-display").<EditorDisplay>tryQuery().orElse(null);
             assertNotNull("Editor Display", targetField);
@@ -321,9 +322,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             @NonNull Node targetFinal = targetField;
             if (!TestUtil.fx(() -> targetFinal.isFocused()))
             {
-                TestUtil.fx_(() -> dumpScreenshot());
+                //TestUtil.fx_(() -> dumpScreenshot());
                 Log.debug("Focusing target field: " + targetFinal);
-                scrollTo(targetField);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(targetField);

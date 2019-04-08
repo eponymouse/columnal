@@ -56,8 +56,7 @@ public final class EditorDisplay extends TextEditorBase
             HitInfo hitInfo = hitTest(event.getX(), event.getY());
             if (hitInfo != null)
             {
-                int insertionIndex = hitInfo.getInsertionIndex();
-                content.positionCaret(content.mapDisplayToContent(insertionIndex), true);
+                content.positionCaret(content.mapDisplayToContent(hitInfo.getInsertionIndex(), !hitInfo.isLeading()), true);
             }
             event.consume();
         });
@@ -273,7 +272,12 @@ public final class EditorDisplay extends TextEditorBase
         for (ErrorDetails error : content.getErrors())
         {
             if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
-                errorChars.set(content.mapContentToDisplay(error.location.start).start, content.mapContentToDisplay(error.location.end).end);
+            {
+                if (error.displayLocation != null)
+                    errorChars.set(error.displayLocation.start, error.displayLocation.end);
+                else
+                    errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+            }
         }
         return errorChars;
     }

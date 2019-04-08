@@ -5,6 +5,7 @@ import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -127,6 +128,8 @@ public class EditorLocationAndErrorRecorder
     public static class ErrorDetails
     {
         public final Span location;
+        // Mutable for ease of processing:
+        public @MonotonicNonNull Span displayLocation;
         public final StyledString error;
         public final ImmutableList<TextQuickFix> quickFixes;
         // Note -- mutable field.

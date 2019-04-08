@@ -117,25 +117,25 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPos8()
     {
-        testCaretPositionsAndDisplay("from string to(type{Maybe(Number{m},Text)},\"Maybe Not\")", "from string to(type{Maybe(Number{m}, Text)}, \"Maybe Not\")", IntStream.range(0, 56).toArray());
+        testCaretPositionsAndDisplay("from string to(type{Maybe(Number{m},Text)},\"Maybe Not\")", "from string to(type{Maybe(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 56)).toArray());
     }
 
     @Test
     public void testPosIncomplete1()
     {
-        testCaretPositionsAndDisplay("1+", "1 + ", 0, 1, 2);
+        testCaretPositionsAndDisplay("1+", "1 +  ", 0, 1, 2);
     }
     
     @Test
     public void testPosIncomplete2()
     {
-        testCaretPositionsAndDisplay("1<", "1 < ", 0, 1, 2);
+        testCaretPositionsAndDisplay("1<", "1 <  ", 0, 1, 2);
     }
     
     @Test
     public void testPosIncomplete2b()
     {
-        testCaretPositionsAndDisplay("1<=", "1 <= ", 0, 1, 3);
+        testCaretPositionsAndDisplay("1<=", "1 <=  ", 0, 1, 3);
     }
     
     @Test
@@ -147,7 +147,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPosIncomplete4()
     {
-        testCaretPositionsAndDisplay("@if", "@if ", 0, 3);
+        testCaretPositionsAndDisplay("@if", "@if  ", 0, 3);
     }
 
 
@@ -186,6 +186,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
 
             write(internalContent);
 
+            /*
             TestUtil.fx_(() -> {
                 Node n = getFocusOwner();
                 if (n != null && n.getScene() != null)
@@ -195,6 +196,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     });
                 }
             });
+            */
 
             Point2D[] caretCentres = new Point2D[internalCaretPos.length];
 
@@ -232,8 +234,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 }
 
                 // Dismiss dialog:
-                moveAndDismissPopupsAtPos(point(".ok-button"));
-                clickOn(".ok-button");
+                TestUtil.doubleOk(this);
                 
                 if (i == 0)
                 {

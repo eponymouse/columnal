@@ -8,6 +8,7 @@ import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.Lexer.LexerResult;
+import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledShowable;
 import utility.FXPlatformConsumer;
@@ -31,16 +32,16 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         this.lexer = lexer;
         this.curContent = this.lexer.process(originalContent, 0);
-        this.curCaretPosition = curContent.caretPositions.length > 0 ? curContent.caretPositions[0] : 0;
+        this.curCaretPosition = curContent.caretPositions.size() > 0 ? curContent.caretPositions.get(0).positionInternal : 0;
         this.curAnchorPosition = curCaretPosition;
     }
 
     public void positionCaret(Focus side)
     {
-        if (side == Focus.LEFT && curContent.caretPositions.length > 0)
-            positionCaret(curContent.caretPositions[0], true);
-        else if (side == Focus.RIGHT && curContent.caretPositions.length > 0)
-            positionCaret(curContent.caretPositions[curContent.caretPositions.length - 1], true);
+        if (side == Focus.LEFT && curContent.caretPositions.size() > 0)
+            positionCaret(curContent.caretPositions.get(0).positionInternal, true);
+        else if (side == Focus.RIGHT && curContent.caretPositions.size() > 0)
+            positionCaret(curContent.caretPositions.get(curContent.caretPositions.size() - 1).positionInternal, true);
     }
     
     public void positionCaret(@SourceLocation int pos, boolean alsoSetAnchor)
@@ -118,18 +119,18 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             throw new RuntimeException("Content " + targetContent + " appears multiple times in editor");
         int targetEndIndex = targetStartIndex + targetContent.length();
         
-        int caretIndex = Utility.findFirstIndex(Ints.asList(curContent.caretPositions), c -> c.intValue() == curCaretPosition).orElseThrow(() -> new RuntimeException("Could not find caret position"));
+        int caretIndex = Utility.<Integer>findFirstIndex(Utility.<CaretPos, Integer>mapList(curContent.caretPositions, p -> p.positionInternal), c -> c == curCaretPosition).orElseThrow(() -> new RuntimeException("Could not find caret position"));
         if (curCaretPosition < targetStartIndex)
         {
             int hops = 0;
-            while (curContent.caretPositions[caretIndex + hops] < targetStartIndex)
+            while (curContent.caretPositions.get(caretIndex + hops).positionInternal < targetStartIndex)
                 hops += 1;
             return hops;
         }
         else if (curCaretPosition > targetEndIndex)
         {
             int hops = 0;
-            while (curContent.caretPositions[caretIndex + hops] > targetEndIndex)
+            while (curContent.caretPositions.get(caretIndex + hops).positionInternal > targetEndIndex)
                 hops -= 1;
             return hops;
         }
@@ -146,18 +147,19 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.errors;
     }
 
+    @SuppressWarnings("units")
     public @SourceLocation int[] getValidCaretPositions()
     {
-        return curContent.caretPositions;
+        return Ints.toArray(Utility.mapList(curContent.caretPositions, p -> p.positionInternal));
     }
 
     // Note: this is not the caret position, but instead an index
     // into the getValidCaretPositions array.
     public int getCaretPosAsValidIndex()
     {
-        for (int i = 0; i < curContent.caretPositions.length; i++)
+        for (int i = 0; i < curContent.caretPositions.size(); i++)
         {
-            if (curCaretPosition == curContent.caretPositions[i])
+            if (curCaretPosition == curContent.caretPositions.get(i).positionInternal)
                 return i;
         }
         return 0;
@@ -175,23 +177,21 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public int getDisplayCaretPosition()
     {
-        return curContent.mapContentToDisplay(getCaretPosition()).start;
+        return curContent.mapContentToDisplay(getCaretPosition());
     }
 
     public int getDisplayAnchorPosition()
     {
-        return curContent.mapContentToDisplay(getAnchorPosition()).start;
+        return curContent.mapContentToDisplay(getAnchorPosition());
     }
 
-    @SuppressWarnings("units")
-    public @SourceLocation int mapDisplayToContent(int graphicalIndex)
+    public @SourceLocation int mapDisplayToContent(int clickedCaretPos, boolean biasEarlier)
     {
-        return curContent.mapDisplayToContent(graphicalIndex);
+        return curContent.mapDisplayToContent(clickedCaretPos, biasEarlier);
     }
     
-    @SuppressWarnings("units")
-    public Span mapContentToDisplay(int contentIndex)
+    public int mapContentToDisplay(@SourceLocation int contentIndex)
     {
-        return curContent.mapContentToDisplay(contentIndex);
+        return curContent.mapContentToDisplay(curContent.mapOldCaretPos(contentIndex));
     }
 }
