@@ -226,9 +226,10 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 for (int clickIndex = 0; clickIndex < caretCentres.length; clickIndex++)
                 {
                     sleep(200);
-                    //System.out.println("Clicking on " + clickIndex + ": " + caretCentres[clickIndex]);
+                    System.out.println("Clicking on " + clickIndex + ": " + caretCentres[clickIndex]);
                     //TestUtil.fx_(() -> dumpScreenshot());
                     moveAndDismissPopupsAtPos(point(caretCentres[clickIndex]));
+                    sleep(300);
                     clickOn(caretCentres[clickIndex].add(1, 0));
                     assertEquals("Clicked: " + caretCentres[clickIndex].add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
                 }
