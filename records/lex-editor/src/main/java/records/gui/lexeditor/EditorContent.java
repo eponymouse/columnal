@@ -114,10 +114,11 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     // How many right presses (positive) or left (negative) to
     // reach nearest end of given content?
+    // Empty string is treated as the end
     public int _test_getCaretMoveDistance(String targetContent)
     {
-        int targetStartIndex = curContent.adjustedContent.indexOf(targetContent);
-        if (curContent.adjustedContent.indexOf(targetContent, targetStartIndex + 1) != -1)
+        int targetStartIndex = targetContent.isEmpty() ? curContent.adjustedContent.length() : curContent.adjustedContent.indexOf(targetContent);
+        if (!targetContent.isEmpty() && curContent.adjustedContent.indexOf(targetContent, targetStartIndex + 1) != -1)
             throw new RuntimeException("Content " + targetContent + " appears multiple times in editor");
         int targetEndIndex = targetStartIndex + targetContent.length();
         

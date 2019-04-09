@@ -253,6 +253,18 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
         // Note units aren't right here, but fix should still be offered:
         testFix("@entire ACC1 + 6", "ACC1", dotCssClassFor("@column ACC1"), "@column ACC1 + 6");
     }
+
+    @Test
+    public void testUnmatchedBracketFix1()
+    {
+        testSimpleFix("(1+2", "", "(1 + 2)");
+    }
+
+    @Test
+    public void testUnmatchedIfFix1()
+    {
+        testSimpleFix("@iftrue", "", "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+    }
     
     
     
@@ -311,7 +323,13 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             // Focus expression editor:
             push(KeyCode.TAB);
             // Enter content:
-            write(original, DELAY);
+            for (char c : original.toCharArray())
+            {
+                write(c);
+                // Delete auto-matched brackets:
+                if ("({[".contains("" + c))
+                    push(KeyCode.DELETE);
+            }
             // Click OK so that errors show up (cancel masking on new fields):
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
