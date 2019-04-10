@@ -69,6 +69,10 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
             }
         };
+        // This also allows popup to take on styles:
+        FXUtility.onceNotNull(scrollPane.sceneProperty(), scene -> {
+            scene.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
+        });
         scrollPane.setPrefWidth(600.0);
         scrollPane.setAlwaysFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);

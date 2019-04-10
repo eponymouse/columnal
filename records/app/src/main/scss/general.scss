@@ -227,14 +227,17 @@
     .fade-overlay {
         -fx-fill: transparent;
     }
-    .document-text-flow > .document-text {
-        -fx-fill: black;
+    .document-text-flow {
+        -fx-cursor: text;
+        & > .document-text {
+            -fx-fill: black;
+        }
     }
     .error-underline {
         -fx-stroke: red;
         -fx-fill: pink;
         &:contains-caret {
-            -fx-stroke:pink;
+            -fx-stroke: pink;
         }
     }
 }
