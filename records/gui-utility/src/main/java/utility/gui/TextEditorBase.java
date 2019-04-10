@@ -202,7 +202,7 @@ public abstract class TextEditorBase extends Region
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(textNodes);
         
-        getChildren().setAll(textFlow, caretAndSelectionNodes.errorUnderlinePane);
+        getChildren().setAll(caretAndSelectionNodes.errorUnderlinePane, textFlow);
 
     }
     
@@ -327,14 +327,14 @@ public abstract class TextEditorBase extends Region
         CaretAndSelectionNodes cs = caretAndSelectionNodes;
         if (focused)
         {
-            getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.errorUnderlinePane, cs.caretShape, cs.fadeOverlay);
+            getChildren().setAll(cs.errorUnderlinePane, textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.fadeOverlay);
             cs.focusChanged(true);
         }
         else
         {
             horizTranslation = 0;
             vertTranslation = 0;
-            getChildren().setAll(textFlow, cs.errorUnderlinePane);
+            getChildren().setAll(cs.errorUnderlinePane, textFlow);
         }
     }
 }
