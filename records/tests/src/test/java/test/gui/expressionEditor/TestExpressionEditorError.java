@@ -145,6 +145,13 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         testError("@if(true>false)",
                 e(15,15, "missing"));
     }
+
+    @Test
+    public void testPartialIf2()
+    {
+        testError("@if(ACC1>ACC1)",
+            e(14,14, "missing"));
+    }
     
 
     // Checks that errors don't show up while still in the span,
