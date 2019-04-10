@@ -221,7 +221,7 @@ public class EditorLocationAndErrorRecorder
                     typeDetails.flatMapEx(typeExp -> typeExp.toConcreteType(typeManager).mapEx(dataType -> dataType.toDisplay(false)))
                         .either_(err -> {
                             errorDisplayer.showType("");
-                            errorDisplayer.addErrorAndFixes(err.getErrorText(), ExpressionEditorUtil.quickFixesForTypeError(typeManager, expression, err.getSuggestedTypeFix()));
+                            errorDisplayer.addErrorAndFixes(err.getErrorText(), ExpressionUtil.quickFixesForTypeError(typeManager, expression, err.getSuggestedTypeFix()));
                         }, display -> errorDisplayer.showType(display));
                 }
                 catch (InternalException | UserException e)

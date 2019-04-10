@@ -2,9 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
@@ -13,10 +11,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
-import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.jellytype.JellyUnit;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -30,7 +24,6 @@ import utility.Utility;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 25/11/2016.
@@ -115,25 +108,6 @@ public class NumericLiteral extends Literal
     private String numberAsString()
     {
         return Utility.numberToString(value);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionSaver>> builder = ImmutableList.builder();
-        String valueStr = Utility.numberToString(this.value);
-        if (valueStr.startsWith("-"))
-        {
-            valueStr = valueStr.substring(1);
-            builder.add(GeneralExpressionEntry.load(Op.SUBTRACT));
-        }
-        builder.add(GeneralExpressionEntry.load(valueStr));
-        if (unit != null)
-        {
-            @NonNull UnitExpression unitFinal = unit;
-            builder.add(p -> new UnitLiteralExpressionNode(p, unitFinal));
-        }
-        return builder.build().stream();
     }
 
     @Override

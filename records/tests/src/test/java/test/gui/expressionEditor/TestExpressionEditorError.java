@@ -26,8 +26,6 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.expressioneditor.TopLevelEditor;
-import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;

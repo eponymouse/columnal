@@ -3,10 +3,7 @@ package records.gui.lexeditor;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.expressioneditor.UnitEntry.UnitBracket;
-import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.InvalidSingleUnitExpression;
@@ -15,6 +12,8 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import styled.StyledCSS;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -25,6 +24,44 @@ import java.util.stream.IntStream;
 
 public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
 {
+    public static enum UnitOp implements ExpressionToken
+    {
+        MULTIPLY("*"), DIVIDE("/"), RAISE("^");
+
+        private final String op;
+
+        private UnitOp(String op)
+        {
+            this.op = op;
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return op;
+        }
+    }
+
+    public static enum UnitBracket implements ExpressionToken
+    {
+        OPEN_ROUND("("), CLOSE_ROUND(")");
+
+        private final String bracket;
+
+        private UnitBracket(String bracket)
+        {
+            this.bracket = bracket;
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return bracket;
+        }
+    }
+    
     @SuppressWarnings("units")
     @Override
     public LexerResult<UnitExpression, CodeCompletionContext> process(String content, int curCaretPos)

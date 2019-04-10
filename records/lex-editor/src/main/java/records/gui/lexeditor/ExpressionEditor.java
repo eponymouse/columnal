@@ -14,7 +14,6 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;

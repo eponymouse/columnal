@@ -5,20 +5,13 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitEntry.UnitBracket;
-import records.gui.expressioneditor.UnitEntry.UnitOp;
-import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class UnitTimesExpression extends UnitExpression
 {
@@ -91,19 +84,6 @@ public class UnitTimesExpression extends UnitExpression
     public int hashCode()
     {
         return operands.hashCode();
-    }
-
-    @Override
-    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
-        boolean needsBrackets = bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED && bracketedStatus != BracketedStatus.TOP_LEVEL;
-        if (needsBrackets)
-            r.add(UnitEntry.load(UnitBracket.OPEN_ROUND.getContent()));
-        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitSaver>>>intercalateStreamM(operands.stream().<Stream<SingleLoader<UnitExpression, UnitSaver>>>map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
-        if (needsBrackets)
-            r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
-        return r.stream();
     }
 
     @Override

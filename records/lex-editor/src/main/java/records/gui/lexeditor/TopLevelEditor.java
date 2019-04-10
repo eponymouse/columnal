@@ -1,7 +1,6 @@
 package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
@@ -10,7 +9,6 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
-import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -20,15 +18,12 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
-import records.gui.expressioneditor.ClipboardSaver;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
-import records.gui.lexeditor.Lexer.LexerResult;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -41,8 +36,6 @@ import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
 /**

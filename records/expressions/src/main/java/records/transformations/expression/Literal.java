@@ -4,8 +4,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -50,12 +48,6 @@ public abstract class Literal extends NonOperatorExpression
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(editString()));
     }
 
     public abstract String editString();

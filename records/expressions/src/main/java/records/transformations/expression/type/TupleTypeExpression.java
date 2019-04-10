@@ -9,15 +9,11 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
-import records.transformations.expression.BracketedStatus;
-import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TupleTypeExpression extends TypeExpression
 {
@@ -26,23 +22,6 @@ public class TupleTypeExpression extends TypeExpression
     public TupleTypeExpression(ImmutableList<@Recorded TypeExpression> members)
     {
         this.members = members;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> items = new StreamTreeBuilder<>();
-        roundBracket(BracketedStatus.MISC, items, () -> {
-            for (int i = 0; i < members.size(); i++)
-            {
-                items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
-                // Now we must add the comma:
-                if (i < members.size() - 1)
-                    items.add(p -> new TypeEntry(p, ","));
-            }
-        });
-
-        return items.stream();
     }
 
     @Override

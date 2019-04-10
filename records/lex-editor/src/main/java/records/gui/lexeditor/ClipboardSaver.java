@@ -1,4 +1,4 @@
-package records.gui.expressioneditor;
+package records.gui.lexeditor;
 
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.nullness.qual.Nullable;

@@ -6,7 +6,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.function.FunctionLookup;
@@ -52,7 +51,7 @@ public interface ErrorAndTypeRecorder
         return errorOrVal.<@Nullable T>either(err -> {
             @Nullable DataType fix = err.getSuggestedTypeFix();
             recordError(src, err.getErrorText());
-            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(typeManager, functionLookup, src, fix));
+            recordQuickFixes(src, ExpressionUtil.quickFixesForTypeError(typeManager, functionLookup, src, fix));
             return null;
         }, val -> val);
     }

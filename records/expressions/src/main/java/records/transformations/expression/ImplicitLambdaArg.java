@@ -8,9 +8,6 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
@@ -82,12 +79,6 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "?";
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(Keyword.QUEST));
     }
 
     @Override

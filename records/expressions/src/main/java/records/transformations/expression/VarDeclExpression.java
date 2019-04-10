@@ -10,8 +10,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import styled.StyledString;
@@ -93,12 +91,6 @@ public class VarDeclExpression extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.s("_" + varName), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load("_" + varName));
     }
 
     @Override

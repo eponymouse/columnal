@@ -7,14 +7,11 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 // For a named, fully-formed type (not a tagged type name), not including numeric types
 public class TypePrimitiveLiteral extends TypeExpression
@@ -24,12 +21,6 @@ public class TypePrimitiveLiteral extends TypeExpression
     public TypePrimitiveLiteral(DataType dataType)
     {
         this.dataType = dataType;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new TypeEntry(p, toDisplay()));
     }
 
     public String toDisplay()

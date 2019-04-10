@@ -9,9 +9,6 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -76,12 +73,6 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     }
 
     @Override
-    protected Op loadOp(int index)
-    {
-        return ops.get(index) == ADD ? Op.ADD : Op.SUBTRACT;
-    }
-
-    @Override
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
@@ -102,7 +93,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             }
 
             if (ourType instanceof NumTypeExp)
-                fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p));
+                fixes.addAll(ExpressionUtil.getFixesForMatchingNumericUnits(state, p));
             ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
             return err == null && builtFixes.isEmpty() ? null : new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes);
         }));

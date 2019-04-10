@@ -8,9 +8,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import styled.StyledString;
@@ -74,12 +71,6 @@ public class MatchAnythingExpression extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.s("_"), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load("_"));
     }
 
     @Override

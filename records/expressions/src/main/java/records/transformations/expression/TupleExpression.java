@@ -10,16 +10,11 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 import utility.Utility.TransparentBuilder;
 
@@ -124,22 +119,6 @@ public class TupleExpression extends Expression
     {
         StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", "));
         return expressionStyler.styleExpression(surround == BracketedStatus.DIRECT_ROUND_BRACKETED ? content : StyledString.roundBracket(content), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        r.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
-        for (int i = 0; i < members.size(); i++)
-        {
-            if (i > 0)
-                r.add(GeneralExpressionEntry.load(Op.COMMA));
-            Expression item = members.get(i);
-            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
-        }
-        r.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
-        return r.stream();
     }
 
     @SuppressWarnings("recorded")

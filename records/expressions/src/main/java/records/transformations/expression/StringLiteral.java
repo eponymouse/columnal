@@ -7,16 +7,11 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
 import utility.Either;
-import utility.Pair;
-
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 25/11/2016.
@@ -70,12 +65,6 @@ public class StringLiteral extends Literal
     public int hashCode()
     {
         return value.hashCode();
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new StringLiteralNode(editString(), p));
     }
 
     // Escapes the characters ready for editing.

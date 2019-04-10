@@ -1,17 +1,13 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import utility.Pair;
 import utility.Utility;
 import utility.Utility.TransparentBuilder;
 
@@ -38,12 +34,6 @@ public class AndExpression extends NaryOpShortCircuitExpression
     protected String saveOp(int index)
     {
         return "&";
-    }
-
-    @Override
-    protected Op loadOp(int index)
-    {
-        return Op.AND;
     }
 
     @Override

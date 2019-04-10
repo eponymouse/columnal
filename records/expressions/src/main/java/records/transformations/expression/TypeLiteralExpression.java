@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
@@ -11,8 +10,6 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
@@ -118,12 +115,6 @@ public class TypeLiteralExpression extends NonOperatorExpression
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(StyledString.s("type{"), type.toStyledString(), StyledString.s("}")), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of((SingleLoader<Expression, ExpressionSaver>) p -> new TypeLiteralNode(p, type));
     }
 
     @Override

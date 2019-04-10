@@ -14,9 +14,7 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
-import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
-import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.ComparableEither;
@@ -29,7 +27,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitSaver>, StyledShowable, Replaceable<UnitExpression>
+public abstract class UnitExpression implements StyledShowable, Replaceable<UnitExpression>
 {
     @SuppressWarnings("recorded")
     public static @Recorded UnitExpression load(Unit unit)

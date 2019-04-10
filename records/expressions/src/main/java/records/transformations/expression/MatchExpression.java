@@ -8,12 +8,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
@@ -24,7 +19,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 import utility.Utility.TransparentBuilder;
 
@@ -202,23 +196,6 @@ public class MatchExpression extends NonOperatorExpression
             return result;
         }
 
-        @OnThread(Tag.FXPlatform)
-        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
-        {
-            StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-
-            boolean first = true;
-            for (Pattern pattern : patterns)
-            {
-                r.add(GeneralExpressionEntry.load(first ? Keyword.CASE : Keyword.ORCASE));
-                r.addAll(pattern.load());
-                first = false;
-            }
-            r.add(GeneralExpressionEntry.load(Keyword.THEN));
-            r.addAll(outcome.loadAsConsecutive(BracketedStatus.MISC));
-            return r.stream();
-        }
-
         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
         public MatchClause replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
@@ -329,20 +306,6 @@ public class MatchExpression extends NonOperatorExpression
             int result = pattern.hashCode();
             result = 31 * result + (guard != null ? guard.hashCode() : 0);
             return result;
-        }
-
-        // Load pattern and guard
-        @OnThread(Tag.FXPlatform)
-        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
-        {
-            StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-            r.addAll(pattern.loadAsConsecutive(BracketedStatus.MISC));
-            if (guard != null)
-            {
-                r.add(GeneralExpressionEntry.load(Keyword.GIVEN));
-                r.addAll(guard.loadAsConsecutive(BracketedStatus.MISC));
-            }
-            return r.stream();
         }
 
         public @Nullable Expression getGuard()
@@ -473,7 +436,7 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < immPatternExpressions.size(); i++)
         {
             Expression expression = immPatternExpressions.get(i);
-            List<QuickFix<Expression>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
+            List<QuickFix<Expression>> fixesForMatchingNumericUnits = ExpressionUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {
                 // Must show an error to get the quick fixes to show:
@@ -487,20 +450,6 @@ public class MatchExpression extends NonOperatorExpression
 
         // TypeState doesn't extend outside the match expression, so we discard and return original:
         return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes), ExpressionKind.EXPRESSION, state);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        r.add(GeneralExpressionEntry.load(Keyword.MATCH));
-        r.addAll(expression.loadAsConsecutive(BracketedStatus.MISC));
-        for (MatchClause clause : clauses)
-        {
-            r.addAll(clause.load());
-        }
-        r.add(GeneralExpressionEntry.load(Keyword.ENDMATCH));
-        return r.stream();
     }
 
     @Override

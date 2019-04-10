@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -8,8 +7,6 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.jellytype.JellyUnit;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -68,12 +65,6 @@ public class UnitLiteralExpression extends NonOperatorExpression
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "unit{" + unitExpression.save(structured, true) + "}";
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new UnitLiteralExpressionNode(p, unitExpression));
     }
 
     @Override

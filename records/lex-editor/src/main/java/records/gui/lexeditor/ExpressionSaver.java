@@ -11,10 +11,10 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.gui.expressioneditor.ExpressionOps;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.ExpressionUtil;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.ExpressionLexer.Keyword;
+import records.gui.lexeditor.ExpressionLexer.Op;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -113,7 +113,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             Function<Span, ApplyBrackets<BracketContent, Expression>> applyBrackets = c -> tupleBracket(locationRecorder, Span.fromTo(errorDisplayer, c));
             ArrayList<Either<@Recorded Expression, OpAndNode>> precedingItems = currentScopes.peek().items;
             // Function calls are a special case:
-            if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionOps::isCallTarget, op -> false))
+            if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(ExpressionUtil::isCallTarget, op -> false))
             {
                 @Nullable @Recorded Expression callTarget = precedingItems.remove(precedingItems.size() - 1).<@Nullable @Recorded Expression>either(e -> e, op -> null);
                 // Shouldn't ever be null:

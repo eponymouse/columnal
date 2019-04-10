@@ -1,25 +1,18 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -134,8 +127,6 @@ public abstract class NaryOpExpression extends Expression
 
     protected abstract String saveOp(int index);
 
-    protected abstract Op loadOp(int index);
-
     @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
@@ -177,22 +168,6 @@ public abstract class NaryOpExpression extends Expression
     public List<Expression> getChildren()
     {
         return Collections.unmodifiableList(expressions);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> nodes = new StreamTreeBuilder<>();
-        roundBracket(bracketedStatus, false, nodes, () -> {
-            for (int i = 0; i < expressions.size(); i++)
-            {
-                int iFinal = i;
-                nodes.addAll(expressions.get(i).loadAsConsecutive(BracketedStatus.MISC));
-                if (i < expressions.size() - 1)
-                    nodes.add(GeneralExpressionEntry.load(loadOp(iFinal)));
-            }
-        });
-        return nodes.stream();
     }
 
     // Can be overriden by subclasses if needed:

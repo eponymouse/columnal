@@ -15,19 +15,16 @@ import records.transformations.expression.function.ValueFunction.ArgumentExplana
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.typeExp.MutVar;
-import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.TaggedValue;
 import utility.Utility;
 import records.transformations.expression.function.ValueFunction;
@@ -272,15 +269,6 @@ public class CallExpression extends Expression
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(function.toDisplay(BracketedStatus.MISC, expressionStyler), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s(")")), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        r.addAll(function.loadAsConsecutive(BracketedStatus.MISC));
-        r.addAll(new TupleExpression(arguments).loadAsConsecutive(BracketedStatus.MISC));
-        return r.stream();
     }
 
     /*

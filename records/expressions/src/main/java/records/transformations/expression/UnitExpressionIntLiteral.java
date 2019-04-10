@@ -3,17 +3,13 @@ package records.transformations.expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class UnitExpressionIntLiteral extends UnitExpression
 {
@@ -37,12 +33,6 @@ public class UnitExpressionIntLiteral extends UnitExpression
     public String save(boolean structured, boolean topLevel)
     {
         return Integer.toString(number);
-    }
-
-    @Override
-    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(UnitEntry.load(Integer.toString(number)));
     }
 
     public int getNumber()

@@ -7,7 +7,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
-import records.gui.expressioneditor.OperandOps;
+import records.transformations.expression.ExpressionUtil;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
@@ -56,7 +56,7 @@ public final class TextQuickFix
             {
                 try
                 {
-                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(OperandOps.makeCssClass(makeReplacement.get().getFirst())));
+                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(ExpressionUtil.makeCssClass(makeReplacement.get().getFirst())));
                 }
                 catch (InternalException e)
                 {

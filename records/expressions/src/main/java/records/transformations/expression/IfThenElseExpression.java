@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -8,14 +7,9 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.Random;
@@ -133,20 +127,6 @@ public class IfThenElseExpression extends NonOperatorExpression
         return expressionStyler.styleExpression(content, this); //surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
     }
 
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        r.add(GeneralExpressionEntry.load(Keyword.IF));
-        r.addAll(condition.loadAsConsecutive(BracketedStatus.MISC));
-        r.add(GeneralExpressionEntry.load(Keyword.THEN));
-        r.addAll(thenExpression.loadAsConsecutive(BracketedStatus.MISC));
-        r.add(GeneralExpressionEntry.load(Keyword.ELSE));
-        r.addAll(elseExpression.loadAsConsecutive(BracketedStatus.MISC));
-        r.add(GeneralExpressionEntry.load(Keyword.ENDIF));
-        return r.stream();
-    }
-    
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()

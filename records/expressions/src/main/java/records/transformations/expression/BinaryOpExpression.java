@@ -10,16 +10,12 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -86,9 +82,6 @@ public abstract class BinaryOpExpression extends Expression
 
     // For saving to string:
     protected abstract String saveOp();
-    
-    // For loading in expression editor:
-    protected abstract Op loadOp();
 
     @Override
     public Stream<ColumnReference> allColumnReferences()
@@ -219,18 +212,6 @@ public abstract class BinaryOpExpression extends Expression
     public Expression getRHS()
     {
         return rhs;
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        roundBracket(bracketedStatus, false, r, () -> {
-            r.addAll(lhs.loadAsConsecutive(BracketedStatus.MISC));
-            r.add(GeneralExpressionEntry.load(loadOp()));
-            r.addAll(rhs.loadAsConsecutive(BracketedStatus.MISC));
-        });
-        return r.stream();
     }
 
     public String _test_getOperatorEntry()

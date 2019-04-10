@@ -6,14 +6,10 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
-import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
-import utility.Utility;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class ListTypeExpression extends TypeExpression
 {
@@ -22,16 +18,6 @@ public class ListTypeExpression extends TypeExpression
     public ListTypeExpression(TypeExpression innerType)
     {
         this.innerType = innerType;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Utility.<SingleLoader<TypeExpression, TypeSaver>>concatStreams(
-            Stream.<SingleLoader<TypeExpression, TypeSaver>>of(TypeEntry.load("[")),
-            innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED),
-            Stream.<SingleLoader<TypeExpression, TypeSaver>>of(TypeEntry.load("]"))
-        );
     }
 
     @Override

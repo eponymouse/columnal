@@ -1,10 +1,13 @@
-package records.gui.expressioneditor;
+package records.gui.lexeditor;
 
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+/**
+ * An interface for keywords and operators, to get their content and their styled representation.
+ */
 @OnThread(Tag.Any)
 public interface ExpressionToken extends StyledShowable
 {

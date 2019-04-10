@@ -8,16 +8,12 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledString;
 import utility.IdentifierUtility;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class InvalidIdentTypeExpression extends TypeExpression
 {
@@ -26,12 +22,6 @@ public class InvalidIdentTypeExpression extends TypeExpression
     public InvalidIdentTypeExpression(String value)
     {
         this.value = value;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new TypeEntry(p, value));
     }
 
     @Override

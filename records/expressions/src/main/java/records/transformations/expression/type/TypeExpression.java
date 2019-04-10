@@ -1,7 +1,6 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -27,23 +26,16 @@ import records.grammar.FormatParser.InvalidOpsTypeExpressionContext;
 import records.grammar.FormatParser.RoundTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.Replaceable;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformRunnable;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
-public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeSaver>, StyledShowable, Replaceable<TypeExpression>
+public abstract class TypeExpression implements StyledShowable, Replaceable<TypeExpression>
 {
 
     @SuppressWarnings("recorded")
@@ -320,22 +312,6 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
     public abstract boolean equals(@Nullable Object o);
     @Override
     public abstract int hashCode();
-
-    // Round brackets if needed
-    @OnThread(Tag.FXPlatform)
-    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> builder, FXPlatformRunnable buildContent)
-    {
-        if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
-        {
-            buildContent.run();
-        }
-        else
-        {
-            builder.add(TypeEntry.load("("));
-            buildContent.run();
-            builder.add(TypeEntry.load(")"));
-        }
-    }
 
     // Useful for debugging:
     @Override

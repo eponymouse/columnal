@@ -6,7 +6,6 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.SourceLocation;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,8 +19,6 @@ import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
@@ -35,6 +32,8 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledCSS;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -47,6 +46,65 @@ import java.util.stream.IntStream;
 
 public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionContext>
 {
+    /**
+     * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
+     * item, and thus always completes immediately when directly matched.
+     */
+    public static enum Keyword implements ExpressionToken
+    {
+        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), QUEST("?"),
+        IF(records.grammar.ExpressionLexer.IF), THEN(records.grammar.ExpressionLexer.THEN), ELSE(records.grammar.ExpressionLexer.ELSE), ENDIF(records.grammar.ExpressionLexer.ENDIF),
+        MATCH(records.grammar.ExpressionLexer.MATCH),
+        CASE(records.grammar.ExpressionLexer.CASE),
+        ORCASE(records.grammar.ExpressionLexer.ORCASE),
+        GIVEN(records.grammar.ExpressionLexer.CASEGUARD),
+        ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH);
+
+        private final String keyword;
+
+        private Keyword(String keyword)
+        {
+            this.keyword = keyword;
+        }
+
+        private Keyword(int token)
+        {
+            this.keyword = Utility.literal(records.grammar.ExpressionLexer.VOCABULARY, token);
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return keyword;
+        }
+    }
+
+    /**
+     * An Op, unlike a Keyword, may have a longer alternative available, so should not
+     * complete on direct match (unless it is the only possible direct match).
+     */
+    public static enum Op implements ExpressionToken
+    {
+        AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
+        COMMA(","),
+        LESS_THAN("<"), LESS_THAN_OR_EQUAL("<="), GREATER_THAN(">"), GREATER_THAN_OR_EQUAL(">=");
+
+        private final String op;
+
+        private Op(String op)
+        {
+            this.op = op;
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return op;
+        }
+    }
+    
     private final ObservableObjectValue<ColumnLookup> columnLookup;
     private final TypeManager typeManager;
     private ImmutableList<StandardFunctionDefinition> allFunctions;

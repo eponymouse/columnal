@@ -1,18 +1,14 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
 import records.typeExp.MutVar;
@@ -91,12 +87,6 @@ public class StandardFunction extends NonOperatorExpression
             return "@function " + functionDefinition.getName();
         else
             return functionDefinition.getName();
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(this));
     }
 
     @Override

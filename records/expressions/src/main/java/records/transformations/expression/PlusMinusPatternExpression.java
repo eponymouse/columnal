@@ -8,23 +8,15 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
-import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.EpsilonType;
-
-import java.util.Set;
-import java.util.function.Function;
 
 /**
  * This is a pattern match item, value +- tolerance.
@@ -40,12 +32,6 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     protected String saveOp()
     {
         return "\u00B1";
-    }
-
-    @Override
-    protected Op loadOp()
-    {
-        return Op.PLUS_MINUS;
     }
 
     @Override

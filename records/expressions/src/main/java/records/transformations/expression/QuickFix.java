@@ -2,20 +2,15 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
-import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.TableManager;
 import records.error.InternalException;
-import records.gui.expressioneditor.OperandOps;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunctionInt;
 import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
@@ -55,7 +50,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
             {
                 try
                 {
-                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(OperandOps.makeCssClass(makeReplacement.get())));
+                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(ExpressionUtil.makeCssClass(makeReplacement.get())));
                 }
                 catch (InternalException e)
                 {

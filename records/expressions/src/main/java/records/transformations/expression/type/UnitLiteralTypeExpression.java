@@ -6,16 +6,11 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.jellytype.JellyType;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class UnitLiteralTypeExpression extends TypeExpression
 {
@@ -48,12 +43,6 @@ public class UnitLiteralTypeExpression extends TypeExpression
     public boolean isEmpty()
     {
         return unitExpression.isEmpty();
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new UnitLiteralTypeNode(p, unitExpression));
     }
 
     @Override

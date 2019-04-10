@@ -3,13 +3,10 @@ package records.gui.lexeditor;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.gui.expressioneditor.TypeEntry.Keyword;
-import records.gui.expressioneditor.TypeEntry.Operator;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.UnitExpression;
@@ -21,7 +18,8 @@ import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
 import styled.StyledCSS;
 import styled.StyledString;
-import styled.StyledString.Builder;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -35,6 +33,44 @@ import java.util.stream.Stream;
 
 public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
 {
+    public static enum Keyword implements ExpressionToken
+    {
+        OPEN_ROUND("("), CLOSE_ROUND(")"), OPEN_SQUARE("["), CLOSE_SQUARE("]");
+
+        private final String keyword;
+
+        private Keyword(String keyword)
+        {
+            this.keyword = keyword;
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return keyword;
+        }
+    }
+
+    public static enum Operator implements ExpressionToken
+    {
+        COMMA(",");
+
+        private final String op;
+
+        private Operator(String op)
+        {
+            this.op = op;
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        public String getContent()
+        {
+            return op;
+        }
+    }
+    
     @SuppressWarnings("units")
     @Override
     public LexerResult<TypeExpression, CodeCompletionContext> process(String content, int curCaretPos)

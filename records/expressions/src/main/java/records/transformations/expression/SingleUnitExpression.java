@@ -5,17 +5,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
 public class SingleUnitExpression extends UnitExpression
@@ -45,12 +41,6 @@ public class SingleUnitExpression extends UnitExpression
     public String save(boolean structured, boolean topLevel)
     {
         return name;
-    }
-
-    @Override
-    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(UnitEntry.load(name));
     }
 
     @Override

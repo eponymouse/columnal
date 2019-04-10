@@ -3,8 +3,6 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -33,9 +31,8 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.expressioneditor.OperandOps;
+import records.transformations.expression.ExpressionUtil;
 import records.gui.grid.RectangleBounds;
-import records.gui.lexeditor.EditorContent;
 import records.gui.lexeditor.EditorDisplay;
 import records.transformations.Calculate;
 import records.transformations.expression.Expression;
@@ -58,8 +55,6 @@ import utility.gui.FXUtility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -257,43 +252,43 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnmatchedBracketFix1()
     {
-        testFix("(1+2", "", "." + OperandOps.makeCssClass(")"), "(1 + 2)");
+        testFix("(1+2", "", "." + ExpressionUtil.makeCssClass(")"), "(1 + 2)");
     }
 
     @Test
     public void testUnmatchedBracketFix2()
     {
-        testFix("[1+2", "", "." + OperandOps.makeCssClass("]"), "[1 + 2]");
+        testFix("[1+2", "", "." + ExpressionUtil.makeCssClass("]"), "[1 + 2]");
     }
 
     @Test
     public void testUnmatchedBracketFix3()
     {
-        testFix("([0];[1)", "", "." + OperandOps.makeCssClass("]"), "([0] ; [1])");
+        testFix("([0];[1)", "", "." + ExpressionUtil.makeCssClass("]"), "([0] ; [1])");
     }
 
     @Test
     public void testUnmatchedIfFix1()
     {
-        testFix("@iftrue@then0@else1", "", "." + OperandOps.makeCssClass("@endif"), "@if true @then 0 @else 1 @endif");
+        testFix("@iftrue@then0@else1", "", "." + ExpressionUtil.makeCssClass("@endif"), "@if true @then 0 @else 1 @endif");
     }
 
     @Test
     public void testUnmatchedIfFix2()
     {
-        testFix("@iftrue", "", "." + OperandOps.makeCssClass("@then@else@endif"), "@if true @then @invalidops () @else @invalidops () @endif");
+        testFix("@iftrue", "", "." + ExpressionUtil.makeCssClass("@then@else@endif"), "@if true @then @invalidops () @else @invalidops () @endif");
     }
 
     @Test
     public void testUnmatchedIfFix3()
     {
-        testFix("@iftrue@endif", "", "." + OperandOps.makeCssClass("@then@else"), "@if true @then @invalidops () @else @invalidops () @endif");
+        testFix("@iftrue@endif", "", "." + ExpressionUtil.makeCssClass("@then@else"), "@if true @then @invalidops () @else @invalidops () @endif");
     }
 
     @Test
     public void testUnmatchedIfFix4()
     {
-        testFix("@if1@else", "1", "." + OperandOps.makeCssClass("@then"), "@invalidops(@unfinished \"^aif\", 1, @unfinished \"^athen\", @invalidops (), @unfinished \"^aelse\", @invalidops ())");
+        testFix("@if1@else", "1", "." + ExpressionUtil.makeCssClass("@then"), "@invalidops(@unfinished \"^aif\", 1, @unfinished \"^athen\", @invalidops (), @unfinished \"^aelse\", @invalidops ())");
     }
     
     
@@ -313,7 +308,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     private String dotCssClassFor(String expression) throws InternalException, UserException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        return "." + ExpressionUtil.makeCssClass(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     /**

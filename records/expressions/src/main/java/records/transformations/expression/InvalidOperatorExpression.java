@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
@@ -9,14 +8,12 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
 import styled.StyledString;
 import styled.StyledString.Builder;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.Random;
@@ -35,17 +32,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     public InvalidOperatorExpression(ImmutableList<@Recorded Expression> operands)
     {
         this.items = operands;
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        for (int i = 0; i < items.size(); i++)
-        {
-            r.addAll(items.get(i).loadAsConsecutive(BracketedStatus.MISC));
-        }
-        return r.stream();
     }
 
     @Override

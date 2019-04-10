@@ -8,8 +8,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -40,12 +38,6 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    protected Op loadOp()
-    {
-        return Op.NOT_EQUAL;
-    }
-
-    @Override
     @RequiresNonNull({"lhsType", "rhsType"})
     public @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
@@ -63,8 +55,8 @@ public class NotEqualExpression extends BinaryOpExpression
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
         {
             ImmutableList<Optional<TypeExp>> expressionTypes = ImmutableList.<Optional<TypeExp>>of(Optional.<TypeExp>of(lhsType.typeExp), Optional.<TypeExp>of(rhsType.typeExp));
-            onError.recordQuickFixes(lhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 0)));
-            onError.recordQuickFixes(rhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 1)));
+            onError.recordQuickFixes(lhs, ExpressionUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 0)));
+            onError.recordQuickFixes(rhs, ExpressionUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 1)));
             return null;
         }
         return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);

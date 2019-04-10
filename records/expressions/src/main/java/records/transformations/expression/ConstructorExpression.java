@@ -8,15 +8,12 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.transformations.expression.function.ValueFunction;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -112,12 +109,6 @@ public class ConstructorExpression extends NonOperatorExpression
             return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + t.getTypeName().getRaw() + ":" + t.getTagInfo().getName());
         else
             return tag.either(s -> s, t -> t.getTypeName().getRaw() + ":" + t.getTagInfo().getName());
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(this));
     }
 
     @Override

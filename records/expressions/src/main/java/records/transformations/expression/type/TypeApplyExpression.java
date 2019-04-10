@@ -14,22 +14,17 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
-import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import utility.Either;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 // An Nary expression applying a tagged type, e.g. Either-Int-String.  That would have three args.
 public class TypeApplyExpression extends TypeExpression
@@ -135,22 +130,6 @@ public class TypeApplyExpression extends TypeExpression
     public boolean isEmpty()
     {
         return false;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> r = new StreamTreeBuilder<>();
-        r.add(p -> new TypeEntry(p, typeName));
-        for (int i = 0; i < arguments.size(); i++)
-        {
-            Either<UnitExpression, TypeExpression> arg = arguments.get(i);
-            roundBracket(BracketedStatus.MISC, r, () ->arg.either_(
-                u -> r.add(p -> new UnitLiteralTypeNode(p, u)),
-                t -> r.addAll(t.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED))
-            ));
-        }
-        return r.stream();
     }
 
     @Override

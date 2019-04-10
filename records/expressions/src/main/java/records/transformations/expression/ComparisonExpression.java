@@ -4,14 +4,10 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
@@ -108,27 +104,10 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    protected Op loadOp(int index)
-    {
-        switch (operators.get(index))
-        {
-            case LESS_THAN:
-                return Op.LESS_THAN;
-            case LESS_THAN_OR_EQUAL_TO:
-                return Op.LESS_THAN_OR_EQUAL;
-            case GREATER_THAN:
-                return Op.GREATER_THAN;
-            case GREATER_THAN_OR_EQUAL_TO:
-            default: // To avoid compiler error
-                return Op.GREATER_THAN_OR_EQUAL;
-        }
-    }
-
-    @Override
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
-            ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p)
+            ExpressionUtil.getFixesForMatchingNumericUnits(state, p)
         ) : ImmutableList.of()));
         if (type == null)
             return null;

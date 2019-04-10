@@ -9,20 +9,13 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
-import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
-import utility.Either;
 import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class InvalidOpTypeExpression extends TypeExpression
 {
@@ -31,12 +24,6 @@ public class InvalidOpTypeExpression extends TypeExpression
     public InvalidOpTypeExpression(ImmutableList<@Recorded TypeExpression> items)
     {
         this.items = items;
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return items.stream().flatMap(x -> x.loadAsConsecutive(BracketedStatus.MISC));
     }
 
     @Override

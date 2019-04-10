@@ -10,10 +10,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
@@ -22,12 +18,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.TransparentBuilder;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -135,22 +129,6 @@ public class ArrayExpression extends Expression
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s("]")), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        r.add(GeneralExpressionEntry.load(Keyword.OPEN_SQUARE));
-        for (int i = 0; i < items.size(); i++)
-        {
-            if (i > 0)
-                r.add(GeneralExpressionEntry.load(Op.COMMA));
-            Expression item = items.get(i);
-            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
-        }
-        r.add(GeneralExpressionEntry.load(Keyword.CLOSE_SQUARE));
-        return r.stream();
     }
 
     @SuppressWarnings("recorded")

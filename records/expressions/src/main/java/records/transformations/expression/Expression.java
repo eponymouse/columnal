@@ -15,35 +15,65 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.ListExDTV;
-import records.transformations.expression.explanation.Explanation;
-import records.transformations.expression.explanation.Explanation.ExecutionType;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.ListExDTV;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.*;
+import records.grammar.ExpressionParser.AddSubtractExpressionContext;
+import records.grammar.ExpressionParser.AndExpressionContext;
+import records.grammar.ExpressionParser.AnyContext;
+import records.grammar.ExpressionParser.ArrayExpressionContext;
+import records.grammar.ExpressionParser.BooleanLiteralContext;
+import records.grammar.ExpressionParser.BracketedExpressionContext;
+import records.grammar.ExpressionParser.CallExpressionContext;
+import records.grammar.ExpressionParser.ColumnRefContext;
+import records.grammar.ExpressionParser.ConstructorContext;
+import records.grammar.ExpressionParser.CustomLiteralExpressionContext;
+import records.grammar.ExpressionParser.DivideExpressionContext;
+import records.grammar.ExpressionParser.ExpressionContext;
+import records.grammar.ExpressionParser.GreaterThanExpressionContext;
+import records.grammar.ExpressionParser.IfThenElseExpressionContext;
+import records.grammar.ExpressionParser.ImplicitLambdaParamContext;
+import records.grammar.ExpressionParser.InvalidOpExpressionContext;
+import records.grammar.ExpressionParser.InvalidOpItemContext;
+import records.grammar.ExpressionParser.LessThanExpressionContext;
+import records.grammar.ExpressionParser.MatchClauseContext;
+import records.grammar.ExpressionParser.MatchContext;
+import records.grammar.ExpressionParser.NotEqualExpressionContext;
+import records.grammar.ExpressionParser.NumericLiteralContext;
+import records.grammar.ExpressionParser.OrExpressionContext;
+import records.grammar.ExpressionParser.PatternContext;
+import records.grammar.ExpressionParser.PlusMinusPatternContext;
+import records.grammar.ExpressionParser.RaisedExpressionContext;
+import records.grammar.ExpressionParser.StandardFunctionContext;
+import records.grammar.ExpressionParser.StringConcatExpressionContext;
+import records.grammar.ExpressionParser.StringLiteralContext;
+import records.grammar.ExpressionParser.TableIdContext;
+import records.grammar.ExpressionParser.TimesExpressionContext;
+import records.grammar.ExpressionParser.TopLevelExpressionContext;
+import records.grammar.ExpressionParser.TupleExpressionContext;
+import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
@@ -59,10 +89,8 @@ import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
-import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -79,7 +107,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>, Explanation.ExplanationSource
+public abstract class Expression extends ExpressionBase implements StyledShowable, Replaceable<Expression>, Explanation.ExplanationSource
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
@@ -981,21 +1009,4 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             return true;
         }
     }
-    
-    // Round brackets if needed
-    @OnThread(Tag.FXPlatform)
-    protected static void roundBracket(BracketedStatus bracketedStatus, boolean evenAtTopLevel, StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> builder, FXPlatformRunnable buildContent)
-    {
-        if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED || (bracketedStatus == BracketedStatus.TOP_LEVEL && !evenAtTopLevel))
-        {
-            buildContent.run();
-        }
-        else
-        {
-            builder.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
-            buildContent.run();
-            builder.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
-        }
-    }
-
 }

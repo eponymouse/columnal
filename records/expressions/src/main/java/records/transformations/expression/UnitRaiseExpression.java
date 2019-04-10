@@ -3,18 +3,12 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitEntry.UnitOp;
-import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
-import utility.StreamTreeBuilder;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class UnitRaiseExpression extends UnitExpression
 {
@@ -71,16 +65,6 @@ public class UnitRaiseExpression extends UnitExpression
         int result = unit.hashCode();
         result = 31 * result + power;
         return result;
-    }
-
-    @Override
-    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
-        r.addAll(unit.loadAsConsecutive(BracketedStatus.MISC));
-        r.add(UnitEntry.load(UnitOp.RAISE));
-        r.addAll(new UnitExpressionIntLiteral(power).loadAsConsecutive(BracketedStatus.MISC));
-        return r.stream();
     }
 
     @SuppressWarnings("recorded")

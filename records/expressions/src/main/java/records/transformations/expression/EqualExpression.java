@@ -8,8 +8,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -46,12 +44,6 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     protected String saveOp(int index)
     {
         return "=";
-    }
-
-    @Override
-    protected Op loadOp(int index)
-    {
-        return Op.EQUALS;
     }
 
     @Override
@@ -118,7 +110,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             for (Integer index : invalidIndexes)
             {
                 TypeProblemDetails tpd = new TypeProblemDetails(ImmutableList.copyOf(expressionTypes), ImmutableList.copyOf(expressions), index);
-                onError.recordQuickFixes(expressions.get(index), ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, tpd));
+                onError.recordQuickFixes(expressions.get(index), ExpressionUtil.getFixesForMatchingNumericUnits(typeState, tpd));
             }
             return null;
         }

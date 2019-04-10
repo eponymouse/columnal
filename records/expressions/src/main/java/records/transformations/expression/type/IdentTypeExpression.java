@@ -11,14 +11,10 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
-import records.loadsave.OutputBuilder;
-import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class IdentTypeExpression extends TypeExpression
 {
@@ -27,12 +23,6 @@ public class IdentTypeExpression extends TypeExpression
     public IdentTypeExpression(@ExpressionIdentifier String value)
     {
         this.value = value;
-    }
-
-    @Override
-    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(p -> new TypeEntry(p, value));
     }
 
     @Override

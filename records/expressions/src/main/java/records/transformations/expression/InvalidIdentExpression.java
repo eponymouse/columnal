@@ -1,14 +1,11 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
-import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import utility.IdentifierUtility;
@@ -77,12 +74,6 @@ public class InvalidIdentExpression extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.s(text), this);
-    }
-
-    @Override
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(text));
     }
 
     @Override

@@ -20,7 +20,6 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BracketedStatus;
@@ -51,8 +50,6 @@ import styled.StyledString;
 import test.gen.type.GenDataType;
 import test.gen.GenUnit;
 import test.gen.type.GenDataTypeMaker;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
@@ -120,12 +117,6 @@ public class PropTypecheckIndividual
         protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
         {
             return StyledString.s("Testing");
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-        {
-            throw new RuntimeException("Testing");
         }
 
         @Override
@@ -427,12 +418,6 @@ public class PropTypecheckIndividual
         protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
         {
             return StyledString.s("Testing");
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-        {
-            throw new RuntimeException("Testing");
         }
 
         @Override

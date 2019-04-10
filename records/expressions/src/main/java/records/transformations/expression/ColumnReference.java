@@ -1,23 +1,19 @@
 package records.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
-import records.transformations.expression.explanation.Explanation;
-import records.transformations.expression.explanation.ExplanationLocation;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataTypeValue;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -35,6 +31,9 @@ import java.util.stream.Stream;
  */
 public class ColumnReference extends NonOperatorExpression
 {
+    public static final String ARROW_SAME_ROW = "\u2192";
+    public static final String ARROW_WHOLE = "\u2195";
+    
     public static enum ColumnReferenceType
     {
         // Column is in same table as referring item, use the same row as that item
@@ -123,7 +122,7 @@ public class ColumnReference extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(
-            StyledString.s(referenceType == ColumnReferenceType.WHOLE_COLUMN ? GeneralExpressionEntry.ARROW_WHOLE : GeneralExpressionEntry.ARROW_SAME_ROW),
+            StyledString.s(referenceType == ColumnReferenceType.WHOLE_COLUMN ? ARROW_WHOLE : ARROW_SAME_ROW),
             columnName.toStyledString()
         ), this);
     }
@@ -145,13 +144,6 @@ public class ColumnReference extends NonOperatorExpression
     {
         // Don't want to print out entire column:
         return skipIfTrivial || referenceType.equals(ColumnReferenceType.WHOLE_COLUMN);
-    }
-
-    @Override
-    @OnThread(Tag.FXPlatform)
-    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
-    {
-        return Stream.of(GeneralExpressionEntry.load(this));
     }
 
     @Override
