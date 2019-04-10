@@ -60,7 +60,7 @@ public abstract class TextEditorBase extends Region
         private final Path inverter;
         private final Pane selectionPane;
         private final Pane inverterPane;
-        private final Path errorUnderlines;
+        private final Pane errorUnderlinePane;
 
         private final Animation caretBlink;
         private boolean updateCaretShapeQueued;
@@ -97,6 +97,9 @@ public abstract class TextEditorBase extends Region
             inverterPane = new Pane(inverter);
             inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
             inverterPane.setBlendMode(BlendMode.DIFFERENCE);
+            
+            errorUnderlinePane = new Pane();
+            errorUnderlinePane.setMouseTransparent(true);
 
             selectionShape.visibleProperty().bind(focusedProperty());
             fadeOverlay = new ResizableRectangle();
@@ -109,11 +112,16 @@ public abstract class TextEditorBase extends Region
                     new KeyFrame(Duration.seconds(1.2), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
             );
             caretBlink.setCycleCount(Animation.INDEFINITE);
-
-            errorUnderlines = new Path();
-            errorUnderlines.setMouseTransparent(true);
-            errorUnderlines.setManaged(false);
-            errorUnderlines.getStyleClass().add("error-underline");
+        }
+        
+        private Path makeErrorUnderline(boolean containsCaret, PathElement[] pathElements)
+        {
+            Path errorUnderline = new Path(pathElements);
+            errorUnderline.setMouseTransparent(true);
+            errorUnderline.setManaged(false);
+            errorUnderline.getStyleClass().add("error-underline");
+            FXUtility.setPseudoclass(errorUnderline, "contains-caret", containsCaret);
+            return errorUnderline;
         }
 
         public void focusChanged(boolean focused)
@@ -152,7 +160,7 @@ public abstract class TextEditorBase extends Region
                 selectionShape.getElements().setAll(textLayout.getRange(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
                 inverter.getElements().setAll(selectionShape.getElements());
                 caretShape.getElements().setAll(textLayout.getCaretShape(getDisplayCaretPosition(), true, 0, 0));
-                errorUnderlines.getElements().setAll(makeSpans(getErrorCharacters()).stream().flatMap(r -> Arrays.<PathElement>stream(textLayout.getRange(r.start, r.end, TextLayout.TYPE_TEXT, 0, 0))).collect(Collectors.<PathElement>toList()));
+                errorUnderlinePane.getChildren().setAll(makeSpans(getErrorCharacters()).stream().map(r -> makeErrorUnderline(r.start <= getDisplayCaretPosition() && getDisplayCaretPosition() <= r.end, textLayout.getRange(r.start, r.end, TextLayout.TYPE_TEXT, 0, 0))).collect(Collectors.<Path>toList()));
                 if (isFocused())
                     caretBlink.playFromStart();
             }
@@ -194,7 +202,7 @@ public abstract class TextEditorBase extends Region
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(textNodes);
         
-        getChildren().setAll(textFlow, caretAndSelectionNodes.errorUnderlines);
+        getChildren().setAll(textFlow, caretAndSelectionNodes.errorUnderlinePane);
 
     }
     
@@ -319,14 +327,14 @@ public abstract class TextEditorBase extends Region
         CaretAndSelectionNodes cs = caretAndSelectionNodes;
         if (focused)
         {
-            getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.caretShape, cs.errorUnderlines, cs.fadeOverlay);
+            getChildren().setAll(textFlow, cs.inverterPane, cs.selectionPane, cs.errorUnderlinePane, cs.caretShape, cs.fadeOverlay);
             cs.focusChanged(true);
         }
         else
         {
             horizTranslation = 0;
             vertTranslation = 0;
-            getChildren().setAll(textFlow, cs.errorUnderlines);
+            getChildren().setAll(textFlow, cs.errorUnderlinePane);
         }
     }
 }

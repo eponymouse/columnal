@@ -216,8 +216,9 @@
 }
 
 .text-editor {
+    -fx-cursor: text;
     .document-caret {
-        -fx-stroke: red;
+        -fx-stroke: $focus-color;
     }
     .document-selection {
         -fx-fill: $focus-color;
@@ -228,6 +229,13 @@
     }
     .document-text-flow > .document-text {
         -fx-fill: black;
+    }
+    .error-underline {
+        -fx-stroke: red;
+        -fx-fill: pink;
+        &:contains-caret {
+            -fx-stroke:pink;
+        }
     }
 }
 
