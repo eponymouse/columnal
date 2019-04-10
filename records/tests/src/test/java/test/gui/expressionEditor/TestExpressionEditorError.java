@@ -123,6 +123,29 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         // Type error
         testError("@if3@then4@else5@endif", e(3,4, "boolean"));
     }
+    
+    @Test
+    public void testEmptyIf()
+    {
+        testError("@iftrue@then@else1@endif",
+            e(12,12, "empty"));
+    }
+
+    @Test
+    public void testEmptyIf2()
+    {
+        testError("@iftrue@then@else@endif",
+                e(12,12, "empty"),
+                e(17,17, "empty"));
+    }
+
+    @Test
+    public void testPartialIf()
+    {
+        testError("@if(true>false)",
+                e(15,15, "missing"));
+    }
+    
 
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
