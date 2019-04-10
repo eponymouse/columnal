@@ -281,19 +281,19 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnmatchedIfFix2()
     {
-        testFix("@iftrue", "", "." + OperandOps.makeCssClass("@then@else@endif"), "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+        testFix("@iftrue", "", "." + OperandOps.makeCssClass("@then@else@endif"), "@if true @then @invalidops () @else @invalidops () @endif");
     }
 
     @Test
     public void testUnmatchedIfFix3()
     {
-        testFix("@iftrue@endif", "", "." + OperandOps.makeCssClass("@then@else"), "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+        testFix("@iftrue@endif", "", "." + OperandOps.makeCssClass("@then@else"), "@if true @then @invalidops () @else @invalidops () @endif");
     }
 
     @Test
     public void testUnmatchedIfFix4()
     {
-        testFix("@if1@else", "1", "." + OperandOps.makeCssClass("@then"), "@invalidops(@unfinished \"^aif\", 1, @unfinished \"^athen\", @unfinished \"^aelse\")");
+        testFix("@if1@else", "1", "." + OperandOps.makeCssClass("@then"), "@invalidops(@unfinished \"^aif\", 1, @unfinished \"^athen\", @invalidops (), @unfinished \"^aelse\", @invalidops ())");
     }
     
     

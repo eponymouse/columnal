@@ -33,6 +33,7 @@ import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * 
@@ -806,13 +807,14 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(@NonNull KEYWORD expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
+    public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
     {
         return new Terminator() {
             @Override
             public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, Span keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
             {
-                if (Objects.equal(expected, terminator))
+                int termIndex = expected.indexOf(terminator);
+                if (termIndex == 0)
                 {
                     // All is well:
                     Either<@Recorded EXPRESSION, Terminator> result = onSuccessfulClose.apply(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
@@ -824,8 +826,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         hasUnmatchedBrackets = true;
                     
                     // Error!
-                    TextQuickFix fix = new TextQuickFix(StyledString.concat(StyledString.s("Add missing "), expected.toStyledString()), ImmutableList.of(), keywordErrorDisplayer.lhs(), () -> new Pair<>(expected.getContent(), expected.toStyledString()));
-                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Missing " + expected + " before " + (terminator == null ? "end" : terminator)), ImmutableList.of(fix));
+                    ImmutableList<KEYWORD> toAdd = termIndex == -1 ? expected : expected.subList(0, termIndex);
+                    StyledString toAddSS = toAdd.stream().map(s -> s.toStyledString()).collect(StyledString.joining("\u2026"));
+                    TextQuickFix fix = new TextQuickFix(StyledString.s("Add missing item(s)"), ImmutableList.of(), keywordErrorDisplayer.lhs(), () -> new Pair<>(toAdd.stream().map(k -> k.getContent()).collect(Collectors.joining()), toAddSS));
+                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.concat(StyledString.s("Missing "), toAddSS, StyledString.s(" before " + (terminator == null ? "end" : terminator))), ImmutableList.of(fix));
                     @Nullable Span start = currentScopes.peek().openingNode;
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> items = ImmutableList.builder();

@@ -139,14 +139,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
             }
             Function<Span, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (bracketed, bracketEnd) -> {
+            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (bracketed, bracketEnd) -> {
                 return Either.<@Recorded Expression, Terminator>left(bracketed);
             }, invalidPrefix, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
             currentScopes.push(new Scope(errorDisplayer,
-                expect(Keyword.CLOSE_SQUARE,
+                expect(ImmutableList.of(Keyword.CLOSE_SQUARE),
                     close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()),
                     (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword, true)));
         }
@@ -154,13 +154,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             ImmutableList.Builder<@Recorded Expression> invalid = ImmutableList.builder();
             invalid.addAll(prefixKeyword.get());
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, miscBracketsFrom(errorDisplayer), (condition, conditionEnd) -> {
+            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.THEN, Keyword.ELSE, Keyword.ENDIF), miscBracketsFrom(errorDisplayer), (condition, conditionEnd) -> {
                 invalid.add(condition);
                 invalid.add(record(conditionEnd, new InvalidIdentExpression(Keyword.THEN.getContent())));
-                return Either.right(expect(Keyword.ELSE, miscBracketsFrom(conditionEnd), (thenPart, thenEnd) -> {
+                return Either.right(expect(ImmutableList.of(Keyword.ELSE, Keyword.ENDIF), miscBracketsFrom(conditionEnd), (thenPart, thenEnd) -> {
                     invalid.add(thenPart);
                     invalid.add(record(thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
-                    return Either.right(expect(Keyword.ENDIF, miscBracketsFrom(thenEnd), (elsePart, elseEnd) -> {
+                    return Either.right(expect(ImmutableList.of(Keyword.ENDIF), miscBracketsFrom(thenEnd), (elsePart, elseEnd) -> {
                         return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(Span.fromTo(errorDisplayer, elseEnd), new IfThenElseExpression(condition, thenPart, elsePart)));
                     }, invalid::build, false));
                 }, invalid::build, false));
