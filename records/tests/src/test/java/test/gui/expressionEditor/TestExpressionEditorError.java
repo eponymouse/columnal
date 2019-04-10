@@ -44,6 +44,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -265,8 +266,8 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
     {
         Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
-        Path errorUnderline = lookup(".expression-editor .error-underline").query();
-        assertEquals("Underline showing", underlineShowing, TestUtil.fx(() -> errorUnderline.getElements().size()) > 0);
+        Collection<Path> errorUnderline = lookup(".expression-editor .error-underline").<Path>queryAll();
+        assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (popupShowing != null)
             assertEquals("Popup showing", popupShowing, isShowingErrorPopup());
     }

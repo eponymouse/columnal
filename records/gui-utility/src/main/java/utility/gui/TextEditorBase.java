@@ -100,6 +100,7 @@ public abstract class TextEditorBase extends Region
             
             errorUnderlinePane = new Pane();
             errorUnderlinePane.setMouseTransparent(true);
+            errorUnderlinePane.getStyleClass().add("error-underline-pane");
 
             selectionShape.visibleProperty().bind(focusedProperty());
             fadeOverlay = new ResizableRectangle();
