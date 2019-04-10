@@ -157,6 +157,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             // Focus expression editor:
             push(KeyCode.TAB);
             write(expression);
+            sleep(200);
             
             if (errors.length == 0)
             {
