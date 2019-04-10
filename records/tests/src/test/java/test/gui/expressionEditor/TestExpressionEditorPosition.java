@@ -209,6 +209,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 int curIndex = 0;
                 while (curIndex < internalCaretPos.length)
                 {
+                    sleep(200);
                     caretCentres[curIndex] = getCaretPosOnScreen();
                     assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
                     curIndex += 1;
