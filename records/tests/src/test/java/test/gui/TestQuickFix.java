@@ -257,13 +257,43 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnmatchedBracketFix1()
     {
-        testSimpleFix("(1+2", "", "(1 + 2)");
+        testFix("(1+2", "", "." + OperandOps.makeCssClass(")"), "(1 + 2)");
+    }
+
+    @Test
+    public void testUnmatchedBracketFix2()
+    {
+        testFix("[1+2", "", "." + OperandOps.makeCssClass("]"), "[1 + 2]");
+    }
+
+    @Test
+    public void testUnmatchedBracketFix3()
+    {
+        testFix("([0];[1)", "", "." + OperandOps.makeCssClass("]"), "([0] ; [1])");
     }
 
     @Test
     public void testUnmatchedIfFix1()
     {
-        testSimpleFix("@iftrue", "", "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+        testFix("@iftrue@then0@else1", "", "." + OperandOps.makeCssClass("@endif"), "@if true @then 0 @else 1 @endif");
+    }
+
+    @Test
+    public void testUnmatchedIfFix2()
+    {
+        testFix("@iftrue", "", "." + OperandOps.makeCssClass("@then@else@endif"), "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+    }
+
+    @Test
+    public void testUnmatchedIfFix3()
+    {
+        testFix("@iftrue@endif", "", "." + OperandOps.makeCssClass("@then@else"), "@if true @then @unfinished \"\" @else @unfinished \"\" @endif");
+    }
+
+    @Test
+    public void testUnmatchedIfFix4()
+    {
+        testFix("@if1@else", "1", "." + OperandOps.makeCssClass("@then"), "@invalidops(@unfinished \"^aif\", 1, @unfinished \"^athen\", @unfinished \"^aelse\")");
     }
     
     

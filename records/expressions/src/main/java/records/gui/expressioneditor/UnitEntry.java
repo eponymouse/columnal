@@ -20,6 +20,8 @@ import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiFunction;
 import utility.Utility;
@@ -286,7 +288,7 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
         }
     }
     
-    public static enum UnitOp
+    public static enum UnitOp implements ExpressionToken
     {
         MULTIPLY("*"), DIVIDE("/"), RAISE("^");
         
@@ -297,13 +299,15 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
             this.op = op;
         }
 
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;
         }
     }
 
-    public static enum UnitBracket
+    public static enum UnitBracket implements ExpressionToken
     {
         OPEN_ROUND("("), CLOSE_ROUND(")");
         
@@ -314,6 +318,8 @@ public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSav
             this.bracket = bracket;
         }
 
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return bracket;

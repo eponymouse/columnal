@@ -25,6 +25,8 @@ import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -369,7 +371,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
         return load(value.getContent());
     }
 
-    public static enum Keyword
+    public static enum Keyword implements ExpressionToken
     {
         OPEN_ROUND("("), CLOSE_ROUND(")"), OPEN_SQUARE("["), CLOSE_SQUARE("]");
 
@@ -380,13 +382,15 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
             this.keyword = keyword;
         }
 
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return keyword;
         }
     }
     
-    public static enum Operator
+    public static enum Operator implements ExpressionToken
     {
         COMMA(",");
 
@@ -397,6 +401,8 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
             this.op = op;
         }
 
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;

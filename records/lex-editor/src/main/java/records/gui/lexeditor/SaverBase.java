@@ -13,6 +13,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ClipboardSaver;
+import records.gui.expressioneditor.ExpressionToken;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.transformations.expression.QuickFix;
@@ -42,7 +43,7 @@ import java.util.function.Supplier;
  * @param <CONTEXT> Context for reporting back to the expressions.
  * @param <BRACKET_CONTENT> The content of brackets.  For units this is EXPRESSION, for others it is list of expression and operators (which will be commas)
  */
-public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> implements ClipboardSaver
+public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP extends ExpressionToken, KEYWORD extends ExpressionToken, CONTEXT, BRACKET_CONTENT> implements ClipboardSaver
 {
     /**
      * Gets all special keywords available in child operators,
@@ -805,7 +806,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(KEYWORD expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
+    public Terminator expect(@NonNull KEYWORD expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
     {
         return new Terminator() {
             @Override
@@ -823,7 +824,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         hasUnmatchedBrackets = true;
                     
                     // Error!
-                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
+                    TextQuickFix fix = new TextQuickFix(StyledString.concat(StyledString.s("Add missing "), expected.toStyledString()), ImmutableList.of(), keywordErrorDisplayer.lhs(), () -> new Pair<>(expected.getContent(), expected.toStyledString()));
+                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Missing " + expected + " before " + (terminator == null ? "end" : terminator)), ImmutableList.of(fix));
                     @Nullable Span start = currentScopes.peek().openingNode;
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> items = ImmutableList.builder();

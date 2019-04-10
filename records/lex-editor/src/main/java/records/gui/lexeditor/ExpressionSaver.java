@@ -558,7 +558,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
             
             // Error!
-            locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
+            ImmutableList<TextQuickFix> fixes = Utility.mapListI(choices, c -> new TextQuickFix(StyledString.s("Add missing " + c.keyword.getContent()), ImmutableList.of(), keywordErrorDisplayer.lhs(), () -> new Pair<>(c.keyword.getContent(), StyledString.s(c.keyword.getContent()))));
+            locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Missing " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " before " + (terminator == null ? "end" : terminator.getContent())), fixes);
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.<@Recorded Expression>map(s -> s.get()).collect(Collectors.<@Recorded Expression>toList()));

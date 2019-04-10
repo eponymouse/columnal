@@ -918,7 +918,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
      * An Op, unlike a Keyword, may have a longer alternative available, so should not
      * complete on direct match (unless it is the only possible direct match).
      */
-    public static enum Op
+    public static enum Op implements ExpressionToken
     {
         AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
         COMMA(","),
@@ -931,6 +931,8 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             this.op = op;
         }
 
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;
@@ -974,7 +976,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
      * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
      * item, and thus always completes immediately when directly matched.
      */
-    public static enum Keyword
+    public static enum Keyword implements ExpressionToken
     {
         OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), QUEST("?"),
         IF(ExpressionLexer.IF), THEN(ExpressionLexer.THEN), ELSE(ExpressionLexer.ELSE), ENDIF(ExpressionLexer.ENDIF),
@@ -995,7 +997,9 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         {
             this.keyword = Utility.literal(ExpressionLexer.VOCABULARY, token);
         }
-        
+
+        @Override
+        @OnThread(Tag.Any)
         public String getContent()
         {
             return keyword;
