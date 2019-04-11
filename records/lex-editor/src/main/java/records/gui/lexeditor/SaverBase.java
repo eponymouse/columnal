@@ -478,7 +478,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets), null, lastNode(closed).rhs(), c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, closed.terminatorDescription), null, errorDisplayer, c -> {});
         }
 
         Scope closed = currentScopes.pop();
