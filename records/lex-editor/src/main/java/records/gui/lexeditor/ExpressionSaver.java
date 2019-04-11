@@ -217,7 +217,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @Override
             public @Recorded @Nullable Expression apply(@NonNull BracketContent items)
             {
-                if (items.expressions.size() == 1)
+                if (items.expressions.isEmpty())
+                    return null;
+                else if (items.expressions.size() == 1)
                     return items.expressions.get(0);
                 else
                     return locationRecorder.record(location, new TupleExpression(items.expressions));
