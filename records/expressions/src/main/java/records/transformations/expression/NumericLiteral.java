@@ -40,7 +40,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Either<StyledString, TypeExp> checkType(TypeState state, LocationInfo locationInfo) throws InternalException
+    public Either<@Nullable StyledString, TypeExp> checkType(TypeState state, LocationInfo locationInfo) throws InternalException
     {
         if (unit == null)
         {
@@ -57,8 +57,8 @@ public class NumericLiteral extends Literal
             return Either.right(new NumTypeExp(this, unit));
         }
 
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<StyledString, TypeExp>mapBothInt(err -> {
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
+        return errOrUnit.<@Nullable StyledString, TypeExp>mapBothInt((Pair<@Nullable StyledString, List<UnitExpression>> err) -> {
             /*
             onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
                 @SuppressWarnings("recorded")

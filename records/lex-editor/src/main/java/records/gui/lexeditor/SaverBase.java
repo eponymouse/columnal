@@ -71,6 +71,15 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return hasUnmatchedBrackets;
     }
 
+    public void addNestedErrors(ImmutableList<ErrorDetails> nestedErrors, int caretPosOffset, int displayCaretPosOffset)
+    {
+        for (ErrorDetails nestedError : nestedErrors)
+        {
+            locationRecorder.addNestedError(nestedError, caretPosOffset, displayCaretPosOffset);
+        }
+        
+    }
+
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
@@ -477,15 +486,15 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return item.either(e -> recorderFor(e), op -> op.sourceNode);
     }
 
-    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, String terminatorDescription);
+    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, @Nullable String terminatorDescription);
     
     public final @Recorded EXPRESSION finish(Span errorDisplayer)
     {
         while (currentScopes.size() > 1)
         {
-            // TODO give some sort of error.... somewhere?  On the opening item?
+            // The error should be given by terminate when terminator is null
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, closed.terminator.terminatorDescription), null, errorDisplayer, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, null), null, errorDisplayer, c -> {});
         }
 
         Scope closed = currentScopes.pop();

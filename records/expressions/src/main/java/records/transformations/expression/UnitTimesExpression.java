@@ -23,9 +23,9 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> r = Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> r = Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
         for (UnitExpression operand : operands)
         {
             r = r.flatMap(u -> operand.asUnit(unitManager).map(v -> u.times(v)));

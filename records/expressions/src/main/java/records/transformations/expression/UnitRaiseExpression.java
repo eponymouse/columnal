@@ -22,9 +22,9 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> lhs = unit.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> lhs = unit.asUnit(unitManager);
 
         return lhs.map(u -> u.raiseBy(power));
     }

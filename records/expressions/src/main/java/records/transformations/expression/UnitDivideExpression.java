@@ -22,10 +22,10 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> num = numerator.asUnit(unitManager);
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> den = denominator.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> num = numerator.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> den = denominator.asUnit(unitManager);
 
         return num.flatMap(n -> den.map(d -> n.divideBy(d)));
     }

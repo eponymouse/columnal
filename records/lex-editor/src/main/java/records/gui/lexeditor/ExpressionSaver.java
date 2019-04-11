@@ -234,7 +234,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets, String terminatorDescription)
+    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
         {
@@ -243,7 +243,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 return bracketedEmpty;
             else
             {
-                locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
+                if (terminatorDescription != null)
+                    locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
                 return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
             }
         }

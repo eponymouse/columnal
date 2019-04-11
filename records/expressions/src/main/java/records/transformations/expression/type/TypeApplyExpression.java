@@ -20,6 +20,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -120,7 +121,7 @@ public class TypeApplyExpression extends TypeExpression
         ImmutableList<Either<JellyUnit, JellyType>> args =
             Utility.mapListExI(
                 arguments,
-                arg -> arg.mapBothEx(u -> u.asUnit(typeManager.getUnitManager()).eitherEx(p -> {throw new UserException(p.getFirst().toPlain());}, ju -> ju), t -> t.toJellyType(typeManager))
+                arg -> arg.mapBothEx(u -> u.asUnit(typeManager.getUnitManager()).eitherEx((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UserException(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, ju -> ju), t -> t.toJellyType(typeManager))
             );
         
         return JellyType.tagged(new TypeId(typeName), args);

@@ -109,4 +109,9 @@ public final class TextQuickFix
     {
         return cssClasses.get();
     }
+
+    public TextQuickFix offsetBy(int caretPosOffset)
+    {
+        return new TextQuickFix(title, cssClasses.get(), replacementTarget.offsetBy(caretPosOffset), makeReplacement);
+    }
 }

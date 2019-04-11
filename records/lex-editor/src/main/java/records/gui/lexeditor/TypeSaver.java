@@ -243,7 +243,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Recorded TypeExpression makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets, String terminatorDescription)
+    protected @Recorded TypeExpression makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
             return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));

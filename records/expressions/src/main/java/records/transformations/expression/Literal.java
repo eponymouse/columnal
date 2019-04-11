@@ -24,7 +24,7 @@ public abstract class Literal extends NonOperatorExpression
         return onError.recordTypeAndError(this, checkType(typeState, locationInfo), ExpressionKind.EXPRESSION, typeState);
     }
 
-    protected abstract Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException;
+    protected abstract Either<@Nullable StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()

@@ -98,10 +98,14 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     class Context {}
     
     @Override
-    protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets, String terminatorDescription)
+    protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
-            return record(brackets.location, new InvalidOperatorUnitExpression(ImmutableList.of()));
+        {
+            if (terminatorDescription != null)
+                locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
+            return brackets.applyBrackets.applySingle(record(brackets.location, new InvalidOperatorUnitExpression(ImmutableList.of())));
+        }
         Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
         
         CollectedItems collectedItems = processItems(content);
@@ -186,7 +190,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     else
                     {
                         // Error!
-                        locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
+                        locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Missing ) before " + (terminator == null ? "end" : terminator)), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
                         ImmutableList.Builder<@Recorded UnitExpression> items = ImmutableList.builder();
                         items.add(record(errorDisplayer, new InvalidSingleUnitExpression(bracket.getContent())));

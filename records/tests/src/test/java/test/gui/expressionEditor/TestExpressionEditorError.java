@@ -141,13 +141,13 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     @Test
     public void testEmptyUnit()
     {
-        testError("1{}", e(1, 3, "missing", "}"));
+        testError("1{}", e(2, 2, "missing"));
     }
 
     @Test
     public void testUnclosedUnitBracket()
     {
-        testError("1{(}", e(3, 3, "missing", ")"));
+        testError("1{(}", e(3, 3, "missing", ")", "end"));
     }
     
     @Test
@@ -212,7 +212,13 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            write(expression);
+            for (char c : expression.toCharArray())
+            {
+                write(c);
+                // Delete auto-matched brackets:
+                if ("({[".contains("" + c))
+                    push(KeyCode.DELETE);
+            }
             sleep(200);
             
             if (errors.length == 0)

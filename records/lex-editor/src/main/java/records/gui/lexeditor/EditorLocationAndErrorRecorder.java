@@ -59,6 +59,12 @@ public class EditorLocationAndErrorRecorder
         }
         
         @SuppressWarnings("units")
+        public Span offsetBy(int offsetBy)
+        {
+            return new Span(start + offsetBy, end + offsetBy);
+        }
+        
+        @SuppressWarnings("units")
         public static final Span START = new Span(0, 0);
 
         // Errors show if you are at edge of them, so even if error ends
@@ -140,6 +146,15 @@ public class EditorLocationAndErrorRecorder
             this.location = location;
             this.error = error;
             this.quickFixes = quickFixes;
+        }
+        
+        public ErrorDetails offsetBy(int caretPosOffset, int displayCaretPosOffset)
+        {
+            ErrorDetails r = new ErrorDetails(location.offsetBy(caretPosOffset), error, Utility.mapListI(quickFixes, f -> f.offsetBy(caretPosOffset)));
+            r.caretHasLeftSinceEdit = caretHasLeftSinceEdit;
+            if (displayLocation != null)
+                r.displayLocation = displayLocation.offsetBy(displayCaretPosOffset);
+            return r;
         }
 
         // Useful for debugging:
@@ -295,6 +310,11 @@ public class EditorLocationAndErrorRecorder
         return unitDisplayers.get(expression);
     }
 
+    public void addNestedError(ErrorDetails nestedError, int caretPosOffset, int displayCaretPosOffset)
+    {
+        errorsToShow.add(() -> nestedError.offsetBy(caretPosOffset, displayCaretPosOffset));
+    }
+    
     public ImmutableList<ErrorDetails> getErrors()
     {
         ImmutableList.Builder<ErrorDetails> r = ImmutableList.builderWithExpectedSize(errorsToShow.size());

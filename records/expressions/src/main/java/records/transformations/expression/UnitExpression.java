@@ -155,7 +155,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     }
 
     // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit
-    public abstract Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager);
+    public abstract Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager);
     
     public abstract String save(boolean structured, boolean topLevel);
 

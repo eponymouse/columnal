@@ -37,8 +37,12 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
-        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
-        return saved.<@Nullable CheckedExp>eitherInt(error -> {onError.recordError(this, error.getFirst()); return null;}, unit -> 
+        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
+        return saved.<@Nullable CheckedExp>eitherInt(error -> {
+            if (error.getFirst() != null)
+                onError.recordError(this, error.getFirst());
+            return null;
+            }, unit -> 
             onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit.makeUnitExp(ImmutableMap.of()))), ExpressionKind.EXPRESSION, typeState));
     }
 

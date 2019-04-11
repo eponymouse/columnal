@@ -13,7 +13,9 @@ import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
+import utility.Pair;
 
+import java.util.List;
 import java.util.Objects;
 
 public class NumberTypeExpression extends TypeExpression
@@ -57,7 +59,7 @@ public class NumberTypeExpression extends TypeExpression
             return JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR));
         
         return unitExpression.asUnit(typeManager.getUnitManager())
-            .eitherEx(p -> {throw new UserException(p.getFirst().toPlain());}, JellyType::number);
+            .eitherEx((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UserException(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, JellyType::number);
     }
 
     @Override

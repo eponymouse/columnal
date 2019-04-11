@@ -271,6 +271,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome);
                     saver.saveOperand(outcome.expression, new Span(curIndex, nestedOutcome.positionAfter), c -> {});
+                    saver.addNestedErrors(outcome.nestedErrors, curIndex + nestedLiteral.getFirst().length(), curIndex + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum());
                     chunks.add(outcome.chunk);
                     orShift(removedChars, outcome.removedChars, curIndex + nestedLiteral.getFirst().length());
                     curIndex = nestedOutcome.positionAfter;
@@ -674,15 +675,17 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         public final Expression expression;
         public final BitSet removedChars;
         public final ContentChunk chunk;
+        public final ImmutableList<ErrorDetails> nestedErrors;
         
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
             this.chunk = new ContentChunk(source.prefix + source.innerContent + (source.terminatedProperly ? "}" : ""));
             this.expression = expression;
             this.removedChars = new BitSet();
+            this.nestedErrors = ImmutableList.of();
         }
 
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, BitSet removedChars, ImmutableList<CaretPos> caretPos)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, BitSet removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             caretPosIncludingPrefixSuffix.add(new CaretPos(0, 0));
@@ -697,6 +700,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 caretPosIncludingPrefixSuffix.build());
             this.expression = expression;
             this.removedChars = removedChars;
+            this.nestedErrors = errors;
         }
     }
 
@@ -711,12 +715,12 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer();
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors);
             })
         );
     }

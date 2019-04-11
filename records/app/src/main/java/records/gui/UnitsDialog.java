@@ -295,10 +295,10 @@ public class UnitsDialog extends Dialog<Void>
                     return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
                 }
 
-                Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
+                Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
                 @NonNull @UnitIdentifier String nameFinal = name;
                 return unitExpOrError.<Either<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>>either(err -> {
-                    return Either.left(err.getFirst().toPlain());
+                    return Either.left(err.getFirst() == null ? "Invalid unit" : err.getFirst().toPlain());
                 }, jellyUnit -> {
                     @Nullable Unit concreteUnit = null;
                     try
