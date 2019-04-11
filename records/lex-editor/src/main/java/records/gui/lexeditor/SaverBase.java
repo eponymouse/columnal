@@ -345,6 +345,13 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      */
     protected abstract class Terminator
     {
+        public final String terminatorDescription;
+
+        public Terminator(String terminatorDescription)
+        {
+            this.terminatorDescription = terminatorDescription;
+        }
+
         /**
          * 
          * @param makeContent A function which, given a BracketedStatus wrapped with error displayers,
@@ -441,7 +448,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         @SuppressWarnings("nullness") // Pending fix for Checker Framework #2052
         final @NonNull Stack<Scope> currentScopesFinal = this.currentScopes;
-        currentScopesFinal.push(new Scope(Span.START, new Terminator()
+        currentScopesFinal.push(new Scope(Span.START, new Terminator("end")
         {
             @Override
             public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, Span keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
@@ -470,7 +477,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return item.either(e -> recorderFor(e), op -> op.sourceNode);
     }
 
-    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
+    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, String terminatorDescription);
     
     public final @Recorded EXPRESSION finish(Span errorDisplayer)
     {
@@ -478,12 +485,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, closed.terminatorDescription), null, errorDisplayer, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, closed.terminator.terminatorDescription), null, errorDisplayer, c -> {});
         }
 
         Scope closed = currentScopes.pop();
         BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(locationRecorder, Span.fromTo(closed.openingNode, errorDisplayer));
-        return makeExpression(closed.items, brackets);
+        return makeExpression(closed.items, brackets, closed.terminator.terminatorDescription);
     }
 
     private Span lastNode(Scope closed)
@@ -806,7 +813,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     // terminator for a new scope, compiled using the scope content and given bracketed status
     public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<Span, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, Span, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
     {
-        return new Terminator() {
+        return new Terminator(expected.get(0).getContent()) {
             @Override
             public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, Span keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
             {

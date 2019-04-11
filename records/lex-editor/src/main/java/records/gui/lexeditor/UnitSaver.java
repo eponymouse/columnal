@@ -98,7 +98,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     class Context {}
     
     @Override
-    protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets)
+    protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets, String terminatorDescription)
     {
         if (content.isEmpty())
             return record(brackets.location, new InvalidOperatorUnitExpression(ImmutableList.of()));
@@ -171,7 +171,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     {
         if (bracket == UnitBracket.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, new Terminator()
+            currentScopes.push(new Scope(errorDisplayer, new Terminator(")")
             {
                 @Override
                 public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, Span keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
@@ -206,7 +206,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             {
                 addTopLevelScope();
             }
-            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(cur.items, brackets), bracket, errorDisplayer, withContext);
+            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(cur.items, brackets, cur.terminator.terminatorDescription), bracket, errorDisplayer, withContext);
         }
     }
 

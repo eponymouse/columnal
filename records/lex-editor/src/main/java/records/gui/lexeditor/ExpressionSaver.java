@@ -183,7 +183,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public @Recorded Expression fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
                 {
-                    return ExpressionSaver.this.makeExpression(cur.items, brackets);
+                    return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.terminator.terminatorDescription);
                 }
             }, keyword, errorDisplayer, withContext);
         }
@@ -234,7 +234,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
+    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets, String terminatorDescription)
     {
         if (content.isEmpty())
         {
@@ -242,7 +242,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             if (bracketedEmpty != null)
                 return bracketedEmpty;
             else
+            {
+                locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
                 return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
+            }
         }
         Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1))); 
 
@@ -540,7 +543,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
     public Terminator expectOneOf(Span start, ImmutableList<Choice> choices, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
     {
-        return new Terminator()
+        return new Terminator(choices.stream().map(c -> c.keyword.getContent()).collect(Collectors.joining(" or ")))
         {
         @Override
         public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, Span keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)

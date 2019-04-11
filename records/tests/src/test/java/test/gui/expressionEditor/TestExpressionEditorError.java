@@ -1,6 +1,7 @@
 package test.gui.expressionEditor;
 
 import annotation.units.SourceLocation;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -12,6 +13,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.hamcrest.core.SubstringMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.util.WaitForAsyncUtils;
@@ -122,34 +124,59 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         // Type error
         testError("@if3@then4@else5@endif", e(3,4, "boolean"));
     }
+
+    @Test
+    public void testEmptyList()
+    {
+        // Should be no error:
+        testError("[]");
+    }
+
+    @Test
+    public void testEmptyBracket()
+    {
+        testError("()", e(0, 2, "missing", ")"));
+    }
+
+    @Test
+    public void testEmptyUnit()
+    {
+        testError("1{}", e(1, 3, "missing", "}"));
+    }
+
+    @Test
+    public void testUnclosedUnitBracket()
+    {
+        testError("1{(}", e(3, 3, "missing", ")"));
+    }
     
     @Test
     public void testEmptyIf()
     {
         testError("@iftrue@then@else1@endif",
-            e(12,12, "empty"));
+            e(7,17, "missing", "@else"));
     }
 
     @Test
     public void testEmptyIf2()
     {
         testError("@iftrue@then@else@endif",
-                e(12,12, "empty"),
-                e(17,17, "empty"));
+                e(7,17, "missing", "@else"),
+                e(12,23, "missing", "@endif"));
     }
 
     @Test
     public void testPartialIf()
     {
         testError("@if(true>false)",
-                e(15,15, "missing"));
+                e(15,15, "missing", "@then"));
     }
 
     @Test
     public void testPartialIf2()
     {
         testError("@if(ACC1>ACC1)",
-            e(14,14, "missing"));
+            e(14,14, "missing", "@then"));
     }
     
 
@@ -207,8 +234,8 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                 Collections.sort(expectedErrors, Comparator.comparing(e -> e.location));
                 for (int i = 0; i < expectedErrors.size(); i++)
                 {
-                    assertEquals(actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
-                    MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), Matchers.containsString(expectedErrors.get(i).expectedMessagePart.toLowerCase()));
+                    assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
+                    MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), new MultiSubstringMatcher(expectedErrors.get(i).expectedMessageParts));
                 }
 
                 boolean hasSpanNotContainingEnd = Arrays.stream(errors).anyMatch(s -> !s.location.contains(expression.length()));
@@ -280,18 +307,51 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     private static class Error
     {
         private final Span location;
-        private final String expectedMessagePart;
+        private final ImmutableList<String> expectedMessageParts;
 
-        public Error(@SourceLocation int start, @SourceLocation int end, String expectedMessagePart)
+        public Error(@SourceLocation int start, @SourceLocation int end, ImmutableList<String> expectedMessageParts)
         {
             this.location = new Span(start, end);
-            this.expectedMessagePart = expectedMessagePart;
+            this.expectedMessageParts = expectedMessageParts;
         }
     }
     
     @SuppressWarnings("units")
-    private static final Error e(int start, int end, String errorMessagePart)
+    private static final Error e(int start, int end, String... errorMessagePart)
     {
-        return new Error(start, end, errorMessagePart);
+        return new Error(start, end, ImmutableList.copyOf(errorMessagePart));
+    }
+    
+    // Also ignores case
+    class MultiSubstringMatcher extends SubstringMatcher
+    {
+        private final ImmutableList<String> substrings;
+
+        public MultiSubstringMatcher(ImmutableList<String> substrings)
+        {
+            super(substrings.stream().collect(Collectors.joining("\u2026")));
+            this.substrings = substrings;
+        }
+
+        @Override
+        protected boolean evalSubstringOf(String string)
+        {
+            int curIndex = 0;
+            for (String sub : substrings)
+            {
+                curIndex = string.toLowerCase().indexOf(sub.toLowerCase(), curIndex);
+                if (curIndex == -1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        protected String relationship()
+        {
+            return "contains string(s)";
+        }
     }
 }
