@@ -133,7 +133,8 @@ public class EditorLocationAndErrorRecorder
     
     public static class ErrorDetails
     {
-        public final Span location;
+        // Mutable for ease of processing:
+        public Span location;
         // Mutable for ease of processing:
         public @MonotonicNonNull Span displayLocation;
         public final StyledString error;

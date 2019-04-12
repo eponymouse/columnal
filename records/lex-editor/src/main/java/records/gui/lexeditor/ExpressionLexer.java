@@ -540,11 +540,11 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         for (ErrorDetails error : Utility.iterableStream(errors.stream().sorted(Comparator.comparing(e -> e.location.start))))
         {
+            error.location = new Span(error.location.start - removedChars.get(0, error.location.start).cardinality(), error.location.end - removedChars.get(0, error.location.end).cardinality());
+            
             // If an error only occupies one caret position, add an extra char there:
             if (error.location.start == error.location.end)
-            {
-                int mappedPos = error.location.start - removedChars.get(0, error.location.start).cardinality();
-                
+            {                
                 // Find caret pos:
                 int displayOffset = 0;
                 for (int i = 0; i < caretPos.size(); i++)
@@ -557,7 +557,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     {
                         CaretPos p = caretPos.get(i);
 
-                        if (p.positionInternal == mappedPos)
+                        if (p.positionInternal == error.location.start)
                         {
                             error.displayLocation = new Span(p.positionDisplay, p.positionDisplay + 1);
                             // Add space to display:
