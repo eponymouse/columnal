@@ -181,15 +181,12 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         {
                             if (mouseButton == MouseButton.PRIMARY)
                             {
-                                new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
-                                    Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, concatenate.getIncompleteColumnHandling(), concatenate.isIncludeMarkerColumn()), null);
-                                })));
+                                editConcatenate(screenPoint, parent, concatenate);
                             }
                         }
                     }
                 ),
-                StyledString.s(" "),
+                StyledString.s(" - "),
                 StyledString.s(
                     concatenate.isIncludeMarkerColumn()
                     ? "with source column"
@@ -412,6 +409,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         this.tableDisplay = Utility.later(tableDisplay);
+    }
+
+    public static void editConcatenate(Point2D screenPoint, View parent, Concatenate concatenate)
+    {
+        new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
+            Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
+                parent.getManager().edit(concatenate.getId(), () -> new Concatenate(parent.getManager(), concatenate.getDetailsForCopy(), newList, concatenate.getIncompleteColumnHandling(), concatenate.isIncludeMarkerColumn()), null);
+        })));
     }
 
     protected static void editSort(@Nullable Point2D screenPoint, View parent, Sort sort)

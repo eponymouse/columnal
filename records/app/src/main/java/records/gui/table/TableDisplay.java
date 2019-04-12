@@ -66,6 +66,7 @@ import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
+import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
@@ -1070,6 +1071,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof ManualEdit)
         {
             TableHat.editManualEdit(parent, (ManualEdit)table);
+        }
+        else if (table instanceof Concatenate)
+        {
+            TableHat.editConcatenate(new Point2D(0, 0), parent, (Concatenate)table);
         }
         // For other tables, do nothing
     }

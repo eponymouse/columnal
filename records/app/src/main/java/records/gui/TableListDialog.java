@@ -63,6 +63,11 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         setOnHiding(e -> {
             parent.disablePickingMode();
         });
+        if (originalItems.isEmpty())
+        {
+            // runAfter to avoid focus stealing:
+            FXUtility.runAfter(() -> tableList.addToEnd(new TableId(""), true));
+        }
     }
 
     @OnThread(Tag.FXPlatform)
