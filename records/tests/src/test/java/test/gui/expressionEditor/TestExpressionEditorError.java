@@ -283,6 +283,21 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                 sleep(500);
                 assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
                 assertErrorShowing(true, false);
+                // Check it shows if you move into it:
+                push(KeyCode.TAB);
+                push(KeyCode.HOME);
+                boolean seenPopup = false;
+                for (int i = 0; i < expression.length(); i++)
+                {
+                    push(KeyCode.RIGHT);
+                    if (isShowingErrorPopup())
+                    {
+                        seenPopup = true;
+                        break;
+                    }
+                }
+                assertTrue("Error popup showed somewhere", seenPopup);
+                
                 TestUtil.doubleOk(this);
                 assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
             }
