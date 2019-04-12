@@ -177,7 +177,7 @@ public final class StyledString
     {
         return Collector.<StyledString, Builder, StyledString>of(Builder::new, (l, x) -> {
             l.append(x);
-        }, Builder::new, b -> b.build(StyledString.s(s)));
+        }, Builder::new, b -> s.isEmpty() ? b.build() : b.build(StyledString.s(s)));
     }
 
     @Pure
@@ -240,7 +240,12 @@ public final class StyledString
         
         return new StyledString(r.build());
     }
-    
+
+    public ImmutableList<Pair<ImmutableList<Style<?>>, String>> getMembers()
+    {
+        return Utility.mapListI(members, m -> m.mapFirst(sm -> sm.styleMembers));
+    }
+
     @Override
     public boolean equals(@Nullable Object o)
     {

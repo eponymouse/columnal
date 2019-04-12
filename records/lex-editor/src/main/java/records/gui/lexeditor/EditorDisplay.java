@@ -12,6 +12,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
+import javafx.scene.text.Text;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -19,20 +20,57 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TextEditorBase;
 
 import java.util.BitSet;
 import java.util.OptionalInt;
+import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public final class EditorDisplay extends TextEditorBase
 {
+    @OnThread(Tag.FXPlatform)
+    public static class TokenBackground extends Style<TokenBackground>
+    {
+        private final ImmutableList<String> styleClasses;
+
+        @OnThread(Tag.Any)
+        public TokenBackground(ImmutableList<String> styleClasses)
+        {
+            super(TokenBackground.class);
+            this.styleClasses = styleClasses;
+        }
+
+
+        @Override
+        protected @OnThread(Tag.FXPlatform) void style(Text t)
+        {
+            // We don't style the text directly
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        protected TokenBackground combine(TokenBackground with)
+        {
+            return new TokenBackground(Utility.concatI(styleClasses, with.styleClasses));
+        }
+
+        @Override
+        @OnThread(Tag.Any)
+        protected boolean equalsStyle(TokenBackground item)
+        {
+            return styleClasses.equals(item.styleClasses);
+        }
+    }
+    
     private final EditorContent<?, ?> content;
     private final LexAutoComplete autoComplete;
     private final TopLevelEditor<?, ?, ?> editor;
@@ -329,6 +367,26 @@ public final class EditorDisplay extends TextEditorBase
             error.caretHasLeftSinceEdit = true;
         }
         render(false);
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
+    {
+        ImmutableList.Builder<BackgroundInfo> r = ImmutableList.builder();
+        int curPos = 0;
+        for (Pair<ImmutableList<Style<?>>, String> member : content.getDisplay().getMembers())
+        {
+            for (Style<?> style : member.getFirst())
+            {
+                if (style instanceof TokenBackground)
+                {
+                    r.add(new BackgroundInfo(curPos, curPos + member.getSecond().length(), ((TokenBackground)style).styleClasses));
+                }
+            }
+            
+            curPos += member.getSecond().length();
+        }
+        return r.build();
     }
 
     public ImmutableList<ErrorDetails> _test_getErrors()

@@ -297,6 +297,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
+    public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
+    {
+        return ImmutableList.of();
+    }
+
+    @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {

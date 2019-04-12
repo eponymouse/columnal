@@ -11,11 +11,13 @@ import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledShowable;
+import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
@@ -196,5 +198,10 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public int mapContentToDisplay(@SourceLocation int contentIndex)
     {
         return curContent.mapContentToDisplay(curContent.mapOldPos(contentIndex, false));
+    }
+
+    public StyledString getDisplay()
+    {
+        return curContent.display;
     }
 }

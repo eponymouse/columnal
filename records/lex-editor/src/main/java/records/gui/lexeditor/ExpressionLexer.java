@@ -32,6 +32,7 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledCSS;
 import styled.StyledString;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.IdentifierUtility;
@@ -78,6 +79,15 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         {
             return keyword;
         }
+
+        @Override
+        @OnThread(Tag.Any)
+        public StyledString toStyledString()
+        {
+            return StyledString.s(getContent()).withStyle(new StyledCSS("expression-" + this.name().toLowerCase()));
+        }
+
+
     }
 
     /**
@@ -122,20 +132,25 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         // Positions are relative to this chunk:
         private final ImmutableList<CaretPos> caretPositions;
         private final StyledString displayContent;
+
+        public ContentChunk(String simpleContent, String... styleClasses)
+        {
+            this(simpleContent, StyledString.s(simpleContent).withStyle(new StyledCSS(styleClasses)));
+        }
         
-        public ContentChunk(String simpleContent)
+        public ContentChunk(String simpleContent, StyledString styledString)
         {
             internalContent = simpleContent;
-            displayContent = StyledString.s(simpleContent);
+            displayContent = styledString;
             caretPositions = IntStream.range(0, simpleContent.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
         }
         
         // Special keyword/operator that has no valid caret positions except at ends, and optionally pads with spaces
-        public ContentChunk(boolean addLeadingSpace, String specialContent, boolean addTrailingSpace)
+        public ContentChunk(boolean addLeadingSpace, ExpressionToken specialContent, boolean addTrailingSpace)
         {
-            internalContent = specialContent;
-            displayContent = StyledString.s((addLeadingSpace ? " " : "") + specialContent + (addTrailingSpace ? " " : ""));
-            caretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(specialContent.length(), displayContent.getLength()));
+            internalContent = specialContent.getContent();
+            displayContent = StyledString.concat(StyledString.s(addLeadingSpace ? " " : ""), specialContent.toStyledString(), StyledString.s(addTrailingSpace ? " " : ""));
+            caretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(specialContent.getContent().length(), displayContent.getLength()));
         }
 
         public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions)
@@ -192,7 +207,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     if (keyword.getContent().startsWith("@"))
                     {
                         boolean addLeadingSpace = chunks.stream().mapToInt(c -> c.internalContent.length()).sum() > 0;
-                        chunks.add(new ContentChunk(addLeadingSpace, keyword.getContent(), true));
+                        chunks.add(new ContentChunk(addLeadingSpace, keyword, true));
                     }
                     else
                         chunks.add(new ContentChunk(keyword.getContent()));
@@ -207,7 +222,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
                     boolean addLeadingSpace = !op.getContent().equals(",");
-                    chunks.add(new ContentChunk(addLeadingSpace, op.getContent(), true));
+                    chunks.add(new ContentChunk(addLeadingSpace, op, true));
                     curIndex += op.getContent().length();
                     continue nextToken;
                 }
@@ -220,7 +235,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 if (endQuote != -1)
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), new Span(curIndex, endQuote + 1), c -> {});
-                    chunks.add(new ContentChunk(content.substring(curIndex, endQuote + 1)));
+                    chunks.add(new ContentChunk(content.substring(curIndex, endQuote + 1), "expression-string-literal"));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + 1;
                     continue nextToken;
@@ -314,7 +329,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), new Span(curIndex, parsed.getSecond()), c -> {
                             });
-                            chunks.add(new ContentChunk("@entire " + parsed.getFirst()));
+                            chunks.add(new ContentChunk("@entire " + parsed.getFirst(), "expression-column"));
                             curIndex = parsed.getSecond();
                             continue nextToken;
                         }
@@ -364,10 +379,9 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 }
                 
                 completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
-                
-                
+
+                boolean wasColumn = false;
                 {
-                    boolean wasColumn = false;
                     for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
                     {
                         TableId tableId = availableColumn.getTableId();
@@ -430,7 +444,14 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         }
                     }
                 }
-                chunks.add(new ContentChunk(text));
+                if (wasColumn)
+                {
+                    chunks.add(new ContentChunk(text, StyledString.s(text).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background")))));
+                }
+                else
+                {
+                    chunks.add(new ContentChunk(text));
+                }
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
@@ -495,7 +516,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         }
         
         String internalContent = chunks.stream().map(c -> c.internalContent).collect(Collectors.joining());
-        StyledString display = chunks.stream().map(c -> c.displayContent).collect(StyledString.joining(""));
+        StyledString display = chunks.stream().map(c -> c.displayContent).filter(d -> d.getLength() > 0).collect(StyledString.joining(""));
         ArrayList<CaretPos> caretPos = new ArrayList<>();
         int internalLenSoFar = 0;
         int displayLenSoFar = 0;

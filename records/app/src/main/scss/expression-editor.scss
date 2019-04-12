@@ -4,9 +4,10 @@
 $selected-expression-border-color: $focus-color;
 $function-color: paleturquoise;
 $match-color: lightpink;
-$if-color: yellowgreen;
+$if-color: seagreen;
 $column-color: lightsteelblue;
 $default-color: rgb(250, 250, 250);
+$string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
 
 .top-level-editor {
     -fx-font-family: $font-main;
@@ -55,5 +56,21 @@ $default-color: rgb(250, 250, 250);
     }
     & .function-info-short-description {
         -fx-fill: rgb(40, 40, 40);
+    }
+}
+
+.expression-editor {
+    .expression-if, .expression-then, .expression-else, .expression-endif {
+        -fx-fill: grey;
+    }
+    .expression-string-literal {
+        -fx-fill: $string-color;
+    }
+    .expression-column {
+        -fx-fill: $column-header-text-color;
+    }
+    .expression-column-background {
+        -fx-fill: $column-header-background-color;
+        -fx-stroke: $column-header-background-color;
     }
 }
