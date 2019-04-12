@@ -189,6 +189,11 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
         @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
-        return new LexerResult<>(saved, s.toString(), missingSpots, false, caretPositions, d.build(), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        if (caretPositions.isEmpty())
+            caretPositions = ImmutableList.of(new CaretPos(0, 0));
+        StyledString built = d.build();
+        if (built.getLength() == 0)
+            built = StyledString.s(" ");
+        return new LexerResult<>(saved, s.toString(), missingSpots, false, caretPositions, built, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

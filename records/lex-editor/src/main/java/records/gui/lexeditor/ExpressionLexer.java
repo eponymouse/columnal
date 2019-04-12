@@ -532,6 +532,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         // Empty strings should still have a caret pos:
         if (chunks.isEmpty())
         {
+            chunks.add(new ContentChunk("", StyledString.s(" ")));
             caretPos.add(new CaretPos(0, 0));
         }
 

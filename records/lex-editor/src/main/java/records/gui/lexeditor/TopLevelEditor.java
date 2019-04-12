@@ -7,11 +7,13 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
@@ -62,13 +64,14 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         errorMessagePopup = new ErrorMessagePopup();
         content = new EditorContent<>(originalContent, lexer);
         display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n), this));
-        scrollPane = new ScrollPaneFill(display)  {
+        scrollPane = new ScrollPaneFill(new StackPane(display))  {
             @Override
             @OnThread(Tag.FX)
             public void requestFocus()
             {
             }
         };
+        StackPane.setMargin(display, new Insets(2));
         // This also allows popup to take on styles:
         FXUtility.onceNotNull(scrollPane.sceneProperty(), scene -> {
             scene.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
@@ -78,6 +81,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("top-level-editor");
         scrollPane.getStyleClass().addAll(styleClasses);
+        FXUtility.addChangeListenerPlatformNN(display.focusedProperty(), focused -> {
+            FXUtility.setPseudoclass(scrollPane, "focus-within", focused);
+        });
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
         });
