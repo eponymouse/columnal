@@ -584,7 +584,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     if (lastWasOperand.get())
                     {
                         Span start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression);
-                        invalidReason = new Pair<>(Span.fromTo(start, recorderFor(expression)), StyledString.s("Missing operator"));
+                        invalidReason = new Pair<>(Span.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"));
                     }
                     lastWasOperand.set(true);
                     lastNodeSpan.set(recorderFor(expression));

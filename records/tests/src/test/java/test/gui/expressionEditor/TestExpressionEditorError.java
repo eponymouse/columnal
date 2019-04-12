@@ -178,6 +178,20 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         testError("@if(ACC1>ACC1)",
             e(14,14, "missing", "@then"));
     }
+
+    @Test
+    public void testMissingOperator1()
+    {
+        testError("1ACC1",
+                e(1,1, "missing operator"));
+    }
+
+    @Test
+    public void testMissingOperator2()
+    {
+        testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
+                e(25,25, "missing operator"));
+    }
     
 
     // Checks that errors don't show up while still in the span,
