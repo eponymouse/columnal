@@ -2,6 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.units.SourceLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.text.HitInfo;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -9,6 +10,8 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
@@ -152,10 +155,24 @@ public final class EditorDisplay extends TextEditorBase
                         selectAll();
                     }
                     break;
+                case X:
+                case C:
+                    if (keyEvent.isShortcutDown())
+                    {
+                        if (content.getAnchorPosition() != content.getCaretPosition())
+                        {
+                            Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content.getText().substring(Math.min(content.getCaretPosition(), content.getAnchorPosition()), Math.max(content.getCaretPosition(), content.getAnchorPosition()))));
+                            if (keyEvent.getCode() == KeyCode.X)
+                                content.replaceSelection("");
+                        }
+                    }
+                    break;
                 case V:
                     if (keyEvent.isShortcutDown())
                     {
-                        content.replaceSelection(Clipboard.getSystemClipboard().getString());
+                        String clip = Clipboard.getSystemClipboard().getString();
+                        if (clip != null && !clip.isEmpty())
+                            content.replaceSelection(clip);
                     }
                     break;
                 case ESCAPE:

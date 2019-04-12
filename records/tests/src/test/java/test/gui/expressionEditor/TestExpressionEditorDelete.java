@@ -87,13 +87,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator2b(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("a<b<=c", 3, 2, "a < bc", r);
+        testDeleteBackspace("a<b<=c", 3, 2, "a < bc", r, 1);
     }
 
     @Property(trials = 3)
     public void testDeleteAfterInfixOperator2c(@From(GenRandom.class) Random r) throws Exception
     {
-        testDeleteBackspace("a<b<=c", 3, 1, "@invalidops(a, @unfinished \"<\", b, @unfinished \"=\", c)", r);
+        testDeleteBackspace("a<b<=c", 3, 1, "@invalidops(a, @unfinished \"<\", b, @unfinished \"=\", c)", r, -1);
     }
     
     @Property(trials = 3)
@@ -196,7 +196,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         {
             push(KeyCode.BACK_SPACE);
         }
-        write(retype);
+        if (r.nextBoolean())
+            write(retype);
+        else
+        {
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, retype)));
+            push(KeyCode.SHORTCUT, KeyCode.V);
+        }
 
         Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
@@ -205,7 +211,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         clickOn(".cancel-button");
     }
 
-    private void testDeleteBackspace(String original, int deleteAfterPos, int deleteCount, String expectedStr, Random r) throws Exception
+    private void testDeleteBackspace(String original, int deleteAfterPos, int deleteCount, String expectedStr, Random r, int... cutCount) throws Exception
     {
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         testBackspace(original, deleteAfterPos + deleteCount, deleteCount, expectedStr, r);
@@ -215,6 +221,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         TestUtil.sleep(300);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         testDelete(original, deleteAfterPos, deleteCount, expectedStr, r);
+        assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
+        triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), targetPos);
+        clickOn(".id-tableDisplay-menu-delete");
+        TestUtil.sleep(300);
+        assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
+        if (cutCount.length == 0 || cutCount[0] > 0)
+            testCut(original, deleteAfterPos, cutCount.length > 0 ? cutCount[0] : deleteCount, expectedStr, r);
     }
 
     private void testBackspace(String original, int deleteBefore, int deleteCount, String expectedStr, Random r) throws Exception
@@ -255,6 +268,42 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         {
             push(KeyCode.DELETE);
         }
+
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+
+        assertEquals(expectedExp, after);
+
+        clickOn(".cancel-button");
+    }
+
+    private void testCut(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
+    {
+        DummyManager dummyManager = new DummyManager();
+        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        EditorDisplay expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+
+        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
+
+        press(KeyCode.SHIFT);
+        for (int i = 0; i < deleteCount; i++)
+        {
+            push(KeyCode.RIGHT);
+        }
+        release(KeyCode.SHIFT);
+        
+        if (r.nextBoolean())
+            push(KeyCode.DELETE);
+        else
+        {
+            // Test copy does same as cut:
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
+            push(KeyCode.SHORTCUT, KeyCode.C);
+            String copied = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
+            push(KeyCode.SHORTCUT, KeyCode.X);
+            assertEquals(copied, TestUtil.fx(() -> Clipboard.getSystemClipboard().getString()));
+        }
+        
 
         Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
 
