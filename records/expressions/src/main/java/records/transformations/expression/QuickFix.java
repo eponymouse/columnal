@@ -30,7 +30,6 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
     private final EXPRESSION replacementTarget;
     private final FXPlatformSupplierInt<@UnknownIfRecorded EXPRESSION> makeReplacement;
     private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
-    private @MonotonicNonNull StyledString cachedTitle;
 
     public QuickFix(@LocalizableKey String titleKey, EXPRESSION replacementTarget, FXPlatformSupplierInt<@NonNull @UnknownIfRecorded EXPRESSION> makeReplacement)
     {
@@ -66,21 +65,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
     @OnThread(Tag.FXPlatform)
     public StyledString getTitle()
     {
-        if (cachedTitle != null)
-            return cachedTitle;
-        
-        StyledString replacement;
-        try
-        {
-            replacement = makeReplacement.get().toStyledString();
-        }
-        catch (InternalException e)
-        {
-            Log.log(e);
-            replacement = StyledString.s("");
-        }
-        cachedTitle = StyledString.concat(title, StyledString.s(" \u21fe "), replacement);
-        return cachedTitle;
+        return title;
     }
     
     @OnThread(Tag.FXPlatform)
