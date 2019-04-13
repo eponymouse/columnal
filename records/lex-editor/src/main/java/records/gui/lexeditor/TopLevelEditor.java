@@ -58,6 +58,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     protected final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
     private final ErrorMessagePopup errorMessagePopup;
+    private boolean hiding;
 
     // package-visible
     TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
@@ -133,6 +134,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     
     public void cleanup()
     {
+        hiding = true;
         errorMessagePopup.hidePopup(true);
     }
 
@@ -296,7 +298,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         private void showPopup()
         {
             // Shouldn't be non-null already, but just in case:
-            if (!isShowing())
+            if (!isShowing() && !hiding)
             {
                 Log.debug("Showing ErrorMessagePopup");
                 show(scrollPane);

@@ -297,10 +297,10 @@ public class TableManager
         return new CellPosition(display.getMostRecentPosition().rowIndex, display.getBottomRightIncl().columnIndex);
     }
 
-    public static interface TableMaker
+    public static interface TableMaker<T extends Table>
     {
         @OnThread(Tag.Simulation)
-        Table make() throws InternalException;
+        @NonNull T make() throws InternalException;
     }
     
     /**
@@ -321,7 +321,7 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public @PolyNull Table edit(@Nullable TableId affectedTableId, @PolyNull TableMaker makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
+    public <@NonNull T extends Table> @PolyNull T edit(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
     {
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;
@@ -375,7 +375,7 @@ public class TableManager
         }
 
         @SuppressWarnings("nullness")
-        @PolyNull Table newTable = null;
+        @PolyNull T newTable = null;
         if (makeReplacement != null)
         {
             synchronized (this)
@@ -515,7 +515,7 @@ public class TableManager
     {
         return newName -> {
             FXUtility.alertOnError_("Error renaming table", () -> {
-                edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
+                this.<Table>edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };
     }

@@ -22,6 +22,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -461,9 +462,21 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         updateChildren();
     }
     
+    public void setAddButtonText(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Localized String text)
+    {
+        if (addButton != null)
+            addButton.setText(text);
+    }
+    
     protected void listenForCellChange(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, FXPlatformConsumer<Change<? extends Cell>> listener)
     {
         FXUtility.listen(cells, listener);
+    }
+    
+    // True for empty, false when non-empty
+    public void addEmptyListenerAndCallNow(FXPlatformConsumer<Boolean> callWithEmpty)
+    {
+        FXUtility.listenAndCallNow(cells, cellsValue -> callWithEmpty.consume(cellsValue.isEmpty()));
     }
 
     // Just used for testing, to get reference to parent.

@@ -167,6 +167,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         FXUtility.preventCloseOnEscape(getDialogPane());
 
+        setOnHiding(e -> {
+            typeEditor.cleanup();
+        });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
             FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);

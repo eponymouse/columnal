@@ -287,7 +287,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
                         Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error hiding column", () -> {
-                                    parent.getManager().edit(hide.getId(), makeTrans, null);
+                                    parent.getManager().<HideColumns>edit(hide.getId(), makeTrans, null);
                                 })
                         );
                     });

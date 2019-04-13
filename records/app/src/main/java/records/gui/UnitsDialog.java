@@ -242,6 +242,9 @@ public class UnitsDialog extends Dialog<Void>
             // Okay because it's the end of the constructor:
             updateEnabledState();
             
+            setOnHiding(e -> {
+                definition.cleanup();
+            });
             setOnShown(e -> {
                 FXUtility.runAfter(() -> unitNameField.requestFocus());
             });

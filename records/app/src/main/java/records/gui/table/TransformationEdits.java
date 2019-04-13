@@ -3,22 +3,25 @@ package records.gui.table;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableManager.TableMaker;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeUtility.ComparableValue;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
-import records.gui.EditAggregateSourceDialog;
+import records.gui.EditAggregateSplitByDialog;
 import records.gui.EditColumnExpressionDialog;
 import records.gui.EditImmediateColumnDialog;
 import records.gui.View;
@@ -38,8 +41,11 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class TransformationEdits
 {
@@ -66,9 +72,86 @@ public class TransformationEdits
     @OnThread(Tag.FXPlatform)
     static void editAggregateSplitBy(View parent, SummaryStatistics aggregate)
     {
-        new EditAggregateSourceDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-            FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
-        }));
+        CompletableFuture<Optional<Pair<ColumnId, ImmutableList<String>>>> exampleSplitColumn = new CompletableFuture<>();
+        new Thread(() -> {
+            @Nullable Pair<ColumnId, ImmutableList<String>> example = null;
+            long limit = System.currentTimeMillis() + 500;
+            Workers.onWorkerThread("Fetch example split", Priority.FETCH, () -> {
+                try
+                {
+                    exampleSplitColumn.complete(Optional.ofNullable(calculateExampleSplit(limit, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()))));
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
+                catch (UserException e)
+                {
+                    // Just ignore
+                }
+            });
+            try
+            {
+                example = exampleSplitColumn.get(500, TimeUnit.MILLISECONDS).orElse(null);
+            }
+            catch (Throwable t)
+            {
+                // Never mind, just show the dialog without
+            }
+            final @Nullable Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
+            FXUtility.runAfter(() -> {
+                new EditAggregateSplitByDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), exampleFinal, aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
+                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
+                }));
+            });
+        }).start();
+    }
+
+    @OnThread(Tag.Simulation)
+    private static @Nullable Pair<ColumnId, ImmutableList<String>> calculateExampleSplit(long end, @Nullable Table table) throws InternalException, UserException
+    {
+        if (table == null)
+            return null;
+        
+        RecordSet data = table.getData();
+        // Check first 100 rows:
+        int len = Math.min(100, data.getLength());
+        int bestGuessSize = len;
+        @Nullable Pair<ColumnId, ImmutableList<String>> bestGuess = null;
+        for (Column column : data.getColumns())
+        {
+            // No point taking longer than the time-out
+            if (System.currentTimeMillis() > end - 50)
+                return bestGuess;
+            TreeSet<ComparableValue> values = new TreeSet<>();
+            DataTypeValue columnType = column.getType();
+            for (int i = 0; i < len; i++)
+            {
+                try
+                {
+                    values.add(new ComparableValue(columnType.getCollapsed(i)));
+                }
+                catch (UserException e)
+                {
+                    // Never mind, just skip that row
+                }
+            }
+            if (values.size() > 1 && values.size() < bestGuessSize)
+            {
+                ImmutableList.Builder<String> stringItems = ImmutableList.builder();
+                for (ComparableValue value : Utility.iterableStream(values.stream().limit(3)))
+                {
+                    stringItems.add(DataTypeUtility.valueToString(columnType.getType(), value.getValue(), null));
+                }
+                bestGuess = new Pair<>(column.getName(), stringItems.build());
+                bestGuessSize = values.size();
+                if (values.size() < len / 4)
+                {
+                    return bestGuess;
+                }
+            }        
+        }
+        return bestGuess;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -108,7 +191,7 @@ public class TransformationEdits
         new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () -> {
-                    @Nullable TableMaker makeReplacement = null;
+                    @Nullable TableMaker<ImmediateDataSource> makeReplacement = null;
                     // If column type and default value are unaltered, don't need to re-do table:
                     final Column oldColumn = data.getData().getColumn(columnId);
                     if (!(oldColumn instanceof EditableColumn))
@@ -147,7 +230,7 @@ public class TransformationEdits
                         EditableRecordSet newRecordSet = new <EditableColumn>EditableRecordSet(columns, () -> length);
                         makeReplacement = () -> new ImmediateDataSource(parent.getManager(), data.getDetailsForCopy(), newRecordSet);
                     }
-                    parent.getManager().edit(data.getId(), makeReplacement, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))));
+                    parent.getManager().<ImmediateDataSource>edit(data.getId(), makeReplacement, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))));
                 });
             });
         });

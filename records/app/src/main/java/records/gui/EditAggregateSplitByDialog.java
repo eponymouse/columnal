@@ -10,6 +10,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
@@ -45,18 +46,20 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.Instruction;
 import utility.gui.LightDialog;
+import utility.gui.TranslationUtility;
 
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
-public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnId>>
+public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<ColumnId>>
 {
     private final @Nullable Table srcTable;
     private final SplitList splitList;
 
-    public EditAggregateSourceDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, ImmutableList<ColumnId> originalSplitBy)
+    public EditAggregateSplitByDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, @Nullable Pair<ColumnId, ImmutableList<String>> example, ImmutableList<ColumnId> originalSplitBy)
     {
         super(parent);
         setResizable(true);
@@ -68,7 +71,15 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
         splitList.getNode().setMinHeight(150.0);
         splitList.getNode().setPrefWidth(300.0);
         splitList.getNode().setPrefHeight(250.0);
-        getDialogPane().setContent(new BorderPane(splitList.getNode(), new Label("Choose the columns to split by"), null, null, null));
+        String header = "Aggregate can either calculate once for the whole table, or separately depending on values of column(s) below." + (example == null || example.getSecond().size() < 2 ? "" : "\n\nFor example, if column " + example.getFirst().getRaw() + " is selected , there will be one calculation for rows with value " + example.getSecond().stream().map(EditAggregateSplitByDialog::truncate).collect(Collectors.joining(", one for rows with value ")) + ", etc");
+        Label label = new Label(header + "\n ");
+        label.setWrapText(true);
+        label.setPrefWidth(300.0);
+        Label wholeTableLabel = new Label("Calculate for whole table");
+        splitList.addEmptyListenerAndCallNow(empty -> {
+            wholeTableLabel.setVisible(empty);
+        });
+        getDialogPane().setContent(new BorderPane(new StackPane(splitList.getNode(), wholeTableLabel), label, null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().getStylesheets().addAll(
@@ -93,6 +104,14 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
         });
     }
 
+    private static String truncate(String orig)
+    {
+        if (orig.length() > 20)
+            return orig.substring(0, 20) + "\u2026";
+        else
+            return orig;
+    }
+
     @OnThread(Tag.FXPlatform)
     private class SplitList extends FancyList<ColumnId, ColumnPane>
     {
@@ -100,11 +119,12 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
         {
             super(initialItems, true, true, () -> new ColumnId(""));
             getStyleClass().add("split-list");
+            setAddButtonText(TranslationUtility.getString("aggregate.add.column"));
             
-            if (initialItems.isEmpty())
-            {
-                addToEnd(new ColumnId(""), true);
-            }
+            // We don't want to do this actually; whole table
+            // calculation is a common wish:
+            //if (initialItems.isEmpty())
+            //    addToEnd(new ColumnId(""), true);
         }
 
         @Override

@@ -16,7 +16,7 @@ import utility.gui.LightDialog;
  * A dialog for editing a HideColumns transformation.
  */
 @OnThread(Tag.FXPlatform)
-public class HideColumnsDialog extends LightDialog<TableMaker>
+public class HideColumnsDialog extends LightDialog<TableMaker<HideColumns>>
 {
     public HideColumnsDialog(DimmableParent parent, TableManager tableManager, HideColumns hideColumns)
     {
@@ -30,7 +30,7 @@ public class HideColumnsDialog extends LightDialog<TableMaker>
             if (bt == ButtonType.OK)
             {
                 ImmutableList<ColumnId> newHidden = hideColumnsPanel.getHiddenColumns();
-                TableMaker tableMaker = () -> new HideColumns(tableManager, hideColumns.getDetailsForCopy(), hideColumns.getSrcTableId(), newHidden);
+                TableMaker<HideColumns> tableMaker = () -> new HideColumns(tableManager, hideColumns.getDetailsForCopy(), hideColumns.getSrcTableId(), newHidden);
                 return tableMaker;
             }
             return null;

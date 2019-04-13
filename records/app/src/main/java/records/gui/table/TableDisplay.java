@@ -513,7 +513,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Crucial to set onModify before calling setupWithRecordSet:
         this.onModify = () -> {
             parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_("Error updating dependent transformations", () -> parent.getManager().edit(table.getId(), null, null)));
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_("Error updating dependent transformations", () -> parent.getManager().<Table>edit(table.getId(), null, null)));
         };
         
         this.recordSet = recordSet;
@@ -1062,7 +1062,29 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            TransformationEdits.editAggregateSplitBy(parent, aggregate);
+            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), new ColumnId(""), null, aggregate.getColumnLookup(), null).showAndWait();
+            if (newColumn.isPresent())
+            {
+                Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
+                    try
+                    {
+                        SummaryStatistics newAggregate = parent.getManager().<SummaryStatistics>edit(aggregate.getId(), () -> {
+                            return new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), newColumn.get()), aggregate.getSplitBy());
+                        }, null);
+                        Platform.runLater(() -> {
+                            TransformationEdits.editAggregateSplitBy(parent, newAggregate);
+                        });
+                    }
+                    catch (InternalException e)
+                    {
+                        Log.log(e);
+                    }
+                });
+            }
+            else
+            {
+                TransformationEdits.editAggregateSplitBy(parent, aggregate);
+            }
         }
         else if (table instanceof Sort)
         {
