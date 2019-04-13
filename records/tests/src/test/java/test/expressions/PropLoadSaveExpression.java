@@ -106,6 +106,13 @@ public class PropLoadSaveExpression extends FXApplicationTest
             {
                 return expression.allColumnReferences().distinct();
             }
+
+            @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                // Not used:
+                return Stream.empty();
+            }
         };
         
         

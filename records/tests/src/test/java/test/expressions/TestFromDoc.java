@@ -294,5 +294,11 @@ public class TestFromDoc
         {
             return tables.entrySet().stream().flatMap(e -> e.getValue().getColumns().stream().map(c -> new ColumnReference(e.getKey(), c.getName(), ColumnReferenceType.WHOLE_COLUMN)));
         }
+
+        @Override
+        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        {
+            return Stream.empty(); // Not used here
+        }
     }
 }

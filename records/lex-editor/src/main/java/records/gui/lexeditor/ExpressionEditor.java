@@ -19,6 +19,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -30,8 +31,12 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer, ExpressionCompletionContext>
 {
@@ -48,12 +53,13 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                     {
                         if (showing)
                         {
-                            columnPicker.enableColumnPickingMode(null, c -> display.isFocused() && !calcAvailableColRefTypes(columnLookup.get(), srcTable.get(), c.getFirst().getId(), c.getSecond()).isEmpty(), c -> {
+                            columnPicker.enableColumnPickingMode(null, c -> display.isFocused() && columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).findFirst().isPresent(), c -> {
                                 String ref = "";
-                                if (!calcAvailableColRefTypes(columnLookup.get(), srcTable.get(), c.getFirst().getId(), c.getSecond()).contains(ColumnReferenceType.CORRESPONDING_ROW))
+                                ImmutableList<ColumnReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.comparing(cr -> cr.getReferenceType())).collect(ImmutableList.<ColumnReference>toImmutableList());
+                                if (!columnReferences.get(0).getReferenceType().equals(ColumnReferenceType.CORRESPONDING_ROW))
                                     ref += "@entire ";
-                                if (c.getFirst() != srcTable.getValue())
-                                    ref += c.getFirst().getId().getRaw() + ":";
+                                if (columnReferences.get(0).getTableId() != null)
+                                    ref += columnReferences.get(0).getTableId().getRaw() + ":";
                                 ref += c.getSecond().getRaw();
                                 content.replaceSelection(ref);
                                 FXUtility.runAfterDelay(Duration.millis(50), () -> {
@@ -86,26 +92,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
             Log.log(e);
             return ImmutableList.of();
         }
-    }
-    
-    // For a given table id and column id, what 
-    private static ImmutableList<ColumnReferenceType> calcAvailableColRefTypes(ColumnLookup columnLookup, @Nullable Table srcTable, TableId colTableId, ColumnId columnId)
-    {
-        return columnLookup.getAvailableColumnReferences().filter(c -> {
-            if (c.getTableId() == null)
-            {
-                if (srcTable != null)
-                {
-                    return Objects.equals(srcTable.getId(), colTableId) && Objects.equals(c.getColumnId(), columnId);
-                }
-                else
-                    return false; // No source, and yet no table id in the reference?!
-            }
-            else
-            {
-                return Objects.equals(c.getTableId(), colTableId) && Objects.equals(c.getColumnId(), columnId);
-            }
-        }).map(c -> c.getReferenceType()).collect(ImmutableList.<ColumnReferenceType>toImmutableList());
     }
     
     @OnThread(Tag.FXPlatform)

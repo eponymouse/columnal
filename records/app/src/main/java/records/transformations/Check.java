@@ -250,6 +250,12 @@ public class Check extends Transformation implements SingleSourceTransformation
                     }
                 });
             }
+
+            @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return getAvailableColumnReferences().filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+            }
         };
     }
 

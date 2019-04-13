@@ -123,6 +123,8 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // This is really for the editor, but it doesn't rely on any GUI
         // functionality so can be here:
         public Stream<ColumnReference> getAvailableColumnReferences();
+        
+        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId);
     }
     
     // PATTERN infects EXPRESSION: any bit of PATTERN in an inner expression
@@ -914,13 +916,24 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Stream<ColumnReference> getAvailableColumnReferences()
         {
+            return getAvailableColumnReferences(true);
+        }
+
+        @Override
+        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        {
+            return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+        }
+
+        private Stream<ColumnReference> getAvailableColumnReferences(boolean nullOurTable)
+        {
             return tableManager.streamAllTablesAvailableTo(us).flatMap(t -> {
                 try
                 {
                     boolean isOurTable = Objects.equals(us, t.getId());
                     return t.getData().getColumns().stream().flatMap(c -> {
                         Stream<ColumnReferenceType> possRefTypes = isOurTable ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
-                        return possRefTypes.map(rt -> new ColumnReference(isOurTable ? null : t.getId(), c.getName(), rt));
+                        return possRefTypes.map(rt -> new ColumnReference(isOurTable && nullOurTable ? null : t.getId(), c.getName(), rt));
                     });
                 }
                 catch (UserException e)

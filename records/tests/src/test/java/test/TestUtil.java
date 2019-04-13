@@ -1184,6 +1184,12 @@ public class TestUtil
             {
                 return Stream.empty();
             }
+
+            @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return Stream.empty();
+            }
         };
     }
 
@@ -1498,6 +1504,12 @@ public class TestUtil
                 return Stream.empty();
             else
                 return srcTable.getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(c.getName(), rt)));
+        }
+
+        @Override
+        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        {
+            return Stream.empty(); // Not used in testing
         }
 
         @Override

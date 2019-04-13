@@ -896,12 +896,23 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         @Override
         public Stream<ColumnReference> getAvailableColumnReferences()
         {
+            return getAvailableColumnReferences(true);
+        }
+
+        @Override
+        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        {
+            return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+        }
+
+        public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
+        {
             return
                 tableManager.streamAllTablesAvailableTo(getId())
                     .flatMap(t -> {
                         try
                         {
-                            @Nullable TableId tableId = t.getId().equals(getId()) || t.getId().equals(srcTableId) ? null : t.getId();
+                            @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
                             return t.getData().getColumns().stream()
                                 .flatMap(c -> (tableId != null ? Stream.of(ColumnReferenceType.WHOLE_COLUMN) : Arrays.stream(ColumnReferenceType.values()))
                                 .map(rt -> new ColumnReference(tableId, c.getName(), rt)));

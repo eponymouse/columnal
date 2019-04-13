@@ -75,6 +75,12 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             }
 
             @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return Stream.of();
+            }
+
+            @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
                 return Stream.of();
