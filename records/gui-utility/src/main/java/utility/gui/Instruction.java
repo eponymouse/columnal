@@ -19,7 +19,6 @@ public class Instruction extends PopupControl
         this.label = GUI.label(instructionKey, "instruction-label");
         setSkin(new InstructionSkin());
         getStyleClass().add("instruction");
-        getStyleClass().addAll("autocomplete-instruction");
         
         setAutoFix(false);
         setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);

@@ -12,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -411,13 +412,16 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 }
             });
             //deleteButton.visibleProperty().bind(deletable);
-            setMargin(deleteButton, new Insets(0, 4, 0, 4));
+            setMargin(deleteButton, new Insets(0, 8, 0, 4));
             Pair<CELL_CONTENT, FXPlatformSupplier<T>> pair = makeCellContent(initialContent, editImmediately);
             this.content = pair.getFirst();
             this.value = pair.getSecond();
             setCenter(this.content);
             if (allowDeleting)
+            {
+                BorderPane.setAlignment(deleteButton, Pos.CENTER);
                 setRight(deleteButton);
+            }
         }
 
         private int getIndex(@UnknownInitialization Cell this)

@@ -90,7 +90,6 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
                 if (addButton != null)
                     addButton.requestFocus();
             });
-            pickTablePane.showLabelOnlyWhenFocused();
             FXUtility.addChangeListenerPlatformNN(pickTablePane.currentlyEditing(), ed -> {
                 if (ed)
                 {

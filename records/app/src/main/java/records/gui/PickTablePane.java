@@ -5,10 +5,12 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.PopupWindow.AnchorLocation;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -27,6 +29,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.Instruction;
 
 import java.util.ArrayList;
 import java.util.OptionalInt;
@@ -39,7 +42,7 @@ public class PickTablePane extends BorderPane
     private final AutoComplete autoComplete;
     private final FXPlatformConsumer<Table> setResultAndClose;
     private long lastEditTimeMillis = -1;
-    private final Label label;
+    private final Instruction instruction;
 
     public PickTablePane(View view, ImmutableSet<Table> exclude, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
@@ -50,21 +53,19 @@ public class PickTablePane extends BorderPane
             getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
         
         setCenter(tableField);
-        label = new Label("Click on a table or type table name");
-        setTop(label);
-        setMargin(label, new Insets(2));
+        instruction = new Instruction("pick.table.instruction");
         setMargin(tableField, new Insets(0, 4, 4, 4));
         
         FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
+            Point2D screenTopLeft = tableField.localToScreen(new Point2D(0, 1));
+            if (focus)
+                instruction.show(tableField, screenTopLeft.getX(), screenTopLeft.getY());
+            else
+                instruction.hide();
             // Update whether focus is arriving or leaving:
             lastEditTimeMillis = System.currentTimeMillis();
         });
         getStyleClass().add("pick-table-pane");
-    }
-    
-    public void showLabelOnlyWhenFocused()
-    {
-        label.visibleProperty().bind(tableField.focusedProperty());
     }
 
     public void focusEntryField()

@@ -205,9 +205,10 @@
 }
 .instruction > .instruction-label {
     -fx-background-insets: 0, 1;
-    -fx-background-color: black, yellow;
-    -fx-text-fill: black;
+    -fx-background-color: grey(70%), white;
+    -fx-text-fill: grey(30%);
     -fx-label-padding: 3;
+    -fx-font-size: 75%;
 }
 
 .styled-text.expression-error {
