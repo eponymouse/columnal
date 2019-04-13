@@ -28,6 +28,8 @@ import java.util.function.Consumer;
  */
 public class TypeState
 {
+    public static final String GROUP_COUNT = "group count";
+    
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
     private final ImmutableMap<String, ImmutableList<TypeExp>> variables;

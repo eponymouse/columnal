@@ -20,10 +20,13 @@ import records.gui.lexeditor.ExpressionEditor;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformSupplier;
+import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DoubleOKLightDialog;
@@ -42,7 +45,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     private Expression curValue;
     private final ColumnNameTextField nameField;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
@@ -52,7 +55,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
         FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> notifyModified());
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {

@@ -23,11 +23,14 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TypeState;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
+import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -42,9 +45,9 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
 {
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, @Nullable FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? "" : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)), onChangeHandler, "expression-editor");
+        super(startingValue == null ? "" : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), makeTypeState == null ? new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)) : new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup), makeTypeState), onChangeHandler, "expression-editor");
         
         FXUtility.onceNotNull(display.sceneProperty(), s -> {
             FXUtility.onceNotNull(s.windowProperty(), w -> {

@@ -927,7 +927,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null, null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -944,7 +944,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), new ColumnId(""), null, agg.getColumnLookup(), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), new ColumnId(""), null, agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1062,7 +1062,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), new ColumnId(""), null, aggregate.getColumnLookup(), null).showAndWait();
+            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), new ColumnId(""), null, aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
             if (newColumn.isPresent())
             {
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {

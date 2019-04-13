@@ -35,6 +35,8 @@ import styled.StyledString;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
+import utility.FXPlatformSupplierInt;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -118,12 +120,19 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
     private final ObservableObjectValue<ColumnLookup> columnLookup;
     private final TypeManager typeManager;
     private ImmutableList<StandardFunctionDefinition> allFunctions;
+    private final FXPlatformSupplierInt<TypeState> makeTypeState;
 
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager,  ImmutableList<StandardFunctionDefinition> functions)
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions, FXPlatformSupplierInt<TypeState> makeTypeState)
     {
         this.columnLookup = columnLookup;
         this.typeManager = typeManager;
         this.allFunctions = functions;
+        this.makeTypeState = makeTypeState;
+    }
+
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions)
+    {
+        this(columnLookup, typeManager, functions, () -> new TypeState(typeManager.getUnitManager(), typeManager));
     }
     
     private static class ContentChunk
@@ -506,7 +515,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         @Recorded Expression saved = saver.finish(new Span(curIndex, curIndex));
         try
         {
-            saved.checkExpression(columnLookup.get(), new TypeState(typeManager.getUnitManager(), typeManager), saver.locationRecorder.getRecorder());
+            saved.checkExpression(columnLookup.get(), makeTypeState.get(), saver.locationRecorder.getRecorder());
         }
         catch (InternalException | UserException e)
         {

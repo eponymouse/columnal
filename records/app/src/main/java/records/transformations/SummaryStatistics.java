@@ -239,18 +239,36 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
             try
             {
-                @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
-                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(i), errors)).value));
+                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr, errors, i)).value));
             }
             catch (UserException ex)
             {
                 result.buildColumn(rs -> new ErrorColumn(rs, getManager().getTypeManager(), e.getFirst(), ex.getStyledMessage()));
             }
         }
+    }
+
+    private static EvaluateState makeEvaluateState(JoinedSplit splits, TableManager mgr, ErrorAndTypeRecorderStorer errors, int rowIndex) throws InternalException
+    {
+        EvaluateState evaluateState = new EvaluateState(mgr.getTypeManager(), OptionalInt.of(rowIndex), errors);
+        evaluateState = evaluateState.add(TypeState.GROUP_COUNT, DataTypeUtility.value(splits.valuesAndOccurrences.get(rowIndex).getSecond().bitSet.cardinality()));
+        return evaluateState;
+    }
+
+    @OnThread(Tag.Any)
+    public static TypeState makeTypeState(TableManager mgr) throws InternalException
+    {
+        TypeState typeState = new TypeState(mgr.getUnitManager(), mgr.getTypeManager());
+        typeState = typeState.add(TypeState.GROUP_COUNT, TypeExp.plainNumber(null), ss -> {});
+        if (typeState != null)
+            return typeState;
+        else
+            throw new InternalException("group count variable was already added");
     }
 
     private static class SingleSplit
