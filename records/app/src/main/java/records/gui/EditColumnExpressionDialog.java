@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -45,12 +46,13 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
+        initModality(Modality.NONE);
 
         nameField = new ColumnNameTextField(initialName);
         FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> notifyModified());
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {

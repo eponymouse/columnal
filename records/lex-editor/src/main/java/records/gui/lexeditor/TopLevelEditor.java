@@ -54,7 +54,7 @@ import java.util.function.Function;
 public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT>, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
     protected final EditorContent<EXPRESSION, CODE_COMPLETION_CONTEXT> content;
-    private final EditorDisplay display;
+    protected final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
     private final ErrorMessagePopup errorMessagePopup;
 

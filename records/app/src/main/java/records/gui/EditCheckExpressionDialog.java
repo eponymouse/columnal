@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.stage.Modality;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
@@ -37,6 +38,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
+        initModality(Modality.NONE);
 
         ComboBox<CheckType> combo = new ComboBox<>();
         combo.getStyleClass().add("check-type-combo");
@@ -46,7 +48,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         ReadOnlyObjectWrapper<@Nullable DataType> expectedType = new ReadOnlyObjectWrapper<@Nullable DataType>(DataType.BOOLEAN);
         SimpleObjectProperty<ColumnLookup> columnLookupProperty = new SimpleObjectProperty<>(columnLookup.apply(initialCheckType));
         FXUtility.addChangeListenerPlatform(combo.getSelectionModel().selectedItemProperty(), ct -> columnLookupProperty.set(columnLookup.apply(ct == null ? initialCheckType : ct)));
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, expectedType, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, expectedType, parent, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {

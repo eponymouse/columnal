@@ -46,6 +46,7 @@ import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.lexeditor.ExpressionEditor;
 import records.gui.table.CheckDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
@@ -77,7 +78,7 @@ import java.util.stream.Stream;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends StackPane implements DimmableParent
+public class View extends StackPane implements DimmableParent, ExpressionEditor.ColumnPicker
 {
     private static final double DEFAULT_SPACE = 150.0;
 
@@ -226,6 +227,7 @@ public class View extends StackPane implements DimmableParent
         return mainPane;
     }
 
+    @OnThread(Tag.FXPlatform)
     public void disablePickingMode()
     {
         if (pickPaneMouse != null)
@@ -236,6 +238,7 @@ public class View extends StackPane implements DimmableParent
         }
     }
     
+    @OnThread(Tag.FXPlatform)
     public void enableTablePickingMode(Point2D screenPos, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)

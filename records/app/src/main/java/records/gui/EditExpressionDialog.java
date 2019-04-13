@@ -4,6 +4,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Modality;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
@@ -30,8 +31,9 @@ public class EditExpressionDialog extends LightDialog<Expression>
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
+        initModality(Modality.NONE);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent, parent.getManager().getTypeManager(), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
         curValue = expressionEditor.save();
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));
