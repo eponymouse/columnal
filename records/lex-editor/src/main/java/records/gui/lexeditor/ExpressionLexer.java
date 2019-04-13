@@ -375,6 +375,18 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         identCompletions.add(new LexCompletion(curIndex, fullName + (tag.hasInner ? "()" : ""), fullName.length() + (tag.hasInner ? 1 : 0)));
                     }
                 }
+                try
+                {
+                    for (String availableVariable : makeTypeState.get().getAvailableVariables())
+                    {
+                        if (availableVariable.startsWith(parsed.getFirst()))
+                            identCompletions.add(new LexCompletion(curIndex, availableVariable));
+                    }
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
                 for (Keyword keyword : Keyword.values())
                 {
                     if (keyword.getContent().startsWith("@"))

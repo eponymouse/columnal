@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -242,5 +243,10 @@ public class TypeState
     public int getNextLambdaId()
     {
         return nextLambdaId++;
+    }
+
+    public ImmutableSet<String> getAvailableVariables()
+    {
+        return variables.keySet();
     }
 }
