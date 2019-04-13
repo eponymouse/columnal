@@ -76,9 +76,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         FXUtility.onceNotNull(scrollPane.sceneProperty(), scene -> {
             scene.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
         });
+        scrollPane.setMinHeight(65.0);
         scrollPane.setPrefWidth(600.0);
         scrollPane.setAlwaysFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.getStyleClass().add("top-level-editor");
         scrollPane.getStyleClass().addAll(styleClasses);
         FXUtility.addChangeListenerPlatformNN(display.focusedProperty(), focused -> {

@@ -68,7 +68,7 @@ public class ScrollPaneFill extends ScrollPane
         {
             Node content = getContent();
             setFitToWidth(alwaysFitToWidth || content.prefWidth(-1) < viewportBounds.getWidth());
-            setFitToHeight(content.prefHeight(-1) < viewportBounds.getHeight());
+            setFitToHeight(content.prefHeight(viewportBounds.getWidth()) < viewportBounds.getHeight());
             requestLayout();
             if (content instanceof Parent)
                 ((Parent)content).requestLayout();

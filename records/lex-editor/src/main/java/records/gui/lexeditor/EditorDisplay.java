@@ -410,4 +410,48 @@ public final class EditorDisplay extends TextEditorBase
     {
         return content.getErrors();
     }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) Point2D translateHit(double x, double y)
+    {
+        return new Point2D(x, y);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected void layoutChildren()
+    {
+        double wholeTextHeight = textFlow.prefHeight(getWidth());
+
+        CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
+
+        textFlow.resizeRelocate(0, 0, getWidth(), wholeTextHeight);
+   
+        if (cs != null)
+        {
+            cs.fadeOverlay.resize(getWidth(), getHeight());
+            cs.caretShape.setLayoutX(0);
+            cs.caretShape.setLayoutY(0);
+            cs.selectionShape.setLayoutX(0);
+            cs.selectionShape.setLayoutY(0);
+            cs.inverter.setLayoutX(0);
+            cs.inverter.setLayoutY(0);
+            cs.inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
+            cs.selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computeMinHeight(double width)
+    {
+        return textFlow.prefHeight(width);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computePrefHeight(double width)
+    {
+        return textFlow.prefHeight(width);
+    }
 }

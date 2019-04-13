@@ -46,6 +46,15 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
     private Document document;
+
+    // Always positive, the amount of offset from the left edge back
+    // to the real start of the content.
+    protected double horizTranslation;
+    // Always positive, the amount of offset from the top edge up
+    // to the real start of the content.
+    protected double vertTranslation;
+    protected boolean expanded;
+    protected boolean scrollable;
     
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
@@ -79,7 +88,18 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             Utility.later(this).focusChanged(focused);
         });
     }
-    
+
+    @Override
+    public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
+    {
+        super.focusChanged(focused);
+        if (!focused)
+        {
+            horizTranslation = 0;
+            vertTranslation = 0;
+        }
+    }
+
     private void mouseEvent(MouseEvent mouseEvent)
     {
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
@@ -448,4 +468,99 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         caretPosition.moveTo(document.getLength());
     }
 
+    @Override
+    protected @OnThread(Tag.FXPlatform) Point2D translateHit(double x, double y)
+    {
+        return new Point2D(x + horizTranslation, y + vertTranslation);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected void layoutChildren()
+    {
+        if (expanded)
+        {
+            textFlow.setPrefWidth(getWidth());
+        }
+        else
+        {
+            textFlow.setPrefWidth(USE_COMPUTED_SIZE);
+        }
+
+        // 10 is fudge factor; if you set exactly its desired width,
+        // it can sometimes wrap the text anyway.
+        double wholeTextWidth = textFlow.prefWidth(-1) + 10;
+        double wholeTextHeight = textFlow.prefHeight(getWidth());
+
+        CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
+        if (cs != null)
+        {
+            Path caretShape = cs.caretShape;
+            Bounds caretLocalBounds = caretShape.getBoundsInLocal();
+            Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
+
+            //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
+            boolean focused = isFocused();
+            if (scrollable)
+            {
+                if (focused && caretBounds.getMinX() - 5 < 0)
+                {
+                    // Caret is off screen to the left:
+                    horizTranslation = Math.max(0, caretLocalBounds.getMinX() - 10);
+                }
+                else if (focused && caretBounds.getMaxX() > getWidth() - 5)
+                {
+                    // Caret is off screen to the right:
+                    horizTranslation = Math.min(Math.max(0, wholeTextWidth - getWidth()), caretLocalBounds.getMaxX() + 10 - getWidth());
+                }
+                else if (!focused)
+                {
+                    horizTranslation = 0;
+                }
+
+                if (focused && caretBounds.getMinY() - 5 < 0)
+                {
+                    // Caret is off screen to the top:
+                    vertTranslation = Math.max(0, caretLocalBounds.getMinY() - 10);
+                }
+                else if (focused && caretBounds.getMaxY() > getHeight() - 5)
+                {
+                    // Caret is off screen to the bottom:
+                    vertTranslation = Math.min(Math.max(0, wholeTextHeight - getHeight()), caretLocalBounds.getMaxY() + 10 - getHeight());
+                }
+                else if (!focused)
+                {
+                    vertTranslation = 0;
+                }
+            }
+        }
+
+        if (expanded)
+        {
+            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, getWidth(), wholeTextHeight);
+        }
+        else
+        {
+            // We avoid needlessly making TextFlows which are thousands of pixels
+            // wide by restricting to our own width plus some.
+            // (We don't use our own width because this causes text wrapping
+            // of long words, but we actually want to see those truncated)
+            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
+        }
+        //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
+        if (cs != null)
+        {
+            FXUtility.setPseudoclass(cs.fadeOverlay, "more-above", vertTranslation > 8);
+            FXUtility.setPseudoclass(cs.fadeOverlay, "more-below", wholeTextHeight - vertTranslation > getHeight() + 8);
+            cs.fadeOverlay.resize(getWidth(), getHeight());
+            cs.caretShape.setLayoutX(-horizTranslation);
+            cs.caretShape.setLayoutY(-vertTranslation);
+            cs.selectionShape.setLayoutX(-horizTranslation);
+            cs.selectionShape.setLayoutY(-vertTranslation);
+            cs.inverter.setLayoutX(-horizTranslation);
+            cs.inverter.setLayoutY(-vertTranslation);
+            cs.inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
+            cs.selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        }
+    }
 }
