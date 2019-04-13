@@ -39,6 +39,7 @@ import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * An editor is a wrapper around an editable TextFlow.  The distinctive feature is that
@@ -107,6 +108,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         display.setDisable(disabled);
     }
 
+    void mouseHover(@Nullable ImmutableList<ErrorDetails> hoveringOn)
+    {
+        errorMessagePopup.mouseHover(hoveringOn);
+    }
+
     public static enum Focus { LEFT, RIGHT };
 
     public void focus(Focus side)
@@ -144,28 +150,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     public void showAllErrors(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         display.showAllErrors();
-    }
-
-    private class ErrorInfo
-    {
-        private final Span location;
-        private final StyledString errorMessage;
-        private final ImmutableList<FixInfo> fixes;
-
-        /*
-        public ErrorInfo(StyledString errorMessage, ImmutableList<FixInfo> fixes)
-        {
-            this.errorMessage = errorMessage;
-            this.fixes = fixes;
-        }
-        */
-
-        public ErrorInfo(ErrorDetails errorDetails)
-        {
-            this.location = errorDetails.location;
-            this.errorMessage = errorDetails.error;
-            this.fixes = Utility.mapListI(errorDetails.quickFixes, makeFixInfo());
-        }
     }
 
     private Function<@NonNull TextQuickFix, @NonNull FixInfo> makeFixInfo()
@@ -420,20 +404,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             updateShowHide(true);
         }
 
-        //@Override
-        public void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn)
+        public void mouseHover(@Nullable ImmutableList<ErrorDetails> errorInfo)
         {
-            //mouseErrorInfo = errorInfo;
-
-            updateShowHide(true);
-        }
-
-        //@Override
-        public void mouseHoverEnded(Node hoverEndedOn)
-        {
-            mouseErrorInfo = null;
-
-            updateShowHide(false);
+            if (errorInfo == null || errorInfo.isEmpty())
+                mouseErrorInfo = null;
+            else
+            {
+                mouseErrorInfo = new Pair<>(errorInfo.stream().map(e -> e.error).collect(StyledString.joining("\n")), errorInfo.stream().flatMap(e -> e.quickFixes.stream()).collect(ImmutableList.<TextQuickFix>toImmutableList()));
+            }
+            updateShowHide(errorInfo != null);
         }
 
         public void triggerFix(int fixIndex)

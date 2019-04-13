@@ -21,6 +21,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledString.Style;
@@ -103,6 +104,24 @@ public final class EditorDisplay extends TextEditorBase
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
+        addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
+            @Nullable HitInfo hit = hitTest(event.getX(), event.getY());
+            if (hit != null)
+            {
+                FXUtility.mouse(editor).mouseHover(content.getErrors().stream().filter(e -> {
+                    @SuppressWarnings("units")
+                    @SourceLocation int displayIndex = hit.getCharIndex();
+                    return e.displayLocation != null && e.displayLocation.contains(displayIndex) && e.caretHasLeftSinceEdit;
+                }).collect(ImmutableList.<ErrorDetails>toImmutableList()));
+            }
+            else
+            {
+                FXUtility.mouse(editor).mouseHover(null);
+            }
+        });
+        addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+            FXUtility.mouse(editor).mouseHover(null);
+        });
         
         addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
             OptionalInt fKey = FXUtility.FKeyNumber(keyEvent.getCode());
@@ -332,6 +351,7 @@ public final class EditorDisplay extends TextEditorBase
     }
 
     @Override
+    @SuppressWarnings("units")
     public @OnThread(Tag.FXPlatform) BitSet getErrorCharacters()
     {
         BitSet errorChars = new BitSet();
@@ -340,10 +360,11 @@ public final class EditorDisplay extends TextEditorBase
             if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
             {
                 error.caretHasLeftSinceEdit = true;
-                if (error.displayLocation != null)
-                    errorChars.set(error.displayLocation.start, error.displayLocation.end);
-                else
-                    errorChars.set(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+                if (error.displayLocation == null)
+                {
+                    error.displayLocation = new Span(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+                }
+                errorChars.set(error.displayLocation.start, error.displayLocation.end);
             }
         }
         return errorChars;
