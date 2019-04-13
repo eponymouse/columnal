@@ -43,6 +43,7 @@ import utility.Pair;
 import utility.UnitType;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
+import utility.gui.Instruction;
 import utility.gui.LightDialog;
 
 import java.util.Objects;
@@ -176,9 +177,8 @@ public class EditAggregateSourceDialog extends LightDialog<ImmutableList<ColumnI
             FXUtility.addChangeListenerPlatformNN(columnField.textProperty(), t -> {
                 currentValue.set(new ColumnId(t));
             });
-            Label label = new Label("Type column name or click on column");
-            label.visibleProperty().bind(columnField.focusedProperty());
-            setTop(label);
+            Instruction instruction = new Instruction("pick.column.instruction");
+            instruction.showAboveWhenFocused(columnField);
             setCenter(columnField);
             getStyleClass().add("column-pane");
             

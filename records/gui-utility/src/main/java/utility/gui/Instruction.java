@@ -1,9 +1,11 @@
 package utility.gui;
 
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
+import javafx.scene.control.TextField;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import threadchecker.OnThread;
@@ -22,6 +24,17 @@ public class Instruction extends PopupControl
         
         setAutoFix(false);
         setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);
+    }
+    
+    public void showAboveWhenFocused(TextField textField)
+    {
+        FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
+            Point2D screenTopLeft = textField.localToScreen(new Point2D(0, 1));
+            if (focus)
+                this.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
+            else
+                this.hide();
+        });
     }
 
     @OnThread(Tag.FX)

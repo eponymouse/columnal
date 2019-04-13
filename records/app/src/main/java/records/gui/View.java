@@ -270,6 +270,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
+    @OnThread(Tag.FXPlatform)
     public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
     {
         if (pickPaneMouse != null)
