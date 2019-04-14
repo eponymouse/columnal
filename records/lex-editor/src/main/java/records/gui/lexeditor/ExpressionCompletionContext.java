@@ -1,6 +1,6 @@
 package records.gui.lexeditor;
 
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 
@@ -14,7 +14,7 @@ public class ExpressionCompletionContext implements CodeCompletionContext
     }
 
     @Override
-    public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int caretPos)
+    public ImmutableList<LexCompletion> getCompletionsFor(@CanonicalLocation int caretPos)
     {
         return completions;
     }

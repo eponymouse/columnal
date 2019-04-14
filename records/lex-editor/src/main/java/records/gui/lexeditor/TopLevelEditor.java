@@ -1,7 +1,7 @@
 package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -24,8 +24,8 @@ import org.controlsfx.control.PopOver;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -39,7 +39,6 @@ import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * An editor is a wrapper around an editable TextFlow.  The distinctive feature is that
@@ -94,7 +93,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             onChange.consume(Utility.later(this).save());
         });
         content.addCaretPositionListener(errorMessagePopup::caretMoved);
-        content.addCaretPositionListener((@SourceLocation Integer n) -> {
+        content.addCaretPositionListener((@CanonicalLocation Integer n) -> {
             display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
         onChange.consume(save());
@@ -161,7 +160,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
             try
             {
-                Pair<Span, String> replacement = f.getReplacement();
+                Pair<CanonicalSpan, String> replacement = f.getReplacement();
                 content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
             }
             catch (InternalException e)
@@ -377,7 +376,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         }
         */
         
-        public void caretMoved(@SourceLocation int newCaretPos)
+        public void caretMoved(@CanonicalLocation int newCaretPos)
         {
             ImmutableList<ErrorDetails> allErrors = content.getErrors();
             ArrayList<StyledString> errors = new ArrayList<>();
@@ -386,7 +385,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             for (ErrorDetails error : allErrors)
             {
                 Log.debug("  " + error.location + " " + error.error.toPlain());
-                if (error.location.contains(newCaretPos))
+                if (error.location.touches(newCaretPos))
                 {
                     if (error.caretHasLeftSinceEdit)
                     {

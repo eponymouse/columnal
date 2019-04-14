@@ -1,6 +1,6 @@
 package records.gui.lexeditor;
 
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -10,12 +10,9 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
-import javafx.scene.control.Skinnable;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import log.Log;
@@ -111,12 +108,12 @@ public class LexAutoComplete
 
     public static class LexCompletion
     {
-        public final @SourceLocation int startPos;
+        public final @CanonicalLocation int startPos;
         public final String content;
         public final int relativeCaretPos;
         public final LexSelectionBehaviour selectionBehaviour;
 
-        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour)
+        public LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour)
         {
             this.startPos = startPos;
             this.content = content;
@@ -124,17 +121,17 @@ public class LexAutoComplete
             this.selectionBehaviour = selectionBehaviour;
         }
 
-        public LexCompletion(@SourceLocation int startPos, String content, int relativeCaretPos)
+        public LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos)
         {
             this(startPos, content, relativeCaretPos, LexSelectionBehaviour.NO_AUTO_SELECT);
         }
 
-        public LexCompletion(@SourceLocation int startPos, String content)
+        public LexCompletion(@CanonicalLocation int startPos, String content)
         {
             this(startPos, content, content.length());
         }
 
-        public LexCompletion(@SourceLocation int startPos, String content, LexSelectionBehaviour selectionBehaviour)
+        public LexCompletion(@CanonicalLocation int startPos, String content, LexSelectionBehaviour selectionBehaviour)
         {
             this(startPos, content, content.length(), selectionBehaviour);
         }

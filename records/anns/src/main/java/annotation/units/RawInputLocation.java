@@ -10,12 +10,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A location in a source editor.
+ * A location in the raw input to a lex editor, before spaces are removed
  */
 @Documented
 @SubtypeOf(value= UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-public @interface SourceLocation
+public @interface RawInputLocation
 {
+    public static @RawInputLocation int ONE = 1;
+    public static @RawInputLocation int ZERO = 0;
 }

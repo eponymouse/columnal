@@ -270,7 +270,7 @@
                                     <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
-                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.SourceLocation</arg>
+                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>
                                     <arg>-Werror</arg>
                                 </compilerArgs>

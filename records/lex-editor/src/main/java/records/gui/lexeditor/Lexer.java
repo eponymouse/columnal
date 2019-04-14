@@ -1,12 +1,13 @@
 package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
+import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import log.Log;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -20,11 +21,10 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
     {
         public static class CaretPos
         {
-            public final @SourceLocation int positionInternal;
-            public final int positionDisplay;
+            public final @CanonicalLocation int positionInternal;
+            public final @DisplayLocation int positionDisplay;
 
-            @SuppressWarnings("units")
-            public CaretPos(int positionInternal, int positionDisplay)
+            public CaretPos(@CanonicalLocation int positionInternal, @DisplayLocation int positionDisplay)
             {
                 this.positionInternal = positionInternal;
                 this.positionDisplay = positionDisplay;
@@ -44,7 +44,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         // The internal canonical content after parsing:
         public final String adjustedContent;
         // The removed characters (indexes in original string to process):
-        public final BitSet removedChars;
+        public final RemovedCharacters removedChars;
         public final boolean reLexOnCaretMove;
         // Valid caret positions
         public final ImmutableList<CaretPos> caretPositions;
@@ -59,7 +59,7 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         public final boolean bracketsAreBalanced;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, BitSet removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, StyledString display, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, StyledString display, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -74,26 +74,12 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
-        public ImmutableList<LexCompletion> getCompletionsFor(@SourceLocation int pos)
+        public ImmutableList<LexCompletion> getCompletionsFor(@CanonicalLocation int pos)
         {
-            return autoCompleteDetails.stream().filter(a -> a.location.contains(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletion>toImmutableList());
-        }
-        
-        @SuppressWarnings("units")
-        public @SourceLocation int mapOldPos(@SourceLocation int pos, boolean caretPos)
-        {
-            int mapped = pos - removedChars.get(0, pos).cardinality();
-            if (caretPos)
-            {
-                for (ErrorDetails error : errors)
-                {
-                    error.caretHasLeftSinceEdit = !error.location.contains(mapped);
-                }
-            }
-            return mapped;
+            return autoCompleteDetails.stream().filter(a -> a.location.touches(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletion>toImmutableList());
         }
 
-        public int mapContentToDisplay(@SourceLocation int contentPos)
+        public @DisplayLocation int mapContentToDisplay(@CanonicalLocation int contentPos)
         {
             // We assume that the position is a caret position when mapping from content
             for (CaretPos caretPosition : caretPositions)
@@ -103,34 +89,18 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
             }
             // Uh-oh!  Inaccurate, but will do as a fallback:
             Log.logStackTrace("Trying to find non-caret content position " + contentPos + " in {{{" + adjustedContent + "}}} positions are: " + Utility.listToString(caretPositions));
-            return contentPos;
+            @SuppressWarnings("units")
+            @DisplayLocation int fallback = contentPos;
+            return fallback;
         }
 
-        // Finds the Nth (N = targetPos) clear index in the given bitset.
-        @SuppressWarnings("units")
-        public static Span findNthClearIndex(BitSet addedDisplayChars, int targetPos)
-        {
-            // We look for the ith empty spot in addedDisplayChars
-            int start = 0;
-            for (int j = 0; j < targetPos; j++)
-            {
-                if (addedDisplayChars.get(j))
-                {
-                    start += 1;
-                }
-                start += 1;
-            }
-            // It ends at the next empty spot:
-            return new Span(start, addedDisplayChars.nextClearBit(targetPos) - targetPos + start);
-        }
-
-        public @SourceLocation int mapDisplayToContent(int clickedCaret, boolean biasEarlier)
+        public @CanonicalLocation int mapDisplayToContent(@DisplayLocation int clickedCaret, boolean biasEarlier)
         {
             // Shouldn't happen, but try to stay sane:
             if (caretPositions.isEmpty())
             {
                 @SuppressWarnings("units")
-                @SourceLocation int zero = 0;
+                @CanonicalLocation int zero = 0;
                 return zero;
             }
             // We need to find the nearest display caret position
@@ -151,21 +121,61 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
         }
     }
     
-    public interface CaretPosMapper
-    {
-        public @SourceLocation int mapCaretPos(@SourceLocation int pos);
-    }
-    
     public static class AutoCompleteDetails<CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
     {
-        public final Span location;
+        public final CanonicalSpan location;
         public final CODE_COMPLETION_CONTEXT codeCompletionContext;
 
-        public AutoCompleteDetails(Span location, CODE_COMPLETION_CONTEXT codeCompletionContext)
+        public AutoCompleteDetails(CanonicalSpan location, CODE_COMPLETION_CONTEXT codeCompletionContext)
         {
             this.location = location;
             this.codeCompletionContext = codeCompletionContext;
         }
+    }
+
+    // Helper class for implementations
+    static class RemovedCharacters
+    {
+        // Indexes are in RawInputLocation
+        private final BitSet removedChars = new BitSet();
+
+        @SuppressWarnings("units")
+        public @CanonicalLocation int map(@RawInputLocation int location)
+        {
+            return location - removedChars.get(0, location).cardinality();
+        }
+
+        public CanonicalSpan map(@RawInputLocation int startIncl, @RawInputLocation int endExcl)
+        {
+            return new CanonicalSpan(map(startIncl), map(endExcl));
+        }
+
+        public CanonicalSpan map(@RawInputLocation int startIncl, String skipString)
+        {
+            @SuppressWarnings("units")
+            @RawInputLocation int length = skipString.length();
+            return new CanonicalSpan(map(startIncl), map(startIncl + length));
+        }
+        
+        public void set(@RawInputLocation int index)
+        {
+            removedChars.set(index);
+        }
+
+        // Effectively does: this = this | (src << shiftBy)
+        public void orShift(RemovedCharacters src, int shiftBy)
+        {
+            for (int srcBit = src.removedChars.nextSetBit(0); srcBit != -1; srcBit = src.removedChars.nextSetBit(srcBit + 1))
+            {
+                removedChars.set(srcBit + shiftBy);
+            }
+        }
+    }
+
+    @SuppressWarnings("units")
+    public default @RawInputLocation int rawLength(String content)
+    {
+        return content.length();
     }
     
     // Takes latest content, lexes it, returns result

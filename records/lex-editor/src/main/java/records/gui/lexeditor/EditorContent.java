@@ -1,12 +1,13 @@
 package records.gui.lexeditor;
 
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
+import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import javafx.scene.text.Text;
 import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.TopLevelEditor.Focus;
@@ -17,16 +18,15 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
     private LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> curContent;
-    private @SourceLocation int curCaretPosition;
-    private @SourceLocation int curAnchorPosition;
+    private @CanonicalLocation int curCaretPosition;
+    private @CanonicalLocation int curAnchorPosition;
     private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
-    private final ArrayList<FXPlatformConsumer<@SourceLocation Integer>> caretPositionListeners = new ArrayList<>();
+    private final ArrayList<FXPlatformConsumer<@CanonicalLocation Integer>> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
     
     @SuppressWarnings("units")
@@ -46,7 +46,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             positionCaret(curContent.caretPositions.get(curContent.caretPositions.size() - 1).positionInternal, true);
     }
     
-    public void positionCaret(@SourceLocation int pos, boolean alsoSetAnchor)
+    public void positionCaret(@CanonicalLocation int pos, boolean alsoSetAnchor)
     {
         curCaretPosition = pos;
         if (alsoSetAnchor)
@@ -56,18 +56,18 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     void notifyCaretPositionListeners()
     {
-        for (FXPlatformConsumer<@SourceLocation Integer> caretPositionListener : caretPositionListeners)
+        for (FXPlatformConsumer<@CanonicalLocation Integer> caretPositionListener : caretPositionListeners)
         {
             caretPositionListener.consume(curCaretPosition);
         }
     }
 
-    public @SourceLocation int getAnchorPosition()
+    public @CanonicalLocation int getAnchorPosition()
     {
         return curAnchorPosition;
     }
 
-    public @SourceLocation int getCaretPosition()
+    public @CanonicalLocation int getCaretPosition()
     {
         return curCaretPosition;
     }
@@ -82,9 +82,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
         @SuppressWarnings("units")
-        @SourceLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
+        @RawInputLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
         this.curContent = lexer.process(newText, newCaretPos);
-        this.curCaretPosition = curContent.mapOldPos(newCaretPos, true);
+        this.curCaretPosition = curContent.removedChars.map(newCaretPos);
         this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)
@@ -142,7 +142,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return 0;
     }
 
-    public void addCaretPositionListener(FXPlatformConsumer<@SourceLocation Integer> listener)
+    public void addCaretPositionListener(FXPlatformConsumer<@CanonicalLocation Integer> listener)
     {
         caretPositionListeners.add(listener);
     }
@@ -152,8 +152,8 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.errors;
     }
 
-    @SuppressWarnings("units")
-    public @SourceLocation int[] getValidCaretPositions()
+    @SuppressWarnings("units") // Because of toArray
+    public @CanonicalLocation int[] getValidCaretPositions()
     {
         return Ints.toArray(Utility.mapList(curContent.caretPositions, p -> p.positionInternal));
     }
@@ -190,14 +190,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.mapContentToDisplay(getAnchorPosition());
     }
 
-    public @SourceLocation int mapDisplayToContent(int clickedCaretPos, boolean biasEarlier)
+    public @CanonicalLocation int mapDisplayToContent(@DisplayLocation int clickedCaretPos, boolean biasEarlier)
     {
         return curContent.mapDisplayToContent(clickedCaretPos, biasEarlier);
     }
     
-    public int mapContentToDisplay(@SourceLocation int contentIndex)
+    public @DisplayLocation int mapContentToDisplay(@CanonicalLocation int contentIndex)
     {
-        return curContent.mapContentToDisplay(curContent.mapOldPos(contentIndex, false));
+        return curContent.mapContentToDisplay(contentIndex);
     }
 
     public StyledString getDisplay()

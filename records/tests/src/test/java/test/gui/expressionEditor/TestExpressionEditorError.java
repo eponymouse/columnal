@@ -1,22 +1,18 @@
 package test.gui.expressionEditor;
 
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Path;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.SubstringMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
@@ -30,8 +26,8 @@ import records.data.unit.UnitManager;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ListUtilTrait;
@@ -40,7 +36,6 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -258,7 +253,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                     MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), new MultiSubstringMatcher(expectedErrors.get(i).expectedMessageParts));
                 }
 
-                boolean hasSpanNotContainingEnd = Arrays.stream(errors).anyMatch(s -> !s.location.contains(expression.length()));
+                boolean hasSpanNotContainingEnd = Arrays.stream(errors).anyMatch(s -> !s.location.touches(expression.length()));
                 assertErrorShowing(hasSpanNotContainingEnd, false);
 
 
@@ -341,12 +336,12 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     
     private static class Error
     {
-        private final Span location;
+        private final CanonicalSpan location;
         private final ImmutableList<String> expectedMessageParts;
 
-        public Error(@SourceLocation int start, @SourceLocation int end, ImmutableList<String> expectedMessageParts)
+        public Error(@CanonicalLocation int start, @CanonicalLocation int end, ImmutableList<String> expectedMessageParts)
         {
-            this.location = new Span(start, end);
+            this.location = new CanonicalSpan(start, end);
             this.expectedMessageParts = expectedMessageParts;
         }
     }

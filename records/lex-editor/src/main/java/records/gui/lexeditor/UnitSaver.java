@@ -10,7 +10,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.UnitLexer.UnitBracket;
 import records.gui.lexeditor.UnitLexer.UnitOp;
 import records.gui.lexeditor.UnitSaver.Context;
@@ -53,17 +53,17 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
     
     
-    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, Span>> operators)
+    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
     {
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, Span opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
+    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, Span opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
+    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
     {
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
@@ -74,7 +74,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     };
 
     @Override
-    public BracketAndNodes<UnitExpression, UnitSaver, Void> expectSingle(@UnknownInitialization(Object.class)UnitSaver this, EditorLocationAndErrorRecorder locationRecorder, Span location)
+    public BracketAndNodes<UnitExpression, UnitSaver, Void> expectSingle(@UnknownInitialization(Object.class)UnitSaver this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location)
     {
         return new BracketAndNodes<>(new ApplyBrackets<Void, UnitExpression>()
         {
@@ -106,7 +106,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                 locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
             return brackets.applyBrackets.applySingle(record(brackets.location, new InvalidOperatorUnitExpression(ImmutableList.of())));
         }
-        Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
+        CanonicalSpan location = CanonicalSpan.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
         
         CollectedItems collectedItems = processItems(content);
 
@@ -128,8 +128,8 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     {
                         validOperators.remove(i);
                         @Recorded UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
-                        Span recorder = locationRecorder.recorderFor(validOperands.get(i));
-                        validOperands.set(i, record(Span.fromTo(recorder, locationRecorder.recorderFor(power)), new UnitRaiseExpression(validOperands.get(i), power.getNumber())));
+                        CanonicalSpan recorder = locationRecorder.recorderFor(validOperands.get(i));
+                        validOperands.set(i, record(CanonicalSpan.fromTo(recorder, locationRecorder.recorderFor(power)), new UnitRaiseExpression(validOperands.get(i), power.getNumber())));
                     }
                 }
             }
@@ -161,7 +161,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected @Recorded UnitExpression makeInvalidOp(Span location, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
+    protected @Recorded UnitExpression makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
     {
         return locationRecorder.recordUnit(location, new InvalidOperatorUnitExpression(Utility.<Either<OpAndNode, @Recorded UnitExpression>, @Recorded UnitExpression>mapListI(items, x -> x.<@Recorded UnitExpression>either(op -> locationRecorder.recordUnit(op.sourceNode, new InvalidSingleUnitExpression(op.op.getContent())), y -> y))));
     }
@@ -171,16 +171,16 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new Pair<>(op, TranslationUtility.getString(key));
     }
 
-    public void saveBracket(UnitBracket bracket, Span errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveBracket(UnitBracket bracket, CanonicalSpan errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
         if (bracket == UnitBracket.OPEN_ROUND)
         {
             currentScopes.push(new Scope(errorDisplayer, new Terminator(")")
             {
                 @Override
-                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, Span keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
                 {
-                    BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = expectSingle(locationRecorder, Span.fromTo(errorDisplayer, keywordErrorDisplayer));
+                    BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, keywordErrorDisplayer));
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
@@ -197,7 +197,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         items.add(makeContent.fetchContent(brackets));
                         if (terminator != null)
                             items.add(record(errorDisplayer, new InvalidSingleUnitExpression(terminator.getContent())));
-                        @Recorded UnitExpression invalid = record(Span.fromTo(brackets.location, keywordErrorDisplayer), new InvalidOperatorUnitExpression(items.build()));
+                        @Recorded UnitExpression invalid = record(CanonicalSpan.fromTo(brackets.location, keywordErrorDisplayer), new InvalidOperatorUnitExpression(items.build()));
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
                 }
@@ -221,13 +221,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected Span recorderFor(@Recorded UnitExpression unitExpression)
+    protected CanonicalSpan recorderFor(@Recorded UnitExpression unitExpression)
     {
         return locationRecorder.recorderFor(unitExpression);
     }
 
     @Override
-    protected @Recorded UnitExpression record(Span location, UnitExpression unitExpression)
+    protected @Recorded UnitExpression record(CanonicalSpan location, UnitExpression unitExpression)
     {
         return locationRecorder.recordUnit(location, unitExpression);
     }

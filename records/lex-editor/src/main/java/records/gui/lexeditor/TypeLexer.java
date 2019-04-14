@@ -2,12 +2,15 @@ package records.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
+import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
@@ -71,16 +74,15 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
         }
     }
     
-    @SuppressWarnings("units")
     @Override
     public LexerResult<TypeExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
         TypeSaver saver = new TypeSaver();
         boolean prevWasIdent = false;
-        int curIndex = 0;
+        @RawInputLocation int curIndex = RawInputLocation.ZERO;
         StringBuilder s = new StringBuilder();
         StyledString.Builder d = new StyledString.Builder();
-        BitSet missingSpots = new BitSet();
+        RemovedCharacters removedCharacters = new RemovedCharacters();
         nextToken: while (curIndex < content.length())
         {
             // Skip any extra spaces at the start of tokens:
@@ -94,10 +96,10 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                 }
                 else
                 {
-                    missingSpots.set(curIndex);
+                    removedCharacters.set(curIndex);
                 }
                 prevWasIdent = false;
-                curIndex += 1;
+                curIndex += RawInputLocation.ONE;
                 continue nextToken;
             }
             prevWasIdent = false;
@@ -106,8 +108,8 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (content.startsWith(bracket.getContent(), curIndex))
                 {
-                    saver.saveKeyword(bracket, new Span(curIndex, curIndex + bracket.getContent().length()), c -> {});
-                    curIndex += bracket.getContent().length();
+                    saver.saveKeyword(bracket, removedCharacters.map(curIndex, bracket.getContent()), c -> {});
+                    curIndex += rawLength(bracket.getContent());
                     s.append(bracket.getContent());
                     d.append(bracket.getContent());
                     continue nextToken;
@@ -117,8 +119,8 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (content.startsWith(op.getContent(), curIndex))
                 {
-                    saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
-                    curIndex += op.getContent().length();
+                    saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()), c -> {});
+                    curIndex += rawLength(op.getContent());
                     s.append(op.getContent());
                     d.append(op.getContent() + " ");
                     continue nextToken;
@@ -130,8 +132,8 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (content.startsWith(dataType.toString(), curIndex))
                 {
-                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), new Span(curIndex, curIndex + dataType.toString().length()), c -> {});
-                    curIndex += dataType.toString().length();
+                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndex, dataType.toString()), c -> {});
+                    curIndex += rawLength(dataType.toString());
                     s.append(dataType.toString());
                     d.append(dataType.toString());
                     continue nextToken;
@@ -140,60 +142,61 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             
             if (content.charAt(curIndex) == '{')
             {
-                int end = content.indexOf('}', curIndex + 1);
+                @SuppressWarnings("units")
+                @RawInputLocation int end = content.indexOf('}', curIndex + 1);
                 if (end != -1)
                 {
                     UnitLexer unitLexer = new UnitLexer();
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
-                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, end + 1), c -> {});
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE), c -> {});
                     s.append("{");
                     d.append("{");
                     s.append(lexerResult.adjustedContent);
                     d.append(lexerResult.display);
                     s.append("}");
                     d.append("}");
-                    curIndex = end + 1;
+                    curIndex = end + RawInputLocation.ONE;
                 }
                 else
                 {
-                    saver.locationRecorder.addErrorAndFixes(new Span(curIndex, content.length()), StyledString.s("Unit lacks closing }"), ImmutableList.of());
+                    saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content), StyledString.s("Unit lacks closing }"), ImmutableList.of());
                     UnitLexer unitLexer = new UnitLexer();
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
-                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), new Span(curIndex, content.length()), c -> {});
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});
                     s.append(content.substring(curIndex));
                     d.append(content.substring(curIndex));
-                    curIndex = content.length();
+                    curIndex = rawLength(content);
                 }
                 continue nextToken;
             }
 
-            @Nullable Pair<@ExpressionIdentifier String, Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
+            @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 prevWasIdent = true;
-                saver.saveOperand(new IdentTypeExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
+                saver.saveOperand(new IdentTypeExpression(parsed.getFirst()), removedCharacters.map(curIndex, parsed.getSecond()), c -> {});
                 curIndex = parsed.getSecond();
                 s.append(parsed.getFirst());
                 d.append(parsed.getFirst());
                 continue nextToken;
             }
 
-            Span invalidCharLocation = new Span(curIndex, curIndex + 1);
+            CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
             saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             s.append(content.charAt(curIndex));
             d.append("" + content.charAt(curIndex));
             
-            curIndex += 1;
+            curIndex += RawInputLocation.ONE;
         }
-        @Recorded TypeExpression saved = saver.finish(new Span(curIndex, curIndex));
+        @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
         if (caretPositions.isEmpty())
-            caretPositions = ImmutableList.of(new CaretPos(0, 0));
+            caretPositions = ImmutableList.of(new CaretPos(CanonicalLocation.ZERO, DisplayLocation.ZERO));
         StyledString built = d.build();
         if (built.getLength() == 0)
             built = StyledString.s(" ");
-        return new LexerResult<>(saved, s.toString(), missingSpots, false, caretPositions, built, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, s.toString(), removedCharacters, false, caretPositions, built, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

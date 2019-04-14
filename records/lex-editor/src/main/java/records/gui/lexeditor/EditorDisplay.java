@@ -1,6 +1,7 @@
 package records.gui.lexeditor;
 
-import annotation.units.SourceLocation;
+import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.text.HitInfo;
@@ -20,8 +21,8 @@ import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledString.Style;
@@ -36,7 +37,6 @@ import utility.gui.TextEditorBase;
 
 import java.util.BitSet;
 import java.util.OptionalInt;
-import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public final class EditorDisplay extends TextEditorBase
@@ -101,7 +101,9 @@ public final class EditorDisplay extends TextEditorBase
             HitInfo hitInfo = hitTest(event.getX(), event.getY());
             if (hitInfo != null)
             {
-                content.positionCaret(content.mapDisplayToContent(hitInfo.getInsertionIndex(), !hitInfo.isLeading()), true);
+                @SuppressWarnings("units")
+                @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
+                content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), true);
             }
             event.consume();
         });
@@ -112,8 +114,8 @@ public final class EditorDisplay extends TextEditorBase
             {
                 FXUtility.mouse(editor).mouseHover(hasBeenFocused ? content.getErrors().stream().filter(e -> {
                     @SuppressWarnings("units")
-                    @SourceLocation int displayIndex = hit.getCharIndex();
-                    return e.displayLocation != null && e.displayLocation.contains(displayIndex) && e.caretHasLeftSinceEdit;
+                    @DisplayLocation int displayIndex = hit.getCharIndex();
+                    return e.displayLocation != null && e.displayLocation.touches(displayIndex) && e.caretHasLeftSinceEdit;
                 }).collect(ImmutableList.<ErrorDetails>toImmutableList()) : null);
             }
             else
@@ -133,7 +135,7 @@ public final class EditorDisplay extends TextEditorBase
                 triggerFix.consume(fKey.getAsInt() - 1);
             }
             
-            @SourceLocation int[] caretPositions = content.getValidCaretPositions();
+            @CanonicalLocation int[] caretPositions = content.getValidCaretPositions();
             int caretPosIndex = content.getCaretPosAsValidIndex();
             int caretPosition = content.getCaretPosition();
             switch (keyEvent.getCode())
@@ -249,14 +251,14 @@ public final class EditorDisplay extends TextEditorBase
                     else
                         this.content.replaceSelection("{}");
                     @SuppressWarnings("units")
-                    @SourceLocation int one = 1;
+                    @CanonicalLocation int one = 1;
                     content.positionCaret(this.getCaretPosition() - one, true);
                 }
                 else if (")}]".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
                 {
                     // Overtype instead
                     @SuppressWarnings("units")
-                    @SourceLocation int one = 1;
+                    @CanonicalLocation int one = 1;
                     this.content.positionCaret(content.getCaretPosition() + one, true);
                 }
                 else
@@ -341,7 +343,7 @@ public final class EditorDisplay extends TextEditorBase
     }
     
     @OnThread(Tag.FXPlatform)
-    public @SourceLocation int getCaretPosition()
+    public @CanonicalLocation int getCaretPosition()
     {
         return content.getCaretPosition();
     }
@@ -381,7 +383,7 @@ public final class EditorDisplay extends TextEditorBase
                 error.caretHasLeftSinceEdit = true;
                 if (error.displayLocation == null)
                 {
-                    error.displayLocation = new Span(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
+                    error.displayLocation = new DisplaySpan(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
                 }
                 errorChars.set(error.displayLocation.start, error.displayLocation.end);
             }

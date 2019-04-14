@@ -2,9 +2,10 @@ package records.gui.lexeditor;
 
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
@@ -62,20 +63,20 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
         }
     }
     
-    @SuppressWarnings("units")
     @Override
     public LexerResult<UnitExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
         UnitSaver saver = new UnitSaver();
-        int curIndex = 0;
+        RemovedCharacters removedCharacters = new RemovedCharacters();
+        @RawInputLocation int curIndex = RawInputLocation.ZERO;
         nextToken: while (curIndex < content.length())
         {
             for (UnitBracket bracket : UnitBracket.values())
             {
                 if (content.startsWith(bracket.getContent(), curIndex))
                 {
-                    saver.saveBracket(bracket, new Span(curIndex, curIndex + bracket.getContent().length()), c -> {});
-                    curIndex += bracket.getContent().length();
+                    saver.saveBracket(bracket, removedCharacters.map(curIndex, bracket.getContent()), c -> {});
+                    curIndex += rawLength(bracket.getContent());
                     continue nextToken;
                 }
             }
@@ -83,8 +84,8 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             {
                 if (content.startsWith(op.getContent(), curIndex))
                 {
-                    saver.saveOperator(op, new Span(curIndex, curIndex + op.getContent().length()), c -> {});
-                    curIndex += op.getContent().length();
+                    saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()), c -> {});
+                    curIndex += rawLength(op.getContent());
                     continue nextToken;
                 }
             }
@@ -92,35 +93,35 @@ public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
             if ((content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9') || 
                 (content.charAt(curIndex) == '-' && curIndex + 1 < content.length() && (content.charAt(curIndex + 1) >= '0' && content.charAt(curIndex + 1) <= '9')))
             {
-                int startIndex = curIndex;
+                @RawInputLocation int startIndex = curIndex;
                 // Minus only allowed at start:
                 if (content.charAt(curIndex) == '-')
                 {
-                    curIndex += 1;
+                    curIndex += RawInputLocation.ONE;
                 }
                 while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
-                    curIndex += 1;
-                saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(content.substring(startIndex, curIndex))), new Span(startIndex, curIndex), c -> {});
+                    curIndex += RawInputLocation.ONE;
+                saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(content.substring(startIndex, curIndex))), removedCharacters.map(startIndex, curIndex), c -> {});
                 continue nextToken;
             }
 
-            @Nullable Pair<@UnitIdentifier String, Integer> parsed = IdentifierUtility.consumeUnitIdentifier(content, curIndex);
+            @Nullable Pair<@UnitIdentifier String, @RawInputLocation Integer> parsed = IdentifierUtility.consumeUnitIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
-                saver.saveOperand(new SingleUnitExpression(parsed.getFirst()), new Span(curIndex, parsed.getSecond()), c -> {});
+                saver.saveOperand(new SingleUnitExpression(parsed.getFirst()), removedCharacters.map(curIndex, parsed.getSecond()), c -> {});
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
 
-            Span invalidCharLocation = new Span(curIndex, curIndex + 1);
+            CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
             saver.saveOperand(new InvalidSingleUnitExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             
-            curIndex += 1;
+            curIndex += RawInputLocation.ONE;
         }
-        @Recorded UnitExpression saved = saver.finish(new Span(curIndex, curIndex));
+        @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
-        return new LexerResult<>(saved, content, new BitSet(), false, caretPositions, StyledString.s(content), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

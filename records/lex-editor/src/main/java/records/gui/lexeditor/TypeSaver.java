@@ -10,7 +10,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.Span;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.transformations.expression.UnitExpression;
@@ -46,7 +46,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         {
             @Nullable
             @Override
-            public @Recorded TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, Span>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
+            public @Recorded TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
             {
                 return bracketedStatus.applyBrackets.apply(new BracketContent(typeExpressions));
             }
@@ -69,13 +69,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
 
-    public void saveKeyword(Keyword keyword, Span errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
         Supplier<ImmutableList<@Recorded TypeExpression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, new InvalidIdentTypeExpression(keyword.getContent())));
         
         if (keyword == Keyword.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<TypeExpression, TypeSaver, BracketContent>(tupleOrSingle(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()),
+            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<TypeExpression, TypeSaver, BracketContent>(tupleOrSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, close)), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()),
                     (bracketed, bracketEnd) -> {
                         ArrayList<Either<@Recorded TypeExpression, OpAndNode>> precedingItems = currentScopes.peek().items;
                         // Type applications are a special case:
@@ -99,15 +99,15 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
                                     typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.of(newArg));
                                 }
-                                return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(Span.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
+                                return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }
                         }
-                        return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(Span.fromTo(errorDisplayer, bracketEnd), bracketed));
+                        return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(errorDisplayer, bracketEnd), bracketed));
             }, prefixKeyword, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_SQUARE), close -> new BracketAndNodes<>(makeList(locationRecorder, Span.fromTo(errorDisplayer, close)), Span.fromTo(errorDisplayer, close), ImmutableList.of()), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword, true)));
+            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_SQUARE), close -> new BracketAndNodes<>(makeList(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, close)), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()), (e, c) -> Either.<@Recorded TypeExpression, Terminator>left(e), prefixKeyword, true)));
         }
         else
         {
@@ -121,7 +121,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
 
-    private ApplyBrackets<BracketContent, TypeExpression> tupleOrSingle(EditorLocationAndErrorRecorder errorDisplayerRecord, Span location)
+    private ApplyBrackets<BracketContent, TypeExpression> tupleOrSingle(EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
     {
         return new ApplyBrackets<BracketContent, TypeExpression>()
         {
@@ -142,7 +142,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         };
     }
 
-    private ApplyBrackets<BracketContent, TypeExpression> makeList(EditorLocationAndErrorRecorder errorDisplayerRecord, Span location)
+    private ApplyBrackets<BracketContent, TypeExpression> makeList(EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
     {
         return new ApplyBrackets<BracketContent, TypeExpression>()
         {
@@ -164,7 +164,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class)TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, Span location)
+    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class)TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
     {
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression>()
         {
@@ -187,7 +187,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     
 
     @Override
-    public void saveOperand(TypeExpression singleItem, Span location, FXPlatformConsumer<Context> withContext)
+    public void saveOperand(TypeExpression singleItem, CanonicalSpan location, FXPlatformConsumer<Context> withContext)
     {
         if (singleItem instanceof UnitLiteralTypeExpression)
         {
@@ -199,7 +199,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     if (t instanceof NumberTypeExpression && !((NumberTypeExpression) t).hasUnit())
                     {
                         curItems.remove(curItems.size() - 1);
-                        super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression) singleItem).getUnitExpression()), Span.fromTo(locationRecorder.recorderFor(t), location), withContext);
+                        super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression) singleItem).getUnitExpression()), CanonicalSpan.fromTo(locationRecorder.recorderFor(t), location), withContext);
                         return true;
                     }
                     return false;
@@ -219,19 +219,19 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Recorded TypeExpression makeInvalidOp(Span location, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
+    protected @Recorded TypeExpression makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
         return locationRecorder.recordType(location, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.<@Recorded TypeExpression>either(u -> record(u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
     }
 
     @Override
-    protected Span recorderFor(@Recorded TypeExpression typeExpression)
+    protected CanonicalSpan recorderFor(@Recorded TypeExpression typeExpression)
     {
         return locationRecorder.recorderFor(typeExpression);
     }
 
     @Override
-    protected @Recorded TypeExpression record(Span location, TypeExpression typeExpression)
+    protected @Recorded TypeExpression record(CanonicalSpan location, TypeExpression typeExpression)
     {
         return locationRecorder.recordType(location, typeExpression);
     }
@@ -248,7 +248,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         if (content.isEmpty())
             return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));
 
-        Span location = Span.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
+        CanonicalSpan location = CanonicalSpan.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
         
         content = new ArrayList<>(content);
 
@@ -262,7 +262,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 if (unitLiteral != null)
                 {
                     content.set(i, Either.left(
-                        record(Span.fromTo(locationRecorder.recorderFor(numberType),
+                        record(CanonicalSpan.fromTo(locationRecorder.recorderFor(numberType),
                             locationRecorder.recorderFor(unitLiteral)),
                             new NumberTypeExpression(unitLiteral.getUnitExpression()))));
                     i -= 1;
