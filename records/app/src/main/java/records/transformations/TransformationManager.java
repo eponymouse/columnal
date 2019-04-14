@@ -55,7 +55,7 @@ public class TransformationManager implements TransformationLoader
             new Sort.Info(),
             new Check.Info(),
             new ManualEdit.Info(),
-            new HideColumns.Info(),
+            //new HideColumns.Info(),
             new Concatenate.Info()
         );
     }
