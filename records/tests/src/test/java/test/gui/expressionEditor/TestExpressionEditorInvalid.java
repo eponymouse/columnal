@@ -25,6 +25,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -85,6 +86,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             {
                 return Stream.of();
             }
-        }), new ReadOnlyObjectWrapper<@Nullable DataType>(null), null, dummyManager.getTypeManager(), null, FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        }), new ReadOnlyObjectWrapper<@Nullable DataType>(null), null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

@@ -8,9 +8,11 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TypeState;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplierInt;
 
 public class ExpressionErrorException extends UserException
 {
@@ -27,13 +29,15 @@ public class ExpressionErrorException extends UserException
         public final Expression current;
         public final @Nullable TableId srcTableId;
         public final ColumnLookup columnLookup;
+        public final FXPlatformSupplierInt<TypeState> makeTypeState;
         public final @Nullable DataType expectedType;
 
-        protected EditableExpression(Expression current, @Nullable TableId srcTableId, ColumnLookup columnLookup, @Nullable DataType expectedType)
+        protected EditableExpression(Expression current, @Nullable TableId srcTableId, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
         {
             this.current = current;
             this.srcTableId = srcTableId;
             this.columnLookup = columnLookup;
+            this.makeTypeState = makeTypeState;
             this.expectedType = expectedType;
         }
 

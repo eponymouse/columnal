@@ -149,7 +149,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         try
         {
             ErrorAndTypeRecorderStorer errorAndTypeRecorder = new ErrorAndTypeRecorderStorer();
-            @Nullable TypeExp type = expression.checkExpression(columnLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+            @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
@@ -161,6 +161,12 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         {
             return rs -> new ErrorColumn(rs, mgr.getTypeManager(), columnId, e.getStyledMessage());
         }
+    }
+
+    @OnThread(Tag.Any)
+    public static TypeState makeTypeState(TableManager mgr) throws InternalException
+    {
+        return TypeState.withRowNumber(mgr.getTypeManager());
     }
 
     @Override

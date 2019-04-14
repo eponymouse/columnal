@@ -91,7 +91,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid, new TypeState(valid.typeManager.getUnitManager(), valid.typeManager), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
+            if (null == expression.check(valid, new TypeState(valid.typeManager), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)

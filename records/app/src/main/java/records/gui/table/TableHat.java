@@ -57,6 +57,7 @@ import records.transformations.SummaryStatistics;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.TypeState;
 import styled.StyledCSS;
 import styled.StyledString;
 import styled.StyledString.Builder;
@@ -64,6 +65,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
+import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
@@ -100,7 +102,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s(" "),
                 editSourceLink(parent, filter),
                 StyledString.s(", keeping rows where: "),
-                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()), DataType.BOOLEAN, newExp ->
+                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, newExp ->
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                         table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
             );
@@ -227,7 +229,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 editSourceLink(parent, check),
                 StyledString.s(" that "),
                 StyledString.s(type),
-                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSrcTableId()), check.getColumnLookup(), DataType.BOOLEAN, e -> 
+                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSrcTableId()), check.getColumnLookup(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), check.getCheckType()), DataType.BOOLEAN, e -> 
                     parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSrcTableId(), check.getCheckType(), e), null)
                 )
             );
@@ -604,7 +606,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         });
     }
 
-    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toStyledString().withStyle(new Clickable() {
             @Override
@@ -613,7 +615,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, expectedType).showAndWait().ifPresent(newExp -> {
+                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, makeTypeState, expectedType).showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }

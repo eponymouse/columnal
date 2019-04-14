@@ -29,7 +29,9 @@ import java.util.function.Consumer;
  */
 public class TypeState
 {
+    // In-built variables:
     public static final String GROUP_COUNT = "group count";
+    public static final String ROW_NUMBER = "row number";
     
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
@@ -38,9 +40,9 @@ public class TypeState
     private final UnitManager unitManager;
     private int nextLambdaId = 1;
 
-    public TypeState(UnitManager unitManager, TypeManager typeManager)
+    public TypeState(TypeManager typeManager)
     {
-        this(ImmutableMap.of(), typeManager, unitManager);
+        this(ImmutableMap.of(), typeManager, typeManager.getUnitManager());
     }
 
     private TypeState(ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
@@ -48,6 +50,16 @@ public class TypeState
         this.variables = variables;
         this.typeManager = typeManager;
         this.unitManager = unitManager;
+    }
+
+    public static TypeState withRowNumber(TypeManager typeManager) throws InternalException
+    {
+        TypeState typeState = new TypeState(typeManager).add(ROW_NUMBER, TypeExp.plainNumber(null), ss -> {
+        });
+        if (typeState != null)
+            return typeState;
+        else
+            throw new InternalException("Could not add row number variable");
     }
 
     public @Nullable TypeState add(String varName, TypeExp type, Consumer<StyledString> error)

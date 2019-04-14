@@ -927,7 +927,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null, null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), () -> Calculate.makeTypeState(parent.getManager()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1052,6 +1052,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
                 filter.getFilterExpression(),
                 new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()),
+                    () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
                 DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
                 
@@ -1121,7 +1122,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.expectedType)
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->

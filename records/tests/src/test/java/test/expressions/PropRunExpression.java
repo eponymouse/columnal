@@ -47,7 +47,7 @@ public class PropRunExpression
         {
             DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable CheckedExp checked = src.expression.check(src, new TypeState(dummyManager.getUnitManager(), dummyManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, errors);
+            @Nullable CheckedExp checked = src.expression.check(src, new TypeState(dummyManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, errors);
             assertEquals("Checked iff error", checked == null, errors.getAllErrors().count() != 0);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)

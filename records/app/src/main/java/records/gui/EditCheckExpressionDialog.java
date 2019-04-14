@@ -12,6 +12,7 @@ import records.data.Table;
 import records.data.datatype.DataType;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.lexeditor.TopLevelEditor.Focus;
+import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -48,7 +49,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         ReadOnlyObjectWrapper<@Nullable DataType> expectedType = new ReadOnlyObjectWrapper<@Nullable DataType>(DataType.BOOLEAN);
         SimpleObjectProperty<ColumnLookup> columnLookupProperty = new SimpleObjectProperty<>(columnLookup.apply(initialCheckType));
         FXUtility.addChangeListenerPlatform(combo.getSelectionModel().selectedItemProperty(), ct -> columnLookupProperty.set(columnLookup.apply(ct == null ? initialCheckType : ct)));
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, expectedType, parent, parent.getManager().getTypeManager(), null, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, expectedType, parent, parent.getManager().getTypeManager(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), combo.getSelectionModel().getSelectedItem()), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
@@ -102,4 +103,5 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
+
 }

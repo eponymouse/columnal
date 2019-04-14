@@ -59,7 +59,7 @@ public class TransformationEdits
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
         // expression may still be null
         
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), null, null).showAndWait().ifPresent(newDetails -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), () -> Calculate.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->

@@ -10,6 +10,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.ListExDTV;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.explanation.Explanation;
@@ -97,13 +98,13 @@ public class Check extends Transformation implements SingleSourceTransformation
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
             ColumnLookup lookup = getColumnLookup();
-            @Nullable TypeExp checked = checkExpression.checkExpression(lookup, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+            @Nullable TypeExp checked = checkExpression.checkExpression(lookup, makeTypeState(getManager().getTypeManager(), checkType), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
                 typeFinal = errors.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
             if (typeFinal == null)
-                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, lookup, DataType.BOOLEAN)
+                throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, lookup, () -> makeTypeState(getManager().getTypeManager(), checkType), DataType.BOOLEAN)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -353,6 +354,12 @@ public class Check extends Transformation implements SingleSourceTransformation
         if (obj instanceof Check)
             return checkExpression.equals(((Check)obj).checkExpression);
         return false;
+    }
+
+    @OnThread(Tag.Any)
+    public static TypeState makeTypeState(TypeManager typeManager, @Nullable CheckType selectedItem) throws InternalException
+    {
+        return selectedItem == CheckType.STANDALONE ? new TypeState(typeManager) : TypeState.withRowNumber(typeManager);
     }
 
     public static class Info extends SingleSourceTransformationInfo

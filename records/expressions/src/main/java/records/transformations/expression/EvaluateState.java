@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -37,12 +38,12 @@ public final class EvaluateState
 
     public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, TypeLookup typeLookup)
     {
-        this(ImmutableMap.of(), typeManager, rowIndex, false, typeLookup);
+        this(makeVariables(rowIndex), typeManager, rowIndex, false, typeLookup);
     }
 
     public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
     {
-        this(ImmutableMap.of(), typeManager, rowIndex, recordExplanation, typeLookup);
+        this(makeVariables(rowIndex), typeManager, rowIndex, recordExplanation, typeLookup);
     }
 
     private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
@@ -52,6 +53,11 @@ public final class EvaluateState
         this.rowIndex = rowIndex;
         this.recordExplanation = recordExplanation;
         this.typeLookup = typeLookup;
+    }
+
+    private static ImmutableMap<String, @Value Object> makeVariables(OptionalInt rowIndex)
+    {
+        return rowIndex.isPresent() ? ImmutableMap.<String, @Value Object>of(TypeState.ROW_NUMBER, DataTypeUtility.<Integer>value(rowIndex.getAsInt() + 1)) : ImmutableMap.<String, @Value Object>of();
     }
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException

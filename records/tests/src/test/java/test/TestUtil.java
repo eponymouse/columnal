@@ -585,7 +585,7 @@ public class TestUtil
                 typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
             }
             */
-            return new TypeState(unitManager, typeManager);
+            return new TypeState(typeManager);
         }
         catch (InternalException | UserException e)
         {
@@ -1165,7 +1165,7 @@ public class TestUtil
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
-        expression.check(TestUtil.dummyColumnLookup(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
+        expression.check(TestUtil.dummyColumnLookup(), new TypeState(mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
         return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty(), (m, e) -> {throw new InternalException("No type lookup in runExpression");})).value;
     }
 

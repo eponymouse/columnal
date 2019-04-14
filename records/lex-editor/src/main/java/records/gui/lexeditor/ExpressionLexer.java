@@ -130,11 +130,6 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         this.allFunctions = functions;
         this.makeTypeState = makeTypeState;
     }
-
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions)
-    {
-        this(columnLookup, typeManager, functions, () -> new TypeState(typeManager.getUnitManager(), typeManager));
-    }
     
     private static class ContentChunk
     {

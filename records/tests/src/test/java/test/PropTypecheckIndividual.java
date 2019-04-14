@@ -360,7 +360,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
     {
-        TypeExp typeExp = e.checkExpression(TestUtil.dummyColumnLookup(), new TypeState(typeManager.getUnitManager(), typeManager), new ErrorAndTypeRecorderStorer());
+        TypeExp typeExp = e.checkExpression(TestUtil.dummyColumnLookup(), new TypeState(typeManager), new ErrorAndTypeRecorderStorer());
         if (typeExp == null)
             return null;
         else

@@ -12,9 +12,11 @@ import records.gui.lexeditor.ExpressionEditor;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplierInt;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;
@@ -27,13 +29,13 @@ public class EditExpressionDialog extends LightDialog<Expression>
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable DataType expectedType)
+    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
         initModality(Modality.NONE);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent, parent.getManager().getTypeManager(), null, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
         curValue = expressionEditor.save();
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));

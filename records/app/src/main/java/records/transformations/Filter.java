@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
-import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
@@ -133,13 +133,13 @@ public class Filter extends Transformation implements SingleSourceTransformation
                 ErrorAndTypeRecorderStorer typeRecorder = new ErrorAndTypeRecorderStorer();
                 // Must set it before, in case it throws:
                 typeChecked = true;
-                @Nullable TypeExp checked = filterExpression.checkExpression(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), typeRecorder);
+                @Nullable TypeExp checked = filterExpression.checkExpression(data, makeTypeState(getManager().getTypeManager()), typeRecorder);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
                     typeFinal = typeRecorder.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
-                    throw new ExpressionErrorException(typeRecorder.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, DataType.BOOLEAN)
+                    throw new ExpressionErrorException(typeRecorder.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, () -> makeTypeState(getManager().getTypeManager()), DataType.BOOLEAN)
                     {
                         @Override
                         @OnThread(Tag.Simulation)
@@ -167,7 +167,13 @@ public class Filter extends Transformation implements SingleSourceTransformation
                 //prog.progressUpdate((double)(indexMap.filled() - start) / (double)(index - start));
         }
     }
-    
+
+    @OnThread(Tag.Any)
+    public static TypeState makeTypeState(TypeManager typeManager) throws InternalException
+    {
+        return TypeState.withRowNumber(typeManager);
+    }
+
     @Override
     @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()

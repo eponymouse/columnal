@@ -135,7 +135,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     @Test
     public void testEmptyBracket()
     {
-        testError("()", e(0, 2, "missing", ")"));
+        testError("()", e(1, 1, "missing", ")"));
     }
 
     @Test
@@ -154,15 +154,15 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     public void testEmptyIf()
     {
         testError("@iftrue@then@else1@endif",
-            e(7,17, "missing", "@else"));
+            e(12,12, "missing", "@else"));
     }
 
     @Test
     public void testEmptyIf2()
     {
         testError("@iftrue@then@else@endif",
-                e(7,17, "missing", "@else"),
-                e(12,23, "missing", "@endif"));
+                e(12,12, "missing", "@else"),
+                e(17,17, "missing", "@endif"));
     }
 
     @Test

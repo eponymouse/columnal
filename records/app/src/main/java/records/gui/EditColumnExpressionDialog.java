@@ -45,7 +45,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     private Expression curValue;
     private final ColumnNameTextField nameField;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, @Nullable FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);

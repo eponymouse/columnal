@@ -116,7 +116,7 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.check(src, new TypeState(src.typeManager.getUnitManager(), src.typeManager), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorder()
+            assertNull(src.getDisplay(expression), expression.check(src, new TypeState(src.typeManager), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorder()
             {
                 @Override
                 public <E> void recordError(E src, StyledString error)
@@ -146,7 +146,7 @@ public class PropTypecheck
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
-        @Nullable TypeExp checked = src.expression.checkExpression(src, new TypeState(src.typeManager.getUnitManager(), src.typeManager), storer);
+        @Nullable TypeExp checked = src.expression.checkExpression(src, new TypeState(src.typeManager), storer);
         TypeExp srcTypeExp = TypeExp.fromDataType(null, src.type);
         assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
