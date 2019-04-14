@@ -2,6 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
@@ -182,7 +183,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public @Recorded Expression fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets)
                 {
-                    return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.terminator.terminatorDescription);
+                    return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
                 }
             }, keyword, errorDisplayer, withContext);
         }
@@ -233,7 +234,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets, @Nullable String terminatorDescription)
+    protected @Recorded Expression makeExpression(List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
         {
@@ -243,7 +244,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 if (terminatorDescription != null)
-                    locationRecorder.addErrorAndFixes(brackets.location, StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
+                    locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
                 return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
             }
         }

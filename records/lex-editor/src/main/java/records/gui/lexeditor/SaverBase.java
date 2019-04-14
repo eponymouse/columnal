@@ -488,7 +488,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return item.either(e -> recorderFor(e), op -> op.sourceNode);
     }
 
-    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, @Nullable String terminatorDescription);
+    //innerContentLocation is after opening bracket, used for
+    //errors about empty content items
+    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription);
     
     public final @Recorded EXPRESSION finish(CanonicalSpan errorDisplayer)
     {
@@ -496,12 +498,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // The error should be given by terminate when terminator is null
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, null), null, errorDisplayer, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, errorDisplayer.start, null), null, errorDisplayer, c -> {});
         }
 
         Scope closed = currentScopes.pop();
         BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(closed.openingNode, errorDisplayer));
-        return makeExpression(closed.items, brackets, closed.terminator.terminatorDescription);
+        return makeExpression(closed.items, brackets, errorDisplayer.start, closed.terminator.terminatorDescription);
     }
 
     private CanonicalSpan lastNode(Scope closed)
