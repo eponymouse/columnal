@@ -125,10 +125,31 @@
                 <xs:element ref="binaryOperator"/>
                 <xs:element ref="function"/>
                 <xs:element ref="type"/>
+                <xs:element ref="syntax"/>
             </xs:choice>
             <xs:attribute name="namespace" type="xs:string" use="required"/>
             <!-- For when it's imported by XInclude -->
             <xs:attribute ref="xml:base"/>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="syntax">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="typeArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="typeConstraint" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="syntaxElements">
+                    <xs:complexType>
+                        <xs:choice minOccurs="1" maxOccurs="unbounded">
+                            <xs:element name="keyword" type="xs:string"/>
+                            <xs:element name="type" type="xs:string"/>
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element ref="description"/>
+            </xs:sequence>
+            <xs:attribute name="id" type="xs:string" use="required"/>
+            <xs:attribute name="title" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
 

@@ -139,4 +139,35 @@
         </div>
     </xsl:template>
 
+    <xsl:template name="processSyntax">
+        <xsl:param name="syntax" select="."/>
+
+        <div class="syntax-item"  id="syntax-{@id}">
+            <xsl:if test="typeArg">
+                <span class="syntax-type-args">For any types <xsl:for-each select="typeArg"><span class="type-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
+            </xsl:if>
+            <span class="syntax-name-header">
+                <xsl:for-each select="syntaxElements/(keyword|type)">
+                    <xsl:if test="name()='keyword'">
+                        <span class="syntax-keyword" xml:space="preserve"> <xsl:value-of select="."/> </span>
+                    </xsl:if>
+                    <xsl:if test="name()='type'">
+                        <span class="syntax-type">
+                            <xsl:call-template name="processType">
+                                <xsl:with-param name="type" select="."/>
+                            </xsl:call-template>
+                        </span>
+                    </xsl:if>
+                </xsl:for-each>
+            </span>
+            <div class="description"><xsl:copy-of select="description"/></div>
+            <xsl:for-each select="seeAlso">
+                <div class="seeAlso">
+                    <span class="seeAlsoHeader">See Also</span>
+                    <xsl:apply-templates select="child::node()"/>
+                </div>
+            </xsl:for-each>
+        </div>
+    </xsl:template>
+
 </xsl:stylesheet>

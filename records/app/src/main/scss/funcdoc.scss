@@ -35,21 +35,18 @@ body.indiv {
 .function-name-header {
     display: none;
 }
-.function-name-type {
+.function-name-type, .syntax-keyword, .type-name-header {
     font-weight: bold;
 }
-.function-type-args {
+.function-type-args, .syntax-type-args {
     display:block;
     font-size: 80%;
 }
-.type-name-header {
-    font-weight: bold;
-}
-.type-name-header, .function-name-type, .function-type, .operator-type {
+.type-name-header, .function-name-type, .function-type, .operator-type, .syntax-name-header {
     font-size: 18pt;
 }
 body.indiv {
-    .type-name-header, .function-name-type, .function-type, .operator-type {
+    .type-name-header, .function-name-type, .function-type, .operator-type, .syntax-name-header {
      font-size: 13pt;
     }
 }

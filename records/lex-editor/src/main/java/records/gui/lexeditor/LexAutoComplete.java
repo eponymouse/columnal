@@ -18,6 +18,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -28,6 +29,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
@@ -144,7 +146,8 @@ public class LexAutoComplete
             return content;
         }
 
-        public @Nullable String getFurtherDetailsURL()
+        // Gives back HTML file name (e.g. function-abs.html) and optional anchor
+        public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
         {
             return null;
         }
@@ -166,6 +169,7 @@ public class LexAutoComplete
                     // Can't be focused
                 }
             };
+            listView.setFocusTraversable(false);
             listView.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
                 {
@@ -177,6 +181,7 @@ public class LexAutoComplete
                 }
             });
             WebView webView = new WebView();
+            webView.setFocusTraversable(false);
             webView.setPrefWidth(400.0);
             webView.setVisible(false);
             listView.setMaxHeight(400.0);
@@ -199,11 +204,20 @@ public class LexAutoComplete
             FXUtility.addChangeListenerPlatform(listView.getSelectionModel().selectedItemProperty(), selected -> {
                 if (selected != null)
                 {
-                    @Nullable String url = selected.getFurtherDetailsURL();
-                    if (url != null)
+                    @Nullable Pair<String, @Nullable String> fileNameAndAnchor = selected.getFurtherDetailsURL();
+                    if (fileNameAndAnchor != null)
                     {
-                        webView.getEngine().load(url);
-                        webView.setVisible(true);
+                        URL url = getClass().getResource("/" + fileNameAndAnchor.getFirst());
+                        if (url != null)
+                        {
+                            webView.getEngine().load(url.toExternalForm() + (fileNameAndAnchor.getSecond() != null ? "#" + fileNameAndAnchor.getSecond() : ""));
+                            webView.setVisible(true);
+                        }
+                        else
+                        {
+                            Log.error("Missing file: " + fileNameAndAnchor.getFirst());
+                            webView.setVisible(false);
+                        }
                     }
                     else
                         webView.setVisible(false);

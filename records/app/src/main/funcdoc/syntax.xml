@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="">
+    <syntax title="If Then Else" id="if">
+        <typeArg>t</typeArg>
+        <syntaxElements>
+            <keyword>@if</keyword>
+            <type>Boolean</type>
+            <keyword>@then</keyword>
+            <type>t</type>
+            <keyword>@else</keyword>
+            <type>t</type>
+            <keyword>@endif</keyword>
+        </syntaxElements>
+        <description>
+            <p>Chooses between two expressions depending on whether the condition is true or false.  For example, @if score >= 0 @then "Positive" @else "Negative" @endif would check whether the score expression is greater than or equal to zero.  If it was, the result would be the "Positive" text; otherwise it would be the "Negative" text.</p>
+        </description>
+    </syntax>
+</functionDocumentation>

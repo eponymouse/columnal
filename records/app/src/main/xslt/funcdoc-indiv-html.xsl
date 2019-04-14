@@ -24,6 +24,22 @@
                 </html>
             </xsl:result-document>
         </xsl:for-each>
+        <xsl:for-each select="syntax">
+            <xsl:result-document method="html" href="file:///{$myOutputDir}/syntax-{@id}.html">
+                <html>
+                    <head>
+                        <title><xsl:value-of select="@id"/></title>
+                        <link rel="stylesheet" href="funcdoc.css"/>
+                        <link rel="stylesheet" href="web.css"/>
+                    </head>
+                    <body class="indiv">
+                        <xsl:call-template name="processSyntax">
+                            <xsl:with-param name="syntax" select="."/>
+                        </xsl:call-template>
+                    </body>
+                </html>
+            </xsl:result-document>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template match="link">
