@@ -61,11 +61,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private boolean hiding;
 
     // package-visible
-    TopLevelEditor(String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
+    TopLevelEditor(@Nullable String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
     {
         errorMessagePopup = new ErrorMessagePopup();
-        content = new EditorContent<>(originalContent, lexer);
+        content = new EditorContent<>(originalContent == null ? "" : originalContent, lexer);
         display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n), this));
+        if (originalContent != null)
+            display.markAsPreviouslyFocused();
         scrollPane = new ScrollPaneFill(new StackPane(display))  {
             @Override
             @OnThread(Tag.FX)

@@ -41,6 +41,8 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public final class EditorDisplay extends TextEditorBase
 {
+    private boolean hasBeenFocused = false;
+
     @OnThread(Tag.FXPlatform)
     public static class TokenBackground extends Style<TokenBackground>
     {
@@ -108,11 +110,11 @@ public final class EditorDisplay extends TextEditorBase
             @Nullable HitInfo hit = hitTest(event.getX(), event.getY());
             if (hit != null)
             {
-                FXUtility.mouse(editor).mouseHover(content.getErrors().stream().filter(e -> {
+                FXUtility.mouse(editor).mouseHover(hasBeenFocused ? content.getErrors().stream().filter(e -> {
                     @SuppressWarnings("units")
                     @SourceLocation int displayIndex = hit.getCharIndex();
                     return e.displayLocation != null && e.displayLocation.contains(displayIndex) && e.caretHasLeftSinceEdit;
-                }).collect(ImmutableList.<ErrorDetails>toImmutableList()));
+                }).collect(ImmutableList.<ErrorDetails>toImmutableList()) : null);
             }
             else
             {
@@ -269,12 +271,21 @@ public final class EditorDisplay extends TextEditorBase
         render(true);
     }
 
+    public void markAsPreviouslyFocused()
+    {
+        hasBeenFocused = true;
+        render(false);
+    }
+
     @Override
     public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
     {
         super.focusChanged(focused);
         if (focused)
+        {
+            hasBeenFocused = true;
             content.notifyCaretPositionListeners();
+        }
         else
             showAllErrors();
     }
@@ -361,7 +372,11 @@ public final class EditorDisplay extends TextEditorBase
         BitSet errorChars = new BitSet();
         for (ErrorDetails error : content.getErrors())
         {
-            if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
+            if (!hasBeenFocused)
+            {
+                error.caretHasLeftSinceEdit = false;
+            }
+            else if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
             {
                 error.caretHasLeftSinceEdit = true;
                 if (error.displayLocation == null)

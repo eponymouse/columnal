@@ -47,7 +47,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, ObservableObjectValue<@Nullable DataType> expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, @Nullable FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? "" : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), makeTypeState == null ? new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)) : new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup), makeTypeState), onChangeHandler, "expression-editor");
+        super(startingValue == null ? null : startingValue.save(false, BracketedStatus.TOP_LEVEL, new TableAndColumnRenames(ImmutableMap.of())), makeTypeState == null ? new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup)) : new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup), makeTypeState), onChangeHandler, "expression-editor");
         
         FXUtility.onceNotNull(display.sceneProperty(), s -> {
             FXUtility.onceNotNull(s.windowProperty(), w -> {

@@ -13,6 +13,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCo
 {
     public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
     {
-        super(originalContent == null ? "" : originalContent.save(false, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(), onChange, "type-editor");
+        super(originalContent == null ? null : originalContent.save(false, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(), onChange, "type-editor");
     }
 }
