@@ -191,7 +191,7 @@
     -fx-text-fill: $table-row-label-text-color;
     -fx-font-size: 10px;
     -fx-alignment: baseline-right;
-    -fx-font-family: "Droid Sans Mono";
+    -fx-font-family: "Noto Mono";
     &:row-header-floating {
         -fx-effect: dropshadow(gaussian, grey(70%), 10, 0.4, 3, 0);
     }

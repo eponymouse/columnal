@@ -32,7 +32,6 @@ public class Main extends Application
     {
         Log.normal("Started application");
         
-        FXUtility.ensureFontLoaded("DroidSansMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Italic.ttf");
