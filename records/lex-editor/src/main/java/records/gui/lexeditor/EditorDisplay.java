@@ -378,7 +378,7 @@ public final class EditorDisplay extends TextEditorBase
             {
                 error.caretHasLeftSinceEdit = false;
             }
-            else if (error.caretHasLeftSinceEdit || !error.location.contains(getCaretPosition()))
+            else if (error.caretHasLeftSinceEdit || !isFocused() || !error.location.touches(getCaretPosition()))
             {
                 error.caretHasLeftSinceEdit = true;
                 if (error.displayLocation == null)

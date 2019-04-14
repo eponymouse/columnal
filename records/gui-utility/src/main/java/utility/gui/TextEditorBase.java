@@ -175,6 +175,8 @@ public abstract class TextEditorBase extends Region
             }
             catch (Exception e)
             {
+                // We don't expect any exceptions here...
+                Log.log(e);
                 selectionShape.getElements().clear();
                 inverter.getElements().clear();
                 caretShape.getElements().clear();

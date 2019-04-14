@@ -79,9 +79,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                 });
             });
         });
-        FXUtility.addChangeListenerPlatformNN(display.focusedProperty(), focused -> {
-            
-        });
     }
 
     private static ImmutableList<StandardFunctionDefinition> getAllFunctions(FunctionLookup functionLookup)

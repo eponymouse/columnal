@@ -287,6 +287,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                 
                 TestUtil.doubleOk(this);
                 assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                System.out.println("Closed expression editor, opening again");
                 // Show again and check error is showing from the outset:
                 clickOn("DestCol");
                 sleep(500);
