@@ -156,6 +156,10 @@ public final class EditorDisplay extends TextEditorBase
                     if (autoComplete.isShowing())
                         autoComplete.down();
                     break;
+                case UP:
+                    if (autoComplete.isShowing())
+                        autoComplete.up();
+                    break;
                 case BACK_SPACE:
                     if (caretPosition != content.getAnchorPosition())
                         content.replaceSelection("");

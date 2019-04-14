@@ -84,6 +84,15 @@ public class LexAutoComplete
             window.listView.getSelectionModel().select(sel + 1);
     }
 
+    public void up()
+    {
+        int sel = window.listView.getSelectionModel().getSelectedIndex();
+        if (sel - 1 >= 0)
+            window.listView.getSelectionModel().select(sel - 1);
+        else
+            window.listView.getSelectionModel().clearSelection();
+    }
+
     public Optional<LexCompletion> selectCompletion()
     {
         return Optional.ofNullable(window.listView.getSelectionModel().getSelectedItem());
