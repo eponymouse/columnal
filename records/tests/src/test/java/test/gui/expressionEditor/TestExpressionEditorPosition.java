@@ -209,7 +209,8 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 int curIndex = 0;
                 while (curIndex < internalCaretPos.length)
                 {
-                    sleep(200);
+                    // Make sure to wait for caret reposition on blink:
+                    sleep(1300);
                     caretCentres[curIndex] = getCaretPosOnScreen();
                     assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
                     curIndex += 1;

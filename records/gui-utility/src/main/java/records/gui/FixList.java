@@ -3,6 +3,7 @@ package records.gui;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
@@ -93,7 +94,8 @@ public class FixList extends VBox
             setCenter(new TextFlow(fixInfo.label.toGUI().toArray(new Node[0])));
 
             setOnMouseClicked(e -> {
-                doFix();
+                if (e.getButton() == MouseButton.PRIMARY)
+                    doFix();
             });
         }
 
