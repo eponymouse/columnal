@@ -104,6 +104,29 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
 
+    @Test
+    public void testColumn2() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("@entire My Nu");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+    }
+
+    @Test
+    public void testColumn2b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("@ent");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+    }
+
     private void checkPosition()
     {
         sleep(50);

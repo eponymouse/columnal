@@ -508,6 +508,24 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         }
                     });
                 }
+                if ("@entire".startsWith(stem))
+                {
+                    for (ColumnReference columnReference : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences().sorted(Comparator.comparing((ColumnReference c) -> c.getTableId() == null ? "" : c.getTableId().getRaw()).thenComparing((ColumnReference c) -> c.getColumnId().getRaw()))))
+                    {
+                        if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
+                        {
+                            String fullAfterEntire = (columnReference.getTableId() == null ? "" : columnReference.getTableId().getRaw() + ":") + columnReference.getColumnId().getRaw();
+                            validKeywordCompletions.add(new LexCompletion(curIndex, "@entire" + fullAfterEntire) {
+                                @Override
+                                public String toString()
+                                {
+                                    return "@entire " + fullAfterEntire;
+                                }
+                            });
+                        }
+                    }
+                    
+                }
 
                 for (Keyword keyword : Keyword.values())
                 {
