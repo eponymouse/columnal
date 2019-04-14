@@ -42,6 +42,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.net.URL;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -360,7 +361,21 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 for (StandardFunctionDefinition function : allFunctions)
                 {
                     if (function.getName().startsWith(parsed.getFirst()))
-                        identCompletions.add(new LexCompletion(curIndex, function.getName() + "()", function.getName().length() + 1));
+                        identCompletions.add(new LexCompletion(curIndex, function.getName() + "()", function.getName().length() + 1) {
+                            @Override
+                            public @Nullable String getFurtherDetailsURL()
+                            {
+                                String scopedName = "/function-" + function.getDocKey().replace(":", "-");
+                                URL url = getClass().getResource(scopedName + ".html");
+                                if (url != null)
+                                    return url.toExternalForm() + "#" + scopedName;
+                                else
+                                {
+                                    Log.error("Missing file: " + scopedName);
+                                    return null;
+                                }
+                            }
+                        });
                 }
                 for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
                 {

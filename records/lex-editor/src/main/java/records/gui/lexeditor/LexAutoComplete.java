@@ -16,6 +16,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -25,6 +26,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.List;
 import java.util.Optional;
@@ -141,6 +143,11 @@ public class LexAutoComplete
         {
             return content;
         }
+
+        public @Nullable String getFurtherDetailsURL()
+        {
+            return null;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -169,7 +176,12 @@ public class LexAutoComplete
                     }
                 }
             });
-            this.pane = new BorderPane(listView);
+            WebView webView = new WebView();
+            webView.setPrefWidth(400.0);
+            webView.setVisible(false);
+            listView.setMaxHeight(400.0);
+            webView.setMaxHeight(400.0);
+            this.pane = GUI.borderLeftCenterRight(listView, webView, null);
             setAutoFix(false);
             setAutoHide(false);
             setHideOnEscape(false);
@@ -184,6 +196,21 @@ public class LexAutoComplete
                     }
                 });
             }
+            FXUtility.addChangeListenerPlatform(listView.getSelectionModel().selectedItemProperty(), selected -> {
+                if (selected != null)
+                {
+                    @Nullable String url = selected.getFurtherDetailsURL();
+                    if (url != null)
+                    {
+                        webView.getEngine().load(url);
+                        webView.setVisible(true);
+                    }
+                    else
+                        webView.setVisible(false);
+                }
+                else
+                    webView.setVisible(false);
+            });
         }
 
         public void setCompletions(List<LexCompletion> completions)

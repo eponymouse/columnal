@@ -18,7 +18,7 @@
                         <xsl:variable name="typevar">
                             <link type="{regex-group(1)}var"><xsl:copy-of select="regex-group(2)"/></link>
                         </xsl:variable>
-                    <span class="type-var"><xsl:apply-templates select="ext:node-set($typevar)"/></span>
+                        <span class="{regex-group(1)}-var"><xsl:apply-templates select="ext:node-set($typevar)"/></span>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:analyze-string select="." regex="\[">
@@ -61,7 +61,10 @@
         <xsl:variable name="functionName" select="@name"/>
         <div class="function-item" id="function-{@name}">
             <xsl:if test="typeArg">
-                <span class="function-type-args">For any types <xsl:value-of select="string-join(typeArg, ', ')"/><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
+                <span class="function-type-args">For any types <xsl:for-each select="typeArg"><span class="type-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
+            </xsl:if>
+            <xsl:if test="unitArg">
+                <span class="function-type-args">For any units <xsl:for-each select="unitArg"><span class="unit-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each></span>
             </xsl:if>
             <span class="function-name-header"><xsl:value-of select="@name"/></span>
             <span class="function-name-type"><xsl:value-of select="@name"/></span>
@@ -76,7 +79,7 @@
                 <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                         name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$functionName"/><xsl:call-template
                         name="processExpression"><xsl:with-param name="expression"><xsl:call-template
-                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
+                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="example-arrow"/> <xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>
@@ -108,7 +111,7 @@
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:call-template
-                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
+                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="example-arrow"/> <xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>

@@ -1,8 +1,13 @@
+@import 'colors';
 @import 'fonts';
 
-html {
+body {
     font-family: $font-main;
     font-size: 13pt;
+    
+    &.indiv {
+        font-size: 11pt;
+    }
 }
 
 .index-entry {
@@ -12,9 +17,16 @@ html {
 .function-group-item {
     display: none;
 }
-
 .function-item, .operator-item, .type-item {
     padding: 25pt;
+}
+body.indiv {
+    .function-item, .operator-item, .type-item {
+        padding: 5pt;
+    }
+}
+
+.function-item, .operator-item, .type-item {
     border-width: 0 0 1px 0;
     border-color: lightgray;
     border-style: solid;
@@ -28,15 +40,22 @@ html {
 }
 .function-type-args {
     display:block;
+    font-size: 80%;
 }
 .type-name-header {
-    font-size: 18pt;
     font-weight: bold;
 }
-.function-name-type, .function-type, .operator-type {   
+.type-name-header, .function-name-type, .function-type, .operator-type {
     font-size: 18pt;
-    
-    .wild-unit {
+}
+body.indiv {
+    .type-name-header, .function-name-type, .function-type, .operator-type {
+     font-size: 13pt;
+    }
+}
+
+.function-name-type, .function-type, .operator-type {
+    .type-var, .unit-var {
         display: inline;
         position: relative;
         /* From https://www.webdesignerdepot.com/2012/11/how-to-create-a-simple-css3-tooltip/ */
@@ -47,7 +66,7 @@ html {
              border-radius: 5px;
              top: 120%;
              color: #fff;
-             content: "Works for any unit";
+             content: "Can be any type/unit";
              left: 20%;
              padding: 5px;
              position: absolute;
@@ -55,11 +74,11 @@ html {
              width: 120px;
         }
     }
-    .type-var {
-        font-style: italic;
-        display: inline-block;
-        margin-left: -2px;
-        margin-right: 2px;
+    .type-var:hover:after {
+        content: "Can be any type";
+    }
+    .unit-var:hover:after {
+        content: "Can be any unit";
     }
     
     .function-arrow {
@@ -67,16 +86,27 @@ html {
         padding-right: 12pt;
     }
 }
+.type-var, .unit-var {
+    color: grey(60%);
+}
 .function-arrow::before {
     /*content: "\27F6";*/
     content: "->";
+}
+.example-arrow::before {
+    content: "\2192";
+    font-family: 'Noto Sans Symbols';
 } 
 .function-type, .operator-type {
-    font-family: 'Droid Sans Mono';
+    font-family: 'Noto Mono';
     color: #333;
 }
 .expression-bracket {
-    font-family: 'Droid Sans Mono';
+    font-family: 'Noto Mono';
+}
+
+body.indiv .examples .examples-header {
+    font-size: 11pt;
 }
 
 .examples {
@@ -87,7 +117,7 @@ html {
     .example .example-call {
         padding-left: 20pt;
     }
-    & .function-arrow {
+    & .example-arrow {
         padding-left: 4pt;
         padding-right: 8pt;
     }
@@ -99,6 +129,9 @@ html {
         font-weight: bold;
         font-size: 14pt;
     }
+}
+body.indiv .seeAlso .seeAlsoHeader {
+    font-size: 11pt;
 }
 .seeAlso a, .index a {
     margin-left: 30pt;
