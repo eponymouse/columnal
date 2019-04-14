@@ -6,7 +6,7 @@
     
     <xsl:include href="funcdoc-shared.xsl"/>
     
-    <xsl:template match="/functionDocumentation">
+    <xsl:template match="//functionDocumentation">
         <xsl:variable name="namespace" select="@namespace"/>
         <xsl:for-each select="function">
             <xsl:result-document method="html" href="file:///{$myOutputDir}/function-{$namespace}-{@name}.html">

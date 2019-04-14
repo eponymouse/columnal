@@ -281,13 +281,18 @@
                             <stylesheet>src/main/xslt/make-help-indiv.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
-                            <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
+                            <outputDir>${project.build.directory}/classes</outputDir>
                             <parameters>
                                 <parameter>
                                     <name>myOutputDir</name>
                                     <value>${project.build.directory}/classes</value>
                                 </parameter>
                             </parameters>
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.helpindivdummy</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
                         </transformationSet>
 
 
@@ -314,13 +319,19 @@
                             <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
-                            <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
+                            <outputDir>${project.build.directory}/classes</outputDir>
                             <parameters>
                                 <parameter>
                                     <name>myOutputDir</name>
                                     <value>${project.build.directory}/classes</value>
                                 </parameter>
                             </parameters>
+                            <!-- Generate dummy file to help with up-to-date check -->
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.funcdocindivdummy</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
                         </transformationSet>
 
                         <transformationSet>
@@ -368,7 +379,7 @@
                             <!-- Generate dummy file to help with up-to-date checl -->
                             <fileMappers>
                                 <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
-                                    <targetExtension>.functiondummy</targetExtension>
+                                    <targetExtension>.functionminidummy</targetExtension>
                                 </fileMapper>
                             </fileMappers>
                         </transformationSet>
