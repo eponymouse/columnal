@@ -101,6 +101,13 @@ public class MainWindow
                         return;
                     v.setDiskFileAndSave(dest);
                 }),
+                GUI.menuItem("menu.project.saveCopy", () -> {
+                    FileChooser fc = new FileChooser();
+                    File dest = fc.showSaveDialog(stage);
+                    if (dest == null)
+                        return;
+                    v.doSaveTo(false, dest);
+                }),
                 GUI.menuItem("menu.project.close", () -> {stage.hide();}),
                 GUI.menuItem("menu.exit", () -> {closeAll();})
             ),

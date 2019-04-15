@@ -101,7 +101,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<File> diskFile;
     // Null means modified since last save
-    private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(Instant.now());
     // Cancels a delayed save operation:
     private @Nullable FXPlatformRunnable cancelDelayedSave;
 
@@ -120,7 +120,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         saveCount += 1;
         
-        File dest = diskFile.get();
+        doSaveTo(keepPrevForUndo, diskFile.get());
+    }
+
+    void doSaveTo(boolean keepPrevForUndo, File dest)
+    {
         Workers.onWorkerThread("Saving file", Priority.SAVE, () ->
         {
             FullSaver fetcher = new FullSaver();
