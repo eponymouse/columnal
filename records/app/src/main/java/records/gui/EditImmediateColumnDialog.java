@@ -172,7 +172,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);
+            FXUtility.runAfter((tableNameTextField != null ? tableNameTextField : columnNameTextField)::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
