@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
@@ -82,6 +83,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         StringBuilder s = new StringBuilder();
         StyledString.Builder d = new StyledString.Builder();
+        ImmutableList.Builder<AutoCompleteDetails<CodeCompletionContext>> autoCompletes = ImmutableList.builder();
         RemovedCharacters removedCharacters = new RemovedCharacters();
         nextToken: while (curIndex < content.length())
         {
@@ -128,17 +130,27 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             }
             
             // Important to try longest types first:
-            for (DataType dataType : Utility.<DataType>iterableStream(Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.BOOLEAN, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t)))).sorted(Comparator.comparing(t -> -t.toString().length()))))
+            boolean matchedType = false;
+            @CanonicalLocation int startOfType = removedCharacters.map(curIndex);
+            for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes().sorted(Comparator.comparing(t -> -t.toString().length()))))
             {
-                if (content.startsWith(dataType.toString(), curIndex))
+                if (!matchedType && content.startsWith(dataType.toString(), curIndex))
                 {
                     saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndex, dataType.toString()), c -> {});
                     curIndex += rawLength(dataType.toString());
                     s.append(dataType.toString());
                     d.append(dataType.toString());
-                    continue nextToken;
+                    matchedType = true;
+                }
+                @SuppressWarnings("units")
+                @CanonicalLocation int common = Utility.longestCommonStart(content, curIndex, dataType.toString(), 0);
+                if (common > 0)
+                {
+                    autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString(), caretPos - startOfType))));
                 }
             }
+            if (matchedType)
+                continue nextToken;
             
             if (content.charAt(curIndex) == '{')
             {
@@ -190,6 +202,18 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
             curIndex += RawInputLocation.ONE;
         }
         @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
+        
+        if (content.isEmpty())
+        {
+            ImmutableList.Builder<LexCompletion> emptyCompletions = ImmutableList.builder();
+            for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes()))
+            {
+                emptyCompletions.add(new LexCompletion(CanonicalLocation.ZERO, dataType.toString()));
+            }
+            ImmutableList<LexCompletion> built = emptyCompletions.build();
+            autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), (caretPos) -> built));
+        }
+        
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
         if (caretPositions.isEmpty())
@@ -197,6 +221,11 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
         StyledString built = d.build();
         if (built.getLength() == 0)
             built = StyledString.s(" ");
-        return new LexerResult<>(saved, s.toString(), removedCharacters, false, caretPositions, built, saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, s.toString(), removedCharacters, false, caretPositions, built, saver.getErrors(), autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
+    }
+
+    private Stream<DataType> streamDataTypes()
+    {
+        return Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.TEXT, DataType.BOOLEAN), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))));
     }
 }

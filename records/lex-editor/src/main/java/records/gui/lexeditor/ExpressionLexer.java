@@ -406,7 +406,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                     if (keyword.getContent().startsWith("@"))
                     {
                         @SuppressWarnings("units")
-                        @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent().substring(1), text);
+                        @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent(), 1, text, 0);
                         if (common > 0)
                         {
                             completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(removedChars.map(curIndex), keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY) {

@@ -1306,12 +1306,12 @@ public class Utility
     }
 
     // In characters, how long is the common subsequence at the start of the strings?
-    public static int longestCommonStart(String a, String b)
+    public static int longestCommonStart(String a, int aStartAt, String b, int bStartAt)
     {
         int i = 0;
-        for (; i < a.length() && i < b.length(); i++)
+        for (; i + aStartAt < a.length() && i + bStartAt < b.length(); i++)
         {
-            if (a.charAt(i) != b.charAt(i))
+            if (a.charAt(i + aStartAt) != b.charAt(i + bStartAt))
                 break;
         }
         return i;
