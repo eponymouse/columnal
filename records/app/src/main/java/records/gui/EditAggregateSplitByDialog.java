@@ -71,7 +71,7 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
         splitList.getNode().setMinHeight(150.0);
         splitList.getNode().setPrefWidth(300.0);
         splitList.getNode().setPrefHeight(250.0);
-        String header = "Aggregate can either calculate once for the whole table, or separately depending on values of column(s) below." + (example == null || example.getSecond().size() < 2 ? "" : "\n\nFor example, if column " + example.getFirst().getRaw() + " is selected , there will be one calculation for rows with value " + example.getSecond().stream().map(EditAggregateSplitByDialog::truncate).collect(Collectors.joining(", one for rows with value ")) + ", etc");
+        String header = "Aggregate can either calculate once for the whole table, or separately depending on values of column(s) below." + (example == null || example.getSecond().size() < 2 ? "" : "\n\nFor example, if column " + example.getFirst().getRaw() + " is selected , there will be one result for rows with value " + example.getSecond().stream().map(EditAggregateSplitByDialog::truncate).collect(Collectors.joining(", one for rows with value ")) + ", etc");
         Label label = new Label(header + "\n ");
         label.setWrapText(true);
         label.setPrefWidth(300.0);

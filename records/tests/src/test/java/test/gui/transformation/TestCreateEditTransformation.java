@@ -193,7 +193,22 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             TestUtil.delay(100);
             write("Src Data");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            sleep(300);
+            if (aggColumns.isEmpty() || aggColumns.get(0).calculations.isEmpty())
+            {
+                moveAndDismissPopupsAtPos(point(".cancel-button"));
+                clickOn(".cancel-button");
+            }
+            else
+            {
+                write(aggColumns.get(0).calculations.get(0).columnName.getRaw(), 1);
+                push(KeyCode.TAB);
+                enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), aggColumns.get(0).calculations.get(0).expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                moveAndDismissPopupsAtPos(point(".ok-button"));
+                clickOn(".ok-button");
+            }
+            sleep(300);
+            clickOn(".id-fancylist-add");
             if (r.nextBoolean())
             {
                 write("Split Col");
@@ -201,6 +216,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             else
             {
                 write("Spl");
+                push(KeyCode.DOWN);
                 push(KeyCode.ENTER);
                 TextField field = getFocusOwner(TextField.class);
                 assertEquals("Split Col", TestUtil.fx(() -> field.getText()));
@@ -224,19 +240,25 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             clickOn(".ok-button");
             TestUtil.sleep(3000);
 
-            // Should be one column at the moment, with the distinct split values:
+            // Should be one column at the moment, with the distinct split values, and maybe the first calculation:
             SummaryStatistics aggTable = (SummaryStatistics) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
             assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
             String aggId = aggTable.getId().getRaw();
             ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
-            TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
+            //TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
 
             // Now add the calculations:
             int colCount = initialAgg.size();
+            boolean skipFirst = true;
             for (AggColumns aggColumn : aggColumns)
             {
                 for (AggCalculation calculation : aggColumn.calculations)
                 {
+                    if (skipFirst)
+                    {
+                        skipFirst = false;
+                        continue;
+                    }
                     CellPosition arrowLoc = aggTarget.offsetByRowCols(2, colCount++);
                     keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
                     clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
