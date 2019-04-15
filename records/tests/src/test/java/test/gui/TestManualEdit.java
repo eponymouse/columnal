@@ -359,6 +359,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         if (r.nextInt(3) == 1)
         {
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), TestUtil.fx(() -> findFirstSort.get().getDisplay().getMostRecentPosition().offsetByRowCols(0, -1)));
             // Change sort order of source:
             clickOn(".edit-sort-by");
             sleep(200);
