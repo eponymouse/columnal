@@ -166,10 +166,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         correctTargetWindow();
         if (tableName != null)
         {
-            push(KeyCode.SHIFT, KeyCode.TAB);
             write(tableName, DELAY);
-            push(KeyCode.TAB);
         }
+        push(KeyCode.TAB);
         write("A");
         push(KeyCode.TAB);
         if (dataTypeAndDefault == null)
