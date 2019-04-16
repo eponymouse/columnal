@@ -367,34 +367,28 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 // Add completions even if one is already spotted:
                 for (StandardFunctionDefinition function : allFunctions)
                 {
-                    if (function.getName().startsWith(parsed.getFirst()))
-                        identCompletions.add(new LexCompletion(removedChars.map(curIndex), function.getName() + "()", function.getName().length() + 1) {
-                            @Override
-                            public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
-                            {
-                                return new Pair<>("function-" + function.getDocKey().replace(":", "-") + ".html", null);
-                            }
-                        });
+                    LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), function.getName()).ifPresent(c -> identCompletions.add(c.withReplacement(function.getName() + "()").withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1)));
                 }
                 for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
                 {
-                    if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null && availableColumn.getColumnId().getRaw().startsWith(parsed.getFirst()))
-                        identCompletions.add(new LexCompletion(removedChars.map(curIndex), availableColumn.getColumnId().getRaw()));
+                    if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
+                    {
+                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableColumn.getColumnId().getRaw()).ifPresent(identCompletions::add);
+                    }
                 }
                 for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
                 {
                     String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
                     if (tag.tagName.startsWith(parsed.getFirst()) || (tag.typeName != null && fullName.startsWith(parsed.getFirst())))
                     {
-                        identCompletions.add(new LexCompletion(removedChars.map(curIndex), fullName + (tag.hasInner ? "()" : ""), fullName.length() + (tag.hasInner ? 1 : 0)));
+                        identCompletions.add(new LexCompletion(removedChars.map(curIndex), fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)));
                     }
                 }
                 try
                 {
                     for (String availableVariable : makeTypeState.get().getAvailableVariables())
                     {
-                        if (availableVariable.startsWith(parsed.getFirst()))
-                            identCompletions.add(new LexCompletion(removedChars.map(curIndex), availableVariable));
+                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableVariable).ifPresent(identCompletions::add);
                     }
                 }
                 catch (InternalException e)
@@ -409,13 +403,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                         @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent(), 1, text, 0);
                         if (common > 0)
                         {
-                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(removedChars.map(curIndex), keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY) {
-                                @Override
-                                public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
-                                {
-                                    return getDocURLFor(keyword);
-                                }
-                            }))));
+                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(removedChars.map(curIndex), keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY)))));
                         }
                     }
                 }
@@ -509,19 +497,13 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
                 if ("@i".startsWith(stem))
                 {
-                    validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), "@if@then@else@endif", 2, LexSelectionBehaviour.SELECT_IF_TOP) {
+                    validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), "@if@then@else@endif") {
                         @Override
                         public String toString()
                         {
                             return "@if \u2026 @then \u2026 @else \u2026 @endif";
                         }
-
-                        @Override
-                        public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
-                        {
-                            return new Pair<>("syntax-if.html", null);
-                        }
-                    });
+                    }.withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(2).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP));
                 }
                 if ("@entire".startsWith(stem))
                 {
@@ -546,13 +528,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
                 {
                     if (keyword.getContent().startsWith(stem))
                     {
-                        validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), keyword.getContent(), LexSelectionBehaviour.SELECT_IF_ONLY) {
-                            @Override
-                            public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
-                            {
-                                return getDocURLFor(keyword);
-                            }
-                        });
+                        validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
                     }
                 }
                 completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
@@ -659,7 +635,7 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         return caretPos;
     }
 
-    private @Nullable Pair<String, @Nullable String> getDocURLFor(Keyword keyword)
+    private @Nullable String getDocURLFor(Keyword keyword)
     {
         switch (keyword)
         {
@@ -667,13 +643,13 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
             case THEN:
             case ELSE:
             case ENDIF:
-                return new Pair<>("syntax-if.html", null);
+                return "syntax-if.html";
             case MATCH:
             case CASE:
             case ORCASE:
             case GIVEN:
             case ENDMATCH:
-                return new Pair<>("syntax-match.html", null);
+                return "syntax-match.html";
         }
         return null;
     }

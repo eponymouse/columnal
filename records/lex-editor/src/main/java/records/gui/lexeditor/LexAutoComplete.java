@@ -99,6 +99,24 @@ public class LexAutoComplete
         return Optional.ofNullable(window.listView.getSelectionModel().getSelectedItem());
     }
     
+    public static Optional<LexCompletion> matchWordStart(String src, @CanonicalLocation int startPos, String completionText)
+    {
+        int curCompletionStart = 0;
+        do
+        {
+            if (completionText.startsWith(src, curCompletionStart))
+            {
+                return Optional.of(new LexCompletion(startPos, completionText));
+            }
+            curCompletionStart = completionText.indexOf(' ', curCompletionStart);
+            if (curCompletionStart >= 0)
+                curCompletionStart += 1;
+        }
+        while (curCompletionStart >= 0);
+        
+        return Optional.empty();
+    }
+    
     public enum LexSelectionBehaviour
     {
         SELECT_IF_ONLY,
@@ -112,28 +130,41 @@ public class LexAutoComplete
         public final String content;
         public final int relativeCaretPos;
         public final LexSelectionBehaviour selectionBehaviour;
+        // HTML file name (e.g. function-abs.html) and optional anchor
+        public final @Nullable Pair<String, @Nullable String> furtherDetailsURL;
 
-        public LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour)
+        private LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL)
         {
             this.startPos = startPos;
             this.content = content;
             this.relativeCaretPos = relativeCaretPos;
             this.selectionBehaviour = selectionBehaviour;
-        }
-
-        public LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos)
-        {
-            this(startPos, content, relativeCaretPos, LexSelectionBehaviour.NO_AUTO_SELECT);
+            this.furtherDetailsURL = furtherDetailsURL;
         }
 
         public LexCompletion(@CanonicalLocation int startPos, String content)
         {
-            this(startPos, content, content.length());
+            this(startPos, content, content.length(), LexSelectionBehaviour.NO_AUTO_SELECT, null);
         }
-
-        public LexCompletion(@CanonicalLocation int startPos, String content, LexSelectionBehaviour selectionBehaviour)
+        
+        public LexCompletion withReplacement(String newContent)
         {
-            this(startPos, content, content.length(), selectionBehaviour);
+            return new LexCompletion(startPos, newContent, relativeCaretPos, selectionBehaviour, furtherDetailsURL);
+        }
+        
+        public LexCompletion withCaretPosAfterCompletion(int pos)
+        {
+            return new LexCompletion(startPos, content, pos, selectionBehaviour, furtherDetailsURL);
+        }
+        
+        public LexCompletion withSelectionBehaviour(LexSelectionBehaviour selectionBehaviour)
+        {
+            return new LexCompletion(startPos, content, relativeCaretPos, selectionBehaviour, furtherDetailsURL);
+        }
+        
+        public LexCompletion withFurtherDetailsURL(@Nullable String url)
+        {
+            return new LexCompletion(startPos, content, relativeCaretPos, selectionBehaviour, url == null ? null : new Pair<>(url, null));
         }
 
         // Used by ListView to display content:
@@ -141,12 +172,6 @@ public class LexAutoComplete
         public String toString()
         {
             return content;
-        }
-
-        // Gives back HTML file name (e.g. function-abs.html) and optional anchor
-        public @Nullable Pair<String, @Nullable String> getFurtherDetailsURL()
-        {
-            return null;
         }
     }
 
@@ -201,7 +226,7 @@ public class LexAutoComplete
             FXUtility.addChangeListenerPlatform(listView.getSelectionModel().selectedItemProperty(), selected -> {
                 if (selected != null)
                 {
-                    @Nullable Pair<String, @Nullable String> fileNameAndAnchor = selected.getFurtherDetailsURL();
+                    @Nullable Pair<String, @Nullable String> fileNameAndAnchor = selected.furtherDetailsURL;
                     if (fileNameAndAnchor != null)
                     {
                         URL url = getClass().getResource("/" + fileNameAndAnchor.getFirst());
