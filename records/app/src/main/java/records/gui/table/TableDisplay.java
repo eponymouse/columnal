@@ -71,6 +71,7 @@ import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
+import records.transformations.Sort.Direction;
 import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
@@ -78,6 +79,8 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.IdentExpression;
+import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
@@ -832,14 +835,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             type = table.getData().getColumn(c).getType().getType();
             if (type.isNumber())
             {
-                r.add(columnQuickTransform(tableManager, table, "recipe.sum", "sum", c, newId -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                
+                r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
+                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
 
-                r.add(columnQuickTransform(tableManager, table, "recipe.average", "average", c, newId -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
+                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
             }
+            r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
+                return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
+            }));
+            r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
+                return new Sort(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
+            }));
         }
         catch (InternalException | UserException e)
         {
@@ -968,10 +978,22 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             )
         ));
     }
-
-    private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, SimulationFunction<ColumnId, Transformation> makeTransform) throws InternalException, UserException
+    
+    private static interface MakeColumnTransformation
     {
-        String stem = suggestedPrefix + "." + srcColumn.getRaw();
+        @OnThread(Tag.Simulation)
+        public Transformation makeTransform(ColumnId targetId, CellPosition targetPosition) throws InternalException, UserException;
+    }
+
+    private static interface MakeTableTransformation
+    {
+        @OnThread(Tag.Simulation)
+        public Transformation makeTransform(CellPosition targetPosition) throws InternalException, UserException;
+    }
+
+    private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, MakeColumnTransformation makeTransform) throws InternalException, UserException
+    {
+        String stem = suggestedPrefix + " " + srcColumn.getRaw();
         String nextId = stem;
         for (int i = 1; i <= 1000; i++)
         {
@@ -982,14 +1004,30 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // If we reach 999, just go with that and let user fix it
         ColumnId newColumnId = new ColumnId(nextId);
         
-        return new SimpleColumnOperation(nameKey)
+        return new SimpleColumnOperation(tableManager, us.getId(), nameKey)
         {
             @Override
             @OnThread(Tag.Simulation)
-            public void execute()
+            public void execute(CellPosition insertPosition)
             {
                 FXUtility.alertOnError_("Error adding column", () -> {
-                    Transformation t = makeTransform.apply(newColumnId);
+                    Transformation t = makeTransform.makeTransform(newColumnId, insertPosition);
+                    tableManager.record(t);
+                });
+            }
+        };
+    }
+
+    private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, MakeTableTransformation makeTransform)
+    {
+        return new SimpleColumnOperation(tableManager, us.getId(), nameKey)
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public void execute(CellPosition insertPosition)
+            {
+                FXUtility.alertOnError_("Error adding column", () -> {
+                    Transformation t = makeTransform.makeTransform(insertPosition);
                     tableManager.record(t);
                 });
             }
