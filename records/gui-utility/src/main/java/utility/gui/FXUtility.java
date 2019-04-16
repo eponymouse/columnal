@@ -310,6 +310,13 @@ public class FXUtility
     }
 
     @OnThread(Tag.FXPlatform)
+    public static <T> void addChangeListenerPlatformNNAndCallNow(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull T> listener)
+    {
+        addChangeListenerPlatformNN(property, listener);
+        listener.consume(property.getValue());
+    }
+
+    @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
     public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull ? super T> listener)

@@ -215,7 +215,9 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             setCenter(columnField);
             button = new DirectionButton();
             button.setDirection(initialContent == null ? Direction.ASCENDING : initialContent.getSecond());
-            button.setType(calculateTypeOf(initialContent == null ? null : initialContent.getFirst()));
+            FXUtility.addChangeListenerPlatformNNAndCallNow(columnField.textProperty(), c -> {
+                button.setType(calculateTypeOf(new ColumnId(c)));
+            });
             setRight(button);
             BorderPane.setMargin(button, new Insets(0, 4, 0, 4));
             getStyleClass().add("sort-pane");
