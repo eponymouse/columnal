@@ -8,10 +8,12 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
@@ -26,6 +28,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -45,7 +48,11 @@ import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
+import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.table.CheckDisplay;
 import records.gui.table.TableDisplay;
@@ -61,6 +68,7 @@ import utility.*;
 import utility.Workers.Priority;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
@@ -95,7 +103,8 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     private final ExpandTableArrowSupplier expandTableArrowSupplier;
     // The supplier for row labels:
     private final RowLabelSupplier rowLabelSupplier;
-    
+    private final HintMessage hintMessage;
+
     // This is only put into our children while we are doing special mouse capture, but it is always non-null.
     private @Nullable Pane pickPaneMouse;
     @OnThread(Tag.FXPlatform)
@@ -104,8 +113,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(Instant.now());
     // Cancels a delayed save operation:
     private @Nullable FXPlatformRunnable cancelDelayedSave;
-
-    private final FXPlatformConsumer<ContentState> emptyListener;
 
     // We start in readOnly mode, and enable writing later if everything goes well:
     private boolean readOnly = true;
@@ -197,7 +204,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 // This goes last because it will redo layout:
                 mainPane.removeGridArea(checkDisplay);
             }
-            emptyListener.consume(remainingCount == 0 ? ContentState.EMPTY_NO_SEL : ContentState.NON_EMPTY);
+            hintMessage.updateState();
         });
     }
 
@@ -568,20 +575,13 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
     }
     */
-    
-    public static enum ContentState
-    {
-        EMPTY_NO_SEL,
-        EMPTY_SEL,
-        NON_EMPTY;
-    }
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"keyfor", "interning", "userindex", "valuetype", "helpfile"})
-    public View(File location, FXPlatformConsumer<ContentState> emptyListener) throws InternalException, UserException
+    public View(File location) throws InternalException, UserException
     {
-        this.emptyListener = emptyListener;
         diskFile = new SimpleObjectProperty<>(location);
+        hintMessage = new HintMessage();
         tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
         {
             // No-one will add tables after the constructor, so this is okay:
@@ -598,7 +598,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             public void addSource(DataSource dataSource)
             {
                 FXUtility.runFX(() -> {
-                    thisView.emptyListener.consume(ContentState.NON_EMPTY);
+                    thisView.hintMessage.updateState();
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource));
                     thisView.save(true);
@@ -610,7 +610,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 FXUtility.runFX(() ->
                 {
-                    thisView.emptyListener.consume(ContentState.NON_EMPTY);
+                    thisView.hintMessage.updateState();
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     if (transformation instanceof Check)
                     {
@@ -689,11 +689,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         mainPane.addNodeSupplier(expandTableArrowSupplier);
         this.rowLabelSupplier = new RowLabelSupplier(mainPane);
         mainPane.addNodeSupplier(rowLabelSupplier);
+        mainPane.getFloatingSupplier().addItem(hintMessage);
         mainPane.addNewButtonVisibleListener(vis -> {
-            emptyListener.consume(tableManager.getAllTables().isEmpty() ?
-                (vis ? ContentState.EMPTY_SEL : ContentState.EMPTY_NO_SEL)
-                : ContentState.NON_EMPTY
-            );
+            hintMessage.newButtonVisible = vis;
+            hintMessage.updateState();
         });
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
@@ -947,7 +946,90 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             return r;
         }
     }
+    
+    @OnThread(Tag.FXPlatform)
+    private class HintMessage extends FloatingItem<Label>
+    {
+        /*
+        public static enum ContentState
+        {
+            // Empty window with no 
+            EMPTY_NO_SEL,
+            EMPTY_SEL,
+            NON_EMPTY;
+        }
+        
+        private ContentState state;
+        */
+        private final Label label;
+        private boolean newButtonVisible;
+        
+        public HintMessage()
+        {
+            super(ViewOrder.STANDARD_CELLS);
+            label = new Label(TranslationUtility.getString("main.emptyHint"));
+            label.getStyleClass().add("main-empty-hint");
+            label.setWrapText(true);
+            label.setMaxWidth(400.0);
+            label.setMouseTransparent(true);
+        }
+        
+        public void updateState()
+        {
+            ImmutableList<Table> allTables = tableManager.getAllTables();
+            if (allTables.isEmpty())
+            {
+                if (newButtonVisible)
+                {
+                    label.setText(TranslationUtility.getString("main.selHint"));
+                }
+                else
+                {
+                    label.setText(TranslationUtility.getString("main.emptyHint"));
+                }
+            }
+            else if (allTables.stream().allMatch(t -> t instanceof DataSource))
+            {
+                label.setText(TranslationUtility.getString("main.transHint"));
+            }
+            else
+            {
+                label.setText(Utility.universal(""));
+            }
+        }
+        
+        @Override
+        protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {            
+            // If visible, we position ourselves slightly to the right of any existing tables, at their level
+            
+            CellPosition rightMostTableEdge = getManager().streamAllTables().flatMap(t -> Utility.<CellPosition>streamNullable(Utility.<TableDisplayBase, CellPosition>onNullable(t.getDisplay(), d -> new CellPosition(d.getMostRecentPosition().rowIndex, d.getBottomRightIncl().columnIndex)))).max(Comparator.<CellPosition, Integer>comparing(c -> c.columnIndex).thenComparing(c -> -c.rowIndex)).orElse(CellPosition.ORIGIN.offsetByRowCols(2, 1));
+            
+            CellPosition target = rightMostTableEdge.offsetByRowCols(2, 2);
+            double x = visibleBounds.getXCoord(target.columnIndex) + 20;
+            double y = visibleBounds.getYCoord(target.rowIndex) + 10;
 
+            double width = Math.min(400, label.prefWidth(-1));
+            double height = label.prefHeight(width);
+            return Optional.of(new BoundingBox(x, y, width, height));
+        }
 
+        @Override
+        protected Label makeCell(VisibleBounds visibleBounds)
+        {
+            return label;
+        }
+
+        @Override
+        public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        {
+            return null;
+        }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+        }
+    }
 }
 

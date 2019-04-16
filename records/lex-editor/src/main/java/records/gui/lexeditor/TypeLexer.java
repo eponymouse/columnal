@@ -146,7 +146,7 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
                 @CanonicalLocation int common = Utility.longestCommonStart(content, curIndex, dataType.toString(), 0);
                 if (common > 0)
                 {
-                    autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString()))));
+                    autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString() ))));
                 }
             }
             if (matchedType)

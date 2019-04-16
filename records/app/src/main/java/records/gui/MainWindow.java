@@ -1,17 +1,16 @@
 package records.gui;
 
-import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -19,13 +18,11 @@ import records.data.DataSource;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.View.ContentState;
 import records.gui.grid.VirtualGrid;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -34,7 +31,6 @@ import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -71,18 +67,7 @@ public class MainWindow
     // If src is null, make new
     public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src) throws UserException, InternalException
     {
-        Label emptyMessage = new Label(TranslationUtility.getString("main.emptyHint"));
-        emptyMessage.getStyleClass().add("main-empty-hint");
-        emptyMessage.setWrapText(true);
-        emptyMessage.setMaxWidth(400.0);
-        emptyMessage.setMouseTransparent(true);
-
-        EnumMap<ContentState, @Localized String> emptyMessages = new EnumMap<ContentState, @Localized String>(ImmutableMap.of(
-            ContentState.EMPTY_NO_SEL, TranslationUtility.getString("main.emptyHint"),
-            ContentState.EMPTY_SEL, TranslationUtility.getString("main.selHint"),
-            ContentState.NON_EMPTY, Utility.universal("")
-        ));
-        View v = new View(destinationFile, state -> emptyMessage.setText(emptyMessages.getOrDefault(state, "")));
+        View v = new View(destinationFile);
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {
@@ -165,7 +150,7 @@ public class MainWindow
         banner.setVisible(false);
         updateBanner(v, banner, true);
 
-        BorderPane root = new BorderPane(new StackPane(v, emptyMessage, banner), menuBar, null, null, null);
+        BorderPane root = new BorderPane(new StackPane(v, banner), menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
