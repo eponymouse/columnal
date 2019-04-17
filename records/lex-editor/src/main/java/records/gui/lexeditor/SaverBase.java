@@ -470,7 +470,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
                 currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
                 if (terminator != null)
-                    currentScopesFinal.peek().items.add(Either.left(thisSaver.record(CanonicalSpan.fromTo(start, end), thisSaver.keywordToInvalid(terminator))));
+                    currentScopesFinal.peek().items.add(Either.left(thisSaver.record(keywordErrorDisplayer, thisSaver.keywordToInvalid(terminator))));
             }
         }));
     }
