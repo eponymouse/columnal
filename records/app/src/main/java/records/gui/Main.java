@@ -13,10 +13,10 @@ import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.File;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -30,6 +30,7 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        System.setProperty("storageDirectory", Utility.getStorageDirectory().getAbsolutePath());
         Log.normal("Started application");
         
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");

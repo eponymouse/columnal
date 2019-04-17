@@ -4,10 +4,14 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%msg [%t]%ex%n"/>
         </Console>
+        <File name="LogFile" fileName="${sys:storageDirectory}/log.txt">
+            <PatternLayout pattern="%d %msg [%t]%ex%n" />
+        </File>
     </Appenders>
     <Loggers>
         <Root level="DEBUG">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="LogFile"/>
         </Root>
     </Loggers>
 </Configuration>

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
@@ -12,7 +13,7 @@ import utility.Utility;
 
 public class Log
 {
-    private static Logger logger = LogManager.getRootLogger();
+    private static @MonotonicNonNull Logger logger;
     
     // Used to remember which thread set off which runnable.  Each thread can only manipulate
     // its own caller state.
@@ -21,28 +22,28 @@ public class Log
 
     public static void normal(String message)
     {
-        logger.info(message);
+        getLogger().info(message);
     }
     
     @SuppressWarnings("i18n")
     public static void log(String info, Throwable e)
     {
-        logger.log(Level.ERROR, info, e);
+        getLogger().log(Level.ERROR, info, e);
         
         // Print suppressed exceptions, if any
         for (Throwable se : e.getSuppressed())
-            logger.log(Level.ERROR, "Suppressed:", se);
+            getLogger().log(Level.ERROR, "Suppressed:", se);
 
         // Print cause, if any
         Throwable ourCause = e.getCause();
         if (ourCause != null)
-            logger.log(Level.ERROR, "Caused by:", ourCause);
+            getLogger().log(Level.ERROR, "Caused by:", ourCause);
 
         StringBuilder sb = new StringBuilder();
         logCallers(sb);
         String s = sb.toString();
         if (!s.isEmpty())
-            logger.log(Level.ERROR, sb);        
+            getLogger().log(Level.ERROR, sb);        
     }
 
     /**
@@ -117,14 +118,14 @@ public class Log
 
     public static void error(String s)
     {
-        logger.log(Level.ERROR, s);
+        getLogger().log(Level.ERROR, s);
     }
 
     // This should only be used temporarily while debugging, and should not be left in:
     @Pure
     public static void debug(String s)
     {
-        logger.log(Level.DEBUG, s);
+        getLogger().log(Level.DEBUG, s);
     }
 
     // This should only be used temporarily while debugging, and should not be left in:
@@ -132,7 +133,7 @@ public class Log
     public static void debugTime(String s)
     {
         long millis = System.currentTimeMillis() % 100000L;
-        logger.log(Level.DEBUG, String.format("#%03d.%03d: ", millis / 1000L, millis % 1000L) + s);
+        getLogger().log(Level.DEBUG, String.format("#%03d.%03d: ", millis / 1000L, millis % 1000L) + s);
     }
 
     public static void debugDuration(String prefix, Runnable runnable)
@@ -141,5 +142,12 @@ public class Log
         runnable.run();
         long end = System.currentTimeMillis();
         debug(prefix + " took " + (end - start) + " milliseconds");
+    }
+
+    private static Logger getLogger()
+    {
+        if (logger == null) 
+            logger = LogManager.getRootLogger();
+        return logger;
     }
 }
