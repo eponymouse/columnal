@@ -194,10 +194,12 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             write("Src Data");
             push(KeyCode.ENTER);
             sleep(300);
+            boolean skipFirst;
             if (aggColumns.isEmpty() || aggColumns.get(0).calculations.isEmpty())
             {
                 moveAndDismissPopupsAtPos(point(".cancel-button"));
                 clickOn(".cancel-button");
+                skipFirst = false;
             }
             else
             {
@@ -206,6 +208,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), aggColumns.get(0).calculations.get(0).expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                 moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
+                skipFirst = true;
             }
             sleep(300);
             clickOn(".id-fancylist-add");
@@ -249,7 +252,6 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
             // Now add the calculations:
             int colCount = initialAgg.size();
-            boolean skipFirst = true;
             for (AggColumns aggColumn : aggColumns)
             {
                 for (AggCalculation calculation : aggColumn.calculations)
@@ -588,7 +590,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
 
         @SuppressWarnings("nullness")
-        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(4, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
+        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(8, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
 
         keyboardMoveTo(virtualGrid, targetPos);
         TestUtil.delay(300);

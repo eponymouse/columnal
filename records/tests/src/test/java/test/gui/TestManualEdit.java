@@ -9,6 +9,8 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -54,6 +56,7 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.FancyList;
 
 import java.math.BigDecimal;
@@ -359,9 +362,15 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         if (r.nextInt(3) == 1)
         {
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), TestUtil.fx(() -> findFirstSort.get().getDisplay().getMostRecentPosition().offsetByRowCols(0, -1)));
+            CellPosition target = TestUtil.fx(() -> findFirstSort.get().getDisplay().getMostRecentPosition().offsetByRowCols(0, -1));
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), target);
+            Point2D selScreenPos = TestUtil.fx(() -> FXUtility.getCentre(mainWindowActions._test_getVirtualGrid().getRectangleBoundsScreen(new RectangleBounds(target, target))));
             // Change sort order of source:
-            clickOn(".edit-sort-by");
+            // We might see both sort edit links on screen, so pick the closest one:
+            clickOn(lookup(".edit-sort-by").queryAll().stream().min(Comparator.comparing((Node n) -> {
+                Bounds bounds = TestUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()));
+                return Math.hypot(FXUtility.getCentre(bounds).getX() - selScreenPos.getX(), FXUtility.getCentre(bounds).getY() - selScreenPos.getY());
+            })).get());
             sleep(200);
             clickOn(".small-delete");
             sleep(200);
