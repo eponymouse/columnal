@@ -22,8 +22,6 @@ import java.util.Map;
  * (if the String is kept in memory forever, it just adds one extra reference
  * size to that String) and most columns are unlikely to have huge numbers
  * of completely distinct Strings.
- *
- * TODO add a pool which counts references.
  */
 public class DumbObjectPool<T>
 {

@@ -1931,7 +1931,6 @@ public class Utility
         }
         else
         {
-            @NonNull T tNN = t;
             @NonNull R r = f.apply(t);
             return r;
         }

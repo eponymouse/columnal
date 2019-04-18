@@ -152,7 +152,6 @@ public class Workers
     @OnThread(Tag.Any)
     public static void onWorkerThread(String title, Priority priority, Worker runnable, long delay)
     {
-        int numAhead;
         synchronized (Workers.class)
         {
             // We ask for current time.  If we just used 0, then all immediates
