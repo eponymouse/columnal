@@ -186,6 +186,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     @Override
     protected @OnThread(Tag.FXPlatform) Either<@Localized String, ColumnDetails> calculateResult()
     {
+        typeEditor.showAllErrors();
         // Check whether some conditions are fulfilled
         DataType dataType = customDataType;
         
