@@ -57,7 +57,7 @@ class JellyTypeIdent extends JellyType
         DataType dataType = mgr.lookupType(new TypeId(name), ImmutableList.of());
         if (dataType != null)
             return dataType;
-        throw new InternalException("No such type variable: " + name);
+        throw new UserException("No such type variable: " + name);
         
     }
 
