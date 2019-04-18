@@ -103,7 +103,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                 return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }
                         }
-                        return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(errorDisplayer, bracketEnd), bracketed));
+                        return Either.<@Recorded TypeExpression, Terminator>left(bracketed);
             }, prefixKeyword, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
