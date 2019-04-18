@@ -165,6 +165,10 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE), c -> {});
                     s.append("{");
                     d.append("{");
+                    @SuppressWarnings("units")
+                    @DisplayLocation int displayOffset = d.getLengthSoFar();
+                    saver.addNestedErrors(lexerResult.errors, removedCharacters.map(curIndex + RawInputLocation.ONE), displayOffset);
+                    removedCharacters.orShift(lexerResult.removedChars, curIndex + lexerResult.adjustedContent.length());
                     s.append(lexerResult.adjustedContent);
                     d.append(lexerResult.display);
                     s.append("}");
