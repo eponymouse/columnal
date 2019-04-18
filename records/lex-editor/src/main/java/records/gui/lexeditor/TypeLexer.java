@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.UnitExpression;
@@ -29,13 +30,14 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
+public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
 {
     public static enum Keyword implements ExpressionToken
     {
@@ -215,13 +217,15 @@ public class TypeLexer implements Lexer<TypeExpression, CodeCompletionContext>
         }
         
         @SuppressWarnings("units")
-        ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+        ArrayList<CaretPos> caretPositions = new ArrayList<>(IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()));
         if (caretPositions.isEmpty())
-            caretPositions = ImmutableList.of(new CaretPos(CanonicalLocation.ZERO, DisplayLocation.ZERO));
+            caretPositions.add(new CaretPos(CanonicalLocation.ZERO, DisplayLocation.ZERO));
         StyledString built = d.build();
         if (built.getLength() == 0)
             built = StyledString.s(" ");
-        return new LexerResult<>(saved, s.toString(), removedCharacters, false, caretPositions, built, saver.getErrors(), autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
+        ImmutableList<ErrorDetails> errors = saver.getErrors();
+        built = padZeroWidthErrors(built, caretPositions, errors);
+        return new LexerResult<>(saved, s.toString(), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 
     private Stream<DataType> streamDataTypes()

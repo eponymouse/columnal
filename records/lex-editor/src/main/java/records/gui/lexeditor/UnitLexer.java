@@ -23,7 +23,7 @@ import utility.gui.TranslationUtility;
 import java.util.BitSet;
 import java.util.stream.IntStream;
 
-public class UnitLexer implements Lexer<UnitExpression, CodeCompletionContext>
+public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
 {
     public static enum UnitOp implements ExpressionToken
     {

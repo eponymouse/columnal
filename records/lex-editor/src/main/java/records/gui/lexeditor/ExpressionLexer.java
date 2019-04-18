@@ -22,7 +22,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.LexAutoComplete.LexSelectionBehaviour;
@@ -56,7 +55,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionContext>
+public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionContext>
 {
     /**
      * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
@@ -575,39 +574,9 @@ public class ExpressionLexer implements Lexer<Expression, ExpressionCompletionCo
         StyledString display = chunks.stream().map(c -> c.displayContent).filter(d -> d.getLength() > 0).collect(StyledString.joining(""));
         ArrayList<CaretPos> caretPos = calculateCaretPos(chunks);
 
-        // Important to go through in order so that later errors can be
-        // adjusted correctly according to earlier errors.
         ImmutableList<ErrorDetails> errors = saver.getErrors();
-        for (ErrorDetails error : Utility.iterableStream(errors.stream().sorted(Comparator.comparing(e -> e.location.start))))
-        {            
-            // If an error only occupies one caret position, add an extra char there:
-            if (error.location.start == error.location.end)
-            {                
-                // Find caret pos:
-                @DisplayLocation int displayOffset = DisplayLocation.ZERO;
-                for (int i = 0; i < caretPos.size(); i++)
-                {
-                    if (displayOffset != 0)
-                    {
-                        caretPos.set(i, new CaretPos(caretPos.get(i).positionInternal, caretPos.get(i).positionDisplay + displayOffset));
-                    }
-                    else
-                    {
-                        CaretPos p = caretPos.get(i);
+        display = Lexer.padZeroWidthErrors(display, caretPos, errors);
 
-                        if (p.positionInternal == error.location.start)
-                        {
-                            error.displayLocation = new DisplaySpan(p.positionDisplay, p.positionDisplay + DisplayLocation.ONE);
-                            // Add space to display:
-                            display = StyledString.concat(display.substring(0, p.positionDisplay), StyledString.s(" "), display.substring(p.positionDisplay, display.getLength()));
-                            // And offset future caret pos display by one:
-                            displayOffset += DisplayLocation.ONE;
-                        }
-                    }
-                }
-            }
-        }
-        
         return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 

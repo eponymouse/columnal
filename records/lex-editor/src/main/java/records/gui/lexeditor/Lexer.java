@@ -7,17 +7,21 @@ import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Comparator;
 
-public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
-    static class LexerResult<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+    static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
     {
         public static class CaretPos
         {
@@ -173,11 +177,49 @@ public interface Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEX
     }
 
     @SuppressWarnings("units")
-    public default @RawInputLocation int rawLength(String content)
+    protected static @RawInputLocation int rawLength(String content)
     {
         return content.length();
     }
     
     // Takes latest content, lexes it, returns result
-    public LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, int caretPos);
+    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, int caretPos);
+
+    protected static StyledString padZeroWidthErrors(StyledString display, ArrayList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
+    {
+
+        // Important to go through in order so that later errors can be
+        // adjusted correctly according to earlier errors.
+
+        for (ErrorDetails error : Utility.iterableStream(errors.stream().sorted(Comparator.comparing(e -> e.location.start))))
+        {
+            // If an error only occupies one caret position, add an extra char there:
+            if (error.location.start == error.location.end)
+            {
+                // Find caret pos:
+                @DisplayLocation int displayOffset = DisplayLocation.ZERO;
+                for (int i = 0; i < caretPos.size(); i++)
+                {
+                    if (displayOffset != 0)
+                    {
+                        caretPos.set(i, new CaretPos(caretPos.get(i).positionInternal, caretPos.get(i).positionDisplay + displayOffset));
+                    }
+                    else
+                    {
+                        CaretPos p = caretPos.get(i);
+
+                        if (p.positionInternal == error.location.start)
+                        {
+                            error.displayLocation = new DisplaySpan(p.positionDisplay, p.positionDisplay + DisplayLocation.ONE);
+                            // Add space to display:
+                            display = StyledString.concat(display.substring(0, p.positionDisplay), StyledString.s(" "), display.substring(p.positionDisplay, display.getLength()));
+                            // And offset future caret pos display by one:
+                            displayOffset += DisplayLocation.ONE;
+                        }
+                    }
+                }
+            }
+        }
+        return display;
+    }
 }
