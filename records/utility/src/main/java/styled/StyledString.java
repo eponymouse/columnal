@@ -145,6 +145,18 @@ public final class StyledString
         return toPlain();
     }
 
+    // Truncates the string if it is longer than the given length
+    public StyledString limit(int length)
+    {
+        if (getLength() > length)
+        {
+            return StyledString.concat(substring(0, length - 1), StyledString.s("\u2026"));
+        }
+        else
+            return this;
+    }
+
+
     /**
      * Concats the items together, inserting divider between each pair
      */

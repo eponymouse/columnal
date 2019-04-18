@@ -608,7 +608,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
 
     private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
-        return curExpression.toStyledString().withStyle(new Clickable() {
+        return curExpression.toStyledString().limit(60).withStyle(new Clickable() {
             @Override
             @OnThread(Tag.FXPlatform)
             protected void onClick(MouseButton mouseButton, Point2D screenPoint)
