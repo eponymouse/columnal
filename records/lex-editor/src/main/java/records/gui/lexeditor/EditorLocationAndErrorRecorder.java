@@ -205,6 +205,8 @@ public class EditorLocationAndErrorRecorder
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
     public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION recordG(CanonicalSpan location,  @NonNull EXPRESSION e)
     {
+        if (expressionDisplayers.containsKey(e))
+            Log.logStackTrace("Double position record for: " + e);
         expressionDisplayers.put(e, location);
         return e;
     }
@@ -212,6 +214,8 @@ public class EditorLocationAndErrorRecorder
     @SuppressWarnings({"initialization", "recorded"})
     public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(CanonicalSpan location, @NonNull UNIT_EXPRESSION e)
     {
+        if (unitDisplayers.containsKey(e))
+            Log.logStackTrace("Double position record for: " + e);
         unitDisplayers.put(e, location);
         return e;
     }
@@ -219,6 +223,8 @@ public class EditorLocationAndErrorRecorder
     @SuppressWarnings({"initialization", "recorded"})
     public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(CanonicalSpan location, @NonNull TYPE_EXPRESSION e)
     {
+        if (typeDisplayers.containsKey(e))
+            Log.logStackTrace("Double position record for: " + e);
         typeDisplayers.put(e, location);
         return e;
     }
