@@ -102,7 +102,7 @@ public class EditorLocationAndErrorRecorder
         {
             int c = Integer.compare(start, o.start);
             if (c != 0)
-                return 0;
+                return c;
             else
                 return Integer.compare(end, o.end);
         }
