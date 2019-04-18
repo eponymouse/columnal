@@ -24,6 +24,7 @@ import records.transformations.expression.type.TupleTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -247,7 +248,10 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     protected @Recorded TypeExpression makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
+        {
+            locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Empty brackets"), ImmutableList.of());
             return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));
+        }
 
         CanonicalSpan location = CanonicalSpan.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
         
