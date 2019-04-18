@@ -81,4 +81,34 @@
         </example>
         <!-- TODO add more examples -->
     </function>
+    
+    <function name="extract number">
+        <unitArg>u</unitArg>
+        <argType>Text</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Extracts a number from the given text.  If there is no number, or two numbers, gives an error.</p>
+        </description>
+        <equivalence display="false">
+            <forany name="x">Number</forany>
+            <lhs>@call @function extract number("a" ; @call @function to text(x) ; "z")</lhs>
+            <rhs>x</rhs>
+        </equivalence>
+        <example>
+            <inputArg>"-34.20m"</inputArg>
+            <output>-34.2</output>
+        </example>
+        <example>
+            <inputArg>"The 6 cats"</inputArg>
+            <output>6</output>
+        </example>
+        <example>
+            <inputArg>"2 and 2 makes 4"</inputArg>
+            <output>error</output>
+        </example>
+        <example>
+            <inputArg>"Two"</inputArg>
+            <output>error</output>
+        </example>
+    </function>
 </functionDocumentation>

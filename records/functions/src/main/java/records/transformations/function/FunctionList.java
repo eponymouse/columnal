@@ -7,6 +7,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.function.conversion.ExtractNumber;
 import records.transformations.function.core.AsType;
 import records.transformations.function.core.AsUnit;
 import records.transformations.function.core.TypeOf;
@@ -54,6 +55,7 @@ public class FunctionList
             new Combine(),
             new Count(),
             new DaysBetween(),
+            new ExtractNumber(),
             new GetElement(),
             new InList(),
             new JoinLists(),
