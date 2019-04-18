@@ -249,7 +249,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     {
         if (content.isEmpty())
         {
-            locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Empty brackets"), ImmutableList.of());
+            // If terminator is null, error will be elsewhere
+            if (terminatorDescription != null)
+                locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Empty brackets"), ImmutableList.of());
             return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));
         }
 

@@ -192,7 +192,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 }
                 else
                 {
-                    saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content), StyledString.s("Unit lacks closing }"), ImmutableList.of());
+                    saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content.substring(curIndex)), StyledString.s("Missing closing }"), ImmutableList.of());
                     UnitLexer unitLexer = new UnitLexer();
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});

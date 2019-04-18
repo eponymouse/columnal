@@ -84,14 +84,14 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testInvalidChar()
     {
         // Check basic:
-        testError("Text#", e(4, 5, "invalid"));
+        testError("Text#", e(4,4, "missing", "operator"), e(4, 5, "not allowed"));
     }
 
     @Test
     public void testInvalidBracket1()
     {
         // Check basic:
-        testError("Number()",e(6,6, "missing"), e(7, 8, "empty"));
+        testError("Number()",e(6,6, "missing"), e(7, 7, "empty"));
     }
     
     @Test
@@ -105,14 +105,14 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testUnclosedRound()
     {
         // Check basic:
-        testError("Number(", e(7, 7, "missing"));
+        testError("(", e(1, 1, "missing"));
     }
 
     @Test
     public void testUnclosedCurly()
     {
         // Check basic:
-        testError("Number{", e(7, 7, "missing"));
+        testError("Number{", e(6, 7, "missing"));
     }
 
     @Test
