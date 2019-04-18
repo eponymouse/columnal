@@ -115,7 +115,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 Log.log(e);
             }
         }
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, true, t -> {
             clearErrorLabel();
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);

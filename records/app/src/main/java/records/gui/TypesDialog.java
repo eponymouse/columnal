@@ -380,7 +380,7 @@ public class TypesDialog extends Dialog<Void>
                 }
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
-                this.innerType = new TypeEditor(typeManager, startingExpression, latest -> {
+                this.innerType = new TypeEditor(typeManager, startingExpression, false, latest -> {
                     updateCurrentValue(latest);
                 });
                 //innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));

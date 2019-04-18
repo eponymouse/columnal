@@ -91,25 +91,25 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testInvalidBracket1()
     {
         // Check basic:
-        testError("Number()", e(7, 8, "missing"));
+        testError("Number()",e(6,6, "missing"), e(7, 8, "empty"));
     }
     
     @Test
-    public void testInvalidBracket2()
+    public void testInvalidEmptyBracket()
     {
         // Check basic:
-        testError("()", e(1, 1, "missing"));
+        testError("()", e(1, 1, "empty"));
     }
     
     @Test
-    public void testInvalidBracket3()
+    public void testUnclosedRound()
     {
         // Check basic:
         testError("Number(", e(7, 7, "missing"));
     }
 
     @Test
-    public void testInvalidBracket4()
+    public void testUnclosedCurly()
     {
         // Check basic:
         testError("Number{", e(7, 7, "missing"));
@@ -126,7 +126,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testOnlyUnit()
     {
         // Check basic:
-        testError("{m}", e(0, 2, "unit"));
+        testError("{m}", e(0, 3, "unit"));
     }
 
     // Checks that errors don't show up while still in the span,

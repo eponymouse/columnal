@@ -6,10 +6,16 @@ import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TypeManager;
+import records.error.ExceptionWithStyle;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
@@ -76,7 +82,16 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             return op;
         }
     }
-    
+
+    private final TypeManager typeManager;
+    private final boolean requireConcrete;
+
+    public TypeLexer(TypeManager typeManager, boolean requireConcrete)
+    {
+        this.typeManager = typeManager;
+        this.requireConcrete = requireConcrete;
+    }
+
     @Override
     public LexerResult<TypeExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
@@ -229,6 +244,21 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             built = StyledString.s(" ");
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         built = padZeroWidthErrors(built, caretPositions, errors);
+        
+        if (errors.isEmpty() && requireConcrete)
+        {
+            try
+            {
+                saved.toJellyType(typeManager).makeDataType(ImmutableMap.of(), typeManager);
+            }
+            catch (InternalException | UserException e)
+            {
+                if (e instanceof InternalException)
+                    Log.log(e);
+                errors = Utility.appendToList(errors, new ErrorDetails(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex)), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of()));
+            }
+        }
+        
         return new LexerResult<>(saved, s.toString(), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 
