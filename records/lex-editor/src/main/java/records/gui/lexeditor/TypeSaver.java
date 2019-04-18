@@ -292,12 +292,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
+            @Nullable @Recorded TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
                     makeInvalidOp(brackets.location, arg)
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
             {
-                return record(location, e);
+                return e;
             }
 
         }
