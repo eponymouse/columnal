@@ -854,7 +854,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     items.add(Either.right(makeContent.fetchContent(unclosedBrackets(makeBrackets.apply(keywordErrorDisplayer)))));
                     if (terminator != null)
                         items.add(Either.right(record(keywordErrorDisplayer, keywordToInvalid(terminator))));
-                    @Recorded EXPRESSION invalid = makeInvalidOp(CanonicalSpan.fromTo(start, keywordErrorDisplayer), items.build());
+                    ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> built = items.build();
+                    @Recorded EXPRESSION invalid = makeInvalidOp(CanonicalSpan.fromTo(built.get(0).either(opAndNode -> opAndNode.sourceNode, e -> recorderFor(e)), keywordErrorDisplayer), built);
                     currentScopes.peek().items.add(Either.left(invalid));
                 }
             }};
