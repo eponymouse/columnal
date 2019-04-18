@@ -129,6 +129,42 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
         testError("{m}", e(0, 3, "unit"));
     }
 
+    @Test
+    public void testUnknown0()
+    {
+        testError("NumbeX", e(0, 6, "unknown"));
+    }
+    
+    @Test
+    public void testUnknown1()
+    {
+        testError("NumberX", e(0, 7, "unknown"));
+    }
+    
+    @Test
+    public void testUnknown2()
+    {
+        testError("Number X", e(0, 8, "unknown"));
+    }
+
+    @Test
+    public void testTuple()
+    {
+        testError("(Text, Number)");
+    }
+    
+    @Test
+    public void testBadTuple1()
+    {
+        testError("Text, Number", e(4, 5, "bracket"));
+    }
+
+    @Test
+    public void testBadTuple2()
+    {
+        testError("[Text, Number]", e(5, 6, "bracket"));
+    }
+
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
     @SuppressWarnings("units")
