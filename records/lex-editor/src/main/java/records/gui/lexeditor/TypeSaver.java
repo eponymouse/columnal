@@ -87,19 +87,19 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                             // Shouldn't ever be null:
                             if (callTarget != null)
                             {
-                                Either<UnitExpression, TypeExpression> newArg = bracketed instanceof  UnitLiteralTypeExpression ? Either.left(((UnitLiteralTypeExpression)bracketed).getUnitExpression()) : Either.right(bracketed);
+                                Either<UnitExpression, @Recorded TypeExpression> newArg = bracketed instanceof  UnitLiteralTypeExpression ? Either.left(((UnitLiteralTypeExpression)bracketed).getUnitExpression()) : Either.right(bracketed);
                                 
                                 TypeApplyExpression typeExpression;
                                 if (callTarget instanceof TypeApplyExpression)
                                 {
                                     TypeApplyExpression applyExpression = (TypeApplyExpression) callTarget;
                                     
-                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.<Either<UnitExpression, TypeExpression>>concatI(applyExpression.getArgumentsOnly(), ImmutableList.<Either<UnitExpression, TypeExpression>>of(newArg)));
+                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.<Either<UnitExpression, @Recorded TypeExpression>>concatI(applyExpression.getArgumentsOnly(), ImmutableList.<Either<UnitExpression, @Recorded TypeExpression>>of(newArg)));
                                 }
                                 else
                                 {
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
-                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.of(newArg));
+                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.<Either<UnitExpression, @Recorded TypeExpression>>of(newArg));
                                 }
                                 return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }
@@ -155,15 +155,14 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(items.typeExpressions.get(0)));
                 else
                 {
-                    InvalidOpTypeExpression content = new InvalidOpTypeExpression(items.typeExpressions);
-                    errorDisplayerRecord.recordType(locationInsideBrackets, content);
+                    @Recorded InvalidOpTypeExpression content = errorDisplayerRecord.recordType(locationInsideBrackets, new InvalidOpTypeExpression(items.typeExpressions));
                     errorDisplayerRecord.addErrorAndFixes(locationInsideBrackets, StyledString.s("Invalid expression"), ImmutableList.of());
                     return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(content));
                 }
             }
 
             @Override
-            public @Recorded @NonNull TypeExpression applySingle(@NonNull TypeExpression singleItem)
+            public @Recorded @NonNull TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {
                 return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(singleItem));
             }

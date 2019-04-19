@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
@@ -31,18 +32,18 @@ import java.util.Objects;
 public class TypeApplyExpression extends TypeExpression
 {
     private final @ExpressionIdentifier String typeName;
-    private final ImmutableList<Either<UnitExpression, TypeExpression>> arguments;
+    private final ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> arguments;
 
-    public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<UnitExpression, TypeExpression>> arguments)
+    public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> arguments)
     {
         this.typeName = typeName;
         // Turn any units which are encased in a type expression wrapper
         // back into actual units:
-        this.arguments = Utility.mapListI(arguments, arg -> arg.flatMap(t -> {
+        this.arguments = Utility.<Either<UnitExpression, @Recorded TypeExpression>, Either<UnitExpression, @Recorded TypeExpression>>mapListI(arguments, arg -> arg.<@Recorded TypeExpression>flatMap(t -> {
             if (t instanceof UnitLiteralTypeExpression)
-                return Either.left(((UnitLiteralTypeExpression)t).getUnitExpression());
+                return Either.<UnitExpression, @Recorded TypeExpression>left(((UnitLiteralTypeExpression)t).getUnitExpression());
             else
-                return Either.right(t);
+                return Either.<UnitExpression, @Recorded TypeExpression>right(t);
         }));
         if (arguments.isEmpty())
             Log.logStackTrace("Empty arguments in type apply");
@@ -113,21 +114,21 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded TypeApplyExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         if (arguments.isEmpty())
             throw new InternalException("Empty type-apply expression");
 
         ImmutableList.Builder<Either<JellyUnit, JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
 
-        for (Either<UnitExpression, TypeExpression> arg : arguments)
+        for (Either<UnitExpression, @Recorded TypeExpression> arg : arguments)
         {
             args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {
-                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());
-            }, ju -> ju), t -> t.toJellyType(typeManager)));
+                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), this);
+            }, ju -> ju), (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
         }
         
-        return JellyType.tagged(new TypeId(typeName), args.build());
+        return jellyRecorder.record(JellyType.tagged(new TypeId(typeName), args.build()), this);
     }
 
     @Override
@@ -148,7 +149,7 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     // Gets arguments, without the leading identifier
-    public ImmutableList<Either<UnitExpression, TypeExpression>> getArgumentsOnly()
+    public ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> getArgumentsOnly()
     {
         return arguments;
     }
@@ -168,6 +169,7 @@ public class TypeApplyExpression extends TypeExpression
         return Objects.hash(typeName, arguments);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {

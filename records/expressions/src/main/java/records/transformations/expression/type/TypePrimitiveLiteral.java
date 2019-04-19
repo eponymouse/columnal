@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -63,9 +64,9 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException
+    public @Recorded JellyType toJellyType(@Recorded TypePrimitiveLiteral this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException
     {
-        return JellyType.fromConcrete(dataType);
+        return jellyRecorder.record(JellyType.fromConcrete(dataType), this);
     }
 
     @Override

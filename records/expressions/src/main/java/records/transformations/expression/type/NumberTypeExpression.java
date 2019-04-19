@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -53,13 +54,13 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded NumberTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         if (unitExpression == null)
-            return JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR));
+            return jellyRecorder.record(JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR)), this);
         
-        return unitExpression.asUnit(typeManager.getUnitManager())
-            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, JellyType::number);
+        return jellyRecorder.record(unitExpression.asUnit(typeManager.getUnitManager())
+            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), this);}, JellyType::number), this);
     }
 
     @Override

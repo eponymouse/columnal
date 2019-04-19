@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -34,9 +35,9 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded UnitLiteralTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
-        throw new UnJellyableTypeExpression("Unit not valid in this position");
+        throw new UnJellyableTypeExpression("Unit not valid in this position", this);
     }
 
     @Override

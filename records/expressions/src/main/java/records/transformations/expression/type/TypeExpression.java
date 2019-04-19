@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -176,13 +177,26 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
 
     public abstract @Nullable DataType toDataType(TypeManager typeManager);
 
-    public abstract JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression;
+    public abstract @Recorded JellyType toJellyType(@Recorded TypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression;
+    
+    public static interface JellyRecorder
+    {
+        public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source);
+    }
     
     public static class UnJellyableTypeExpression extends UserException
     {
-        public UnJellyableTypeExpression(String message)
+        private final @Recorded TypeExpression source;
+
+        public UnJellyableTypeExpression(String message, @Recorded TypeExpression source)
         {
             super(message);
+            this.source = source;
+        }
+
+        public @Recorded TypeExpression getSource()
+        {
+            return source;
         }
     }
 

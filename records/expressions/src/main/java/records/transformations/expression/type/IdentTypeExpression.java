@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -58,9 +59,9 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager)
+    public @Recorded JellyType toJellyType(@Recorded IdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder)
     {
-        return JellyType.typeVariable(value);
+        return jellyRecorder.record(JellyType.typeVariable(value), this);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -13,9 +14,9 @@ import java.util.Objects;
 
 public class ListTypeExpression extends TypeExpression
 {
-    private final TypeExpression innerType;
+    private final @Recorded TypeExpression innerType;
 
-    public ListTypeExpression(TypeExpression innerType)
+    public ListTypeExpression(@Recorded TypeExpression innerType)
     {
         this.innerType = innerType;
     }
@@ -43,9 +44,9 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded ListTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
-        return JellyType.list(innerType.toJellyType(typeManager));
+        return jellyRecorder.record(JellyType.list(innerType.toJellyType(typeManager, jellyRecorder)), this);
     }
 
     @Override
@@ -75,6 +76,7 @@ public class ListTypeExpression extends TypeExpression
         return Objects.hash(innerType);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {

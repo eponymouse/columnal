@@ -24,11 +24,13 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.jellytype.JellyType;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypeExpression.JellyRecorder;
 import records.transformations.expression.type.TypeExpression.UnJellyableTypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -254,18 +257,39 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         
         if (errors.isEmpty() && requireConcrete)
         {
+            class LocalJellyRecorder implements JellyRecorder
+            {
+                private final IdentityHashMap<@Recorded JellyType, CanonicalSpan> jellyTypeLocations = new IdentityHashMap<>();
+                
+                @SuppressWarnings("recorded")
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source)
+                {
+                    jellyTypeLocations.put(jellyType, saver.locationRecorder.recorderFor(source));
+                    return jellyType;
+                }
+                
+                @SuppressWarnings("nullness")
+                public CanonicalSpan locationFor(@Recorded JellyType jellyType)
+                {
+                    return jellyTypeLocations.get(jellyType);
+                }
+            }
+            LocalJellyRecorder jellyRecorder = new LocalJellyRecorder();
+            
             try
             {
                 // If toJellyType throws, there will usually have been an error
                 // in the lexing stage, except for errors such as
                 // units in the wrong place.
-                saved.toJellyType(typeManager).makeDataType(ImmutableMap.of(), typeManager);
+                saved.toJellyType(typeManager, jellyRecorder).makeDataType(ImmutableMap.of(), typeManager);
             }
             catch (InternalException | UserException e)
             {
                 if (e instanceof InternalException)
                     Log.log(e);
-                errors = Utility.appendToList(errors, new ErrorDetails(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex)), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of()));
+                errors = Utility.appendToList(errors, new ErrorDetails(e instanceof UnJellyableTypeExpression ? saver.locationRecorder.recorderFor(((UnJellyableTypeExpression)e).getSource()) : new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex)), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of()));
             }
         }
         

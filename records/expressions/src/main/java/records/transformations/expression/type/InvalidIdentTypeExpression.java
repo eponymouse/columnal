@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -10,6 +11,7 @@ import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.InvalidIdentExpression;
 import styled.StyledString;
 import utility.IdentifierUtility;
 
@@ -46,9 +48,9 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded InvalidIdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
-        throw new UnJellyableTypeExpression("Invalid type expression: \"" + value + "\"");
+        throw new UnJellyableTypeExpression("Invalid type expression: \"" + value + "\"", this);
     }
 
     @Override

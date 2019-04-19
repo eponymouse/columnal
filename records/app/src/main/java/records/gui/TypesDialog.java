@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -40,6 +41,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.IdentTypeExpression;
+import records.transformations.expression.type.TypeExpression.JellyRecorder;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -409,7 +411,15 @@ public class TypesDialog extends Dialog<Void>
                     latest = innerType.save();
                 try
                 {
-                    @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager);
+                    @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager, new JellyRecorder()
+                    {
+                        @SuppressWarnings("recorded")
+                        @Override
+                        public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source)
+                        {
+                            return jellyType;
+                        }
+                    });
                     @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(tagName.getText());
                     if (ident != null)
                         currentValue.set(Either.right(new TagType<JellyType>(ident, jellyType)));
