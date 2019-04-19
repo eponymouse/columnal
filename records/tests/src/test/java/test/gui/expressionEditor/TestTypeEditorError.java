@@ -156,13 +156,13 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     @Test
     public void testBadTuple1()
     {
-        testError("Text, Number", e(4, 5, "bracket"));
+        testError("Text,Number", e(0, 11, "invalid"));
     }
 
     @Test
     public void testBadTuple2()
     {
-        testError("[Text, Number]", e(5, 6, "bracket"));
+        testError("[Text,Number]", e(1, 12, "invalid"));
     }
 
     // Checks that errors don't show up while still in the span,

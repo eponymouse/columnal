@@ -639,6 +639,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     public interface ApplyBrackets<BRACKET_CONTENT, EXPRESSION>
     {
+        // Return null if that content with these brackets is invalid
         public @Nullable @Recorded EXPRESSION apply(@NonNull BRACKET_CONTENT items);
         
         public @NonNull @Recorded EXPRESSION applySingle(@NonNull @Recorded EXPRESSION singleItem);
