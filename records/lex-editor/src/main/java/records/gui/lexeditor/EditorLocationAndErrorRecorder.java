@@ -243,6 +243,21 @@ public class EditorLocationAndErrorRecorder
             }
         });
     }
+
+    private void showUnresolvedError(TypeExpression e, @Nullable StyledString error, ImmutableList<QuickFix<TypeExpression>> quickFixes)
+    {
+        errorsToShow.add(() -> {
+            @Nullable CanonicalSpan resolvedLocation = typeDisplayers.get(e);
+            if (resolvedLocation != null)
+            {
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(typeDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, new TableAndColumnRenames(ImmutableMap.of())), q)));
+            }
+            else
+            {
+                throw new InternalException("Could not resolve location for type expression: " + e);
+            }
+        });
+    }
     
     public void addErrorAndFixes(CanonicalSpan showFor, StyledString error, ImmutableList<TextQuickFix> quickFixes)
     {
@@ -296,6 +311,10 @@ public class EditorLocationAndErrorRecorder
                 {
                     EditorLocationAndErrorRecorder.this.showUnresolvedError((Expression) src, error, ImmutableList.of());
                 }
+                else if (src instanceof TypeExpression)
+                {
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((TypeExpression) src, error, ImmutableList.of());
+                }
             }
 
             @SuppressWarnings("unchecked")
@@ -305,6 +324,10 @@ public class EditorLocationAndErrorRecorder
                 if (src instanceof Expression && !quickFixes.isEmpty())
                 {
                     EditorLocationAndErrorRecorder.this.showUnresolvedError((Expression) src, null, ImmutableList.copyOf((List<QuickFix<Expression>>)(List)quickFixes));
+                }
+                else if (src instanceof TypeExpression && !quickFixes.isEmpty())
+                {
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((TypeExpression) src, null, ImmutableList.copyOf((List<QuickFix<TypeExpression>>)(List)quickFixes));
                 }
             }
 
