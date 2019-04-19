@@ -10,6 +10,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberDisplayInfo.Padding;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -20,6 +21,7 @@ import records.grammar.FormatParser;
 import records.grammar.FormatParser.*;
 import records.grammar.MainParser.TypesContext;
 import records.jellytype.JellyType;
+import records.jellytype.JellyType.UnknownTypeException;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -274,7 +276,7 @@ public class TypeManager
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }
 
-    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, UserException
+    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, TaggedInstantiationException, UnknownTypeException
     {
         TaggedTypeDefinition taggedTypeDefinition = allKnownTypes.get(typeId);
         if (taggedTypeDefinition == null)

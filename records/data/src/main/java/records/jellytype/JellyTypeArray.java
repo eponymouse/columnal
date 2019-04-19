@@ -3,6 +3,7 @@ package records.jellytype;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -33,7 +34,7 @@ class JellyTypeArray extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         return DataType.array(inner.makeDataType(typeVariables, mgr));
     }

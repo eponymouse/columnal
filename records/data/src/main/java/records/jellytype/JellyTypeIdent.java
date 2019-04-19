@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -49,7 +50,7 @@ class JellyTypeIdent extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         Either<Unit, DataType> var = typeVariables.get(name);
         if (var != null)
@@ -57,7 +58,7 @@ class JellyTypeIdent extends JellyType
         DataType dataType = mgr.lookupType(new TypeId(name), ImmutableList.of());
         if (dataType != null)
             return dataType;
-        throw new UserException("Unknown type or type variable: " + name);
+        throw new UnknownTypeException("Unknown type or type variable: " + name);
         
     }
 

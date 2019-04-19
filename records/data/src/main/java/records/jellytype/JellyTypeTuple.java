@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -38,12 +39,19 @@ public class JellyTypeTuple extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         if (!complete)
-            throw new UserException("Cannot turn tuple of unknown size into concrete type");
+            throw new UnknownTypeException("Cannot turn tuple of unknown size into concrete type"); // Not quite the right exception, admittedly
         
-        return DataType.tuple(Utility.mapListExI(types, t -> t.makeDataType(typeVariables, mgr)));
+        ImmutableList.Builder<DataType> members = ImmutableList.builderWithExpectedSize(types.size());
+
+        for (JellyType type : types)
+        {
+            members.add(type.makeDataType(typeVariables, mgr));
+        }
+        
+        return DataType.tuple(members.build());
     }
 
     @Override

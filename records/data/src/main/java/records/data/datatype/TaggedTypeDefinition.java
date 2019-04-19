@@ -12,7 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
-import records.jellytype.JellyUnit;
+import records.jellytype.JellyType.UnknownTypeException;
 import records.loadsave.OutputBuilder;
 import utility.Either;
 import utility.Pair;
@@ -60,34 +60,48 @@ public class TaggedTypeDefinition
     {
         return tags;
     }
+    
+    public static class TaggedInstantiationException extends UserException
+    {
+        public TaggedInstantiationException(String message)
+        {
+            super(message);
+        }
+    }
 
     // Instantiates to concrete type.
-    public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs, TypeManager mgr) throws UserException, InternalException
+    public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs, TypeManager mgr) throws TaggedInstantiationException, InternalException, UnknownTypeException
     {
         if (typeVariableSubs.size() != typeVariables.size())
-            throw new UserException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
+            throw new TaggedInstantiationException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
         
         ImmutableMap.Builder<String, Either<Unit, DataType>> substitutionsBuilder = ImmutableMap.builder();
 
         for (int i = 0; i < typeVariables.size(); i++)
         {
             if ((typeVariables.get(i).getFirst() == TypeVariableKind.TYPE) && typeVariableSubs.get(i).isLeft())
-                throw new UserException("Expected type variable but found unit variable for variable #" + (i + 1));
+                throw new TaggedInstantiationException("Expected type variable but found unit variable for variable #" + (i + 1));
             if ((typeVariables.get(i).getFirst() == TypeVariableKind.UNIT) && typeVariableSubs.get(i).isRight())
-                throw new UserException("Expected unit variable but found type variable for variable #" + (i + 1));
+                throw new TaggedInstantiationException("Expected unit variable but found type variable for variable #" + (i + 1));
             
             substitutionsBuilder.put(typeVariables.get(i).getSecond(), typeVariableSubs.get(i));
         }
         ImmutableMap<String, Either<Unit, DataType>> substitutions = substitutionsBuilder.build();
 
-        ImmutableList<TagType<DataType>> substitutedTags = Utility.mapListExI(tags, tag -> {
+        ImmutableList.Builder<TagType<DataType>> substitutedTags = ImmutableList.builderWithExpectedSize(tags.size());
+
+        for (TagType<JellyType> tag : tags)
+        {
             if (tag.getInner() == null)
-                return new TagType<>(tag.getName(), null);
-            @NonNull DataType inner = tag.getInner().makeDataType(substitutions, mgr);
-            return new TagType<>(tag.getName(), inner);
-        });
+                substitutedTags.add(new TagType<>(tag.getName(), null));
+            else
+            {
+                @NonNull DataType inner = tag.getInner().makeDataType(substitutions, mgr);
+                substitutedTags.add(new TagType<>(tag.getName(), inner));
+            }
+        }
         
-        return DataType.tagged(name, typeVariableSubs, substitutedTags);
+        return DataType.tagged(name, typeVariableSubs, substitutedTags.build());
     }
 
     public TypeId getTaggedTypeName()

@@ -76,10 +76,24 @@ public class Either<A, B>
         else
             return withRight.apply(b);
     }
+
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public <R, E1 extends Exception, E2 extends Exception, E3 extends Exception> R eitherEx3(FunctionEx3<? super A, R, E1, E2, E3> withLeft, FunctionEx3<? super B, R, E1, E2, E3> withRight) throws E1, E2, E3
+    {
+        if (isA)
+            return withLeft.apply(a);
+        else
+            return withRight.apply(b);
+    }
     
     public static interface FunctionEx2<T, R, E1 extends Exception, E2 extends Exception>
     {
         public R apply(T t) throws E1, E2;
+    }
+
+    public static interface FunctionEx3<T, R, E1 extends Exception, E2 extends Exception, E3 extends Exception>
+    {
+        public R apply(T t) throws E1, E2, E3;
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
@@ -318,6 +332,11 @@ public class Either<A, B>
     public <C, D, E1 extends Exception, E2 extends Exception> Either<C, D> mapBothEx2(FunctionEx2<A, C, E1, E2> withLeft, FunctionEx2<B, D, E1, E2> withRight) throws E1, E2
     {
         return this.<Either<C, D>, E1, E2>eitherEx2(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
+    }
+
+    public <C, D, E1 extends Exception, E2 extends Exception, E3 extends Exception> Either<C, D> mapBothEx3(FunctionEx3<A, C, E1, E2, E3> withLeft, FunctionEx3<B, D, E1, E2, E3> withRight) throws E1, E2, E3
+    {
+        return this.<Either<C, D>, E1, E2, E3>eitherEx3(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
     // If the value in the either is null, return null, else return a new either without the nullable qualifier

@@ -10,6 +10,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -65,7 +66,17 @@ public abstract class JellyType
 
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
-    public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException;
+    public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException;
+    
+    //public static class TypeQuickFix {}
+    
+    public static class UnknownTypeException extends UserException
+    {
+        public UnknownTypeException(String message)
+        {
+            super(message);
+        }
+    }
 
     public abstract void save(OutputBuilder output);
 

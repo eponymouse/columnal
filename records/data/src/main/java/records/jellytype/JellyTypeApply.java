@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -44,14 +45,19 @@ public class JellyTypeApply extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
-        ImmutableList<Either<Unit, DataType>> typeParamConcrete = Utility.mapListExI(typeParams, p -> p.mapBothEx(u -> u.makeUnit(typeVariables), t -> t.makeDataType(typeVariables, mgr)));
+        ImmutableList.Builder<Either<Unit, DataType>> typeParamConcrete = ImmutableList.builderWithExpectedSize(typeParams.size());
+
+        for (Either<JellyUnit, JellyType> typeParam : typeParams)
+        {
+            typeParamConcrete.add(typeParam.<Unit, DataType, InternalException, UnknownTypeException, TaggedInstantiationException>mapBothEx3(u -> u.makeUnit(typeVariables), t -> t.makeDataType(typeVariables, mgr)));
+        }
         
-        DataType dataType = mgr.lookupType(typeName, typeParamConcrete);
+        DataType dataType = mgr.lookupType(typeName, typeParamConcrete.build());
         if (dataType != null)
             return dataType;
-        throw new UserException("Could not find data type: " + typeName);
+        throw new UnknownTypeException("Could not find data type: " + typeName);
     }
 
     @Override

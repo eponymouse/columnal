@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -37,9 +38,16 @@ class JellyTypeFunction extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
-        return DataType.function(Utility.mapListExI(params, p -> p.makeDataType(typeVariables, mgr)), result.makeDataType(typeVariables, mgr));
+        ImmutableList.Builder<DataType> paramTypes = ImmutableList.builderWithExpectedSize(params.size());
+
+        for (JellyType param : params)
+        {
+            paramTypes.add(param.makeDataType(typeVariables, mgr));
+        }
+        
+        return DataType.function(paramTypes.build(), result.makeDataType(typeVariables, mgr));
     }
 
     @Override
