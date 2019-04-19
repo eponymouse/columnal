@@ -79,12 +79,13 @@ public class ExpressionUtil
     @OnThread(Tag.Any)
     public static String makeCssClass(StyledShowable replacement)
     {
-        return "id-munged-" + replacement.toString().codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
+        return makeCssClass(replacement.toStyledString().toPlain());
     }
 
     @OnThread(Tag.Any)
     public static String makeCssClass(String replacement)
     {
+        Log.debug("Munging: " + replacement);
         return "id-munged-" + replacement.codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
     }
 

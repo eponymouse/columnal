@@ -1,5 +1,6 @@
 package test.gui.expressionEditor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
@@ -54,6 +55,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -78,13 +80,20 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     @Test
     public void testTypo2()
     {
-        testSimpleFix("DateYN", "DateYM", DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+        testSimpleFix("DateYN", "DateYN", DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
     }
 
     @Test
     public void testTypo3()
     {
-        testSimpleFix("Booleen", "Boolean", DataType.BOOLEAN);
+        testSimpleFix("Booleen", "Booleen", DataType.BOOLEAN);
+    }
+
+    @Test
+    public void testTypo4() throws Exception
+    {
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        testSimpleFix("Optionl(Text)", "Optionl", dummyManager.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), dummyManager.getTypeManager()));
     }
     
     @Test
@@ -97,7 +106,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     {
         try
         {
-            testFix(original, fixFieldContent, dotCssClassFor(dataType.toString()), dataType);
+            testFix(original, fixFieldContent, dotCssClassFor(dataType.toDisplay(false)), dataType);
         }
         catch (InternalException | UserException e)
         {
@@ -105,10 +114,9 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
         }
     }
 
-    private String dotCssClassFor(String expression) throws InternalException, UserException
+    private String dotCssClassFor(String type) throws InternalException, UserException
     {
-        TypeManager typeManager = DummyManager.make().getTypeManager();
-        return "." + ExpressionUtil.makeCssClass(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        return "." + ExpressionUtil.makeCssClass(type);
     }
 
     /**
@@ -179,7 +187,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches, among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
+            assertEquals("Looking for row that matches " + fixId + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
                 1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:

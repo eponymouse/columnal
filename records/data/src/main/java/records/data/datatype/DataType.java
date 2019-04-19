@@ -541,7 +541,7 @@ public final class DataType implements StyledShowable
             {
                 @Localized String typeStr = typeName.getRaw();
                 if (!typeVars.isEmpty())
-                    typeStr += typeVars.stream().map(t -> "(" + t.toString() + ")").collect(Collectors.joining());
+                    typeStr += typeVars.stream().map(t -> "(" + t.either(u -> u.toString(), ty -> ty.toString()) + ")").collect(Collectors.joining());
                 if (drillIntoTagged)
                 {
                     typeStr += " <";

@@ -473,7 +473,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testMaybeType() throws Exception
     {
-        testSimple("@call @function asType(type{[((Text, @apply Maybe(Boolean)), @apply Maybe(@apply Maybe(Date)))]}, @call @function from text(\"[]\"))");
+        testSimple("@call @function asType(type{[((Text, @apply " + TypeManager.MAYBE_NAME + "(Boolean)), @apply "+ TypeManager.MAYBE_NAME + "(@apply "+ TypeManager.MAYBE_NAME +  "(Date)))]}, @call @function from text(\"[]\"))");
     }
     
     @Test

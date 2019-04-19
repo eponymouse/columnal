@@ -44,6 +44,7 @@ import static records.data.datatype.DataType.TEXT;
  */
 public class TypeManager
 {
+    public static final @ExpressionIdentifier String MAYBE_NAME = "Optional";
     private final UnitManager unitManager;
     private final HashMap<TypeId, TaggedTypeDefinition> userTypes = new HashMap<>();
     private final HashMap<TypeId, TaggedTypeDefinition> builtInTypes = new HashMap<>();
@@ -59,9 +60,11 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier  String>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
-            new TagType<>("Missing", null),
-            new TagType<>("Present", JellyType.typeVariable("a"))
+        // This needs to be built-in because we use it ourselves
+        // e.g. when importing data which may be missing.s
+        maybeType = new TaggedTypeDefinition(new TypeId(MAYBE_NAME), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier  String>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
+            new TagType<>("None", null),
+            new TagType<>("Is", JellyType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
         builtInTypes.put(maybeType.getTaggedTypeName(), maybeType);

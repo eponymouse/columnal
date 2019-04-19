@@ -64,13 +64,13 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testFine2()
     {
         // Check basic:
-        testError("Maybe(Text)");
+        testError(TypeManager.MAYBE_NAME + "(Text)");
     }
     @Test
     public void testFine3()
     {
         // Check basic:
-        testError("[Maybe(Number{m})]");
+        testError("["+ TypeManager.MAYBE_NAME +  "(Number{m})]");
     }
 
     @Test

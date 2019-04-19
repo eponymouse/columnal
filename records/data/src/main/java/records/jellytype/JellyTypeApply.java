@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,6 +23,7 @@ import utility.Utility;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static records.typeExp.TypeExp.ALL_TYPE_CLASSES;
 
@@ -57,7 +59,8 @@ public class JellyTypeApply extends JellyType
         DataType dataType = mgr.lookupType(typeName, typeParamConcrete.build());
         if (dataType != null)
             return dataType;
-        throw new UnknownTypeException("Could not find data type: " + typeName, this, ImmutableList.of(/*TODO*/));
+        ImmutableList<JellyType> fixes = Utility.findAlternatives(typeName.getRaw(), mgr.getKnownTaggedTypes().values().stream(), ttd -> Stream.<String>of(ttd.getTaggedTypeName().getRaw())).map(t -> new JellyTypeApply(t.getTaggedTypeName(), typeParams)).collect(ImmutableList.<JellyType>toImmutableList());
+        throw new UnknownTypeException("Could not find data type: " + typeName, this, fixes);
     }
 
     @Override

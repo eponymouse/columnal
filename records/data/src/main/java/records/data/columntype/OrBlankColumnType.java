@@ -1,6 +1,7 @@
 package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
 
 /**
  * A column type which also has the option to be blank.
@@ -42,7 +43,7 @@ public class OrBlankColumnType extends ColumnType
     @Override
     public String toString()
     {
-        return "Maybe (" + columnType.toString() + ")";
+        return TypeManager.MAYBE_NAME + " (" + columnType.toString() + ")";
     }
 
     public String getBlankString()
