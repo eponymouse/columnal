@@ -1,5 +1,7 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -21,12 +23,12 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
     {
         if (number == 1)
             return Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
         else
-            return Either.left(new Pair<>(StyledString.s("Expected unit not number"), Collections.emptyList()));
+            return Either.left(new Pair<>(StyledString.s("Expected unit not number"), ImmutableList.of()));
     }
 
     @Override

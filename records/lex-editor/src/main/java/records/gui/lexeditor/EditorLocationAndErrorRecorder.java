@@ -364,6 +364,13 @@ public class EditorLocationAndErrorRecorder
         errorsToShow.add(() -> nestedError.offsetBy(caretPosOffset, displayCaretPosOffset));
     }
     
+    public void addNestedLocations(EditorLocationAndErrorRecorder nested, @CanonicalLocation int caretPosOffset)
+    {
+        nested.expressionDisplayers.forEach((e, s) -> expressionDisplayers.put(e, s.offsetBy(caretPosOffset)));
+        nested.typeDisplayers.forEach((e, s) -> typeDisplayers.put(e, s.offsetBy(caretPosOffset)));
+        nested.unitDisplayers.forEach((e, s) -> unitDisplayers.put(e, s.offsetBy(caretPosOffset)));
+    }
+    
     public ImmutableList<ErrorDetails> getErrors()
     {
         ImmutableList.Builder<ErrorDetails> r = ImmutableList.builderWithExpectedSize(errorsToShow.size());

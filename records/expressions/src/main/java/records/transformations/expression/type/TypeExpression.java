@@ -30,6 +30,7 @@ import records.grammar.FormatParserBaseVisitor;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.Replaceable;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
@@ -186,17 +187,31 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
     
     public static class UnJellyableTypeExpression extends UserException
     {
-        private final @Recorded TypeExpression source;
+        private final Either<@Recorded UnitExpression, @Recorded TypeExpression> source; // For error location
+        private final ImmutableList<QuickFix<@Recorded UnitExpression>> fixes;
 
         public UnJellyableTypeExpression(String message, @Recorded TypeExpression source)
         {
             super(message);
-            this.source = source;
+            this.source = Either.right(source);
+            this.fixes = ImmutableList.of();
         }
 
-        public @Recorded TypeExpression getSource()
+        public UnJellyableTypeExpression(String message, @Recorded UnitExpression source, ImmutableList<QuickFix<@Recorded UnitExpression>> fixes)
+        {
+            super(message);
+            this.source = Either.left(source);
+            this.fixes = fixes;
+        }
+
+        public Either<@Recorded UnitExpression, @Recorded TypeExpression> getSource()
         {
             return source;
+        }
+
+        public ImmutableList<QuickFix<@Recorded UnitExpression>> getFixes()
+        {
+            return fixes;
         }
     }
 

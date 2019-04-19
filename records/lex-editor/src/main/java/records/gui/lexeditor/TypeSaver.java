@@ -54,10 +54,6 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             }
         })
     );
-    
-    public TypeSaver()
-    {
-    }
 
     public class Context {}
     
@@ -87,19 +83,19 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                             // Shouldn't ever be null:
                             if (callTarget != null)
                             {
-                                Either<UnitExpression, @Recorded TypeExpression> newArg = bracketed instanceof  UnitLiteralTypeExpression ? Either.left(((UnitLiteralTypeExpression)bracketed).getUnitExpression()) : Either.right(bracketed);
+                                Either<@Recorded UnitExpression, @Recorded TypeExpression> newArg = bracketed instanceof  UnitLiteralTypeExpression ? Either.left(((UnitLiteralTypeExpression)bracketed).getUnitExpression()) : Either.right(bracketed);
                                 
                                 TypeApplyExpression typeExpression;
                                 if (callTarget instanceof TypeApplyExpression)
                                 {
                                     TypeApplyExpression applyExpression = (TypeApplyExpression) callTarget;
                                     
-                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.<Either<UnitExpression, @Recorded TypeExpression>>concatI(applyExpression.getArgumentsOnly(), ImmutableList.<Either<UnitExpression, @Recorded TypeExpression>>of(newArg)));
+                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>concatI(applyExpression.getArgumentsOnly(), ImmutableList.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>of(newArg)));
                                 }
                                 else
                                 {
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
-                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.<Either<UnitExpression, @Recorded TypeExpression>>of(newArg));
+                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>of(newArg));
                                 }
                                 return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }

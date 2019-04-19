@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
@@ -127,7 +128,7 @@ public class ExpressionUtil
             if (expression instanceof NumericLiteral)
             {
                 NumericLiteral n = (NumericLiteral) expression;
-                @Nullable UnitExpression unitExpression = n.getUnitExpression();
+                @Nullable @Recorded UnitExpression unitExpression = n.getUnitExpression();
                 @Nullable Unit unit;
                 if (unitExpression == null)
                     unit = Unit.SCALAR;

@@ -82,6 +82,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         
     }
 
+    public void addNestedLocations(EditorLocationAndErrorRecorder locationRecorder, @CanonicalLocation int caretPosOffset)
+    {
+        this.locationRecorder.addNestedLocations(locationRecorder, caretPosOffset);
+    }
+
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
@@ -444,7 +449,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     
     protected SaverBase()
     {
-        locationRecorder = new EditorLocationAndErrorRecorder();
+        this.locationRecorder = new EditorLocationAndErrorRecorder();
         addTopLevelScope();
     }
     

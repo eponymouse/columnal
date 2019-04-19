@@ -1,6 +1,8 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.UnitIdentifier;
+import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -9,9 +11,11 @@ import records.jellytype.JellyUnit;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
 public class SingleUnitExpression extends UnitExpression
@@ -24,7 +28,7 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(@Recorded SingleUnitExpression this, UnitManager unitManager)
     {
         try
         {
@@ -32,8 +36,8 @@ public class SingleUnitExpression extends UnitExpression
         }
         catch (InternalException | UserException e)
         {
-            // TODO add similarly spelt unit names:
-            return Either.left(new Pair<>(StyledString.s(e.getLocalizedMessage()), Collections.emptyList()));
+            ImmutableList<QuickFix<@Recorded UnitExpression>> possibles = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription())).<QuickFix<@Recorded UnitExpression>>map(su -> new QuickFix<@Recorded UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName()))).collect(ImmutableList.<QuickFix<@Recorded UnitExpression>>toImmutableList());
+            return Either.left(new Pair<>(StyledString.s(e.getLocalizedMessage()), possibles));
         }
     }
 

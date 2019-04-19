@@ -52,11 +52,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             this.expressions = expressions;
         }
     }
-    
-    // Only used when getting the operators
-    public ExpressionSaver()
-    {
-    }
 
     @Override
     protected BracketAndNodes<Expression, ExpressionSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class)ExpressionSaver this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location)

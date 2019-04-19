@@ -302,7 +302,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     saver.saveOperand(outcome.expression, removedChars.map(curIndex, nestedOutcome.positionAfter), c -> {});
                     @SuppressWarnings("units")
                     @DisplayLocation int displayOffset = curIndex + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
-                    saver.addNestedErrors(outcome.nestedErrors, removedChars.map(curIndex + rawLength(nestedLiteral.getFirst())), displayOffset);
+                    @CanonicalLocation int caretPosOffset = removedChars.map(curIndex + rawLength(nestedLiteral.getFirst()));
+                    if (outcome.locationRecorder != null)
+                        saver.addNestedLocations(outcome.locationRecorder, caretPosOffset);
+                    saver.addNestedErrors(outcome.nestedErrors, caretPosOffset, displayOffset);
                     chunks.add(outcome.chunk);
                     removedChars.orShift(outcome.removedChars, curIndex + nestedLiteral.getFirst().length());
                     curIndex = nestedOutcome.positionAfter;
@@ -577,7 +580,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos, errors);
 
-        return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     @SuppressWarnings("units")
@@ -738,6 +741,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public final RemovedCharacters removedChars;
         public final ContentChunk chunk;
         public final ImmutableList<ErrorDetails> nestedErrors;
+        public final @Nullable EditorLocationAndErrorRecorder locationRecorder;
         
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
@@ -745,10 +749,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             this.expression = expression;
             this.removedChars = new RemovedCharacters();
             this.nestedErrors = ImmutableList.of();
+            this.locationRecorder = null;
         }
 
         @SuppressWarnings("units")
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             CaretPos initialPos = new CaretPos(0, 0);
@@ -765,6 +770,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             this.expression = expression;
             this.removedChars = removedChars;
             this.nestedErrors = errors;
+            this.locationRecorder = locationRecorder;
         }
     }
 
@@ -779,12 +785,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer(typeManager, false);
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer();
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             })
         );
     }

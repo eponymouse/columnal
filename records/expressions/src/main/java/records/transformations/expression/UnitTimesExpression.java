@@ -23,10 +23,10 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> r = Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
-        for (UnitExpression operand : operands)
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> r = Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
+        for (@Recorded UnitExpression operand : operands)
         {
             r = r.flatMap(u -> operand.asUnit(unitManager).map(v -> u.times(v)));
         }

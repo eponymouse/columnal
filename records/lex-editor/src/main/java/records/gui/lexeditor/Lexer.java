@@ -56,6 +56,8 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         public final StyledString display;
         
         public final ImmutableList<ErrorDetails> errors;
+        // For added nested recorded locations to the outer recorder
+        public final EditorLocationAndErrorRecorder locationRecorder;
         public final ImmutableList<Lexer.AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> autoCompleteDetails;
         // If a bit is set at a particular caret position, when the user
         // types a ({[ opening bracket then do not insert the closing bracket.
@@ -63,7 +65,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         public final boolean bracketsAreBalanced;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, StyledString display, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -72,6 +74,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             this.caretPositions = caretPositions;
             this.display = display;
             this.errors = errors;
+            this.locationRecorder = locationRecorder;
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
             this.bracketsAreBalanced = bracketsBalanced;

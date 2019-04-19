@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -37,7 +38,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
         return saved.<@Nullable CheckedExp>eitherInt(error -> {
             if (error.getFirst() != null)
                 onError.recordError(this, error.getFirst());

@@ -1,7 +1,9 @@
 package records.transformations.expression.type;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -12,18 +14,20 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.Objects;
 
 public class NumberTypeExpression extends TypeExpression
 {
-    private final @Nullable UnitExpression unitExpression;
+    private final @Nullable @Recorded UnitExpression unitExpression;
 
-    public NumberTypeExpression(@Nullable UnitExpression unitExpression)
+    public NumberTypeExpression(@Nullable @Recorded UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -34,7 +38,7 @@ public class NumberTypeExpression extends TypeExpression
         if (unitExpression == null || unitExpression.isEmpty() || unitExpression.isScalar())
             return "Number";
         else
-            return "Number {" + unitExpression.save(structured, true) + "}"; 
+            return "Number{" + unitExpression.save(structured, true) + "}"; 
     }
 
     @Override
@@ -58,9 +62,12 @@ public class NumberTypeExpression extends TypeExpression
     {
         if (unitExpression == null)
             return jellyRecorder.record(JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR)), this);
-        
+
+        @NonNull @Recorded UnitExpression unitExpressionFinal = unitExpression;
         return jellyRecorder.record(unitExpression.asUnit(typeManager.getUnitManager())
-            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), this);}, JellyType::number), this);
+            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
+            throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), unitExpressionFinal, p.getSecond());
+        }, JellyType::number), this);
     }
 
     @Override

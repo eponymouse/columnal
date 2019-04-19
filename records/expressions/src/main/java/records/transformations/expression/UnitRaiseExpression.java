@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
@@ -22,9 +23,9 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> lhs = unit.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> lhs = unit.asUnit(unitManager);
 
         return lhs.map(u -> u.raiseBy(power));
     }

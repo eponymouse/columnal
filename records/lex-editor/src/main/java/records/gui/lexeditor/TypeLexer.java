@@ -171,7 +171,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     d.append("{");
                     @SuppressWarnings("units")
                     @DisplayLocation int displayOffset = d.getLengthSoFar();
-                    saver.addNestedErrors(lexerResult.errors, removedCharacters.map(curIndex + RawInputLocation.ONE), displayOffset);
+                    @CanonicalLocation int caretPosOffset = removedCharacters.map(curIndex + RawInputLocation.ONE);
+                    saver.addNestedLocations(lexerResult.locationRecorder, caretPosOffset);
+                    saver.addNestedErrors(lexerResult.errors, caretPosOffset, displayOffset);
                     removedCharacters.orShift(lexerResult.removedChars, curIndex + lexerResult.adjustedContent.length());
                     s.append(lexerResult.adjustedContent);
                     d.append(lexerResult.display);
@@ -185,6 +187,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content.substring(curIndex)), StyledString.s("Missing closing }"), ImmutableList.of());
                     UnitLexer unitLexer = new UnitLexer();
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
+                    saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});
                     s.append(content.substring(curIndex));
                     d.append(content.substring(curIndex));
@@ -291,36 +294,42 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (e instanceof InternalException)
                     Log.log(e);
-                CanonicalSpan location;
+                final CanonicalSpan location;
+                final ImmutableList<TextQuickFix> fixes;
                 if (e instanceof UnJellyableTypeExpression)
-                    location = saver.locationRecorder.recorderFor(((UnJellyableTypeExpression) e).getSource());
-                else
-                    location = new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex));
-                ImmutableList<TextQuickFix> fixes;
-                if (e instanceof UnknownTypeException)
                 {
-                    UnknownTypeException ute = (UnknownTypeException) e;
-                    fixes = Utility.mapListI(ute.getSuggestedFixes(), fixed -> new TextQuickFix(StyledString.s("Correct"), ImmutableList.of(), jellyRecorder.locationFor(ute.getReplacementTarget()), () -> {
-                        try
-                        {
-                            TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
-                            String str = fixedExpression.save(false, new TableAndColumnRenames(ImmutableMap.of()));
-                            return new Pair<>(str, fixedExpression.toStyledString());
-                        }
-                        catch (UserException ex)
-                        {
-                            // We shouldn't have suggested something which can't be loaded!
-                            throw new InternalException("Invalid suggested fix: " + fixed, ex);
-                        }
-                    }));
+                    UnJellyableTypeExpression unjelly = (UnJellyableTypeExpression) e;
+                    location = unjelly.getSource().either(u -> saver.locationRecorder.recorderFor(u), t -> saver.locationRecorder.recorderFor(t));
+                    fixes = Utility.mapListI(unjelly.getFixes(), fixed -> new TextQuickFix(saver.locationRecorder.recorderFor(fixed.getReplacementTarget()), u -> u.toStyledString().toPlain(), fixed));
                 }
                 else
-                    fixes = ImmutableList.of();
+                {
+                    location = new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex));
+                    if (e instanceof UnknownTypeException)
+                    {
+                        UnknownTypeException ute = (UnknownTypeException) e;
+                        fixes = Utility.mapListI(ute.getSuggestedFixes(), fixed -> new TextQuickFix(StyledString.s("Correct"), ImmutableList.of(), jellyRecorder.locationFor(ute.getReplacementTarget()), () -> {
+                            try
+                            {
+                                TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
+                                String str = fixedExpression.save(false, new TableAndColumnRenames(ImmutableMap.of()));
+                                return new Pair<>(str, fixedExpression.toStyledString());
+                            }
+                            catch (UserException ex)
+                            {
+                                // We shouldn't have suggested something which can't be loaded!
+                                throw new InternalException("Invalid suggested fix: " + fixed, ex);
+                            }
+                        }));
+                    }
+                    else
+                        fixes = ImmutableList.of();
+                }
                 errors = Utility.appendToList(errors, new ErrorDetails(location, ((ExceptionWithStyle) e).getStyledMessage(),fixes));
             }
         }
         
-        return new LexerResult<>(saved, s.toString(), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, s.toString(), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 
     private Stream<DataType> streamDataTypes()

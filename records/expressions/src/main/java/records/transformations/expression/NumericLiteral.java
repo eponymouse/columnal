@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -57,8 +58,8 @@ public class NumericLiteral extends Literal
             return Either.right(new NumTypeExp(this, unit));
         }
 
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<@Nullable StyledString, TypeExp>mapBothInt((Pair<@Nullable StyledString, List<UnitExpression>> err) -> {
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
+        return errOrUnit.<@Nullable StyledString, TypeExp>mapBothInt((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> err) -> {
             /*
             onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
                 @SuppressWarnings("recorded")

@@ -1,6 +1,8 @@
 package records.gui;
 
 import annotation.identifier.qual.UnitIdentifier;
+import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -31,6 +33,7 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.ScaleContext;
 import records.gui.lexeditor.UnitEditor;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.function.FunctionList;
 import records.typeExp.units.UnitExp;
@@ -298,7 +301,7 @@ public class UnitsDialog extends Dialog<Void>
                     return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
                 }
 
-                Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
+                Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
                 @NonNull @UnitIdentifier String nameFinal = name;
                 return unitExpOrError.<Either<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>>either(err -> {
                     return Either.left(err.getFirst() == null ? TranslationUtility.getString("invalid.unit") : err.getFirst().toPlain());

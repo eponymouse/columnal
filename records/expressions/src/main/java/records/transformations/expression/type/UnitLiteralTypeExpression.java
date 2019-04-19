@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -15,9 +16,9 @@ import java.util.Objects;
 
 public class UnitLiteralTypeExpression extends TypeExpression
 {
-    private final UnitExpression unitExpression;
+    private final @Recorded UnitExpression unitExpression;
     
-    public UnitLiteralTypeExpression(UnitExpression unitExpression)
+    public UnitLiteralTypeExpression(@Recorded UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -73,7 +74,7 @@ public class UnitLiteralTypeExpression extends TypeExpression
         return Objects.hash(unitExpression);
     }
 
-    public UnitExpression getUnitExpression()
+    public @Recorded UnitExpression getUnitExpression()
     {
         return unitExpression;
     }

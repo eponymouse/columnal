@@ -122,6 +122,6 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
-        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), saver.locationRecorder, ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }

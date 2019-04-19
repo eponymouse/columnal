@@ -18,6 +18,7 @@ import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import utility.Either;
@@ -32,18 +33,18 @@ import java.util.Objects;
 public class TypeApplyExpression extends TypeExpression
 {
     private final @ExpressionIdentifier String typeName;
-    private final ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> arguments;
+    private final ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> arguments;
 
-    public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> arguments)
+    public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> arguments)
     {
         this.typeName = typeName;
         // Turn any units which are encased in a type expression wrapper
         // back into actual units:
-        this.arguments = Utility.<Either<UnitExpression, @Recorded TypeExpression>, Either<UnitExpression, @Recorded TypeExpression>>mapListI(arguments, arg -> arg.<@Recorded TypeExpression>flatMap(t -> {
+        this.arguments = Utility.<Either<@Recorded UnitExpression, @Recorded TypeExpression>, Either<@Recorded UnitExpression, @Recorded TypeExpression>>mapListI(arguments, arg -> arg.<@Recorded TypeExpression>flatMap(t -> {
             if (t instanceof UnitLiteralTypeExpression)
-                return Either.<UnitExpression, @Recorded TypeExpression>left(((UnitLiteralTypeExpression)t).getUnitExpression());
+                return Either.<@Recorded UnitExpression, @Recorded TypeExpression>left(((UnitLiteralTypeExpression)t).getUnitExpression());
             else
-                return Either.<UnitExpression, @Recorded TypeExpression>right(t);
+                return Either.<@Recorded UnitExpression, @Recorded TypeExpression>right(t);
         }));
         if (arguments.isEmpty())
             Log.logStackTrace("Empty arguments in type apply");
@@ -86,7 +87,7 @@ public class TypeApplyExpression extends TypeExpression
         
         // If we're here, right number of arguments!
         List<Either<Unit, DataType>> typeArgs = new ArrayList<>();
-        for (Either<UnitExpression, TypeExpression> arg : arguments)
+        for (Either<@Recorded UnitExpression, @Recorded TypeExpression> arg : arguments)
         {
             @Nullable Either<Unit, DataType> type = Either.surfaceNull(arg.<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> {
                 try
@@ -121,10 +122,12 @@ public class TypeApplyExpression extends TypeExpression
 
         ImmutableList.Builder<Either<JellyUnit, JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
 
-        for (Either<UnitExpression, @Recorded TypeExpression> arg : arguments)
+        for (int i = 0; i < arguments.size(); i++)
         {
-            args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {
-                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), this);
+            Either<@Recorded UnitExpression, @Recorded TypeExpression> arg = arguments.get(i);
+            int iFinal = i;
+            args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
+                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), u, p.getSecond());
             }, ju -> ju), (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
         }
         
@@ -140,7 +143,7 @@ public class TypeApplyExpression extends TypeExpression
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.concat(StyledString.s(typeName), arguments.stream().map(e -> StyledString.roundBracket(e.either(UnitExpression::toStyledString, TypeExpression::toStyledString))).collect(StyledString.joining("")));
+        return StyledString.concat(StyledString.s(typeName), arguments.stream().map(e -> StyledString.roundBracket(e.either(u -> StyledString.concat(StyledString.s("{"), u.toStyledString(), StyledString.s("}")), TypeExpression::toStyledString))).collect(StyledString.joining("")));
     }
 
     public @ExpressionIdentifier String getTypeName()
@@ -149,7 +152,7 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     // Gets arguments, without the leading identifier
-    public ImmutableList<Either<UnitExpression, @Recorded TypeExpression>> getArgumentsOnly()
+    public ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> getArgumentsOnly()
     {
         return arguments;
     }

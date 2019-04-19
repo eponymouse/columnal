@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
@@ -22,10 +23,10 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> num = numerator.asUnit(unitManager);
-        Either<Pair<@Nullable StyledString, List<UnitExpression>>, JellyUnit> den = denominator.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> num = numerator.asUnit(unitManager);
+        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> den = denominator.asUnit(unitManager);
 
         return num.flatMap(n -> den.map(d -> n.divideBy(d)));
     }

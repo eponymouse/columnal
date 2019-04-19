@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.UnitIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
@@ -24,7 +25,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
     {
         return Either.left(new Pair<>(StyledString.s("Invalid unit name"), ImmutableList.of()));
     }

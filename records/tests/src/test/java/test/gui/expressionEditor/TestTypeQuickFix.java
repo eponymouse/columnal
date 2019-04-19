@@ -33,6 +33,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
@@ -126,7 +127,22 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     public void testUnitNameMixup() throws Exception
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        testSimpleFix("Number{second}", "second", DataType.number(new NumberInfo(dummyManager.getUnitManager().loadUse("s"))));
+        testFix("Number{second}", "second", dotCssClassFor("s"), DataType.number(new NumberInfo(dummyManager.getUnitManager().loadUse("s"))));
+    }
+
+    @Test
+    public void testUnitNameMixup2() throws Exception
+    {
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        testFix("EitherNumUnit({second})({m})", "second", dotCssClassFor("s"), TestUtil.checkNonNull(dummyManager.getTypeManager().lookupType(new TypeId("EitherNumUnit"), ImmutableList.of(Either.left(dummyManager.getUnitManager().loadUse("s")), Either.left(dummyManager.getUnitManager().loadUse("m"))))));
+    }
+
+    @Test
+    public void testUnitNameMixup3() throws Exception
+    {
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        UnitManager um = dummyManager.getUnitManager();
+        testFix("Number{(s^6*meter)/kg}", "meter", dotCssClassFor("m"), DataType.number(new NumberInfo(um.loadUse("s").raisedTo(6).times(um.loadUse("m").divideBy(um.loadUse("kg"))))));
     }
     
     @Test

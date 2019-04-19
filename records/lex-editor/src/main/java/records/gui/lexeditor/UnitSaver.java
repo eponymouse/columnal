@@ -47,12 +47,6 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             opD(UnitOp.DIVIDE, "op.divide"), UnitSaver::makeDivide),
         new OperatorExpressionInfo(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
-
-    public UnitSaver()
-    {
-        super();
-    }
-    
     
     private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
     {
