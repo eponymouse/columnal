@@ -8,6 +8,9 @@ import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CodePointCharStream;
+import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -16,6 +19,7 @@ import records.data.datatype.TypeManager;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.FormatLexer;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
@@ -31,9 +35,11 @@ import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.DescriptiveErrorListener;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -146,29 +152,6 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 }
             }
             
-            // Important to try longest types first:
-            boolean matchedType = false;
-            @CanonicalLocation int startOfType = removedCharacters.map(curIndex);
-            for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes().sorted(Comparator.comparing(t -> -t.toString().length()))))
-            {
-                if (!matchedType && content.startsWith(dataType.toString(), curIndex))
-                {
-                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndex, dataType.toString()), c -> {});
-                    curIndex += rawLength(dataType.toString());
-                    s.append(dataType.toString());
-                    d.append(dataType.toString());
-                    matchedType = true;
-                }
-                @SuppressWarnings("units")
-                @CanonicalLocation int common = Utility.longestCommonStart(content, curIndex, dataType.toString(), 0);
-                if (common > 0)
-                {
-                    autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString() ))));
-                }
-            }
-            if (matchedType)
-                continue nextToken;
-            
             if (content.charAt(curIndex) == '{')
             {
                 @SuppressWarnings("units")
@@ -189,6 +172,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     s.append("}");
                     d.append("}");
                     curIndex = end + RawInputLocation.ONE;
+                    continue nextToken;
                 }
                 else
                 {
@@ -203,14 +187,36 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 continue nextToken;
             }
 
-            @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> parsed = IdentifierUtility.consumeExpressionIdentifier(content, curIndex);
+            @Nullable Pair<Either<DataType, @ExpressionIdentifier String>, @RawInputLocation Integer> parsed = consumeTypeIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 prevWasIdent = true;
-                saver.saveOperand(new IdentTypeExpression(parsed.getFirst()), removedCharacters.map(curIndex, parsed.getSecond()), c -> {});
+                
+                @CanonicalLocation int startOfType = removedCharacters.map(curIndex);
+                String match = content.substring(startOfType, parsed.getSecond());
+                
+                // Add any relevant autocompletes:
+                for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes()))
+                {
+                    @SuppressWarnings("units")
+                    @CanonicalLocation int common = Utility.longestCommonStart(match, 0, dataType.toString(), 0);
+                    if (common > 0)
+                    {
+                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString() ))));
+                    }
+                }
+                
+                final @RawInputLocation int curIndexFinal = curIndex;
+                parsed.getFirst().either_(dataType -> {
+                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndexFinal, parsed.getSecond()), c -> {});
+                    
+                }, ident -> {
+                    saver.saveOperand(new IdentTypeExpression(ident), removedCharacters.map(curIndexFinal, parsed.getSecond()), c -> {
+                    });
+                });
                 curIndex = parsed.getSecond();
-                s.append(parsed.getFirst());
-                d.append(parsed.getFirst());
+                s.append(match);
+                d.append(match);
                 continue nextToken;
             }
 
@@ -265,5 +271,51 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     private Stream<DataType> streamDataTypes()
     {
         return Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.TEXT, DataType.BOOLEAN), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))));
+    }
+
+    @SuppressWarnings({"identifier", "units"})
+    public static @Nullable Pair<Either<DataType, @ExpressionIdentifier String>, @RawInputLocation Integer> consumeTypeIdentifier(String content, int startFrom)
+    {
+        CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
+        org.antlr.v4.runtime.Lexer lexer = new FormatLexer(inputStream);
+        DescriptiveErrorListener errorListener = new DescriptiveErrorListener();
+        lexer.addErrorListener(errorListener);
+        Token token = lexer.nextToken();
+        if (!errorListener.errors.isEmpty())
+            return null;
+        final Either<DataType, @ExpressionIdentifier String> r;
+        switch (token.getType())
+        {
+            case FormatLexer.BOOLEAN:
+                r = Either.left(DataType.BOOLEAN);
+                break;
+            case FormatLexer.DATETIME:
+                r = Either.left(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+                break;
+            case FormatLexer.DATETIMEZONED:
+                r = Either.left(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
+                break;
+            case FormatLexer.NUMBER:
+                r = Either.left(DataType.NUMBER);
+                break;
+            case FormatLexer.TEXT:
+                r = Either.left(DataType.TEXT);
+                break;
+            case FormatLexer.TIMEOFDAY:
+                r = Either.left(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
+                break;
+            case FormatLexer.YEARMONTH:
+                r = Either.left(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+                break;
+            case FormatLexer.YEARMONTHDAY:
+                r = Either.left(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
+                break;
+            case FormatLexer.UNQUOTED_NAME:
+                r = Either.right(token.getText());
+                break;
+            default:
+                return null;
+        }
+        return new Pair<>(r, startFrom + token.getStopIndex() + 1);
     }
 }

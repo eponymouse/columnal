@@ -96,8 +96,13 @@ public class IdentifierUtility
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         Lexer lexer = new UnitLexer(inputStream);
+        DescriptiveErrorListener errorListener = new DescriptiveErrorListener();
+        lexer.addErrorListener(errorListener);
         Token token = lexer.nextToken();
-        if (token.getType() == UnitLexer.IDENT)
+        // If there any errors, abort:
+        if (!errorListener.errors.isEmpty())
+            return null;
+        else if (token.getType() == UnitLexer.IDENT)
             return new Pair<>(token.getText(), startFrom + token.getStopIndex() + 1);
         else
             return null;
