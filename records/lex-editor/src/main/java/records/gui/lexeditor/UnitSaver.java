@@ -69,9 +69,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
         else
-            return new InvalidOperatorUnitExpression(ImmutableList.<@Recorded UnitExpression>of(
+        {
+            UnitExpression unitExpression = new InvalidOperatorUnitExpression(ImmutableList.<@Recorded UnitExpression>of(
                     lhs, locationRecorder.<InvalidSingleUnitExpression>recordUnit(opNode, new InvalidSingleUnitExpression("^")), rhs
             ));
+            locationRecorder.addErrorAndFixes(bracketedStatus.location, StyledString.s("Units can only be raised to integer powers"), ImmutableList.of());
+            return unitExpression;
+        }
     };
 
     @Override
@@ -141,7 +145,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
             {
-                return record(location, e);
+                return e;
             }
 
         }

@@ -130,6 +130,27 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     }
 
     @Test
+    public void testUnknownUnit()
+    {
+        // Check basic:
+        testError("Number{zzz}", e(0, 11, "unknown"));
+    }
+
+    @Test
+    public void testUnitInvalidOp()
+    {
+        // Check basic:
+        testError("Number{m**m}", e(9, 9, "missing"));
+    }
+
+    @Test
+    public void testUnitInvalidOp2()
+    {
+        // Check basic:
+        testError("Number{m^m}", e(7, 10, "raise"));
+    }
+
+    @Test
     public void testUnknown0()
     {
         testError("NumbeX", e(0, 6, "unknown"));
