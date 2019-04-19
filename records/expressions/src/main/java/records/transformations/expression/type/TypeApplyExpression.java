@@ -113,18 +113,21 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
         if (arguments.isEmpty())
             throw new InternalException("Empty type-apply expression");
 
-        ImmutableList<Either<JellyUnit, JellyType>> args =
-            Utility.mapListExI(
-                arguments,
-                arg -> arg.mapBothEx(u -> u.asUnit(typeManager.getUnitManager()).eitherEx((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UserException(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, ju -> ju), t -> t.toJellyType(typeManager))
-            );
+        ImmutableList.Builder<Either<JellyUnit, JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
+
+        for (Either<UnitExpression, TypeExpression> arg : arguments)
+        {
+            args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {
+                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());
+            }, ju -> ju), t -> t.toJellyType(typeManager)));
+        }
         
-        return JellyType.tagged(new TypeId(typeName), args);
+        return JellyType.tagged(new TypeId(typeName), args.build());
     }
 
     @Override

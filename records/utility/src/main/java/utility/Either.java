@@ -69,6 +69,20 @@ public class Either<A, B>
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public <R, E1 extends Exception, E2 extends Exception> R eitherEx2(FunctionEx2<? super A, R, E1, E2> withLeft, FunctionEx2<? super B, R, E1, E2> withRight) throws E1, E2
+    {
+        if (isA)
+            return withLeft.apply(a);
+        else
+            return withRight.apply(b);
+    }
+    
+    public static interface FunctionEx2<T, R, E1 extends Exception, E2 extends Exception>
+    {
+        public R apply(T t) throws E1, E2;
+    }
+
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
     public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
     {
         if (isA)
@@ -299,6 +313,11 @@ public class Either<A, B>
     public <C, D> Either<C, D> mapBothEx(ExFunction<A, C> withLeft, ExFunction<B, D> withRight) throws InternalException, UserException
     {
         return eitherEx(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
+    }
+
+    public <C, D, E1 extends Exception, E2 extends Exception> Either<C, D> mapBothEx2(FunctionEx2<A, C, E1, E2> withLeft, FunctionEx2<B, D, E1, E2> withRight) throws E1, E2
+    {
+        return this.<Either<C, D>, E1, E2>eitherEx2(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
     // If the value in the either is null, return null, else return a new either without the nullable qualifier

@@ -29,6 +29,7 @@ import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypeExpression.UnJellyableTypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
 import styled.StyledCSS;
@@ -255,6 +256,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         {
             try
             {
+                // If toJellyType throws, there will usually have been an error
+                // in the lexing stage, except for errors such as
+                // units in the wrong place.
                 saved.toJellyType(typeManager).makeDataType(ImmutableMap.of(), typeManager);
             }
             catch (InternalException | UserException e)

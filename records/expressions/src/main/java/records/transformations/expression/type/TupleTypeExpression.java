@@ -51,9 +51,15 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
-        return JellyType.tuple(Utility.mapListExI(members, m -> m.toJellyType(typeManager)));
+        ImmutableList.Builder<JellyType> memberJelly = ImmutableList.builderWithExpectedSize(members.size());
+        for (TypeExpression member : members)
+        {
+            memberJelly.add(member.toJellyType(typeManager));
+        }
+        
+        return JellyType.tuple(memberJelly.build());
     }
 
     @Override

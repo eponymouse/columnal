@@ -34,9 +34,9 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
-        throw new UserException("Unit not valid in this position");
+        throw new UnJellyableTypeExpression("Unit not valid in this position");
     }
 
     @Override

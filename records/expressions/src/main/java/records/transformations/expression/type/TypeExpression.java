@@ -176,7 +176,15 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
 
     public abstract @Nullable DataType toDataType(TypeManager typeManager);
 
-    public abstract JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException;
+    public abstract JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression;
+    
+    public static class UnJellyableTypeExpression extends UserException
+    {
+        public UnJellyableTypeExpression(String message)
+        {
+            super(message);
+        }
+    }
 
     public static TypeExpression parseTypeExpression(TypeManager typeManager, String src) throws UserException, InternalException
     {

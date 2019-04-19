@@ -58,7 +58,7 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager)
     {
         return JellyType.typeVariable(value);
     }

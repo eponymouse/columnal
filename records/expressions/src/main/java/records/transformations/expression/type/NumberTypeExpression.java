@@ -53,13 +53,13 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
         if (unitExpression == null)
             return JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR));
         
         return unitExpression.asUnit(typeManager.getUnitManager())
-            .eitherEx((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UserException(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, JellyType::number);
+            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, List<UnitExpression>> p) -> {throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain());}, JellyType::number);
     }
 
     @Override

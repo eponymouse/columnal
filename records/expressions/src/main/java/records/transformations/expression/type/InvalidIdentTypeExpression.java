@@ -46,9 +46,9 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
-        throw new UserException("Invalid type expression: \"" + value + "\"");
+        throw new UnJellyableTypeExpression("Invalid type expression: \"" + value + "\"");
     }
 
     @Override

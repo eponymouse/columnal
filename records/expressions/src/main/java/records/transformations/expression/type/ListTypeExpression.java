@@ -43,7 +43,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
         return JellyType.list(innerType.toJellyType(typeManager));
     }

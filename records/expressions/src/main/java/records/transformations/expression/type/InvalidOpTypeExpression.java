@@ -44,9 +44,9 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UnJellyableTypeExpression
     {
-        throw new UserException("Invalid type expression: " + this);
+        throw new UnJellyableTypeExpression("Invalid type expression: " + this);
     }
 
     @Override
