@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -25,6 +26,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.jellytype.JellyType;
+import records.jellytype.JellyType.UnknownTypeException;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -289,7 +291,32 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (e instanceof InternalException)
                     Log.log(e);
-                errors = Utility.appendToList(errors, new ErrorDetails(e instanceof UnJellyableTypeExpression ? saver.locationRecorder.recorderFor(((UnJellyableTypeExpression)e).getSource()) : new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex)), ((ExceptionWithStyle) e).getStyledMessage(), ImmutableList.of()));
+                CanonicalSpan location;
+                if (e instanceof UnJellyableTypeExpression)
+                    location = saver.locationRecorder.recorderFor(((UnJellyableTypeExpression) e).getSource());
+                else
+                    location = new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex));
+                ImmutableList<TextQuickFix> fixes;
+                if (e instanceof UnknownTypeException)
+                {
+                    UnknownTypeException ute = (UnknownTypeException) e;
+                    fixes = Utility.mapListI(ute.getSuggestedFixes(), fixed -> new TextQuickFix(StyledString.s("Correct"), ImmutableList.of(), jellyRecorder.locationFor(ute.getReplacementTarget()), () -> {
+                        try
+                        {
+                            TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
+                            String str = fixedExpression.save(false, new TableAndColumnRenames(ImmutableMap.of()));
+                            return new Pair<>(str, fixedExpression.toStyledString());
+                        }
+                        catch (UserException ex)
+                        {
+                            // We shouldn't have suggested something which can't be loaded!
+                            throw new InternalException("Invalid suggested fix: " + fixed, ex);
+                        }
+                    }));
+                }
+                else
+                    fixes = ImmutableList.of();
+                errors = Utility.appendToList(errors, new ErrorDetails(location, ((ExceptionWithStyle) e).getStyledMessage(),fixes));
             }
         }
         

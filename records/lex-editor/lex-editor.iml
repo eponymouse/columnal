@@ -65,5 +65,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.bluej:threadchecker:0.1" level="project" />
+    <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
+    <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
   </component>
 </module>

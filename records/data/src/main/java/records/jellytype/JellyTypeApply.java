@@ -57,7 +57,7 @@ public class JellyTypeApply extends JellyType
         DataType dataType = mgr.lookupType(typeName, typeParamConcrete.build());
         if (dataType != null)
             return dataType;
-        throw new UnknownTypeException("Could not find data type: " + typeName);
+        throw new UnknownTypeException("Could not find data type: " + typeName, this, ImmutableList.of(/*TODO*/));
     }
 
     @Override

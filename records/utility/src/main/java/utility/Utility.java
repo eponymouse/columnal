@@ -32,6 +32,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import info.debatty.java.stringsimilarity.Damerau;
 import javafx.application.Platform;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -1957,5 +1958,20 @@ public class Utility
         {
             return builder.build();
         }
+    }
+    
+    // Given an original user-entered String, and a stream of options
+    // that can be converted to a String (or several alternatives), returns an ordered stream
+    // (most likely first) of items that the user may have mis-spelt
+    // Not all items are returned, only those that meet a threshold.
+    public static <T> Stream<T> findAlternatives(String raw, Stream<T> possibleItems, Function<T, Stream<String>> extractString)
+    {
+        Damerau d = new Damerau();
+        double threshold = 2;
+        Stream<Pair<Double, T>> withDistance = possibleItems.flatMap(item -> {
+            // For each item, only keep the string that is the closest match:
+            return extractString.apply(item).map(s -> new Pair<>(d.distance(raw.toLowerCase(), s.toLowerCase()), item)).sorted().limit(1);
+        });
+        return withDistance.filter(p -> p.getFirst() <= threshold).sorted(Comparator.comparing(Pair::getFirst)).map(Pair::getSecond);
     }
 }

@@ -42,7 +42,7 @@ public class JellyTypeTuple extends JellyType
     public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         if (!complete)
-            throw new UnknownTypeException("Cannot turn tuple of unknown size into concrete type"); // Not quite the right exception, admittedly
+            throw new UnknownTypeException("Cannot turn tuple of unknown size into concrete type", this, ImmutableList.of()); // Not quite the right exception, admittedly
         
         ImmutableList.Builder<DataType> members = ImmutableList.builderWithExpectedSize(types.size());
 

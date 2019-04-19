@@ -1,6 +1,7 @@
 package records.jellytype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -72,9 +73,24 @@ public abstract class JellyType
     
     public static class UnknownTypeException extends UserException
     {
-        public UnknownTypeException(String message)
+        private final ImmutableList<JellyType> suggestedFixes;
+        private final @Recorded JellyType replacementTarget;
+
+        public UnknownTypeException(String message, JellyType replacementTarget, ImmutableList<JellyType> suggestedFixes)
         {
             super(message);
+            this.replacementTarget = replacementTarget;
+            this.suggestedFixes = suggestedFixes;
+        }
+
+        public ImmutableList<JellyType> getSuggestedFixes()
+        {
+            return suggestedFixes;
+        }
+
+        public @Recorded JellyType getReplacementTarget()
+        {
+            return replacementTarget;
         }
     }
 

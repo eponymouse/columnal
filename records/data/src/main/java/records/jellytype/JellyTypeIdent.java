@@ -6,6 +6,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
@@ -18,9 +21,12 @@ import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import utility.Either;
+import utility.Utility;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * A plain ident, could be
@@ -58,8 +64,15 @@ class JellyTypeIdent extends JellyType
         DataType dataType = mgr.lookupType(new TypeId(name), ImmutableList.of());
         if (dataType != null)
             return dataType;
-        throw new UnknownTypeException("Unknown type or type variable: " + name);
+        @SuppressWarnings("identifier") // Due to DataType.toString
+        ImmutableList<JellyType> fixes = Utility.findAlternatives(name, streamKnownTypes(mgr), t -> t.either(ttd -> Stream.of(ttd.getTaggedTypeName().getRaw()), dt -> Stream.of(dt.toString()))).map(t -> new JellyTypeIdent(t.either(ttd -> ttd.getTaggedTypeName().getRaw(), dt -> dt.toString()))).collect(ImmutableList.<JellyType>toImmutableList());
+        throw new UnknownTypeException("Unknown type or type variable: " + name, this, fixes);
         
+    }
+
+    private static Stream<Either<TaggedTypeDefinition, DataType>> streamKnownTypes(TypeManager mgr)
+    {
+        return Stream.<Either<TaggedTypeDefinition, DataType>>concat(mgr.getKnownTaggedTypes().values().stream().<Either<TaggedTypeDefinition, DataType>>map(ttd -> Either.<TaggedTypeDefinition, DataType>left(ttd)), Stream.<DataType>concat(Stream.<DataType>of(DataType.BOOLEAN, DataType.NUMBER, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(dtt -> DataType.date(new DateTimeInfo(dtt)))).<Either<TaggedTypeDefinition, DataType>>map(t -> Either.<TaggedTypeDefinition, DataType>right(t)));
     }
 
     @Override
