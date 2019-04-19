@@ -34,6 +34,8 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
+import records.data.unit.SingleUnit;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -94,6 +96,37 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
         testSimpleFix("Optionl(Text)", "Optionl", dummyManager.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), dummyManager.getTypeManager()));
+    }
+
+    @Test
+    public void testTypeNameMixup() throws Exception
+    {
+        testSimpleFix("double", "double", DataType.NUMBER);
+    }
+
+    @Test
+    public void testTypeNameMixup2() throws Exception
+    {
+        testSimpleFix("bool", "bool", DataType.BOOLEAN);
+    }
+
+    @Test
+    public void testTypeNameMixup3() throws Exception
+    {
+        testSimpleFix("string", "string", DataType.TEXT);
+    }
+
+    @Test
+    public void testTypeNameMixup4() throws Exception
+    {
+        testSimpleFix("int", "int", DataType.NUMBER);
+    }
+    
+    @Test
+    public void testUnitNameMixup() throws Exception
+    {
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        testSimpleFix("Number{second}", "second", DataType.number(new NumberInfo(dummyManager.getUnitManager().loadUse("s"))));
     }
     
     @Test

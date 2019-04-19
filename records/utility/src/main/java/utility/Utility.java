@@ -1970,7 +1970,7 @@ public class Utility
         double threshold = 2;
         Stream<Pair<Double, T>> withDistance = possibleItems.flatMap(item -> {
             // For each item, only keep the string that is the closest match:
-            return extractString.apply(item).map(s -> new Pair<>(d.distance(raw.toLowerCase(), s.toLowerCase()), item)).sorted().limit(1);
+            return extractString.apply(item).map(s -> new Pair<>(d.distance(raw.toLowerCase(), s.toLowerCase()), item)).sorted(Comparator.comparing(Pair::getFirst)).limit(1);
         });
         return withDistance.filter(p -> p.getFirst() <= threshold).sorted(Comparator.comparing(Pair::getFirst)).map(Pair::getSecond);
     }

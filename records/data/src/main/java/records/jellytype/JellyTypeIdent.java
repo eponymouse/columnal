@@ -21,6 +21,7 @@ import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -65,14 +66,21 @@ class JellyTypeIdent extends JellyType
         if (dataType != null)
             return dataType;
         @SuppressWarnings("identifier") // Due to DataType.toString
-        ImmutableList<JellyType> fixes = Utility.findAlternatives(name, streamKnownTypes(mgr), t -> t.either(ttd -> Stream.of(ttd.getTaggedTypeName().getRaw()), dt -> Stream.of(dt.toString()))).map(t -> new JellyTypeIdent(t.either(ttd -> ttd.getTaggedTypeName().getRaw(), dt -> dt.toString()))).collect(ImmutableList.<JellyType>toImmutableList());
+        ImmutableList<JellyType> fixes = Utility.findAlternatives(name, streamKnownTypes(mgr), t -> t.either(ttd -> Stream.of(ttd.getTaggedTypeName().getRaw()), dts -> Stream.<String>concat(Stream.<String>of(dts.getFirst().toString()), dts.getSecond().stream()))).map(t -> new JellyTypeIdent(t.either(ttd -> ttd.getTaggedTypeName().getRaw(), dts -> dts.getFirst().toString()))).collect(ImmutableList.<JellyType>toImmutableList());
         throw new UnknownTypeException("Unknown type or type variable: " + name, this, fixes);
         
     }
 
-    private static Stream<Either<TaggedTypeDefinition, DataType>> streamKnownTypes(TypeManager mgr)
+    private static Stream<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>> streamKnownTypes(TypeManager mgr)
     {
-        return Stream.<Either<TaggedTypeDefinition, DataType>>concat(mgr.getKnownTaggedTypes().values().stream().<Either<TaggedTypeDefinition, DataType>>map(ttd -> Either.<TaggedTypeDefinition, DataType>left(ttd)), Stream.<DataType>concat(Stream.<DataType>of(DataType.BOOLEAN, DataType.NUMBER, DataType.TEXT), Arrays.stream(DateTimeType.values()).<DataType>map(dtt -> DataType.date(new DateTimeInfo(dtt)))).<Either<TaggedTypeDefinition, DataType>>map(t -> Either.<TaggedTypeDefinition, DataType>right(t)));
+        Stream<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>> taggedTypes = mgr.getKnownTaggedTypes().values().stream().<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>map(ttd -> Either.<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>left(ttd));
+        Stream<Pair<DataType, ImmutableList<String>>> basicTypes = Stream.<Pair<DataType, ImmutableList<String>>>of(
+            new Pair<>(DataType.BOOLEAN, ImmutableList.of("bool")),
+            new Pair<>(DataType.NUMBER, ImmutableList.of("int", "integer", "float", "double")),
+            new Pair<>(DataType.TEXT, ImmutableList.of("string"))
+        );
+        Stream<Pair<DataType, ImmutableList<String>>> dateTypes = Arrays.stream(DateTimeType.values()).<Pair<DataType, ImmutableList<String>>>map(dtt -> new Pair<>(DataType.date(new DateTimeInfo(dtt)), ImmutableList.of()));
+        return Stream.<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>concat(taggedTypes, Stream.<Pair<DataType, ImmutableList<String>>>concat(basicTypes, dateTypes).<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>map(t -> Either.<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>right(t)));
     }
 
     @Override
