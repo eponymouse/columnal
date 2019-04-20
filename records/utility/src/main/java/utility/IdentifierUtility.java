@@ -49,7 +49,7 @@ public class IdentifierUtility
     @SuppressWarnings("identifier")
     public static @UnitIdentifier String fromParsed(SingleUnitContext parsedIdent)
     {
-        return parsedIdent.getText();
+        return parsedIdent.IDENT().getText();
     }
 
     @SuppressWarnings("identifier")
