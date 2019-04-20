@@ -67,7 +67,7 @@ class JellyTypeIdent extends JellyType
         if (dataType != null)
             return dataType;
         @SuppressWarnings("identifier") // Due to DataType.toString
-        ImmutableList<JellyType> fixes = Utility.findAlternatives(name, streamKnownTypes(mgr), t -> t.either(ttd -> Stream.of(ttd.getTaggedTypeName().getRaw()), dts -> Stream.<String>concat(Stream.<String>of(dts.getFirst().toString()), dts.getSecond().stream()))).map(t -> new JellyTypeIdent(t.either(ttd -> ttd.getTaggedTypeName().getRaw(), dts -> dts.getFirst().toString()))).collect(ImmutableList.<JellyType>toImmutableList());
+        ImmutableList<JellyType> fixes = Utility.findAlternatives(name, streamKnownTypes(mgr), t -> t.either(ttd -> Stream.<String>of(ttd.getTaggedTypeName().getRaw()), dts -> Stream.<String>concat(Stream.<String>of(dts.getFirst().toString()), dts.getSecond().stream()))).map(t -> new JellyTypeIdent(t.either(ttd -> ttd.getTaggedTypeName().getRaw(), dts -> dts.getFirst().toString()))).collect(ImmutableList.<JellyType>toImmutableList());
         throw new UnknownTypeException("Unknown type or type variable: " + name, this, fixes);
         
     }
