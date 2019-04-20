@@ -411,6 +411,7 @@ public class TypesDialog extends Dialog<Void>
                     latest = innerType.save();
                 try
                 {
+                    @SuppressWarnings("recorded")
                     @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager, new JellyRecorder()
                     {
                         @SuppressWarnings("recorded")
