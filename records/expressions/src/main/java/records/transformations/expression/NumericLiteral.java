@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,7 +43,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Either<@Nullable StyledString, TypeExp> checkType(TypeState state, LocationInfo locationInfo) throws InternalException
+    public @Nullable TypeExp checkType(TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
         {
@@ -56,17 +57,21 @@ public class NumericLiteral extends Literal
                     unit = UnitExp.SCALAR;
                     break;
             }
-            return Either.right(new NumTypeExp(this, unit));
+            return new NumTypeExp(this, unit);
         }
 
         try
         {
             JellyUnit u = unit.asUnit(state.getUnitManager());
-            return Either.right(new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of())));
+            return new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of()));
         }
         catch (UnitLookupException e)
         {
-            return Either.left(e.errorMessage);
+            if (e.errorMessage != null)
+                onError.recordError(e.errorItem, e.errorMessage);
+            if (!e.quickFixes.isEmpty())
+                onError.recordQuickFixes(e.errorItem, e.quickFixes);
+            return null;
         }
     }
 

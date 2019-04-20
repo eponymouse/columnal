@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, ExpressionSaver.Context, ExpressionSaver.BracketContent> implements ErrorAndTypeRecorder
+public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, ExpressionSaver.Context, ExpressionSaver.BracketContent>
 {
     public class Context {}
     
@@ -761,27 +761,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     protected CanonicalSpan recorderFor(@Recorded Expression expression)
     {
         return locationRecorder.recorderFor(expression);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
-    {
-        locationRecorder.getRecorder().recordError(src, error);
-    }
-    
-    @Override
-    @OnThread(Tag.Any)
-    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
-    {
-        locationRecorder.getRecorder().recordQuickFixes(src, quickFixes);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-    {
-        return locationRecorder.getRecorder().recordTypeNN(expression, typeExp);
     }
 
     @Override

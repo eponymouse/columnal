@@ -272,7 +272,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             else
             {
                 EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
-                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors()));
+                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
                 Collections.sort(actualErrors, Comparator.comparing(e -> e.location));

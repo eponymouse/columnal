@@ -258,6 +258,21 @@ public class EditorLocationAndErrorRecorder
             }
         });
     }
+
+    private void showUnresolvedError(UnitExpression e, @Nullable StyledString error, ImmutableList<QuickFix<UnitExpression>> quickFixes)
+    {
+        errorsToShow.add(() -> {
+            @Nullable CanonicalSpan resolvedLocation = unitDisplayers.get(e);
+            if (resolvedLocation != null)
+            {
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(unitDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, false), q)));
+            }
+            else
+            {
+                throw new InternalException("Could not resolve location for type expression: " + e);
+            }
+        });
+    }
     
     public void addErrorAndFixes(CanonicalSpan showFor, StyledString error, ImmutableList<TextQuickFix> quickFixes)
     {
@@ -315,6 +330,10 @@ public class EditorLocationAndErrorRecorder
                 {
                     EditorLocationAndErrorRecorder.this.showUnresolvedError((TypeExpression) src, error, ImmutableList.of());
                 }
+                else if (src instanceof UnitExpression)
+                {
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((UnitExpression) src, error, ImmutableList.of());
+                }
             }
 
             @SuppressWarnings("unchecked")
@@ -328,6 +347,10 @@ public class EditorLocationAndErrorRecorder
                 else if (src instanceof TypeExpression && !quickFixes.isEmpty())
                 {
                     EditorLocationAndErrorRecorder.this.showUnresolvedError((TypeExpression) src, null, ImmutableList.copyOf((List<QuickFix<TypeExpression>>)(List)quickFixes));
+                }
+                else if (src instanceof UnitExpression && !quickFixes.isEmpty())
+                {
+                    EditorLocationAndErrorRecorder.this.showUnresolvedError((UnitExpression) src, null, ImmutableList.copyOf((List<QuickFix<UnitExpression>>)(List)quickFixes));
                 }
             }
 

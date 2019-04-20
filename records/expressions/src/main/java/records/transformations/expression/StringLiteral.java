@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -12,6 +13,7 @@ import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 /**
  * Created by neil on 25/11/2016.
@@ -27,9 +29,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    protected Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo)
+    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
     {
-        return Either.right(TypeExp.text(this));
+        return TypeExp.text(this);
     }
 
     @Override

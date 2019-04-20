@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -14,6 +15,7 @@ import records.error.UserException;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
@@ -53,14 +55,15 @@ public class TemporalLiteral extends Literal
 
 
     @Override
-    protected Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException
+    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (value.isLeft())
         {
-            return Either.left(StyledString.concat(StyledString.s("Value "), styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString(), StyledString.s(" because "), value.getLeft("Impossible")));
+            onError.recordError(this, StyledString.concat(StyledString.s("Value "), styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString(), StyledString.s(" because "), value.getLeft("Impossible")));
+            return null;
         }
         
-        return Either.right(TypeExp.fromDataType(this, DataType.date(new DateTimeInfo(literalType))));
+        return TypeExp.fromDataType(this, DataType.date(new DateTimeInfo(literalType)));
     }
 
     @Override

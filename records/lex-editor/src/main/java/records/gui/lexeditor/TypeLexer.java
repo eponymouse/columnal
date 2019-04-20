@@ -305,11 +305,11 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 }
                 else
                 {
-                    location = new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex));
                     if (e instanceof UnknownTypeException)
                     {
                         UnknownTypeException ute = (UnknownTypeException) e;
-                        fixes = Utility.mapListI(ute.getSuggestedFixes(), fixed -> new TextQuickFix(StyledString.s("Correct"), ImmutableList.of(), jellyRecorder.locationFor(ute.getReplacementTarget()), () -> {
+                        location = jellyRecorder.locationFor(ute.getReplacementTarget());
+                        fixes = Utility.mapListI(ute.getSuggestedFixes(), fixed -> new TextQuickFix(StyledString.s("Correct"), ImmutableList.of(), location, () -> {
                             try
                             {
                                 TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
@@ -324,7 +324,10 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                         }));
                     }
                     else
+                    {
                         fixes = ImmutableList.of();
+                        location = new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(curIndex));
+                    }
                 }
                 errors = Utility.appendToList(errors, new ErrorDetails(location, ((ExceptionWithStyle) e).getStyledMessage(),fixes));
             }

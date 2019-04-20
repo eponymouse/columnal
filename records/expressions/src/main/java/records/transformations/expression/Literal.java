@@ -1,9 +1,12 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -21,10 +24,14 @@ public abstract class Literal extends NonOperatorExpression
     @Override
     public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return onError.recordTypeAndError(this, checkType(typeState, locationInfo), ExpressionKind.EXPRESSION, typeState);
+        @Recorded TypeExp typeExp = onError.recordType(this, checkType(typeState, locationInfo, onError));
+        if (typeExp == null)
+            return null;
+        else
+            return new CheckedExp(typeExp, typeState, ExpressionKind.EXPRESSION);
     }
 
-    protected abstract Either<@Nullable StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException;
+    protected abstract @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()

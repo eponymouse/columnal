@@ -62,7 +62,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
         this.makeReplacement = makeReplacement;
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public StyledString getTitle()
     {
         return title;

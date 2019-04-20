@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -24,9 +25,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    protected Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo)
+    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
     {
-        return Either.right(TypeExp.bool(this));
+        return TypeExp.bool(this);
     }
 
     @Override
