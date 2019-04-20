@@ -453,6 +453,15 @@ public class TypesDialog extends Dialog<Void>
             }
 
             @Override
+            protected void cleanup(List<Cell> cellsToCleanup)
+            {
+                for (Cell cell : cellsToCleanup)
+                {
+                    cell.getContent().innerType.cleanup();
+                }
+            }
+
+            @Override
             @OnThread(Tag.FXPlatform)
             protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
             {

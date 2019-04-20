@@ -217,9 +217,15 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     private void deleteCells(List<Cell> selectedCells)
     {
         animateOutToRight(selectedCells, () -> {
+            cleanup(selectedCells);
             cells.removeAll(selectedCells);
             updateChildren();
         });
+    }
+    
+    protected void cleanup(List<Cell> cellsToCleanup)
+    {
+        // For overriding by child classes
     }
 
     private void animateOutToRight(List<Cell> cells, FXPlatformRunnable after)
@@ -276,6 +282,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
 
     public void resetItems(List<@NonNull T> newItems)
     {
+        cleanup(cells);
         cells.clear();
         cells.addAll(Utility.mapList(newItems, v -> new Cell(v, false)));
         updateChildren();
