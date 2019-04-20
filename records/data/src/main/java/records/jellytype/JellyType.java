@@ -67,7 +67,7 @@ public abstract class JellyType
 
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
-    public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException;
+    public abstract DataType makeDataType(@Recorded JellyType this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException;
     
     //public static class TypeQuickFix {}
     
@@ -76,7 +76,7 @@ public abstract class JellyType
         private final ImmutableList<JellyType> suggestedFixes;
         private final @Recorded JellyType replacementTarget;
 
-        public UnknownTypeException(String message, JellyType replacementTarget, ImmutableList<JellyType> suggestedFixes)
+        public UnknownTypeException(String message, @Recorded JellyType replacementTarget, ImmutableList<JellyType> suggestedFixes)
         {
             super(message);
             this.replacementTarget = replacementTarget;
@@ -108,12 +108,12 @@ public abstract class JellyType
         return new JellyTypeIdent(name);
     }
     
-    public static JellyType tuple(ImmutableList<JellyType> members)
+    public static JellyType tuple(ImmutableList<@Recorded JellyType> members)
     {
         return new JellyTypeTuple(members, true);
     }
 
-    public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, JellyType>> params)
+    public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, @Recorded JellyType>> params)
     {
         if (params.isEmpty())
             return new JellyTypeIdent(name.getRaw());
@@ -121,11 +121,12 @@ public abstract class JellyType
             return new JellyTypeApply(name, params);
     }
     
-    public static JellyType list(JellyType inner)
+    public static JellyType list(@Recorded JellyType inner)
     {
         return new JellyTypeArray(inner);
     }
-    
+
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     public static JellyType load(TypeContext typeContext, TypeManager mgr) throws InternalException, UserException
     {
         if (typeContext.unbracketedType() != null)
@@ -136,6 +137,7 @@ public abstract class JellyType
             throw new InternalException("Unrecognised case: " + typeContext);
     }
 
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     private static JellyType load(BracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
     {
         if (ctx.type() != null)
@@ -145,6 +147,7 @@ public abstract class JellyType
         throw new InternalException("Unrecognised case: " + ctx);
     }
 
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     private static JellyType load(UnbracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
     {
         if (ctx.BOOLEAN() != null)
@@ -189,6 +192,7 @@ public abstract class JellyType
         throw new InternalException("Unrecognised case: " + ctx.getText());
     }
 
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     private static Either<JellyUnit, JellyType> load(TagRefParamContext param, TypeManager mgr) throws InternalException, UserException
     {
         if (param.bracketedType() != null)
@@ -224,12 +228,12 @@ public abstract class JellyType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException, E;
-        R tuple(ImmutableList<JellyType> inner) throws InternalException, E;
+        R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, @Recorded JellyType>> typeParams) throws InternalException, E;
+        R tuple(ImmutableList<@Recorded JellyType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
-        R array(JellyType inner) throws InternalException, E;
+        R array(@Recorded JellyType inner) throws InternalException, E;
 
-        R function(ImmutableList<JellyType> argTypes, JellyType resultType) throws InternalException, E;
+        R function(ImmutableList<@Recorded JellyType> argTypes, JellyType resultType) throws InternalException, E;
         
         R ident(String name) throws InternalException, E;
     }
@@ -242,6 +246,7 @@ public abstract class JellyType
     public abstract <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E;
 
 
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     public static JellyType fromConcrete(DataType t) throws InternalException
     {
         return t.apply(new DataTypeVisitorEx<JellyType, InternalException>()

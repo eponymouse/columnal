@@ -140,6 +140,7 @@ public class TypeManager
         }
     }
 
+    @SuppressWarnings("recorded") // Won't actually be used in editor
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
         @SuppressWarnings("identifier")

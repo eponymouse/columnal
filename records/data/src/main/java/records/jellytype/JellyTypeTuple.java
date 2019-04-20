@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,10 +24,10 @@ import java.util.function.Consumer;
 
 public class JellyTypeTuple extends JellyType
 {
-    private final ImmutableList<JellyType> types;
+    private final ImmutableList<@Recorded JellyType> types;
     private final boolean complete;
 
-    public JellyTypeTuple(ImmutableList<JellyType> types, boolean complete)
+    public JellyTypeTuple(ImmutableList<@Recorded JellyType> types, boolean complete)
     {
         this.types = types;
         this.complete = complete;
@@ -39,14 +40,14 @@ public class JellyTypeTuple extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
+    public DataType makeDataType(@Recorded JellyTypeTuple this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         if (!complete)
             throw new UnknownTypeException("Cannot turn tuple of unknown size into concrete type", this, ImmutableList.of()); // Not quite the right exception, admittedly
         
         ImmutableList.Builder<DataType> members = ImmutableList.builderWithExpectedSize(types.size());
 
-        for (JellyType type : types)
+        for (@Recorded JellyType type : types)
         {
             members.add(type.makeDataType(typeVariables, mgr));
         }

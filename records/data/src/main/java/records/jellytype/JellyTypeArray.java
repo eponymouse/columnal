@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -20,9 +21,9 @@ import java.util.function.Consumer;
 
 class JellyTypeArray extends JellyType
 {
-    private final JellyType inner;
+    private final @Recorded JellyType inner;
 
-    JellyTypeArray(JellyType inner)
+    JellyTypeArray(@Recorded JellyType inner)
     {
         this.inner = inner;
     }

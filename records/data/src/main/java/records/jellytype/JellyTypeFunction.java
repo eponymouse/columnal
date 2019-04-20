@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,10 +23,10 @@ import java.util.function.Consumer;
 
 class JellyTypeFunction extends JellyType
 {
-    private final ImmutableList<JellyType> params;
-    private final JellyType result;
+    private final ImmutableList<@Recorded JellyType> params;
+    private final @Recorded JellyType result;
 
-    JellyTypeFunction(ImmutableList<JellyType> params, JellyType result)
+    JellyTypeFunction(ImmutableList<@Recorded JellyType> params, @Recorded JellyType result)
     {
         this.params = params;
         this.result = result;
@@ -42,7 +43,7 @@ class JellyTypeFunction extends JellyType
     {
         ImmutableList.Builder<DataType> paramTypes = ImmutableList.builderWithExpectedSize(params.size());
 
-        for (JellyType param : params)
+        for (@Recorded JellyType param : params)
         {
             paramTypes.add(param.makeDataType(typeVariables, mgr));
         }

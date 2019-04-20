@@ -96,6 +96,7 @@ public class TaggedTypeDefinition
                 substitutedTags.add(new TagType<>(tag.getName(), null));
             else
             {
+                @SuppressWarnings("recorded")
                 @NonNull DataType inner = tag.getInner().makeDataType(substitutions, mgr);
                 substitutedTags.add(new TagType<>(tag.getName(), inner));
             }

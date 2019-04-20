@@ -120,13 +120,13 @@ public class TypeApplyExpression extends TypeExpression
         if (arguments.isEmpty())
             throw new InternalException("Empty type-apply expression");
 
-        ImmutableList.Builder<Either<JellyUnit, JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
+        ImmutableList.Builder<Either<JellyUnit, @Recorded JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
 
         for (int i = 0; i < arguments.size(); i++)
         {
             Either<@Recorded UnitExpression, @Recorded TypeExpression> arg = arguments.get(i);
             int iFinal = i;
-            args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
+            args.add(arg.<JellyUnit, @Recorded JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
                 throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), u, p.getSecond());
             }, ju -> ju), (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
         }

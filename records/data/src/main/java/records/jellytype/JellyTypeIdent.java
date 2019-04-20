@@ -1,6 +1,7 @@
 package records.jellytype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,7 +58,7 @@ class JellyTypeIdent extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
+    public DataType makeDataType(@Recorded JellyTypeIdent this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         Either<Unit, DataType> var = typeVariables.get(name);
         if (var != null)
