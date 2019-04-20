@@ -151,6 +151,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
 
+    @SuppressWarnings("identifier")
     private void testCaretPositionsAndDisplay(String internalContent, String display, int... internalCaretPos)
     {
         try
@@ -261,6 +262,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     // Tests that you can get back to the caret positions 
     // that were seen during insertion, by using left and
     // right cursor keys
+    @SuppressWarnings("identifier")
     private void testCaretPositions(String content)
     {
         try

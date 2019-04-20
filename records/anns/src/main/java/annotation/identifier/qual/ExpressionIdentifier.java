@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * A String which is valid Expression identifier.
  */
-@SubtypeOf(UnknownIfIdentifier.class)
+@SubtypeOf(UnitIdentifier.class)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface ExpressionIdentifier
 {

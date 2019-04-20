@@ -330,6 +330,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
      * @param fixId The CSS selector to use to look for the particular fix row
      * @param result The expected outcome expression after applying the fix
      */
+    @SuppressWarnings("identifier")
     private void testFix(String original, String fixFieldContent, String fixId, String result)
     {
         try

@@ -124,6 +124,7 @@ public class ExcelImporter implements Importer
         }
     }
 
+    @SuppressWarnings("identifier")
     private static ColumnId excelColumnName(int columnIndex)
     {
         String s = "";

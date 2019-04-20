@@ -1,5 +1,6 @@
 package test.expressions;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,17 +78,17 @@ public class TestExpressionExplanation
         tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T2"), null, null), new EditableRecordSet(columns, () -> 4)));
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> bools(String name, boolean... values)
+    private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)
     {
         return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> nums(String name, Number... values)
+    private static SimulationFunction<RecordSet, EditableColumn> nums(@ExpressionIdentifier String name, Number... values)
     {
         return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), 0);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> text(String name, String... values)
+    private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)
     {
         return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
     }
@@ -116,7 +117,7 @@ public class TestExpressionExplanation
         );
     }
 
-    protected Explanation entire(String table, String column, Object... values) throws InternalException, UserException
+    protected Explanation entire(@ExpressionIdentifier String table, @ExpressionIdentifier String column, Object... values) throws InternalException, UserException
     {
         return e("@entire " + table + ":" + column, null, new ListExList(TestUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column));
     }
@@ -330,12 +331,12 @@ public class TestExpressionExplanation
         return e(value.toString(), null, value, null);
     }
 
-    private ExplanationLocation l(String tableName, String columnName)
+    private ExplanationLocation l(@ExpressionIdentifier String tableName, @ExpressionIdentifier String columnName)
     {
         return new ExplanationLocation(new TableId(tableName), new ColumnId(columnName));
     }
 
-    private ExplanationLocation l(String tableName, String columnName, int rowIndex)
+    private ExplanationLocation l(@ExpressionIdentifier String tableName, @ExpressionIdentifier String columnName, int rowIndex)
     {
         return new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), DataItemPosition.row(rowIndex));
     }
@@ -352,7 +353,7 @@ public class TestExpressionExplanation
         assertEquals(expectedExplanation, actual);
     }
 
-    private void testCheckExplanation(String srcTable, String src, CheckType checkType, @Nullable Explanation expectedExplanation) throws Exception
+    private void testCheckExplanation(@ExpressionIdentifier String srcTable, String src, CheckType checkType, @Nullable Explanation expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));

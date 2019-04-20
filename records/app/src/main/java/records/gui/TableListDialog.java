@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
@@ -10,32 +11,39 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.stage.Modality;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
+import utility.Utility;
+import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
+import utility.gui.TranslationUtility;
 
 // Shows an editable list of table ids
 @OnThread(Tag.FXPlatform)
-public class TableListDialog extends LightDialog<ImmutableList<TableId>>
+public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>>
 {
     private final View parent;
     private final ImmutableSet<Table> excludeTables;
+    private final TableList tableList;
 
     public TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
     {
-        super(parent);
+        super(parent, true);
         initModality(Modality.NONE);
         setResizable(true);
         this.parent = parent;
         this.excludeTables = ImmutableSet.of(destTable);
-        TableList tableList = new TableList(originalItems);            
+        tableList = new TableList(originalItems);            
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         Region tableListNode = tableList.getNode();
         tableListNode.setMinWidth(200.0);
@@ -48,12 +56,6 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             FXUtility.getStylesheet("dialogs.css")
         );
         getDialogPane().getStyleClass().add("table-list-dialog");
-        setResultConverter(bt -> {
-            if (bt == ButtonType.OK)
-                return tableList.getItems();
-            else
-                return null;
-        });
         
         setOnShowing(e -> {
             parent.enableTablePickingMode(lastScreenPos, excludeTables, t -> {
@@ -66,27 +68,42 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         if (originalItems.isEmpty())
         {
             // runAfter to avoid focus stealing:
-            FXUtility.runAfter(() -> tableList.addToEnd(new TableId(""), true));
+            FXUtility.runAfter(() -> tableList.addToEnd("", true));
         }
     }
 
+    @Override
+    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<TableId>> calculateResult()
+    {
+        ImmutableList.Builder<TableId> r = ImmutableList.builder();
+        for (String item : tableList.getItems())
+        {
+            @Nullable @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(item);
+            if (s != null)
+                r.add(new TableId(s));
+            else
+                return Either.left(TranslationUtility.getString("edit.column.invalid.table.name"));
+        }
+        return Either.right(r.build());
+    }
+
     @OnThread(Tag.FXPlatform)
-    private class TableList extends FancyList<TableId, PickTablePane>
+    private class TableList extends FancyList<String, PickTablePane>
     {
         public TableList(ImmutableList<TableId> originalItems)
         {
-            super(originalItems, true, true, () -> new TableId(""));
+            super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, () -> "");
             getStyleClass().add("table-list");
         }
         
         @Override
-        protected Pair<PickTablePane, FXPlatformSupplier<TableId>> makeCellContent(@Nullable TableId original, boolean editImmediately)
+        protected Pair<PickTablePane, FXPlatformSupplier<String>> makeCellContent(@Nullable String original, boolean editImmediately)
         {
             if (original == null)
-                original = new TableId("");
-            SimpleObjectProperty<TableId> curValue = new SimpleObjectProperty<>(original);
+                original = "";
+            SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original);
             PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original, t -> {
-                curValue.set(t.getId());
+                curValue.set(t.getId().getRaw());
                 if (addButton != null)
                     addButton.requestFocus();
             });
@@ -123,7 +140,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             else
             {
                 // Add to end:
-                addToEnd(t.getId(), false);
+                addToEnd(t.getId().getRaw(), false);
             }
         }
     }

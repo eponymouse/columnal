@@ -33,6 +33,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -155,7 +156,10 @@ public class TextImporter implements Importer
             // Must be one per column:
             ReadState reader = Utility.skipFirstNRows(textFile, charset, 0);
             int iFinal = i;
-            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, quote, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns));
+            columns.add(rs -> {
+                ColumnId columnName = new ColumnId(IdentifierUtility.identNum("Column", (iFinal + 1)));
+                return TextFileColumn.stringColumn(rs, reader, separator, quote, columnName, iFinal, totalColumns);
+            });
         }
 
         return new KnownLengthRecordSet(columns, Utility.countLines(textFile, charset));

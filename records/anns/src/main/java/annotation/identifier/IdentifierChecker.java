@@ -45,22 +45,32 @@ public class IdentifierChecker extends BaseTypeChecker
 
                     class StringLiteralAnnotator extends TreeAnnotator {
                         private final AnnotationMirror EXPRESSION_IDENTIFIER;
+                        private final AnnotationMirror UNIT_IDENTIFIER;
 
                         public StringLiteralAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
                         {
                             super(atypeFactory);
                             this.EXPRESSION_IDENTIFIER = AnnotationBuilder.fromClass(elements, ExpressionIdentifier.class);
+                            this.UNIT_IDENTIFIER = AnnotationBuilder.fromClass(elements, UnitIdentifier.class);
                         }
 
                         public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
                         {
-                            if(!type.isAnnotatedInHierarchy(this.EXPRESSION_IDENTIFIER))
+                            if (tree.getKind() == Kind.STRING_LITERAL)
                             {
-                                if (tree.getKind() == Kind.STRING_LITERAL)
+                                if (!type.isAnnotatedInHierarchy(this.EXPRESSION_IDENTIFIER))
+                                {
+                                
+                                    String value = tree.getValue().toString();
+                                    if (value.matches("^[a-zA-Z][a-zA-Z0-9]*([ _][a-zA-Z0-9]+)*$"))
+                                        type.addAnnotation(this.EXPRESSION_IDENTIFIER);
+                                }
+                            
+                                if (!type.isAnnotatedInHierarchy(this.UNIT_IDENTIFIER))
                                 {
                                     String value = tree.getValue().toString();
                                     if (value.matches("^[a-zA-Z]+$"))
-                                        type.addAnnotation(this.EXPRESSION_IDENTIFIER);
+                                        type.addAnnotation(this.UNIT_IDENTIFIER);
                                 }
                             }
 

@@ -24,6 +24,7 @@ import test.gen.GenFile;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ReadState;
@@ -53,7 +54,7 @@ public class TestTextFileColumn
     {
         try
         {
-            ColumnId columnName = new ColumnId("C" + index);
+            ColumnId columnName = new ColumnId(IdentifierUtility.identNum("C", index));
             ReadState readState = new ReadState(f.getFile(), f.getCharset(), 0);
             return rs -> dataType.apply(new DataTypeVisitor<TextFileColumn>()
             {

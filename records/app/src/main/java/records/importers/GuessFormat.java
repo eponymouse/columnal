@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +43,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
@@ -416,7 +418,8 @@ public class GuessFormat
                 {
                     for (int i = 0; i < values.get(0).size(); i++)
                     {
-                        columnInfos.add(new ColumnInfo(new TextColumnType(), new ColumnId("Col " + (i + 1))));
+                        ColumnId columnId = new ColumnId(IdentifierUtility.identNum("Col", (i + 1)));
+                        columnInfos.add(new ColumnInfo(new TextColumnType(), columnId));
                     }
                 }
                 return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos.build()));
@@ -969,27 +972,29 @@ public class GuessFormat
                         stringBuilder.append(new String(codepoints, i, 1));
                     }
                 }
-                String validated = stringBuilder.toString().trim();
-                String prospectiveName = validated;
-                if (validated.isEmpty())
-                {
-                    validated = "C";
-                    prospectiveName = "C1";
-                }
-                // Now check if it is taken:
-    
-                int appendNum = 1;
-                while (usedNames.contains(new ColumnId(prospectiveName)))
-                {
-                    prospectiveName = validated + appendNum;
-                    appendNum += 1;
-                }
-                columnName = new ColumnId(prospectiveName);
+                columnName = findName(usedNames, stringBuilder);
             }
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), columnName));
             usedNames.add(columnName);
         }
         return columns.build();
+    }
+
+    private static ColumnId findName(HashSet<ColumnId> usedNames, StringBuilder stringBuilder)
+    {
+        ColumnId columnName;
+        @ExpressionIdentifier String validated = IdentifierUtility.fixExpressionIdentifier(stringBuilder.toString().trim(), "C");
+        @ExpressionIdentifier String prospectiveName = validated;
+        // Now check if it is taken:
+
+        int appendNum = 1;
+        while (usedNames.contains(new ColumnId(prospectiveName)))
+        {
+            prospectiveName = IdentifierUtility.identNum(validated, appendNum);
+            appendNum += 1;
+        }
+        columnName = new ColumnId(prospectiveName);
+        return columnName;
     }
 
     public static class ImportInfo<FORMAT>
@@ -998,7 +1003,7 @@ public class GuessFormat
         private final FORMAT format; 
         //public final boolean linkFile;
 
-        public ImportInfo(String suggestedName/*, boolean linkFile*/, FORMAT format)
+        public ImportInfo(@ExpressionIdentifier String suggestedName/*, boolean linkFile*/, FORMAT format)
         {
             this.suggestedTableId = new TableId(suggestedName);
             this.format = format;

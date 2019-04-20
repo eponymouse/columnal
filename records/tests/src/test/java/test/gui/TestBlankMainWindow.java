@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,6 +62,7 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
@@ -146,7 +148,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
         TestUtil.sleep(1000);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
-        assertNotEquals(new TableId(""), mainWindowActions._test_getTableManager().getAllTables().get(0).getId());
+        assertNotEquals("", mainWindowActions._test_getTableManager().getAllTables().get(0).getId().getRaw());
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().get(0).getData().getColumns().size());
     }
 
@@ -215,7 +217,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         {
             if (r.nextInt(5) <= 2 || tableIds.isEmpty())
             {
-                String name = "Table " + i;
+                @ExpressionIdentifier String name = IdentifierUtility.identNum("Table", i);
                 //System.out.println("###\n# Adding " + name + " " + Instant.now() + "\n###\n");
                 makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0), null);
                 tableIds.add(new TableId(name));

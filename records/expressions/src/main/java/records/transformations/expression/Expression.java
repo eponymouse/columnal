@@ -510,7 +510,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             TableIdContext tableIdContext = ctx.tableId();
             if (ctx.columnId() == null)
                 throw new RuntimeException("Error processing column reference");
-            return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
+            TableId tableName = tableIdContext == null ? null : new TableId(IdentifierUtility.fromParsed(tableIdContext.ident()));
+            ColumnId columnName = new ColumnId(IdentifierUtility.fromParsed(ctx.columnId().ident()));
+            return new ColumnReference(tableName, columnName, ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
         }
 
         @Override
@@ -550,10 +552,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        @SuppressWarnings("identifier")
         public Expression visitConstructor(ConstructorContext ctx)
         {
-            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : ctx.typeName().getText(), ctx.constructorName().getText());
+            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : IdentifierUtility.fromParsed(ctx.typeName().ident()), ctx.constructorName().getText());
         }
 
         @Override

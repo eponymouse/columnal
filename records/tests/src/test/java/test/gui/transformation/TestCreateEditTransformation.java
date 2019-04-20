@@ -1,5 +1,6 @@
 package test.gui.transformation;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
@@ -72,6 +73,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FunctionInt;
+import utility.IdentifierUtility;
 import utility.Utility;
 import utility.Utility.ListExList;
 
@@ -160,7 +162,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             {
                 TypeAndValueGen extraType = genTypeAndValueGen.generate(r);
                 mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(extraType.getTypeManager());
-                columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId("Extra " + i), extraType.getType(), Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, @Value Object>left("@") : Either.<String, @Value Object>right(extraType.makeValue()))));
+                columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId(IdentifierUtility.identNum("Extra", i)), extraType.getType(), Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, @Value Object>left("@") : Either.<String, @Value Object>right(extraType.makeValue()))));
             }
 
             for (ColumnDetails column : columns)
@@ -246,7 +248,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             // Should be one column at the moment, with the distinct split values, and maybe the first calculation:
             SummaryStatistics aggTable = (SummaryStatistics) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
             assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
-            String aggId = aggTable.getId().getRaw();
+            @ExpressionIdentifier String aggId = aggTable.getId().getRaw();
             ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
             //TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
 
@@ -305,7 +307,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(r);
             copyTypesTo._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
             ImmutableList<Either<String, @Value Object>> sourceData = Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
-            ColumnDetails columnDetails = new ColumnDetails(new ColumnId("Source " + i), typeAndValueGen.getType(), sourceData);
+            ColumnDetails columnDetails = new ColumnDetails(new ColumnId(IdentifierUtility.identNum("Source", i)), typeAndValueGen.getType(), sourceData);
             List<AggCalculation> calculations = makeCalculations(splitColumnType, distinctSplitValues, typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
             aggColumns.add(new AggColumns(columnDetails, calculations));
         }
@@ -333,6 +335,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         };
 
 
+        @SuppressWarnings("identifier")
         Function<String, ColumnId> name = s -> new ColumnId(columnDetails.name.getRaw() + " " + s);
 
         Comparator<@Value Object> valueComparator = DataTypeUtility.getValueComparator();
@@ -496,7 +499,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         });
     }
 
-    public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, String tableName) throws UserException
+    public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, @ExpressionIdentifier String tableName) throws UserException
     {
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId(tableName))
                 .clickOn(".id-tableDisplay-menu-copyValues");

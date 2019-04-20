@@ -7,6 +7,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import threadchecker.OnThread;
@@ -19,6 +20,7 @@ import utility.gui.LightDialog;
 import utility.gui.TranslationUtility;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -29,9 +31,10 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
 {
     private final RadioButton byColumnRadio;
     private final TextField byColumnName;
-    private final Predicate<ColumnId> columnIdExists;
+    // If column exists, return it -- else return null
+    private final Function<String, @Nullable ColumnId> columnIdExists;
 
-    public PickManualEditIdentifierDialog(View parent, Optional<ColumnId> startingValue, Predicate<ColumnId> columnIdExists)
+    public PickManualEditIdentifierDialog(View parent, Optional<ColumnId> startingValue, Function<String, @Nullable ColumnId> columnIdExists)
     {
         super(parent, true);
         this.columnIdExists = columnIdExists;
@@ -56,11 +59,12 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
     {
         if (byColumnRadio.isSelected())
         {
-            ColumnId columnId = new ColumnId(byColumnName.getText().trim());
-            if (columnIdExists.test(columnId))
+            @Nullable ColumnId columnId = columnIdExists.apply(byColumnName.getText().trim());
+            
+            if (columnId != null)
                 return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>of(columnId));
             else
-                return Either.left(TranslationUtility.getString("manual.edit.column.not.found", columnId.getRaw()));
+                return Either.left(TranslationUtility.getString("manual.edit.column.not.found", byColumnName.getText().trim()));
         }
         else
         {

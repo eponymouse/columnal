@@ -38,6 +38,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
@@ -405,7 +406,7 @@ public class PropRunTransformation
         for (int i = 0; i < numNew; i++)
         {
             ColumnId old = oldColumns.get(r.nextInt(oldColumns.size())).getName();
-            ColumnId newId = new ColumnId("Trans" + i);
+            ColumnId newId = new ColumnId(IdentifierUtility.identNum("Trans", i));
             newCols.put(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW));
             columnMapping.put(newId, old);
         }
@@ -413,7 +414,7 @@ public class PropRunTransformation
 
         Calculate calculate = new Calculate(original.mgr, TestUtil.ILD, original.data().getId(), newCols.build());
 
-        assertDataSame(calculate.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("__TEST_UNKNOWN__")));
+        assertDataSame(calculate.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("TEST_UNKNOWN")));
     }
 
     // Checks that all columns from first parameter have same data as

@@ -35,6 +35,7 @@ import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationSupplier;
@@ -223,7 +224,7 @@ public class HTMLImporter implements Importer
                 else
                 {
                     columnNames.clear();
-                    columnNames.addAll(Utility.mapList(rowVals, s -> new ColumnId(s)));
+                    columnNames.addAll(Utility.mapList_Index(rowVals, (n, s) -> new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n)))));
                 }
             }
         }
@@ -238,7 +239,10 @@ public class HTMLImporter implements Importer
                 if (index < columnNames.size())
                     return columnNames.get(index);
                 else
-                    return new ColumnId("C" + (index + 1));
+                {
+                    ColumnId columnId = new ColumnId(IdentifierUtility.identNum("C", (index + 1)));
+                    return columnId;
+                }
             }
         };
 

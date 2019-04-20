@@ -19,6 +19,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
@@ -44,7 +45,7 @@ public class BackwardsColumnRef extends BackwardsProvider
     public List<ExpressionMaker> terminals(DataType type, @Value Object value) throws InternalException, UserException
     {
         return ImmutableList.of(() -> {
-            ColumnId name = new ColumnId("GEV Col " + columns.size());
+            ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
             columns.add(rs -> type.apply(new ConcreteDataTypeVisitor<Column>()
             {
                 @Override

@@ -72,6 +72,7 @@ public class TestFromDoc
 {
     @Property(trials=100)
     @OnThread(Tag.Simulation)
+    @SuppressWarnings("identifier")
     public void testFromDoc(
         @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
         @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException

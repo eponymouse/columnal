@@ -37,6 +37,7 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.omg.PortableServer.IdUniquenessPolicy;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.*;
@@ -235,7 +236,7 @@ public class TestUtil
 
     public static TableId generateTableId(SourceOfRandomness sourceOfRandomness)
     {
-        return new TableId(generateIdent(sourceOfRandomness));
+        return new TableId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Table"));
     }
 
     // Generates a pair of different ids
@@ -253,7 +254,7 @@ public class TestUtil
 
     public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
     {
-        return new ColumnId(generateIdent(sourceOfRandomness));
+        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Column"));
     }
 
     private static String generateIdent(SourceOfRandomness sourceOfRandomness)

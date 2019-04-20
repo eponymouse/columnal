@@ -1,5 +1,6 @@
 package records.gui.table;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
@@ -937,7 +938,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), new ColumnId(""), null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), () -> Calculate.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), () -> Calculate.makeTypeState(parent.getManager()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -954,7 +955,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), new ColumnId(""), null, agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -993,13 +994,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, MakeColumnTransformation makeTransform) throws InternalException, UserException
     {
-        String stem = suggestedPrefix + " " + srcColumn.getRaw();
-        String nextId = stem;
+        @ExpressionIdentifier String stem = IdentifierUtility.fixExpressionIdentifier(suggestedPrefix + " " + srcColumn.getRaw(), srcColumn.getRaw());
+        @ExpressionIdentifier String nextId = stem;
         for (int i = 1; i <= 1000; i++)
         {
             if (!us.getData().getColumnIds().contains(new ColumnId(nextId)))
                 break;
-            nextId = stem + i;
+            nextId = IdentifierUtility.identNum(stem, i);
         }
         // If we reach 999, just go with that and let user fix it
         ColumnId newColumnId = new ColumnId(nextId);
@@ -1101,7 +1102,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), new ColumnId(""), null, aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
+            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
             if (newColumn.isPresent())
             {
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {

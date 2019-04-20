@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledShowable;
@@ -19,9 +20,9 @@ import java.io.Serializable;
 public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowable
 {
     private static final long serialVersionUID = -6813720608766860501L;
-    private final String columnId;
+    private final @ExpressionIdentifier String columnId;
 
-    public ColumnId(String columnId)
+    public ColumnId(@ExpressionIdentifier String columnId)
     {
         this.columnId = columnId;
     }
@@ -60,9 +61,10 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
         return columnId;
     }
 
-    public @Localized String getRaw()
+    @SuppressWarnings("i18n")
+    public @Localized @ExpressionIdentifier String getRaw()
     {
-        return Utility.userInput(columnId);
+        return columnId;
     }
 
     @Override

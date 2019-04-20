@@ -433,8 +433,11 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
             ImmutableList.Builder<Pair<ColumnId, Expression>> summaryTypes = ImmutableList.builder();
             for (SummaryColContext sumType : loaded.summaryCol())
             {
-                summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
+                @SuppressWarnings("identifier")
+                ColumnId columnId = new ColumnId(sumType.column.getText());
+                summaryTypes.add(new Pair<>(columnId, Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
             }
+            @SuppressWarnings("identifier")
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
             return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
         }

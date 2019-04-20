@@ -1,5 +1,6 @@
 package test.gui.trait;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -46,7 +47,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
     }
     
     @OnThread(Tag.Simulation)
-    public default void createDataTable(MainWindowActions mainWindowActions, CellPosition targetPos, String tableName, List<ColumnDetails> columns) throws Exception
+    public default void createDataTable(MainWindowActions mainWindowActions, CellPosition targetPos, @ExpressionIdentifier String tableName, List<ColumnDetails> columns) throws Exception
     {
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         keyboardMoveTo(virtualGrid, targetPos);

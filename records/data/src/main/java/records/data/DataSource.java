@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -28,6 +29,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
+import utility.IdentifierUtility;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -77,7 +79,8 @@ public abstract class DataSource extends Table
                 columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
-            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(immed.tableId().getText()), table.display()), recordSet);
+            @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
+            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(columnName), table.display()), recordSet);
             manager.record(immediateDataSource);
             return immediateDataSource;
         }
@@ -111,7 +114,7 @@ public abstract class DataSource extends Table
                 ColumnNameContext colName;
                 if (column == null || (colName = column.columnName()) == null)
                     throw new UserException("Problem on line " + line.getText());
-                ColumnId name = new ColumnId(colName.getText());
+                ColumnId name = new ColumnId(IdentifierUtility.fromParsed(colName.ident()));
                 if (r.stream().anyMatch(pr -> pr.columnId.equals(name)))
                     throw new UserException("Duplicate column name: \"" + name + "\"");
 

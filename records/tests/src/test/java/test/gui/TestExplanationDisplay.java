@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.primitives.Booleans;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -61,23 +62,23 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, tempManager).get();
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> bools(String name, boolean... values)
+    private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)
     {
         return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> nums(String name, Number... values)
+    private static SimulationFunction<RecordSet, EditableColumn> nums(@ExpressionIdentifier String name, Number... values)
     {
         return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), 0);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> text(String name, String... values)
+    private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)
     {
         return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
     }
 
 
-    private void addCheck(String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
+    private void addCheck(@ExpressionIdentifier String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
     {
         Expression expression = Expression.parse(null, expressionSrc, mainWindowActions._test_getTableManager().getTypeManager(), FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()));
         Check check = new Check(mainWindowActions._test_getTableManager(), new InitialLoadDetails(null, CHECK_POS, null), new TableId(srcTable), checkType, expression);

@@ -366,6 +366,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
 
         @Override
         @OnThread(Tag.Simulation)
+        @SuppressWarnings("identifier")
         public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);

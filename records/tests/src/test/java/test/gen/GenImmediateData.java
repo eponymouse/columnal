@@ -25,6 +25,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.ExFunction;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 
@@ -99,7 +100,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 }
 
                 @SuppressWarnings({"keyfor", "units"})
-                ImmediateDataSource dataSource = new ImmediateDataSource(mgrAndTypes.getFirst(), new InitialLoadDetails(new TableId("Test" + nextTableNum++), null, null), new EditableRecordSet(columns, () -> length));
+                ImmediateDataSource dataSource = new ImmediateDataSource(mgrAndTypes.getFirst(), new InitialLoadDetails(new TableId(IdentifierUtility.identNum("Test", nextTableNum++)), null, null), new EditableRecordSet(columns, () -> length));
                 mgrAndTypes.getFirst().record(dataSource);
                 tables.add(dataSource);
             }

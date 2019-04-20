@@ -30,6 +30,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
@@ -67,7 +68,7 @@ public class ClipboardUtils
         public SimulationFunction<RecordSet, EditableColumn> load(Integer i)
         {
             return rs -> {
-                return dataType.makeImmediateColumn(columnName != null ? columnName : new ColumnId("Column " + i), dataValues, DataTypeUtility.makeDefaultValue(dataType)).apply(rs);
+                return dataType.makeImmediateColumn(columnName != null ? columnName : new ColumnId(IdentifierUtility.identNum("Column", i)), dataValues, DataTypeUtility.makeDefaultValue(dataType)).apply(rs);
             };
         }
     }

@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,6 +17,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -40,8 +42,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.UnitType;
+import utility.Utility;
+import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.Instruction;
@@ -54,14 +59,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
-public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<ColumnId>>
+public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableList<ColumnId>>
 {
     private final @Nullable Table srcTable;
     private final SplitList splitList;
 
     public EditAggregateSplitByDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, @Nullable Pair<ColumnId, ImmutableList<String>> example, ImmutableList<ColumnId> originalSplitBy)
     {
-        super(parent);
+        super(parent, true);
         setResizable(true);
         initModality(Modality.NONE);
         this.srcTable = srcTable;
@@ -87,12 +92,6 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
             FXUtility.getStylesheet("dialogs.css")
         );
         getDialogPane().getStyleClass().add("sort-list-dialog");
-        setResultConverter(bt -> {
-            if (bt == ButtonType.OK)
-                return splitList.getItems();
-            else
-                return null;
-        });
         setOnShowing(e -> {
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
             parent.enableColumnPickingMode(lastScreenPos, p -> Objects.equals(srcTable, p.getFirst()), t -> {
@@ -104,6 +103,21 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
         });
     }
 
+    @Override
+    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<ColumnId>> calculateResult()
+    {
+        ImmutableList.Builder<ColumnId> r = ImmutableList.builder();
+        for (String item : splitList.getItems())
+        {
+            @Nullable @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(item);
+            if (s != null)
+                r.add(new ColumnId(s));
+            else
+                return Either.left(TranslationUtility.getString("edit.column.invalid.column.name"));
+        }
+        return Either.right(r.build());
+    }
+
     private static String truncate(String orig)
     {
         if (orig.length() > 20)
@@ -113,11 +127,11 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
     }
 
     @OnThread(Tag.FXPlatform)
-    private class SplitList extends FancyList<ColumnId, ColumnPane>
+    private class SplitList extends FancyList<String, ColumnPane>
     {
         public SplitList(ImmutableList<ColumnId> initialItems)
         {
-            super(initialItems, true, true, () -> new ColumnId(""));
+            super(Utility.mapListI(initialItems, c -> c.getRaw()), true, true, () -> "");
             getStyleClass().add("split-list");
             setAddButtonText(TranslationUtility.getString("aggregate.add.column"));
             
@@ -128,7 +142,7 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
         }
 
         @Override
-        protected Pair<ColumnPane, FXPlatformSupplier<ColumnId>> makeCellContent(@Nullable ColumnId initialContent, boolean editImmediately)
+        protected Pair<ColumnPane, FXPlatformSupplier<String>> makeCellContent(String initialContent, boolean editImmediately)
         {
             ColumnPane columnPane = new ColumnPane(initialContent, editImmediately);
             return new Pair<>(columnPane, columnPane.currentValue()::get);
@@ -154,7 +168,7 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
             else
             {
                 // Add to end:
-                addToEnd(t.getSecond(), false);
+                addToEnd(t.getSecond().getRaw(), false);
             }
         }
     }
@@ -162,15 +176,15 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
     @OnThread(Tag.FXPlatform)
     private class ColumnPane extends BorderPane
     {
-        private final SimpleObjectProperty<ColumnId> currentValue;
+        private final SimpleObjectProperty<String> currentValue;
         private final TextField columnField;
         private final AutoComplete autoComplete;
         private long lastEditTimeMillis = -1;
 
-        public ColumnPane(@Nullable ColumnId initialContent, boolean editImmediately)
+        public ColumnPane(String initialContent, boolean editImmediately)
         {
-            currentValue = new SimpleObjectProperty<>(initialContent == null ? new ColumnId("") : initialContent);
-            columnField = new TextField(initialContent == null ? "" : initialContent.getRaw());
+            currentValue = new SimpleObjectProperty<>(initialContent);
+            columnField = new TextField(initialContent);
             if (editImmediately)
                 FXUtility.onceNotNull(columnField.sceneProperty(), s -> FXUtility.runAfter(columnField::requestFocus));
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
@@ -195,7 +209,7 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
                 lastEditTimeMillis = System.currentTimeMillis();
             });
             FXUtility.addChangeListenerPlatformNN(columnField.textProperty(), t -> {
-                currentValue.set(new ColumnId(t));
+                currentValue.set(t);
             });
             Instruction instruction = new Instruction("pick.column.instruction");
             instruction.showAboveWhenFocused(columnField);
@@ -258,10 +272,10 @@ public class EditAggregateSplitByDialog extends LightDialog<ImmutableList<Column
         public void setContent(ColumnId columnId)
         {
             autoComplete.setContentDirect(columnId.getRaw(), true);
-            currentValue.set(columnId);
+            currentValue.set(columnId.getRaw());
         }
 
-        public ObjectExpression<ColumnId> currentValue()
+        public ObjectExpression<String> currentValue()
         {
             return currentValue;
         }

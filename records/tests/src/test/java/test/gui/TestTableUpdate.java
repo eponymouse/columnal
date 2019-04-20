@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -122,7 +123,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     private List<List<@Nullable String>> getDataViaGraphics(MainWindowActions details, int columnIndex) throws UserException
     {
         List<List<@Nullable String>> r = new ArrayList<>();
-        for (String tableName : ImmutableList.of("Src", "T1", "T2"))
+        for (@ExpressionIdentifier String tableName : ImmutableList.<@ExpressionIdentifier String>of("Src", "T1", "T2"))
         {
             @SuppressWarnings("nullness") // Will just throw if it turns out to be null, which is fine
             TableDisplay tableDisplay = (TableDisplay)TestUtil.fx(() -> details._test_getTableManager().getSingleTableOrThrow(new TableId(tableName)).getDisplay());
@@ -167,7 +168,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     }
 
     @OnThread(Tag.Simulation)
-    private static void addTransformation(TableManager mgr, String srcTable, String destTable, CellPosition position, Random r) throws InternalException
+    private static void addTransformation(TableManager mgr, @ExpressionIdentifier String srcTable, @ExpressionIdentifier String destTable, CellPosition position, Random r) throws InternalException
     {
         // We choose between Sort (original order), Calculate(empty list) and Filter (true)
         switch (r.nextInt(3))

@@ -107,4 +107,49 @@ public class IdentifierUtility
         else
             return null;
     }
+    
+    private static enum Last {START, SPACE, VALID}
+    
+    // Finds closest valid expression identifier
+    @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String fixExpressionIdentifier(String original, @ExpressionIdentifier String hint)
+    {
+        StringBuilder processed = new StringBuilder();
+        Last last = Last.START;
+        for (int c : original.codePoints().toArray())
+        {
+            if (last == Last.START && Character.isAlphabetic(c))
+            {
+                processed.appendCodePoint(c);
+                last = Last.VALID;
+            }
+            else if (last != Last.START && (Character.isAlphabetic(c) || Character.getType(c) == Character.OTHER_LETTER || Character.isDigit(c)))
+            {
+                processed.appendCodePoint(c);
+                last = Last.VALID;
+            }
+            else if (last != Last.SPACE && (c == '_' || Character.isWhitespace(c)))
+            {
+                processed.appendCodePoint(c == '_' ? c : ' ');
+                last = Last.SPACE;
+            }
+            // Swap others to space:
+            else if (last != Last.SPACE)
+            {
+                processed.appendCodePoint(' ');
+                last = Last.SPACE;
+            }
+        }
+        
+        @ExpressionIdentifier String r = asExpressionIdentifier(processed.toString().trim());
+        if (r != null)
+            return r;
+        else
+            return hint;
+    }
+    
+    public static @ExpressionIdentifier String identNum(@ExpressionIdentifier String stem, int number)
+    {
+        return fixExpressionIdentifier(stem + " " + number, stem);
+    }
 }

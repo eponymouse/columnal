@@ -600,7 +600,9 @@ edit : editHeader editColumn*;
             @Nullable Pair<ColumnId, DataType> replacementKey;
             if (editContext.editHeader().key != null)
             {
-                replacementKey = new Pair<>(new ColumnId(editContext.editHeader().key.getText()), mgr.getTypeManager().loadTypeUse(editContext.editHeader().type().TYPE().getText()));
+                @SuppressWarnings("identifier")
+                ColumnId columnId = new ColumnId(editContext.editHeader().key.getText());
+                replacementKey = new Pair<>(columnId, mgr.getTypeManager().loadTypeUse(editContext.editHeader().type().TYPE().getText()));
             }
             else
             {
@@ -610,6 +612,7 @@ edit : editHeader editColumn*;
             HashMap<ColumnId, ColumnReplacementValues> replacements = new HashMap<>();
             for (EditColumnContext editColumnContext : editContext.editColumn())
             {
+                @SuppressWarnings("identifier")
                 ColumnId columnId = new ColumnId(editColumnContext.editColumnHeader().column.getText());
                 DataType dataType = mgr.getTypeManager().loadTypeUse(editColumnContext.editColumnHeader().type().TYPE().getText());
                 List<Pair<@Value Object, Either<String, @Value Object>>> replacementValues = new ArrayList<>();

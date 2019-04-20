@@ -221,7 +221,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
 
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
-    @SuppressWarnings("units")
+    @SuppressWarnings({"units", "identifier"})
     private void testError(String expression, Error... errors)
     {        
         try

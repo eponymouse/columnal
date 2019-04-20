@@ -273,7 +273,9 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             TransformContext transform = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.transform());
             for (TransformItemContext transformItemContext : transform.transformItem())
             {
-                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
+                @SuppressWarnings("identifier")
+                ColumnId columnId = new ColumnId(transformItemContext.column.getText());
+                columns.put(columnId, Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
             }
 
             return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());

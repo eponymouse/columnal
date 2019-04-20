@@ -143,8 +143,7 @@ public class TypeManager
     @SuppressWarnings("recorded") // Won't actually be used in editor
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
-        @SuppressWarnings("identifier")
-        TypeId typeName = new TypeId(typeDeclContext.typeName().getText());
+        TypeId typeName = new TypeId(IdentifierUtility.fromParsed(typeDeclContext.typeName().ident()));
         ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeParams = Utility.<TagDeclParamContext, Pair<TypeVariableKind, @ExpressionIdentifier String>>mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
             return new Pair<TypeVariableKind, @ExpressionIdentifier String>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, IdentifierUtility.fromParsed(var.ident()));
         });
@@ -254,8 +253,7 @@ public class TypeManager
                 else
                     return Either.right(loadTypeUse(t.bracketedType()));
             });
-            @SuppressWarnings("identifier")
-            DataType taggedType = lookupType(new TypeId(type.applyRef().ident().getText()), typeParams);
+            DataType taggedType = lookupType(new TypeId(IdentifierUtility.fromParsed(type.applyRef().ident())), typeParams);
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.applyRef().ident().getText() + "\"");
             return taggedType;
@@ -270,8 +268,7 @@ public class TypeManager
         }
         else if (type.ident() != null && type.TYPEVAR() == null)
         {
-            @SuppressWarnings("identifier")
-            DataType taggedType = lookupType(new TypeId(type.ident().getText()), ImmutableList.of());
+            DataType taggedType = lookupType(new TypeId(IdentifierUtility.fromParsed(type.ident())), ImmutableList.of());
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.ident().getText() + "\"");
             return taggedType;

@@ -44,10 +44,10 @@ public class PickTablePane extends BorderPane
     private long lastEditTimeMillis = -1;
     private final Instruction instruction;
 
-    public PickTablePane(View view, ImmutableSet<Table> exclude, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
+    public PickTablePane(View view, ImmutableSet<Table> exclude, String initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
         this.setResultAndClose = setResultAndFinishEditing;
-        tableField.setText(initial.getRaw());
+        tableField.setText(initial);
         autoComplete = new AutoComplete<TableCompletion>(tableField,
             (s, p, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
             getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);

@@ -75,6 +75,7 @@ import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -441,14 +442,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
         })));
     }
 
-    private static Predicate<ColumnId> hasColumn(@Nullable Table srcTable)
+    private static Function<String, @Nullable ColumnId> hasColumn(@Nullable Table srcTable)
     {
         if (srcTable != null)
         {
             try
             {
                 RecordSet rs = srcTable.getData();
-                return rs.getColumnIds()::contains;
+                return s -> rs.getColumnIds().stream().filter(c -> c.getRaw().equals(s)).findFirst().orElse(null);
             }
             catch (InternalException | UserException e)
             {
@@ -456,7 +457,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     Log.log(e);
             }
         }
-        return c -> false;
+        return c -> null;
     }
 
     @Override

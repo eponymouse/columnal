@@ -25,6 +25,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.GraphUtility;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationSupplier;
@@ -94,7 +95,7 @@ public class TableManager
         // So GUID is very unlikely to be in use already, but no harm in checking:
         do
         {
-            id = new TableId("T" + RANDOM.nextInt(1_000_000));
+            id = new TableId(IdentifierUtility.identNum("T", RANDOM.nextInt(1_000_000)));
         }
         while (usedIds.containsKey(id));
         // Reserve the spot for now:

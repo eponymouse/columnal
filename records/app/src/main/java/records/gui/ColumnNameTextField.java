@@ -16,6 +16,7 @@ import utility.gui.TranslationUtility;
 public class ColumnNameTextField extends ErrorableTextField<ColumnId>
 {
     @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("identifier")
     public ColumnNameTextField(@Nullable ColumnId initial)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.

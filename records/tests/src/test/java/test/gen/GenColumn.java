@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExBiFunction;
+import utility.IdentifierUtility;
 import utility.Utility;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         @Override
         public ColumnId get()
         {
-            return new ColumnId("GenCol" + (nextId++));
+            return new ColumnId(IdentifierUtility.identNum("GenCol", (nextId++)));
         }
     };
     private final List<DataType> distinctTypes;

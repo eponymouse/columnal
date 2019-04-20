@@ -1,5 +1,6 @@
 package test;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.embed.swing.JFXPanel;
@@ -47,7 +48,7 @@ public class TestFormat
     private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), LocalTime::from);
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
-    private static ColumnInfo col(ColumnType type, String name)
+    private static ColumnInfo col(ColumnType type, @ExpressionIdentifier String name)
     {
         return new ColumnInfo(type, new ColumnId(name));
     }

@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -46,6 +47,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
@@ -82,7 +84,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
         dataWithColumns = d;
 
-        sortList = new SortList(originalSortBy == null ? ImmutableList.of() : originalSortBy);
+        sortList = new SortList(originalSortBy == null ? ImmutableList.of() : Utility.mapListI(originalSortBy, p -> p.mapFirst(c -> c.getRaw())));
         sortList.getNode().setMinWidth(250.0);
         sortList.getNode().setMinHeight(150.0);
         sortList.getNode().setPrefWidth(300.0);
@@ -95,12 +97,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             FXUtility.getStylesheet("dialogs.css")
         );
         getDialogPane().getStyleClass().add("sort-list-dialog");
-        setResultConverter(bt -> {
-            if (bt == ButtonType.OK)
-                return sortList.getItems();
-            else
-                return null;
-        });
         setOnShowing(e -> {
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
             parent.enableColumnPickingMode(lastScreenPos, p -> Objects.equals(srcTable, p.getFirst()) || Objects.equals(destTable, p.getFirst()),t -> {
@@ -114,16 +110,16 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         if (originalSortBy == null)
         {
             // runAfter to avoid focus stealing:
-            FXUtility.runAfter(() -> sortList.addToEnd(new Pair<>(new ColumnId(""), Direction.ASCENDING), true));
+            FXUtility.runAfter(() -> sortList.addToEnd(new Pair<>("", Direction.ASCENDING), true));
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    private class SortList extends FancyList<Pair<ColumnId, Direction>, SortPane>
+    private class SortList extends FancyList<Pair<String, Direction>, SortPane>
     {
-        public SortList(ImmutableList<Pair<ColumnId, Direction>> initialItems)
+        public SortList(ImmutableList<Pair<String, Direction>> initialItems)
         {
-            super(initialItems, true, true, () -> new Pair<>(new ColumnId(""), Direction.ASCENDING));
+            super(initialItems, true, true, () -> new Pair<>("", Direction.ASCENDING));
             getStyleClass().add("sort-list");
             listenForCellChange(c -> {
                 updateButtonWidths();
@@ -133,7 +129,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
 
         @Override
-        protected Pair<SortPane, FXPlatformSupplier<Pair<ColumnId, Direction>>> makeCellContent(@Nullable Pair<ColumnId, Direction> initialContent, boolean editImmediately)
+        protected Pair<SortPane, FXPlatformSupplier<Pair<String, Direction>>> makeCellContent(@Nullable Pair<String, Direction> initialContent, boolean editImmediately)
         {
             SortPane sortPane = new SortPane(initialContent);
             if (editImmediately)
@@ -161,7 +157,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             else
             {
                 // Add to end:
-                addToEnd(new Pair<>(t.getSecond(), Direction.ASCENDING), false);
+                addToEnd(new Pair<>(t.getSecond().getRaw(), Direction.ASCENDING), false);
             }
         }
 
@@ -188,9 +184,9 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         private final DirectionButton button;
         private long lastEditTimeMillis = -1;
 
-        public SortPane(@Nullable Pair<ColumnId, Direction> initialContent)
+        public SortPane(@Nullable Pair<String, Direction> initialContent)
         {
-            columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
+            columnField = new TextField(initialContent == null ? "" : initialContent.getFirst());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
                 (s, p, q) -> Utility.streamNullable(srcTable).flatMap(t -> {
@@ -216,7 +212,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             button = new DirectionButton();
             button.setDirection(initialContent == null ? Direction.ASCENDING : initialContent.getSecond());
             FXUtility.addChangeListenerPlatformNNAndCallNow(columnField.textProperty(), c -> {
-                button.setType(calculateTypeOf(new ColumnId(c)));
+                button.setType(calculateTypeOf(c));
             });
             setRight(button);
             BorderPane.setMargin(button, new Insets(0, 4, 0, 4));
@@ -280,9 +276,9 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             autoComplete.setContentDirect(columnId.getRaw(), true);
         }
 
-        public Pair<ColumnId, Direction> getCurrentValue()
+        public Pair<String, Direction> getCurrentValue()
         {
-            return new Pair<>(new ColumnId(columnField.getText()), button.direction);
+            return new Pair<>(columnField.getText(), button.direction);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -438,11 +434,14 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
     }
 
-    private @Nullable DataType calculateTypeOf(@Nullable ColumnId columnId)
+    private @Nullable DataType calculateTypeOf(@Nullable String columnId)
     {
         if (columnId == null || dataWithColumns == null)
             return null;
-        @Nullable Column c = dataWithColumns.getColumnOrNull(columnId);
+        @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(columnId);
+        if (s == null)
+            return null;
+        @Nullable Column c = dataWithColumns.getColumnOrNull(new ColumnId(s));
         if (c == null)
             return null;
         try

@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.NonNull;

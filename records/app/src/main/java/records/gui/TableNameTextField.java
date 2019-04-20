@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class TableNameTextField extends ErrorableTextField<TableId>
 {    
     @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("identifier")
     public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId, boolean blankAllowed, FXPlatformRunnable defocus)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.

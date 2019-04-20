@@ -36,6 +36,7 @@ import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Utility;
 
 public abstract class TypeExpression implements StyledShowable, Replaceable<TypeExpression>
@@ -303,8 +304,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 @Override
                 public TypeExpression visitApplyTypeExpression(ApplyTypeExpressionContext ctx)
                 {
-                    @SuppressWarnings("identifier")
-                    @ExpressionIdentifier String typeName = ctx.ident().getText();
+                    @ExpressionIdentifier String typeName = IdentifierUtility.fromParsed(ctx.ident());
 
                     ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(ctx.roundTypeExpression().size());
                     for (RoundTypeExpressionContext roundTypeExpressionContext : ctx.roundTypeExpression())

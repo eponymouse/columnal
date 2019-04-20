@@ -23,6 +23,7 @@ import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -694,7 +695,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
 
     private ExpressionMaker columnRef(DataType type) throws UserException, InternalException
     {
-        ColumnId name = new ColumnId("GEV Col " + columns.size());
+        ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
         return () ->
         {
             List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));

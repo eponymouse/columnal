@@ -82,7 +82,7 @@
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processorPath>

@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -24,6 +25,7 @@ import records.transformations.function.ToDate;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Utility;
 
 import java.nio.charset.Charset;
@@ -102,7 +104,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             // Don't let all be text/blank:
             if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 type = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, sourceOfRandomness.choose(dateFormats), LocalDate::from);
-            String title = hasTitle ? "GenCol" + i : "";
+            @ExpressionIdentifier String title = IdentifierUtility.identNum(hasTitle ? "GenCol" : "Unspec", i);
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
         // Don't pick a charset which can't represent the currency signs:

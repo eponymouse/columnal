@@ -31,9 +31,7 @@ import java.util.function.Consumer;
 public class TypeState
 {
     // In-built variables:
-    @SuppressWarnings("identifier")
     public static final @ExpressionIdentifier String GROUP_COUNT = "group count";
-    @SuppressWarnings("identifier")
     public static final @ExpressionIdentifier String ROW_NUMBER = "row number";
     
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards

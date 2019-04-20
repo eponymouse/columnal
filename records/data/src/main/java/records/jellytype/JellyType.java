@@ -29,6 +29,7 @@ import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Utility;
 
 import java.util.function.Consumer;
@@ -171,8 +172,7 @@ public abstract class JellyType
         }
         else if (ctx.applyRef() != null)
         {
-            @SuppressWarnings("identifier")
-            TypeId typeId = new TypeId(ctx.applyRef().ident().getText());
+            TypeId typeId = new TypeId(IdentifierUtility.fromParsed(ctx.applyRef().ident()));
             return new JellyTypeApply(typeId, Utility.mapListExI(ctx.applyRef().tagRefParam(), param -> load(param, mgr)));
         }
         else if (ctx.array() != null)
@@ -182,8 +182,7 @@ public abstract class JellyType
         else if (ctx.ident() != null)
         {
             // TODO is it right that @typevar comes to same place as plain ident?
-            @SuppressWarnings("identifier")
-            @ExpressionIdentifier String name = ctx.ident().getText();
+            @ExpressionIdentifier String name = IdentifierUtility.fromParsed(ctx.ident());
             return new JellyTypeIdent(name);
         }
         else if (ctx.functionType() != null)

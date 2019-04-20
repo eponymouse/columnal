@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import styled.StyledShowable;
@@ -13,9 +14,9 @@ import threadchecker.Tag;
 @OnThread(Tag.Any)
 public class TableId implements Comparable<TableId>, StyledShowable
 {
-    private final String tableId;
+    private final @ExpressionIdentifier String tableId;
 
-    public TableId(String tableId)
+    public TableId(@ExpressionIdentifier String tableId)
     {
         this.tableId = tableId;
     }
@@ -49,7 +50,7 @@ public class TableId implements Comparable<TableId>, StyledShowable
         return tableId;
     }
 
-    public String getRaw()
+    public @ExpressionIdentifier String getRaw()
     {
         return tableId;
     }

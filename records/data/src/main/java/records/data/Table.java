@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -24,6 +25,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -228,7 +230,10 @@ public abstract class Table
                 initialShowColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
             else
             {
-                ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
+                ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> {
+                    @ExpressionIdentifier String text = IdentifierUtility.fixExpressionIdentifier(itemContext.getText(), "Could Not Load");
+                    return new ColumnId(text);
+                }).collect(ImmutableList.<ColumnId>toImmutableList());
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
@@ -359,11 +364,11 @@ public abstract class Table
         try
         {
             @MonotonicNonNull ColumnId name = null;
-            String stem = "C";
+            @ExpressionIdentifier String stem = "C";
             List<ColumnId> columnIds = getData().getColumnIds();
             for (int i = 1; i < 100000; i++)
             {
-                name = new ColumnId(stem + i);
+                name = new ColumnId(IdentifierUtility.identNum(stem, i));
                 if (!columnIds.contains(name))
                     break;
             }

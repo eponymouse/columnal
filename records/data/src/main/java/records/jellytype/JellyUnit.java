@@ -25,6 +25,7 @@ import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import utility.ComparableEither;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Utility;
 
 import java.util.Map.Entry;
@@ -227,8 +228,7 @@ public class JellyUnit
     private static JellyUnit load(SingleUnitContext ctx, UnitManager mgr) throws InternalException
     {
         JellyUnit u = new JellyUnit();
-        @SuppressWarnings("identifier")
-        @UnitIdentifier String unitName = ctx.IDENT().getText();
+        @UnitIdentifier String unitName = IdentifierUtility.fromParsed(ctx);
         if (ctx.UNITVAR() != null)
         {
             u.units.put(ComparableEither.left(unitName), 1);

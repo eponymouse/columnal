@@ -25,7 +25,7 @@ public class PickTableDialog extends LightDialog<Table>
 
         // Should also exclude tables which use destination as a source, to prevent cycles:
         ImmutableSet<Table> excludeTables = destTable == null ? ImmutableSet.of() : ImmutableSet.of(destTable);
-        PickTablePane pickTablePane = new PickTablePane(view, excludeTables, new TableId(""), t -> {
+        PickTablePane pickTablePane = new PickTablePane(view, excludeTables, "", t -> {
             setResult(t);
             close();
         });

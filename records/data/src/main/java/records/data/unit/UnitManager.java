@@ -75,10 +75,8 @@ public class UnitManager
                 else if (decl.aliasDeclaration() != null)
                 {
                     AliasDeclarationContext aliasDeclaration = decl.aliasDeclaration();
-                    @SuppressWarnings("identifier")
-                    @UnitIdentifier String newName = aliasDeclaration.singleUnit(0).IDENT().getText();
-                    @SuppressWarnings("identifier")
-                    @UnitIdentifier String origName = aliasDeclaration.singleUnit(1).IDENT().getText();
+                    @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
+                    @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                     knownUnits.put(newName, Either.left(origName));
                     this.builtInUnits.put(newName, Either.left(origName));
                 }
@@ -204,8 +202,7 @@ public class UnitManager
             }
             else
             {
-                @SuppressWarnings("identifier")
-                @UnitIdentifier String unitName = singleOrScaleContext.singleUnit().getText();
+                @UnitIdentifier String unitName = IdentifierUtility.fromParsed(singleOrScaleContext.singleUnit());
                 @Nullable UnitDeclaration lookedUp = getKnownUnit(unitName);
                 if (lookedUp == null)
                     throw new UserException("Unknown unit: \"" + unitName + "\"");
@@ -321,10 +318,8 @@ public class UnitManager
             else if (decl.aliasDeclaration() != null)
             {
                 AliasDeclarationContext aliasDeclaration = decl.aliasDeclaration();
-                @SuppressWarnings("identifier")
-                @UnitIdentifier String newName = aliasDeclaration.singleUnit(0).IDENT().getText();
-                @SuppressWarnings("identifier")
-                @UnitIdentifier String origName = aliasDeclaration.singleUnit(1).IDENT().getText();
+                @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
+                @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                 knownUnits.putIfAbsent(newName, Either.left(origName));
                 this.userUnits.putIfAbsent(newName, Either.left(origName));
             }

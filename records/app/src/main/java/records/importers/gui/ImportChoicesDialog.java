@@ -64,6 +64,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
@@ -220,7 +221,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         setResultConverter(bt -> {
             if (bt == ButtonType.OK && destFormat != null)
             {
-                return new ImportInfo<>(suggestedName/*, linkCopyButtons.valueProperty().get()*/, destFormat);
+                @NonNull FORMAT f = destFormat;
+                return new ImportInfo<FORMAT>(IdentifierUtility.fixExpressionIdentifier(suggestedName, "Table")/*, linkCopyButtons.valueProperty().get()*/, f);
             }
             return null;
         });
@@ -341,7 +343,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         @OnThread(Tag.FXPlatform)
         public RecordSetDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, boolean showColumnTypes, ObjectExpression<@Nullable RecordSet> recordSetProperty)
         {
-            super(new TableId(suggestedName), destColumnHeaderSupplier, true, showColumnTypes);
+            super(new TableId(IdentifierUtility.fixExpressionIdentifier(suggestedName, "Table")), destColumnHeaderSupplier, true, showColumnTypes);
             setPosition(CellPosition.ORIGIN);
             this.recordSetProperty = recordSetProperty;
         }
