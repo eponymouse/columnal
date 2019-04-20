@@ -11,8 +11,9 @@ import utility.FXPlatformConsumer;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCompletionContext>
 {
-    public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, boolean requireConcreteType, FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
+    public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, boolean requireConcreteType, boolean emptyAllowed,
+FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
     {
-        super(originalContent == null ? null : originalContent.save(false, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType), onChange, "type-editor");
+        super(originalContent == null ? null : originalContent.save(false, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), onChange, "type-editor");
     }
 }

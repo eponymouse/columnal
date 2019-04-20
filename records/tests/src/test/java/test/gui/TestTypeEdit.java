@@ -118,6 +118,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
                     enterNewInnerValueTag(r, typeManager, tagType);
                 }
 
+                assertNoErrors();
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 push(KeyCode.END);
@@ -126,6 +127,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             else
             {
                 // Select and move to alias field:
+                assertNoErrors();
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 selectAllCurrentTextField();
@@ -139,6 +141,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             int alreadyEntered = 0;
             if (firstWithInner > 0 && r.nextInt(3) == 1)
             {
+                assertNoErrors();
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 selectAllCurrentTextField();
@@ -161,6 +164,12 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
                 enterNewInnerValueTag(r, typeManager, tagType);
             }
         }
+    }
+
+    @OnThread(Tag.Any)
+    private void assertNoErrors()
+    {
+        assertEquals(0, lookup(".error-underline").queryAll().size());
     }
 
     @OnThread(Tag.Any)

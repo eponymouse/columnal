@@ -96,12 +96,16 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     }
 
     private final TypeManager typeManager;
+    // Should we turn to DataType as part of save?
     private final boolean requireConcrete;
+    // Is it fine to be empty?  i.e. hide errors when empty
+    private final boolean emptyAllowed;
 
-    public TypeLexer(TypeManager typeManager, boolean requireConcrete)
+    public TypeLexer(TypeManager typeManager, boolean requireConcrete, boolean emptyAllowed)
     {
         this.typeManager = typeManager;
         this.requireConcrete = requireConcrete;
+        this.emptyAllowed = emptyAllowed;
     }
 
     @Override
@@ -332,6 +336,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 errors = Utility.appendToList(errors, new ErrorDetails(location, ((ExceptionWithStyle) e).getStyledMessage(),fixes));
             }
         }
+        
+        if (saved.isEmpty() && emptyAllowed)
+            errors = ImmutableList.of();
         
         return new LexerResult<>(saved, s.toString(), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
