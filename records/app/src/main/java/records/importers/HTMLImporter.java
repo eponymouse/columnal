@@ -100,6 +100,8 @@ public class HTMLImporter implements Importer
         
         return new Pair<>(doc, importTable);
     }
+    
+    private enum TableState { HEAD, BODY };
 
     @OnThread(Tag.FXPlatform)
     protected static void importTable(@Nullable Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex)
@@ -115,10 +117,22 @@ public class HTMLImporter implements Importer
         final @GridAreaRowIndex int ROW = 1;
         @SuppressWarnings("units")
         final @GridAreaColIndex int COL = 1;
-
+        
+        ArrayList<ColumnId> columnNames = new ArrayList<>();
+        
+        
+        TableState tableState = null;
         for (Element tableBit : table.children())
         {
-            if (!tableBit.tagName().equals("tbody"))
+            if (tableBit.tagName().equals("thead"))
+            {
+                tableState = TableState.HEAD;
+            }
+            else if (tableBit.tagName().equals("tbody"))
+            {
+                tableState = TableState.BODY;
+            }
+            else
                 continue;
 
             Elements tableChildren = tableBit.children();
@@ -129,7 +143,8 @@ public class HTMLImporter implements Importer
                 if (!row.tagName().equals("tr"))
                     continue;
                 ArrayList<String> rowVals = new ArrayList<>();
-                vals.add(rowVals);
+                if (tableState == TableState.BODY)
+                    vals.add(rowVals);
                 Elements children = row.children();
                 @SuppressWarnings("units")
                 @GridAreaColIndex int columnIndex = 0;
@@ -200,8 +215,16 @@ public class HTMLImporter implements Importer
                         nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
                     }
                 }
-
-                rowIndex += 1 * ROW;
+                
+                if (tableState == TableState.BODY)
+                {
+                    rowIndex += 1 * ROW;
+                }
+                else
+                {
+                    columnNames.clear();
+                    columnNames.addAll(Utility.mapList(rowVals, s -> new ColumnId(s)));
+                }
             }
         }
 
@@ -212,7 +235,10 @@ public class HTMLImporter implements Importer
             @Override
             public ColumnId srcColumnName(int index)
             {
-                return new ColumnId("C" + (index + 1));
+                if (index < columnNames.size())
+                    return columnNames.get(index);
+                else
+                    return new ColumnId("C" + (index + 1));
             }
         };
 

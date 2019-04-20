@@ -131,9 +131,9 @@ public class GuessFormat
      * @param vals List of rows, where each row is list of values
      * @return
      */
-    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice) throws GuessException
+    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice, Function<Integer, ColumnId> getColumnName) throws GuessException
     {
-        return guessBodyFormat(mgr, trimChoice, vals);
+        return guessBodyFormat(mgr, trimChoice, vals, getColumnName);
     }
 
     public static class GuessException extends UserException
@@ -467,7 +467,7 @@ public class GuessFormat
                 
                 ImmutableList<ArrayList<String>> vals = loadValues(initial, initialTextFormat.separator, initialTextFormat.quote);
                 ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
-                ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, trimChoice, vals);
+                ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, trimChoice, vals, null);
                 Log.debug("Vals width " + vals.get(0).size() + " cols " + columnTypes.size() + " which are: " + Utility.listToString(columnTypes));
                 return new Pair<>(new FinalTextFormat(initialTextFormat, trimChoice, columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(vals), columnTypes));
             }
@@ -726,7 +726,7 @@ public class GuessFormat
     }
 
     // Note that the trim choice should not already have been applied.  But values should be rectangular
-    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
+    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed, @Nullable Function<Integer, ColumnId> getColumnName) throws GuessException
     {
         // true should be the first item in each sub-list:
         final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.<ImmutableList<String>>of(ImmutableList.<String>of("t", "f"), ImmutableList.<String>of("true", "false"), ImmutableList.<String>of("y", "n"), ImmutableList.<String>of("yes", "no"));
@@ -939,46 +939,53 @@ public class GuessFormat
         HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
         {
-            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex + trimChoice.trimFromLeft).trim();
-            StringBuilder stringBuilder = new StringBuilder();
-            int[] codepoints = original.codePoints().toArray();
-            boolean lastWasSpace = false;
-            final int SPACE_CODEPOINT = 32;
-            for (int i = 0; i < codepoints.length; i++)
+            ColumnId columnName;
+            if (getColumnName != null)
             {
-                int codepoint = codepoints[i];
-                if (!ColumnId.validCharacter(codepoint, i == 0))
+                columnName = getColumnName.apply(columnIndex);
+            }
+            else
+            {
+                String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex + trimChoice.trimFromLeft).trim();
+                StringBuilder stringBuilder = new StringBuilder();
+                int[] codepoints = original.codePoints().toArray();
+                boolean lastWasSpace = false;
+                final int SPACE_CODEPOINT = 32;
+                for (int i = 0; i < codepoints.length; i++)
                 {
-                    // Can we make it valid with a prefix?
-                    if (i == 0 && ColumnId.validCharacter(codepoint, false))
+                    int codepoint = codepoints[i];
+                    if (!ColumnId.validCharacter(codepoint, i == 0))
                     {
-                        stringBuilder.append('C').append(new String(codepoints, i, 1));
+                        // Can we make it valid with a prefix?
+                        if (i == 0 && ColumnId.validCharacter(codepoint, false))
+                        {
+                            stringBuilder.append('C').append(new String(codepoints, i, 1));
+                        }
+                        // Otherwise invalid, so drop it.
                     }
-                    // Otherwise invalid, so drop it.
+                    else if (!lastWasSpace || codepoint != SPACE_CODEPOINT)
+                    {
+                        lastWasSpace = codepoint == SPACE_CODEPOINT;
+                        stringBuilder.append(new String(codepoints, i, 1));
+                    }
                 }
-                else if (!lastWasSpace || codepoint != SPACE_CODEPOINT)
+                String validated = stringBuilder.toString().trim();
+                String prospectiveName = validated;
+                if (validated.isEmpty())
                 {
-                    lastWasSpace = codepoint == SPACE_CODEPOINT;
-                    stringBuilder.append(new String(codepoints, i, 1));
+                    validated = "C";
+                    prospectiveName = "C1";
                 }
+                // Now check if it is taken:
+    
+                int appendNum = 1;
+                while (usedNames.contains(new ColumnId(prospectiveName)))
+                {
+                    prospectiveName = validated + appendNum;
+                    appendNum += 1;
+                }
+                columnName = new ColumnId(prospectiveName);
             }
-            String validated = stringBuilder.toString().trim();
-            String prospectiveName = validated;
-            if (validated.isEmpty())
-            {
-                validated = "C";
-                prospectiveName = "C1";
-            }
-            // Now check if it is taken:
-            
-            int appendNum = 1;
-            while (usedNames.contains(new ColumnId(prospectiveName)))
-            {
-                prospectiveName = validated + appendNum;
-                appendNum += 1;
-            }
-            ColumnId columnName = new ColumnId(prospectiveName);
-            
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), columnName));
             usedNames.add(columnName);
         }
