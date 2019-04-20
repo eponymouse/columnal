@@ -783,12 +783,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             new Pair<>("dateym{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTH, c.innerContent))),
             new Pair<>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
             new Pair<>("type{", c -> {
-                TypeLexer typeLexer = new TypeLexer(typeManager, false);
+                TypeLexer typeLexer = new TypeLexer(typeManager, true);
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             }),
             new Pair<>("{", c -> {
-                UnitLexer unitLexer = new UnitLexer();
+                UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), true);
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             })

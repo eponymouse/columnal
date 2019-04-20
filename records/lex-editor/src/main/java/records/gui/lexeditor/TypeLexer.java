@@ -164,7 +164,8 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 @RawInputLocation int end = content.indexOf('}', curIndex + 1);
                 if (end != -1)
                 {
-                    UnitLexer unitLexer = new UnitLexer();
+                    // We don't require concrete as we do that bit so don't want do it twice:
+                    UnitLexer unitLexer = new UnitLexer( typeManager.getUnitManager(), false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE), c -> {});
                     s.append("{");
@@ -185,7 +186,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 else
                 {
                     saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content.substring(curIndex)), StyledString.s("Missing closing }"), ImmutableList.of());
-                    UnitLexer unitLexer = new UnitLexer();
+                    UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});

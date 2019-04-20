@@ -141,7 +141,19 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnitLiteralFix6D()
     {
-            testFix("@matchACC1@case12{1}@orcase14{1}@then63@endmatch", "14", "", "@match @column ACC1 @case 12{1} @orcase 14{m/s^2} @then 63 @endmatch");
+        testFix("@matchACC1@case12{1}@orcase14{1}@then63@endmatch", "14", "", "@match @column ACC1 @case 12{1} @orcase 14{m/s^2} @then 63 @endmatch");
+    }
+
+    @Test
+    public void testUnitLiteralFix7() throws UserException, InternalException
+    {
+        testFix("12{metre/s}", "metre", dotCssClassFor("m"), "12{m/s}");
+    }
+
+    @Test
+    public void testUnitLiteralFix8() throws UserException, InternalException
+    {
+        testFix("type{Number{metre/s}}", "metre", dotCssClassFor("m"), "type{Number{m/s}}");
     }
 
     @Test
@@ -392,7 +404,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches, among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
+            assertEquals("Looking for row that matches" + fixId + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TestUtil.fx(() -> n.getStyleClass()).stream().collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
                 1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:

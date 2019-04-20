@@ -2,9 +2,12 @@ package records.gui.lexeditor;
 
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.UnitManager;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.InvalidSingleUnitExpression;
@@ -62,7 +65,16 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             return bracket;
         }
     }
-    
+
+    private final UnitManager unitManager;
+    private final boolean requireConcrete;
+
+    public UnitLexer(UnitManager unitManager, boolean requireConcrete)
+    {
+        this.unitManager = unitManager;
+        this.requireConcrete = requireConcrete;
+    }
+
     @Override
     public LexerResult<UnitExpression, CodeCompletionContext> process(String content, int curCaretPos)
     {
@@ -122,6 +134,18 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         @SuppressWarnings("units")
         ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+        
+        if (requireConcrete)
+        {
+            @RawInputLocation int lastIndex = curIndex;
+            saved.asUnit(unitManager).either_(err -> {
+                if (err.getFirst() != null || !err.getSecond().isEmpty())
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), err.getFirst() == null ? StyledString.s("") : err.getFirst(), Utility.mapListI(err.getSecond(), f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(false, true), f)));
+            }, jellyUnit -> {
+            });
+        }
+        
+        
         return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), saver.locationRecorder, ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
     }
 }
