@@ -105,7 +105,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
 
         for (Expression item : items)
         {
-            r.append(item.toStyledString());
+            r.append(item.toDisplay(BracketedStatus.MISC, expressionStyler));
         }
         
         class ErrorStyle extends Style<ErrorStyle>
