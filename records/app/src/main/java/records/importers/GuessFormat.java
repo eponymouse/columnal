@@ -486,7 +486,7 @@ public class GuessFormat
     
     private static enum AlphabetItem
     {
-        NUMERIC, PUNCTUATION, BOOLEAN, OTHER
+        NUMERIC, PUNCTUATION, BOOLEAN, LETTER
     }
 
     // vals must be rectangular
@@ -515,7 +515,14 @@ public class GuessFormat
                 for (int i = 0; i < numColumns; i++)
                 {
                     EnumSet<AlphabetItem> alphabet = calculateAlphabet(rowVals.get(i));
-                    alphabetsChanged += columnAlphabets.get(i).addAll(alphabet) && alphabet.contains(AlphabetItem.OTHER) ? 1 : 0;
+                    boolean changed = false;
+                    for (AlphabetItem alphabetItem : alphabet)
+                    {
+                        if (columnAlphabets.get(i).add(alphabetItem) && (alphabetItem != AlphabetItem.PUNCTUATION || !columnAlphabets.get(i).contains(AlphabetItem.LETTER)))
+                            changed = true;
+                    }
+                    if (changed)
+                        alphabetsChanged += 1;
                 }
                 if (alphabetsChanged > numColumns / 4)
                 {
@@ -538,7 +545,7 @@ public class GuessFormat
     private static EnumSet<AlphabetItem> calculateAlphabet(String s)
     {
         // Replace numbers with zero:
-        s = s.replaceAll("[+-]?[0-9]+(\\.[0-9]+)?(e[+-]?[0-9]+)", "0");
+        s = s.replaceAll("[+-]?[0-9]+(,[0-9]+)*(\\.[0-9]+)?(e[+-]?[0-9]+)?", "0");
         switch (s.toLowerCase())
         {
             case "t": case "f": case "true": case "false": case "yes": case "no": case "y": case "n":
@@ -552,7 +559,7 @@ public class GuessFormat
             }
             else if (Character.isLetter(n))
             {
-                r.add(AlphabetItem.OTHER);
+                r.add(AlphabetItem.LETTER);
             }
             else if (!Character.isWhitespace(n))
             {
