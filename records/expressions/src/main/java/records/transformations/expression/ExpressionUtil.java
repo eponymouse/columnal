@@ -46,6 +46,7 @@ import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -129,21 +130,24 @@ public class ExpressionUtil
             {
                 NumericLiteral n = (NumericLiteral) expression;
                 @Nullable @Recorded UnitExpression unitExpression = n.getUnitExpression();
-                @Nullable Unit unit;
+                @Nullable Unit unit = null;
                 if (unitExpression == null)
                     unit = Unit.SCALAR;
                 else
-                    unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> {
-                        try
-                        {
-                            return u.makeUnit(ImmutableMap.of());
-                        }
-                        catch (InternalException e)
-                        {
-                            Log.log(e);
-                            return null;
-                        }
-                    });
+                {
+                    try
+                    {
+                        unit = unitExpression.asUnit(state.getUnitManager()).makeUnit(ImmutableMap.of());
+                    }
+                    catch (InternalException e)
+                    {
+                        Log.log(e);
+                    }
+                    catch (UnitLookupException e)
+                    {
+                        
+                    }
+                }
                 literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
             }
             else

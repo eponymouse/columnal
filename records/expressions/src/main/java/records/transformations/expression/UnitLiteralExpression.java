@@ -9,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -38,13 +39,17 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
-        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
-        return saved.<@Nullable CheckedExp>eitherInt(error -> {
-            if (error.getFirst() != null)
-                onError.recordError(this, error.getFirst());
+        try
+        {
+            JellyUnit saved = unitExpression.asUnit(typeState.getUnitManager());
+            return onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, saved.makeUnitExp(ImmutableMap.of()))), ExpressionKind.EXPRESSION, typeState);
+        }
+        catch (UnitLookupException e)
+        {
+            if (e.errorMessage != null)
+                onError.recordError(this, e.errorMessage);
             return null;
-            }, unit -> 
-            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit.makeUnitExp(ImmutableMap.of()))), ExpressionKind.EXPRESSION, typeState));
+        }
     }
 
     @Override

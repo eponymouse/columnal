@@ -25,9 +25,9 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
+    public JellyUnit asUnit(@Recorded InvalidSingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
-        return Either.left(new Pair<>(StyledString.s("Invalid unit name"), ImmutableList.of()));
+        throw new UnitLookupException(StyledString.s("Invalid unit name"), this, ImmutableList.of());
     }
 
     @Override

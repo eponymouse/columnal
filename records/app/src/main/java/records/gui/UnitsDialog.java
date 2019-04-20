@@ -35,6 +35,7 @@ import records.gui.lexeditor.UnitEditor;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.function.FunctionList;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -301,28 +302,31 @@ public class UnitsDialog extends Dialog<Void>
                     return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
                 }
 
-                Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
-                @NonNull @UnitIdentifier String nameFinal = name;
-                return unitExpOrError.<Either<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>>either(err -> {
-                    return Either.left(err.getFirst() == null ? TranslationUtility.getString("invalid.unit") : err.getFirst().toPlain());
-                }, jellyUnit -> {
-                    @Nullable Unit concreteUnit = null;
-                    try
-                    {
-                        concreteUnit = jellyUnit.makeUnit(ImmutableMap.of());
-                    }
-                    catch (InternalException e)
-                    {
-                        Log.log(e);
-                        return Either.left(e.getLocalizedMessage());
-                    }
-                    if (concreteUnit == null)
-                        return Either.left(TranslationUtility.getString("invalid.unit.contains.vars"));
-                    
-                    @Nullable Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
+                JellyUnit jellyUnit;
+                try
+                {
+                    jellyUnit = definition.save().asUnit(unitManager);
+                }
+                catch (UnitLookupException e)
+                {
+                    return Either.left(e.errorMessage == null ? TranslationUtility.getString("invalid.unit") : e.errorMessage.toPlain());
+                }
+                @Nullable Unit concreteUnit = null;
+                try
+                {
+                    concreteUnit = jellyUnit.makeUnit(ImmutableMap.of());
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    return Either.left(e.getLocalizedMessage());
+                }
+                if (concreteUnit == null)
+                    return Either.left(TranslationUtility.getString("invalid.unit.contains.vars"));
+                
+                @Nullable Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
 
-                    return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>right(new Pair<>(nameFinal, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv))));
-                });
+                return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>right(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv))));
             }
         }
     }

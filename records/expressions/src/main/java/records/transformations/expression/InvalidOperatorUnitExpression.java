@@ -24,9 +24,9 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(@Recorded InvalidOperatorUnitExpression this, UnitManager unitManager)
+    public JellyUnit asUnit(@Recorded InvalidOperatorUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
-        return Either.left(new Pair<>(null, ImmutableList.of()));
+        throw new UnitLookupException(null, this, ImmutableList.of());
     }
 
     @Override

@@ -13,6 +13,7 @@ import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import styled.StyledCSS;
 import styled.StyledString;
@@ -138,11 +139,17 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         if (requireConcrete)
         {
             @RawInputLocation int lastIndex = curIndex;
-            saved.asUnit(unitManager).either_(err -> {
-                if (err.getFirst() != null || !err.getSecond().isEmpty())
-                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), err.getFirst() == null ? StyledString.s("") : err.getFirst(), Utility.mapListI(err.getSecond(), f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(false, true), f)));
-            }, jellyUnit -> {
-            });
+            try
+            {
+                saved.asUnit(unitManager);
+            }
+            catch (UnitLookupException e)
+            {
+                if (e.errorMessage != null || !e.quickFixes.isEmpty())
+                {
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), e.errorMessage == null ? StyledString.s("") : e.errorMessage, Utility.mapListI(e.quickFixes, f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(false, true), f)));
+                }
+            }
         }
         
         

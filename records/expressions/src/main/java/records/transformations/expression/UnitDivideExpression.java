@@ -23,12 +23,12 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
+    public JellyUnit asUnit(UnitManager unitManager) throws UnitLookupException
     {
-        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> num = numerator.asUnit(unitManager);
-        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> den = denominator.asUnit(unitManager);
+        JellyUnit num = numerator.asUnit(unitManager);
+        JellyUnit den = denominator.asUnit(unitManager);
 
-        return num.flatMap(n -> den.map(d -> n.divideBy(d)));
+        return num.divideBy(den);
     }
 
     @Override

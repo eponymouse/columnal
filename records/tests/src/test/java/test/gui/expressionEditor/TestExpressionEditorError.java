@@ -140,6 +140,36 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     }
 
     @Test
+    public void testUnknownUnit1()
+    {
+        testError("1{zzz}", e(2, 5, "unknown"));
+    }
+
+    @Test
+    public void testUnknownUnit2()
+    {
+        testError("1{(m/zzz)}", e(5, 8, "unknown"));
+    }
+
+    @Test
+    public void testUnknownUnit3()
+    {
+        testError("type{Optional({zzz})}", e(15, 18, "unknown"));
+    }
+
+    @Test
+    public void testUnknownType1()
+    {
+        testError("type{zzz}", e(5, 8, "unknown"));
+    }
+
+    @Test
+    public void testUnknownType2()
+    {
+        testError("type{Optional(zzz)}", e(14, 17, "unknown"));
+    }
+
+    @Test
     public void testUnclosedUnitBracket()
     {
         testError("1{(}", e(3, 3, "missing", ")", "end"));

@@ -13,6 +13,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -58,17 +59,15 @@ public class NumericLiteral extends Literal
             return Either.right(new NumTypeExp(this, unit));
         }
 
-        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<@Nullable StyledString, TypeExp>mapBothInt((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> err) -> {
-            /*
-            onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
-                @SuppressWarnings("recorded")
-                NumericLiteral replacement = new NumericLiteral(value, u);
-                return new QuickFix<>("quick.fix.unit", CURRENT, replacement);
-            }));
-            */
-            return err.getFirst();
-        }, u -> new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of())));
+        try
+        {
+            JellyUnit u = unit.asUnit(state.getUnitManager());
+            return Either.right(new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of())));
+        }
+        catch (UnitLookupException e)
+        {
+            return Either.left(e.errorMessage);
+        }
     }
 
     @Override

@@ -153,9 +153,22 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
             return loadUnit(ctx.unit());
         }
     }
+    
+    public static class UnitLookupException extends Exception
+    {
+        public final @Nullable StyledString errorMessage;
+        public final @Recorded UnitExpression errorItem;
+        public final ImmutableList<QuickFix<@Recorded UnitExpression>> quickFixes;
 
-    // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit
-    public abstract Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(@Recorded UnitExpression this, UnitManager unitManager);
+        public UnitLookupException(@Nullable StyledString errorMessage, @Recorded UnitExpression errorItem, ImmutableList<QuickFix<@Recorded UnitExpression>> quickFixes)
+        {
+            this.errorMessage = errorMessage;
+            this.errorItem = errorItem;
+            this.quickFixes = quickFixes;
+        }
+    }
+
+    public abstract JellyUnit asUnit(@Recorded UnitExpression this, UnitManager unitManager) throws UnitLookupException;
     
     public abstract String save(boolean structured, boolean topLevel);
 

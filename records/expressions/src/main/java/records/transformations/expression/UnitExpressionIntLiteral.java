@@ -23,12 +23,12 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
+    public JellyUnit asUnit(@Recorded UnitExpressionIntLiteral this, UnitManager unitManager) throws UnitLookupException
     {
         if (number == 1)
-            return Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
+            return JellyUnit.fromConcrete(Unit.SCALAR);
         else
-            return Either.left(new Pair<>(StyledString.s("Expected unit not number"), ImmutableList.of()));
+            throw new UnitLookupException(StyledString.s("Expected unit not number"), this, ImmutableList.of());
     }
 
     @Override

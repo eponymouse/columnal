@@ -20,6 +20,7 @@ import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -89,17 +90,20 @@ public class TypeApplyExpression extends TypeExpression
         List<Either<Unit, DataType>> typeArgs = new ArrayList<>();
         for (Either<@Recorded UnitExpression, @Recorded TypeExpression> arg : arguments)
         {
-            @Nullable Either<Unit, DataType> type = Either.surfaceNull(arg.<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> {
-                try
-                {
-                    return u2.makeUnit(ImmutableMap.of());
-                }
-                catch (InternalException e)
-                {
-                    Log.log(e);
-                    return null;
-                }
-            }), t -> t.toDataType(typeManager)));
+            @Nullable Either<Unit, DataType> type = null;
+            try
+            {
+                type = Either.surfaceNull(arg.<@Nullable Unit, @Nullable DataType, InternalException, UnitLookupException>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).makeUnit(ImmutableMap.of()), t -> t.toDataType(typeManager)));
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+                return null;
+            }
+            catch (UnitLookupException e)
+            {
+                return null;
+            }
             if (type == null)
                 return null;
             typeArgs.add(type);
@@ -126,9 +130,17 @@ public class TypeApplyExpression extends TypeExpression
         {
             Either<@Recorded UnitExpression, @Recorded TypeExpression> arg = arguments.get(i);
             int iFinal = i;
-            args.add(arg.<JellyUnit, @Recorded JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).<JellyUnit, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
-                throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), u, p.getSecond());
-            }, ju -> ju), (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
+            args.add(arg.<JellyUnit, @Recorded JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> {
+                try
+                {
+                    return u.asUnit(typeManager.getUnitManager());
+                }
+                catch (UnitLookupException e)
+                {
+                    throw new UnJellyableTypeExpression(e.errorMessage == null ? StyledString.s("Invalid unit") : e.errorMessage, e.errorItem, e.quickFixes);
+                }
+            }, (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
+            
         }
         
         return jellyRecorder.record(JellyType.tagged(new TypeId(typeName), args.build()), this);

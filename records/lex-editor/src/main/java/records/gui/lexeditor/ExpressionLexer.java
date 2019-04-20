@@ -788,7 +788,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             }),
             new Pair<>("{", c -> {
-                UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), true);
+                UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
             })

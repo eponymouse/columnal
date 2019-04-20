@@ -23,11 +23,11 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(UnitManager unitManager)
+    public JellyUnit asUnit(UnitManager unitManager) throws UnitLookupException
     {
-        Either<Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> lhs = unit.asUnit(unitManager);
+        JellyUnit lhs = unit.asUnit(unitManager);
 
-        return lhs.map(u -> u.raiseBy(power));
+        return lhs.raiseBy(power);
     }
 
     @Override

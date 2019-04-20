@@ -28,16 +28,16 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>>, JellyUnit> asUnit(@Recorded SingleUnitExpression this, UnitManager unitManager)
+    public JellyUnit asUnit(@Recorded SingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
         try
         {
-            return Either.right(JellyUnit.fromConcrete(unitManager.loadUse(name)));
+            return JellyUnit.fromConcrete(unitManager.loadUse(name));
         }
         catch (InternalException | UserException e)
         {
             ImmutableList<QuickFix<@Recorded UnitExpression>> possibles = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription())).<QuickFix<@Recorded UnitExpression>>map(su -> new QuickFix<@Recorded UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName()))).collect(ImmutableList.<QuickFix<@Recorded UnitExpression>>toImmutableList());
-            return Either.left(new Pair<>(StyledString.s(e.getLocalizedMessage()), possibles));
+            throw new UnitLookupException(StyledString.s(e.getLocalizedMessage()), this, possibles);
         }
     }
 

@@ -34,6 +34,7 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.Replaceable;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
+import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
@@ -197,7 +198,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             this.fixes = ImmutableList.of();
         }
 
-        public UnJellyableTypeExpression(String message, @Recorded UnitExpression source, ImmutableList<QuickFix<@Recorded UnitExpression>> fixes)
+        public UnJellyableTypeExpression(StyledString message, @Recorded UnitExpression source, ImmutableList<QuickFix<@Recorded UnitExpression>> fixes)
         {
             super(message);
             this.source = Either.left(source);

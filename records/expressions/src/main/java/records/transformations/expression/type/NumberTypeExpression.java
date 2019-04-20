@@ -3,6 +3,7 @@ package records.transformations.expression.type;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -16,6 +17,7 @@ import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpression.UnitLookupException;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
@@ -44,17 +46,19 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
-        return unitExpression == null ? DataType.NUMBER : unitExpression.asUnit(typeManager.getUnitManager())
-            .<@Nullable DataType>either(err -> null, jellyUnit -> {
-                try
-                {
-                    return DataType.number(new NumberInfo(jellyUnit.makeUnit(ImmutableMap.of())));
-                }
-                catch (InternalException e)
-                {
-                    return null;
-                }
-            });
+        try
+        {
+            return unitExpression == null ? DataType.NUMBER : DataType.number(new NumberInfo(unitExpression.asUnit(typeManager.getUnitManager()).makeUnit(ImmutableMap.of())));
+        }
+        catch (UnitLookupException e)
+        {
+            return null;
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            return null;
+        }
     }
 
     @Override
@@ -63,11 +67,14 @@ public class NumberTypeExpression extends TypeExpression
         if (unitExpression == null)
             return jellyRecorder.record(JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR)), this);
 
-        @NonNull @Recorded UnitExpression unitExpressionFinal = unitExpression;
-        return jellyRecorder.record(unitExpression.asUnit(typeManager.getUnitManager())
-            .<JellyType, InternalException, UnJellyableTypeExpression>eitherEx2((Pair<@Nullable StyledString, ImmutableList<QuickFix<@Recorded UnitExpression>>> p) -> {
-            throw new UnJellyableTypeExpression(p.getFirst() == null ? "Invalid unit" : p.getFirst().toPlain(), unitExpressionFinal, p.getSecond());
-        }, JellyType::number), this);
+        try
+        {
+            return jellyRecorder.record(JellyType.number(unitExpression.asUnit(typeManager.getUnitManager())), this);
+        }
+        catch (UnitLookupException e)
+        {
+            throw new UnJellyableTypeExpression(e.errorMessage == null ? StyledString.s("Invalid unit") : e.errorMessage, e.errorItem, e.quickFixes);
+        }
     }
 
     @Override
