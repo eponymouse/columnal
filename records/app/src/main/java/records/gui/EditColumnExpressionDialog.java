@@ -45,6 +45,7 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
+import utility.gui.TimedFocusable;
 
 import java.util.List;
 import java.util.Optional;
@@ -103,11 +104,12 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
             public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
             {
                 parent.enableColumnPickingMode(screenPos, tc -> {
-                    if (FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor.isFocused())
+                    @Nullable TimedFocusable item = TimedFocusable.getRecentlyFocused(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField);
+                    if (expressionEditor == item)
                     {
                         return expEdIncludeColumn.test(tc);
                     }
-                    else if (nameField.isFocused())
+                    else if (nameField == item)
                     {
                         try
                         {
@@ -123,11 +125,12 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                         return false;
                     }
                 }, tc -> {
-                    if (FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor.isFocused())
+                    @Nullable TimedFocusable item = TimedFocusable.getRecentlyFocused(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField);
+                    if (item == expressionEditor)
                     {
                         expEdOnPick.consume(tc);
                     }
-                    else if (nameField.isFocused())
+                    else if (item == nameField)
                     {
                         nameField.setText(tc.getSecond().getRaw());
                     }

@@ -36,6 +36,7 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.TimedFocusable;
 import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
@@ -53,12 +54,13 @@ import java.util.stream.Stream;
  * - Ability to display an error/warning (either because of conversion failure, or any other reason)
  */
 @OnThread(Tag.FXPlatform)
-public class ErrorableTextField<T>
+public class ErrorableTextField<T> implements TimedFocusable
 {
     private final TextField field = new TextField();
     private final ObjectProperty<ConversionResult<T>> converted;
     private final ObjectProperty<@Nullable T> value;
     private final PopOver popOver = new PopOver();
+    private long lastFocusLeft;
     
     // Default is to suppress errors if blank and never been unfocused.
     private boolean suppressingErrors = true;
@@ -99,9 +101,18 @@ public class ErrorableTextField<T>
         FXUtility.addChangeListenerPlatformNN(field.focusedProperty(), focused -> {
             // Once unfocused, stop suppressing errors;
             if (!focused)
+            {
                 suppressingErrors = false;
+                lastFocusLeft = System.currentTimeMillis();
+            }
             updateState();
         });
+    }
+
+    @Override
+    public long lastFocusedTime()
+    {
+        return isFocused() ? System.currentTimeMillis() : lastFocusLeft;
     }
 
     private void updateState(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)

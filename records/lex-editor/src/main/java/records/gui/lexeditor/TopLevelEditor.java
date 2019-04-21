@@ -36,6 +36,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
+import utility.gui.TimedFocusable;
 
 import java.util.ArrayList;
 import java.util.function.Function;
@@ -51,7 +52,7 @@ import java.util.function.Function;
  * @param <EXPRESSION>
  * @param <LEXER>
  */
-public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT>, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT>, CODE_COMPLETION_CONTEXT extends CodeCompletionContext> implements TimedFocusable
 {
     protected final EditorContent<EXPRESSION, CODE_COMPLETION_CONTEXT> content;
     protected final EditorDisplay display;
@@ -158,6 +159,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     public void showAllErrors(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         display.showAllErrors();
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public long lastFocusedTime()
+    {
+        return display.lastFocusedTime();
     }
 
     private Function<@NonNull TextQuickFix, @NonNull FixInfo> makeFixInfo()

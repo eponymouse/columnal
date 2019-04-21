@@ -34,14 +34,16 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TextEditorBase;
+import utility.gui.TimedFocusable;
 
 import java.util.BitSet;
 import java.util.OptionalInt;
 
 @OnThread(Tag.FXPlatform)
-public final class EditorDisplay extends TextEditorBase
+public final class EditorDisplay extends TextEditorBase implements TimedFocusable
 {
     private boolean hasBeenFocused = false;
+    private long lastFocusLeft;
 
     @OnThread(Tag.FXPlatform)
     public static class TokenBackground extends Style<TokenBackground>
@@ -92,7 +94,10 @@ public final class EditorDisplay extends TextEditorBase
         
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (!focused)
+            {
                 showCompletions(null);
+                lastFocusLeft = System.currentTimeMillis();
+            }
             focusChanged(focused);
         });
         
@@ -271,6 +276,13 @@ public final class EditorDisplay extends TextEditorBase
         content.addChangeListener(() -> render(true));
         content.addCaretPositionListener(c -> render(false));
         render(true);
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public long lastFocusedTime()
+    {
+        return isFocused() ? System.currentTimeMillis() : lastFocusLeft;
     }
 
     public void markAsPreviouslyFocused()
