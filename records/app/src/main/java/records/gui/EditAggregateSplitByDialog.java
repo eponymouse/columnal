@@ -85,8 +85,6 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
             wholeTableLabel.setVisible(empty);
         });
         getDialogPane().setContent(new BorderPane(new StackPane(splitList.getNode(), wholeTableLabel), label, null, null, null));
-        getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")

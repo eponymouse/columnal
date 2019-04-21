@@ -20,6 +20,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,9 +52,11 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
+import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
+import utility.gui.TranslationUtility;
 
 import java.util.Objects;
 import java.util.OptionalInt;
@@ -61,7 +64,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
-public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Direction>>>
+public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<ColumnId, Direction>>>
 {
     private final @Nullable Table srcTable;
     private final @Nullable RecordSet dataWithColumns;
@@ -69,7 +72,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
     public EditSortDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, @Nullable ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
-        super(parent);
+        super(parent, true);
         setResizable(true);
         initModality(Modality.NONE);
         this.srcTable = srcTable;
@@ -90,8 +93,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         sortList.getNode().setPrefWidth(300.0);
         sortList.getNode().setPrefHeight(250.0);
         getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, null, null));
-        getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")
@@ -112,6 +113,18 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             // runAfter to avoid focus stealing:
             FXUtility.runAfter(() -> sortList.addToEnd(new Pair<>("", Direction.ASCENDING), true));
         }
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<Pair<ColumnId, Direction>>> calculateResult()
+    {
+        return Either.mapM(sortList.getItems(), item -> {
+            @ExpressionIdentifier String columnId = IdentifierUtility.asExpressionIdentifier(item.getFirst());
+            if (columnId == null)
+                return Either.<@Localized String, Pair<ColumnId, Direction>>left(TranslationUtility.getString("edit.column.invalid.column.name"));
+            else
+                return Either.<@Localized String, Pair<ColumnId, Direction>>right(item.<ColumnId>mapFirst(c -> new ColumnId(columnId)));
+        });
     }
 
     @OnThread(Tag.FXPlatform)
