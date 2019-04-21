@@ -11,6 +11,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Utility;
@@ -18,9 +19,54 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.IntStream;
 
 public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
+    @SuppressWarnings("units")
+    protected static ArrayList<CaretPos> calculateCaretPos(ArrayList<ContentChunk> chunks)
+    {
+        ArrayList<CaretPos> caretPos = new ArrayList<>();
+        @CanonicalLocation int internalLenSoFar = 0;
+        @DisplayLocation int displayLenSoFar = 0;
+        for (ContentChunk chunk : chunks)
+        {
+            for (CaretPos caretPosition : chunk.caretPositions)
+            {
+                addCaretPos(caretPos, new CaretPos(caretPosition.positionInternal + internalLenSoFar, caretPosition.positionDisplay + displayLenSoFar));
+            }
+            internalLenSoFar += chunk.internalContent.length();
+            displayLenSoFar += chunk.displayContent.getLength();
+        }
+        // Empty strings should still have a caret pos:
+        if (chunks.isEmpty())
+        {
+            chunks.add(new ContentChunk("", StyledString.s(" ")));
+            caretPos.add(new CaretPos(0, 0));
+        }
+        return caretPos;
+    }
+
+    private static void addCaretPos(ArrayList<CaretPos> caretPos, CaretPos newPos)
+    {
+        if (!caretPos.isEmpty())
+        {
+            CaretPos last = caretPos.get(caretPos.size() - 1);
+            if (newPos.positionInternal == last.positionInternal && newPos.positionDisplay == last.positionDisplay)
+            {
+                // Complete duplicate, ignore
+                return;
+            }
+            else if (newPos.positionInternal == last.positionInternal || newPos.positionDisplay == last.positionDisplay)
+            {
+                // Partial duplicate, so gives conflict.  Favour first by ignoring
+                return;
+            }
+        }
+        caretPos.add(newPos);
+    }
+
     static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
     {
         public static class CaretPos
@@ -224,5 +270,42 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             }
         }
         return display;
+    }
+
+    protected static class ContentChunk
+    {
+        protected final String internalContent;
+        // Positions are relative to this chunk:
+        protected final ImmutableList<CaretPos> caretPositions;
+        protected final StyledString displayContent;
+
+        public ContentChunk(String simpleContent, String... styleClasses)
+        {
+            this(simpleContent, StyledString.s(simpleContent).withStyle(new StyledCSS(styleClasses)));
+        }
+        
+        @SuppressWarnings("units")
+        public ContentChunk(String simpleContent, StyledString styledString)
+        {
+            internalContent = simpleContent;
+            displayContent = styledString;
+            caretPositions = IntStream.range(0, simpleContent.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+        }
+        
+        // Special keyword/operator that has no valid caret positions except at ends, and optionally pads with spaces
+        @SuppressWarnings("units")
+        public ContentChunk(boolean addLeadingSpace, ExpressionToken specialContent, boolean addTrailingSpace)
+        {
+            internalContent = specialContent.getContent();
+            displayContent = StyledString.concat(StyledString.s(addLeadingSpace ? " " : ""), specialContent.toStyledString(), StyledString.s(addTrailingSpace ? " " : ""));
+            caretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(specialContent.getContent().length(), displayContent.getLength()));
+        }
+
+        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions)
+        {
+            this.internalContent = internalContent;
+            this.caretPositions = caretPositions;
+            this.displayContent = displayContent;
+        }
     }
 }

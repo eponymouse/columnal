@@ -117,7 +117,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPos8()
     {
-        testCaretPositionsAndDisplay("from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 56)).toArray());
+        testCaretPositionsAndDisplay("from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 51 + TypeManager.MAYBE_NAME.length())).toArray());
     }
 
     @Test
