@@ -12,6 +12,7 @@ import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -32,6 +33,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
+import records.typeExp.TypeExp;
 import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -128,13 +130,15 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private final TypeManager typeManager;
     private ImmutableList<StandardFunctionDefinition> allFunctions;
     private final FXPlatformSupplierInt<TypeState> makeTypeState;
+    private final @Nullable DataType expectedType;
 
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions, FXPlatformSupplierInt<TypeState> makeTypeState)
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         this.columnLookup = columnLookup;
         this.typeManager = typeManager;
         this.allFunctions = functions;
         this.makeTypeState = makeTypeState;
+        this.expectedType = expectedType;
     }
 
     @Override
@@ -526,7 +530,18 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         @Recorded Expression saved = saver.finish(removedChars.map(curIndex, curIndex));
         try
         {
-            saved.checkExpression(columnLookup.get(), makeTypeState.get(), saver.locationRecorder.getRecorder());
+            TypeExp typeExp = saved.checkExpression(columnLookup.get(), makeTypeState.get(), saver.locationRecorder.getRecorder());
+            
+            if (typeExp != null)
+            {
+                // Must be concrete:
+                if (expectedType != null)
+                    TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType));
+                @RawInputLocation int lastIndex = curIndex;
+                typeExp.toConcreteType(typeManager, false).ifLeft(err -> {
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedChars.map(lastIndex)), err.getErrorText(), ImmutableList.of());
+                });
+            }
         }
         catch (InternalException | UserException e)
         {

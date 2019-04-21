@@ -56,13 +56,13 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testTypeError1()
     {
-        testError("2+true", e(0, 6, "type"));
+        testError("2+true", e(2, 6, "type"));
     }
 
     @Test
     public void testTypeError2()
     {
-        testError("[2,true]", e(0, 8, "list"));
+        testError("[2,true]", e(0, 8, "type"));
     }
 
     @Test
@@ -74,13 +74,13 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testFunctionError1()
     {
-        testError("element([1],false)", e(12, 17, "list"));
+        testError("element([1],false)", e(0, 18, "type"));
     }
 
     @Test
     public void testUnitError1()
     {
-        testError("2+3{m}", e(0, 6, "unit"));
+        testError("2{s}+3{m}", e(0, 9, "unit"));
     }
 
     @Test
@@ -98,12 +98,12 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testAmbiguousTypeError1c()
     {
-        testError("@iftrue@thenfrom text(\"\")@else[]@endif", e(0, 40, "type"));
+        testError("@iftrue@thenfrom text(\"\")@else[]@endif", e(0, 38, "type"));
     }
 
     @Test
     public void testAmbiguousTypeError2()
     {
-        testError("element([], 1)", e(0, 14, "type"));
+        testError("element([],1)", e(0, 13, "type"));
     }
 }

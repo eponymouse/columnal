@@ -96,7 +96,6 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
         }
         
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
-        ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
         // We let ExpressionEditor call these methods, and piggy-back on them:
         ColumnPicker columnPicker = new ColumnPicker()
         {
@@ -143,7 +142,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                 parent.disablePickingMode();
             }
         };
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {

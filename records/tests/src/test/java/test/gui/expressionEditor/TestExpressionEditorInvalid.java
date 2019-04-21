@@ -86,6 +86,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             {
                 return Stream.of();
             }
-        }), new ReadOnlyObjectWrapper<@Nullable DataType>(null), null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        }), null, null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }
