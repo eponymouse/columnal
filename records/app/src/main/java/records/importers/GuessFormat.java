@@ -505,7 +505,8 @@ public class GuessFormat
         ArrayList<EnumSet<AlphabetItem>> columnAlphabets = new ArrayList<>();
         
         int trimFromTop = 0;
-        for (int row = values.size() < 16 ? (values.size() / 2) : 8; row >= 0; row--)
+        int startingRow = values.size() < 16 ? (values.size() / 2) : 8;
+        for (int row = startingRow; row >= 0; row--)
         {
             List<String> rowVals = values.get(row);
             if (columnAlphabets.isEmpty())
@@ -521,13 +522,17 @@ public class GuessFormat
                     boolean changed = false;
                     for (AlphabetItem alphabetItem : alphabet)
                     {
-                        if (columnAlphabets.get(i).add(alphabetItem) && (alphabetItem != AlphabetItem.PUNCTUATION || !columnAlphabets.get(i).contains(AlphabetItem.LETTER)))
+                        boolean wasNumericOnly = !columnAlphabets.get(i).contains(AlphabetItem.LETTER) && !columnAlphabets.get(i).contains(AlphabetItem.BOOLEAN);
+                        boolean wasBooleanOnly = columnAlphabets.get(i).equals(EnumSet.of(AlphabetItem.BOOLEAN)) && startingRow - row > 1;
+                        // Alphabet changes are: adding non-numeric to numeric
+                        // or adding punctuation to non-letter
+                        if (columnAlphabets.get(i).add(alphabetItem) && (wasNumericOnly || wasBooleanOnly))
                             changed = true;
                     }
                     if (changed)
                         alphabetsChanged += 1;
                 }
-                if (alphabetsChanged > numColumns / 4)
+                if (alphabetsChanged >= (numColumns < 4 ? numColumns / 2 : numColumns / 4))
                 {
                     trimFromTop = row + 1;
                     break;
@@ -983,8 +988,10 @@ public class GuessFormat
     private static ColumnId findName(HashSet<ColumnId> usedNames, StringBuilder stringBuilder)
     {
         ColumnId columnName;
-        @ExpressionIdentifier String validated = IdentifierUtility.fixExpressionIdentifier(stringBuilder.toString().trim(), "C");
-        @ExpressionIdentifier String prospectiveName = validated;
+        String fromFile = stringBuilder.toString().trim();
+        @ExpressionIdentifier String validated = IdentifierUtility.fixExpressionIdentifier(fromFile, "C");
+        @ExpressionIdentifier String prospectiveName = 
+validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(validated, 1) : validated;
         // Now check if it is taken:
 
         int appendNum = 1;

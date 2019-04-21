@@ -68,13 +68,13 @@ public class TestFormat
             "A,B", "0,0", "1,1", "2,2");
         assertFormatCR(GenFormat.f(2, c(col(NUM, "A"), col(NUM, "B")), ",", "", UTF8),
             "# Some comment", "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(GenFormat.f(0, c(col(NUM, "C1"), col(NUM, "C2")), ",", "", UTF8),
+        assertFormatCR(GenFormat.f(0, c(col(NUM, "C 1"), col(NUM, "C 2")), ",", "", UTF8),
             "0,0", "1,1", "2,2");
 
-        assertFormatCR(GenFormat.f(1, c(col(TEXT, "A"), col(TEXT, "B")), ",", "", UTF8),
-            "A,B", "0,0", "3,5", "1,D", "C,2", "2,2", "E,F");
+        assertFormatCR(GenFormat.f(0, c(col(TEXT, "C 1"), col(TEXT, "C 2")), ",", "", UTF8),
+            "A,B", "0,0", "3,5", "1,D", "C,2", "2,2", "E,F", "G,H", "I,J", "2,2", "3,3", "4,4", "5,5", "6,6", "7,7");
         assertFormatCR(GenFormat.f(1, c(col(NUM, "A"), col(TEXT, "B")), ",", "", UTF8),
-            "A,B", "0,0", "1,1", "1.5,D", "2,2", "3,E");
+            "A,B", "0,0", "1,1", "1.5,D", "2,2", "3,E", "4,5");
 
         assertFormat(GenFormat.f(1, c(col(DATE, "Date"), col(TIME, "Time"), col(BOOL, "Bool"), col(TEXT, "Text")), ",", "", UTF8),
             "Date, Time, Bool, Text", "3/5/18, 16:45, TRUE, Whatever", "21/6/17, 00:01, FALSE, Something");
@@ -86,9 +86,9 @@ public class TestFormat
     {
         //assertFormat(GenFormat.f(0, c(col(NUM("USD", "$"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
             //"$0, A", "$1, Whatever", "$2, C");
-        assertFormat(GenFormat.f(0, c(col(NUM("EUR", "€"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
+        assertFormat(GenFormat.f(0, c(col(NUM("EUR", "€"), "C 1"), col(TEXT, "C 2")), ",", "", UTF8),
             "€ 0, A", "€ 1, Whatever", "€ 2, C");
-        assertFormat(GenFormat.f(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", "", UTF8),
+        assertFormat(GenFormat.f(0, c(col(TEXT, "C 1"), col(TEXT, "C 2")), ",", "", UTF8),
             "A0, A", "A1, Whatever", "A2, C");
     }
 
