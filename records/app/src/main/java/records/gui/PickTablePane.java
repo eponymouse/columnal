@@ -49,7 +49,7 @@ public class PickTablePane extends BorderPane
         this.setResultAndClose = setResultAndFinishEditing;
         tableField.setText(initial);
         autoComplete = new AutoComplete<TableCompletion>(tableField,
-            (s, p, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
+            s -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
         
         setCenter(tableField);
@@ -83,33 +83,11 @@ public class PickTablePane extends BorderPane
             }
 
             @Override
-            public String nonAlphabetCharacter(String textBefore, @Nullable TableCompletion selectedItem, String textAfter, OptionalInt positionCaret)
-            {
-                return textBefore + textAfter; // Shouldn't happen as not using alphabets
-            }
-
-            @Override
             public String keyboardSelect(String textBefore, String textAfter, TableCompletion selectedItem)
             {
                 return doubleClick(textBefore + textAfter, selectedItem);
             }
-
-            @Override
-            public @Nullable String exactCompletion(String currentText, TableCompletion selectedItem)
-            {
-                // Don't close dialog just because they typed the exact name:
-                return null;
-            }
-
-            @Override
-            public String focusLeaving(String currentText, @Nullable TableCompletion selectedItem)
-            {
-                if (selectedItem != null)
-                    return doubleClick(currentText, selectedItem);
-                else
-                    return currentText;
-            }
-
+            
             @Override
             public void tabPressed()
             {

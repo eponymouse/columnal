@@ -187,7 +187,7 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
                 FXUtility.onceNotNull(columnField.sceneProperty(), s -> FXUtility.runAfter(columnField::requestFocus));
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
-                (s, p, q) -> {
+                s -> {
                     try
                     {
                         if (srcTable == null)
@@ -231,34 +231,13 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
                     // TODO update the sort button
                     return selectedItem.c.getName().getOutput();
                 }
-
-                @Override
-                public String nonAlphabetCharacter(String textBefore, @Nullable ColumnCompletion selectedItem, String textAfter, OptionalInt positionCaret)
-                {
-                    return textBefore + textAfter; // Shouldn't happen as not using alphabets
-                }
-
+                
                 @Override
                 public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem)
                 {
                     return doubleClick(textBefore + textAfter, selectedItem);
                 }
-
-                @Override
-                public String exactCompletion(String currentText, ColumnCompletion selectedItem)
-                {
-                    return doubleClick(currentText, selectedItem);
-                }
-
-                @Override
-                public String focusLeaving(String currentText, @Nullable ColumnCompletion selectedItem)
-                {
-                    if (selectedItem != null)
-                        return doubleClick(currentText, selectedItem);
-                    else
-                        return currentText;
-                }
-
+                
                 @Override
                 public void tabPressed()
                 {

@@ -70,7 +70,6 @@ public class AutoComplete<C extends Completion>
     private @Nullable AutoCompleteWindow window;
     
     private boolean settingContentDirectly = false;
-    private OptionalInt prospectiveCaret = OptionalInt.empty();
 
     public static enum WhitespacePolicy
     {
@@ -79,17 +78,9 @@ public class AutoComplete<C extends Completion>
         DISALLOW
     }
     
-    public static enum CompletionQuery
-    {
-        // They've entered another char which doesn't fit, we're planning to leave the slot now:
-        LEAVING_SLOT,
-        // They've entered a char which does fit, so we're currently planning to stay in the slot:
-        CONTINUED_ENTRY;
-    }
-    
     public interface CompletionCalculator<C extends Completion>
     {
-        Stream<C> calculateCompletions(String textFieldContent, int caretPos, CompletionQuery completionQuery) throws InternalException, UserException; 
+        Stream<C> calculateCompletions(String textFieldContent) throws InternalException, UserException; 
     }
 
     /**
@@ -147,14 +138,6 @@ public class AutoComplete<C extends Completion>
                     // e.g. they pressed closing bracket and that has been removed and
                     // is causing us to move focus:
                     window.updateCompletions(calculateCompletions, textField.getText(), textField.getCaretPosition());
-                    C completion = getCompletionIfFocusLeftNow();
-                    if (completion != null)
-                    {
-                        //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
-                        @Nullable String newContent = onSelect.focusLeaving(textField.getText(), completion);
-                        if (newContent != null)
-                            FXUtility.keyboard(this).setContentDirect(newContent, true);
-                    }
                     hide();
                 }
             }
@@ -242,106 +225,8 @@ public class AutoComplete<C extends Completion>
                 FXUtility.keyboard(this).show(textField, pos.getFirst(), pos.getSecond());
             }
             
-            // If they type an operator or non-operator char, and there is
-            // no completion containing such a char, finish with current and move
-            // to next (e.g. user types "true&"; as long as there's no current completion
-            // involving "&", take it as an operator and move to next slot (which
-            // may also complete if that's the only operator featuring that char)
-            // while selecting the best (top) selection for current, or leave as error if none
-            Log.debug("Checking alphabet: [[" + text + "]]");
-            for (int codepointIndex = 1; codepointIndex < codepoints.length; codepointIndex++)
-            {
-                String prefix = new String(codepoints, 0, codepointIndex);
-                int cur = codepoints[codepointIndex];
-                String suffix = new String(codepoints, codepointIndex + 1, codepoints.length - codepointIndex - 1);
-
-                ImmutableList<C> completionWithoutLast = ImmutableList.of();
-                try
-                {
-                    completionWithoutLast = calculateCompletions.calculateCompletions(prefix, prefix.length(), CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.<C>toImmutableList());
-                }
-                catch (InternalException | UserException e)
-                {
-                    Log.log(e);
-                }
-                if (codepoints.length >= 1 &&
-                        ((completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
-                                && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix, prefix.length()) == ShowStatus.DIRECT_MATCH))
-                        ))
-                {
-                    try
-                    {
-                        if (!available.stream().anyMatch(c -> c.features(prefix, cur)))
-                        {
-                            // No completions feature the character and it is in the following alphabet, so
-                            // complete the top one (if any are available) and move character to next slot
-                            List<C> completionsWithoutLast = calculateCompletions.calculateCompletions(prefix, prefix.length(), CompletionQuery.LEAVING_SLOT).collect(Collectors.<C>toList());
-                            @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(prefix, prefix.length()).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
-                            int caretPos = prospectiveCaret.orElse(change.getCaretPosition());
-                            OptionalInt position = caretPos > prefix.length() && textField.isFocused() ? OptionalInt.of(caretPos - prefix.length()) : OptionalInt.empty();
-                            @Nullable String newContent = onSelect.nonAlphabetCharacter(prefix, completion, Utility.codePointToString(cur) + suffix, position);
-                            if (newContent == null)
-                                newContent = prefix;
-                            if (newContent != null)
-                            {
-                                change.setText(newContent);
-                                change.setRange(0, textField.getLength());
-                            }
-                            return change;
-                        }
-                    }
-                    catch (UserException | InternalException e)
-                    {
-                        Log.log(e);
-                    }
-                }
-            }
-            // Trim after alphabet check:
+            // Trim spaces:
             text = text.trim();
-            
-            if (window != null)
-            {
-                ListView<C> completions = window.completions;
-                
-                // We want to select top one, not last one, so keep track of
-                // whether we've already selected top one:
-                boolean haveSelected = false;
-                for (C completion : available)
-                {
-                    ShowStatus completionAction = completion.shouldShow(text, text.length());
-                    //Log.debug("Completion for \"" + text + "\": " + completionAction);
-                    // TODO check if we are actually a single completion
-                    if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
-                    {
-                        completions.getSelectionModel().select(completion);
-
-                        @Nullable String newContent = onSelect.exactCompletion(text, completion);
-                        if (newContent != null)
-                        {
-                            change.setText(newContent);
-                            change.setRange(0, textField.getLength());
-                        }
-                        hide();
-                        return change;
-                    }
-                    else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || completionAction == ShowStatus.DIRECT_MATCH)
-                    {
-                        // Select it, at least:
-                        if (!haveSelected)
-                        {
-                            completions.getSelectionModel().select(completion);
-                            FXUtility.ensureSelectionInView(completions, null);
-                            haveSelected = true;
-                        }
-                    }
-                }
-
-                if (!text.isEmpty() && !completions.getItems().isEmpty() && completions.getSelectionModel().isEmpty())
-                {
-                    completions.getSelectionModel().select(0);
-                    FXUtility.ensureSelectionInView(completions, null);
-                }
-            }
             
             if (whitespacePolicy == WhitespacePolicy.DISALLOW)
             {
@@ -421,36 +306,7 @@ public class AutoComplete<C extends Completion>
             textToScene.getY() + textFieldScene.getY() + window.getY()
         );
     }
-
-    @RequiresNonNull({"textField"})
-    public @Nullable C getCompletionIfFocusLeftNow(@UnknownInitialization(Object.class) AutoComplete<C> this)
-    {
-        if (window == null)
-            return null;
-        
-        List<C> availableCompletions = window.completions.getItems();
-        for (C completion : availableCompletions)
-        {
-            // Say it's the only completion, because otherwise e.g. column completions
-            // won't fire because there are always two of them:
-            if (completion.shouldShow(textField.getText(), textField.getLength()).viableNow())
-            {
-                return completion;
-            }
-        }
-        return null;
-    }
-
-    public void withProspectiveCaret(int caret, FXPlatformRunnable action)
-    {
-        prospectiveCaret = OptionalInt.of(caret);
-        action.run();
-        prospectiveCaret = OptionalInt.empty();
-        // If we've lost focus, don't override caret position:
-        if (textField.isFocused())
-            textField.positionCaret(caret);
-    }
-
+    
     public abstract static @Interned class Completion
     {
 
@@ -532,18 +388,6 @@ public class AutoComplete<C extends Completion>
         public abstract ShowStatus shouldShow(String input, int caretPos);
 
         /**
-         * Given current input, if there is one DIRECT_MATCH
-         * and no PHANTOM or START_DIRECT_MATCH
-         * should we complete it right now, or do nothing?
-         * 
-         * By default, don't complete (generally this is only a good idea for keywords and operators)
-         */
-        public boolean completesWhenSingleDirect()
-        {
-            return false;
-        }
-
-        /**
          * Does this completion feature the given character at all after
          * the current input?
          */
@@ -556,49 +400,6 @@ public class AutoComplete<C extends Completion>
         public @Nullable String getFurtherDetailsURL()
         {
             return null;
-        }
-    }
-
-
-
-    public static @Interned class KeyShortcutCompletion extends Completion
-    {
-        private final Character[] shortcuts;
-        private final @LocalizableKey String titleKey;
-
-        public KeyShortcutCompletion(@LocalizableKey String titleKey, Character... shortcuts)
-        {
-            this.shortcuts = shortcuts;
-            this.titleKey = titleKey;
-        }
-
-        @Override
-        public CompletionContent makeDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent("" + shortcuts[0], TranslationUtility.getString(titleKey));
-        }
-
-        @Override
-        public ShowStatus shouldShow(String input, int caretPos)
-        {
-            if (input.isEmpty())
-                return ShowStatus.START_DIRECT_MATCH;
-            else if (Arrays.stream(shortcuts).anyMatch(c -> input.equals(c.toString())))
-                return ShowStatus.DIRECT_MATCH;
-            else
-                return ShowStatus.NO_MATCH;
-        }
-
-        @Override
-        public boolean completesWhenSingleDirect()
-        {
-            return true;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            return Arrays.stream(shortcuts).anyMatch(c -> c.charValue() == character);
         }
     }
     
@@ -631,13 +432,6 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public boolean completesWhenSingleDirect()
-        {
-            // Default is don't complete when we get it right for names:
-            return false;
-        }
-
-        @Override
         public boolean features(String curInput, int character)
         {
             if (completion.startsWith(curInput))
@@ -650,19 +444,6 @@ public class AutoComplete<C extends Completion>
         public @Nullable String getFurtherDetailsURL()
         {
             return super.getFurtherDetailsURL();
-        }
-    }
-
-    public static class EndCompletion extends SimpleCompletion
-    {
-        public EndCompletion(String ending)
-        {
-            super(ending, null);
-        }
-        @Override
-        public boolean completesWhenSingleDirect()
-        {
-            return true;
         }
     }
 
@@ -702,24 +483,9 @@ public class AutoComplete<C extends Completion>
         // Returns the new text for the textfield, or null if keep as-is
         @Nullable String doubleClick(String currentText, C selectedItem);
 
-        // Moving on because non alphabet character entered
-        // Returns the new text for the textfield, or null if keep as-is
-        // positionCaret is blank for no focus change, or an index
-        // of how many characters after the current to move the focus to.
-        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter, OptionalInt positionCaret);
-
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
         @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem);
-
-        // Selected because completesOnExactly returned true
-        // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String exactCompletion(String currentText, C selectedItem);
-        
-        // Leaving the slot.  selectedItem is only non-null if
-        // completesOnExactly is true.
-        // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String focusLeaving(String currentText, @Nullable C selectedItem);
 
         // Tab has been pressed when we have no reason to handle it: 
         void tabPressed();
@@ -732,25 +498,13 @@ public class AutoComplete<C extends Completion>
         {
             return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
-
-        @Override
-        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter, OptionalInt positionCaret)
-        {
-            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore, textBefore.length()).viableNow() ? selectedItem : null, textAfter, positionCaret);
-        }
-
+        
         @Override
         public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem)
         {
             return selected(textBeforeCaret, selectedItem, textAfterCaret, isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
         }
-
-        @Override
-        public @Nullable String exactCompletion(String currentText, C selectedItem)
-        {
-            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
-        }
-
+        
         protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest, OptionalInt positionCaret);
         
         protected abstract boolean isFocused();
@@ -979,7 +733,7 @@ public class AutoComplete<C extends Completion>
         {
             try
             {
-                List<C> calculated = calculateCompletions.calculateCompletions(text, caretPos, CompletionQuery.CONTINUED_ENTRY)
+                List<C> calculated = calculateCompletions.calculateCompletions(text)
                         .sorted(Comparator.comparing((C c) -> c.shouldShow(text, caretPos)).thenComparing((C c) -> c.getDisplaySortKey(text)))
                         .collect(Collectors.<C>toList());
                 this.completions.getItems().setAll(calculated);

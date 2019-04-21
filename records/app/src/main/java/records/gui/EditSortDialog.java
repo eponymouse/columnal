@@ -202,7 +202,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete<ColumnCompletion>(columnField,
-                (s, p, q) -> Utility.streamNullable(srcTable).flatMap(t -> {
+                s -> Utility.streamNullable(srcTable).flatMap(t -> {
                     try
                     {
                         return t.getData().getColumns().stream();
@@ -250,32 +250,11 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                 }
 
                 @Override
-                public String nonAlphabetCharacter(String textBefore, @Nullable ColumnCompletion selectedItem, String textAfter, OptionalInt positionCaret)
-                {
-                    return textBefore + textAfter; // Shouldn't happen as not using alphabets
-                }
-
-                @Override
                 public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem)
                 {
                     return doubleClick(textBefore + textAfter, selectedItem);
                 }
-
-                @Override
-                public String exactCompletion(String currentText, ColumnCompletion selectedItem)
-                {
-                    return doubleClick(currentText, selectedItem);
-                }
-
-                @Override
-                public String focusLeaving(String currentText, @Nullable ColumnCompletion selectedItem)
-                {
-                    if (selectedItem != null)
-                        return doubleClick(currentText, selectedItem);
-                    else
-                        return currentText;
-                }
-
+                
                 @Override
                 public void tabPressed()
                 {
