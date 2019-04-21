@@ -37,7 +37,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionContent;
-import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
@@ -350,49 +349,6 @@ public class AutoComplete<C extends Completion>
             return makeDisplay(new ReadOnlyStringWrapper(text)).completion.get();
         }
 
-        public static enum ShowStatus
-        {
-            /** An exact match as it stands right now,
-             *  e.g. you type @if and it matches @if */
-            DIRECT_MATCH,
-            /** A dummy completion, e.g. numeric literal
-             *  during entry. */
-            PHANTOM,
-            /**
-             * Could be a direct match if you keep typing,
-             * e.g. you've typed @mat but there is @match
-             */
-            START_DIRECT_MATCH,
-
-            /** Doesn't match directly but we know it
-             *  may relate due to a typo or synonym, e.g. you
-             *  type @mach but there is @match
-             */
-            RELATED_MATCH,
-            /**
-             * Totally unrelated.  You type "dog" and the
-             * item is @match.
-             */
-            NO_MATCH;
-
-            public boolean viableNow()
-            {
-                return this == DIRECT_MATCH || this == PHANTOM;
-            }
-        }
-        
-        /**
-         * Given the current input, what is the relation
-         * of this completion?
-         */
-        public abstract ShowStatus shouldShow(String input, int caretPos);
-
-        /**
-         * Does this completion feature the given character at all after
-         * the current input?
-         */
-        public abstract boolean features(String curInput, int character);
-
         /**
          * Gets the URL of the details to show to the right of the list.  If null, nothing
          * is shown to the right.
@@ -418,26 +374,6 @@ public class AutoComplete<C extends Completion>
         public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(completion, description);
-        }
-
-        @Override
-        public ShowStatus shouldShow(String input, int caretPos)
-        {
-            if (input.equals(completion))
-                return ShowStatus.DIRECT_MATCH;
-            else if (completion.startsWith(input))
-                return ShowStatus.START_DIRECT_MATCH;
-            else
-                return ShowStatus.NO_MATCH;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            if (completion.startsWith(curInput))
-                return Utility.containsCodepoint(completion.substring(curInput.length()), character);
-            else
-                return false;
         }
 
         @Override
@@ -734,7 +670,7 @@ public class AutoComplete<C extends Completion>
             try
             {
                 List<C> calculated = calculateCompletions.calculateCompletions(text)
-                        .sorted(Comparator.comparing((C c) -> c.shouldShow(text, caretPos)).thenComparing((C c) -> c.getDisplaySortKey(text)))
+                        .sorted(Comparator.comparing((C c) -> c.getDisplaySortKey(text)))
                         .collect(Collectors.<C>toList());
                 this.completions.getItems().setAll(calculated);
             }
