@@ -133,14 +133,14 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testUnknownUnit()
     {
         // Check basic:
-        testError("Number{zzz}", e(0, 11, "unknown"));
+        testError("Number{zzz}", e(7, 10, "unknown"));
     }
 
     @Test
     public void testUnknownUnit2()
     {
         // Check basic:
-        testError("(Number{zzz}, Text)", e(1, 12, "unknown"));
+        testError("(Number{zzz}, Text)", e(8, 11, "unknown"));
     }
 
     @Test
@@ -184,7 +184,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     @Test
     public void testBadTuple1()
     {
-        testError("Text,Number", e(0, 11, "invalid"));
+        testError("Text,Number", e(0, 11, "bracket"));
     }
 
     @Test
@@ -233,7 +233,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
             else
             {
                 EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
-                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors()));
+                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
                 Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
