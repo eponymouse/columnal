@@ -118,7 +118,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
     @Override
     protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<Pair<ColumnId, Direction>>> calculateResult()
     {
-        return Either.mapM(sortList.getItems(), item -> {
+        return Either.<@Localized String, Pair<ColumnId, Direction>, Pair<String, Direction>>mapM(sortList.getItems(), item -> {
             @ExpressionIdentifier String columnId = IdentifierUtility.asExpressionIdentifier(item.getFirst());
             if (columnId == null)
                 return Either.<@Localized String, Pair<ColumnId, Direction>>left(TranslationUtility.getString("edit.column.invalid.column.name"));
