@@ -67,7 +67,6 @@ public class AutoComplete<C extends Completion>
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
     private final CompletionListener<C> onSelect;
-    private final AlphabetCheck alphabetCheck;
     private @Nullable AutoCompleteWindow window;
     
     private boolean settingContentDirectly = false;
@@ -86,20 +85,6 @@ public class AutoComplete<C extends Completion>
         LEAVING_SLOT,
         // They've entered a char which does fit, so we're currently planning to stay in the slot:
         CONTINUED_ENTRY;
-    }
-    
-    public static interface AlphabetCheck
-    {
-        /**
-         * Returns true if the new character (codepoint) is a different alphabet
-         * to the existing String.  That is, the new character cannot possibly continue
-         * the current item and must be part of a new entry.  This is the case e.g.
-         * for ("xyz", '+'), ("54", '{'), ("+", 'a') and so on.
-         * @param existing The string so far.  Will not be empty.
-         * @param newCodepoint The new codepoint.
-         * @return
-         */
-        public boolean requiresNewSlot(String existing, int newCodepoint);
     }
     
     public interface CompletionCalculator<C extends Completion>
@@ -124,11 +109,10 @@ public class AutoComplete<C extends Completion>
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
+    public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy)
     {
         this.textField = textField;
         this.onSelect = onSelect;
-        this.alphabetCheck = inNextAlphabet;
         
 
         textField.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
@@ -281,8 +265,7 @@ public class AutoComplete<C extends Completion>
                     Log.log(e);
                 }
                 if (codepoints.length >= 1 &&
-                        (inNextAlphabet.requiresNewSlot(prefix, cur)
-                                || (completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
+                        ((completionWithoutLast.stream().allMatch(c -> !c.features(prefix, cur))
                                 && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(prefix, prefix.length()) == ShowStatus.DIRECT_MATCH))
                         ))
                 {
@@ -457,14 +440,6 @@ public class AutoComplete<C extends Completion>
         }
         return null;
     }
-
-
-    public boolean matchingAlphabets(String lhs, String rhs)
-    {
-        return lhs.isEmpty() || rhs.isEmpty() || 
-            !alphabetCheck.requiresNewSlot(lhs, rhs.codePoints().findFirst().orElse(0));
-    }
-
 
     public void withProspectiveCaret(int caret, FXPlatformRunnable action)
     {

@@ -201,7 +201,7 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
                         return Stream.empty();
                     }
                 },
-                getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
+                getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
             FXUtility.addChangeListenerPlatformNN(columnField.focusedProperty(), focus -> {
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();
