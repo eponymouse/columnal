@@ -109,7 +109,7 @@ public class AutoComplete<C extends Completion>
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy)
+    public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy)
     {
         this.textField = textField;
         this.onSelect = onSelect;
@@ -129,7 +129,7 @@ public class AutoComplete<C extends Completion>
                 // big difference if auto complete appears a fraction later, so we don't lose anything:
                 FXUtility.runAfter(() -> {
                     Pair<Double, Double> pos = calculatePosition();
-                    if (textField.isFocused() && !isShowing() && pos != null && showOnFocus.get())
+                    if (textField.isFocused() && !isShowing() && pos != null)
                     {
                         //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
                         // TODO see if we can find a useful place to show this:

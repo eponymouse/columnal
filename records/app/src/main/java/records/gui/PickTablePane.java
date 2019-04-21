@@ -50,7 +50,7 @@ public class PickTablePane extends BorderPane
         tableField.setText(initial);
         autoComplete = new AutoComplete<TableCompletion>(tableField,
             (s, p, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
-            getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
+            getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
         
         setCenter(tableField);
         instruction = new Instruction("pick.table.instruction");
