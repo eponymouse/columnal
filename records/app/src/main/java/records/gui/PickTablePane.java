@@ -32,6 +32,7 @@ import utility.gui.FXUtility;
 import utility.gui.Instruction;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
@@ -50,7 +51,7 @@ public class PickTablePane extends BorderPane
         tableField.setText(initial);
         autoComplete = new AutoComplete<TableCompletion>(tableField,
             s -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
-            getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
+            getListener(view.getManager().getAllTables()), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
         
         setCenter(tableField);
         instruction = new Instruction("pick.table.instruction");
@@ -70,7 +71,7 @@ public class PickTablePane extends BorderPane
     }
 
     @RequiresNonNull("setResultAndClose")
-    private CompletionListener<TableCompletion> getListener(@UnknownInitialization(BorderPane.class) PickTablePane this)
+    private CompletionListener<TableCompletion> getListener(@UnknownInitialization(BorderPane.class) PickTablePane this, List<Table> tables)
     {
         @NonNull FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
         return new CompletionListener<TableCompletion>()
@@ -78,20 +79,28 @@ public class PickTablePane extends BorderPane
             @Override
             public String doubleClick(String currentText, TableCompletion selectedItem)
             {
-                setResultAndCloseFinal.consume(selectedItem.t);
-                return ((TableCompletion) selectedItem).t.getId().getOutput();
+                return complete(selectedItem.t);
+            }
+
+            @OnThread(Tag.FXPlatform)
+            protected String complete(Table t)
+            {
+                setResultAndCloseFinal.consume(t);
+                return t.getId().getOutput();
             }
 
             @Override
-            public String keyboardSelect(String textBefore, String textAfter, TableCompletion selectedItem)
+            public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable TableCompletion selectedItem, boolean wasTab)
             {
-                return doubleClick(textBefore + textAfter, selectedItem);
-            }
-            
-            @Override
-            public void tabPressed()
-            {
-                // TODO focus Ok button or equivalent
+                if (selectedItem != null)
+                    return complete(selectedItem.t);
+                else
+                {
+                    Table t = tables.stream().filter(table -> table.getId().getRaw().equals(textBefore + textAfter)).findFirst().orElse(null);
+                    if (t != null)
+                        return complete(t);
+                }
+                return null;
             }
         };
     }

@@ -421,29 +421,7 @@ public class AutoComplete<C extends Completion>
 
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem);
-
-        // Tab has been pressed when we have no reason to handle it: 
-        void tabPressed();
-    }
-
-    public static abstract class SimpleCompletionListener<C extends Completion> implements CompletionListener<C>
-    {
-        @Override
-        public @Nullable String doubleClick(String currentText, C selectedItem)
-        {
-            return selected(currentText, selectedItem, "", isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
-        }
-        
-        @Override
-        public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem)
-        {
-            return selected(textBeforeCaret, selectedItem, textAfterCaret, isFocused() ? OptionalInt.of(0) : OptionalInt.empty());
-        }
-        
-        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest, OptionalInt positionCaret);
-        
-        protected abstract boolean isFocused();
+        @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable C selectedItem, boolean wasTab);
     }
 
     // For reasons I'm not clear about, this listener needs to be its own class, not anonymous:
@@ -626,19 +604,15 @@ public class AutoComplete<C extends Completion>
             if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
             {
                 C selectedItem = completions.getSelectionModel().getSelectedItem();
-                if (isShowing() && selectedItem != null)
+                if (isShowing())
                 {
                     e.consume();
                     String curText = textField.getText();
-                    @Nullable String newContent = onSelect.keyboardSelect(curText.substring(0, textField.getCaretPosition()), curText.substring(textField.getCaretPosition()), selectedItem);
+                    @Nullable String newContent = onSelect.keyboardSelect(curText.substring(0, textField.getCaretPosition()), curText.substring(textField.getCaretPosition()), selectedItem, e.getCode() == KeyCode.TAB);
                     if (newContent != null)
                         setContentDirect(newContent, true);
                     hide();
                     instruction.hide();
-                }
-                else if (selectedItem == null && e.getCode() == KeyCode.TAB)
-                {
-                    onSelect.tabPressed();
                 }
             }
         }

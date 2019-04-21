@@ -250,15 +250,12 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                 }
 
                 @Override
-                public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem)
+                public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable ColumnCompletion selectedItem, boolean tabPressed)
                 {
-                    return doubleClick(textBefore + textAfter, selectedItem);
-                }
-                
-                @Override
-                public void tabPressed()
-                {
-                    // TODO focus next item or add button
+                    if (selectedItem != null)
+                        return selectedItem.c.getName().getOutput();
+                    else
+                        return null;
                 }
             };
         }
