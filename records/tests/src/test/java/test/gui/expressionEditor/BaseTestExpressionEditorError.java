@@ -51,178 +51,12 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
+class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
-    @Test
-    public void test1()
-    {
-        // Check basic:
-        testError("1");
-    }
-
-    @Test
-    public void test1b()
-    {
-        // Check basic:
-        testError("1+", e(2, 2, "missing"));
-    }
-
-    @Test
-    public void test2()
-    {
-        testError("foo", e(0, 3, "unknown"));
-    }
-
-    @Test
-    public void test2A()
-    {
-        testError("foo+1", e(0, 3, "unknown"));
-    }
-
-    @Test
-    public void test2B()
-    {
-        testError("foo+", e(4, 4, "missing"));
-    }
-
-    @Test
-    public void test2C()
-    {
-        // Error once we leave the slot:
-        // (and error in the blank operand skipped)
-        testError("1+/3", e(2, 2, "missing"));
-    }
-
-    @Test
-    public void test2D()
-    {
-        // Error once we leave the slot:
-        testError("foo*1", e(0, 3, "unknown"));
-    }
-
-    
-    @Test
-    public void test3()
-    {
-        testError("@iftrue@then3@else5", e(19, 19, "endif"));
-    }
-
-    @Test
-    public void test3A()
-    {
-        testError("@if#@then#@else0@endif", e(3,4, "#"), e(9,10, "#"));
-    }
-
-    @Test
-    public void test3B()
-    {
-        // Type error
-        testError("@if3@then4@else5@endif", e(3,4, "boolean"));
-    }
-
-    @Test
-    public void testEmptyList()
-    {
-        // Should be no error:
-        testError("[]");
-    }
-
-    @Test
-    public void testEmptyBracket()
-    {
-        testError("()", e(1, 1, "missing", ")"));
-    }
-
-    @Test
-    public void testEmptyUnit()
-    {
-        testError("1{}", e(2, 2, "missing"));
-    }
-
-    @Test
-    public void testUnknownUnit1()
-    {
-        testError("1{zzz}", e(2, 5, "unknown"));
-    }
-
-    @Test
-    public void testUnknownUnit2()
-    {
-        testError("1{(m/zzz)}", e(5, 8, "unknown"));
-    }
-
-    @Test
-    public void testUnknownUnit3()
-    {
-        testError("type{Optional({zzz})}", e(15, 18, "unknown"));
-    }
-
-    @Test
-    public void testUnknownType1()
-    {
-        testError("type{zzz}", e(5, 8, "unknown"));
-    }
-
-    @Test
-    public void testUnknownType2()
-    {
-        testError("type{Optional(zzz)}", e(14, 17, "unknown"));
-    }
-
-    @Test
-    public void testUnclosedUnitBracket()
-    {
-        testError("1{(}", e(3, 3, "missing", ")", "end"));
-    }
-    
-    @Test
-    public void testEmptyIf()
-    {
-        testError("@iftrue@then@else1@endif",
-            e(12,12, "missing", "@else"));
-    }
-
-    @Test
-    public void testEmptyIf2()
-    {
-        testError("@iftrue@then@else@endif",
-                e(12,12, "missing", "@else"),
-                e(17,17, "missing", "@endif"));
-    }
-
-    @Test
-    public void testPartialIf()
-    {
-        testError("@if(true>false)",
-                e(15,15, "missing", "@then"));
-    }
-
-    @Test
-    public void testPartialIf2()
-    {
-        testError("@if(ACC1>ACC1)",
-            e(14,14, "missing", "@then"));
-    }
-
-    @Test
-    public void testMissingOperator1()
-    {
-        testError("1ACC1",
-                e(1,1, "missing operator"));
-    }
-
-    @Test
-    public void testMissingOperator2()
-    {
-        testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
-                e(25,25, "missing operator"));
-    }
-    
-
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
     @SuppressWarnings({"units", "identifier"})
-    private void testError(String expression, Error... errors)
+    void testError(String expression, Error... errors)
     {        
         try
         {
@@ -365,7 +199,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         return lookup(".expression-info-popup").tryQuery().isPresent();
     }
     
-    private static class Error
+    static class Error
     {
         private final CanonicalSpan location;
         private final ImmutableList<String> expectedMessageParts;
@@ -378,7 +212,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     }
     
     @SuppressWarnings("units")
-    private static final Error e(int start, int end, String... errorMessagePart)
+    static final Error e(int start, int end, String... errorMessagePart)
     {
         return new Error(start, end, ImmutableList.copyOf(errorMessagePart));
     }
