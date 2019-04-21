@@ -218,6 +218,11 @@ public class ErrorableTextField<T>
         FXUtility.addChangeListenerPlatform(field.textProperty(), t -> onChange.run());
     }
 
+    public TextField getFieldForComplete()
+    {
+        return field;
+    }
+
     public static class ConversionResult<@NonNull T>
     {
         private final @Nullable T value;

@@ -339,6 +339,11 @@ public class AutoComplete<C extends Completion>
          */
         public abstract CompletionContent makeDisplay(ObservableStringValue currentText);
 
+        public String _test_getContent()
+        {
+            return makeDisplay(new ReadOnlyStringWrapper("")).completion.get();
+        }
+        
         /**
          * How should we sort this item?  For functions, leave off brackets.
          * 

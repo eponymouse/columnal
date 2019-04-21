@@ -58,7 +58,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                         {
                             columnPicker.enableColumnPickingMode(null, c -> display.isFocused() && columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).findFirst().isPresent(), c -> {
                                 String ref = "";
-                                ImmutableList<ColumnReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.comparing(cr -> cr.getReferenceType())).collect(ImmutableList.<ColumnReference>toImmutableList());
+                                ImmutableList<ColumnReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.<ColumnReference,  Boolean>comparing(cr -> cr.getTableId() != null).thenComparing(cr -> cr.getReferenceType())).collect(ImmutableList.<ColumnReference>toImmutableList());
                                 if (!columnReferences.get(0).getReferenceType().equals(ColumnReferenceType.CORRESPONDING_ROW))
                                     ref += "@entire ";
                                 if (columnReferences.get(0).getTableId() != null)

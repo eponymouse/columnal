@@ -191,6 +191,7 @@ public class LexAutoComplete
                     // Can't be focused
                 }
             };
+            listView.getStyleClass().add("lex-completion-listview");
             listView.setFocusTraversable(false);
             listView.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)

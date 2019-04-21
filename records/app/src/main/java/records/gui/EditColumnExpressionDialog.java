@@ -1,6 +1,8 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -11,12 +13,20 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
+import records.gui.expressioneditor.AutoComplete;
+import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.CompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.lexeditor.ExpressionEditor;
+import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -25,6 +35,7 @@ import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
@@ -35,7 +46,9 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
@@ -53,9 +66,81 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
 
         nameField = new ColumnNameTextField(initialName);
         FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> notifyModified());
+        if (srcTable != null)
+        {
+            try
+            {
+                List<ColumnId> columnIds = srcTable.getData().getColumnIds();
+                AutoComplete<ColumnCompletion> autoComplete = new AutoComplete<ColumnCompletion>(nameField.getFieldForComplete(), s -> columnIds.stream().map(ColumnCompletion::new), new CompletionListener<ColumnCompletion>()
+                {
+                    @Override
+                    public @Nullable String doubleClick(String currentText, ColumnCompletion selectedItem)
+                    {
+                        return selectedItem.columnId.getRaw();
+                    }
+
+                    @Override
+                    public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable ColumnCompletion selectedItem, boolean wasTab)
+                    {
+                        FXUtility.keyboard(EditColumnExpressionDialog.this).expressionEditor.focus(Focus.LEFT);
+                        return selectedItem != null ? selectedItem.columnId.getRaw() : textBeforeCaret + textAfterCaret;
+                    }
+                }, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
+            }
+            catch (InternalException | UserException e)
+            {
+                if (e instanceof InternalException)
+                    Log.log(e);
+            }
+        }
+        
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        // We let ExpressionEditor call these methods, and piggy-back on them:
+        ColumnPicker columnPicker = new ColumnPicker()
+        {
+            @Override
+            public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
+            {
+                parent.enableColumnPickingMode(screenPos, tc -> {
+                    if (FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor.isFocused())
+                    {
+                        return expEdIncludeColumn.test(tc);
+                    }
+                    else if (nameField.isFocused())
+                    {
+                        try
+                        {
+                            return srcTable != null && srcTable.getData().getColumnIds().contains(tc.getSecond());
+                        }
+                        catch (UserException | InternalException e)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }, tc -> {
+                    if (FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor.isFocused())
+                    {
+                        expEdOnPick.consume(tc);
+                    }
+                    else if (nameField.isFocused())
+                    {
+                        nameField.setText(tc.getSecond().getRaw());
+                    }
+                });
+            }
+
+            @Override
+            public void disablePickingMode()
+            {
+                parent.disablePickingMode();
+            }
+        };
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedTypeWrapper, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {
@@ -146,5 +231,21 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     protected void showAllErrors()
     {
         expressionEditor.showAllErrors();
+    }
+
+    private static class ColumnCompletion extends Completion
+    {
+        private final ColumnId columnId;
+
+        public ColumnCompletion(ColumnId columnId)
+        {
+            this.columnId = columnId;
+        }
+        
+        @Override
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(columnId.getRaw(), null);
+        }
     }
 }

@@ -122,6 +122,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         content.positionCaret(side);
         display.requestFocus();
     }
+    
+    public boolean isFocused()
+    {
+        return display.isFocused();
+    }
 
     public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {

@@ -932,8 +932,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 try
                 {
                     boolean isOurTable = Objects.equals(us, t.getId());
+                    boolean allowsSameRow = isOurTable || (srcTable != null && Objects.equals(srcTable.getId(), t.getId()));
                     return t.getData().getColumns().stream().flatMap(c -> {
-                        Stream<ColumnReferenceType> possRefTypes = isOurTable ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
+                        Stream<ColumnReferenceType> possRefTypes = allowsSameRow ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
                         return possRefTypes.map(rt -> new ColumnReference(isOurTable && nullOurTable ? null : t.getId(), c.getName(), rt));
                     });
                 }
