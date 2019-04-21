@@ -11,6 +11,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import org.assertj.core.util.Arrays;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
@@ -93,7 +95,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
     
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
-    public void testCalculate(@When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testCalculate(@From(GenRandom.class) Random r) throws Exception
     {
         RecordSet orig = new EditableRecordSet(Utility.<Col, SimulationFunction<RecordSet, EditableColumn>>mapListI(ImmutableList.copyOf(Col.values()), (Col c) -> (RecordSet rs) -> makeColumn(c, rs)), () -> 0);
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, orig);
@@ -181,7 +183,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         sleep(500);
         Calculate calculate = getCalculate(mainWindowActions);
         Expression expression = TestUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
-        assertEquals(new ColumnReference(new TableId("Table1"), new ColumnId(columnNameToReplace), ColumnReferenceType.CORRESPONDING_ROW), expression);
+        MatcherAssert.assertThat(expression, Matchers.isIn(ImmutableList.of(new ColumnReference(new TableId("Table1"), new ColumnId(columnNameToReplace), ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(new ColumnId(columnNameToReplace), ColumnReferenceType.CORRESPONDING_ROW))));
         
     }
 

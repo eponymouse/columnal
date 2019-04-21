@@ -3,6 +3,7 @@ package records.transformations;
 import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,6 +35,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -232,7 +234,19 @@ public class Calculate extends Transformation implements SingleSourceTransformat
 
     private void deleteColumn(ColumnId columnId)
     {
-        //TODO
+        if (newColumns.containsKey(columnId))
+        {
+            FXUtility.alertOnError_("Error deleting column", () -> {
+                getManager().edit(getId(), () -> {
+                    ImmutableMap.Builder<ColumnId, Expression> filtered = ImmutableMap.builder();
+                    newColumns.forEach((c, e) -> {
+                        if (!c.equals(columnId))
+                            filtered.put(c, e);
+                    });
+                    return new Calculate(getManager(), getDetailsForCopy(), srcTableId, filtered.build());
+                }, null);
+            });
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@ public interface AutoCompleteTrait extends FxRobotInterface
     // Completes in LexCompletionWindow
     public default void lexComplete(String completion)
     {
+        write(completion.substring(0, 1));
         ListView<?> listView = lookup(".lex-completion-listview").query();
         int itemCount = TestUtil.fx(() -> listView.getItems().size());
         for (int i = TestUtil.fx(() -> listView.getSelectionModel().getSelectedIndex()); i < itemCount; i++)

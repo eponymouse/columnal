@@ -38,6 +38,7 @@ import records.data.RecordSet.RecordSetListener;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
+import records.data.TableOperations.DeleteColumn;
 import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameTable;
@@ -828,6 +829,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 // If no data, just don't add this item
                 Log.log(e);
             }
+        }
+        @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(c);
+        if (deleteColumn != null)
+        {
+            r.add(new ColumnOperation("virtGrid.column.delete")
+            {
+                @Override
+                protected @OnThread(Tag.FXPlatform) void executeFX()
+                {
+                    Workers.onWorkerThread("Removing column", Priority.SAVE, () -> {
+                        deleteColumn.deleteColumn(c);
+                    });
+                }
+            });
         }
 
         DataType type = null;
