@@ -44,7 +44,7 @@
         <returnType>@typevar t</returnType>
         <description>
             <p>Converts a value from text, specifying the target type.</p>
-            <p>See <link function="from text"/> for more details.</p>
+            <p>See <link namespace="conversion" function="from text"/> for more details.</p>
         </description>
         <example>
             <inputArg>(type{Date}, "21 March 2004")</inputArg>

@@ -11,7 +11,7 @@
             <p>Gets the lowest item in the list.</p>
         </description>
         <seeAlso>
-            <link function="maximum"/>
+            <link namespace="comparison" function="maximum"/>
             <link operator="&lt;"/>
         </seeAlso>
         <equivalence display="false">
@@ -48,7 +48,7 @@
             <p>Gets the highest item in the list.</p>
         </description>
         <seeAlso>
-            <link function="minimum"/>
+            <link namespace="comparison" function="minimum"/>
             <link operator="&lt;"/>
         </seeAlso>
         <equivalence display="false">
