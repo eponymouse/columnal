@@ -102,7 +102,7 @@ public class MutVar extends TypeExp
             return Either.right(typeManager.getVoidType().instantiate(ImmutableList.of(), typeManager));
         
         // Will have been pruned, so error here
-        return Either.left(new TypeConcretisationError(StyledString.s("Error: cannot determine type (free variable remaining)"), null));
+        return Either.left(new TypeConcretisationError(StyledString.s("Ambiguous type"), null));
     }
 
     @Override

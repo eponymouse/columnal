@@ -124,7 +124,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testEmptyList()
     {
         // Should be no error:
-        testError("[]");
+        testError("[]", e(0, 2, "ambig"));
     }
 
     @Test
