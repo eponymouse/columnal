@@ -316,7 +316,7 @@
                             <otherDepends>tuple.xml</otherDepends>
                             <otherDepends>types.xml</otherDepends>
                             
-                            <otherDepends>../xslt/funcdoc-shared.xml</otherDepends>
+                            <otherDepends>../xslt/funcdoc-shared.xsl</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
@@ -339,7 +339,7 @@
                             <xincludeAware>true</xincludeAware>
                             <dir>src/main/funcdoc</dir>
                             <includes>*.xml</includes>
-                            <otherDepends>../xslt/funcdoc-shared.xml</otherDepends>
+                            <otherDepends>../xslt/funcdoc-shared.xsl</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-joined-html.xsl</stylesheet>
                             <outputDir>${project.build.directory}/classes</outputDir>
                             <fileMappers>
