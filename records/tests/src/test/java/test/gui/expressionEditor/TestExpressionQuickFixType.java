@@ -105,5 +105,19 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     public void testUnitLiteralFix8() throws UserException, InternalException
     {
         testFix("type{Number{metre/s}}", "metre", dotCssClassFor("m"), "type{Number{m/s}}");
-    }    
+    }
+
+    @Test
+    public void testUnitLiteralFix9() throws UserException, InternalException
+    {
+        testFix("type{Number{new/s}}", "new", dotCssClassFor("new"), "type{Number{new/s}}", () -> {
+            clickOn(".edit-unit-dialog .ok-button");
+        });
+    }
+    
+    @Test
+    public void testAsType1()
+    {
+        testSimpleFix("from text(\"\")", "from", "@call @function asType(type{@invalidtypeops()},@call @function from text(\"\"))");
+    }
 }

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -16,6 +17,7 @@ import utility.Utility;
 import utility.Utility.TransparentBuilder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -44,7 +46,16 @@ public class OrExpression extends NaryOpShortCircuitExpression
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(TypeExp.bool(this), dataLookup, state, LocationInfo.UNIT_DEFAULT, onError, (typeAndExpression) -> {
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
+            TypeExp ourType = typeAndExpression.getOurType();
+            if (ourType == null || Objects.equals(ourType, TypeExp.bool(null)))
+            {
+                // We're fine or we have no idea.
+                return ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of();
+            }
+            else
+            {
+                return ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), ImmutableList.of()));
+            }
         }));
     }
 

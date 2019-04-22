@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
@@ -77,10 +78,13 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     {
         type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
-            if (ourType == null)
-                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
-            @Nullable StyledString err = ourType == null || p.expressionTypes.stream().filter(Optional::isPresent).count() <= 1
-                    ? null : StyledString.concat(StyledString.s("You can only add/subtract numbers (with identical units), but found "), ourType.toStyledString());
+            if (ourType == null || ourType instanceof NumTypeExp)
+                return ImmutableMap.of();
+            @Nullable StyledString err = null;
+            if (p.expressionTypes.stream().filter(Optional::isPresent).count() > 1)
+            {
+                err = StyledString.concat(StyledString.s("Adding/subtracting requires numbers (with identical units), but found "), ourType.toStyledString());
+            }
             ImmutableList.Builder<QuickFix<Expression>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
             
@@ -95,7 +99,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionUtil.getFixesForMatchingNumericUnits(state, p));
             ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
-            return err == null && builtFixes.isEmpty() ? null : new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes);
+            return err == null && builtFixes.isEmpty() ? ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
         }));
         return type;
     }

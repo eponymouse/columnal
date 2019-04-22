@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -106,9 +107,9 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     @Override
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
-            ExpressionUtil.getFixesForMatchingNumericUnits(state, p)
-        ) : ImmutableList.of()));
+        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> p.getOurType() instanceof NumTypeExp ? ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(this, new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.copyOf(
+                ExpressionUtil.getFixesForMatchingNumericUnits(state, p)
+        ))) : ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of());
         if (type == null)
             return null;
         return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.bool(this));

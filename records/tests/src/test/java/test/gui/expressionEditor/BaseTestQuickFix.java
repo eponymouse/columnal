@@ -48,6 +48,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -88,8 +89,13 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
      * @param fixId The CSS selector to use to look for the particular fix row
      * @param result The expected outcome expression after applying the fix
      */
-    @SuppressWarnings("identifier")
     void testFix(String original, String fixFieldContent, String fixId, String result)
+    {
+        testFix(original, fixFieldContent, fixId, result, () -> {});
+    }
+    
+    @SuppressWarnings("identifier")
+    void testFix(String original, String fixFieldContent, String fixId, String result, Runnable afterClick)
     {
         try
         {
@@ -179,6 +185,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             TestUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
+            afterClick.run();
             TestUtil.doubleOk(this);
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();

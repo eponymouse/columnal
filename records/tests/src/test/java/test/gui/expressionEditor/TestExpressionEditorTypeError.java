@@ -54,9 +54,29 @@ import static org.junit.Assert.*;
 public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
 {
     @Test
+    public void testEmptyList()
+    {
+        // Should be no error:
+        testError("[]", e(0, 2, "ambig"));
+    }
+
+    @Test
+    public void testLengthEmptyList()
+    {
+        // Should be no error:
+        testError("list length([])");
+    }
+    
+    @Test
     public void testTypeError1()
     {
-        testError("2+true", e(2, 6, "type"));
+        testError("2+true", e(2, 6, "number"));
+    }
+
+    @Test
+    public void testTypeError1b()
+    {
+        testError("2+true+3", e(2, 6, "number"));
     }
 
     @Test
@@ -80,7 +100,13 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testUnitError1()
     {
-        testError("2{s}+3{m}", e(0, 9, "unit"));
+        testError("2{s}+3{m}", e(5, 9, "number"));
+    }
+
+    @Test
+    public void testUnitError1b()
+    {
+        testError("2{s}+3{m}+4{s}", e(5, 9, "number"));
     }
 
     @Test

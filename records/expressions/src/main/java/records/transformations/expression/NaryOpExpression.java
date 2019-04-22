@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -18,6 +19,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -188,8 +190,7 @@ public abstract class NaryOpExpression extends Expression
     
     public static class TypeProblemDetails
     {
-        // Same length as expressions.  Boolean indicates whether unification
-        // was successful or not.
+        // Same length as expressions.
         final ImmutableList<Optional<TypeExp>> expressionTypes;
         public final ImmutableList<@Recorded Expression> expressions;
         final int index;
@@ -212,13 +213,18 @@ public abstract class NaryOpExpression extends Expression
             return expressionTypes.get(index).orElse(null);
         }
 
-        public Expression getOurExpression()
+        public @Recorded Expression getOurExpression()
         {
             return expressions.get(index);
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
+    protected interface CustomError
+    {
+        ImmutableMap<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
+    }
+    
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
@@ -255,19 +261,24 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
-                if (errorAndQuickFix != null)
-                    onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
-                StyledString error = null;
-                if (errorAndQuickFix != null && errorAndQuickFix.getFirst() != null)
-                    error = errorAndQuickFix.getFirst();
-                else if (unificationOutcomes.get(i) != null && unificationOutcomes.get(i).getFirst() != null)
-                    error = unificationOutcomes.get(i).getFirst();
-                else if (errorAndQuickFix != null && !errorAndQuickFix.getSecond().isEmpty())
-                    // Hack to ensure there is an error:
-                    error = StyledString.s(" ");
-                if (error != null)
-                    onError.recordError(expression, error);
+                ImmutableMap<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
+                @Nullable StyledString unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
+                for (Entry<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
+                {
+                    if (entry.getValue().getFirst() != null)
+                        onError.recordError(entry.getKey(), entry.getValue().getFirst());
+                    else if (!entry.getValue().getSecond().isEmpty() && (entry.getKey() != expression || unifyError != null))
+                        // Hack to ensure there is an error:
+                        onError.recordError(entry.getKey(), StyledString.s(" "));
+                    if (!entry.getValue().getSecond().isEmpty())
+                        onError.recordQuickFixes(entry.getKey(), entry.getValue().getSecond());
+                }
+                
+                if (customErrors.isEmpty())
+                {
+                    if (unifyError != null)
+                        onError.recordError(expression, unifyError);
+                }
             }
         }
         
