@@ -117,7 +117,7 @@ public class ExpressionUtil
     }
 
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
+    public static ImmutableList<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
     {
         // Must be a units issue.  Check if fixing a numeric literal involved would make
         // the units match all non-literal units:
@@ -156,7 +156,7 @@ public class ExpressionUtil
                 if (type != null && !(type instanceof NumTypeExp))
                 {
                     // Non-numeric type; definitely can't offer a sensible fix:
-                    return Collections.emptyList();
+                    return ImmutableList.of();
                 }
                 nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
             }
@@ -175,12 +175,12 @@ public class ExpressionUtil
                 Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    return Collections.singletonList(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {
+                    return ImmutableList.of(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {
                         return literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0));
                     }));
                 }
             }
         }
-        return Collections.emptyList();
+        return ImmutableList.of();
     }
 }

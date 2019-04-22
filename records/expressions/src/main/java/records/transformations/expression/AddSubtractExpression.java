@@ -78,8 +78,16 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     {
         type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
-            if (ourType == null || ourType instanceof NumTypeExp)
+            if (ourType == null)
                 return ImmutableMap.of();
+            if (ourType instanceof NumTypeExp)
+            {
+                ImmutableList<QuickFix<Expression>> fixes = ExpressionUtil.getFixesForMatchingNumericUnits(state, p);
+                if (fixes.isEmpty())
+                    return ImmutableMap.of();
+                else
+                    return ImmutableMap.of(this, new Pair<>(null, fixes));
+            }
             @Nullable StyledString err = null;
             if (p.expressionTypes.stream().filter(Optional::isPresent).count() > 1)
             {
