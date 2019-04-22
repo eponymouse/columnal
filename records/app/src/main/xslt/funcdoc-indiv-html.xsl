@@ -40,6 +40,59 @@
                 </html>
             </xsl:result-document>
         </xsl:for-each>
+        <xsl:for-each select="binaryOperator">
+            <xsl:variable name="operator" select="operator"/>
+            <xsl:result-document method="html" href="file:///{$myOutputDir}/operator-{string-join(string-to-codepoints($operator), '-')}.html">
+                <html>
+                    <head>
+                        <title><xsl:value-of select="$operator"/></title>
+                        <link rel="stylesheet" href="funcdoc.css"/>
+                        <link rel="stylesheet" href="web.css"/>
+                    </head>
+                    <body class="indiv">
+                        <xsl:call-template name="processOperator">
+                            <xsl:with-param name="operator" select="."/>
+                        </xsl:call-template>
+                    </body>
+                </html>
+            </xsl:result-document>
+        </xsl:for-each>
+        <xsl:for-each select="naryOperatorGroup">
+            <xsl:variable name="group" select="."/>
+            <xsl:for-each select="operator">
+                <xsl:variable name="operator" select="."/>
+                <xsl:result-document method="html" href="file:///{$myOutputDir}/operator-{string-join(string-to-codepoints($operator), '-')}.html">
+                    <html>
+                        <head>
+                            <title><xsl:value-of select="$operator"/></title>
+                            <link rel="stylesheet" href="funcdoc.css"/>
+                            <link rel="stylesheet" href="web.css"/>
+                        </head>
+                        <body class="indiv">
+                            <xsl:call-template name="processOperator">
+                                <xsl:with-param name="operator" select="$group"/>
+                            </xsl:call-template>
+                        </body>
+                    </html>
+                </xsl:result-document>
+            </xsl:for-each>
+        </xsl:for-each>
+        <xsl:for-each select="type">
+            <xsl:result-document method="html" href="file:///{$myOutputDir}/type-{@name}.html">
+                <html>
+                    <head>
+                        <title><xsl:value-of select="@name"/></title>
+                        <link rel="stylesheet" href="funcdoc.css"/>
+                        <link rel="stylesheet" href="web.css"/>
+                    </head>
+                    <body class="indiv">
+                        <xsl:call-template name="processTypeDef">
+                            <xsl:with-param name="type" select="."/>
+                        </xsl:call-template>
+                    </body>
+                </html>
+            </xsl:result-document>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template match="link">

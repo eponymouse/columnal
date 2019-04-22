@@ -57,10 +57,20 @@
         </seeAlso>
     </type>
     
+    <type name="DateYM">
+        <description>
+            <p>A year and month, for example August 2014, usually written 2014-08. Only valid items are allowed.</p>
+            <p>This is useful for things like tracking sales for a particular month.</p>
+        </description>
+        <seeAlso>
+            <link type="Date"/>
+        </seeAlso>
+    </type>
+    
     <type name="Time">
         <description>
             <p>A time of day, for example 10:08.  Only valid times are allowed (e.g. 24:02 is not allowed).</p>
-            <p>The time can feature seconds, including fractional seconds.</p>
+            <p>The time can feature seconds, including fractional seconds, e.g. 15:04:11.27441.</p>
             <p>This type converts to text using the 24-hour clock.</p>
             <p>This type has no date or timezone attached.</p>
         </description>
@@ -109,7 +119,7 @@
         <description>
             <p>A collection of a fixed set of values, written in round brackets, separated by commas, e.g. (Text, Number, Boolean) is a text, number and boolean value.</p>
             <p>A collection of two values is often called a pair, three is a triple, five is a quintuple and thus the name tuple is used to refer to the general concept.</p>
-            <p>There is no single right way to pronounce tuple.  Some say tupple (like supple), some say too-pull, some say chew-pull (depending on how you pronounce words like tulip).</p>
+            <p>There is no single right way to pronounce tuple.  Some say tupple (rhymes with supple), some say too-pull (rhymes with tootle), some say chew-pull (depending on how you pronounce words like tulip, tunic).</p>
         </description>
         <seeAlso>
             <link namespace="tuple"/>
@@ -121,7 +131,7 @@
             <p>A tagged type has one or more tags, each with an optional inner type.  A value is one of these tags, with a value if needed.</p>
             <p>For example, to represent pricing at a theme park, you might have a tagged type with tags Child, Adult, Senior.</p>
             <p>Some tagged types may be flexible in their inner types, in which case they are represented using a type variable.  For example, the concept of an optional value occurs often: a value may be missing because a survey respondent didn't fill it in, because some sensor data is missing, because a price is unknown, or because the value is not applicable.</p>
-            <p>Rather than have a separate tagged type for each inner type, e.g. MaybeBoolean, MaybeText, and so on, we have one Maybe type that takes a type variable, so we can have Maybe(Boolean) or Maybe(Text), and so on.</p>
+            <p>Rather than have a separate tagged type for each inner type, e.g. OptionalBoolean, OptionalText, and so on, we have one Optional type that takes a type variable, so we can have Optional(Boolean) or Optional(Text), and so on.</p>
         </description>
         <seeAlso>
             <link namespace="maybe"/>
@@ -134,7 +144,7 @@
             <p>Units are optional -- you can choose to use them or not.  They can be useful for two main reasons.  First, they provide a reminder of how something is measured -- if you have a column called distance, it is useful to specify whether than is in miles or kilometres.  Second, the units are tracked to make sure you do not add two mismatching units (e.g. adding a number in metres per second to a number in miles per hour) and allow you to convert between related units (e.g. inches to metres).</p>
         </description>
         <seeAlso>
-            <link function="asUnit"/>
+            <link namespace="core" function="asUnit"/>
         </seeAlso>
     </type>
     

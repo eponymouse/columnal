@@ -212,7 +212,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     @CanonicalLocation int common = Utility.longestCommonStart(match, 0, dataType.toString(), 0);
                     if (common > 0)
                     {
-                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletion(startOfType, dataType.toString() ))));
+                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(typeCompletion(dataType, startOfType))));
                     }
                 }
                 
@@ -238,12 +238,13 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         }
         @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         
+        // We still add auto-complete even when empty:
         if (content.isEmpty())
         {
             ImmutableList.Builder<LexCompletion> emptyCompletions = ImmutableList.builder();
             for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes()))
             {
-                emptyCompletions.add(new LexCompletion(CanonicalLocation.ZERO, dataType.toString()));
+                emptyCompletions.add(typeCompletion(dataType, CanonicalLocation.ZERO));
             }
             ImmutableList<LexCompletion> built = emptyCompletions.build();
             autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), (caretPos) -> built));
@@ -332,6 +333,11 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             errors = ImmutableList.of();
         
         return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
+    }
+
+    protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start)
+    {
+        return new LexCompletion(start, dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
     }
 
     private Stream<DataType> streamDataTypes()
