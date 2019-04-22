@@ -28,6 +28,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
     default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException, UserException
     {
         // We should be focused on name initially with the whole field selected, or blank:
+        assertFalse("Should be no errors showing in type editor while unfocused", lookup(".type-editor .error-underline").tryQuery().isPresent());
         write(columnDetails.columnId.getRaw(), DELAY);
         Window dialog = TestUtil.fx(() -> getRealFocusedWindow());
         Log.debug("Pressing TAB on window: " + dialog);

@@ -103,7 +103,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             }
         };
         defaultValueField.getStyleClass().add("default-value");
-        TypeExpression typeExpression = new InvalidIdentTypeExpression("");
+        TypeExpression typeExpression = null;
         if (dataType != null)
         {
             try
