@@ -161,7 +161,7 @@
             <output>false</output>
         </example>
     </naryOperatorGroup>
-    <naryOperatorGroup title="And">
+    <naryOperatorGroup title="Or">
         <operator>|</operator>
         <argType>Boolean</argType>
         <resultType>Boolean</resultType>
@@ -203,7 +203,6 @@
                 <li>Text is compared lexicographically using the Unicode codepoints -- see the examples.</li>
                 <li>Date, YearMonth, Time and DateTime are compared in the usual way (earlier dates or times are less than later dates or times).</li>
                 <li>DateTimeZoned is compared by converting to the UTC DateTime and then comparing that.</li>
-                <li>TimeZoned is compared by converting to a notional UTC time and then comparing that.</li>
                 <li>Tuples are compared by initially comparing the first item.  If the first items differ, that is the result of the comparison.  Only if the first items are equal will the second values be compared, and so on until they are all equal, or there is a result.</li>
                 <li>Lists are compared lexicographically.  The empty list is less than all other lists.  If both lists are non-empty, the first item is compared.  If these differ, that is the result.  Only if the first items are the same are the second values compared.  If lists are equal until one of them ends, the shorter list is less than the longer list.</li>
                 <li>Tagged items are compared using their tag order.  Earlier tags are less than later tags.  Items with the same tag are compared using their inner value, if present.</li>

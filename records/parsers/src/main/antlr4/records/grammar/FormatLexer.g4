@@ -12,7 +12,6 @@ TEXT : 'Text';
 YEARMONTHDAY : 'Date';
 YEARMONTH : 'DateYM';
 TIMEOFDAY : 'Time';
-TIMEOFDAYZONED : 'TimeZoned';
 DATETIME : 'DateTime';
 DATETIMEZONED : 'DateTimeZoned';
 TAGGED : '@tagged';
