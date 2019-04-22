@@ -12,7 +12,7 @@
             <p>Plus cannot be used for non-numbers.  Some other types:</p>
             <ul>
                 <li>To join text values together, use <link operator=";"/>.</li>
-                <li>To join lists together use the <link function="list:join lists"/> function.</li>
+                <li>To join lists together use the <link namespace="list" function="join lists"/> function.</li>
                 <li>To manipulate dates and times, see <link namespace="datetime"/>.</li>
             </ul>
         </description>

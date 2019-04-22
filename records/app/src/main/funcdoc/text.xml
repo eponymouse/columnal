@@ -51,7 +51,7 @@
         <returnType>Text</returnType>
         <description>
             <p>Joins a list of text values together as one text item.</p>
-            <p>If you want to add a separator between each text item, use <link function="join text with"/> instead.</p>
+            <p>If you want to add a separator between each text item, use <link namespace="text" function="join text with"/> instead.</p>
         </description>
         <equivalence>
             <forany name="x">[Text]</forany>

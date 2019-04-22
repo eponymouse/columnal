@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:ext="http://exslt.org/common" exclude-result-prefixes="ext"
+                xmlns:ext="http://exslt.org/common" exclude-result-prefixes="#all"
                 version="2.0">
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
@@ -72,7 +72,7 @@
                     name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="argType" separator =","/></xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
                     name="processType"><xsl:with-param name="type" select="returnType"/></xsl:call-template>
             </span>
-            <div class="description"><xsl:copy-of select="description"/></div>
+            <div class="description"><xsl:apply-templates select="$function/description"/></div>
             <div class="examples">
                 <span class="examples-header">Examples</span>
                 <xsl:for-each select="example">
@@ -93,21 +93,33 @@
     </xsl:template>
 
     
-    <xsl:template name="processOperator">
+    <xsl:template match="binaryOperator|naryOperatorGroup">
         <xsl:param name="operator" select="."/>
+        <xsl:variable name="op" select="operator"/>
 
         <div class="operator-item">
-            <xsl:for-each select="operator">
+            <xsl:for-each select="$operator/operator">
                 <span class="operator-name-header" id="operator-{string-join(string-to-codepoints(.), '-')}">operator <xsl:copy-of select="."/></span>
             </xsl:for-each>
-            <span class="operator-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
-                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="argTypeLeft"/><xsl:value-of select="argTypeRight"/> </xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
-                    name="processType"><xsl:with-param name="type" select="resultType"/></xsl:call-template>
+            <span class="operator-type">
+                <xsl:if test="local-name($operator)='binaryOperator'">
+                <!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
+                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="$operator/argTypeLeft"/><xsl:value-of select="$op"/><xsl:value-of select="$operator/argTypeRight"/> </xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template>
+                </xsl:if>
+                <xsl:if test="local-name($operator)='naryOperatorGroup'">
+                    <!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
+                        name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op"/><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op"/>...</xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template>
+                </xsl:if>
+            <span class="function-arrow"/> <xsl:call-template
+                    name="processType"><xsl:with-param name="type" select="$operator/resultType"/></xsl:call-template>
+                
             </span>
-            <div class="description"><xsl:copy-of select="description"/></div>
+            <div class="description">
+                <xsl:apply-templates select="$operator/description"/>
+            </div>
             <div class="examples">
                 <span class="examples-header">Examples</span>
-                <xsl:for-each select="example">
+                <xsl:for-each select="$operator/example">
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:call-template
@@ -115,7 +127,7 @@
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>
-            <xsl:for-each select="seeAlso">
+            <xsl:for-each select="$operator/seeAlso">
                 <div class="seeAlso">
                     <span class="seeAlsoHeader">See Also</span>
                     <xsl:apply-templates select="child::node()"/>
@@ -124,12 +136,10 @@
         </div>
     </xsl:template>
 
-    <xsl:template name="processTypeDef">
-        <xsl:param name="type" select="."/>
-
+    <xsl:template match="type">
         <div class="type-item">
             <span class="type-name-header" id="type-{@name}"><xsl:value-of select="@name"/></span>
-            <div class="description"><xsl:copy-of select="description"/></div>
+            <div class="description"><xsl:apply-templates select="description"/></div>
             <xsl:for-each select="seeAlso">
                 <div class="seeAlso">
                     <span class="seeAlsoHeader">See Also</span>
@@ -160,7 +170,7 @@
                     </xsl:if>
                 </xsl:for-each>
             </span>
-            <div class="description"><xsl:copy-of select="description"/></div>
+            <div class="description"><xsl:apply-templates select="$syntax/description"/></div>
             <xsl:for-each select="seeAlso">
                 <div class="seeAlso">
                     <span class="seeAlsoHeader">See Also</span>
@@ -168,6 +178,13 @@
                 </div>
             </xsl:for-each>
         </div>
+    </xsl:template>
+
+    <!-- Copy all p, ul, li as-is: -->
+    <xsl:template match="p|ul|li">
+         <xsl:copy>
+               <xsl:apply-templates select="@* | node()" />
+         </xsl:copy>
     </xsl:template>
 
 </xsl:stylesheet>

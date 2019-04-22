@@ -35,14 +35,14 @@ body.indiv {
 .function-name-header {
     display: none;
 }
-.function-name-type, .syntax-keyword, .type-name-header {
+.function-name-type, .syntax-keyword, .type-name-header, .operator-name-header {
     font-weight: bold;
 }
-.function-type-args, .syntax-type-args {
+.function-type-args, .syntax-type-args, .operator-type, .operator-name-header {
     display:block;
     font-size: 80%;
 }
-.type-name-header, .function-name-type, .function-type, .operator-type, .syntax-name-header {
+.type-name-header, .function-name-type, .function-type, .operator-type, .syntax-name-header, .operator-name-header {
     font-size: 18pt;
 }
 body.indiv {
@@ -126,12 +126,14 @@ body.indiv .examples .examples-header {
         font-weight: bold;
         font-size: 14pt;
     }
+
 }
 body.indiv .seeAlso .seeAlsoHeader {
     font-size: 11pt;
 }
 .seeAlso a, .index a {
-    margin-left: 30pt;
+    margin-left: 20pt;
+    display: block;
     &, &:visited, &:hover {
         color: black;
     }

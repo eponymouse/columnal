@@ -5,7 +5,7 @@
     
     <xsl:include href="funcdoc-shared.xsl"/>
     
-    <xsl:template match="/all">
+    <xsl:template match="//all|//functionDocumentation">
         <html>
             <head>
                 <title>Function Documentation</title>
@@ -15,7 +15,7 @@
             <body>
                 <!-- Index -->
                 <div class="index">
-                    <xsl:for-each select=".//functionDocumentation">
+                    <xsl:for-each select=".//functionDocumentation|//functionDocumentation">
                         <xsl:variable name="namespace" select="@namespace"/>
                         <div class="index-namespace">
                             <xsl:for-each select="function">
@@ -26,32 +26,12 @@
                 </div>
                 
                 <!-- Body -->
-                <xsl:for-each select=".//functionDocumentation">
+                <xsl:for-each select=".//functionDocumentation|//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
                     <div class="namespace" id="namespace-{@namespace}">
-                        <xsl:for-each select="function">
-                            <xsl:call-template name="processFunction">
-                                <xsl:with-param name="function" select="."/>
-                            </xsl:call-template>
-                        </xsl:for-each>
+                        <xsl:apply-templates select="function"/>
                     </div>
-                </xsl:for-each>
-                
-                <xsl:for-each select=".//binaryOperator">
-                    <xsl:call-template name="processOperator">
-                        <xsl:with-param name="operator" select="."/>
-                    </xsl:call-template>
-                </xsl:for-each>
-                <xsl:for-each select=".//naryOperatorGroup">
-                    <xsl:call-template name="processOperator">
-                        <xsl:with-param name="operator" select="."/>
-                    </xsl:call-template>
-                </xsl:for-each>
-
-                <xsl:for-each select=".//type">
-                    <xsl:call-template name="processTypeDef">
-                        <xsl:with-param name="type" select="."/>
-                    </xsl:call-template>
+                    <xsl:apply-templates select="binaryOperator|naryOperatorGroup|type"/>
                 </xsl:for-each>
             </body>
         </html>

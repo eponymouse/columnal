@@ -17,9 +17,7 @@
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:call-template name="processFunction">
-                            <xsl:with-param name="function" select="."/>
-                        </xsl:call-template>
+                        <xsl:apply-templates/>
                     </body>
                 </html>
             </xsl:result-document>
@@ -33,9 +31,7 @@
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:call-template name="processSyntax">
-                            <xsl:with-param name="syntax" select="."/>
-                        </xsl:call-template>
+                        <xsl:apply-templates/>
                     </body>
                 </html>
             </xsl:result-document>
@@ -45,14 +41,12 @@
             <xsl:result-document method="html" href="file:///{$myOutputDir}/operator-{string-join(string-to-codepoints($operator), '-')}.html">
                 <html>
                     <head>
-                        <title><xsl:value-of select="$operator"/></title>
+                        <title>Operator <xsl:value-of select="$operator"/></title>
                         <link rel="stylesheet" href="funcdoc.css"/>
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:call-template name="processOperator">
-                            <xsl:with-param name="operator" select="."/>
-                        </xsl:call-template>
+                        <xsl:apply-templates/>
                     </body>
                 </html>
             </xsl:result-document>
@@ -64,14 +58,12 @@
                 <xsl:result-document method="html" href="file:///{$myOutputDir}/operator-{string-join(string-to-codepoints($operator), '-')}.html">
                     <html>
                         <head>
-                            <title><xsl:value-of select="$operator"/></title>
+                            <title>Operator <xsl:value-of select="$operator"/></title>
                             <link rel="stylesheet" href="funcdoc.css"/>
                             <link rel="stylesheet" href="web.css"/>
                         </head>
                         <body class="indiv">
-                            <xsl:call-template name="processOperator">
-                                <xsl:with-param name="operator" select="$group"/>
-                            </xsl:call-template>
+                            <xsl:apply-templates select=".."/>
                         </body>
                     </html>
                 </xsl:result-document>
@@ -86,9 +78,7 @@
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:call-template name="processTypeDef">
-                            <xsl:with-param name="type" select="."/>
-                        </xsl:call-template>
+                        <xsl:apply-templates select="."/>
                     </body>
                 </html>
             </xsl:result-document>
@@ -98,7 +88,7 @@
     <xsl:template match="link">
         <xsl:choose>
             <xsl:when test="@function"><a class="internal-link" href="function-{@namespace}-{@function}.html"><xsl:value-of select="@function"/>(..)</a></xsl:when>
-            <xsl:when test="@namespace"></xsl:when>
+            <xsl:when test="@namespace"><a class="internal-link" href="{@namespace}.html"><xsl:value-of select="@namespace"/></a></xsl:when>
             <xsl:when test="@type='typevar' or @type='List' or @type='unitvar'"><a class="internal-link" href="type-{@type}.html"><xsl:copy-of select="child::node()"/></a></xsl:when>
             <xsl:when test="@type"><a class="internal-link" alt="Type {@type}" href="type-{@type}.html"><xsl:value-of select="@type"/></a></xsl:when>
             <xsl:when test="@operator"><a class="internal-link" href="operator-{string-join(string-to-codepoints(@operator), '-')}.html">operator <xsl:value-of select="@operator"/></a></xsl:when>
