@@ -31,7 +31,7 @@
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:apply-templates/>
+                        <xsl:apply-templates select="."/>
                     </body>
                 </html>
             </xsl:result-document>
@@ -46,7 +46,7 @@
                         <link rel="stylesheet" href="web.css"/>
                     </head>
                     <body class="indiv">
-                        <xsl:apply-templates/>
+                        <xsl:apply-templates select="."/>
                     </body>
                 </html>
             </xsl:result-document>

@@ -149,9 +149,7 @@
         </div>
     </xsl:template>
 
-    <xsl:template name="processSyntax">
-        <xsl:param name="syntax" select="."/>
-
+    <xsl:template match="syntax">
         <div class="syntax-item"  id="syntax-{@id}">
             <xsl:if test="typeArg">
                 <span class="syntax-type-args">For any types <xsl:for-each select="typeArg"><span class="type-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
@@ -170,7 +168,7 @@
                     </xsl:if>
                 </xsl:for-each>
             </span>
-            <div class="description"><xsl:apply-templates select="$syntax/description"/></div>
+            <div class="description"><xsl:apply-templates select="description"/></div>
             <xsl:for-each select="seeAlso">
                 <div class="seeAlso">
                     <span class="seeAlsoHeader">See Also</span>

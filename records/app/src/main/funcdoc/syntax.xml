@@ -14,7 +14,29 @@
             <keyword>@endif</keyword>
         </syntaxElements>
         <description>
-            <p>Chooses between two expressions depending on whether the condition is true or false.  For example, @if score >= 0 @then "Positive" @else "Negative" @endif would check whether the score expression is greater than or equal to zero.  If it was, the result would be the "Positive" text; otherwise it would be the "Negative" text.</p>
+            <p>Chooses between two expressions depending on whether the condition is true or false.  For example, <code>@if score &gt;= 0 @then "Positive" @else "Negative" @endif</code> would check whether the score expression is greater than or equal to zero.  If it was, the result would be the "Positive" text; otherwise it would be the "Negative" text.</p>
+        </description>
+    </syntax>
+    <syntax title="Match" id="match">
+        <typeArg>c</typeArg>
+        <typeArg>t</typeArg>
+        <syntaxElements>
+            <keyword>@match</keyword>
+            <type>c</type>
+            <keyword>@case</keyword>
+            <type>c</type>
+            <keyword>@given</keyword>
+            <type>Boolean</type>
+            <keyword>@orcase</keyword>
+            <type>c</type>
+            <keyword>@given</keyword>
+            <type>Boolean</type>
+            <keyword>@then</keyword>
+            <type>t</type>
+            <keyword>@endmatch</keyword>
+        </syntaxElements>
+        <description>
+            <p>Matches against several possible alternatives.  For example, <code>@match desc @case "full" @orcase "max" @then 1.0 @case _ @then 0.5 @endmatch</code> checks if desc is equal to "full" or "max".  If so, the result is 1.0, otherwise (the case underscore matches anything else) the result is 0.5.</p>
         </description>
     </syntax>
 </functionDocumentation>
