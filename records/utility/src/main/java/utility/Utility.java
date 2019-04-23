@@ -1974,4 +1974,15 @@ public class Utility
         });
         return withDistance.filter(p -> p.getFirst() <= threshold).sorted(Comparator.comparing(Pair::getFirst)).map(Pair::getSecond);
     }
+    
+    // Like longer.startsWith(shorter) but ignoring case
+    public static boolean startsWithIgnoreCase(String longer, String shorter)
+    {
+        return longer.regionMatches(true, 0, shorter, 0, shorter.length());
+    }
+
+    public static boolean startsWithIgnoreCase(String longer, String shorter, int offsetInLonger)
+    {
+        return longer.regionMatches(true, offsetInLonger, shorter, 0, shorter.length());
+    }
 }

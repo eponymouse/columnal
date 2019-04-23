@@ -347,7 +347,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
                 {
                     String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
-                    if (tag.tagName.startsWith(parsed.getFirst()) || (tag.typeName != null && fullName.startsWith(parsed.getFirst())))
+                    if (Utility.startsWithIgnoreCase(tag.tagName, parsed.getFirst()) || (tag.typeName != null && Utility.startsWithIgnoreCase(fullName, parsed.getFirst())))
                     {
                         identCompletions.add(new LexCompletion(removedChars.map(curIndex), fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)));
                     }
@@ -463,7 +463,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 String stem = content.substring(curIndex, nonLetter);
 
                 ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
-                if ("@i".startsWith(stem))
+                if (Utility.startsWithIgnoreCase("@i", stem))
                 {
                     validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), "@if@then@else@endif") {
                         @Override
@@ -473,7 +473,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         }
                     }.withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(2).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP));
                 }
-                if ("@entire".startsWith(stem))
+                if (Utility.startsWithIgnoreCase("@entire",stem))
                 {
                     for (ColumnReference columnReference : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences().sorted(Comparator.comparing((ColumnReference c) -> c.getTableId() == null ? "" : c.getTableId().getRaw()).thenComparing((ColumnReference c) -> c.getColumnId().getRaw()))))
                     {
@@ -494,7 +494,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
                 for (Keyword keyword : Keyword.values())
                 {
-                    if (keyword.getContent().startsWith(stem))
+                    if (Utility.startsWithIgnoreCase(keyword.getContent(), stem))
                     {
                         validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
                     }
@@ -539,7 +539,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType));
                 @RawInputLocation int lastIndex = curIndex;
                 typeExp.toConcreteType(typeManager, false).ifLeft(err -> {
-                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedChars.map(lastIndex)), err.getErrorText(), ImmutableList.of());
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedChars.map(lastIndex)), err.getErrorText(), ImmutableList.of(/*asType fix?  Only if ambig?*/));
                 });
             }
         }

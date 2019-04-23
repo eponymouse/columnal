@@ -104,7 +104,7 @@ public class LexAutoComplete
         int curCompletionStart = 0;
         do
         {
-            if (completionText.startsWith(src, curCompletionStart))
+            if (Utility.startsWithIgnoreCase(completionText, src, curCompletionStart))
             {
                 return Optional.of(new LexCompletion(startPos, completionText));
             }

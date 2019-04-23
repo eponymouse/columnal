@@ -116,6 +116,17 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     }
 
     @Test
+    public void testColumn2a() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("@entire MY NU");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+    }
+
+    @Test
     public void testColumn2b() throws Exception
     {
         loadExpression("@unfinished \"\"");
