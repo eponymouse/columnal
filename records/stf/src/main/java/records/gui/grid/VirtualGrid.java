@@ -1126,7 +1126,7 @@ public final class VirtualGrid implements ScrollBindable
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 
-                if (cellPosition != null && mouseEvent.getButton() == MouseButton.PRIMARY)
+                if (cellPosition != null && mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.isStillSincePress())
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition;
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
