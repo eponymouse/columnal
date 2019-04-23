@@ -136,6 +136,12 @@ public class EditorLocationAndErrorRecorder
         {
             return start <= position && position <= end;
         }
+        
+        @Override
+        public String toString()
+        {
+            return start + "->" + end;
+        }
     }
     
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,

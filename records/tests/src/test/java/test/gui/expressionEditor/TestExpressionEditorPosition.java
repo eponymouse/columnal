@@ -150,6 +150,12 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         testCaretPositionsAndDisplay("@if", "@if  ", 0, 3);
     }
 
+    @Test
+    public void testPosIncompleteCase()
+    {
+        testCaretPositionsAndDisplay("@case", "  @case ", 0, 5);
+    }
+
 
     @SuppressWarnings("identifier")
     private void testCaretPositionsAndDisplay(String internalContent, String display, int... internalCaretPos)

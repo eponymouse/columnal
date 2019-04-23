@@ -240,7 +240,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 if (terminatorDescription != null)
                     locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Missing expression before " + terminatorDescription), ImmutableList.of());
-                return locationRecorder.record(brackets.location, new InvalidOperatorExpression(ImmutableList.of()));
+                return locationRecorder.record(new CanonicalSpan(innerContentLocation, innerContentLocation), new InvalidOperatorExpression(ImmutableList.of()));
             }
         }
         CanonicalSpan location = CanonicalSpan.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1))); 

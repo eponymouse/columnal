@@ -21,6 +21,7 @@ import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.LexAutoComplete.LexCompletion;
@@ -397,7 +398,16 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 {
                     error.displayLocation = new DisplaySpan(content.mapContentToDisplay(error.location.start), content.mapContentToDisplay(error.location.end));
                 }
-                errorChars.set(error.displayLocation.start, error.displayLocation.end);
+                try
+                {
+                    if (error.displayLocation.start > error.displayLocation.end)
+                        throw new InternalException("Invalid display location: " + error.displayLocation + " with error: " + error.error + " and content: " + content.getText());
+                    errorChars.set(error.displayLocation.start, error.displayLocation.end);
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
             }
         }
         return errorChars;

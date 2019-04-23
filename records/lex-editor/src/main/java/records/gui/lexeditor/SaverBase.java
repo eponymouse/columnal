@@ -590,7 +590,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     invalid.add(Either.right(expression));
                     validOperands.add(expression);
 
-                    if (lastWasOperand.get())
+                    if (lastWasOperand.get() && iFinal > 0)
                     {
                         CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression);
                         invalidReason = new Pair<>(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"));
