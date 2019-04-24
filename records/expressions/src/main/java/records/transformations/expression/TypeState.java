@@ -32,7 +32,7 @@ public class TypeState
 {
     // In-built variables:
     public static final @ExpressionIdentifier String GROUP_COUNT = "group count";
-    public static final @ExpressionIdentifier String ROW_NUMBER = "row number";
+    public static final @ExpressionIdentifier String ROW_NUMBER = "row";
     
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.

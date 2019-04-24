@@ -39,4 +39,18 @@
             <p>Matches against several possible alternatives.  For example, <code>@match desc @case "full" @orcase "max" @then 1.0 @case _ @then 0.5 @endmatch</code> checks if desc is equal to "full" or "max".  If so, the result is 1.0, otherwise (the case underscore matches anything else) the result is 0.5.</p>
         </description>
     </syntax>
+    <variable name="group count">
+        <type>Number</type>
+        <description>
+            <p>A count of the number of items that collapsed into the destination row.  The aggregate expression can either be calculated once for the whole source table (in which case this variable is the length of the source table) or split by row values.</p>
+            <p>For example, if you split by a boolean column Winning, there will be one aggregated row for all the rows in the source table where Winning was true -- and there, group count will be the number of rows in the source table where Winning was true.</p>
+            <p>If you want a frequency table, using group count by itself will produce the right result.</p>
+        </description>
+    </variable>
+    <variable name="row">
+        <type>Number</type>
+        <description>
+            <p>The number of the current row.  The first row is 1, the second row is 2 and so on.</p>
+        </description>
+    </variable>
 </functionDocumentation>

@@ -356,7 +356,19 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     for (String availableVariable : makeTypeState.get().getAvailableVariables())
                     {
-                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableVariable).ifPresent(identCompletions::add);
+                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableVariable).map(c -> {
+                            // Special cases for in-built variables with attached documentation:
+                            if (availableVariable.equals(TypeState.GROUP_COUNT))
+                            {
+                                return c.withFurtherDetailsURL("variable-" + TypeState.GROUP_COUNT.replace(" ", "-") + ".html");
+                            }
+                            else if (availableVariable.equals(TypeState.ROW_NUMBER))
+                            {
+                                return c.withFurtherDetailsURL("variable-" + TypeState.ROW_NUMBER.replace(" ", "-") + ".html");
+                            }
+                            else
+                                return c;
+                        }).ifPresent(identCompletions::add);
                     }
                 }
                 catch (InternalException e)

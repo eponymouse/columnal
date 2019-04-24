@@ -126,6 +126,7 @@
                 <xs:element ref="function"/>
                 <xs:element ref="type"/>
                 <xs:element ref="syntax"/>
+                <xs:element ref="variable"/>
             </xs:choice>
             <xs:attribute name="namespace" type="xs:string" use="required"/>
             <!-- For when it's imported by XInclude -->
@@ -150,6 +151,16 @@
             </xs:sequence>
             <xs:attribute name="id" type="xs:string" use="required"/>
             <xs:attribute name="title" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="variable">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="type" type="xs:string"/>
+                <xs:element ref="description"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
 

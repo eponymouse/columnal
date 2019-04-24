@@ -149,6 +149,19 @@
         </div>
     </xsl:template>
 
+    <xsl:template match="variable">
+        <div class="variable-item">
+            <span class="variable-name-header" id="type-{replace(@name, ' ', '-')}"><xsl:value-of select="@name"/></span>
+            <div class="description"><xsl:apply-templates select="description"/></div>
+            <xsl:for-each select="seeAlso">
+                <div class="seeAlso">
+                    <span class="seeAlsoHeader">See Also</span>
+                    <xsl:apply-templates select="child::node()"/>
+                </div>
+            </xsl:for-each>
+        </div>
+    </xsl:template>
+
     <xsl:template match="syntax">
         <div class="syntax-item"  id="syntax-{@id}">
             <xsl:if test="typeArg">
