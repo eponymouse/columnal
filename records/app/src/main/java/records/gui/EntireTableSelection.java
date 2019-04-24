@@ -111,4 +111,9 @@ public class EntireTableSelection implements CellSelection
     {
         selected.gotoRow(parent, column);
     }
+
+    @Override
+    public void notifySelected(boolean selected)
+    {
+    }
 }

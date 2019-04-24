@@ -341,6 +341,11 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
+            public void notifySelected(boolean selected)
+            {
+            }
+
+            @Override
             public CellPosition getActivateTarget()
             {
                 return cellPosition;

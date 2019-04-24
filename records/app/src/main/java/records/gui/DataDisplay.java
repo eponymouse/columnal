@@ -521,6 +521,21 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             return pos;
         }
+
+        @Override
+        public void notifySelected(boolean selected)
+        {
+            boolean isDown = canExpandDown() && pos.rowIndex == getPosition().rowIndex + getHeaderRowCount() + currentKnownRows;
+            boolean isRight = canExpandRight() && pos.columnIndex == getPosition().columnIndex + getDisplayColumns().size();
+            
+            if ((isDown || isRight) && !(isDown && isRight))
+            {
+                if (selected)
+                    addCellStyle(isDown ? CellStyle.HOVERING_EXPAND_DOWN : CellStyle.HOVERING_EXPAND_RIGHT);
+                else
+                    removeCellStyle(isDown ? CellStyle.HOVERING_EXPAND_DOWN : CellStyle.HOVERING_EXPAND_RIGHT);
+            }
+        }
     }
 
     
@@ -796,6 +811,18 @@ public abstract class DataDisplay extends HeadedDisplay
             );
             CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
         }
+    }
+    
+    protected boolean canExpandDown()
+    {
+        // Default implementation:
+        return false;
+    }
+
+    protected boolean canExpandRight()
+    {
+        // Default implementation:
+        return false;
     }
 
     @OnThread(Tag.FXPlatform)

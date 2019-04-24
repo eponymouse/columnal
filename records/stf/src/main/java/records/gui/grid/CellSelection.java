@@ -71,4 +71,7 @@ public interface CellSelection
     public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay);
     
     public void gotoRow(Window parent);
+    
+    // Called when selected or deselected
+    public void notifySelected(boolean selected);
 }

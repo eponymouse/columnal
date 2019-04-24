@@ -877,10 +877,16 @@ public final class VirtualGrid implements ScrollBindable
             FXUtility.setPseudoclass(visCell, "secondary-selected-cell", status == SelectionStatus.SECONDARY_SELECTION);
         });
         */
-        
+
+        @Nullable CellSelection old = selection.get();
+        if (old != null)
+            old.notifySelected(false);
         selection.set(cellSelection);
         if (cellSelection != null)
+        {
             container.requestFocus();
+            cellSelection.notifySelected(true);
+        }
     }
 
     public boolean selectionIncludes(@UnknownInitialization(GridArea.class) GridArea gridArea)
@@ -2011,6 +2017,12 @@ public final class VirtualGrid implements ScrollBindable
         public void gotoRow(Window parent)
         {
             // Do nothing if not in a table
+        }
+
+        @Override
+        public void notifySelected(boolean selected)
+        {
+            
         }
 
         // Useful for debugging

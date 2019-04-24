@@ -156,6 +156,11 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
+    public void notifySelected(boolean selected)
+    {
+    }
+
+    @Override
     public String toString()
     {
         // For debugging:

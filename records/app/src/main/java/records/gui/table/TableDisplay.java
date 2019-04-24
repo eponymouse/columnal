@@ -339,7 +339,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @SuppressWarnings("units")
     protected @TableDataRowIndex int getCurrentKnownRows()
     {
-        return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (table.getOperations().appendRows != null ? 1 : 0);
+        return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (canExpandDown() ? 1 : 0);
+    }
+
+    @Override
+    protected boolean canExpandDown()
+    {
+        return table.getOperations().appendRows != null;
+    }
+
+    @Override
+    protected boolean canExpandRight()
+    {
+        return showAddColumnArrow(table);
     }
 
     private int internal_getColumnCount(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
