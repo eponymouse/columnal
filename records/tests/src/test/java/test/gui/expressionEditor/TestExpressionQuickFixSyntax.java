@@ -241,6 +241,13 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
         // or a tuple, offer to switch to list brackets:
         testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call @function sum([2, 3, 4])"), "@call @function sum([2, 3, 4])");
     }
+
+    @Test
+    public void testListBracketFix3() throws UserException, InternalException
+    {
+        // If user tries to use array index syntax, offer the element function instead:
+        testFix("@entire ACC1[3]+1", "3", dotCssClassFor("@call @function element(@entire ACC1, 3)"), "@call @function element(@entire ACC1,3)+1");
+    }
     
     @Test
     public void testColumnToListFix1() throws UserException, InternalException

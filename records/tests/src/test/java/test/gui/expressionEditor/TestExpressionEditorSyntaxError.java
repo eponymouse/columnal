@@ -210,4 +210,18 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
         testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
                 e(25,25, "missing operator"));
     }
+
+    @Test
+    public void testMissingOperator3()
+    {
+        testError("ACC1[1]",
+                e(4,4, "missing operator"));
+    }
+
+    @Test
+    public void testMissingOperator3b()
+    {
+        testError("ACC1[1]+ACC1[2]",
+                e(4,4, "missing operator"), e(12,12, "missing operator"));
+    }
 }
