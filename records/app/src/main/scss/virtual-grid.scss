@@ -50,16 +50,11 @@
 .table-display-column-title, .table-display-column-type {
     -fx-background-color: $column-header-background-color;
     -fx-text-fill: $column-header-text-color;
-    
-    .text-field {
-        -fx-text-fill: $column-header-text-color;
-        -fx-background-color: $column-header-background-color, $column-header-background-color;
-        &:focused, &:hover {
-            -fx-background-color: grey(65%), $column-header-background-color;
-        }
-        -fx-background-insets: 0, 1;
-        -fx-padding: -1 1 -1 1;
+    &.table-display-column-type {
+        -fx-font-size: 85%;
     }
+    -fx-label-padding: 0 1 0 2;
+    
     &.column-title-edit {
         -fx-cursor: hand;
         &:hover {
