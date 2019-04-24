@@ -21,6 +21,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
@@ -40,11 +43,19 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
@@ -79,6 +90,7 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 
@@ -208,6 +220,7 @@ public final class VirtualGrid implements ScrollBindable
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
     private boolean suppressSelectionUpdate = false;
+    private final ResizableColumnBar resizableColumnBar;
 
     public static interface VirtualGridManager
     {
@@ -298,10 +311,11 @@ public final class VirtualGrid implements ScrollBindable
             {
             }
         };
-        this.paneWithScrollBars = new BorderPane(stackPane, null, vBar, hBar, null);
+        scrollGroup = new ScrollGroup(FXUtility.mouse(this)::scrollClampX, FXUtility.mouse(this)::scrollClampY);
+        resizableColumnBar = new ResizableColumnBar(scrollGroup);
+        this.paneWithScrollBars = new BorderPane(stackPane, resizableColumnBar, vBar, hBar, null);
         
         this.paneWithScrollBars.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
-        scrollGroup = new ScrollGroup(FXUtility.mouse(this)::scrollClampX, FXUtility.mouse(this)::scrollClampY);
 /*
 
                 scrollLayoutXBy, MAX_EXTRA_ROW_COLS, targetX -> {
@@ -496,7 +510,8 @@ public final class VirtualGrid implements ScrollBindable
         return idealScrollBy;
     }
 
-    private @Nullable CellPosition getCellPositionAt(double x, double y)
+    // Returns the cell position, and the relative X Y position within the cell
+    private @Nullable Pair<CellPosition, Point2D> getCellPositionAt(double x, double y)
     {
         @AbsColIndex int colIndex;
         x -= logicalScrollColumnOffset;
@@ -515,7 +530,7 @@ public final class VirtualGrid implements ScrollBindable
         @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + logicalScrollRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
-        return new CellPosition(rowIndex, colIndex);
+        return new Pair<>(new CellPosition(rowIndex, colIndex), new Point2D(x + getColumnWidth(colIndex), y % rowHeight));
     }
 
     @Override
@@ -1020,10 +1035,15 @@ public final class VirtualGrid implements ScrollBindable
     }
     
 
-    public void _test_setColumnWidth(int columnIndex, double width)
+    public void _test_setColumnWidth(@AbsColIndex int columnIndex, double width)
+    {
+        setColumnWidth(columnIndex, width);
+    }
+
+    private void setColumnWidth(@AbsColIndex int columnIndex, double width)
     {
         customisedColumnWidths.put(CellPosition.col(columnIndex), width);
-        container.redoLayout();
+        updateSizeAndPositions();
     }
 
     public Optional<CellSelection> _test_getSelection()
@@ -1123,12 +1143,12 @@ public final class VirtualGrid implements ScrollBindable
 
                 //Log.debug("Processing: " + mouseEvent + " shift: " + mouseEvent.isShiftDown() + " still: " + mouseEvent.isStillSincePress() +  " click count: " + mouseEvent.getClickCount());
                 
-                @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                @Nullable Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 
                 if (cellPosition != null && mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.isStillSincePress())
                 {
-                    @NonNull CellPosition cellPositionFinal = cellPosition;
+                    @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
                         ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState != ItemState.NOT_CLICKABLE;
@@ -1138,7 +1158,7 @@ public final class VirtualGrid implements ScrollBindable
                     
                     // Not editing, is the cell currently part of a single cell selection:
                     @Nullable CellSelection curSel = VirtualGrid.this.selection.get();
-                    boolean selectedByItself = curSel != null && curSel.isExactly(cellPosition);
+                    boolean selectedByItself = curSel != null && curSel.isExactly(cellPositionFinal);
                     
                     if (selectedByItself || mouseEvent.getClickCount() == 2)
                     {
@@ -1153,7 +1173,7 @@ public final class VirtualGrid implements ScrollBindable
                         // Become a single cell selection:
                         for (GridArea gridArea : gridAreas)
                         {
-                            @Nullable CellSelection singleCellSelection = gridArea.getSelectionForSingleCell(cellPosition);
+                            @Nullable CellSelection singleCellSelection = gridArea.getSelectionForSingleCell(cellPositionFinal);
                             if (singleCellSelection != null)
                             {
                                 select(singleCellSelection);
@@ -1165,7 +1185,7 @@ public final class VirtualGrid implements ScrollBindable
                         if (!foundInGrid)
                         {
                             // Belongs to no-one; we must handle it:
-                            select(new EmptyCellSelection(cellPosition));
+                            select(new EmptyCellSelection(cellPositionFinal));
                             FXUtility.mouse(this).requestFocus();
                         }
                     }
@@ -1177,13 +1197,13 @@ public final class VirtualGrid implements ScrollBindable
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
 
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc @UnknownIfIdentifier MouseEvent> capture = mouseEvent -> {
-                @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                @Nullable Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
 
                 if (cellPosition != null)
                 {
                     // We want to capture the events to prevent clicks reaching the underlying cell,
                     // if the cell is not currently editing
-                    @NonNull CellPosition cellPositionFinal = cellPosition;
+                    @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
                     Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
                         ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
@@ -1646,6 +1666,7 @@ public final class VirtualGrid implements ScrollBindable
         {
              nodeSupplier.sizesOrPositionsChanged(bounds);
         }
+        resizableColumnBar.redoLayoutAfterScroll();
         updateHBar();
         updateVBar();
     }
@@ -2035,7 +2056,7 @@ public final class VirtualGrid implements ScrollBindable
         public <T> @Nullable T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
         {
             Point2D localPos = container.screenToLocal(screenPos);
-            @Nullable CellPosition cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
+            @Nullable Pair<CellPosition, Point2D> cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
             @Nullable RectangleBounds oldPicked = picked;
             final Pair<RectangleBounds, T> result;
             if (cellAtScreenPos == null)
@@ -2044,7 +2065,7 @@ public final class VirtualGrid implements ScrollBindable
             }
             else
             {
-                @NonNull CellPosition pos = cellAtScreenPos;
+                @NonNull CellPosition pos = cellAtScreenPos.getFirst();
                 result = gridAreas.stream().filter(g -> g.contains(pos))
                     .flatMap(g -> Utility.streamNullable(picker.pick(g, pos)))
                     .findFirst().orElse(null);
@@ -2115,5 +2136,152 @@ public final class VirtualGrid implements ScrollBindable
         suppressSelectionUpdate = false;
         container.move(false, 1, 0);
         container.move(false, -1, 0);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private final class ResizableColumnBar extends Region implements ScrollBindable 
+    {
+        private static final double HEIGHT = 10;
+
+        private class ColumnResize
+        {
+            // We will change the width of this column, so effectively moving its right edge:
+            private final @AbsColIndex int colIndex;
+            private final double startPosX;
+            private final double originalWidth;
+
+            @OnThread(Tag.FXPlatform)
+            public ColumnResize(@AbsColIndex int colIndex, double startPosX)
+            {
+                this.colIndex = colIndex;
+                this.startPosX = startPosX;
+                this.originalWidth = getColumnWidth(colIndex);
+            }
+        }
+        private @Nullable ColumnResize resizingColumn;
+        
+        // getChildren() are updated automatically based on this map:
+        private final ObservableMap<@AbsColIndex Integer, Pair<Line, Path>> columnRightHandLines = FXCollections.observableHashMap();
+        
+        public ResizableColumnBar(ScrollGroup scrollGroupToAddTo)
+        {
+            scrollGroupToAddTo.add(this, ScrollLock.HORIZONTAL);
+            columnRightHandLines.addListener((MapChangeListener<@AbsColIndex Integer, Pair<Line, Path>>)(MapChangeListener.Change<? extends @AbsColIndex Integer, ? extends Pair<Line, Path>> c) -> {
+                if (c.wasRemoved())
+                {
+                    getChildren().remove(c.getValueRemoved().getFirst());
+                    getChildren().remove(c.getValueRemoved().getSecond());
+                }
+                if (c.wasAdded())
+                {
+                    getChildren().add(c.getValueAdded().getFirst());
+                    getChildren().add(c.getValueAdded().getSecond());
+                }
+            });
+            setPrefHeight(HEIGHT);
+            setMinHeight(HEIGHT);
+            setMaxHeight(HEIGHT);
+            translateXProperty().bind(scrollGroupToAddTo.translateXProperty());
+            getStyleClass().add("resizable-column-header");
+            setOnMouseEntered(e -> updateCursor(e));
+            setOnMouseMoved(e -> updateCursor(e));
+            setOnMousePressed(e -> {
+                if (e.getButton() == MouseButton.PRIMARY && !e.isShiftDown())
+                {
+                    @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
+                    if (colIndex != null)
+                    {
+                        resizingColumn = new ColumnResize(colIndex, e.getX());
+                        e.consume();
+                    }
+                }
+            });
+            setOnMouseDragged(e -> {
+                // Don't update cursor if resizing
+                if (resizingColumn != null)
+                {
+                    // TODO shouldn't use _test_ method here
+                    @NonNull ColumnResize c = this.resizingColumn;
+                    _test_setColumnWidth(c.colIndex, Math.max(20, e.getX() - c.startPosX + c.originalWidth));
+                }
+                else
+                    updateCursor(e);
+            });
+            setOnMouseReleased(e -> {
+                resizingColumn = null;
+                updateCursor(e);
+            });
+        }
+
+        @Override
+        public boolean scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
+        {
+            return true;
+        }
+
+        @Override
+        public boolean scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
+        {
+            // Y scroll doesn't affect us
+            return false;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void redoLayoutAfterScroll()
+        {
+            @AbsColIndex int lastColExcl = currentColumns.get();
+            double x = logicalScrollColumnOffset;
+            columnRightHandLines.entrySet().removeIf(e -> e.getKey() < logicalScrollColumnIndex);
+            @AbsColIndex int col;
+            for (col = logicalScrollColumnIndex; col < lastColExcl && x < getWidth(); col++)
+            {
+                Pair<Line, Path> rhs = columnRightHandLines.computeIfAbsent(col, k -> makeLine());
+                x += getColumnWidth(col);
+                rhs.getFirst().setTranslateX(x);
+                rhs.getSecond().setTranslateX(x);
+            }
+            @AbsColIndex int lastRendered = col;
+            columnRightHandLines.entrySet().removeIf(e -> e.getKey() > lastRendered);
+        }
+
+        protected Pair<Line, Path> makeLine()
+        {
+            // -0.5 to make line appear in the middle of the pixel:
+            Line line = new Line(-0.5, 0, -0.5, getHeight());
+            line.getStyleClass().add("column-header-line");
+            Path arrows = new Path(new MoveTo(-3.5, 2.5), new LineTo(-5.5, 4.5), new LineTo(-3.5, 6.5),
+                new MoveTo(2.5, 2.5), new LineTo(4.5, 4.5), new LineTo(2.5, 6.5));
+            arrows.getStyleClass().add("column-header-arrow");
+            return new Pair<>(
+                line,
+                arrows
+            );
+        }
+        
+        // Returns column index if you could click and drag here to resize the right-hand side of that column
+        private @Nullable @AbsColIndex Integer updateCursor(MouseEvent mouseEvent)
+        {
+            // First is X dist, second is column index
+            Pair<Double, @AbsColIndex Integer> nearest = columnRightHandLines.entrySet().stream().<Pair<Double, @AbsColIndex Integer>>map((Entry<@AbsColIndex Integer, Pair<Line, Path>> entry) ->
+                new Pair<Double, @AbsColIndex Integer>(Math.abs(mouseEvent.getX() - entry.getValue().getFirst().getTranslateX()), entry.getKey()))
+                .filter(p -> p.getFirst() <= 6.0)
+                .min(Comparator.comparing(p -> p.getFirst())).<@Nullable Pair<Double, @AbsColIndex Integer>>orElse(null);
+            if (nearest != null)
+            {
+                setCursor(Cursor.H_RESIZE);
+                return nearest.getSecond();
+            }
+            else
+            {
+                setCursor(Cursor.DEFAULT);
+                return null;
+            }
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void updateClip()
+        {
+
+        }
     }
 }

@@ -250,3 +250,14 @@
         -fx-fill: white;
     }
 }
+
+.resizable-column-header {
+    -fx-background-color: derive($table-empty-background, -20%), derive($table-empty-background, 20%);
+    -fx-background-insets: 0, 0 0 1 0;
+    .column-header-line {
+        -fx-stroke: derive($table-empty-background, -20%);
+    }
+    .column-header-arrow {
+        -fx-stroke: derive($table-empty-background, -20%);
+    }
+}
