@@ -28,5 +28,5 @@ public abstract class ColumnOperation
     }
     
     @OnThread(Tag.FXPlatform)
-    protected abstract void executeFX();
+    public abstract void executeFX();
 }

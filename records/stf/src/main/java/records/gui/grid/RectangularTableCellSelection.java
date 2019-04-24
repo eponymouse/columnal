@@ -54,6 +54,12 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
+    public void doDelete()
+    {
+        // Not supported
+    }
+
+    @Override
     public CellPosition getActivateTarget()
     {
         return curFocus;

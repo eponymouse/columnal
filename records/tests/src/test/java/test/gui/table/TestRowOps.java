@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.table;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;

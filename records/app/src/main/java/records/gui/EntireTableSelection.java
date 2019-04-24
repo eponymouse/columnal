@@ -36,6 +36,12 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
+    public void doDelete()
+    {
+        selected.doDelete();
+    }
+
+    @Override
     public CellPosition getActivateTarget()
     {
         return selected.getPosition();

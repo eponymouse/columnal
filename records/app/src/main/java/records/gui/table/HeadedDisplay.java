@@ -304,6 +304,11 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
      */
     public abstract void doCopy(@Nullable RectangleBounds bounds);
 
+    /**
+     * Deletes the source table, if possible.
+     */
+    public abstract void doDelete();
+
     protected abstract void setTableDragSource(boolean on, BorderPane tableNamePane);
 
     protected @Nullable ContextMenu getTableHeaderContextMenu()

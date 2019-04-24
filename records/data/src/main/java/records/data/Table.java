@@ -321,7 +321,7 @@ public abstract class Table
     public abstract TableOperations getOperations();
 
     @OnThread(Tag.Any)
-    protected TableManager getManager(@UnknownInitialization(Table.class) Table this)
+    public TableManager getManager(@UnknownInitialization(Table.class) Table this)
     {
         return mgr;
     }

@@ -445,6 +445,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
+    public void doDelete()
+    {
+        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting table", () -> table.getManager().remove(table.getId())));
+    }
+
+    @Override
     public void setPosition(@UnknownInitialization(GridArea.class) TableDisplay this, CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
@@ -831,19 +837,23 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
         }
         @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(c);
+        final @Nullable ColumnOperation deleteOp;
         if (deleteColumn != null)
         {
-            r.add(new ColumnOperation("virtGrid.column.delete")
+            deleteOp = new ColumnOperation("virtGrid.column.delete")
             {
                 @Override
-                protected @OnThread(Tag.FXPlatform) void executeFX()
+                public @OnThread(Tag.FXPlatform) void executeFX()
                 {
                     Workers.onWorkerThread("Removing column", Priority.SAVE, () -> {
                         deleteColumn.deleteColumn(c);
                     });
                 }
-            });
+            };
+            r.add(deleteOp);
         }
+        else
+            deleteOp = null;
 
         DataType type = null;
         try
@@ -880,6 +890,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             public ImmutableList<ColumnOperation> contextOperations()
             {
                 return ops;
+            }
+
+            @Override
+            public @Nullable ColumnOperation getDeleteOperation()
+            {
+                return deleteOp;
             }
 
             @Override

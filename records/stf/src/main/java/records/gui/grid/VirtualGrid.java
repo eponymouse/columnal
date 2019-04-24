@@ -1034,10 +1034,9 @@ public final class VirtualGrid implements ScrollBindable
         };
     }
     
-
-    public void _test_setColumnWidth(@AbsColIndex int columnIndex, double width)
+    public void _test_setColumnWidth(int columnIndex, double width)
     {
-        setColumnWidth(columnIndex, width);
+        setColumnWidth(CellPosition.col(columnIndex), width);
     }
 
     private void setColumnWidth(@AbsColIndex int columnIndex, double width)
@@ -1292,6 +1291,14 @@ public final class VirtualGrid implements ScrollBindable
                         if (sel != null)
                         {
                             activateCell(sel.getActivateTarget());
+                        }
+                        e.consume();
+                    }),
+                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.DELETE), EventPattern.keyPressed(KeyCode.BACK_SPACE)), e -> {
+                        @Nullable CellSelection sel = selection.get();
+                        if (sel != null)
+                        {
+                            sel.doDelete();
                         }
                         e.consume();
                     })
@@ -1918,6 +1925,12 @@ public final class VirtualGrid implements ScrollBindable
         public void doCopy()
         {
             // Can't copy an empty cell
+        }
+
+        @Override
+        public void doDelete()
+        {
+            // Can't delete an empty cell
         }
 
         @Override

@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.table;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -42,11 +42,11 @@ import test.TestUtil;
 import test.gen.GenColumnId;
 import test.gen.GenRandom;
 import test.gen.GenTableId;
-import test.gen.type.GenDataType;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterColumnDetailsTrait;
 import test.gui.trait.PopupTrait;
@@ -76,13 +76,12 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait, PopupTrait
+public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait, PopupTrait, ClickOnTableHeaderTrait
 {
     @OnThread(Tag.Any)
     private final List<Boolean> booleans = Arrays.asList(true, false, false);
@@ -194,6 +193,68 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Check we haven't amassed multiple tables during the rename re-runs:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
         assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+    }
+    
+    @Property(trials = 2)
+    public void testDeleteColumn(@When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException
+    {
+        // Pick a table and column:
+        ImmutableList<Pair<TableId, ColumnId>> columns = tableManager.getAllTables().stream().<Pair<TableId, ColumnId>>flatMap(t -> {
+            try
+            {
+                return t.getData().getColumnIds().stream().map(c -> new Pair<TableId, ColumnId>(t.getId(), c));
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).collect(ImmutableList.<Pair<TableId, ColumnId>>toImmutableList());
+        Pair<TableId, ColumnId> picked = columns.get(r.nextInt(columns.size()));
+        assertNotNull(tableManager.getSingleTableOrThrow(picked.getFirst()).getData().getColumnOrNull(picked.getSecond()));
+        // Scroll to it
+        keyboardMoveTo(virtualGrid, tableManager, picked.getFirst(), picked.getSecond(), DataItemPosition.row(0));
+        push(KeyCode.UP);
+        push(KeyCode.UP);
+        // Either keyboard or context menu:
+        if (r.nextBoolean())
+        {
+            push(r.nextBoolean() ? KeyCode.BACK_SPACE : KeyCode.DELETE);
+        }
+        else
+        {
+            withItemInBounds(lookup(".column-title"), virtualGrid, virtualGrid._test_getSelection().orElseThrow(RuntimeException::new).getSelectionDisplayRectangle(), this::showContextMenu);
+            lookup(".id-virtGrid-column-delete").tryQuery().ifPresent(this::clickOn);
+        }
+        
+        sleep(500);
+        Column columnAfter = tableManager.getSingleTableOrThrow(picked.getFirst()).getData().getColumnOrNull(picked.getSecond());
+        if (tableManager.getSingleTableOrThrow(picked.getFirst()) instanceof ImmediateDataSource)
+            assertNull(columnAfter);
+        else
+            assertNotNull(columnAfter); // Can't delete from sort
+    }
+
+    @Property(trials = 2)
+    public void testDeleteTable(@When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException
+    {
+        // Pick a table and column:
+        Table picked = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
+        assertNotNull(tableManager.getSingleTableOrNull(picked.getId()));
+        // Scroll to it
+        keyboardMoveTo(virtualGrid, TestUtil.checkNonNull(picked.getDisplay()).getMostRecentPosition());
+        // Either keyboard or context menu:
+        if (r.nextBoolean())
+        {
+            push(r.nextBoolean() ? KeyCode.BACK_SPACE : KeyCode.DELETE);
+        }
+        else
+        {
+            triggerTableHeaderContextMenu(virtualGrid, tableManager, picked.getId());
+            clickOn(".id-tableDisplay-menu-delete");
+        }
+
+        sleep(500);
+        assertNull(tableManager.getSingleTableOrNull(picked.getId()));
     }
     
     @Property(trials = 2, shrink = false)

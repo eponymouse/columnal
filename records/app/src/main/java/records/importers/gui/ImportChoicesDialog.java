@@ -416,7 +416,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         {
             // We don't currently support copy on this table
         }
-        
+
+        @Override
+        public void doDelete()
+        {
+            // Not supported
+        }
+
         @OnThread(Tag.FXPlatform)
         public @Nullable RecordSet _test_getRecordSet()
         {

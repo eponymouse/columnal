@@ -17,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
+import records.data.ColumnId;
 import records.data.DataItemPosition;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
@@ -190,6 +191,14 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
     {
         return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(0));
+    }
+
+    @OnThread(Tag.Any)
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, ColumnId columnId, @TableDataRowIndex int row) throws UserException
+    {
+        Table table = tableManager.getSingleTableOrThrow(tableId);
+        TableDisplay display = (TableDisplay) TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay()));
+        return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(Utility.findFirstIndex(TestUtil.fx(() -> display.getDisplayColumns()), c -> c.getColumnId().equals(columnId)).orElseThrow(RuntimeException::new)));
     }
     
     // Ideally, will be private in later Java:

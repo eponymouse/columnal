@@ -263,6 +263,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
+    public void doDelete()
+    {
+        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting check", () -> check.getManager().remove(check.getId())));
+    }
+
+    @Override
     protected boolean isShowingRowLabels()
     {
         return false;
@@ -324,6 +330,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
 
             @Override
             public void doPaste()
+            {
+                // N/A
+            }
+
+            @Override
+            public void doDelete()
             {
                 // N/A
             }

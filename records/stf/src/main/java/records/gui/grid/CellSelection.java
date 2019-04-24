@@ -24,6 +24,9 @@ public interface CellSelection
     // Paste the value of the clipboard, if that operation makes sense.
     public void doPaste();
 
+    // Perform a delete, if that operation makes sense.
+    public void doDelete();
+
     // Which position should we target if they try to activate?
     CellPosition getActivateTarget();
 

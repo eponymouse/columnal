@@ -27,7 +27,7 @@ public abstract class SimpleColumnOperation extends ColumnOperation
     public abstract void execute(CellPosition insertPosition);
 
     @Override
-    protected @OnThread(Tag.FXPlatform) void executeFX()
+    public @OnThread(Tag.FXPlatform) void executeFX()
     {
         CellPosition insertPosition = tableManager.getNextInsertPosition(toRightOf);
         Workers.onWorkerThread(nameKey, Priority.SAVE, () -> execute(insertPosition));

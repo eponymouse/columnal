@@ -7,6 +7,7 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -109,6 +110,8 @@ public abstract class DataDisplay extends HeadedDisplay
     // Also note that this is used by reference as an up-to-date check in GridCellInfo
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
+    // This is re-assigned all at once when columns change:
+    protected ImmutableMap<ColumnId, ColumnHeaderOps> columnHeaderOps = ImmutableMap.of();
 
     protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyles = new SimpleObjectProperty<>(ImmutableList.of());
 
@@ -167,13 +170,17 @@ public abstract class DataDisplay extends HeadedDisplay
         // Remove old columns:
         columnHeaderItems.forEach(x -> floatingItems.removeItem(x));
         columnHeaderItems.clear();
-        this.displayColumns = columns;        
+        this.displayColumns = columns;
+        
+        ImmutableMap.Builder<ColumnId, ColumnHeaderOps> colOps = ImmutableMap.builderWithExpectedSize(columns.size());
         
         for (int i = 0; i < columns.size(); i++)
         {
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
             @Nullable ColumnHeaderOps ops = columnActions == null ? null : columnActions.apply(column.getColumnId());
+            if (ops != null)
+                colOps.put(column.getColumnId(), ops);
             // Item for column name:
             if (headerRows.showingColumnNameRow)
             {
@@ -189,6 +196,7 @@ public abstract class DataDisplay extends HeadedDisplay
                 floatingItems.addItem(columnTypeItem);
             }
         }
+        this.columnHeaderOps = colOps.build();
         
         updateParent();
         
@@ -493,6 +501,22 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
+        public void doDelete()
+        {
+            if (pos.rowIndex == getPosition().rowIndex || pos.rowIndex == getPosition().rowIndex + 1)
+            {
+                int relCol = pos.columnIndex - getPosition().columnIndex;
+                if (relCol >= 0 && relCol < getDisplayColumns().size())
+                {
+                    ColumnId columnId = getDisplayColumns().get(relCol).getColumnId();
+                    @Nullable ColumnHeaderOps ops = columnHeaderOps.get(columnId);
+                    if (ops != null && ops.getDeleteOperation() != null)
+                        ops.getDeleteOperation().executeFX();
+                }
+            }
+        }
+
+        @Override
         public CellPosition getActivateTarget()
         {
             return pos;
@@ -521,6 +545,9 @@ public abstract class DataDisplay extends HeadedDisplay
     public static interface ColumnHeaderOps
     {
         public ImmutableList<ColumnOperation> contextOperations();
+        
+        @Pure
+        public @Nullable ColumnOperation getDeleteOperation();
         
         // Used as the hyperlinked edit operation on column headers, if non-null.
         @Pure
