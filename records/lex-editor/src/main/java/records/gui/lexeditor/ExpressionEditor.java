@@ -5,10 +5,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.scene.input.DataFormat;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -79,6 +81,12 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                 });
             });
         });
+    }
+
+    @Override
+    protected Dimension2D getEditorDimension(@UnknownInitialization(Object.class) ExpressionEditor this)
+    {
+        return new Dimension2D(500.0, 65.0);
     }
 
     private static ImmutableList<StandardFunctionDefinition> getAllFunctions(FunctionLookup functionLookup)

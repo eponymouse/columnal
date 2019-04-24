@@ -7,6 +7,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -80,8 +81,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         FXUtility.onceNotNull(scrollPane.sceneProperty(), scene -> {
             scene.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
         });
-        scrollPane.setMinHeight(65.0);
-        scrollPane.setPrefWidth(600.0);
+        Dimension2D dim = getEditorDimension();
+        scrollPane.setMinHeight(dim.getHeight());
+        scrollPane.setPrefWidth(dim.getWidth());
         scrollPane.setAlwaysFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -99,6 +101,12 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         });
         onChange.consume(save());
         FXUtility.onceNotNull(display.sceneProperty(), s -> showAllErrors());
+    }
+
+    // The width is preferred, the height is minimum
+    protected Dimension2D getEditorDimension(@UnknownInitialization(Object.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
+    {
+        return new Dimension2D(250.0, 25.0);
     }
 
     public String _test_getRawText()
