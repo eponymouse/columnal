@@ -928,7 +928,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         private Stream<ColumnReference> getAvailableColumnReferences(boolean nullOurTable)
         {
-            return tableManager.streamAllTablesAvailableTo(us).flatMap(t -> {
+            return tableManager.getAllTablesAvailableTo(us).stream().flatMap(t -> {
                 try
                 {
                     boolean isOurTable = Objects.equals(us, t.getId());

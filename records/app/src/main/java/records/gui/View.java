@@ -165,12 +165,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @OnThread(Tag.Any)
-    private synchronized @NonNull Stream<Table> streamAllTables()
-    {
-        return tableManager.streamAllTables();
-    }
-
-    @OnThread(Tag.Any)
     public TableManager getManager()
     {
         return tableManager;
@@ -1003,7 +997,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         {            
             // If visible, we position ourselves slightly to the right of any existing tables, at their level
             
-            CellPosition rightMostTableEdge = getManager().streamAllTables().flatMap(t -> Utility.<CellPosition>streamNullable(Utility.<TableDisplayBase, CellPosition>onNullable(t.getDisplay(), d -> new CellPosition(d.getMostRecentPosition().rowIndex, d.getBottomRightIncl().columnIndex)))).max(Comparator.<CellPosition, Integer>comparing(c -> c.columnIndex).thenComparing(c -> -c.rowIndex)).orElse(CellPosition.ORIGIN.offsetByRowCols(2, 1));
+            CellPosition rightMostTableEdge = getManager().getAllTables().stream().flatMap(t -> Utility.<CellPosition>streamNullable(Utility.<TableDisplayBase, CellPosition>onNullable(t.getDisplay(), d -> new CellPosition(d.getMostRecentPosition().rowIndex, d.getBottomRightIncl().columnIndex)))).max(Comparator.<CellPosition, Integer>comparing(c -> c.columnIndex).thenComparing(c -> -c.rowIndex)).orElse(CellPosition.ORIGIN.offsetByRowCols(2, 1));
             
             CellPosition target = rightMostTableEdge.offsetByRowCols(2, 2);
             double x = visibleBounds.getXCoord(target.columnIndex) + 20;

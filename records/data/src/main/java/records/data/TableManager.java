@@ -244,14 +244,8 @@ public class TableManager
             }
         }
     }
-
-    // Faster than getAllTables if you only need to process a stream.
-    public synchronized Stream<Table> streamAllTables()
-    {
-        return Stream.<Table>concat(sources.stream(), transformations.stream());
-    }
-
-    public synchronized Stream<Table> streamAllTablesAvailableTo(@Nullable TableId tableId)
+    
+    public synchronized ImmutableList<Table> getAllTablesAvailableTo(@Nullable TableId tableId)
     {
         // Sources are always available.  Transformations require that they do not
         // (transitively) depend on us.
@@ -263,7 +257,8 @@ public class TableManager
         // Shouldn't be any nulls but must satisfy type checker:
         return Utility.filterOutNulls(linearised.subList(0, lastIndexIncl + 1)
             .stream()
-            .<@Nullable Table>map(t -> getSingleTableOrNull(t)));
+            .<@Nullable Table>map(t -> getSingleTableOrNull(t)))
+            .collect(ImmutableList.<Table>toImmutableList());
     }
 
     public synchronized ImmutableList<Table> getAllTables()
@@ -281,13 +276,13 @@ public class TableManager
         @Nullable TableDisplayBase toRightOfDisplay = toRightOf == null ? null : Optional.ofNullable(getSingleTableOrNull(toRightOf)).map(Table::getDisplay).orElse(null);
         if (toRightOfDisplay == null)
         {
-            return Utility.filterOutNulls(streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).max(Comparator.comparing(p -> p.columnIndex)).orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
+            return Utility.filterOutNulls(getAllTables().stream().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).max(Comparator.comparing(p -> p.columnIndex)).orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
         }
         else
         {
             // We usually leave a blank space to the right
             // of the table, unless there's another table beginning in that row:
-            boolean anyImmediatelyToRight = streamAllTables().filter(t -> t.getDisplay() != null && t.getDisplay().getMostRecentPosition().columnIndex == toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex).findFirst().isPresent();
+            boolean anyImmediatelyToRight = getAllTables().stream().filter(t -> t.getDisplay() != null && t.getDisplay().getMostRecentPosition().columnIndex == toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex).findFirst().isPresent();
             return getTopRight(toRightOfDisplay).offsetByRowCols(0, anyImmediatelyToRight ? 1 : 2);
         }
     }

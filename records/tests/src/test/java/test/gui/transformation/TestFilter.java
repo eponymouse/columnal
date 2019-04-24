@@ -98,7 +98,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
 
         @SuppressWarnings("recorded")
         ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
-        assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Filter.class).findFirst().get().getFilterExpression());
+        assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Filter.class).findFirst().get().getFilterExpression());
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());

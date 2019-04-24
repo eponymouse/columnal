@@ -134,7 +134,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         clickOn(".ok-button");
 
         TestUtil.sleep(500);
-        assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Sort.class).findFirst().get().getSortBy());
+        assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Sort.class).findFirst().get().getSortBy());
 
         // Now check output values by getting them from clipboard:
         showContextMenu(".table-display-table-title.transformation-table-title")

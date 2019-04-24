@@ -929,7 +929,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
         {
             return
-                tableManager.streamAllTablesAvailableTo(getId())
+                tableManager.getAllTablesAvailableTo(getId()).stream()
                     .flatMap(t -> {
                         try
                         {

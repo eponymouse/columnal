@@ -224,7 +224,7 @@ public class Check extends Transformation implements SingleSourceTransformation
             @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
-                return tableManager.streamAllTables().flatMap(t -> {
+                return tableManager.getAllTables().stream().flatMap(t -> {
                     try
                     {
                         Stream.Builder<ColumnReference> columns = Stream.builder();

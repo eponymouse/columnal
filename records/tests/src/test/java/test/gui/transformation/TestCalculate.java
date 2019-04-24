@@ -189,7 +189,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
 
     private Calculate getCalculate(MainWindowActions mainWindowActions)
     {
-        return TestUtil.checkNonNull(Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Calculate.class).findFirst().orElse(null));
+        return TestUtil.checkNonNull(Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Calculate.class).findFirst().orElse(null));
     }
 
     private NodeQuery findColumnTitle(@ExpressionIdentifier String columnNameToReplace)
