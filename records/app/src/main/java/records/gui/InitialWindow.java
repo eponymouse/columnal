@@ -125,6 +125,7 @@ public class InitialWindow
         Scene scene = new Scene(new BorderPane(content, menuBar, null, null, null));
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
         stage.setScene(scene);
+        stage.setTitle(TranslationUtility.getString("us"));
         stage.show();
         //org.scenicview.ScenicView.show(scene);
     }
