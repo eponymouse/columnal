@@ -55,7 +55,7 @@
     </xsl:template>
     
     
-    <xsl:template name="processFunction">
+    <xsl:template match="function">
         <xsl:param name="function" select="."/>
 
         <xsl:variable name="functionName" select="@name"/>
