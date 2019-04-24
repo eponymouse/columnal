@@ -74,6 +74,15 @@
         -fx-border-color: transparent;
         -fx-border-style: solid inside;
         -fx-border-width: 2 0 0 0;
+        & .pick-table-pane {
+            /* Left padding to allow drag */
+            -fx-padding: 0 10 2 10;
+            -fx-cursor: default;
+        }
+        & .text-field {
+            -fx-padding: 3;
+            -fx-cursor: text;
+        }
     }
 }
 .table-list-dialog .table-list .fancy-list-cell:even, .sort-list-dialog .sort-list .fancy-list-cell:even {
