@@ -392,7 +392,7 @@ public abstract class DataDisplay extends HeadedDisplay
             return new EntireTableSelection(this, cellPosition.columnIndex);
         }
         // In data cells?
-        else if (cellPosition.rowIndex >= us.rowIndex + getHeaderRowCount())
+        else if (cellPosition.rowIndex >= us.rowIndex + getHeaderRowCount() && cellPosition.rowIndex < us.rowIndex + currentKnownRows + getHeaderRowCount() && cellPosition.columnIndex < us.columnIndex + getDisplayColumns().size())
         {
             return new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits);
         }
