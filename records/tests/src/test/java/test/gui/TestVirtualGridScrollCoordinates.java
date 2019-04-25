@@ -35,6 +35,7 @@ import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import records.gui.stable.ScrollGroup;
 import styled.StyledString;
 import test.TestUtil;
 import test.gui.util.FXApplicationTest;
@@ -49,15 +50,19 @@ import java.util.function.Function;
 import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@OnThread(Tag.Simulation)
 @RunWith(JUnitQuickcheck.class)
 public class TestVirtualGridScrollCoordinates extends FXApplicationTest
 {
     private final double ORIGINAL_SCROLL = 5001.0;
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     private VirtualGrid virtualGrid;
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     private Label node;
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     private Label topLeft;
 
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -318,12 +323,13 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         assertEquals(0, TestUtil.fx(() -> virtualGrid.getVisibleBounds().getXCoord(CellPosition.col(0))), 0.01);
         assertEquals(0, TestUtil.fx(() -> topLeft.getLayoutX()), 0.01);
     }
-
+    
     @Property(trials = 5)
     public void scrollXYBy(@From(GenScrollAmounts.class) ScrollAmounts scrollX, @From(GenScrollAmounts.class) ScrollAmounts scrollY)
     {
         // Scroll to the middle to begin with so we don't get clamped:
-        virtualGrid.getScrollGroup().requestScrollBy(-ORIGINAL_SCROLL, -ORIGINAL_SCROLL);
+        ScrollGroup scrollGroup = TestUtil.fx(() -> virtualGrid.getScrollGroup());
+        TestUtil.fx_(() -> scrollGroup.requestScrollBy(-ORIGINAL_SCROLL, -ORIGINAL_SCROLL));
         TestUtil.sleep(300);
         
         // Check window has sized properly:
@@ -333,17 +339,17 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         checkOffsetsNegative();
       
         // We check with and without delay to try with/without smooth scrolling and jumping:
-        for (int delay : new int[]{0, (int) (virtualGrid.getScrollGroup()._test_getScrollTimeNanos() / 1_000_000L)})
+        for (int delay : new int[]{0, (int) (scrollGroup._test_getScrollTimeNanos() / 1_000_000L)})
         {
             assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
             // Test that scroll and scroll back works:
             for (double amount : scrollX.amounts)
             {
-                TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
+                TestUtil.fx_(() -> scrollGroup.requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
                 assertThat("Scrolling " + amount, TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL - amount, 0.1));
                 checkOffsetsNegative();
-                TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
+                TestUtil.fx_(() -> scrollGroup.requestScrollBy(-amount, 0.0));
                 TestUtil.sleep(delay);
                 assertThat("Scrolling " + (-amount), TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 
@@ -354,11 +360,11 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             // Test that scroll and scroll back works:
             for (double amount : scrollY.amounts)
             {
-                TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
+                TestUtil.fx_(() -> scrollGroup.requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
                 assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL - amount, 0.1));
                 checkOffsetsNegative();
-                TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
+                TestUtil.fx_(() -> scrollGroup.requestScrollBy(-amount, 0.0));
                 TestUtil.sleep(delay);
                 assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 checkOffsetsNegative();
@@ -389,7 +395,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
     public void testSmoothScrollMonotonic()
     {
         // Easier to spot issues with a slower scroll:
-        virtualGrid.getScrollGroup()._test_setScrollTimeNanos(1_000_000_000L);
+        TestUtil.fx_(() -> virtualGrid.getScrollGroup()._test_setScrollTimeNanos(1_000_000_000L));
 
         // Down twice, back up to the top twice, each separate:
         testMonotonicScroll(true);

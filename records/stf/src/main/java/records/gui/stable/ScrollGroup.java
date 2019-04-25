@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.input.ScrollEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.A;
 import records.gui.stable.SmoothScroller.ScrollClamp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -165,12 +166,14 @@ public class ScrollGroup
             inUpdateClip = false;
         }
     }
-
+    
+    @OnThread(Tag.Any)
     public long _test_getScrollTimeNanos()
     {
         return smoothScrollX._test_getScrollTimeNanos();
     }
     
+    @OnThread(Tag.Any)
     public void _test_setScrollTimeNanos(long nanos)
     {
         smoothScrollX._test_setScrollTimeNanos(nanos);

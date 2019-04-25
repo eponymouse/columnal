@@ -41,6 +41,7 @@ public class SmoothScroller<@NonNull R>
     private double scrollStartOffset;
 
     // Not static final, because some tests alter it:
+    @OnThread(Tag.Any)
     private long scrollTimeNanos = 200_000_000L;
 
     // The translateX/translateY of container, depending on which axis we are:
@@ -156,12 +157,14 @@ public class SmoothScroller<@NonNull R>
         return result;
     }
     
-    public long _test_getScrollTimeNanos()
+    @OnThread(Tag.Any)
+    public synchronized long _test_getScrollTimeNanos()
     {
         return scrollTimeNanos;
     }
 
-    public void _test_setScrollTimeNanos(long scrollTimeNanos)
+    @OnThread(Tag.Any)
+    public synchronized void _test_setScrollTimeNanos(long scrollTimeNanos)
     {
         this.scrollTimeNanos = scrollTimeNanos;
     }
