@@ -1508,6 +1508,12 @@ public final class VirtualGrid implements ScrollBindable
                     Point2D local = container.screenToLocal(screenPos);
                     return local;
                 }
+
+                @Override
+                public Point2D _test_localToScreen(Point2D local)
+                {
+                    return container.localToScreen(local);
+                }
             };
         }
 

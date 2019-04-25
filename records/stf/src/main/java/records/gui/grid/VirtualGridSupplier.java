@@ -158,6 +158,8 @@ public abstract class VirtualGridSupplier<T extends Node>
 
         public abstract Point2D screenToLayout(Point2D screen);
         
+        public abstract Point2D _test_localToScreen(Point2D local);
+        
         /**
          * Takes a rectangle, and clamps it so that its extents fall within the portion being rendered.
          * 
