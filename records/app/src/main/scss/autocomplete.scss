@@ -34,3 +34,29 @@
     -fx-font-size: 75%;
     -fx-text-fill: grey(70%);
 }
+
+.lex-complete-root {
+    .lex-completion-list {
+        -fx-background-color: grey(50%), white;
+        -fx-background-insets: 0, 0 1 1 1;    
+        -fx-padding: 1;
+    }
+    .lex-completion {
+        -fx-background-color: white;
+        -fx-padding: 0 2 0 2;
+        & .styled-text {
+            -fx-font-smoothing-type: gray;
+            -fx-fill: black;
+        }
+        &:selected {
+            -fx-background-color: $focus-color;
+            & .styled-text {
+                -fx-fill: white;
+            }
+        }
+    }
+    .web-view {
+        -fx-font-smoothing-type: gray;
+        -fx-content-menu-enabled: false;
+    }
+}
