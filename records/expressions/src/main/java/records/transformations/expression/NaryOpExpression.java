@@ -263,22 +263,26 @@ public abstract class NaryOpExpression extends Expression
                 Expression expression = expressions.get(i);
                 ImmutableMap<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
                 @Nullable StyledString unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
+                boolean recordedCustomError = false;
                 for (Entry<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
                 {
                     if (entry.getValue().getFirst() != null)
+                    {
                         onError.recordError(entry.getKey(), entry.getValue().getFirst());
+                        recordedCustomError = true;
+                    }
                     else if (!entry.getValue().getSecond().isEmpty() && (entry.getKey() != expression || unifyError != null))
+                    {
                         // Hack to ensure there is an error:
                         onError.recordError(entry.getKey(), StyledString.s(" "));
+                        recordedCustomError = true;
+                    }
                     if (!entry.getValue().getSecond().isEmpty())
                         onError.recordQuickFixes(entry.getKey(), entry.getValue().getSecond());
                 }
                 
-                if (customErrors.isEmpty())
-                {
-                    if (unifyError != null)
-                        onError.recordError(expression, unifyError);
-                }
+                if (!recordedCustomError && unifyError != null)
+                    onError.recordError(expression, unifyError);
             }
         }
         
