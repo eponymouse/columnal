@@ -107,8 +107,8 @@ public abstract class TextEditorBase extends Region
 
             caretBlink = new Timeline(
                     new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
-                    new KeyFrame(Duration.seconds(0.8), new KeyValue(caretShape.visibleProperty(), false)),
-                    new KeyFrame(Duration.seconds(1.2), e -> Utility.later(this).updateCaretShape(), new KeyValue(caretShape.visibleProperty(), true))
+                    new KeyFrame(Duration.seconds(0.8), e -> Utility.later(this).queueUpdateCaretShape(), new KeyValue(caretShape.visibleProperty(), false)),
+                    new KeyFrame(Duration.seconds(1.2), new KeyValue(caretShape.visibleProperty(), true))
             );
             caretBlink.setCycleCount(Animation.INDEFINITE);
         }
