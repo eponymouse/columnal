@@ -20,6 +20,7 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
@@ -195,7 +196,7 @@ public class LexAutoComplete
     @OnThread(Tag.FXPlatform)
     public class LexAutoCompleteWindow extends PopupControl
     {
-        private final Pane pane;
+        private final HBox pane;
         private final LexCompletionList listView;
         
         public LexAutoCompleteWindow()
@@ -207,7 +208,9 @@ public class LexAutoComplete
             webView.setVisible(false);
             listView.setMaxHeight(400.0);
             webView.setMaxHeight(400.0);
-            this.pane = GUI.borderLeftCenterRight(listView, webView, null);
+            this.pane = new HBox(listView, webView);
+            pane.setFillHeight(false);
+            
             setAutoFix(false);
             setAutoHide(false);
             setHideOnEscape(false);
