@@ -29,6 +29,7 @@ import records.gui.lexeditor.completion.LexAutoComplete;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -349,12 +350,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent(), 1, text, 0);
                         if (common > 0)
                         {
-                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY)))));
+                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(ImmutableList.of(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY)))))));
                         }
                     }
                 }
                 
-                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(sort(identCompletions.build()))));
+                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(sort(identCompletions.build()))))));
 
                 boolean wasColumn = false;
                 {
@@ -477,7 +478,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         validKeywordCompletions.add(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
                     }
                 }
-                completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
+                completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, nonLetter), new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(validKeywordCompletions.build())))));
                 
                 // We skip to next non-letter to prevent trying to complete the keyword as a function:
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
@@ -544,7 +545,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             addColumnCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addVariableCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             
-            completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(sort(emptyCompletions.build()))));
+            completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(sort(emptyCompletions.build()))))));
         }
 
         return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());

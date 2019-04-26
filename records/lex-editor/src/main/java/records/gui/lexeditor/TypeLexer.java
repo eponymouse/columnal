@@ -25,6 +25,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.UnknownTypeException;
 import records.transformations.expression.UnitExpression;
@@ -206,7 +207,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     @CanonicalLocation int common = Utility.longestCommonStart(match, 0, dataType.toString(), 0);
                     if (common > 0)
                     {
-                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(typeCompletion(dataType, startOfType))));
+                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletionGroup(ImmutableList.of(typeCompletion(dataType, startOfType))))));
                     }
                 }
                 
@@ -241,7 +242,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 emptyCompletions.add(typeCompletion(dataType, CanonicalLocation.ZERO));
             }
             ImmutableList<LexCompletion> built = emptyCompletions.build();
-            autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), (caretPos) -> built));
+            autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), (caretPos) -> ImmutableList.of(new LexCompletionGroup(built))));
         }
         
         ArrayList<CaretPos> caretPositions = calculateCaretPos(chunks);

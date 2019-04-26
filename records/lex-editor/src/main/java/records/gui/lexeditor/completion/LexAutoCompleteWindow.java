@@ -84,13 +84,13 @@ public class LexAutoCompleteWindow extends PopupControl
         });
     }
 
-    public void setCompletions(ImmutableList<LexCompletion> completions)
+    public void setCompletions(ImmutableList<LexCompletionGroup> groups)
     {
-        this.listView.setCompletions(completions);
-        if ((completions.size() == 1 && completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_ONLY)
-            || (completions.size() >= 1 && completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_TOP))
+        this.listView.setCompletions(groups);
+        if ((groups.size() >= 1 && groups.get(0).completions.size() == 1 && groups.get(0).completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_ONLY)
+            || (groups.size() >= 1 && groups.get(0).completions.size() >= 1 && groups.get(0).completions.get(0).selectionBehaviour == LexSelectionBehaviour.SELECT_IF_TOP))
         {
-            listView.select(0);
+            listView.select(new Pair<>(0, 0));
         }
     }
 
@@ -102,7 +102,7 @@ public class LexAutoCompleteWindow extends PopupControl
 
     public List<LexCompletion> _test_getShowing()
     {
-        return listView.getItems();
+        return listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList());
     }
 
     @OnThread(Tag.FX)

@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
 public class LexAutoComplete
@@ -46,14 +47,14 @@ public class LexAutoComplete
         this.window = new LexAutoCompleteWindow(triggerCompletion);
         this.editor = Utility.later(editor);
         this.updatePosition = new Timeline(new KeyFrame(Duration.millis(250), e -> {
-            Utility.later(this).updateWindowPosition(Utility.later(this).window.listView.getItems());
+            Utility.later(this).updateWindowPosition(Utility.later(this).window.listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList()));
         }));
     }
 
-    public void show(ImmutableList<LexCompletion> completions)
+    public void show(ImmutableList<LexCompletionGroup> groups)
     {
-        window.setCompletions(completions);
-        FXUtility.runAfterNextLayout(() -> updateWindowPosition(completions));
+        window.setCompletions(groups);
+        FXUtility.runAfterNextLayout(() -> updateWindowPosition(window.listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList())));
         updatePosition.playFromStart();
     }
 
@@ -81,18 +82,12 @@ public class LexAutoComplete
 
     public void down()
     {
-        int sel = window.listView.getSelectedIndex();
-        if (sel + 1 < window.listView.getItems().size())
-            window.listView.select(sel + 1);
+        window.listView.down();
     }
 
     public void up()
     {
-        int sel = window.listView.getSelectedIndex();
-        if (sel - 1 >= 0)
-            window.listView.select(sel - 1);
-        else
-            window.listView.select(-1);
+        window.listView.up();
     }
 
     public Optional<LexCompletion> getSelectedCompletion()

@@ -27,6 +27,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.LexAutoComplete;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
+import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -328,7 +329,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             caretAndSelectionNodes.queueUpdateCaretShape();
     }
     
-    void showCompletions(@Nullable ImmutableList<LexCompletion> completions)
+    void showCompletions(@Nullable ImmutableList<LexCompletionGroup> completions)
     {
         if (completions != null)
             autoComplete.show(completions);

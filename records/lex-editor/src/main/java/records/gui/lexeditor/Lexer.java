@@ -11,6 +11,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -126,9 +127,9 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
-        public ImmutableList<LexCompletion> getCompletionsFor(@CanonicalLocation int pos)
+        public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int pos)
         {
-            return autoCompleteDetails.stream().filter(a -> a.location.touches(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletion>toImmutableList());
+            return autoCompleteDetails.stream().filter(a -> a.location.touches(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
         }
 
         public @DisplayLocation int mapContentToDisplay(@CanonicalLocation int contentPos)
