@@ -54,6 +54,12 @@
                 -fx-fill: white;
             }
         }
+        &.lex-completion-header {
+            -fx-background-color: grey(90%);
+            & .styled-text {
+                -fx-fill: grey(40%);
+            }
+        }
     }
     .web-view {
         -fx-font-smoothing-type: gray;

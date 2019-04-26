@@ -210,6 +210,8 @@ class LexCompletionList extends Region
     {
         ClippedTextFlow textFlow = new ClippedTextFlow(lexCompletion.either(c -> c.display.toGUI(), g -> (g.header == null ? StyledString.s("") : g.header).toGUI()));
         textFlow.getStyleClass().add("lex-completion");
+        if (lexCompletion.isRight())
+            textFlow.getStyleClass().add("lex-completion-header");
         textFlow.setMouseTransparent(true);
         return textFlow;
     }
