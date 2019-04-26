@@ -53,7 +53,13 @@ public class GenGraph extends Generator<Graph>
         List<Pair<Object, Object>> possibleEdges = new ArrayList<>();
         for (int i = 0; i < numNodes; i++)
             for (int j = 0; j < i; j++)
-                possibleEdges.add(new Pair<>(nodes.get(j), nodes.get(i)));
+            {
+                // Duplicate each edge to test the algorithm for that case:
+                for (int k = 0; k < 3; k++)
+                {
+                    possibleEdges.add(new Pair<>(nodes.get(j), nodes.get(i)));
+                }
+            }
 
         Map<Object, List<Object>> edges = new HashMap<>();
         for (Object node : nodes)

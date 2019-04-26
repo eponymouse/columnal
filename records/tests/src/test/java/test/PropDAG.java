@@ -1,5 +1,7 @@
 package test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -91,5 +93,11 @@ public class PropDAG
                 validSources.add(n);
             }
         }
+    }
+    
+    @Test
+    public void testSpecific()
+    {
+        propLinearise(new Graph(ImmutableList.of("A", "B", "BL", "C", "EK", "ENU", "JR", "Nested", "VQ"), ImmutableMap.of("VQ", ImmutableList.of("BL"), "JR", ImmutableList.of("BL", "BL")), ImmutableList.of()));
     }
 }
