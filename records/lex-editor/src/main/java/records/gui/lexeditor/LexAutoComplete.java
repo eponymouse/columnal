@@ -20,6 +20,7 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -350,10 +351,25 @@ public class LexAutoComplete
             
             setPrefWidth(300.0);
             setMaxHeight(USE_PREF_SIZE);
-            setOnScroll(e -> {
+            addEventFilter(ScrollEvent.ANY, e -> {
                 scrollOffset = Math.max(0, Math.min(scrollOffset - e.getDeltaY(), curCompletions.size() * ITEM_HEIGHT - getHeight()));
                 FXUtility.mouse(this).recalculateChildren();
                 e.consume();
+            });
+            setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY)
+                {
+                    int itemIndex = (int) ((e.getY() + scrollOffset) / ITEM_HEIGHT);
+                    boolean wasAlreadySelected = FXUtility.mouse(this).getSelectedIndex() == itemIndex;
+                    if (e.getClickCount() >= 1)
+                    {
+                        FXUtility.mouse(this).select(itemIndex);
+                    }
+
+                    // Clicking twice slowly also works this way:
+                    if ((e.getClickCount() == 2 || wasAlreadySelected) && selectionIndex != -1)
+                        triggerCompletion.run();
+                }
             });
         }
 
@@ -404,26 +420,13 @@ public class LexAutoComplete
         {
             ClippedTextFlow textFlow = new ClippedTextFlow(lexCompletion.display.toGUI());
             textFlow.getStyleClass().add("lex-completion");
-            textFlow.setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.PRIMARY)
-                {
-                    if (e.getClickCount() >= 1)
-                        select(Utility.findFirstIndex(curCompletions, c -> c == lexCompletion).orElse(-1));
-                    
-                    if (e.getClickCount() == 2 && selectionIndex != -1)
-                        triggerCompletion.run();
-                }
-            });
+            textFlow.setMouseTransparent(true);
             return textFlow;
         }
 
         public void setCompletions(ImmutableList<LexCompletion> completions)
         {
             this.curCompletions = completions;
-            // Also scroll to top:
-            // TODO not if an item is selected?
-            scrollOffset = 0;
-            recalculateChildren();
             // Keep same item selected, if still present:
             select(curCompletions.indexOf(selectedItem.get()));
         }
@@ -439,6 +442,14 @@ public class LexAutoComplete
         {
             selectionIndex = Math.min(curCompletions.size() - 1, itemIndex);
             selectedItem.setValue(selectionIndex < 0 ? null : curCompletions.get(selectionIndex));
+
+            double minY = Math.max(0, selectionIndex) * ITEM_HEIGHT;
+            double maxY = minY + ITEM_HEIGHT;
+            if (minY < scrollOffset)
+                scrollOffset = minY;
+            else if (getHeight() >= ITEM_HEIGHT && maxY > scrollOffset + getHeight())
+                scrollOffset = maxY - getHeight();
+            
             // Update graphics:
             recalculateChildren();
         }
