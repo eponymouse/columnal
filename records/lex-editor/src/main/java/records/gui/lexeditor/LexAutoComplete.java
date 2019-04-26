@@ -67,7 +67,6 @@ public class LexAutoComplete
     public void show(ImmutableList<LexCompletion> completions)
     {
         window.setCompletions(completions);
-        updateWindowPosition(completions);
         FXUtility.runAfterNextLayout(() -> updateWindowPosition(completions));
         updatePosition.playFromStart();
     }
