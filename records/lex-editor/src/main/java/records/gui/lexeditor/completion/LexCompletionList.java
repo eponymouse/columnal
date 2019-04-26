@@ -199,7 +199,7 @@ class LexCompletionList extends Region
             Either<LexCompletion, LexCompletionGroup> row = allDisplayRows.get(i);
             TextFlow item = visible.computeIfAbsent(row, this::makeFlow);
             
-            FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable Pair<Integer, Integer>>either(c -> completionIndexes.get(c), g -> null)));
+            FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
             toKeep.add(row);
         }
         visible.entrySet().removeIf(e -> !toKeep.contains(e.getKey()));
