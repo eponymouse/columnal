@@ -9,7 +9,7 @@ import org.testfx.api.FxRobotInterface;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
-import records.gui.lexeditor.LexAutoComplete;
+import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -327,10 +327,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     @OnThread(Tag.Any)
     default void scrollAutoCompleteToOption(String content)
     {
-        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoComplete.LexAutoCompleteWindow).collect(Collectors.toList());
+        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
         assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
 
-        LexAutoComplete.LexAutoCompleteWindow autoComplete = ((LexAutoComplete.LexAutoCompleteWindow)window(w -> w instanceof LexAutoComplete.LexAutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
+        LexAutoCompleteWindow autoComplete = ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
         
         // Move to top:
         String prev = "\u0000";

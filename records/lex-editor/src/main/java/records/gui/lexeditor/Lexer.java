@@ -9,7 +9,7 @@ import log.Log;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import styled.StyledCSS;
 import styled.StyledShowable;
@@ -19,7 +19,6 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.IntStream;
 
 public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>

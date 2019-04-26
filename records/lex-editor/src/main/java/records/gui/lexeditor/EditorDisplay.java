@@ -24,7 +24,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.completion.LexAutoComplete;
+import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
@@ -87,7 +88,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
         super(ImmutableList.of());
-        this.autoComplete = Utility.later(new LexAutoComplete(this, () -> Utility.later(this).triggerSelection()));
+        this.autoComplete = Utility.later(new LexAutoComplete(this, c -> Utility.later(this).triggerSelection(c)));
         this.content = theContent;
         this.editor = Utility.later(editor);
         getStyleClass().add("editor-display");
@@ -213,13 +214,13 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     break;
                 case ENTER:
                     if (autoComplete.isShowing())
-                        triggerSelection();
+                        autoComplete.getSelectedCompletion().ifPresent(this::triggerSelection);
                     else
                         return;
                     break;
                 case TAB:
                     if (autoComplete.isShowing())
-                        triggerSelection();
+                        autoComplete.getSelectedCompletion().ifPresent(this::triggerSelection);
                     else
                         this.editor.parentFocusRightOfThis(Either.left(Focus.LEFT), true);
                     break;
@@ -313,12 +314,10 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @SuppressWarnings("units")
-    private void triggerSelection()
+    private void triggerSelection(LexCompletion p)
     {
-        autoComplete.selectCompletion().ifPresent(p -> {
-            content.replaceText(p.startPos, content.getCaretPosition(), p.content);
-            content.positionCaret(p.startPos + p.relativeCaretPos, true);
-        });
+        content.replaceText(p.startPos, content.getCaretPosition(), p.content);
+        content.positionCaret(p.startPos + p.relativeCaretPos, true);
     }
 
     private void render(boolean contentChanged)

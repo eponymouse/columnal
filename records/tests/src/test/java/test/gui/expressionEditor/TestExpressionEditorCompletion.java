@@ -2,16 +2,12 @@ package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.sun.javafx.scene.control.skin.LabeledText;
 import javafx.scene.Node;
-import javafx.scene.control.Labeled;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
-import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import records.data.CellPosition;
@@ -26,7 +22,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.lexeditor.EditorDisplay;
-import records.gui.lexeditor.LexAutoComplete.LexAutoCompleteWindow;
+import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -42,7 +38,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.Collection;
 

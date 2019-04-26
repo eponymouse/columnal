@@ -2,7 +2,7 @@ package records.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
-import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.completion.LexCompletion;
 
 public class ExpressionCompletionContext implements CodeCompletionContext
 {

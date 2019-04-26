@@ -7,8 +7,6 @@ import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import log.Log;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
@@ -25,7 +23,7 @@ import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.LexAutoComplete.LexCompletion;
+import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.UnknownTypeException;
@@ -43,20 +41,16 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.DescriptiveErrorListener;
-import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
