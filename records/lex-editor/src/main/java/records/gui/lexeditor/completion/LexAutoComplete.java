@@ -26,6 +26,7 @@ import records.gui.lexeditor.EditorDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -105,19 +106,19 @@ public class LexAutoComplete
      * @param src the source content.  If null, automatically match
      * @param startPos the start position to feed to the completion constructor
      * @param completionText The completion text
-     * @return
+     * @return True, completion if at very start; False, completion if it maps a later word.
      */
-    public static Optional<LexCompletion> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText)
+    public static Optional<Pair<Boolean, LexCompletion>> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText)
     {
         if (src == null)
-            return Optional.of(new LexCompletion(startPos, completionText));
+            return Optional.of(new Pair<>(true, new LexCompletion(startPos, completionText)));
         
         int curCompletionStart = 0;
         do
         {
             if (Utility.startsWithIgnoreCase(completionText, src, curCompletionStart))
             {
-                return Optional.of(new LexCompletion(startPos, completionText));
+                return Optional.of(new Pair<>(curCompletionStart == 0, new LexCompletion(startPos, completionText)));
             }
             curCompletionStart = completionText.indexOf(' ', curCompletionStart);
             if (curCompletionStart >= 0)

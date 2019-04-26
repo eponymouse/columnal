@@ -58,6 +58,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionContext>
 {
@@ -335,7 +336,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 CanonicalSpan location = removedChars.map(curIndex, ((parsed.getSecond() < content.length() && content.charAt(parsed.getSecond()) == ' ') ? parsed.getSecond() + RawInputLocation.ONE : parsed.getSecond()));
                 
                 // Large size to avoid reallocations:
-                ImmutableList.Builder<ExpressionCompletion> identCompletions = ImmutableList.builderWithExpectedSize(1000);
+                ImmutableList.Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions = ImmutableList.builderWithExpectedSize(1000);
                 
                 // Add completions even if one is already spotted:
                 addFunctionCompletions(identCompletions, parsed.getFirst(), canonIndex);
@@ -355,7 +356,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     }
                 }
                 
-                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(sort(identCompletions.build()))))));
+                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(sort(identCompletions.build()))));
 
                 boolean wasColumn = false;
                 {
@@ -539,13 +540,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         if (internalContent.isEmpty())
         {
             // We know it will be big, so avoid lots of reallocation:
-            ImmutableList.Builder<ExpressionCompletion> emptyCompletions = ImmutableList.builderWithExpectedSize(1000);
+            ImmutableList.Builder<Pair<CompletionStatus, ExpressionCompletion>> emptyCompletions = ImmutableList.builderWithExpectedSize(1000);
             addFunctionCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addTagCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addColumnCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addVariableCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             
-            completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(sort(emptyCompletions.build()))))));
+            completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(sort(emptyCompletions.build()))));
         }
 
         return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
@@ -557,13 +558,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    protected void addVariableCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    protected void addVariableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
         try
         {
             for (String availableVariable : makeTypeState.get().getAvailableVariables())
             {
-                LexAutoComplete.matchWordStart(stem, canonIndex, availableVariable).map(c -> {
+                LexAutoComplete.matchWordStart(stem, canonIndex, availableVariable).map(p -> p.mapSecond(c -> {
                     // Special cases for in-built variables with attached documentation:
                     if (availableVariable.equals(TypeState.GROUP_COUNT))
                     {
@@ -575,7 +576,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     }
                     else
                         return c;
-                }).ifPresent(c -> identCompletions.add(new ExpressionCompletion(c, CompletionType.VARIABLE)));
+                })).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond(), CompletionType.VARIABLE))));
             }
         }
         catch (InternalException e)
@@ -590,13 +591,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    protected void addColumnCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    protected void addColumnCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
         for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
         {
             if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
             {
-                LexAutoComplete.matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw()).ifPresent(c -> identCompletions.add(new ExpressionCompletion(c, CompletionType.COLUMN)));
+                LexAutoComplete.matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw()).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond(), CompletionType.COLUMN))));
             }
         }
     }
@@ -607,12 +608,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    protected void addFunctionCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    protected void addFunctionCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
         for (StandardFunctionDefinition function : allFunctions)
         {
-            Optional<LexCompletion> lexCompletion = LexAutoComplete.matchWordStart(stem, canonIndex, function.getName());
-            lexCompletion.ifPresent(c -> identCompletions.add(new ExpressionCompletion(c.withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION)));
+            Optional<Pair<Boolean, LexCompletion>> lexCompletion = LexAutoComplete.matchWordStart(stem, canonIndex, function.getName());
+            lexCompletion.ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION))));
         }
     }
 
@@ -622,14 +623,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    protected void addTagCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    protected void addTagCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
         for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
         {
             String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
             if (stem == null || Utility.startsWithIgnoreCase(tag.tagName, stem) || (tag.typeName != null && Utility.startsWithIgnoreCase(fullName, stem)))
             {
-                identCompletions.add(new ExpressionCompletion(new LexCompletion(canonIndex, fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)), CompletionType.CONSTRUCTOR));
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)), CompletionType.CONSTRUCTOR)));
             }
         }
     }
@@ -852,6 +853,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         COLUMN, VARIABLE, FUNCTION, CONSTRUCTOR, NESTED_LITERAL, KEYWORD; 
     }
     
+    private static enum CompletionStatus
+    {
+        DIRECT, RELATED;
+    }
+    
     // LexCompletion plus extra info for sorting
     private static class ExpressionCompletion
     {
@@ -865,8 +871,25 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
     
-    private static ImmutableList<LexCompletion> sort(ImmutableList<ExpressionCompletion> completions)
+    private static ImmutableList<LexCompletionGroup> sort(ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> completions)
     {
-        return completions.stream().sorted(Comparator.<ExpressionCompletion, Integer>comparing(c -> c.completionType.ordinal()).thenComparing((c1, c2) -> c1.completion.content.compareToIgnoreCase(c2.completion.content))).map(c -> c.completion).collect(ImmutableList.<LexCompletion>toImmutableList());
+        ImmutableList.Builder<LexCompletionGroup> groups = ImmutableList.builder();
+
+        ImmutableList<LexCompletion> direct = sort(completions.stream().filter(p -> p.getFirst().equals(CompletionStatus.DIRECT)).map(p -> p.getSecond()));
+        if (!direct.isEmpty())
+        {
+            groups.add(new LexCompletionGroup(direct));
+        }
+        ImmutableList<LexCompletion> related = sort(completions.stream().filter(p -> p.getFirst().equals(CompletionStatus.RELATED)).map(p -> p.getSecond()));
+        if (!related.isEmpty())
+        {
+            groups.add(new LexCompletionGroup(related, StyledString.s("Related"), 2));
+        }
+        
+        return groups.build();
+    }
+    private static ImmutableList<LexCompletion> sort(Stream<ExpressionCompletion> completions)
+    {
+        return completions.sorted(Comparator.<ExpressionCompletion, Integer>comparing(c -> c.completionType.ordinal()).thenComparing((c1, c2) -> c1.completion.content.compareToIgnoreCase(c2.completion.content))).map(c -> c.completion).collect(ImmutableList.<LexCompletion>toImmutableList());
     }
 }
