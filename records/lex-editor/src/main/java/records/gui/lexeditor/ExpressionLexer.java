@@ -8,6 +8,7 @@ import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -324,57 +325,21 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
 
             @Nullable Pair<String, @RawInputLocation Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex);
+            final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 prevWasIdent = true;
                 String text = parsed.getFirst();
                 CanonicalSpan location = removedChars.map(curIndex, ((parsed.getSecond() < content.length() && content.charAt(parsed.getSecond()) == ' ') ? parsed.getSecond() + RawInputLocation.ONE : parsed.getSecond()));
                 
-                ImmutableList.Builder<LexCompletion> identCompletions = ImmutableList.builder();
+                // Large size to avoid reallocations:
+                ImmutableList.Builder<ExpressionCompletion> identCompletions = ImmutableList.builderWithExpectedSize(1000);
                 
                 // Add completions even if one is already spotted:
-                for (StandardFunctionDefinition function : allFunctions)
-                {
-                    LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), function.getName()).ifPresent(c -> identCompletions.add(c.withReplacement(function.getName() + "()").withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1)));
-                }
-                for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
-                {
-                    if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
-                    {
-                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableColumn.getColumnId().getRaw()).ifPresent(identCompletions::add);
-                    }
-                }
-                for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
-                {
-                    String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
-                    if (Utility.startsWithIgnoreCase(tag.tagName, parsed.getFirst()) || (tag.typeName != null && Utility.startsWithIgnoreCase(fullName, parsed.getFirst())))
-                    {
-                        identCompletions.add(new LexCompletion(removedChars.map(curIndex), fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)));
-                    }
-                }
-                try
-                {
-                    for (String availableVariable : makeTypeState.get().getAvailableVariables())
-                    {
-                        LexAutoComplete.matchWordStart(parsed.getFirst(), removedChars.map(curIndex), availableVariable).map(c -> {
-                            // Special cases for in-built variables with attached documentation:
-                            if (availableVariable.equals(TypeState.GROUP_COUNT))
-                            {
-                                return c.withFurtherDetailsURL("variable-" + TypeState.GROUP_COUNT.replace(" ", "-") + ".html");
-                            }
-                            else if (availableVariable.equals(TypeState.ROW_NUMBER))
-                            {
-                                return c.withFurtherDetailsURL("variable-" + TypeState.ROW_NUMBER.replace(" ", "-") + ".html");
-                            }
-                            else
-                                return c;
-                        }).ifPresent(identCompletions::add);
-                    }
-                }
-                catch (InternalException e)
-                {
-                    Log.log(e);
-                }
+                addFunctionCompletions(identCompletions, parsed.getFirst(), canonIndex);
+                addColumnCompletions(identCompletions, parsed.getFirst(), canonIndex);
+                addTagCompletions(identCompletions, parsed.getFirst(), canonIndex);
+                addVariableCompletions(identCompletions, parsed.getFirst(), canonIndex);
                 for (Keyword keyword : Keyword.values())
                 {
                     if (keyword.getContent().startsWith("@"))
@@ -383,12 +348,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent(), 1, text, 0);
                         if (common > 0)
                         {
-                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(removedChars.map(curIndex), keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY)))));
+                            completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, curIndex + common), new ExpressionCompletionContext(ImmutableList.of(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY)))));
                         }
                     }
                 }
                 
-                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(identCompletions.build())));
+                completions.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(sort(identCompletions.build()))));
 
                 boolean wasColumn = false;
                 {
@@ -477,7 +442,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
                 if (Utility.startsWithIgnoreCase("@i", stem))
                 {
-                    validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), "@if@then@else@endif") {
+                    validKeywordCompletions.add(new LexCompletion(canonIndex, "@if@then@else@endif") {
                         @Override
                         public String toString()
                         {
@@ -492,7 +457,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
                         {
                             String fullAfterEntire = (columnReference.getTableId() == null ? "" : columnReference.getTableId().getRaw() + ":") + columnReference.getColumnId().getRaw();
-                            validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), "@entire" + fullAfterEntire) {
+                            validKeywordCompletions.add(new LexCompletion(canonIndex, "@entire" + fullAfterEntire) {
                                 @Override
                                 public String toString()
                                 {
@@ -508,7 +473,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     if (Utility.startsWithIgnoreCase(keyword.getContent(), stem))
                     {
-                        validKeywordCompletions.add(new LexCompletion(removedChars.map(curIndex), keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
+                        validKeywordCompletions.add(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
                     }
                 }
                 completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, nonLetter), new ExpressionCompletionContext(validKeywordCompletions.build())));
@@ -568,8 +533,103 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos, errors);
+        
+        if (internalContent.isEmpty())
+        {
+            // We know it will be big, so avoid lots of reallocation:
+            ImmutableList.Builder<ExpressionCompletion> emptyCompletions = ImmutableList.builderWithExpectedSize(1000);
+            addFunctionCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            addTagCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            addColumnCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            addVariableCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            
+            completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(sort(emptyCompletions.build()))));
+        }
 
         return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+    }
+
+    /**
+     * Adds all the available variable completions to the given builder
+     * @param identCompletions The builder to add to
+     * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
+     * @param canonIndex The position to pass to the completion
+     */
+    protected void addVariableCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        try
+        {
+            for (String availableVariable : makeTypeState.get().getAvailableVariables())
+            {
+                LexAutoComplete.matchWordStart(stem, canonIndex, availableVariable).map(c -> {
+                    // Special cases for in-built variables with attached documentation:
+                    if (availableVariable.equals(TypeState.GROUP_COUNT))
+                    {
+                        return c.withFurtherDetailsURL("variable-" + TypeState.GROUP_COUNT.replace(" ", "-") + ".html");
+                    }
+                    else if (availableVariable.equals(TypeState.ROW_NUMBER))
+                    {
+                        return c.withFurtherDetailsURL("variable-" + TypeState.ROW_NUMBER.replace(" ", "-") + ".html");
+                    }
+                    else
+                        return c;
+                }).ifPresent(c -> identCompletions.add(new ExpressionCompletion(c, CompletionType.VARIABLE)));
+            }
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+        }
+    }
+
+    /**
+     * Adds all the available column completions to the given builder
+     * @param identCompletions The builder to add to
+     * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
+     * @param canonIndex The position to pass to the completion
+     */
+    protected void addColumnCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+        {
+            if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
+            {
+                LexAutoComplete.matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw()).ifPresent(c -> identCompletions.add(new ExpressionCompletion(c, CompletionType.COLUMN)));
+            }
+        }
+    }
+
+    /**
+     * Adds all the available function completions to the given builder
+     * @param identCompletions The builder to add to
+     * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
+     * @param canonIndex The position to pass to the completion
+     */
+    protected void addFunctionCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        for (StandardFunctionDefinition function : allFunctions)
+        {
+            Optional<LexCompletion> lexCompletion = LexAutoComplete.matchWordStart(stem, canonIndex, function.getName());
+            lexCompletion.ifPresent(c -> identCompletions.add(new ExpressionCompletion(c.withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION)));
+        }
+    }
+
+    /**
+     * Adds all the available tag completions to the given builder
+     * @param identCompletions The builder to add to
+     * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
+     * @param canonIndex The position to pass to the completion
+     */
+    protected void addTagCompletions(Builder<ExpressionCompletion> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
+        {
+            String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
+            if (stem == null || Utility.startsWithIgnoreCase(tag.tagName, stem) || (tag.typeName != null && Utility.startsWithIgnoreCase(fullName, stem)))
+            {
+                identCompletions.add(new ExpressionCompletion(new LexCompletion(canonIndex, fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)), CompletionType.CONSTRUCTOR));
+            }
+        }
     }
 
     private @Nullable String getDocURLFor(Keyword keyword)
@@ -782,5 +842,29 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
         return null;
-    }    
+    }
+    
+    // Used for ordering, so the order here is significant
+    private static enum CompletionType
+    {
+        COLUMN, VARIABLE, FUNCTION, CONSTRUCTOR, NESTED_LITERAL, KEYWORD; 
+    }
+    
+    // LexCompletion plus extra info for sorting
+    private static class ExpressionCompletion
+    {
+        private final LexCompletion completion;
+        private final CompletionType completionType;
+
+        public ExpressionCompletion(LexCompletion completion, CompletionType completionType)
+        {
+            this.completion = completion;
+            this.completionType = completionType;
+        }
+    }
+    
+    private static ImmutableList<LexCompletion> sort(ImmutableList<ExpressionCompletion> completions)
+    {
+        return completions.stream().sorted(Comparator.<ExpressionCompletion, Integer>comparing(c -> c.completionType.ordinal()).thenComparing((c1, c2) -> c1.completion.content.compareToIgnoreCase(c2.completion.content))).map(c -> c.completion).collect(ImmutableList.<LexCompletion>toImmutableList());
+    }
 }

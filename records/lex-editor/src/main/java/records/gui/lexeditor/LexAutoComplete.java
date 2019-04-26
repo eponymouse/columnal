@@ -118,9 +118,24 @@ public class LexAutoComplete
     {
         return Optional.ofNullable(window.listView.getSelectedItem());
     }
-    
-    public static Optional<LexCompletion> matchWordStart(String src, @CanonicalLocation int startPos, String completionText)
+
+    /**
+     * Check if the source snippet is a stem of any (space-separated) word in the completion text.  If so, return a
+     * corresponding completion, else return empty.
+     * 
+     * e.g. matchWordStart("te", 34, "from text to")
+     * would return Optional.of(new LexCompletion(34, "from text to"))
+     * 
+     * @param src the source content.  If null, automatically match
+     * @param startPos the start position to feed to the completion constructor
+     * @param completionText The completion text
+     * @return
+     */
+    public static Optional<LexCompletion> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText)
     {
+        if (src == null)
+            return Optional.of(new LexCompletion(startPos, completionText));
+        
         int curCompletionStart = 0;
         do
         {
@@ -175,6 +190,13 @@ public class LexAutoComplete
         {
             this.content = newContent;
             this.display = StyledString.s(newContent);
+            return this;
+        }
+
+        public LexCompletion withReplacement(String newContent, StyledString display)
+        {
+            this.content = newContent;
+            this.display = display;
             return this;
         }
         
