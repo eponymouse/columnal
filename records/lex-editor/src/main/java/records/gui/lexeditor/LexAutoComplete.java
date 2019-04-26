@@ -23,6 +23,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebView;
@@ -38,12 +39,15 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ResizableRectangle;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -190,6 +194,26 @@ public class LexAutoComplete
             this.furtherDetailsURL = url == null ? null : new Pair<>(url, null);
             return this;
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            LexCompletion that = (LexCompletion) o;
+            return startPos == that.startPos &&
+                    relativeCaretPos == that.relativeCaretPos &&
+                    content.equals(that.content) &&
+                    display.equals(that.display) &&
+                    selectionBehaviour == that.selectionBehaviour &&
+                    Objects.equals(furtherDetailsURL, that.furtherDetailsURL);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(startPos, content, display, relativeCaretPos, selectionBehaviour, furtherDetailsURL);
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -304,13 +328,13 @@ public class LexAutoComplete
         private ImmutableList<LexCompletion> curCompletions = ImmutableList.of();
         
         // This map's values are always inserted into the children of this region
-        private ObservableMap<LexCompletion, TextFlow> visible = FXCollections.observableMap(new IdentityHashMap<>());
+        private ObservableMap<LexCompletion, ClippedTextFlow> visible = FXCollections.observableHashMap();
         
         private int selectionIndex;
         // Holds a mirror of selectionIndex:
         private final ObjectProperty<@Nullable LexCompletion> selectedItem = new SimpleObjectProperty<>(null);
-        private int topVisibleItemIndex = 0;
-        private double topVisibleItemScroll = 0;
+        // Always positive, in pixels from top of full list:
+        private double scrollOffset = 0;
         private final double ITEM_HEIGHT = 24;
         
         public LexCompletionList()
@@ -326,28 +350,38 @@ public class LexAutoComplete
             
             setPrefWidth(300.0);
             setMaxHeight(USE_PREF_SIZE);
+            setOnScroll(e -> {
+                scrollOffset = Math.max(0, Math.min(scrollOffset - e.getDeltaY(), curCompletions.size() * ITEM_HEIGHT - getHeight()));
+                FXUtility.mouse(this).recalculateChildren();
+                e.consume();
+            });
         }
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefHeight(double width)
         {
-            return Math.min(curCompletions.size(), 16) * ITEM_HEIGHT;
+            return Math.min(curCompletions.size(), 16) * ITEM_HEIGHT + 2 /* border */;
         }
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
-            double y = topVisibleItemScroll;
             Insets insets = getInsets();
-            for (int i = topVisibleItemIndex; i < curCompletions.size() && y < getHeight(); i++, y += ITEM_HEIGHT)
+            double y = insets.getTop() - (scrollOffset % ITEM_HEIGHT);
+            double maxY = getHeight() - insets.getTop() - insets.getBottom();
+            for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < curCompletions.size() && y < maxY; i++, y += ITEM_HEIGHT)
             {
-                TextFlow flow = visible.get(curCompletions.get(i));
+                ClippedTextFlow flow = visible.get(curCompletions.get(i));
                 if (flow != null)
                 {
                     // Should always be non-null, but need to guard
-                    flow.resizeRelocate(insets.getLeft(), y, getWidth() - insets.getRight() - insets.getLeft(), ITEM_HEIGHT);
+                    double width = getWidth() - insets.getRight() - insets.getLeft();
+                    flow.resizeRelocate(insets.getLeft(), y, width, ITEM_HEIGHT);
+                    flow.clip.setWidth(width);
+                    flow.clip.setY(Math.max(y, insets.getTop()) - y);
+                    flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
                 }
             }
         }
@@ -355,8 +389,8 @@ public class LexAutoComplete
         private void recalculateChildren()
         {
             Set<LexCompletion> toKeep = Sets.newIdentityHashSet(); 
-            double y = topVisibleItemScroll;
-            for (int i = topVisibleItemIndex; i < curCompletions.size() && y < getHeight(); i++, y += ITEM_HEIGHT)
+            double y = (scrollOffset % ITEM_HEIGHT) - ITEM_HEIGHT;
+            for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < curCompletions.size() && y < computePrefHeight(-1); i++, y += ITEM_HEIGHT)
             {
                 TextFlow item = visible.computeIfAbsent(curCompletions.get(i), this::makeFlow);
                 FXUtility.setPseudoclass(item, "selected", selectionIndex == i);
@@ -366,10 +400,9 @@ public class LexAutoComplete
             requestLayout();
         }
 
-        private TextFlow makeFlow(LexCompletion lexCompletion)
+        private ClippedTextFlow makeFlow(LexCompletion lexCompletion)
         {
-            TextFlow textFlow = new TextFlow();
-            textFlow.getChildren().setAll(lexCompletion.display.toGUI());
+            ClippedTextFlow textFlow = new ClippedTextFlow(lexCompletion.display.toGUI());
             textFlow.getStyleClass().add("lex-completion");
             textFlow.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY)
@@ -388,10 +421,11 @@ public class LexAutoComplete
         {
             this.curCompletions = completions;
             // Also scroll to top:
-            topVisibleItemIndex = 0;
-            topVisibleItemScroll = 0;
+            // TODO not if an item is selected?
+            scrollOffset = 0;
             recalculateChildren();
-            select(0);
+            // Keep same item selected, if still present:
+            select(curCompletions.indexOf(selectedItem.get()));
         }
 
         @Override
@@ -432,6 +466,17 @@ public class LexAutoComplete
         public double getTotalTextLeftPad()
         {
             return getInsets().getLeft() + ((Region)getParent()).getInsets().getLeft() + visible.values().stream().findFirst().map(f -> f.getInsets().getLeft()).orElse(0.0);
+        }
+        
+        private class ClippedTextFlow extends TextFlow
+        {
+            private final Rectangle clip = new Rectangle();
+
+            public ClippedTextFlow(Collection<Text> content)
+            {
+                getChildren().setAll(content);
+                setClip(clip);
+            }
         }
     }
 }
