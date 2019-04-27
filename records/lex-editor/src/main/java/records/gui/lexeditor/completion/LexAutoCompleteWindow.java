@@ -41,6 +41,7 @@ public class LexAutoCompleteWindow extends PopupControl
         webView.setMaxHeight(400.0);
         this.pane = new HBox(listView, webView);
         pane.setFillHeight(false);
+        pane.setFocusTraversable(false);
         
         setAutoFix(false);
         setAutoHide(false);

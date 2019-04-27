@@ -44,20 +44,33 @@
     .lex-completion {
         -fx-background-color: white;
         -fx-padding: 0 2 0 2;
-        & .styled-text {
+        .styled-text {
             -fx-font-smoothing-type: gray;
             -fx-fill: black;
         }
-        &:selected {
-            -fx-background-color: $focus-color;
-            & .styled-text {
-                -fx-fill: white;
-            }
-        }
         &.lex-completion-header {
             -fx-background-color: grey(90%);
+            -fx-background-radius: 7;
+            -fx-background-insets: 1 2 1 2;
+            & .lex-completion-text-flow {
+                -fx-padding: 0 5 0 5;
+            }
             & .styled-text {
                 -fx-fill: grey(40%);
+            }
+        }
+        .side-text {
+            -fx-label-padding: 2;
+            -fx-text-fill: grey(50%);
+            -fx-font-size: 75%;
+        }
+        &:selected {
+            -fx-background-color: $focus-color;
+            .styled-text {
+                -fx-fill: white;
+            }
+            .side-text {
+                -fx-text-fill: grey(90%);
             }
         }
     }

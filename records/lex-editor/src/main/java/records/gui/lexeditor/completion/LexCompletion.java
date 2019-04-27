@@ -17,11 +17,12 @@ public class LexCompletion
 {
     public final @CanonicalLocation int startPos;
     public String content;
-    public StyledString display;
+    StyledString display;
     public int relativeCaretPos;
-    public LexSelectionBehaviour selectionBehaviour;
+    LexSelectionBehaviour selectionBehaviour;
     // HTML file name (e.g. function-abs.html) and optional anchor
-    public @Nullable Pair<String, @Nullable String> furtherDetailsURL;
+    @Nullable Pair<String, @Nullable String> furtherDetailsURL;
+    String sideText = "";
 
     private LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL)
     {
@@ -67,6 +68,12 @@ public class LexCompletion
     public LexCompletion withFurtherDetailsURL(@Nullable String url)
     {
         this.furtherDetailsURL = url == null ? null : new Pair<>(url, null);
+        return this;
+    }
+    
+    public LexCompletion withSideText(String sideText)
+    {
+        this.sideText = sideText;
         return this;
     }
 

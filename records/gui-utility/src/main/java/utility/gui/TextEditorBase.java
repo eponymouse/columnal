@@ -107,7 +107,7 @@ public abstract class TextEditorBase extends Region
 
             caretBlink = new Timeline(
                     new KeyFrame(Duration.seconds(0), new KeyValue(caretShape.visibleProperty(), true)),
-                    new KeyFrame(Duration.seconds(0.8), e -> Utility.later(this).queueUpdateCaretShape(), new KeyValue(caretShape.visibleProperty(), false)),
+                    new KeyFrame(Duration.seconds(0.8), e -> Utility.later(this).updateCaretShape(true), new KeyValue(caretShape.visibleProperty(), false)),
                     new KeyFrame(Duration.seconds(1.2), new KeyValue(caretShape.visibleProperty(), true))
             );
             caretBlink.setCycleCount(Animation.INDEFINITE);
@@ -150,15 +150,15 @@ public abstract class TextEditorBase extends Region
         {
             if (!updateCaretShapeQueued)
             {
-                FXUtility.runAfterNextLayout(CaretAndSelectionNodes.this::updateCaretShape);
+                FXUtility.runAfterNextLayout(() -> updateCaretShape(false));
                 requestLayout();
                 updateCaretShapeQueued = true;
             }
         }
 
-        private void updateCaretShape()
+        private void updateCaretShape(boolean withoutQueue)
         {
-            if (!updateCaretShapeQueued)
+            if (!updateCaretShapeQueued && !withoutQueue)
                 return; // We may be a stale call just after losing focus
             
             updateCaretShapeQueued = false;
@@ -171,7 +171,7 @@ public abstract class TextEditorBase extends Region
                 errorUnderlinePane.getChildren().setAll(makeSpans(getErrorCharacters()).stream().map(r -> makeErrorUnderline(r.start <= getDisplayCaretPosition() && getDisplayCaretPosition() <= r.end, textLayout.getRange(r.start, r.end, TextLayout.TYPE_TEXT, 0, 0))).collect(Collectors.<Path>toList()));
                 backgroundsPane.getChildren().setAll(Utility.mapListI(getBackgrounds(), b -> makeBackground(textLayout.getRange(b.startIncl, b.endExcl, TextLayout.TYPE_TEXT, 0, 0), b.styleClasses)));
                 if (isFocused())
-                    caretBlink.playFromStart();
+                    caretBlink.play();
             }
             catch (Exception e)
             {

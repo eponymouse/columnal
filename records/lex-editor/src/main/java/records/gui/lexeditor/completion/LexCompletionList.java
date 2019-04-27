@@ -11,9 +11,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -55,7 +59,7 @@ class LexCompletionList extends Region
     // This map's values are always inserted into the children of this region.
     // The keys are either completions or headers
     // which are proxied by the group
-    private final ObservableMap<Either<LexCompletion, LexCompletionGroup>, ClippedTextFlow> visible = FXCollections.observableHashMap();
+    private final ObservableMap<Either<LexCompletion, LexCompletionGroup>, CompletionRow> visible = FXCollections.observableHashMap();
     
     // Group index, index within that group
     private @Nullable Pair<Integer, Integer> selectionIndex;
@@ -102,7 +106,7 @@ class LexCompletionList extends Region
         
         getStyleClass().add("lex-completion-list");
         setFocusTraversable(false);
-        visible.addListener((MapChangeListener<Either<LexCompletion, LexCompletionGroup>, TextFlow>) (MapChangeListener.Change<? extends Either<LexCompletion, LexCompletionGroup>, ? extends TextFlow> c) -> {
+        visible.addListener((MapChangeListener<Either<LexCompletion, LexCompletionGroup>, Node>) (MapChangeListener.Change<? extends Either<LexCompletion, LexCompletionGroup>, ? extends Node> c) -> {
             if (c.wasRemoved())
                 getChildren().remove(c.getValueRemoved());
             if (c.wasAdded())
@@ -175,7 +179,7 @@ class LexCompletionList extends Region
         int rowSize = allDisplayRows.size();
         for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < rowSize && y < maxY; i++, y += ITEM_HEIGHT)
         {
-            ClippedTextFlow flow = visible.get(allDisplayRows.get(i));
+            CompletionRow flow = visible.get(allDisplayRows.get(i));
             // Should always be non-null, but need to guard
             if (flow != null)
             {
@@ -197,7 +201,7 @@ class LexCompletionList extends Region
         for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < rowSize && y < computePrefHeight(-1); i++, y += ITEM_HEIGHT)
         {
             Either<LexCompletion, LexCompletionGroup> row = allDisplayRows.get(i);
-            TextFlow item = visible.computeIfAbsent(row, this::makeFlow);
+            CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
             
             FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
             toKeep.add(row);
@@ -206,14 +210,13 @@ class LexCompletionList extends Region
         requestLayout();
     }
 
-    private ClippedTextFlow makeFlow(Either<LexCompletion, LexCompletionGroup> lexCompletion)
+    private CompletionRow makeFlow(Either<LexCompletion, LexCompletionGroup> lexCompletion)
     {
-        ClippedTextFlow textFlow = new ClippedTextFlow(lexCompletion.either(c -> c.display.toGUI(), g -> (g.header == null ? StyledString.s("") : g.header).toGUI()));
-        textFlow.getStyleClass().add("lex-completion");
+        CompletionRow row = new CompletionRow(lexCompletion.either(c -> c.display.toGUI(), g -> (g.header == null ? StyledString.s("") : g.header).toGUI()), lexCompletion.either(c -> c.sideText, g -> ""));
         if (lexCompletion.isRight())
-            textFlow.getStyleClass().add("lex-completion-header");
-        textFlow.setMouseTransparent(true);
-        return textFlow;
+            row.getStyleClass().add("lex-completion-header");
+        row.setMouseTransparent(true);
+        return row;
     }
 
     public void setCompletions(ImmutableList<LexCompletionGroup> completions)
@@ -307,14 +310,34 @@ class LexCompletionList extends Region
     }
     
     @OnThread(Tag.FXPlatform)
-    private class ClippedTextFlow extends TextFlow
+    private class CompletionRow extends Region
     {
+        private final TextFlow mainText;
+        private final Label sideText;
         private final Rectangle clip = new Rectangle();
 
-        public ClippedTextFlow(Collection<Text> content)
+        public CompletionRow(Collection<Text> content, String sideText)
         {
-            getChildren().setAll(content);
+            setFocusTraversable(false);
+            mainText = new TextFlow();
+            mainText.getStyleClass().add("lex-completion-text-flow");
+            mainText.getChildren().setAll(content);
+            mainText.setFocusTraversable(false);
+            this.sideText = new Label(sideText);
+            this.sideText.getStyleClass().add("side-text");
             setClip(clip);
+            getChildren().setAll(mainText, this.sideText);
+            getStyleClass().add("lex-completion");
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        protected void layoutChildren()
+        {
+            mainText.resizeRelocate(0, 0, getWidth(), getHeight());
+            double sideWidth = sideText.prefWidth(-1);
+            double sideHeight = sideText.prefHeight(sideWidth);
+            sideText.resizeRelocate(getWidth() - sideWidth, (getHeight() - sideHeight) / 2.0, sideWidth, sideHeight);
         }
     }
 }

@@ -620,7 +620,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     if (Utility.startsWithIgnoreCase(synonym, stem))
                     {
-                        lexCompletion = Optional.of(new Pair<>(false, new LexCompletion(canonIndex, function.getName())));
+                        lexCompletion = Optional.of(new Pair<>(false, new LexCompletion(canonIndex, function.getName()).withSideText("\u2248 " + synonym)));
                         break;
                     }
                 }
