@@ -22,7 +22,7 @@ public class KeepFunction extends FunctionDefinition
 {
     public KeepFunction() throws InternalException
     {
-        super("listprocess:keep");
+        super("listprocess:select");
     }
 
     @Override

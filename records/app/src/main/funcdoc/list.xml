@@ -3,6 +3,8 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="list">
     <function name="list length">
+        <synonym>size</synonym>
+        
         <typeArg>t</typeArg>
         <argType>[@typevar t]</argType>
         <returnType>Number</returnType>
@@ -24,6 +26,8 @@
     </function>
     
     <function name="element">
+        <synonym>get</synonym>
+        
         <typeArg>t</typeArg>
         <argType>[@typevar t]</argType>
         <argType>Number</argType>
@@ -50,6 +54,8 @@
     </function>
     
     <function name="in list">
+        <synonym>contains</synonym>
+        
         <typeArg>t</typeArg>
         <typeConstraint>Comparable t</typeConstraint>
         <argType>@typevar t</argType>
@@ -91,6 +97,8 @@
     </function>
     
     <function name="join lists">
+        <synonym>concatenate</synonym>
+        
         <typeArg>t</typeArg>
         <argType>[[@typevar t]]</argType>
         <returnType>[@typevar t]</returnType>

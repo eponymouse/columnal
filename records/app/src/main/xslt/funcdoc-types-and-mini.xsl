@@ -17,6 +17,13 @@
         <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=<xsl:value-of select="typeArg" separator=";"/>
         <xsl:text>&#xa;</xsl:text>
     </xsl:template>
+
+    <xsl:template name="processFunctionSynonyms">
+        <xsl:param name="namespace" select="."/>
+
+        <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=<xsl:value-of select="synonym" separator=";"/>
+        <xsl:text>&#xa;</xsl:text>
+    </xsl:template>
     
     <xsl:template name="processFunctionConstraints">
         <xsl:param name="namespace" select="."/>
@@ -67,6 +74,16 @@
                 <xsl:variable name="namespace" select="@namespace"/>
                 <xsl:for-each select=".//function">
                     <xsl:call-template name="processFunctionTypeArgs">
+                        <xsl:with-param name="namespace" select="$namespace"/>
+                    </xsl:call-template>
+                </xsl:for-each>
+            </xsl:for-each>
+        </xsl:result-document>
+        <xsl:result-document method="text" href="file:///{$myOutputDir}/function_synonyms_en.properties">
+            <xsl:for-each select=".//functionDocumentation">
+                <xsl:variable name="namespace" select="@namespace"/>
+                <xsl:for-each select=".//function">
+                    <xsl:call-template name="processFunctionSynonyms">
                         <xsl:with-param name="namespace" select="$namespace"/>
                     </xsl:call-template>
                 </xsl:for-each>

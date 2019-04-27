@@ -70,6 +70,9 @@
     </function>
     
     <function name="combine">
+        <synonym>fold</synonym>
+        <synonym>reduce</synonym>
+        
         <typeArg>t</typeArg>
         <argType>[@typevar t]</argType>
         <argType>(@typevar t, @typevar t) -&gt; @typevar t</argType>
@@ -96,7 +99,9 @@
         </example>
     </function>
     
-    <function name="keep">
+    <function name="select">
+        <synonym>filter</synonym>
+        
         <typeArg>t</typeArg>
         <argType>[@typevar t]</argType>
         <argType>(@typevar t) -&gt; Boolean</argType>
@@ -122,6 +127,11 @@
     </function>
     
     <function name="apply each">
+        <synonym>map</synonym>
+        <synonym>lapply</synonym>
+        <synonym>sapply</synonym>
+        <synonym>mutate</synonym>
+        
         <typeArg>before</typeArg>
         <typeArg>after</typeArg>
         <argType>[@typevar before]</argType>

@@ -79,6 +79,7 @@
         </example>
     </function>
     <function name="average">
+        <synonym>mean</synonym>
         <unitArg>u</unitArg>
         <argType>[Number{@unitvar u}]</argType>
         <returnType>Number{@unitvar u}</returnType>
@@ -99,6 +100,7 @@
         </example>
     </function>
     <function name="sum">
+        <synonym>total</synonym>
         <unitArg>u</unitArg>
         <argType>[Number{@unitvar u}]</argType>
         <returnType>Number{@unitvar u}</returnType>

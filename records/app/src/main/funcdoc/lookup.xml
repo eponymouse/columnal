@@ -3,6 +3,8 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="lookup">
     <function name="lookup">
+        <synonym>vlookup</synonym>
+        
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeConstraint>Equatable a</typeConstraint>

@@ -613,6 +613,19 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         for (StandardFunctionDefinition function : allFunctions)
         {
             Optional<Pair<Boolean, LexCompletion>> lexCompletion = LexAutoComplete.matchWordStart(stem, canonIndex, function.getName());
+            
+            if (!lexCompletion.isPresent() && stem != null && stem.length() >= 3)
+            {
+                for (String synonym : function.getSynonyms())
+                {
+                    if (Utility.startsWithIgnoreCase(synonym, stem))
+                    {
+                        lexCompletion = Optional.of(new Pair<>(false, new LexCompletion(canonIndex, function.getName())));
+                        break;
+                    }
+                }
+            }
+            
             lexCompletion.ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION))));
         }
     }

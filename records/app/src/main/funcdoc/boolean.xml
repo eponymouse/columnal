@@ -3,6 +3,8 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="boolean">
     <function name="not">
+        <synonym>negate</synonym>
+        
         <argType>Boolean</argType>
         <returnType>Boolean</returnType>
         <description>

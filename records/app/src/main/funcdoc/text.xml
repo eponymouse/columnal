@@ -47,6 +47,8 @@
     </function>
     
     <function name="join text">
+        <synonym>concatenate</synonym>
+        
         <argType>[Text]</argType>
         <returnType>Text</returnType>
         <description>

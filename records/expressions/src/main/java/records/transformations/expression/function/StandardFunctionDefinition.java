@@ -2,6 +2,7 @@ package records.transformations.expression.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.identifier.qual.ExpressionIdentifier;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -31,4 +32,6 @@ public interface StandardFunctionDefinition
     public @FuncDocKey String getDocKey();
 
     public @Localized String getMiniDescription();
+    
+    public ImmutableList<String> getSynonyms();
 }

@@ -2,6 +2,7 @@ package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.identifier.qual.ExpressionIdentifier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -42,11 +43,13 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     private static final ResourceBundle FUNCTION_CONSTRAINTS = ResourceBundle.getBundle("function_constraints");
     private static final ResourceBundle FUNCTION_UNITARGS = ResourceBundle.getBundle("function_unitargs");
     private static final ResourceBundle FUNCTION_TYPES = ResourceBundle.getBundle("function_types");
+    private static final ResourceBundle FUNCTION_SYNONYMS = ResourceBundle.getBundle("function_synonyms");
     
     // Namespace colon function name
     private final @FuncDocKey String funcDocKey;
     private final TypeMatcher typeMatcher;
     private final @Localized String miniDescription;
+    private final ImmutableList<String> synonyms;
 
     public FunctionDefinition(@FuncDocKey String funcDocKey) throws InternalException
     {
@@ -54,6 +57,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         Details details = lookupFunction(extractName(funcDocKey), funcDocKey);
         this.miniDescription = details.miniDescription;
         this.typeMatcher = details.typeMatcher;
+        this.synonyms = details.synonyms;
     }
 
     private static String extractNamespace(@FuncDocKey String funcDocKey)
@@ -77,11 +81,13 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     private static class Details
     {
         private final @Localized String miniDescription;
+        private final ImmutableList<String> synonyms;
         private final TypeMatcher typeMatcher;
 
-        private Details(@Localized String miniDescription, TypeMatcher typeMatcher)
+        private Details(@Localized String miniDescription, ImmutableList<String> synonyms, TypeMatcher typeMatcher)
         {
             this.miniDescription = miniDescription;
+            this.synonyms = synonyms;
             this.typeMatcher = typeMatcher;
         }
     }
@@ -96,6 +102,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         {
             return new Details(
                 FUNCTION_MINIS.getString(key),
+                ImmutableList.copyOf(StringUtils.split(FUNCTION_SYNONYMS.getString(key), ";")),
                 parseFunctionType(functionName,
                     Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(key), ";")),
                     Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(key), ";")),
@@ -222,6 +229,12 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     public @FuncDocKey String getDocKey()
     {
         return funcDocKey;
+    }
+
+    @Override
+    public ImmutableList<String> getSynonyms()
+    {
+        return synonyms;
     }
 
     public static interface TypeMatcher
