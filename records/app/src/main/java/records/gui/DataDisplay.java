@@ -83,6 +83,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -628,6 +629,7 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             Label columnName = new Label(column.getColumnId().getRaw());
             columnName.getStyleClass().add("column-title");
+            GUI.showTooltipWhenAbbrev(columnName);
             if (columnActions != null && columnActions.getPrimaryEditOperation() != null)
             {
                 @NonNull FXPlatformRunnable primaryEditOp = columnActions.getPrimaryEditOperation();
@@ -752,6 +754,7 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
             typeLabel.getStyleClass().add("table-display-column-type");
+            GUI.showTooltipWhenAbbrev(typeLabel);
             if (editOp != null)
             {
                 @NonNull FXPlatformRunnable editOpFinal = editOp;
@@ -778,7 +781,6 @@ public abstract class DataDisplay extends HeadedDisplay
     protected static void addEditableStyling(Label editable)
     {
         editable.getStyleClass().add("column-title-edit");
-        Tooltip.install(editable, new Tooltip(TranslationUtility.getString("click.to.change")));
     }
     
     @Override
