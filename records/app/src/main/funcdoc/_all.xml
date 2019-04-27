@@ -7,6 +7,7 @@
     <xi:include href="datetime.xml"/>
     <xi:include href="list.xml"/>
     <xi:include href="listprocess.xml"/>
+    <xi:include href="literals.xml"/>
     <xi:include href="lookup.xml"/>
     <xi:include href="math.xml"/>
     <xi:include href="number.xml"/>

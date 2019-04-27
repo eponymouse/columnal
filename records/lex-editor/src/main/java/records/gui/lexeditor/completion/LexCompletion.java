@@ -52,6 +52,12 @@ public class LexCompletion
         this.display = display;
         return this;
     }
+
+    public LexCompletion withDisplay(StyledString display)
+    {
+        this.display = display;
+        return this;
+    }
     
     public LexCompletion withCaretPosAfterCompletion(int pos)
     {

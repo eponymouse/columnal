@@ -54,6 +54,7 @@
         <seeAlso>
             <link type="DateTime"/>
             <link namespace="datetime"/>
+            <link literal="date"/>
         </seeAlso>
     </type>
     
@@ -64,6 +65,7 @@
         </description>
         <seeAlso>
             <link type="Date"/>
+            <link literal="dateym"/>
         </seeAlso>
     </type>
     
@@ -78,6 +80,7 @@
             <link type="Date"/>
             <link type="DateTime"/>
             <link namespace="datetime"/>
+            <link literal="time"/>
         </seeAlso>
     </type>
     
@@ -89,6 +92,7 @@
         <seeAlso>
             <link type="DateTimeZoned"/>
             <link namespace="datetime"/>
+            <link literal="datetime"/>
         </seeAlso>
     </type>
     
@@ -101,6 +105,7 @@
         <seeAlso>
             <link type="DateTime"/>
             <link namespace="datetime"/>
+            <link literal="datetimezoned"/>
         </seeAlso>
     </type>
     

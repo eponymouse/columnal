@@ -50,6 +50,20 @@
                 </html>
             </xsl:result-document>
         </xsl:for-each>
+        <xsl:for-each select="literal">
+            <xsl:result-document method="html" href="file:///{$myOutputDir}/literal-{@name}.html">
+                <html>
+                    <head>
+                        <title><xsl:value-of select="@name"/>{}</title>
+                        <link rel="stylesheet" href="funcdoc.css"/>
+                        <link rel="stylesheet" href="web.css"/>
+                    </head>
+                    <body class="indiv">
+                        <xsl:apply-templates select="."/>
+                    </body>
+                </html>
+            </xsl:result-document>
+        </xsl:for-each>
         <xsl:for-each select="binaryOperator">
             <xsl:variable name="operator" select="operator"/>
             <xsl:result-document method="html" href="file:///{$myOutputDir}/operator-{string-join(string-to-codepoints($operator), '-')}.html">

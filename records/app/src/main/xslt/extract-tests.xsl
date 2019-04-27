@@ -11,11 +11,13 @@
         </xsl:analyze-string>
     </xsl:template>
     <xsl:template name="processExamples">
-        <xsl:param name="functionName" select="."/>
+        <xsl:param name="functionName"/>
+        <xsl:param name="literalName"/>
         <xsl:for-each select="example">
             <xsl:if test="output='error'">!!! </xsl:if>
             <xsl:choose>
                 <xsl:when test="input">(<xsl:value-of select="input"/>)</xsl:when>
+                <xsl:when test="$literalName"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</xsl:when>
                 <xsl:otherwise> @call @function <xsl:value-of select="$functionName"/><xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:otherwise>
             </xsl:choose>
             <xsl:if test="not(output='error')"><xsl:choose><xsl:when test="output"> = (<xsl:value-of select="output"/>)</xsl:when><xsl:otherwise> = (<xsl:value-of select="outputPattern"/>)</xsl:otherwise></xsl:choose></xsl:if>
@@ -77,6 +79,15 @@
             <xsl:call-template name="processEquivalence"/>
         </xsl:for-each>
     </xsl:template>
+
+    <xsl:template name="processLiteral">
+        <xsl:call-template name="processExamples">
+            <xsl:with-param name="literalName" select="@name"/>
+        </xsl:call-template>
+        <xsl:for-each select="equivalence">
+            <xsl:call-template name="processEquivalence"/>
+        </xsl:for-each>
+    </xsl:template>
     
     
     <xsl:template match="/functionDocumentation">
@@ -94,6 +105,10 @@
 
         <xsl:for-each select="naryOperatorGroup">
             <xsl:call-template name="processNaryOperator"/>
+        </xsl:for-each>
+
+        <xsl:for-each select="literal">
+            <xsl:call-template name="processLiteral"/>
         </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

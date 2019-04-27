@@ -125,6 +125,7 @@
                 <xs:element ref="naryOperatorGroup"/>
                 <xs:element ref="binaryOperator"/>
                 <xs:element ref="function"/>
+                <xs:element ref="literal"/>
                 <xs:element ref="type"/>
                 <xs:element ref="syntax"/>
                 <xs:element ref="variable"/>
@@ -203,6 +204,21 @@
                 </xs:choice>
             </xs:sequence>
             <xs:attribute name="title" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="literal">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="type" type="xs:string"/>
+                <xs:element ref="description"/>
+                <xs:element ref="equivalence" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:choice minOccurs="1" maxOccurs="unbounded">
+                    <xs:element ref="example"/>
+                    <xs:element ref="exampleGroup"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
 

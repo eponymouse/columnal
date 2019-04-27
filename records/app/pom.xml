@@ -307,6 +307,7 @@
                             <otherDepends>datetime.xml</otherDepends>
                             <otherDepends>list.xml</otherDepends>
                             <otherDepends>listprocess.xml</otherDepends>
+                            <otherDepends>literals.xml</otherDepends>
                             <otherDepends>lookup.xml</otherDepends>
                             <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
@@ -360,6 +361,7 @@
                             <otherDepends>datetime.xml</otherDepends>
                             <otherDepends>list.xml</otherDepends>
                             <otherDepends>listprocess.xml</otherDepends>
+                            <otherDepends>literals.xml</otherDepends>
                             <otherDepends>lookup.xml</otherDepends>
                             <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>

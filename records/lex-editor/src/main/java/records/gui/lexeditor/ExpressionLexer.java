@@ -343,6 +343,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 addColumnCompletions(identCompletions, parsed.getFirst(), canonIndex);
                 addTagCompletions(identCompletions, parsed.getFirst(), canonIndex);
                 addVariableCompletions(identCompletions, parsed.getFirst(), canonIndex);
+                addNestedLiteralCompletions(identCompletions, parsed.getFirst(), canonIndex);
                 for (Keyword keyword : Keyword.values())
                 {
                     if (keyword.getContent().startsWith("@"))
@@ -545,6 +546,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             addTagCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addColumnCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addVariableCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            addNestedLiteralCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             
             completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(sort(emptyCompletions.build()))));
         }
@@ -558,8 +560,37 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
+    protected void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals())
+        {
+            if (stem == null || Utility.startsWithIgnoreCase(nestedLiteral.getFirst(), stem))
+            {
+                LexCompletion completion = new LexCompletion(canonIndex, nestedLiteral.getFirst() + "}")
+                    .withDisplay(StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
+                    .withCaretPosAfterCompletion(nestedLiteral.getFirst().length())
+                    .withFurtherDetailsURL("literal-" + nestedLiteral.getFirst().replace("{", "") + ".html");
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(completion, CompletionType.NESTED_LITERAL)));
+            }
+        }
+    }
+
+    /**
+     * Adds all the available variable completions to the given builder
+     * @param identCompletions The builder to add to
+     * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
+     * @param canonIndex The position to pass to the completion
+     */
     protected void addVariableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
+        for (String bool : ImmutableList.of("true", "false"))
+        {
+            if (stem == null || Utility.startsWithIgnoreCase(bool, stem))
+            {
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, bool), CompletionType.VARIABLE)));
+            }
+        }
+        
         try
         {
             for (String availableVariable : makeTypeState.get().getAvailableVariables())

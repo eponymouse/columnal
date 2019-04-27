@@ -113,7 +113,7 @@
             <foranytype name="t"/>
             <forany name="xs">[@typevar t]</forany>
             <forany name="f">((@typevar t) -&gt; Boolean)</forany>
-            <lhs>@call @function all(@call @function keep(xs, f), f)</lhs>
+            <lhs>@call @function all(@call @function select(xs, f), f)</lhs>
             <rhs>true</rhs>
         </equivalence>
         <example>

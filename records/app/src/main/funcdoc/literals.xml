@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="">
+    <literal name="dateym">
+        <type>DateYM</type>
+        <description>
+            <p>Creates a year-month value -- this is a date without a day of the month.  You can use month numbers or English month names.</p>
+        </description>
+        <example>
+            <inputArg>April 2003</inputArg>
+            <output>@call @function dateym(2003{year}, 4{month})</output>
+        </example>
+        <example>
+            <inputArg>11/2010</inputArg>
+            <output>@call @function dateym(2010{year}, 11{month})</output>
+        </example>
+        <example>
+            <inputArg>Sep 1921</inputArg>
+            <output>@call @function dateym(1921{year}, 9{month})</output>
+        </example>
+    </literal>
+
+
+    <literal name="date">
+        <type>Date</type>
+        <description>
+            <p>Creates a date value.  The format is quite flexible, the main issue is avoid ambiguous dates.  Dates like 4/8/2000 could be interpreted as 4th August or 8th April.  This issue can be avoided in several ways: you can use the ISO format (e.g. date{2010-04-05} is 5th April), or you can use an (English) month name, e.g. date{5 April 2010}</p>
+        </description>
+        <example>
+            <inputArg>10 April 2003</inputArg>
+            <output>@call @function date(2003{year}, 4{month}, 10{day})</output>
+        </example>
+        <example>
+            <inputArg>2010-11-28</inputArg>
+            <output>@call @function date(2010{year}, 11{month}, 28{day})</output>
+        </example>
+        <example>
+            <inputArg>Sep 3 1921</inputArg>
+            <output>@call @function date(1921{year}, 9{month}, 3{day})</output>
+        </example>
+    </literal>
+
+    <literal name="time">
+        <type>Time</type>
+        <description>
+            <p>Creates a time value, representing a time of day.  You can use the 24-hour clock or AM/PM.  Fractional seconds are allowed.</p>
+        </description>
+        <example>
+            <inputArg>08:57</inputArg>
+            <output>@call @function time(8{hour}, 57{min}, 0{s})</output>
+        </example>
+        <example>
+            <inputArg>9:12:03 PM</inputArg>
+            <output>@call @function time(21{hour}, 12{min}, 3{s})</output>
+        </example>
+        <example>
+            <inputArg>23:59:59.999999</inputArg>
+            <output>@call @function time(23{hour}, 59{min}, 59.999999{s})</output>
+        </example>
+    </literal>
+
+    <literal name="datetime">
+        <type>DateTime</type>
+        <description>
+            <p>Creates a date-time value, with a date and time of day on that date.</p>
+            <p>The date part of the format is quite flexible, the main issue is avoid ambiguous dates.  Dates like 4/8/2000 could be interpreted as 4th August or 8th April.  This issue can be avoided in several ways: you can use the ISO format (e.g. datetime{2010-04-05 12:34} is 5th April), or you can use a month name, e.g. date{5 April 2010 4:56}</p>
+            <p>For the time part, you can use the 24-hour clock or AM/PM.  Fractional seconds are allowed.</p>
+        </description>
+        <example>
+            <inputArg>10 April 2003 08:57</inputArg>
+            <output>@call @function datetime(@call @function date(2003{year}, 4{month}, 10{day}), @call @function time(8{hour}, 57{min}, 0{s}))</output>
+        </example>
+        <example>
+            <inputArg>2010-11-28 9:12:03 PM</inputArg>
+            <output>@call @function datetime(@call @function date(2010{year}, 11{month}, 28{day}), @call @function time(21{hour}, 12{min}, 3{s}))</output>
+        </example>
+        <example>
+            <inputArg>Sep 3 1921 23:59:59.999999</inputArg>
+            <output>@call @function datetime(@call @function date(1921{year}, 9{month}, 3{day}), @call @function time(23{hour}, 59{min}, 59.999999{s}))</output>
+        </example>
+    </literal>
+
+    <literal name="datetimezoned">
+        <type>DateTimeZoned</type>
+        <description>
+            <p>Creates a zoned date-time value, with a date and time of day on that date, and a time zone.</p>
+            <p>The date part of the format is quite flexible, the main issue is avoid ambiguous dates.  Dates like 4/8/2000 could be interpreted as 4th August or 8th April.  This issue can be avoided in several ways: you can use the ISO format (e.g. datetime{2010-04-05 12:34} is 5th April), or you can use a month name, e.g. date{5 April 2010 4:56}</p>
+            <p>For the time part, you can use the 24-hour clock or AM/PM.  Fractional seconds are allowed.</p>
+            <p>Time zones can be specified in two ways.  The simplest is as an offset from UTC, e.g. +10:00 is ten hours ahead of UTC, -01:30 is one and a half hours behind.  The alternative is to use a continent/city format, e.g. Europe/London.  The city format will use the UTC offset that the official local time used on the given date, so datetimezoned{2019-01-14 03:40 Europe/London} is 03:40 UTC as London operates on UTC in the winter, but datetimezoned{2019-05-14 03:40 Europe/London} is 04:40 UTC because London is one hour ahead during the summer.</p>
+        </description>
+        <example>
+            <inputArg>10 April 2003 08:57+00:00</inputArg>
+            <output>@call @function datetimezoned(@call @function date(2003{year}, 4{month}, 10{day}), @call @function time(8{hour}, 57{min}, 0{s}), "+00:00")</output>
+        </example>
+        <example>
+            <inputArg>2010-11-28 9:12:03 PM Asia/Jakarta</inputArg>
+            <output>@call @function datetimezoned(@call @function date(2010{year}, 11{month}, 28{day}), @call @function time(21{hour}, 12{min}, 3{s}), "Asia/Jakarta")</output>
+        </example>
+        <example>
+            <inputArg>Sep 3 1921 23:59:59.999999 Africa/Khartoum</inputArg>
+            <output>@call @function datetimezoned(@call @function date(1921{year}, 9{month}, 3{day}), @call @function time(23{hour}, 59{min}, 59.999999{s}), "Africa/Khartoum")</output>
+        </example>
+    </literal>
+
+
+    <literal name="type">
+        <type>Type t</type>
+        <description>
+            <p>Creates a type value.  Type values are used for functions like <link function="from text to"/>, and <link function="asType"/>, to specify a destination type.</p>
+        </description>
+        <example>
+            <input>@call @function from text to(type{Boolean}, "true")</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>@call @function from text to(type{Number{min}}, "93")</input>
+            <output>93{min}</output>
+        </example>
+        <example>
+            <input>@call @function from text to(type{@apply Optional(Date)}, "None")</input>
+            <output>@tag Optional:None</output>
+        </example>
+    </literal>
+</functionDocumentation>
