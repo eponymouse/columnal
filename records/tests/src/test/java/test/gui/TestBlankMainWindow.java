@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
@@ -43,7 +44,6 @@ import records.gui.dtf.DocumentTextField;
 import records.gui.grid.RectangleBounds;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
-import test.gen.type.GenDataType;
 import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
@@ -183,7 +183,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
             push(KeyCode.TAB);
-            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), false);
+            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), true);
             defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
@@ -311,7 +311,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 }
                 while (Utility.compareNumbers(latest.get(row), newVal) == 0 && ++attempts < 100);
                 Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
-                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), new Random(1));
+                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), r);
                 latest.set(row, newVal);
             }
             RecordSet recordSet = tableManager.getAllTables().get(0).getData();
@@ -360,7 +360,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         if (value != null)
         {
             clickOn(".default-value");
-            enterStructuredValue(dataType, value, new Random(1), false);
+            enterStructuredValue(dataType, value, new Random(1), true);
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
@@ -461,7 +461,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
 
             values.add(entry.<@Value Object>map(p -> p.getSecond()));
-            DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
+            DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, r);
             if (entry.isLeft())
                 MatcherAssert.assertThat(TestUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
         }
@@ -489,28 +489,41 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     private DocumentTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
     {
-        DocumentTextField textField;
-        int i = 0;
-        do
+        // Make sure we aren't already selecting that cell:
+        push(KeyCode.ESCAPE);
+        push(KeyCode.ESCAPE);
+        push(KeyCode.SHORTCUT, KeyCode.HOME);
+        final @NonNull DocumentTextField textField = (DocumentTextField) clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+        // Three ways to enter value:
+        // click twice, click once and press enter, click once and start typing
+        int choice = random.nextInt(3);
+        boolean needDeleteAll = choice == 0;
+        if (choice == 0)
         {
-            textField = (DocumentTextField) clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+            // Click again
+            sleep(500);
+            clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
         }
-        while (++i < 2);
+        if (choice == 1)
+            push(KeyCode.ENTER);
 
-        Node focused = getFocusOwner();
-        assertNotNull(focused);
-        if (focused == null)
-            return textField; // To satisfy checker
-        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
-        push(KeyCode.HOME);
+        if (choice != 2)
+        {
+            assertFocusOwner(textField);
+        }
         value.eitherEx(s -> {
-            push(TestUtil.ctrlCmd(), KeyCode.A);
-            push(KeyCode.DELETE);
-            push(KeyCode.HOME);
+            if (needDeleteAll)
+            {
+                push(TestUtil.ctrlCmd(), KeyCode.A);
+                push(KeyCode.DELETE);
+                push(KeyCode.HOME);
+            }
             write(s);
+            assertFocusOwner(textField);
             return UnitType.UNIT;
         }, p -> {
-            enterStructuredValue(p.getFirst(), p.getSecond(), random, false);
+            enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll);
+            assertFocusOwner(textField);
             return UnitType.UNIT;
         });
         defocusSTFAndCheck(value.either(s -> true, p -> !p.getFirst().hasNumber()), () -> {
@@ -521,6 +534,16 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
         });
         return textField;
+    }
+
+    @OnThread(Tag.Any)
+    private void assertFocusOwner(@NonNull DocumentTextField textField)
+    {
+        Node focused = getFocusOwner();
+        assertNotNull(focused);
+        if (focused == null) // Satisfy checker
+            return;
+        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
     }
 
     @OnThread(Tag.Any)

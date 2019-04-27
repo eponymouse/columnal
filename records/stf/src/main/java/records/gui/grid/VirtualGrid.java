@@ -1169,7 +1169,7 @@ public final class VirtualGrid implements ScrollBindable
                     {
                         for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
                         {
-                            nodeSupplier.startEditing(screenPos, cellPositionFinal);
+                            nodeSupplier.startEditing(screenPos, cellPositionFinal, null);
                         }
                     }
                     else
@@ -1307,6 +1307,20 @@ public final class VirtualGrid implements ScrollBindable
                             sel.doDelete();
                         }
                         e.consume();
+                    }),
+                    InputMap.<Event, KeyEvent>consume(EventPattern.keyTyped(), e -> {
+                        if (FXUtility.checkKeyTyped(e))
+                        {
+                            @Nullable CellSelection sel = selection.get();
+                            if (sel != null)
+                            {
+                                CellPosition pos = sel.getActivateTarget();
+                                for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+                                {
+                                    nodeSupplier.startEditing(null, pos, e.getCharacter());
+                                }
+                            }
+                        }
                     })
             ));
         }

@@ -449,6 +449,11 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         anchorPosition.moveTo(0);
         caretPosition.moveTo(document.getLength());
     }
+    
+    public void replaceAll(String newContent)
+    {
+        document.replaceText(0, document.getLength(), newContent);
+    }
 
     @Override
     protected @OnThread(Tag.FXPlatform) Point2D translateHit(double x, double y)

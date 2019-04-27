@@ -107,7 +107,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
                 push(KeyCode.ENTER);
-                enterStructuredValue(colType.getType(), newVal, r, false);
+                enterStructuredValue(colType.getType(), newVal, r, true);
                 push(KeyCode.ENTER);
                 TestUtil.sleep(2000);
 

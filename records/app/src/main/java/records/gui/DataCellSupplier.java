@@ -87,11 +87,11 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     @Override
     protected void keyboardActivate(CellPosition cellPosition)
     {
-        startEditing(null, cellPosition);
+        startEditing(null, cellPosition, null);
     }
 
     @Override
-    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
+    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition, @Nullable String startTyping)
     {
         @Nullable VersionedSTF stf = getItemAt(cellPosition);
         if (stf != null)
@@ -106,6 +106,13 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
                 stf.selectAll();
             }
             stf.requestFocus();
+            // Important to do this after focus because things like manual edit
+            // revert to content at point of focus, so don't edit
+            // while unfocused:
+            if (startTyping != null)
+            {
+                stf.replaceAll(startTyping);
+            }
         }
     }
     

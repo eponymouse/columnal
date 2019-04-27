@@ -13,7 +13,6 @@ import javafx.scene.input.KeyCode;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
 import records.data.DataItemPosition;
 import records.data.Table;
 import records.data.TableId;
@@ -138,7 +137,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
             @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType().getType());
-            enterStructuredValue(columnDTV.getType(), value, r, false);
+            enterStructuredValue(columnDTV.getType(), value, r, true);
             push(KeyCode.ESCAPE);
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);

@@ -65,7 +65,7 @@ public abstract class VirtualGridSupplier<T extends Node>
     /**
      * Start editing that cell, if possible
      */
-    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
+    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition, @Nullable String startType)
     {
     }
 

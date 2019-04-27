@@ -51,7 +51,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         
         
         // We should already be in the default value:
-        enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue, r, false);
+        enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue, r, true);
         clickOn(".ok-button");
         
         // If we can still see the OK button, there was a problem.  Cancel the dialog instead:

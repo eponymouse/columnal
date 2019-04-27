@@ -42,11 +42,11 @@ import static org.junit.Assert.*;
 public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
-    default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean nested) throws InternalException, UserException
+    default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst) throws InternalException, UserException
     {
         final int DELAY = 1;
         
-        if (!nested)
+        if (deleteAllFirst)
         {
             //FlexibleTextField view = robot.getFocusOwner(FlexibleTextField.class);
             push(TestUtil.ctrlCmd(), KeyCode.A);
@@ -136,7 +136,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                         if (r.nextBoolean())
                             write(" ");
                     }
-                    enterStructuredValue(inner.get(i), tuple[i], r, true);
+                    enterStructuredValue(inner.get(i), tuple[i], r, false);
                 }
 
                 write(")");
@@ -159,7 +159,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                             if (r.nextBoolean())
                                 write(" ");
                         }
-                        enterStructuredValue(inner, listEx.get(i), r, true);
+                        enterStructuredValue(inner, listEx.get(i), r, false);
                     }
                     write("]");
                 }
@@ -185,6 +185,8 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         TestUtil.fx_(defocus);
         WaitForAsyncUtils.waitForFxEvents();
         assertNotEquals(node, TestUtil.fx(() -> window.getScene().getFocusOwner()));
+        node = TestUtil.fx(() -> window.getScene().getFocusOwner());
+        assertFalse("" + node, node instanceof DocumentTextField);
         if (checkContentSame)
         {
             assertEquals(content, TestUtil.fx(() -> field._test_getGraphicalText()));

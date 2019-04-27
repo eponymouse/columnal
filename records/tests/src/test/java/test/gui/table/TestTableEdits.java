@@ -393,7 +393,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBooleanA ? 0 : 1);
         clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
         push(KeyCode.ENTER);
-        enterStructuredValue(swappedType.getDataType(), swappedValue, r, false);
+        enterStructuredValue(swappedType.getDataType(), swappedValue, r, true);
         push(KeyCode.ENTER);
         
         
