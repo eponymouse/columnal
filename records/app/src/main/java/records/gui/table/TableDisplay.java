@@ -680,8 +680,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, ImmutableList.of())));
         showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay()));
 
-        Optional.ofNullable(showItems.get(columnDisplay.get().getFirst())).ifPresent(show::selectToggle);
-
         items.addAll(Arrays.asList(
             GUI.menu("tableDisplay.menu.showColumns",
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
@@ -701,6 +699,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 );
             })
         ));
+
+        Optional.ofNullable(showItems.get(columnDisplay.get().getFirst())).ifPresent(show::selectToggle);
+        
         return new ContextMenu(items.toArray(new MenuItem[0]));
     }
 
