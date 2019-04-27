@@ -1268,7 +1268,7 @@ public final class VirtualGrid implements ScrollBindable
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
-                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME, KeyCombination.CONTROL_DOWN), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME, KeyCombination.SHORTCUT_DOWN), e -> {
                         FXUtility.keyboard(this).ctrlHome();
                         e.consume();
                     }),
