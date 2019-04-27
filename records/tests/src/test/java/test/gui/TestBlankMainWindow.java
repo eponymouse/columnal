@@ -186,6 +186,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), false);
             defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
         TestUtil.delay(200);
     }
