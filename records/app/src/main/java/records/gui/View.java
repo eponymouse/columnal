@@ -118,7 +118,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     private boolean readOnly = true;
     private int saveCount = 0;
 
-    private void save(boolean keepPrevForUndo)
+    void save(boolean keepPrevForUndo)
     {
         // Log.logStackTrace("Save requested, R/O: " + readOnly);
         

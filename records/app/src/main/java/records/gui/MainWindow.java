@@ -78,7 +78,7 @@ public class MainWindow
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage)),
                 GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage)),
-                new DummySaveMenuItem(v),
+                new SaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {
                     FileChooser fc = new FileChooser();
                     File dest = fc.showSaveDialog(stage);

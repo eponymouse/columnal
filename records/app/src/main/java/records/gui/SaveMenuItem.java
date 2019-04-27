@@ -14,15 +14,14 @@ import utility.gui.TranslationUtility;
 
 import java.time.Instant;
 
-class DummySaveMenuItem extends MenuItem
+final class SaveMenuItem extends MenuItem
 {
     private final ObjectProperty<Object> dummyNowBinding = new SimpleObjectProperty<>(new Object());
     private final @OnThread(Tag.FXPlatform) StringBinding text;
 
     @OnThread(Tag.FXPlatform)
-    public DummySaveMenuItem(View view)
+    public SaveMenuItem(View view)
     {
-        setDisable(true);
         text = Bindings.createStringBinding(() ->
         {
             @Nullable Instant lastSave = view.lastSaveTime().get();
@@ -36,6 +35,7 @@ class DummySaveMenuItem extends MenuItem
             text.invalidate();
         }));
         textProperty().bind(TranslationUtility.bindString("menu.project.save", text));
+        setOnAction(e -> view.save(true));
     }
 
 
