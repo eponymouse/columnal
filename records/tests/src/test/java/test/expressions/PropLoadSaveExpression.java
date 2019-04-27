@@ -2,18 +2,15 @@ package test.expressions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -120,7 +117,8 @@ public class PropLoadSaveExpression extends FXApplicationTest
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> new TypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
         }).save();
         assertEquals(expression, edited);
-        assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
+        assertEquals(expression.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+        assertEquals(expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 
     @Property(trials = 200)
@@ -138,12 +136,12 @@ public class PropLoadSaveExpression extends FXApplicationTest
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
-        String saved = expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
+        String saved = expression.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
         TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
         Expression reloaded = Expression.parse(null, saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
-        String resaved = reloaded.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
+        String resaved = reloaded.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);
 
     }

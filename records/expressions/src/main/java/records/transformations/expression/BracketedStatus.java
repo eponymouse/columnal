@@ -2,12 +2,8 @@ package records.transformations.expression;
 
 public enum BracketedStatus
 {
-    /** Direct round brackets, i.e. if there's only commas, this can be a tuple expression */
-    DIRECT_ROUND_BRACKETED,
-    /** Direct square brackets, i.e. this has to be an array expression */
-    DIRECT_SQUARE_BRACKETED,
-    /** Top level in an expression, i.e. you don't need brackets around operators, but do around a tuple */
-    TOP_LEVEL, 
-    /* Normal state: the others above don't apply */
-    MISC;
+    /** Top level in an expression, i.e. you don't need brackets around an operator expression, although you will do around a tuple */
+    DONT_NEED_BRACKETS, 
+    /* Normal state: you do need brackets around expressions */
+    NEED_BRACKETS;
 }

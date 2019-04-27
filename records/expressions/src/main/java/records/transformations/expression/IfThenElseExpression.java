@@ -108,8 +108,8 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = "@if " + condition.save(structured, BracketedStatus.MISC, renames) + " @then " + thenExpression.save(structured, BracketedStatus.MISC,renames) + " @else " + elseExpression.save(structured, BracketedStatus.MISC, renames) + " @endif";
-        return surround != BracketedStatus.MISC ? content : ("(" + content + ")");
+        String content = "@if " + condition.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS,renames) + " @else " + elseExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
+        return content;
     }
 
     @Override
@@ -117,14 +117,14 @@ public class IfThenElseExpression extends NonOperatorExpression
     {
         StyledString content = StyledString.concat(
             StyledString.s("if "),
-            condition.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
+            condition.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
             StyledString.s(" then "),
-            thenExpression.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
+            thenExpression.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
             StyledString.s(" else "),
-            elseExpression.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler),
+            elseExpression.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
             StyledString.s(" endif")
         );
-        return expressionStyler.styleExpression(content, this); //surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
+        return expressionStyler.styleExpression(content, this); //surround != BracketedStatus.NEED_BRACKETS ? content : StyledString.roundBracket(content);
     }
 
 

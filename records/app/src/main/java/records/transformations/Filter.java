@@ -197,7 +197,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Collections.singletonList(PREFIX + " " + filterExpression.save(true, BracketedStatus.MISC, renames));
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(true, BracketedStatus.DONT_NEED_BRACKETS, renames));
     }
 
     @Override

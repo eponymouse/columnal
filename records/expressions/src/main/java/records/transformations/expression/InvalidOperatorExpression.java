@@ -64,9 +64,9 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (structured)
-            return "@invalidops(" + items.stream().map(x -> x.save(structured, BracketedStatus.MISC, renames)).collect(Collectors.joining(", "))+ ")";
+            return "@invalidops(" + items.stream().map(x -> x.save(structured, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", "))+ ")";
         else
-            return items.stream().map(x -> x.save(structured, BracketedStatus.MISC, renames)).collect(Collectors.joining(""));
+            return items.stream().map(x -> x.save(structured, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(""));
     }
 
     @Override
@@ -105,7 +105,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
 
         for (Expression item : items)
         {
-            r.append(item.toDisplay(BracketedStatus.MISC, expressionStyler));
+            r.append(item.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler));
         }
         
         class ErrorStyle extends Style<ErrorStyle>

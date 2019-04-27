@@ -20,11 +20,7 @@ import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.typeExp.TypeExp;
-import styled.StyledShowable;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -778,8 +774,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
     {
         return ImmutableMap.of(
-            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY),
-            DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY)
+            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY),
+            DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY)
         );
     }
 }

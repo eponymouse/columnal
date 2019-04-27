@@ -1,9 +1,7 @@
 package records.transformations;
 
-import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,17 +17,14 @@ import records.grammar.TransformationParser.TransformItemContext;
 import records.gui.View;
 import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
-import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -198,7 +193,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             OutputBuilder b = new OutputBuilder();
             b.kw("CALCULATE").id(renames.columnId(getId(), entry.getKey()).getSecond());
             b.kw("@EXPRESSION");
-            b.raw(entry.getValue().save(true, BracketedStatus.MISC, renames.withDefaultTableId(srcTableId)));
+            b.raw(entry.getValue().save(true, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }

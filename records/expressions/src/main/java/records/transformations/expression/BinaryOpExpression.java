@@ -63,8 +63,8 @@ public abstract class BinaryOpExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = lhs.save(structured, BracketedStatus.MISC, renames) + " " + saveOp() + " " + rhs.save(structured, BracketedStatus.MISC, renames);
-        if (surround != BracketedStatus.MISC)
+        String inner = lhs.save(structured, BracketedStatus.NEED_BRACKETS, renames) + " " + saveOp() + " " + rhs.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        if (surround != BracketedStatus.NEED_BRACKETS)
             return inner;
         else
             return "(" + inner + ")";
@@ -73,8 +73,8 @@ public abstract class BinaryOpExpression extends Expression
     @Override
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString inner = StyledString.concat(lhs.toDisplay(BracketedStatus.MISC, expressionStyler), StyledString.s(" " + saveOp() + " "), rhs.toDisplay(BracketedStatus.MISC, expressionStyler));
-        if (surround != BracketedStatus.MISC)
+        StyledString inner = StyledString.concat(lhs.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s(" " + saveOp() + " "), rhs.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler));
+        if (surround != BracketedStatus.NEED_BRACKETS)
             return expressionStyler.styleExpression(inner, this);
         else
             return expressionStyler.styleExpression(StyledString.roundBracket(inner), this);

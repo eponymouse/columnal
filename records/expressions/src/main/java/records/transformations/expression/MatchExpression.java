@@ -151,7 +151,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save(boolean structured, TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save(structured, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(structured, BracketedStatus.MISC, renames);
+            return " @case " + patterns.stream().map(p -> p.save(structured, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
@@ -160,7 +160,7 @@ public class MatchExpression extends NonOperatorExpression
                 StyledString.s(" case "),
                 patterns.stream().map(p -> p.toDisplay(expressionStyler)).collect(StyledString.joining(" or ")),
                 StyledString.s(" then "),
-                outcome.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)
+                outcome.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)
             );
         }
 
@@ -274,13 +274,13 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save(boolean structured, TableAndColumnRenames renames)
         {
-            return pattern.save(structured, BracketedStatus.MISC, renames) + (guard == null ? "" : " @given " + guard.save(structured, BracketedStatus.MISC, renames));
+            return pattern.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + (guard == null ? "" : " @given " + guard.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames));
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
         {
-            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler);
-            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler));
+            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler);
+            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
         }
 
         public @Recorded Expression getPattern()
@@ -356,7 +356,7 @@ public class MatchExpression extends NonOperatorExpression
                     Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override
@@ -376,15 +376,15 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = "@match " + expression.save(structured, BracketedStatus.MISC, renames) + clauses.stream().map(c -> c.save(structured, renames)).collect(Collectors.joining("")) + " @endmatch";
-        return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : ("(" + inner + ")");
+        String inner = "@match " + expression.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + clauses.stream().map(c -> c.save(structured, renames)).collect(Collectors.joining("")) + " @endmatch";
+        return (surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : ("(" + inner + ")");
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler), clauses.stream().map(c -> c.toDisplay(expressionStyler)).collect(StyledString.joining("")), StyledString.s(" endmatch"));
-        return expressionStyler.styleExpression(inner, this); //(surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : StyledString.roundBracket(inner);
+        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), clauses.stream().map(c -> c.toDisplay(expressionStyler)).collect(StyledString.joining("")), StyledString.s(" endmatch"));
+        return expressionStyler.styleExpression(inner, this); //(surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : StyledString.roundBracket(inner);
     }
 
     @Override

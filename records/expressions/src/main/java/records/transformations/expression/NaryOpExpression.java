@@ -92,15 +92,15 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        StringBuilder s = new StringBuilder(surround == BracketedStatus.MISC ? "(" : "");
+        StringBuilder s = new StringBuilder(surround == BracketedStatus.NEED_BRACKETS ? "(" : "");
         s.append(getSpecialPrefix());
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(structured, BracketedStatus.MISC, renames));
+            s.append(expressions.get(i).save(structured, BracketedStatus.NEED_BRACKETS, renames));
         }
-        if (surround == BracketedStatus.MISC)
+        if (surround == BracketedStatus.NEED_BRACKETS)
             s.append(")");
         return s.toString();
     }
@@ -109,14 +109,14 @@ public abstract class NaryOpExpression extends Expression
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString.Builder s = new StyledString.Builder();
-        s.append(surround == BracketedStatus.MISC ? "(" : "");
+        s.append(surround == BracketedStatus.NEED_BRACKETS ? "(" : "");
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).toDisplay(BracketedStatus.MISC, expressionStyler));
+            s.append(expressions.get(i).toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler));
         }
-        if (surround == BracketedStatus.MISC)
+        if (surround == BracketedStatus.NEED_BRACKETS)
             s.append(")");
         return expressionStyler.styleExpression(s.build(), this);
     }

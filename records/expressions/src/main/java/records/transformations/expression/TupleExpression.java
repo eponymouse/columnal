@@ -107,18 +107,15 @@ public class TupleExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = members.stream().map(e -> e.save(structured, BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", "));
-        if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
-            return content;
-        else
-            return "(" + content + ")";
+        String content = members.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
+        return "(" + content + ")";
     }
     
     @Override
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", "));
-        return expressionStyler.styleExpression(surround == BracketedStatus.DIRECT_ROUND_BRACKETED ? content : StyledString.roundBracket(content), this);
+        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)).collect(StyledString.joining(", "));
+        return expressionStyler.styleExpression(StyledString.roundBracket(content), this);
     }
 
     @SuppressWarnings("recorded")

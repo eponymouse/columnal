@@ -262,13 +262,13 @@ public class CallExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (structured ? "@call " : "") + function.save(structured, BracketedStatus.MISC, renames) + "(" + arguments.stream().map(a -> a.save(structured, BracketedStatus.TOP_LEVEL, renames)).collect(Collectors.joining(", ")) + ")";
+        return (structured ? "@call " : "") + function.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "(" + arguments.stream().map(a -> a.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(function.toDisplay(BracketedStatus.MISC, expressionStyler), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s(")")), this);
+        return expressionStyler.styleExpression(StyledString.concat(function.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s("("), arguments.stream().map(a -> a.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)).collect(StyledString.joining(", ")), StyledString.s(")")), this);
     }
 
     /*

@@ -350,11 +350,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         if (executionType == ExecutionType.MATCH && value instanceof Boolean)
         {
-            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
+            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
         }
         else
         {
-            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.TOP_LEVEL, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
+            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
         }
     }
 
@@ -847,7 +847,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public String toString()
     {
-        return save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY);
+        return save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)
@@ -875,7 +875,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public final StyledString toStyledString()
     {
-        return toDisplay(BracketedStatus.TOP_LEVEL, (s, e) -> s);
+        return toDisplay(BracketedStatus.DONT_NEED_BRACKETS, (s, e) -> s);
     }
 
     public static interface ExpressionStyler

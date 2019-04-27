@@ -32,10 +32,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -49,8 +49,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="anns" />
         <module name="parsers" />
+        <module name="anns" />
       </profile>
       <profile name="Annotation profile for gui-utility" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -60,10 +60,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -81,10 +81,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -102,10 +102,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -123,10 +123,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -144,11 +144,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -165,10 +164,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/tests/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -186,11 +185,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/lex-editor/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.recorded.RecordedChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
@@ -208,10 +206,10 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation" />
-        <processor name="annotation.identifier.IdentifierChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.ValueTypeChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />

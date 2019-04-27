@@ -241,7 +241,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = expressionDisplayers.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.MISC, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {

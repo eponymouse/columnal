@@ -118,6 +118,6 @@ public class TestLoadSaveExpression
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(expression, Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
-        assertEquals(src, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
+        assertEquals(src, expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 }
