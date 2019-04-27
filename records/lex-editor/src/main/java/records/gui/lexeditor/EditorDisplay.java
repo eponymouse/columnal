@@ -115,6 +115,16 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             }
             event.consume();
         });
+        addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
+            HitInfo hitInfo = hitTest(event.getX(), event.getY());
+            if (hitInfo != null)
+            {
+                @SuppressWarnings("units")
+                @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
+                content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), false);
+            }
+            event.consume();
+        });
         addEventHandler(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
         addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
             @Nullable HitInfo hit = hitTest(event.getX(), event.getY());

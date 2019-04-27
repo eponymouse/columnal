@@ -402,7 +402,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             ImmutableList<ErrorDetails> allErrors = content.getErrors();
             ArrayList<StyledString> errors = new ArrayList<>();
             ImmutableList.Builder<TextQuickFix> fixes = ImmutableList.builder();
-            Log.debug("Caret: " + newCaretPos + " errors: " + allErrors.size());
+            //Log.debug("Caret: " + newCaretPos + " errors: " + allErrors.size());
             for (ErrorDetails error : allErrors)
             {
                 Log.debug("  " + error.location + " " + error.error.toPlain());
