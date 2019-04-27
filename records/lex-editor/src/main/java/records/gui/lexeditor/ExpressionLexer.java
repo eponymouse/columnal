@@ -318,7 +318,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.getSecond()), c -> {
                             });
-                            chunks.add(new ContentChunk("@entire " + parsed.getFirst(), "expression-column"));
+                            chunks.add(new ContentChunk("@entire " + parsed.getFirst(), StyledString.s("@entire " + parsed.getFirst()).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background")))));
                             curIndex = parsed.getSecond();
                             continue nextToken;
                         }
