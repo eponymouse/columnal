@@ -240,26 +240,9 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         });
         
         addEventHandler(KeyEvent.KEY_TYPED, keyEvent -> {
-            // Borrowed from TextInputControlBehavior:
-            // Sometimes we get events with no key character, in which case
-            // we need to bail.
-            String character = keyEvent.getCharacter();
-            if (character.length() == 0)
-                return;
-
-            // Filter out control keys except control+Alt on PC or Alt on Mac
-            if (keyEvent.isControlDown() || keyEvent.isAltDown() || (SystemUtils.IS_OS_MAC && keyEvent.isMetaDown()))
+            if (FXUtility.checkKeyTyped(keyEvent))
             {
-                if (!((keyEvent.isControlDown() || SystemUtils.IS_OS_MAC) && keyEvent.isAltDown()))
-                    return;
-            }
-
-            // Ignore characters in the control range and the ASCII delete
-            // character as well as meta key presses
-            if (character.charAt(0) > 0x1F
-                    && character.charAt(0) != 0x7F
-                    && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
-            {
+                String character = keyEvent.getCharacter();
                 if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
                 {
                     if (character.equals("("))

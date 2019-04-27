@@ -51,6 +51,7 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import log.Log;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -1062,6 +1063,42 @@ public class FXUtility
                 }
             }
         });
+    }
+
+    /**
+     * Checks if a key typed event should actually proceed.
+     * 
+     * Returns false for things like backspace, control keys,
+     * menu shortcuts and so on.
+     * @param keyEvent
+     * @return true if it should be handled, false if not
+     */
+    public static boolean checkKeyTyped(KeyEvent keyEvent)
+    {
+        // Borrowed from TextInputControlBehavior:
+        // Sometimes we get events with no key character, in which case
+        // we need to bail.
+        String character = keyEvent.getCharacter();
+        if (character.length() == 0)
+            return false;
+
+        // Filter out control keys except control+Alt on PC or Alt on Mac
+        if (keyEvent.isControlDown() || keyEvent.isAltDown() || (SystemUtils.IS_OS_MAC && keyEvent.isMetaDown()))
+        {
+            if (!((keyEvent.isControlDown() || SystemUtils.IS_OS_MAC) && keyEvent.isAltDown()))
+                return false;
+        }
+
+        // Ignore characters in the control range and the ASCII delete
+        // character as well as meta key presses
+        if (character.charAt(0) > 0x1F
+                && character.charAt(0) != 0x7F
+                && !keyEvent.isMetaDown()) // Not sure about this one (Note: this comment is in JavaFX source)
+        {
+            return true;
+        }
+        
+        return false;
     }
 
     public static interface GenOrError<T>
