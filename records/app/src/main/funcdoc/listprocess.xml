@@ -74,9 +74,9 @@
         <synonym>reduce</synonym>
         
         <typeArg>t</typeArg>
-        <argType>[@typevar t]</argType>
-        <argType>(@typevar t, @typevar t) -&gt; @typevar t</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="items">[@typevar t]</argType>
+        <argType name="combining function">(@typevar t, @typevar t) -&gt; @typevar t</argType>
+        <returnType name="combined">@typevar t</returnType>
         <description>
             <p>Collapses the list into a single item by combining the elements using the given function.</p>
         </description>

@@ -104,8 +104,24 @@
                 <xs:element name="unitArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="typeArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="typeConstraint" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element name="argType" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
-                <xs:element name="returnType" type="xs:string"/>
+                <xs:element name="argType" minOccurs="1" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute name="name" type="xs:string"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="returnType">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute name="name" type="xs:string"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
                 <!-- TODO add mini as mandatory here -->
                 <xs:element ref="description"/>
                 <xs:element ref="seeAlso" minOccurs="0" maxOccurs="unbounded"/>

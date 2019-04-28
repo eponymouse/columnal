@@ -66,11 +66,10 @@
             <xsl:if test="unitArg">
                 <span class="function-type-args">For any units <xsl:for-each select="unitArg"><span class="unit-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each></span>
             </xsl:if>
-            <span class="function-name-header"><xsl:value-of select="@name"/></span>
-            <span class="function-name-type"><xsl:value-of select="@name"/></span>
-            <span class="function-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
-                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="argType" separator =","/></xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
-                    name="processType"><xsl:with-param name="type" select="returnType"/></xsl:call-template>
+            <span class="function-type">
+                <span class="typed-name"><span class="function-name-header tn-name"><xsl:value-of select="@name"/></span><span class="tn-type">Type</span></span><span class="typed-name"><span class="big-bracket tn-name">(</span><span class="tn-type">(</span></span> <!-- @any <xsl:value-of select="scope"/> --><xsl:for-each select="argType"><xsl:if test="position() > 1">, </xsl:if><span class="typed-name"><span class="tn-name"><xsl:value-of select="@name"/></span><span class="tn-type"><xsl:call-template
+                    name="processType"><xsl:with-param name="type" select="."/></xsl:call-template></span></span></xsl:for-each><span class="typed-name"><span class="big-bracket tn-name">)</span><span class="tn-type">)</span></span> <span class="typed-name"><span class="tn-name"><span class="function-arrow"/></span><span class="tn-type"><span class="function-arrow"/></span> </span> <span class="typed-name"><span class="tn-name"><xsl:value-of select="returnType/@name"/></span><span class="tn-type"><xsl:call-template
+                    name="processType"><xsl:with-param name="type" select="returnType"/></xsl:call-template></span></span>
             </span>
             <div class="description"><xsl:apply-templates select="$function/description"/></div>
             <div class="examples">

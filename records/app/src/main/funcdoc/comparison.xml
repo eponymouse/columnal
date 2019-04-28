@@ -5,8 +5,8 @@
     <function name="minimum">
         <typeArg>t</typeArg>
         <typeConstraint>Comparable t</typeConstraint>
-        <argType>[@typevar t]</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="items">[@typevar t]</argType>
+        <returnType name="lowest">@typevar t</returnType>
         <description>
             <p>Gets the lowest item in the list.</p>
         </description>
@@ -42,8 +42,8 @@
     <function name="maximum">
         <typeArg>t</typeArg>
         <typeConstraint>Comparable t</typeConstraint>
-        <argType>[@typevar t]</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="items">[@typevar t]</argType>
+        <returnType name="highest">@typevar t</returnType>
         <description>
             <p>Gets the highest item in the list.</p>
         </description>
