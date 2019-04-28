@@ -2,11 +2,11 @@
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="core">
-    <function name="asType">
+    <function name="as type">
         <typeArg>t</typeArg>
-        <argType>@apply Type(@typevar t)</argType>
-        <argType>@typevar t</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="type">@apply Type(@typevar t)</argType>
+        <argType name="value">@typevar t</argType>
+        <returnType name="value">@typevar t</returnType>
         <description>
             <p>Clarifies the type of a value.</p>
             <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
@@ -20,10 +20,10 @@
             <output>[]</output>
         </example>
     </function>
-    <function name="typeOf">
+    <function name="type of">
         <typeArg>t</typeArg>
-        <argType>@typevar t</argType>
-        <returnType>@apply Type(@typevar t)</returnType>
+        <argType name="value">@typevar t</argType>
+        <returnType name="type">@apply Type(@typevar t)</returnType>
         <description>
             <p>Gets the type of the given value.</p>
         </description>
@@ -41,12 +41,12 @@
         </example>
     </function>
     
-    <function name="asUnit">
+    <function name="as unit">
         <unitArg>u</unitArg>
         <unitArg>v</unitArg>
-        <argType>@apply Unit(@unitvar u)</argType>
-        <argType>Number{@unitvar v}</argType>
-        <returnType>Number{@unitvar u}</returnType>
+        <argType name="target unit">@apply Unit(@unitvar u)</argType>
+        <argType name="source number">Number{@unitvar v}</argType>
+        <returnType name="target number">Number{@unitvar u}</returnType>
         <description>
             <p>Converts a number from one unit to another (if possible).</p>
             <p>Unit conversion is only available for exact conversions (e.g. metres to centimetres), not for approximate or changing conversions (e.g. euros to dollars).</p>

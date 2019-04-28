@@ -5,8 +5,8 @@
     <function name="first">
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
-        <argType>(@typevar a, @typevar b, _)</argType>
-        <returnType>@typevar a</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, _)</argType>
+        <returnType name="first item">@typevar a</returnType>
         <description>
             <p>Gets the first item from the tuple.</p>
         </description>
@@ -27,8 +27,8 @@
     <function name="second">
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
-        <argType>(@typevar a, @typevar b, _)</argType>
-        <returnType>@typevar b</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, _)</argType>
+        <returnType name="second item">@typevar b</returnType>
         <description>
             <p>Gets the second item from the tuple.</p>
         </description>
@@ -50,8 +50,8 @@
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeArg>c</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, _)</argType>
-        <returnType>@typevar c</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, _)</argType>
+        <returnType name="third item">@typevar c</returnType>
         <description>
             <p>Gets the third item from the tuple.</p>
         </description>
@@ -66,8 +66,8 @@
         <typeArg>b</typeArg>
         <typeArg>c</typeArg>
         <typeArg>d</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, _)</argType>
-        <returnType>@typevar d</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, _)</argType>
+        <returnType name="fourth item">@typevar d</returnType>
         <description>
             <p>Gets the fourth item from the tuple.</p>
         </description>
@@ -88,8 +88,8 @@
         <typeArg>h</typeArg>
         <typeArg>i</typeArg>
         <typeArg>j</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, _)</argType>
-        <returnType>@typevar e</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, _)</argType>
+        <returnType name="fifth item">@typevar e</returnType>
         <description>
             <p>Gets the fifth item from the tuple.</p>
         </description>
@@ -106,8 +106,8 @@
         <typeArg>d</typeArg>
         <typeArg>e</typeArg>
         <typeArg>f</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, _)</argType>
-        <returnType>@typevar f</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, _)</argType>
+        <returnType name="sixth item">@typevar f</returnType>
         <description>
             <p>Gets the sixth item from the tuple.</p>
         </description>
@@ -125,8 +125,8 @@
         <typeArg>e</typeArg>
         <typeArg>f</typeArg>
         <typeArg>g</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, _)</argType>
-        <returnType>@typevar g</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, _)</argType>
+        <returnType name="seventh item">@typevar g</returnType>
         <description>
             <p>Gets the seventh item from the tuple.</p>
         </description>
@@ -145,8 +145,8 @@
         <typeArg>f</typeArg>
         <typeArg>g</typeArg>
         <typeArg>h</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, _)</argType>
-        <returnType>@typevar h</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, _)</argType>
+        <returnType name="eighth item">@typevar h</returnType>
         <description>
             <p>Gets the eighth item from the tuple.</p>
         </description>
@@ -166,8 +166,8 @@
         <typeArg>g</typeArg>
         <typeArg>h</typeArg>
         <typeArg>i</typeArg>
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, _)</argType>
-        <returnType>@typevar i</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, _)</argType>
+        <returnType name="ninth item">@typevar i</returnType>
         <description>
             <p>Gets the ninth item from the tuple.</p>
         </description>
@@ -188,8 +188,8 @@
         <typeArg>h</typeArg>
         <typeArg>i</typeArg>
         <typeArg>j</typeArg>        
-        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, @typevar j, _)</argType>
-        <returnType>@typevar j</returnType>
+        <argType name="tuple">(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, @typevar j, _)</argType>
+        <returnType name="tenth item">@typevar j</returnType>
         <description>
             <p>Gets the tenth item from the tuple.</p>
         </description>

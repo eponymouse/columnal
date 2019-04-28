@@ -6,8 +6,8 @@
         <synonym>size</synonym>
         
         <typeArg>t</typeArg>
-        <argType>[@typevar t]</argType>
-        <returnType>Number</returnType>
+        <argType name="list">[@typevar t]</argType>
+        <returnType name="length">Number</returnType>
         <description>
             <p>Gets the number of elements in the given list.</p>
         </description>
@@ -29,9 +29,9 @@
         <synonym>get</synonym>
         
         <typeArg>t</typeArg>
-        <argType>[@typevar t]</argType>
-        <argType>Number</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="list">[@typevar t]</argType>
+        <argType name="position">Number</argType>
+        <returnType name="list item">@typevar t</returnType>
         <description>
             <p>Gets the list element at the given position (first position is 1).</p>
         </description>
@@ -58,9 +58,9 @@
         
         <typeArg>t</typeArg>
         <typeConstraint>Comparable t</typeConstraint>
-        <argType>@typevar t</argType>
-        <argType>[@typevar t]</argType>
-        <returnType>Boolean</returnType>
+        <argType name="item">@typevar t</argType>
+        <argType name="list">[@typevar t]</argType>
+        <returnType name="is in list">Boolean</returnType>
         <description>
             <p>Checks if the item is in the list.</p>
         </description>
@@ -76,8 +76,8 @@
     
     <function name="single">
         <typeArg>t</typeArg>
-        <argType>[@typevar t]</argType>
-        <returnType>@typevar t</returnType>
+        <argType name="list">[@typevar t]</argType>
+        <returnType name="single item">@typevar t</returnType>
         <description>
             <p>If this list has exactly one element, returns it.  Otherwise gives an error.</p>
             <p>This is useful if you have a table where you store single values.  The column is a list, so you need to use a function, like single, to fetch out the one item in it.</p>
@@ -100,8 +100,8 @@
         <synonym>concatenate</synonym>
         
         <typeArg>t</typeArg>
-        <argType>[[@typevar t]]</argType>
-        <returnType>[@typevar t]</returnType>
+        <argType name="list of lists">[[@typevar t]]</argType>
+        <returnType name="joined lists">[@typevar t]</returnType>
         <description>
             <p>Takes a list of lists, and joins them into one list by joining them end-to-end.</p>
             <p>Each item in the passed list must be a list.  To include single items, wrap them in square brackets [].</p>

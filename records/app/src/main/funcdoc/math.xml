@@ -4,9 +4,9 @@
                        namespace="math">
     <function name="log">
         <unitArg>u</unitArg>
-        <argType>Number{@unitvar u}</argType>
-        <argType>Number</argType>
-        <returnType>Number</returnType>
+        <argType name="base raised to x">Number{@unitvar u}</argType>
+        <argType name="base">Number</argType>
+        <returnType name="x">Number</returnType>
         <description>
             <p>Takes the logarithm of the first number, using the second number as the base.</p>
         </description>
@@ -25,8 +25,8 @@
     </function>
     <function name="log natural">
         <unitArg>u</unitArg>
-        <argType>Number{@unitvar u}</argType>
-        <returnType>Number</returnType>
+        <argType name="e raised to x">Number{@unitvar u}</argType>
+        <returnType name="x">Number</returnType>
         <description>
             <p>Takes the natural logarithm (i.e. the logarithm with base e).</p>
         </description>

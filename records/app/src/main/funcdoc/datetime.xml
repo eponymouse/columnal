@@ -3,10 +3,10 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="datetime">
     <function name="date">
-        <argType>Number{year}</argType>
-        <argType>Number{month}</argType>
-        <argType>Number{day}</argType>
-        <returnType>Date</returnType>
+        <argType name="year">Number{year}</argType>
+        <argType name="month">Number{month}</argType>
+        <argType name="day">Number{day}</argType>
+        <returnType name="date">Date</returnType>
         <description>
             <p>Creates a date from the given year, month and day.</p>
             <p>Months and days start at 1: 1{month} is January, and 1{day} is the first day of the month.</p>
@@ -27,10 +27,10 @@
     </function>
 
     <function name="time">
-        <argType>Number{hour}</argType>
-        <argType>Number{min}</argType>
-        <argType>Number{s}</argType>
-        <returnType>Time</returnType>
+        <argType name="hour">Number{hour}</argType>
+        <argType name="minute">Number{min}</argType>
+        <argType name="second">Number{s}</argType>
+        <returnType name="time">Time</returnType>
         <description>
             <p>Creates a time-of-day (or clock time) from the given hours, minutes and seconds.</p>
         </description>
@@ -46,8 +46,8 @@
     </function>
     
     <function name="time from datetime">
-        <argType>DateTime</argType>
-        <returnType>Time</returnType>
+        <argType name="datetime">DateTime</argType>
+        <returnType name="time">Time</returnType>
         <description>
             <p>Gets the Time part of a DateTime.</p>
         </description>
@@ -58,8 +58,8 @@
     </function>
 
     <function name="time from datetimezoned">
-        <argType>DateTimeZoned</argType>
-        <returnType>Time</returnType>
+        <argType name="datetimezoned">DateTimeZoned</argType>
+        <returnType name="time">Time</returnType>
         <description>
             <p>Gets the Time part of a DateTimeZoned.</p>
             <p>No timezone conversions are performed, this just takes the time part, ignoring the date and the zone.</p>
@@ -71,8 +71,8 @@
     </function>
 
     <function name="date from datetime">
-        <argType>DateTime</argType>
-        <returnType>Date</returnType>
+        <argType name="datetime">DateTime</argType>
+        <returnType name="date">Date</returnType>
         <description>
             <p>Gets the Date part of a DateTime.</p>
         </description>
@@ -83,8 +83,8 @@
     </function>
 
     <function name="date from datetimezoned">
-        <argType>DateTimeZoned</argType>
-        <returnType>Date</returnType>
+        <argType name="datetimezoned">DateTimeZoned</argType>
+        <returnType name="date">Date</returnType>
         <description>
             <p>Gets the Date part of a DateTimeZoned.</p>
             <p>No timezone conversions are performed, this just takes the time part, ignoring the date and the zone.</p>
@@ -96,8 +96,8 @@
     </function>
 
     <function name="datetime from datetimezoned">
-        <argType>DateTimeZoned</argType>
-        <returnType>DateTime</returnType>
+        <argType name="datetimezoned">DateTimeZoned</argType>
+        <returnType name="datetime">DateTime</returnType>
         <description>
             <p>Gets the DateTime part of a DateTimeZoned.</p>
             <p>No timezone conversions are performed, this just takes the DateTime part, ignoring the zone.</p>
@@ -109,9 +109,9 @@
     </function>
 
     <function name="dateym">
-        <argType>Number{year}</argType>
-        <argType>Number{month}</argType>
-        <returnType>DateYM</returnType>
+        <argType name="year">Number{year}</argType>
+        <argType name="month">Number{month}</argType>
+        <returnType name="dateym">DateYM</returnType>
         <description>
             <p>Creates a year-month value from the given year and month.</p>
         </description>
@@ -126,8 +126,8 @@
     </function>
 
     <function name="dateym from date">
-        <argType>Date</argType>
-        <returnType>DateYM</returnType>
+        <argType name="date">Date</argType>
+        <returnType name="dateym">DateYM</returnType>
         <description>
             <p>Gets the year and month part of a Date as a DateYM.</p>
         </description>
@@ -138,9 +138,9 @@
     </function>
 
     <function name="datetime">
-        <argType>Date</argType>
-        <argType>Time</argType>
-        <returnType>DateTime</returnType>
+        <argType name="date">Date</argType>
+        <argType name="time">Time</argType>
+        <returnType name="datetime">DateTime</returnType>
         <description>
             <p>Creates a DateTime from the given Date and Time.</p>
         </description>
@@ -151,10 +151,10 @@
     </function>
     
     <function name="datetimezoned">
-        <argType>Date</argType>
-        <argType>Time</argType>
-        <argType>Text</argType>
-        <returnType>DateTimeZoned</returnType>
+        <argType name="date">Date</argType>
+        <argType name="time">Time</argType>
+        <argType name="zone">Text</argType>
+        <returnType name="datetimezoned">DateTimeZoned</returnType>
         <description>
             <p>Creates a datetime with a time zone from the given Date, Time and time zone.</p>
             <p>Note that because many of the three-letter abbreviations for time zones overlap, they are not supported here, and you must spell out the full name.</p>
@@ -166,9 +166,9 @@
     </function>
     
     <function name="days between">
-        <argType>Date</argType>
-        <argType>Date</argType>
-        <returnType>Number{day}</returnType>
+        <argType name="start">Date</argType>
+        <argType name="end">Date</argType>
+        <returnType name="days">Number{day}</returnType>
         <description>
             <p>Calculates the number of days between two dates.</p>
             <p>If the first date is before the second date, the returned number is positive.  If the first date is after the second date, the returned number will be negative.</p>
@@ -186,9 +186,9 @@
     </function>
     
     <function name="add days">
-        <argType>Date</argType>
-        <argType>Number{day}</argType>
-        <returnType>Date</returnType>
+        <argType name="date">Date</argType>
+        <argType name="days to add">Number{day}</argType>
+        <returnType name="result date">Date</returnType>
         <description>
             <p>Adds the given number of the days to the date.</p>
         </description>
@@ -209,9 +209,9 @@
     </function>
     
     <function name="seconds between">
-        <argType>Time</argType>
-        <argType>Time</argType>
-        <returnType>Number{s}</returnType>
+        <argType name="start">Time</argType>
+        <argType name="end">Time</argType>
+        <returnType name="seconds">Number{s}</returnType>
         <description>
             <p>Calculates the number of seconds between two times.</p>
             <p>If the first time is before the second time, the returned number is positive.  If the first time is after the second time, the returned number will be negative.</p>

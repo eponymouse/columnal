@@ -8,10 +8,10 @@
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeConstraint>Equatable a</typeConstraint>
-        <argType>[@typevar a]</argType>
-        <argType>@typevar a</argType>
-        <argType>[@typevar b]</argType>
-        <returnType>@typevar b</returnType>
+        <argType name="keys">[@typevar a]</argType>
+        <argType name="key">@typevar a</argType>
+        <argType name="values">[@typevar b]</argType>
+        <returnType name="value">@typevar b</returnType>
         <description>
             <p>Given a list, finds a matching item, and returns the corresponding value from the other list.</p>
             <p>This is useful for looking up one column via the value of another, e.g. lookup(Column A, value in A, Column B)</p>
@@ -51,10 +51,10 @@
         <typeArg>a</typeArg>
         <typeArg>b</typeArg>
         <typeConstraint>Equatable a</typeConstraint>
-        <argType>[@typevar a]</argType>
-        <argType>@typevar a</argType>
-        <argType>[@typevar b]</argType>
-        <returnType>[@typevar b]</returnType>
+        <argType name="keys">[@typevar a]</argType>
+        <argType name="key">@typevar a</argType>
+        <argType name="values">[@typevar b]</argType>
+        <returnType name="matching values">[@typevar b]</returnType>
         <description>
             <p>Given two lists, finds all the items with a matching value in left list, and returns the right list values for each.</p>
             <p>This is useful for looking up one column via the value of another, e.g. lookup all(Column A, value in A, Column B)</p>

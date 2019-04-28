@@ -108,7 +108,7 @@
                     <xs:complexType>
                         <xs:simpleContent>
                             <xs:extension base="xs:string">
-                                <xs:attribute name="name" type="xs:string"/>
+                                <xs:attribute name="name" type="xs:string" use="required"/>
                             </xs:extension>
                         </xs:simpleContent>
                     </xs:complexType>
@@ -117,7 +117,7 @@
                     <xs:complexType>
                         <xs:simpleContent>
                             <xs:extension base="xs:string">
-                                <xs:attribute name="name" type="xs:string"/>
+                                <xs:attribute name="name" type="xs:string" use="required"/>
                             </xs:extension>
                         </xs:simpleContent>
                     </xs:complexType>

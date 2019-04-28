@@ -3,11 +3,11 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="text">
     <function name="text length">
-        <argType>Text</argType>
-        <returnType>Number</returnType>
+        <argType name="text">Text</argType>
+        <returnType name="length">Number</returnType>
         <description>
             <p>Gets the length of the given text.</p>
-            <p>Technical note: this is actually the number of Unicode codepoints in the text.  For English text without accents, one character is one codepoint.  If you have accents or non-English characters in your text, what looks like one character may be made up of multiple codepoints.</p>
+            <p>Technical note: this is actually the number of Unicode codepoints in the text.  For English text without accents, one character is one codepoint.  If you have complex characters (e.g. flags) in your text, what looks like one character may be made up of multiple codepoints.</p>
         </description>
         <example>
             <inputArg>"hello"</inputArg>
@@ -24,10 +24,10 @@
     </function>
     
     <function name="replace all">
-        <argType>Text</argType>
-        <argType>Text</argType>
-        <argType>Text</argType>
-        <returnType>Text</returnType>
+        <argType name="source">Text</argType>
+        <argType name="to replace">Text</argType>
+        <argType name="replacement">Text</argType>
+        <returnType name="with replaced">Text</returnType>
         <description>
             <p>Replaces all occurrences of the first text with the second text, within the third text</p>
             <p>If the first text is empty, no replacement is performed.  If any occurrences overlap, the earlier part is replaced first.</p>
@@ -49,8 +49,8 @@
     <function name="join text">
         <synonym>concatenate</synonym>
         
-        <argType>[Text]</argType>
-        <returnType>Text</returnType>
+        <argType name="list of text">[Text]</argType>
+        <returnType name="joined">Text</returnType>
         <description>
             <p>Joins a list of text values together as one text item.</p>
             <p>If you want to add a separator between each text item, use <link namespace="text" function="join text with"/> instead.</p>
@@ -80,9 +80,9 @@
     </function>
 
     <function name="join text with">
-        <argType>[Text]</argType>
-        <argType>Text</argType>
-        <returnType>Text</returnType>
+        <argType name="list of text">[Text]</argType>
+        <argType name="separator">Text</argType>
+        <returnType name="joined">Text</returnType>
         <description>
             <p>Joins a list of text values together as one text item, inserting a separator between each.</p>
         </description>
@@ -120,8 +120,8 @@
     </function>
     
     <function name="trim">
-        <argType>Text</argType>
-        <returnType>Text</returnType>
+        <argType name="original">Text</argType>
+        <returnType name="trimmed">Text</returnType>
         <description>
             <p>Removes white space from beginning and end of the text.</p>
         </description>

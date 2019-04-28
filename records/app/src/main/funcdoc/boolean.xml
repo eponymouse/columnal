@@ -5,8 +5,8 @@
     <function name="not">
         <synonym>negate</synonym>
         
-        <argType>Boolean</argType>
-        <returnType>Boolean</returnType>
+        <argType name="bool">Boolean</argType>
+        <returnType name="negated">Boolean</returnType>
         <description>
             <p>Returns the opposite Boolean (given true, returns false; given false, returns true)</p>
         </description>
@@ -35,9 +35,9 @@
         </example>
     </function>
     <function name="xor">
-        <argType>Boolean</argType>
-        <argType>Boolean</argType>
-        <returnType>Boolean</returnType>
+        <argType name="a">Boolean</argType>
+        <argType name="b">Boolean</argType>
+        <returnType name="xored">Boolean</returnType>
         <description>
             <p>Returns the exclusive-or of the two items: returns true if exactly one of the items is true, but false if both are true.</p>
         </description>
