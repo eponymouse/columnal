@@ -17,7 +17,7 @@ public class AsType extends FunctionDefinition
 {
     public AsType() throws InternalException
     {
-        super("core:asType");
+        super("core:as type");
     }
 
     @Override

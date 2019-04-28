@@ -58,9 +58,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @SuppressWarnings("recorded") // Don't need to record when making a fix
     public static Expression fixType(FunctionLookup functionLookup, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
     {
-        StandardFunctionDefinition asType = functionLookup.lookup( "asType");
+        StandardFunctionDefinition asType = functionLookup.lookup( "as type");
         if (asType == null)
-            throw new InternalException("Missing asType function");
+            throw new InternalException("Missing as type function");
         if (expression instanceof CallExpression
             && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
             )

@@ -118,12 +118,12 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testAsType1()
     {
-        testSimpleFix("from text(\"\")", "from", "@call @function asType(type{@invalidtypeops()},@call @function from text(\"\"))");
+        testSimpleFix("from text(\"\")", "from", "@call @function as type(type{@invalidtypeops()},@call @function from text(\"\"))");
     }
 
     @Test
     public void testAsType2()
     {
-        testSimpleFix("[]", "[", "@call @function asType(type{@invalidtypeops()},[])");
+        testSimpleFix("[]", "[", "@call @function as type(type{@invalidtypeops()},[])");
     }
 }

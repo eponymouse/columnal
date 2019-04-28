@@ -461,37 +461,37 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testTupleType() throws Exception
     {
-        testSimple("@call @function asType(type{(Number, Boolean)}, @call @function from text(\"(1, true)\"))");
+        testSimple("@call @function as type(type{(Number, Boolean)}, @call @function from text(\"(1, true)\"))");
     }
 
     @Test
     public void testNestedTupleType() throws Exception
     {
-        testSimple("@call @function asType(type{((Number, Boolean), Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
+        testSimple("@call @function as type(type{((Number, Boolean), Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
     }
 
     @Test
     public void testMaybeType() throws Exception
     {
-        testSimple("@call @function asType(type{[((Text, @apply " + TypeManager.MAYBE_NAME + "(Boolean)), @apply "+ TypeManager.MAYBE_NAME + "(@apply "+ TypeManager.MAYBE_NAME +  "(Date)))]}, @call @function from text(\"[]\"))");
+        testSimple("@call @function as type(type{[((Text, @apply " + TypeManager.MAYBE_NAME + "(Boolean)), @apply "+ TypeManager.MAYBE_NAME + "(@apply "+ TypeManager.MAYBE_NAME +  "(Date)))]}, @call @function from text(\"[]\"))");
     }
     
     @Test
     public void testTupleAndListType() throws Exception
     {
-        testSimple("@call @function asType(type{[[(Number, [Boolean])]]}, @call @function from text(\"[]\"))");
+        testSimple("@call @function as type(type{[[(Number, [Boolean])]]}, @call @function from text(\"[]\"))");
     }
     
     @Test
     public void testNumberType() throws Exception
     {
-        testSimple("@call @function asType(type{Number{1}}, @call @function from text(\"3\"))");
+        testSimple("@call @function as type(type{Number{1}}, @call @function from text(\"3\"))");
     }
 
     @Test
     public void testNumberType2() throws Exception
     {
-        testSimple("@call @function asType(type{Number{m/s}}, @call @function from text(\"3\"))");
+        testSimple("@call @function as type(type{Number{m/s}}, @call @function from text(\"3\"))");
     }
 
     @Test

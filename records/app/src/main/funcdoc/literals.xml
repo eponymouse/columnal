@@ -107,7 +107,7 @@
     <literal name="type">
         <type>Type t</type>
         <description>
-            <p>Creates a type value.  Type values are used for functions like <link function="from text to"/>, and <link function="asType"/>, to specify a destination type.</p>
+            <p>Creates a type value.  Type values are used for functions like <link function="from text to"/>, and <link function="as tsype"/>, to specify a destination type.</p>
         </description>
         <example>
             <input>@call @function from text to(type{Boolean}, "true")</input>

@@ -1221,9 +1221,9 @@ public class TestUtil
             // If any type variables aren't mentioned, wrap in asType:
             if (!containsTypeVar(wholeType.getTags().get(constructor.tagIndex).getInner(), var))
             {
-                FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
+                FunctionDefinition asType = FunctionList.lookup(unitManager, "as type");
                 if (asType == null)
-                    throw new RuntimeException("Could not find asType");
+                    throw new RuntimeException("Could not find as type");
                 return new CallExpression(new StandardFunction(asType),ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r));
             }
         }

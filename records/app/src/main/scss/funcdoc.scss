@@ -97,13 +97,14 @@ body.indiv {
     color: grey(60%);
 }
 .function-arrow {
-        padding-left: 8pt;
-        padding-right: 12pt;
+        padding-left: 7pt;
+        padding-right: 7pt;
     }
 .function-arrow::before {
     /*content: "\27F6";*/
     /*content: "->";*/
     content: "\2192";
+    font-family: 'Noto Sans Symbols';
 }
 .example-arrow::before {
     content: "\2192";

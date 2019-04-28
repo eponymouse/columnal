@@ -221,7 +221,7 @@
             <output>true</output>
         </example>
         <example>
-            <input>@call @function asType(type{DateTimeZoned}, @call @function from text("2013-05-02 12:00 Europe/London")) &lt; @call @function from text("2013-05-02 11:37 America/Toronto")</input>
+            <input>@call @function as type(type{DateTimeZoned}, @call @function from text("2013-05-02 12:00 Europe/London")) &lt; @call @function from text("2013-05-02 11:37 America/Toronto")</input>
             <output>true</output>
         </example>
         <example>

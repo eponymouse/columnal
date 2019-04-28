@@ -28,7 +28,7 @@
             <p>Gets the type of the given value.</p>
         </description>
         <example>
-            <input>@call @function asType(@call @function typeOf([3]), @call @function from text("[1, 2, 5]"))</input>
+            <input>@call @function as type(@call @function typeOf([3]), @call @function from text("[1, 2, 5]"))</input>
             <output>[1, 2, 5]</output>
         </example>
         <example>

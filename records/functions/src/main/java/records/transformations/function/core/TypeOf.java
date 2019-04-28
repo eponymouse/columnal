@@ -18,7 +18,7 @@ public class TypeOf extends FunctionDefinition
 {
     public TypeOf() throws InternalException
     {
-        super("core:typeOf");
+        super("core:type of");
     }
 
     @Override

@@ -9,7 +9,7 @@
         <returnType name="value">@typevar t</returnType>
         <description>
             <p>Converts a value from text.</p>
-            <p>This function works for any readable type (the only non-readable types are function types).  If the intended type cannot be inferred automatically, you may need to wrap this using the asType function.</p>
+            <p>This function works for any readable type (the only non-readable types are function types).  If the intended type cannot be inferred automatically, you may need to use the <link function="from text to"/> function to specify the type .</p>
             <p>Some notes for specific types:</p>
             <ul>
                 <li>For boolean values, lower-case and upper-case are allowed in the names.</li>
@@ -27,11 +27,11 @@
             <output>true</output>
         </example>
         <example>
-            <input>@call @function asType(type{Date}, @call @function from text("21 March 2004"))</input>
+            <input>@call @function as type(type{Date}, @call @function from text("21 March 2004"))</input>
             <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
-            <input>@call @function asType(type{[(Boolean, Number{m})]}, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</input>
+            <input>@call @function as type(type{[(Boolean, Number{m})]}, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</input>
             <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
     </function>
