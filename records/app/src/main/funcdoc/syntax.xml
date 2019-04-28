@@ -16,6 +16,14 @@
         <description>
             <p>Chooses between two expressions depending on whether the condition is true or false.  For example, <code>@if score &gt;= 0 @then "Positive" @else "Negative" @endif</code> would check whether the score expression is greater than or equal to zero.  If it was, the result would be the "Positive" text; otherwise it would be the "Negative" text.</p>
         </description>
+        <example>
+            <input>@if 5 &gt;= 0 @then "Positive" @else "Negative" @endif</input>
+            <output>"Positive"</output>
+        </example>
+        <example>
+            <input>@if "A" = "B" @then 1 @else 0 @endif</input>
+            <output>0</output>
+        </example>
     </syntax>
     <syntax title="Match" id="match">
         <typeArg>c</typeArg>
@@ -38,6 +46,18 @@
         <description>
             <p>Matches against several possible alternatives.  For example, <code>@match desc @case "full" @orcase "max" @then 1.0 @case _ @then 0.5 @endmatch</code> checks if desc is equal to "full" or "max".  If so, the result is 1.0, otherwise (the case underscore matches anything else) the result is 0.5.</p>
         </description>
+        <example>
+            <input>@match "B" @case "A" @then true @case "B" @then false @endmatch</input>
+            <output>false</output>
+        </example>
+        <example>
+            <input>@match "Hello There" @case "Bye" @then "Leaving" @case "Hello" ; _ @then "Arriving" @endmatch</input>
+            <output>"Arriving"</output>
+        </example>
+        <example>
+            <input>@match 32 @case 0 @then "Zero" @case _n @given n &gt; 0 @then "Positive" @endmatch</input>
+            <output>"Positive"</output>
+        </example>
     </syntax>
     <variable name="group count">
         <type>Number</type>

@@ -88,6 +88,10 @@
             <xsl:call-template name="processEquivalence"/>
         </xsl:for-each>
     </xsl:template>
+
+    <xsl:template name="processSyntax">
+        <xsl:call-template name="processExamples"/>
+    </xsl:template>
     
     
     <xsl:template match="/functionDocumentation">
@@ -109,6 +113,10 @@
 
         <xsl:for-each select="literal">
             <xsl:call-template name="processLiteral"/>
+        </xsl:for-each>
+
+        <xsl:for-each select="syntax">
+            <xsl:call-template name="processSyntax"/>
         </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>
