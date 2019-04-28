@@ -32,21 +32,37 @@ body.indiv {
     border-style: solid;
 }
 
-.function-name-header, .syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header, .big-bracket {
+.function-header {
+    .function-name-header, .bracket, .comma {
+        font-weight: bold;
+    }
+}
+
+.syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header {
     font-weight: bold;
-    display: inline-block;
-    vertical-align: center;
 }
-.function-type-args, .syntax-type-args, .operator-type, .operator-name-header {
+.function-header, .function-type, 
+.syntax-type-args, .operator-type, .operator-name-header {
     display:block;
-    font-size: 80%;
 }
-.type-name-header, .function-name-header, .function-type, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header {
+.type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header {
     font-size: 18pt;
+        background-color: #e3e3ff;
+        padding: 3 8 3 8;
 }
+.function-type {
+    padding: 3 0 0 14;
+    .type {
+        padding: 0 0 0 15;
+    }
+}
+
 body.indiv {
-    .type-name-header, .function-name-header, .function-type, .operator-type, .syntax-name-header, .variable-name-header {
+    .type-name-header, .function-header, .operator-type, .syntax-name-header, .variable-name-header {
      font-size: 14pt;
+    }
+    .function-type {
+        font-size: 11pt;
     }
 }
 
@@ -76,15 +92,14 @@ body.indiv {
     .unit-var:hover:after {
         content: "Can be any unit";
     }
-    
-    .function-arrow {
-        padding-left: 8pt;
-        padding-right: 12pt;
-    }
 }
 .type-var, .unit-var {
     color: grey(60%);
 }
+.function-arrow {
+        padding-left: 8pt;
+        padding-right: 12pt;
+    }
 .function-arrow::before {
     /*content: "\27F6";*/
     /*content: "->";*/
@@ -94,9 +109,17 @@ body.indiv {
     content: "\2192";
     font-family: 'Noto Sans Symbols';
 } 
-.function-type .tn-type, .operator-type {
+.type {
     font-family: 'Noto Mono';
-    color: #333;
+    color: #555;
+    a, a:visited, a:hover {
+        color: #555;
+        text-decoration: none;
+    }
+    a:hover {
+        background-color: #eee;
+        text-decoration: underline;
+    }
 }
 .expression-bracket {
     font-family: 'Noto Mono';
@@ -136,28 +159,5 @@ body.indiv .seeAlso .seeAlsoHeader {
     display: block;
     &, &:visited, &:hover {
         color: black;
-    }
-}
-.function-type a {
-    &, &:visited, &:hover {
-        color: black;
-        text-decoration: none;
-    }
-    &:hover {
-        background-color: #eee;
-        text-decoration: underline;
-    }
-}
-.typed-name {
-    display: inline-block;
-    vertical-align: center;
-    .tn-name, .tn-type {
-        display: block;
-        vertical-align: baseline;
-        text-align: center;
-    }
-    .tn-type {
-        /*float: left;*/
-        font-size: 11pt;
     }
 }
