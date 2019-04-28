@@ -53,7 +53,7 @@ class LexCompletionList extends Region
     // that the next group begins before the previous one ends.
     // These may also change as scrolling happens
     private double[] groupTopY = new double[0];
-    // Scroll from top, if nothing was pinned
+    // Scroll from top, if nothing was pinned.  Always zero or positive
     private double scrollOffset;
     
     // This map's values are always inserted into the children of this region.
@@ -154,7 +154,7 @@ class LexCompletionList extends Region
             }
             for (int i = 0; i < group.completions.size(); i++)
             {
-                if (y < groupTopY[g] + ITEM_HEIGHT * (i + header))
+                if (y < groupTopY[g] + ITEM_HEIGHT * (i + header) + ITEM_HEIGHT)
                     return new Pair<>(g, i);
             }
         }
@@ -195,14 +195,24 @@ class LexCompletionList extends Region
     {
         Set<Either<LexCompletion, LexCompletionGroup>> toKeep = Sets.newHashSet();
         groupTopY = new double[curCompletionGroups.size()];
+        for (int i = 0; i < groupTopY.length; i++)
+        {
+            groupTopY[i] = Double.MAX_VALUE;
+        }
         LexCompletion sel = selectedItem.get();
-        double y = (scrollOffset % ITEM_HEIGHT) - ITEM_HEIGHT;
+        double y = -(scrollOffset % ITEM_HEIGHT);
         int rowSize = allDisplayRows.size();
         for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < rowSize && y < computePrefHeight(-1); i++, y += ITEM_HEIGHT)
         {
             Either<LexCompletion, LexCompletionGroup> row = allDisplayRows.get(i);
-            CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
+            double thisY = y;
+            row.ifLeft(c -> {
+                Pair<Integer, Integer> indexes = completionIndexes.get(c);
+                if (indexes != null)
+                    groupTopY[indexes.getFirst()] = Math.min(groupTopY[indexes.getFirst()], thisY - (indexes.getSecond() * ITEM_HEIGHT));
+            });
             
+            CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
             FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
             toKeep.add(row);
         }
