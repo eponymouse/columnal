@@ -249,7 +249,7 @@ class LexCompletionList extends Region
         selectionIndex = target;
         selectedItem.setValue(target == null ? null : curCompletionGroups.get(target.getFirst()).completions.get(target.getSecond()));
 
-        double minY = Math.max(0, allDisplayRows.indexOf(target == null ? null : completionIndexes.inverse().get(target))) * ITEM_HEIGHT;
+        double minY = Math.max(0, allDisplayRows.indexOf(target == null ? null : Either.left(completionIndexes.inverse().get(target)))) * ITEM_HEIGHT;
         double maxY = minY + ITEM_HEIGHT;
         if (minY < scrollOffset)
             scrollOffset = minY;
