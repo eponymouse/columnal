@@ -793,14 +793,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public @OnThread(Tag.FXPlatform) void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value)
     {
-        Alert alert = new Alert(AlertType.CONFIRMATION, "Transformation results cannot be edited.  Add an edit transformation to allow editing of specific items?", ButtonType.YES, ButtonType.CANCEL);
+        Alert alert = new Alert(AlertType.CONFIRMATION, "Transformation results cannot be directly edited.  Add an edit transformation to allow editing of specific items?", ButtonType.YES, ButtonType.CANCEL);
+        alert.setHeaderText("Create edit transformation?");
+        alert.setTitle(alert.getHeaderText());
         alert.getDialogPane().lookupButton(ButtonType.YES).getStyleClass().add("yes-button");
         if (alert.showAndWait().equals(Optional.of(ButtonType.YES)))
         {
             CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
             Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Creating edit", () -> {
                 @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().edit(null, () -> new ManualEdit(parent.getManager(), new InitialLoadDetails(null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))), null);
-                Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit));
+                Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true));
             }));
         }
     }
@@ -1176,7 +1178,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
         else if (table instanceof ManualEdit)
         {
-            TableHat.editManualEdit(parent, (ManualEdit)table);
+            TableHat.editManualEdit(parent, (ManualEdit)table, false);
         }
         else if (table instanceof Concatenate)
         {

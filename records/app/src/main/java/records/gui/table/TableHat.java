@@ -434,12 +434,20 @@ class TableHat extends FloatingItem<TableHatDisplay>
         });
     }
     
-    protected static void editManualEdit(View parent, ManualEdit manualEdit)
+    protected static void editManualEdit(View parent, ManualEdit manualEdit, boolean deleteIfCancel)
     {
-        new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), hasColumn(manualEdit.getSrcTable())).showAndWait().ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
+        Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), hasColumn(manualEdit.getSrcTable())).showAndWait();
+        columnId.ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
             ManualEdit swapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
             parent.getManager().edit(manualEdit.getId(), () -> swapped, TableAndColumnRenames.EMPTY);
         })));
+        if (!columnId.isPresent() && deleteIfCancel)
+        {
+            Workers.onWorkerThread("Cancelling manual edit", Priority.SAVE, () -> {
+                parent.getManager().remove(manualEdit.getId());
+            });
+        }
+            
     }
 
     private static Function<String, @Nullable ColumnId> hasColumn(@Nullable Table srcTable)
