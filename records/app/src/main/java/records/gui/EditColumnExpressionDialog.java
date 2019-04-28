@@ -2,6 +2,7 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -49,6 +50,7 @@ import utility.gui.TimedFocusable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 // Edit column name and expression for that column
@@ -59,14 +61,19 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     private Expression curValue;
     private final ColumnNameTextField nameField;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
         initModality(Modality.NONE);
+        
+        SimpleObjectProperty<ColumnLookup> curColumnLoookup = new SimpleObjectProperty<>(makeColumnLookup.apply(initialName));
 
         nameField = new ColumnNameTextField(initialName);
-        FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> notifyModified());
+        FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> {
+            notifyModified();
+            curColumnLoookup.set(makeColumnLookup.apply(v));
+        });
         if (srcTable != null)
         {
             try
@@ -142,7 +149,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                 parent.disablePickingMode();
             }
         };
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, new ReadOnlyObjectWrapper<>(columnLookup), expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLoookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {

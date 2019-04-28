@@ -123,7 +123,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // This is really for the editor, but it doesn't rely on any GUI
         // functionality so can be here:
         public Stream<ColumnReference> getAvailableColumnReferences();
-        
+
+        /**
+         * Called when the column is clicked, to find out
+         * which column reference to insert into the editor.  If the column is not clickable, will return empty stream.
+         */
         public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId);
     }
     
@@ -900,42 +904,88 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public TypeManager getTypeManager();
     }
 
+    /**
+     * Lookup for filter and calculate.  Available columns are:
+     *  - per-row columns (with null table id) from
+     *    the source table (equivalent to  our table if the column
+     *    is unaltered)
+     *  - @entire columns from the source table (equivalent to our table if the column
+     *     is unaltered) 
+     *  -  @entire columns from all tables that
+     *     are behind this in the dependency tree,
+     *     with non-null table id.
+     */
     public static class MultipleTableLookup implements ColumnLookup
     {
         private final @Nullable TableId us;
         private final TableManager tableManager;
         private final @Nullable Table srcTable;
-        
+        private final @Nullable ColumnId editing;
 
-        public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId)
+        public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId, @Nullable ColumnId editing)
         {
             this.us = us;
             this.tableManager = tableManager;
             this.srcTable = srcTableId == null ? null : tableManager.getSingleTableOrNull(srcTableId);
-        }
-
-        @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
-        {
-            return getAvailableColumnReferences(true);
+            this.editing = editing;
         }
 
         @Override
         public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
         {
-            return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+            // Handle us and source table specially:
+            if (us != null && tableId.equals(us))
+            {
+                // Can't refer to an edited column
+                if (columnId.equals(editing))
+                    return Stream.empty();
+                
+                Table usTable = tableManager.getSingleTableOrNull(us);
+                if (usTable == null)
+                    return Stream.empty();
+                try
+                {
+                    Column column = usTable.getData().getColumnOrNull(columnId);
+                    if (column == null || column.isAltered())
+                        return Stream.empty();
+                    return Stream.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(columnId, ColumnReferenceType.WHOLE_COLUMN));
+                }
+                catch (InternalException | UserException e)
+                {
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                    return Stream.empty();
+                }
+            }
+            if (srcTable != null && tableId.equals(srcTable.getId()))
+            {
+                try
+                {
+                    Column column = srcTable.getData().getColumnOrNull(columnId);
+                    if (column == null)
+                        return Stream.empty();
+                    return Stream.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(columnId, ColumnReferenceType.WHOLE_COLUMN));
+                }
+                catch (InternalException | UserException e)
+                {
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                    return Stream.empty();
+                }
+            }
+            // For everything else fall back to usual:
+            return getAvailableColumnReferences().filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
         }
 
-        private Stream<ColumnReference> getAvailableColumnReferences(boolean nullOurTable)
+        public Stream<ColumnReference> getAvailableColumnReferences()
         {
             return tableManager.getAllTablesAvailableTo(us).stream().flatMap(t -> {
                 try
                 {
-                    boolean isOurTable = Objects.equals(us, t.getId());
-                    boolean allowsSameRow = isOurTable || (srcTable != null && Objects.equals(srcTable.getId(), t.getId()));
+                    boolean isUsOrSrc = Objects.equals(us, t.getId()) || (srcTable != null && Objects.equals(t.getId(), srcTable.getId()));
                     return t.getData().getColumns().stream().flatMap(c -> {
-                        Stream<ColumnReferenceType> possRefTypes = allowsSameRow ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
-                        return possRefTypes.map(rt -> new ColumnReference(isOurTable && nullOurTable ? null : t.getId(), c.getName(), rt));
+                        Stream<ColumnReferenceType> possRefTypes = isUsOrSrc ? Arrays.stream(ColumnReferenceType.values()) : Stream.of(ColumnReferenceType.WHOLE_COLUMN);
+                        return possRefTypes.map(rt -> new ColumnReference(isUsOrSrc ? null : t.getId(), c.getName(), rt));
                     });
                 }
                 catch (UserException e)
@@ -947,7 +997,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     Log.log(e);
                     return Stream.empty();
                 }
-            });
+            }).distinct();
         }
 
         @Override

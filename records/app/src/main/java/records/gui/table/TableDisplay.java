@@ -984,7 +984,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId()), () -> Calculate.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1001,7 +1001,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1136,7 +1136,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             new EditExpressionDialog(parent, 
                 parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
                 filter.getFilterExpression(),
-                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()),
+                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
                     () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
                 DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
@@ -1148,7 +1148,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
+            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
             if (newColumn.isPresent())
             {
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {

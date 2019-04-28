@@ -77,7 +77,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
             {
                 List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
                 RecordSet data = src.getData();
-                ColumnLookup columnLookup = new MultipleTableLookup(getId(), mgr, src.getId());
+                ColumnLookup columnLookup = new MultipleTableLookup(getId(), mgr, src.getId(), null);
                 for (Column c : data.getColumns())
                 {
                     columns.add(rs -> new Column(rs, c.getName())

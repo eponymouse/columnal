@@ -103,7 +103,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s(" "),
                 editSourceLink(parent, filter),
                 StyledString.s(", keeping rows where: "),
-                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId()), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, newExp ->
+                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, newExp ->
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                         table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
             );

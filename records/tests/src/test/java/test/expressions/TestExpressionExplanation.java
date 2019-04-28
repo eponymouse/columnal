@@ -347,7 +347,7 @@ public class TestExpressionExplanation
         Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
-        CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null), new TypeState(typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
+        CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null, null), new TypeState(typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
         Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer)).makeExplanation(null);
         assertEquals(expectedExplanation, actual);

@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,7 +82,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         try
         {
             RecordSet srcRecordSet = this.src.getData();
-            ColumnLookup columnLookup = new MultipleTableLookup(getId(), mgr, src.getId());
+            Function<ColumnId, ColumnLookup> columnLookup = ed -> new MultipleTableLookup(getId(), mgr, srcTableId, ed);
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
             HashMap<ColumnId, Expression> stillToAdd = new HashMap<>(newColumns);
             for (Column c : srcRecordSet.getColumns())
@@ -108,13 +109,13 @@ public class Calculate extends Transformation implements SingleSourceTransformat
                 }
                 else
                 {
-                    columns.add(makeCalcColumn(mgr, columnLookup, c.getName(), overwrite));
+                    columns.add(makeCalcColumn(mgr, columnLookup.apply(c.getName()), c.getName(), overwrite));
                 }
             }
 
             for (Entry<ColumnId, Expression> newCol : stillToAdd.entrySet())
             {
-                columns.add(makeCalcColumn(mgr, columnLookup, newCol.getKey(), newCol.getValue()));
+                columns.add(makeCalcColumn(mgr, columnLookup.apply(newCol.getKey()), newCol.getKey(), newCol.getValue()));
             }
 
             theResult = new RecordSet(columns)
