@@ -6,11 +6,11 @@
         <typeArg>t</typeArg>
         <syntaxElements>
             <keyword>@if</keyword>
-            <type>Boolean</type>
+            <type name="condition">Boolean</type>
             <keyword>@then</keyword>
-            <type>t</type>
+            <type name="value if true">t</type>
             <keyword>@else</keyword>
-            <type>t</type>
+            <type name="value if false">t</type>
             <keyword>@endif</keyword>
         </syntaxElements>
         <description>
@@ -22,17 +22,17 @@
         <typeArg>t</typeArg>
         <syntaxElements>
             <keyword>@match</keyword>
-            <type>c</type>
+            <type name="expression">c</type>
             <keyword>@case</keyword>
-            <type>c</type>
+            <type name="pattern">c</type>
             <keyword>@given</keyword>
-            <type>Boolean</type>
+            <type name="guard">Boolean</type>
             <keyword>@orcase</keyword>
-            <type>c</type>
+            <type name="another pattern">c</type>
             <keyword>@given</keyword>
-            <type>Boolean</type>
+            <type name="another guard">Boolean</type>
             <keyword>@then</keyword>
-            <type>t</type>
+            <type name="value if matches">t</type>
             <keyword>@endmatch</keyword>
         </syntaxElements>
         <description>

@@ -161,7 +161,15 @@
                     <xs:complexType>
                         <xs:choice minOccurs="1" maxOccurs="unbounded">
                             <xs:element name="keyword" type="xs:string"/>
-                            <xs:element name="type" type="xs:string"/>
+                            <xs:element name="type">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute name="name" use="required" type="xs:string"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:choice>
                     </xs:complexType>
                 </xs:element>

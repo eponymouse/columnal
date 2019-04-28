@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -446,13 +447,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 ImmutableList.Builder<LexCompletion> validKeywordCompletions = ImmutableList.builder();
                 if (Utility.startsWithIgnoreCase("@i", stem))
                 {
-                    validKeywordCompletions.add(new LexCompletion(canonIndex, "@if@then@else@endif") {
-                        @Override
-                        public String toString()
-                        {
-                            return "@if \u2026 @then \u2026 @else \u2026 @endif";
-                        }
-                    }.withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(2).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP));
+                    validKeywordCompletions.add(new LexCompletion(canonIndex, "@if@then@else@endif").withDisplay(StyledString.s("@if \u2026 @then \u2026 @else \u2026 @endif")).withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(2).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP));
                 }
                 if (Utility.startsWithIgnoreCase("@entire",stem))
                 {
@@ -473,13 +468,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     
                 }
 
-                for (Keyword keyword : Keyword.values())
-                {
-                    if (Utility.startsWithIgnoreCase(keyword.getContent(), stem))
-                    {
-                        validKeywordCompletions.add(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
-                    }
-                }
+                addKeywordCompletions(validKeywordCompletions::add, stem, canonIndex);
                 completions.add(new AutoCompleteDetails<>(removedChars.map(curIndex, nonLetter), new ExpressionCompletionContext(ImmutableList.of(new LexCompletionGroup(validKeywordCompletions.build())))));
                 
                 // We skip to next non-letter to prevent trying to complete the keyword as a function:
@@ -547,11 +536,23 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             addColumnCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addVariableCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
             addNestedLiteralCompletions(emptyCompletions, null, CanonicalLocation.ZERO);
+            addKeywordCompletions(c -> emptyCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(c, CompletionType.KEYWORD))), null, CanonicalLocation.ZERO);
             
             completions.add(new AutoCompleteDetails<>(CanonicalSpan.START, new ExpressionCompletionContext(sort(emptyCompletions.build()))));
         }
 
         return new LexerResult<>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, completions.build(), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+    }
+
+    protected void addKeywordCompletions(Consumer<LexCompletion> add, @Nullable String stem, @CanonicalLocation int canonIndex)
+    {
+        for (Keyword keyword : Keyword.values())
+        {
+            if (stem == null || Utility.startsWithIgnoreCase(keyword.getContent(), stem))
+            {
+                add.accept(new LexCompletion(canonIndex, keyword.getContent()).withFurtherDetailsURL(getDocURLFor(keyword)).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_ONLY));
+            }
+        }
     }
 
     /**
@@ -763,6 +764,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         for (TaggedTypeDefinition value : knownTaggedTypes.values())
         {
+            // Bit of a hack to hide internal types;
+            if (value.getTaggedTypeName().equals(new TypeId("Type")) || value.getTaggedTypeName().equals(new TypeId("Unit")))
+                continue;
+            
             for (TagType<JellyType> tag : value.getTags())
             {
                 // Try first without type:

@@ -42,15 +42,15 @@ body.indiv {
     font-weight: bold;
 }
 .function-header, .function-type, 
-.syntax-type-args, .operator-type, .operator-name-header {
+.syntax-type, .operator-type, .operator-name-header, .syntax-name-header {
     display:block;
 }
-.type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header {
+.type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header, .literal-name-header {
     font-size: 18pt;
-        background-color: #e3e3ff;
-        padding: 8;
+    background-color: #e3e3ff;
+    padding: 8;
 }
-.function-type {
+.function-type, .syntax-type {
     padding: 3 0 0 14;
     .type {
         padding: 0 0 0 15;
@@ -161,4 +161,9 @@ body.indiv .seeAlso .seeAlsoHeader {
     &, &:visited, &:hover {
         color: black;
     }
+}
+
+.description code {
+    background-color: grey(95%);
+    font-family: "Noto Sans";
 }

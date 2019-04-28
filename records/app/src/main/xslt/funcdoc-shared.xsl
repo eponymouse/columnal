@@ -189,22 +189,34 @@
 
     <xsl:template match="syntax">
         <div class="syntax-item"  id="syntax-{@id}">
-            <xsl:if test="typeArg">
-                <span class="syntax-type-args">For any types <xsl:for-each select="typeArg"><span class="type-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
-            </xsl:if>
             <span class="syntax-name-header">
                 <xsl:for-each select="syntaxElements/(keyword|type)">
                     <xsl:if test="name()='keyword'">
                         <span class="syntax-keyword" xml:space="preserve"> <xsl:value-of select="."/> </span>
                     </xsl:if>
                     <xsl:if test="name()='type'">
-                        <span class="syntax-type">
-                            <xsl:call-template name="processType">
-                                <xsl:with-param name="type" select="."/>
-                            </xsl:call-template>
-                        </span>
+                        <span class="syntax-name"><xsl:value-of select="@name"/></span>
                     </xsl:if>
                 </xsl:for-each>
+            </span>
+            <span class="syntax-type">
+                <xsl:if test="typeArg">
+                    <span class="syntax-type-args">For any types <xsl:for-each select="typeArg"><span class="type-var"><xsl:value-of select="."/></span><xsl:if test="position() != last()">, </xsl:if></xsl:for-each><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
+                </xsl:if>
+                <span class="type">
+                    <xsl:for-each select="syntaxElements/(keyword|type)">
+                        <xsl:if test="name()='keyword'">
+                            <span class="syntax-element-keyword" xml:space="preserve"> <xsl:value-of select="."/> </span>
+                        </xsl:if>
+                        <xsl:if test="name()='type'">
+                            <span class="syntax-element-type">
+                                <xsl:call-template name="processType">
+                                    <xsl:with-param name="type" select="."/>
+                                </xsl:call-template>
+                            </span>
+                        </xsl:if>
+                    </xsl:for-each>
+                </span>
             </span>
             <div class="description"><xsl:apply-templates select="description"/></div>
             <xsl:for-each select="seeAlso">
@@ -216,8 +228,8 @@
         </div>
     </xsl:template>
 
-    <!-- Copy all p, ul, li as-is: -->
-    <xsl:template match="p|ul|li">
+    <!-- Copy all p, ul, li, code as-is: -->
+    <xsl:template match="p|ul|li|code">
          <xsl:copy>
                <xsl:apply-templates select="@* | node()" />
          </xsl:copy>
