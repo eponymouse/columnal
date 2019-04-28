@@ -150,4 +150,30 @@
             <output>[3, 4, 7]</output>
         </example>
     </function>
+    
+    <function name="count where">
+        <synonym>countif</synonym>
+        <typeArg>t</typeArg>
+        <argType name="list">[@typevar t]</argType>
+        <argType name="test">(@typevar t) -&gt; Boolean</argType>
+        <returnType name="count">Number</returnType>
+        <description>
+            <p>Counts the number of items in the list where the given test function returns true.</p>
+        </description>
+        <equivalence display="false">
+            <foranytype name="t"/>
+            <forany name="xs">[@typevar t]</forany>
+            <forany name="f">((@typevar t) -&gt; Boolean)</forany>
+            <lhs>@call @function list length(@call @function select(xs, f))</lhs>
+            <rhs>@call @function count where(xs, f)</rhs>
+        </equivalence>
+        <example>
+            <inputArg>([11, -2, 14, 4, 0], (? &gt; 10))</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>(["Hi", "Hello"], (? = "Bye"))</inputArg>
+            <output>0</output>
+        </example>
+    </function>
 </functionDocumentation>

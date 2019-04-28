@@ -14,15 +14,7 @@ import records.transformations.function.core.TypeOf;
 import records.transformations.function.datetime.AddDays;
 import records.transformations.function.datetime.DaysBetween;
 import records.transformations.function.datetime.SecondsBetween;
-import records.transformations.function.list.AnyAllNone;
-import records.transformations.function.list.Combine;
-import records.transformations.function.list.Count;
-import records.transformations.function.list.GetElement;
-import records.transformations.function.list.InList;
-import records.transformations.function.list.JoinLists;
-import records.transformations.function.list.KeepFunction;
-import records.transformations.function.list.MapFunction;
-import records.transformations.function.list.Single;
+import records.transformations.function.list.*;
 import records.transformations.function.lookup.LookupFunctions;
 import records.transformations.function.math.Logarithm;
 import records.transformations.function.math.LogarithmNatural;
@@ -54,6 +46,7 @@ public class FunctionList
             new AsUnit(),
             new Combine(),
             new Count(),
+            new CountWhere(),
             new DaysBetween(),
             new ExtractNumber(),
             new GetElement(),
