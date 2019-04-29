@@ -1,11 +1,13 @@
 package test.gui.expressionEditor;
 
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
@@ -23,6 +25,7 @@ import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
+import records.gui.lexeditor.completion.LexCompletion;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -36,13 +39,16 @@ import test.gui.trait.PopupTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.util.Collection;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @OnThread(Tag.Simulation)
 public class TestExpressionEditorCompletion extends FXApplicationTest implements PopupTrait
@@ -75,6 +81,77 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         return TestUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
     }
     
+    private class CompletionCheck
+    {
+        private final String content;
+        private final Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> startInclToEndIncl;
+
+        public CompletionCheck(String content, Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> startInclToEndIncl)
+        {
+            this.content = content;
+            this.startInclToEndIncl = startInclToEndIncl;
+        }
+    }
+    
+    private CompletionCheck c(String content, int startIncl, int endIncl)
+    {
+        @SuppressWarnings("units")
+        Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> pos = new Pair<>(startIncl, endIncl);
+        return new CompletionCheck(content, pos);
+    }
+    
+    private void checkCompletions(CompletionCheck... checks)
+    {
+        EditorDisplay editorDisplay = lookup(".editor-display").query();
+        push(KeyCode.HOME);
+        int prevPos = -1;
+        int curPos;
+        while (prevPos != (curPos = TestUtil.fx(() -> editorDisplay.getCaretPosition())))
+        {
+            // Check completions here
+            @Nullable LexAutoCompleteWindow window = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
+            List<LexCompletion> showing = TestUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
+            for (CompletionCheck check : checks)
+            {
+                if (check.startInclToEndIncl.getFirst() <= curPos && curPos <= check.startInclToEndIncl.getSecond())
+                {
+                    ImmutableList<LexCompletion> matching = showing.stream().filter(l -> l.content.equals(check.content)).collect(ImmutableList.toImmutableList());
+                    if (matching.isEmpty())
+                    {
+                        fail("Did not find completion {{{" + check.content + "}}} at caret position " + curPos);
+                    }
+                    else if (matching.size() > 1)
+                    {
+                        fail("Found duplicate completions {{{" + check.content + "}}} at caret position " + curPos);
+                    }
+                    assertEquals(matching.get(0).startPos, check.startInclToEndIncl.getFirst().intValue());
+                }
+            }
+            prevPos = curPos;
+            push(KeyCode.RIGHT);
+        }
+    }
+    
+    @Test
+    public void testCompColumn() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        checkCompletions(c("My Number", 0, 0));
+        write("My Nu");
+        checkCompletions(c("My Number", 0, 5));
+        write("Q");
+        checkCompletions(c("My Number", 0, 5));
+        write("+t");
+        // Completions which don't match should still show at start of token:
+        checkCompletions(c("My Number", 0, 5), 
+                c("true", 7, 8),
+                c("false", 0, 0),
+                c("false", 7, 7),
+                c("@then", 7, 8),
+                c("@if", 0, 0),
+                c("@if", 7, 7));
+    }
+    
     @Test
     public void testColumn1() throws Exception
     {
@@ -86,7 +163,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
 
-    @Ignore // TODO TestFX double-click doesn't seem to work right
     @Test
     public void testColumn1b() throws Exception
     {
@@ -95,7 +171,9 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         Node cell = lookup(".list-cell").match((ListCell c) -> "My Number".equals(TestUtil.fx(() -> c.getText()))).<Node>query();
         TestUtil.checkNonNull(cell);
-        doubleClickOn(point(cell));
+        // Doesn't matter if registered as double click or two single:
+        clickOn(point(cell));
+        clickOn(point(cell));
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
 

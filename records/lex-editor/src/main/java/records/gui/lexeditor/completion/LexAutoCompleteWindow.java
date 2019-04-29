@@ -101,7 +101,7 @@ public class LexAutoCompleteWindow extends PopupControl
         return Utility.onNullable(listView.getSelectedItem(), l -> l.content);
     }
 
-    public List<LexCompletion> _test_getShowing()
+    public ImmutableList<LexCompletion> _test_getShowing()
     {
         return listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList());
     }
