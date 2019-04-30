@@ -337,15 +337,22 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     {
         return content._test_getCaretMoveDistance(targetContent);
     }
-
-    public Point2D getCaretBottomOnScreen()
+    
+    public void _test_queueUpdateCaret()
     {
-        return localToScreen(textFlow.getClickPosFor(content.getCaretPosition(), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
+        if (caretAndSelectionNodes != null)
+            caretAndSelectionNodes.queueUpdateCaretShape();
     }
 
-    public @Nullable Point2D getCaretBottomOnScreen(int caretPos)
+    public @Nullable Point2D getCaretBottomOnScreen()
     {
-        return localToScreen(textFlow.getClickPosFor(caretPos, VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
+        return getCaretBottomOnScreen(content.getCaretPosition());
+    }
+
+    public @Nullable Point2D getCaretBottomOnScreen(@CanonicalLocation int caretPos)
+    {
+        // localToScreen can return null if not in window, hence the @Nullable return
+        return localToScreen(textFlow.getClickPosFor(content.mapContentToDisplay(caretPos), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
     
     @OnThread(Tag.FXPlatform)
@@ -417,11 +424,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         return editor;
     }
 
-    public Bounds _test_getCaretBounds(int pos)
+    public Bounds _test_getCaretBounds(@CanonicalLocation int pos)
     {
         try
         {
-            return textFlow.localToScreen(new Path(textFlow.getInternalTextLayout().getCaretShape(pos, true, 0, 0)).getBoundsInParent());
+            return textFlow.localToScreen(new Path(textFlow.getInternalTextLayout().getCaretShape(content.mapContentToDisplay(pos), true, 0, 0)).getBoundsInParent());
         }
         catch (Exception e)
         {

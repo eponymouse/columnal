@@ -314,9 +314,16 @@ class LexCompletionList extends Region
         return selectedItem;
     }
 
+    /**
+     * The distance from the left of the list view to the left of the window.
+     */
     public double getTotalTextLeftPad()
     {
-        return getInsets().getLeft() + ((Region)getParent()).getInsets().getLeft() + visible.values().stream().findFirst().map(f -> f.getInsets().getLeft()).orElse(0.0);
+        double listInset = getInsets().getLeft();
+        double parentInset = ((Region) getParent()).getInsets().getLeft();
+        // Bit hacky to hard-code, but sometimes the items haven't updated via CSS:
+        double itemInset = 2; // visible.values().stream().findFirst().map(f -> f.getInsets().getLeft()).orElse(0.0);
+        return listInset + parentInset + itemInset;
     }
     
     @OnThread(Tag.FXPlatform)
@@ -344,10 +351,10 @@ class LexCompletionList extends Region
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
-            mainText.resizeRelocate(0, 0, getWidth(), getHeight());
+            mainText.resizeRelocate(getInsets().getLeft(), 0, getWidth() - getInsets().getLeft() - getInsets().getRight(), getHeight());
             double sideWidth = sideText.prefWidth(-1);
             double sideHeight = sideText.prefHeight(sideWidth);
-            sideText.resizeRelocate(getWidth() - sideWidth, (getHeight() - sideHeight) / 2.0, sideWidth, sideHeight);
+            sideText.resizeRelocate(getWidth() - sideWidth - getInsets().getRight(), (getHeight() - sideHeight) / 2.0, sideWidth, sideHeight);
         }
     }
 }

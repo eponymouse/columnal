@@ -42,6 +42,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.Collection;
 import java.util.List;
@@ -213,18 +214,21 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
 
     private void checkPosition()
     {
-        sleep(50);
+        EditorDisplay editorDisplay = lookup(".editor-display").query();
+        // Caret will update on blink, but let's not wait around for that:
+        TestUtil.fx_(() -> editorDisplay._test_queueUpdateCaret());
+        sleep(200);
         ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
         assertEquals(1, completions.size());
         Node caret = lookup(".document-caret").query();
         double caretBottom = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
         MatcherAssert.assertThat(TestUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
-        int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
-        EditorDisplay editorDisplay = lookup(".editor-display").query();
-        double edX = TestUtil.fx(() -> editorDisplay._test_getCaretBounds(targetStartPos).getMaxX());
+        @SuppressWarnings("units") // Because passes through IntStream
+        @CanonicalLocation int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
+        double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
         Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getScene() == completions.get(0).getScene()).queryAll());
         double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> t.localToScreen(t.getBoundsInLocal()).getMinX()).min()).orElse(-1);
-        MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 1));
+        MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 0.5));
     }
 
     @Test
@@ -290,5 +294,18 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         push(KeyCode.ENTER);
         // It's going to be invalid due to the empty bits:
         assertEquals(new IfThenElseExpression(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
+    }
+
+    @Test
+    public void testLong() throws Exception
+    {
+        // Check a long multi-line expression still shows completion in right place:
+        loadExpression("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif");
+        push(KeyCode.END);
+        write("+My Number");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @column My Number", finish().toString());
     }
 }

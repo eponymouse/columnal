@@ -1,5 +1,6 @@
 package utility.gui;
 
+import annotation.units.DisplayLocation;
 import com.sun.javafx.scene.text.TextLayout;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
@@ -37,7 +38,7 @@ public class HelpfulTextFlow extends TextFlow
      * @return The click position in local coordinates, plus a boolean indicating whether or not it is in bounds.
      */
     @OnThread(Tag.FXPlatform)
-    public Pair<Point2D, Boolean> getClickPosFor(int targetPos, VPos vPos, Dimension2D translateBy)
+    public Pair<Point2D, Boolean> getClickPosFor(@DisplayLocation int targetPos, VPos vPos, Dimension2D translateBy)
     {
         try
         {

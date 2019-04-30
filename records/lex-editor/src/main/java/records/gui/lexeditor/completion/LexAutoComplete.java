@@ -61,6 +61,7 @@ public class LexAutoComplete
 
     private void updateWindowPosition(List<LexCompletion> completions)
     {
+        @SuppressWarnings("units") // Because it passes through IntStream
         Point2D caretBottom = editor.getCaretBottomOnScreen(completions.stream().mapToInt(c -> c.startPos).min().orElse(editor.getCaretPosition()));
         double labelPad = window.listView.getTotalTextLeftPad() + 1;
         if (caretBottom != null && !completions.isEmpty())
