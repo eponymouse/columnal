@@ -200,7 +200,7 @@
             <ul>
                 <li>Numbers are compared in the usual way.  All the numbers must have the same units.</li>
                 <li>For booleans, false is less than true.</li>
-                <li>Text is compared lexicographically using the Unicode codepoints -- see the examples.</li>
+                <li>Text is compared lexicographically using the Unicode codepoints.  English capitals come before lower-case so while bear comes before cat, Zebra comes before ant.</li>
                 <li>Date, YearMonth, Time and DateTime are compared in the usual way (earlier dates or times are less than later dates or times).</li>
                 <li>DateTimeZoned is compared by converting to the UTC DateTime and then comparing that.</li>
                 <li>Tuples are compared by initially comparing the first item.  If the first items differ, that is the result of the comparison.  Only if the first items are equal will the second values be compared, and so on until they are all equal, or there is a result.</li>
