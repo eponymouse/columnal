@@ -86,20 +86,25 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     private class CompletionCheck
     {
         private final String content;
-        private final Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> startInclToEndIncl;
+        private final ImmutableList<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> startInclToEndIncl;
 
-        public CompletionCheck(String content, Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> startInclToEndIncl)
+        public CompletionCheck(String content, ImmutableList<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> startInclToEndIncl)
         {
             this.content = content;
             this.startInclToEndIncl = startInclToEndIncl;
         }
     }
     
-    private CompletionCheck c(String content, int startIncl, int endIncl)
+    private CompletionCheck c(String content, int... startEndInclPairs)
     {
-        @SuppressWarnings("units")
-        Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> pos = new Pair<>(startIncl, endIncl);
-        return new CompletionCheck(content, pos);
+        ImmutableList.Builder<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> pairs = ImmutableList.builder();
+        for (int i = 0; i < startEndInclPairs.length; i += 2)
+        {
+            @SuppressWarnings("units")
+            Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> pos = new Pair<>(startEndInclPairs[i], startEndInclPairs[i + 1]);
+            pairs.add(pos);
+        }
+        return new CompletionCheck(content, pairs.build());
     }
     
     private void checkCompletions(CompletionCheck... checks)
@@ -115,18 +120,31 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
             List<LexCompletion> showing = TestUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
             for (CompletionCheck check : checks)
             {
-                if (check.startInclToEndIncl.getFirst() <= curPos && curPos <= check.startInclToEndIncl.getSecond())
+                ImmutableList<LexCompletion> matching = showing.stream().filter(l -> l.content.equals(check.content)).collect(ImmutableList.toImmutableList());
+                
+                boolean wasChecked = false;
+                for (Pair<Integer, Integer> startInclToEndIncl : check.startInclToEndIncl)
                 {
-                    ImmutableList<LexCompletion> matching = showing.stream().filter(l -> l.content.equals(check.content)).collect(ImmutableList.toImmutableList());
-                    if (matching.isEmpty())
+                    if (startInclToEndIncl.getFirst() <= curPos && curPos <= startInclToEndIncl.getSecond())
                     {
-                        fail("Did not find completion {{{" + check.content + "}}} at caret position " + curPos);
+                        wasChecked = true;
+                        if (matching.isEmpty())
+                        {
+                            fail("Did not find completion {{{" + check.content + "}}} at caret position " + curPos);
+                        }
+                        else if (matching.size() > 1)
+                        {
+                            fail("Found duplicate completions {{{" + check.content + "}}} at caret position " + curPos);
+                        }
+                        assertEquals("Start pos for {{{" + check.content + "}}}", startInclToEndIncl.getFirst().intValue(), matching.get(0).startPos);
                     }
-                    else if (matching.size() > 1)
+                }
+                if (!wasChecked)
+                {
+                    if (matching.size() > 0)
                     {
-                        fail("Found duplicate completions {{{" + check.content + "}}} at caret position " + curPos);
+                        fail("Found completion {{{" + check.content + "}}} which should not be present at " + curPos);
                     }
-                    assertEquals(matching.get(0).startPos, check.startInclToEndIncl.getFirst().intValue());
                 }
             }
             prevPos = curPos;
@@ -144,15 +162,31 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("Q");
         checkCompletions(c("My Number", 0, 5));
         write("+t");
+        // Content is now:
+        // My NuQ+t
+        
         // Completions which don't match should still show at start of token:
-        checkCompletions(c("My Number", 0, 5), 
-                c("true", 7, 8),
-                c("false", 0, 0),
-                c("false", 7, 7),
-                c("@then", 7, 7),
-                c("@then", 8, 8),
-                c("@if", 0, 0),
-                c("@if", 7, 7));
+        checkCompletions(c("My Number", 0,5, 7,7), 
+                c("true", 0,0, 7,8),
+                c("false", 0,0, 7,7),
+                c("@then", 0,0, 7,7, 8,8),
+                c("@if", 0,0, 7,7));
+    }
+    
+    @Test
+    public void testCompIf() throws Exception
+    {
+        loadExpression("@if true | false @then 12 @else @call@function from text to(type{Number}, \"34\")@endif");
+        // Will turn into:
+        // @iftrue|false@then12@elsefrom text to(type{Number},"34")
+        checkCompletions(
+            // match at the start of every token:
+            c("@match", 0,0, 3,3, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
+            c("@then", 0,0, 3,4, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
+            c("false", 0,0, 3,3, 8,13, 18,18, 25,26, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
+            c("type{}", 0,0, 3,4, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
+            c("Boolean", 43, 43)
+        );
     }
     
     @Test

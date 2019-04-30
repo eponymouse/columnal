@@ -124,7 +124,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 // Keep single space after ident as it may continue ident:
                 if (prevWasIdent)
                 {
-                    chunks.add(new ContentChunk(" "));
+                    chunks.add(new ContentChunk(" ", ChunkType.IDENT));
                 }
                 else
                 {
@@ -142,7 +142,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.saveKeyword(bracket, removedCharacters.map(curIndex, bracket.getContent()), c -> {});
                     curIndex += rawLength(bracket.getContent());
-                    chunks.add(new ContentChunk(bracket.getContent()));
+                    chunks.add(new ContentChunk(bracket.getContent(), ChunkType.NON_IDENT));
                     continue nextToken;
                 }
             }
@@ -152,7 +152,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()), c -> {});
                     curIndex += rawLength(op.getContent());
-                    chunks.add(new ContentChunk(op.getContent(), StyledString.s(op.getContent() + " ")));
+                    chunks.add(new ContentChunk(op.getContent(), StyledString.s(op.getContent() + " "), ChunkType.NON_IDENT));
                     continue nextToken;
                 }
             }
@@ -167,15 +167,15 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     UnitLexer unitLexer = new UnitLexer( typeManager.getUnitManager(), false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE), c -> {});
-                    chunks.add(new ContentChunk("{"));
+                    chunks.add(new ContentChunk("{", ChunkType.NESTED_START));
                     @SuppressWarnings("units")
                     @DisplayLocation int displayOffset = chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
                     @CanonicalLocation int caretPosOffset = removedCharacters.map(curIndex + RawInputLocation.ONE);
                     saver.addNestedLocations(lexerResult.locationRecorder, caretPosOffset);
                     saver.addNestedErrors(lexerResult.errors, caretPosOffset, displayOffset);
                     removedCharacters.orShift(lexerResult.removedChars, curIndex + lexerResult.adjustedContent.length());
-                    chunks.add(new ContentChunk(lexerResult.adjustedContent, lexerResult.display));
-                    chunks.add(new ContentChunk("}"));
+                    chunks.add(new ContentChunk(lexerResult.adjustedContent, lexerResult.display, ChunkType.NESTED));
+                    chunks.add(new ContentChunk("}", ChunkType.NESTED));
                     curIndex = end + RawInputLocation.ONE;
                     continue nextToken;
                 }
@@ -186,7 +186,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});
-                    chunks.add(new ContentChunk(content.substring(curIndex)));
+                    chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NON_IDENT));
                     curIndex = rawLength(content);
                 }
                 continue nextToken;
@@ -220,14 +220,14 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     });
                 });
                 curIndex = parsed.getSecond();
-                chunks.add(new ContentChunk(match));
+                chunks.add(new ContentChunk(match, ChunkType.IDENT));
                 continue nextToken;
             }
 
             CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
             saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
-            chunks.add(new ContentChunk("" + content.charAt(curIndex)));
+            chunks.add(new ContentChunk("" + content.charAt(curIndex), ChunkType.NON_IDENT));
             
             curIndex += RawInputLocation.ONE;
         }

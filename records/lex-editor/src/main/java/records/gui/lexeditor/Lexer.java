@@ -42,7 +42,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         // Empty strings should still have a caret pos:
         if (chunks.isEmpty())
         {
-            chunks.add(new ContentChunk("", StyledString.s(" ")));
+            chunks.add(new ContentChunk("", StyledString.s(" "), ChunkType.IDENT));
             caretPos.add(new CaretPos(0, 0));
         }
         return caretPos;
@@ -271,6 +271,11 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         }
         return display;
     }
+    
+    protected static enum ChunkType
+    {
+        IDENT, NON_IDENT, NESTED, NESTED_START;
+    }
 
     protected static class ContentChunk
     {
@@ -278,34 +283,38 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         // Positions are relative to this chunk:
         protected final ImmutableList<CaretPos> caretPositions;
         protected final StyledString displayContent;
+        protected final ChunkType chunkType;
 
-        public ContentChunk(String simpleContent, String... styleClasses)
+        public ContentChunk(String simpleContent, ChunkType chunkType, String... styleClasses)
         {
-            this(simpleContent, StyledString.s(simpleContent).withStyle(new StyledCSS(styleClasses)));
+            this(simpleContent, StyledString.s(simpleContent).withStyle(new StyledCSS(styleClasses)), chunkType);
         }
         
         @SuppressWarnings("units")
-        public ContentChunk(String simpleContent, StyledString styledString)
+        public ContentChunk(String simpleContent, StyledString styledString, ChunkType chunkType)
         {
             internalContent = simpleContent;
             displayContent = styledString;
             caretPositions = IntStream.range(0, simpleContent.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+            this.chunkType = chunkType;
         }
         
         // Special keyword/operator that has no valid caret positions except at ends, and optionally pads with spaces
         @SuppressWarnings("units")
-        public ContentChunk(boolean addLeadingSpace, ExpressionToken specialContent, boolean addTrailingSpace)
+        public ContentChunk(boolean addLeadingSpace, ExpressionToken specialContent, ChunkType chunkType, boolean addTrailingSpace)
         {
             internalContent = specialContent.getContent();
             displayContent = StyledString.concat(StyledString.s(addLeadingSpace ? " " : ""), specialContent.toStyledString(), StyledString.s(addTrailingSpace ? " " : ""));
             caretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(specialContent.getContent().length(), displayContent.getLength()));
+            this.chunkType = chunkType;
         }
 
-        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions)
+        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions, ChunkType chunkType)
         {
             this.internalContent = internalContent;
             this.caretPositions = caretPositions;
             this.displayContent = displayContent;
+            this.chunkType = chunkType;
         }
     }
 }
