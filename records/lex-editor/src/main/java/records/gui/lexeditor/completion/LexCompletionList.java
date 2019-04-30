@@ -28,11 +28,13 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -292,8 +294,9 @@ class LexCompletionList extends Region
     {
         if (selectionIndex == null)
         {
-            if (!curCompletionGroups.isEmpty() && !curCompletionGroups.get(0).completions.isEmpty())
-                select(new Pair<>(0, 0));
+            OptionalInt firstNonEmpty = Utility.findFirstIndex(curCompletionGroups, g -> !g.completions.isEmpty());
+            if (firstNonEmpty.isPresent())
+                select(new Pair<>(firstNonEmpty.getAsInt(), 0));
         }
         else
         {
