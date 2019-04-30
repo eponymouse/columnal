@@ -299,7 +299,7 @@ class LexCompletionList extends Region
         {
             if (selectionIndex.getSecond() < curCompletionGroups.get(selectionIndex.getFirst()).completions.size() - 1)
                 select(selectionIndex.mapSecond(n -> n + 1));
-            else if (selectionIndex.getFirst() < curCompletionGroups.size() - 1)
+            else if (selectionIndex.getFirst() < curCompletionGroups.size() - 1 && !curCompletionGroups.get(selectionIndex.getFirst() + 1).completions.isEmpty())
                 select(new Pair<>(selectionIndex.getFirst() + 1, 0));
         }
     }
