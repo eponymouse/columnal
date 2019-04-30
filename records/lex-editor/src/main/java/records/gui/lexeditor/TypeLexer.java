@@ -332,7 +332,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
 
     protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start)
     {
-        return new LexCompletion(start, dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
+        return new LexCompletion(start, dataType.toString().length(), dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
     }
 
     private Stream<DataType> streamDataTypes()

@@ -16,6 +16,7 @@ import java.util.Objects;
 public class LexCompletion
 {
     public final @CanonicalLocation int startPos;
+    public final @CanonicalLocation int lastShowPosIncl;
     public String content;
     StyledString display;
     public int relativeCaretPos;
@@ -24,19 +25,17 @@ public class LexCompletion
     @Nullable Pair<String, @Nullable String> furtherDetailsURL;
     String sideText = "";
 
-    private LexCompletion(@CanonicalLocation int startPos, String content, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL)
+    public LexCompletion(@CanonicalLocation int startPos, int lengthToShowFor, String content)
     {
         this.startPos = startPos;
+        @SuppressWarnings("units")
+        @CanonicalLocation int lastShowPosIncl = startPos + lengthToShowFor;
+        this.lastShowPosIncl = lastShowPosIncl;
         this.content = content;
         this.display = StyledString.s(content);
-        this.relativeCaretPos = relativeCaretPos;
-        this.selectionBehaviour = selectionBehaviour;
-        this.furtherDetailsURL = furtherDetailsURL;
-    }
-
-    public LexCompletion(@CanonicalLocation int startPos, String content)
-    {
-        this(startPos, content, content.length(), LexSelectionBehaviour.NO_AUTO_SELECT, null);
+        this.relativeCaretPos = content.length();
+        this.selectionBehaviour = LexSelectionBehaviour.NO_AUTO_SELECT;
+        this.furtherDetailsURL = null;
     }
     
     public LexCompletion withReplacement(String newContent)

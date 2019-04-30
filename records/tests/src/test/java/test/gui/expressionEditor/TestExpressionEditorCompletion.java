@@ -45,6 +45,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -148,7 +149,8 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
                 c("true", 7, 8),
                 c("false", 0, 0),
                 c("false", 7, 7),
-                c("@then", 7, 8),
+                c("@then", 7, 7),
+                c("@then", 8, 8),
                 c("@if", 0, 0),
                 c("@if", 7, 7));
     }

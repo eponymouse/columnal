@@ -1318,6 +1318,29 @@ public class Utility
         return i;
     }
 
+    public static int longestCommonStartIgnoringCase(String a, int aStartAt, String b, int bStartAt)
+    {
+        int i = 0;
+        for (; i + aStartAt < a.length() && i + bStartAt < b.length(); i++)
+        {
+            // Borrowed from String's compareIgnoringCase:
+            char c1 = a.charAt(i + aStartAt);
+            char c2 = b.charAt(i + bStartAt);
+            if (c1 != c2) {
+                c1 = Character.toUpperCase(c1);
+                c2 = Character.toUpperCase(c2);
+                if (c1 != c2) {
+                    c1 = Character.toLowerCase(c1);
+                    c2 = Character.toLowerCase(c2);
+                    if (c1 != c2) {
+                        break;
+                    }
+                }
+            }
+        }
+        return i;
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);

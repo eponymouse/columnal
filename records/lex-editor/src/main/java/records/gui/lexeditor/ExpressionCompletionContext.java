@@ -4,6 +4,7 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
+import utility.Utility;
 
 public class ExpressionCompletionContext implements CodeCompletionContext
 {
@@ -17,6 +18,6 @@ public class ExpressionCompletionContext implements CodeCompletionContext
     @Override
     public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int caretPos)
     {
-        return completions;
+        return Utility.mapListI(completions, g -> g.filterForPos(caretPos));
     }
 }

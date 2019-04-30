@@ -97,39 +97,6 @@ public class LexAutoComplete
         return Optional.ofNullable(window.listView.getSelectedItem());
     }
 
-    /**
-     * Check if the source snippet is a stem of any (space-separated) word in the completion text.  If so, return a
-     * corresponding completion, else return empty.
-     * 
-     * e.g. matchWordStart("te", 34, "from text to")
-     * would return Optional.of(new LexCompletion(34, "from text to"))
-     * 
-     * @param src the source content.  If null, automatically match
-     * @param startPos the start position to feed to the completion constructor
-     * @param completionText The completion text
-     * @return True, completion if at very start; False, completion if it maps a later word.
-     */
-    public static Optional<Pair<Boolean, LexCompletion>> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText)
-    {
-        if (src == null)
-            return Optional.of(new Pair<>(true, new LexCompletion(startPos, completionText)));
-        
-        int curCompletionStart = 0;
-        do
-        {
-            if (Utility.startsWithIgnoreCase(completionText, src, curCompletionStart))
-            {
-                return Optional.of(new Pair<>(curCompletionStart == 0, new LexCompletion(startPos, completionText)));
-            }
-            curCompletionStart = completionText.indexOf(' ', curCompletionStart);
-            if (curCompletionStart >= 0)
-                curCompletionStart += 1;
-        }
-        while (curCompletionStart >= 0);
-        
-        return Optional.empty();
-    }
-    
     public enum LexSelectionBehaviour
     {
         SELECT_IF_ONLY,
