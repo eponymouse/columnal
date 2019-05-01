@@ -1,5 +1,6 @@
 package records.gui.dtf;
 
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,7 +39,8 @@ public abstract class Document
             return bias;
         }
 
-        public int getPosition()
+        @SuppressWarnings("units") // To convert to canonical location
+        public @CanonicalLocation int getPosition()
         {
             return position;
         }

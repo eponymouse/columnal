@@ -368,14 +368,14 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public int getDisplayCaretPosition()
+    public @DisplayLocation int getDisplayCaretPosition()
     {
         return content.getDisplayCaretPosition();
     }
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public int getDisplayAnchorPosition()
+    public @DisplayLocation int getDisplayAnchorPosition()
     {
         return content.getDisplayAnchorPosition();
     }

@@ -180,12 +180,12 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.bracketsAreBalanced;
     }
 
-    public int getDisplayCaretPosition()
+    public @DisplayLocation int getDisplayCaretPosition()
     {
         return curContent.mapContentToDisplay(getCaretPosition());
     }
 
-    public int getDisplayAnchorPosition()
+    public @DisplayLocation int getDisplayAnchorPosition()
     {
         return curContent.mapContentToDisplay(getAnchorPosition());
     }

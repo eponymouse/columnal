@@ -1,5 +1,7 @@
 package records.gui.dtf;
 
+import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
@@ -41,7 +43,7 @@ import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class DocumentTextField extends TextEditorBase implements DocumentListener
+public class  DocumentTextField extends TextEditorBase implements DocumentListener
 {
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;
@@ -159,7 +161,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             }
             if (keyEvent.getCode() == KeyCode.UP)
             {
-                Point2D p = textFlow.getClickPosFor(caretPosition.getPosition(), VPos.TOP, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
+                Point2D p = textFlow.getClickPosFor(getDisplayCaretPosition(), VPos.TOP, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() - 5);
                 if (hitInfo != null)
                 {
@@ -178,7 +180,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             }
             if (keyEvent.getCode() == KeyCode.DOWN)
             {
-                Point2D p = textFlow.getClickPosFor(caretPosition.getPosition(), VPos.BOTTOM, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
+                Point2D p = textFlow.getClickPosFor(getDisplayCaretPosition(), VPos.BOTTOM, new Dimension2D(-horizTranslation, -vertTranslation)).getFirst();
                 HitInfo hitInfo = hitTest(p.getX(), p.getY() + 5);
                 if (hitInfo != null)
                     caretPosition.moveTo(hitInfo.getInsertionIndex());
@@ -269,25 +271,27 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
     
     @OnThread(Tag.FXPlatform)
-    public int getAnchorPosition()
+    public @CanonicalLocation int getAnchorPosition()
     {
         return anchorPosition.getPosition();
     }
     
     @OnThread(Tag.FXPlatform)
-    public int getCaretPosition()
+    public @CanonicalLocation int getCaretPosition()
     {
         return caretPosition.getPosition();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) int getDisplayCaretPosition()
+    @SuppressWarnings("units") // Because display and canonical are the same
+    public @OnThread(Tag.FXPlatform) @DisplayLocation int getDisplayCaretPosition()
     {
         return getCaretPosition();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) int getDisplayAnchorPosition()
+    @SuppressWarnings("units") // Because display and canonical are the same
+    public @OnThread(Tag.FXPlatform) @DisplayLocation int getDisplayAnchorPosition()
     {
         return getAnchorPosition();
     }
@@ -318,6 +322,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         return 300;
     }
 
+    @SuppressWarnings("units")
     public Optional<Point2D> _test_getClickPosFor(int targetPos)
     {
         Pair<Point2D, Boolean> clickPos = textFlow.getClickPosFor(targetPos, VPos.CENTER, new Dimension2D(-horizTranslation, -vertTranslation));

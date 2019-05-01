@@ -1,5 +1,6 @@
 package utility.gui;
 
+import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
@@ -225,7 +226,7 @@ public abstract class TextEditorBase extends Region
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract int getDisplayCaretPosition();
+    public abstract @DisplayLocation int getDisplayCaretPosition();
 
     @OnThread(Tag.FXPlatform)
     protected abstract Point2D translateHit(double x, double y);
@@ -253,7 +254,7 @@ public abstract class TextEditorBase extends Region
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract int getDisplayAnchorPosition();
+    public abstract @DisplayLocation int getDisplayAnchorPosition();
 
     @OnThread(Tag.FXPlatform)
     public abstract BitSet getErrorCharacters();
