@@ -533,16 +533,16 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected class CollectedItems
     {
-        // This is like a boolean; null means valid, non-null means invalid
-        // because of that error.
-        private @Nullable Pair<CanonicalSpan, StyledString> invalidReason;
+        // This is like a boolean; empty means valid, non-empty means invalid
+        // because of those errors.
+        private ArrayList<Pair<CanonicalSpan, StyledString>> invalidReasons;
         private final ArrayList<Either<OpAndNode, @Recorded EXPRESSION>> invalid;
         private final ArrayList<@Recorded EXPRESSION> validOperands;
         private final ArrayList<OpAndNode> validOperators;
 
         public boolean isValid()
         {
-            return invalidReason == null;
+            return invalidReasons.isEmpty();
         }
 
         public @Recorded EXPRESSION makeInvalid(CanonicalSpan location, Function<ImmutableList<@Recorded EXPRESSION>, EXPRESSION> makeInvalid)
@@ -550,9 +550,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             @Recorded EXPRESSION expression = record(location, makeInvalid.apply(
                     Utility.<Either<OpAndNode, @Recorded EXPRESSION>, @Recorded EXPRESSION>mapListI(invalid, et -> et.<@Recorded EXPRESSION>either(o -> record(o.sourceNode, opToInvalid(o.op)), x -> x))
             ));
-            @Nullable Pair<CanonicalSpan, StyledString> invalidReason = this.invalidReason;
-            if (invalidReason != null)
+            for (Pair<CanonicalSpan, StyledString> invalidReason : invalidReasons)
+            {
                 locationRecorder.addErrorAndFixes(invalidReason.getFirst(), invalidReason.getSecond(), ImmutableList.of());
+            }
             return expression;
         }
 
@@ -573,7 +574,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             
             // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
             // Valid means that operands interleave exactly with operators, and there is an operand at beginning and end.
-            invalidReason = null;
+            invalidReasons = new ArrayList<>();
             invalid = new ArrayList<>();
             validOperands = new ArrayList<>();
             validOperators = new ArrayList<>();
@@ -593,7 +594,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     if (lastWasOperand.get() && iFinal > 0)
                     {
                         CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression);
-                        invalidReason = new Pair<>(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"));
+                        invalidReasons.add(new Pair<>(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator")));
                     }
                     lastWasOperand.set(true);
                     lastNodeSpan.set(recorderFor(expression));
@@ -620,7 +621,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         else
                         {
                             CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : op.sourceNode;
-                            invalidReason = new Pair<>(CanonicalSpan.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators"));
+                            invalidReasons.add(new Pair<>(CanonicalSpan.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators")));
                         }
                     }
                     lastWasOperand.set(false);
@@ -631,7 +632,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             // Must end with operand:
             if (!lastWasOperand.get() && lastNodeSpan.get() != null)
             {
-                invalidReason = new Pair<>(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator."));
+                invalidReasons.add(new Pair<>(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator.")));
             }
         }
     }
