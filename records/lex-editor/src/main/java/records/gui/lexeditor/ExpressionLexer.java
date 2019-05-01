@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
 import records.data.datatype.DataType;
@@ -48,7 +47,7 @@ import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -147,6 +146,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         RemovedCharacters removedChars = new RemovedCharacters();
         BitSet suppressBracketMatching = new BitSet();
         ArrayList<ContentChunk> chunks = new ArrayList<>();
+        ImmutableList.Builder<AutoCompleteDetails<ExpressionCompletionContext>> nestedCompletions = ImmutableList.builder();
         boolean prevWasIdent = false;
         boolean preserveNextSpace = false;
         boolean lexOnMove = false;
@@ -269,6 +269,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         saver.addNestedLocations(outcome.locationRecorder, caretPosOffset);
                     saver.addNestedErrors(outcome.nestedErrors, caretPosOffset, displayOffset);
                     chunks.add(outcome.chunk);
+                    nestedCompletions.addAll(outcome.completions.stream().map(acd -> offsetBy(acd, caretPosOffset)).collect(ImmutableList.<AutoCompleteDetails<ExpressionCompletionContext>>toImmutableList()));
                     removedChars.orShift(outcome.removedChars, curIndex + nestedLiteral.getFirst().length());
                     curIndex = nestedOutcome.positionAfter;
                     continue nextToken;
@@ -484,35 +485,15 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos, errors);
 
-        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, makeCompletions(chunks), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
-    
-    private ImmutableList<AutoCompleteDetails<ExpressionCompletionContext>> makeCompletions(List<ContentChunk> chunks)
+
+    private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
     {
-        ImmutableList.Builder<AutoCompleteDetails<ExpressionCompletionContext>> acd = ImmutableList.builderWithExpectedSize(chunks.size());
-
-        @CanonicalLocation int curPos = CanonicalLocation.ZERO;
-        ChunkType prevChunkType = ChunkType.NON_IDENT;
-        for (ContentChunk chunk : chunks)
-        {
-            @SuppressWarnings("units")
-            @CanonicalLocation int nextPos = curPos + chunk.internalContent.length();
-            if (chunk.chunkType != ChunkType.NESTED)
-            {
-                @SuppressWarnings("units")
-                @CanonicalLocation int start = prevChunkType == ChunkType.NON_IDENT ? curPos : curPos + 1;
-                CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
-                acd.add(new AutoCompleteDetails<>(location, new ExpressionCompletionContext(makeCompletions(chunk.internalContent, curPos))));
-            }
-            
-            curPos = nextPos;
-            prevChunkType = chunk.chunkType;
-        }
-        
-        return acd.build();
+        return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ImmutableList<LexCompletionGroup> makeCompletions(String stem, @CanonicalLocation int canonIndex)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -526,7 +507,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         addKeywordCompletions(completions, stem, canonIndex);
 
-        return sort(completions.build());
+        return new ExpressionCompletionContext(sort(completions.build()));
     }
 
     private void addKeywordCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> completions, String stem, @CanonicalLocation int canonIndex)
@@ -816,6 +797,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public final RemovedCharacters removedChars;
         public final ContentChunk chunk;
         public final ImmutableList<ErrorDetails> nestedErrors;
+        public final ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions;
         public final @Nullable EditorLocationAndErrorRecorder locationRecorder;
         
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
@@ -824,11 +806,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             this.expression = expression;
             this.removedChars = new RemovedCharacters();
             this.nestedErrors = ImmutableList.of();
+            this.completions = ImmutableList.of();
             this.locationRecorder = null;
         }
 
         @SuppressWarnings("units")
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             CaretPos initialPos = new CaretPos(0, 0);
@@ -845,6 +828,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             this.expression = expression;
             this.removedChars = removedChars;
             this.nestedErrors = errors;
+            this.completions = completions;
             this.locationRecorder = locationRecorder;
         }
     }
@@ -860,12 +844,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer(typeManager, true, false);
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.locationRecorder);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             })
         );
     }

@@ -20,6 +20,8 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
@@ -65,6 +67,31 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             }
         }
         caretPos.add(newPos);
+    }
+
+    protected static <CCC extends CodeCompletionContext> ImmutableList<AutoCompleteDetails<CCC>> makeCompletions(List<ContentChunk> chunks, BiFunction<String, @CanonicalLocation Integer, CCC> makeCompletions)
+    {
+        ImmutableList.Builder<AutoCompleteDetails<CCC>> acd = ImmutableList.builderWithExpectedSize(chunks.size());
+
+        @CanonicalLocation int curPos = CanonicalLocation.ZERO;
+        ChunkType prevChunkType = ChunkType.NON_IDENT;
+        for (ContentChunk chunk : chunks)
+        {
+            @SuppressWarnings("units")
+            @CanonicalLocation int nextPos = curPos + chunk.internalContent.length();
+            if (chunk.chunkType != ChunkType.NESTED)
+            {
+                @SuppressWarnings("units")
+                @CanonicalLocation int start = prevChunkType == ChunkType.IDENT ? curPos + 1 : curPos;
+                CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
+                acd.add(new AutoCompleteDetails<>(location, makeCompletions.apply(chunk.internalContent, curPos)));
+            }
+            
+            curPos = nextPos;
+            prevChunkType = chunk.chunkType;
+        }
+        
+        return acd.build();
     }
 
     static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>

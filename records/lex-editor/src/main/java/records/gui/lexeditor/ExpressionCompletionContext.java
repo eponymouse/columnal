@@ -6,18 +6,15 @@ import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import utility.Utility;
 
-public class ExpressionCompletionContext implements CodeCompletionContext
+public class ExpressionCompletionContext extends CodeCompletionContext
 {
-    private final ImmutableList<LexCompletionGroup> completions;
-
     public ExpressionCompletionContext(ImmutableList<LexCompletionGroup> completions)
     {
-        this.completions = completions;
+        super(completions);
     }
 
-    @Override
-    public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int caretPos)
+    public ExpressionCompletionContext(CodeCompletionContext nestedCompletions, @CanonicalLocation int offsetBy)
     {
-        return Utility.mapListI(completions, g -> g.filterForPos(caretPos));
+        super(nestedCompletions, offsetBy);
     }
 }

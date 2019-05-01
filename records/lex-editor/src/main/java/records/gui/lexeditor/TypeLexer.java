@@ -113,8 +113,8 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         TypeSaver saver = new TypeSaver();
         boolean prevWasIdent = false;
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
-        ImmutableList.Builder<AutoCompleteDetails<CodeCompletionContext>> autoCompletes = ImmutableList.builder();
         ArrayList<ContentChunk> chunks = new ArrayList<>();
+        ImmutableList.Builder<AutoCompleteDetails<CodeCompletionContext>> nestedCompletions = ImmutableList.builder();
         RemovedCharacters removedCharacters = new RemovedCharacters();
         nextToken: while (curIndex < content.length())
         {
@@ -176,6 +176,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     removedCharacters.orShift(lexerResult.removedChars, curIndex + lexerResult.adjustedContent.length());
                     chunks.add(new ContentChunk(lexerResult.adjustedContent, lexerResult.display, ChunkType.NESTED));
                     chunks.add(new ContentChunk("}", ChunkType.NESTED));
+                    nestedCompletions.addAll(Utility.mapListI(lexerResult.autoCompleteDetails, acd -> offsetBy(acd, caretPosOffset)));
                     curIndex = end + RawInputLocation.ONE;
                     continue nextToken;
                 }
@@ -200,17 +201,6 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 @CanonicalLocation int startOfType = removedCharacters.map(curIndex);
                 String match = parsed.getFirst().either(dt -> dt.toString(), s -> s);
                 
-                // Add any relevant autocompletes:
-                for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes()))
-                {
-                    @SuppressWarnings("units")
-                    @CanonicalLocation int common = Utility.longestCommonStart(match, 0, dataType.toString(), 0);
-                    if (common > 0)
-                    {
-                        autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(startOfType, startOfType + common), (@CanonicalLocation int caretPos) -> ImmutableList.of(new LexCompletionGroup(ImmutableList.of(typeCompletion(dataType, startOfType))))));
-                    }
-                }
-                
                 final @RawInputLocation int curIndexFinal = curIndex;
                 parsed.getFirst().either_(dataType -> {
                     saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndexFinal, parsed.getSecond()), c -> {});
@@ -232,18 +222,6 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             curIndex += RawInputLocation.ONE;
         }
         @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
-        
-        // We still add auto-complete even when empty:
-        if (content.isEmpty())
-        {
-            ImmutableList.Builder<LexCompletion> emptyCompletions = ImmutableList.builder();
-            for (DataType dataType : Utility.<DataType>iterableStream(streamDataTypes()))
-            {
-                emptyCompletions.add(typeCompletion(dataType, CanonicalLocation.ZERO));
-            }
-            ImmutableList<LexCompletion> built = emptyCompletions.build();
-            autoCompletes.add(new AutoCompleteDetails<>(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), (caretPos) -> ImmutableList.of(new LexCompletionGroup(built))));
-        }
         
         ArrayList<CaretPos> caretPositions = calculateCaretPos(chunks);
         StyledString built = chunks.stream().map(c -> c.displayContent).collect(StyledString.joining(""));
@@ -327,17 +305,32 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         if (saved.isEmpty() && emptyAllowed)
             errors = ImmutableList.of();
         
-        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, autoCompletes.build(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
+    }
+    
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
+    {
+        return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(
+            streamDataTypes().map(t -> {
+                int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);
+                return typeCompletion(t, canonIndex, len);
+            }).collect(ImmutableList.<LexCompletion>toImmutableList())
+        )));
     }
 
-    protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start)
+    protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start, int lengthToShowFor)
     {
-        return new LexCompletion(start, dataType.toString().length(), dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
+        return new LexCompletion(start, lengthToShowFor, dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
     }
 
     private Stream<DataType> streamDataTypes()
     {
         return Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.TEXT, DataType.BOOLEAN), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))));
+    }
+
+    private AutoCompleteDetails<CodeCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
+    {
+        return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new CodeCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
     @SuppressWarnings({"identifier", "units"})

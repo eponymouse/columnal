@@ -10,6 +10,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.LexCompletion;
+import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
@@ -81,6 +83,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     {
         UnitSaver saver = new UnitSaver();
         RemovedCharacters removedCharacters = new RemovedCharacters();
+        ImmutableList.Builder<ContentChunk> chunks = ImmutableList.builder();
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         nextToken: while (curIndex < content.length())
         {
@@ -89,6 +92,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 if (content.startsWith(bracket.getContent(), curIndex))
                 {
                     saver.saveBracket(bracket, removedCharacters.map(curIndex, bracket.getContent()), c -> {});
+                    chunks.add(new ContentChunk(bracket.getContent(), ChunkType.NON_IDENT));
                     curIndex += rawLength(bracket.getContent());
                     continue nextToken;
                 }
@@ -98,6 +102,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 if (content.startsWith(op.getContent(), curIndex))
                 {
                     saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()), c -> {});
+                    chunks.add(new ContentChunk(op.getContent(), ChunkType.NON_IDENT));
                     curIndex += rawLength(op.getContent());
                     continue nextToken;
                 }
@@ -114,7 +119,9 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 }
                 while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
                     curIndex += RawInputLocation.ONE;
-                saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(content.substring(startIndex, curIndex))), removedCharacters.map(startIndex, curIndex), c -> {});
+                String numContent = content.substring(startIndex, curIndex);
+                saver.saveOperand(new UnitExpressionIntLiteral(Integer.parseInt(numContent)), removedCharacters.map(startIndex, curIndex), c -> {});
+                chunks.add(new ContentChunk(numContent, ChunkType.IDENT));
                 continue nextToken;
             }
 
@@ -122,12 +129,15 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 saver.saveOperand(new SingleUnitExpression(parsed.getFirst()), removedCharacters.map(curIndex, parsed.getSecond()), c -> {});
+                chunks.add(new ContentChunk(parsed.getFirst(), ChunkType.IDENT));
                 curIndex = parsed.getSecond();
                 continue nextToken;
             }
 
             CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
-            saver.saveOperand(new InvalidSingleUnitExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            String badChar = content.substring(curIndex, curIndex + 1);
+            saver.saveOperand(new InvalidSingleUnitExpression(badChar), invalidCharLocation, c -> {});
+            chunks.add(new ContentChunk(badChar, ChunkType.NON_IDENT));
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             
             curIndex += RawInputLocation.ONE;
@@ -153,6 +163,14 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         }
         
         
-        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), saver.locationRecorder, ImmutableList.of(), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks.build(), this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
+    }
+    
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
+    {
+        return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(Utility.mapListI(unitManager.getAllDeclared(), u -> {
+            int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);
+            return new LexCompletion(canonIndex, len, u.getName());
+        }))));
     }
 }

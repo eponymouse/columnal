@@ -25,6 +25,18 @@ public class LexCompletion
     @Nullable Pair<String, @Nullable String> furtherDetailsURL;
     String sideText = "";
 
+    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL, String sideText)
+    {
+        this.startPos = startPos;
+        this.lastShowPosIncl = lastShowPosIncl;
+        this.content = content;
+        this.display = display;
+        this.relativeCaretPos = relativeCaretPos;
+        this.selectionBehaviour = selectionBehaviour;
+        this.furtherDetailsURL = furtherDetailsURL;
+        this.sideText = sideText;
+    }
+
     public LexCompletion(@CanonicalLocation int startPos, int lengthToShowFor, String content)
     {
         this.startPos = startPos;
@@ -100,5 +112,10 @@ public class LexCompletion
     public int hashCode()
     {
         return Objects.hash(startPos, content, display, relativeCaretPos, selectionBehaviour, furtherDetailsURL);
+    }
+
+    public LexCompletion offsetBy(@CanonicalLocation int offsetBy)
+    {
+        return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetailsURL, sideText);
     }
 }

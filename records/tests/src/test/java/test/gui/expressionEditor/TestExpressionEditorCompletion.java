@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -169,23 +170,25 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkCompletions(c("My Number", 0,5, 7,7), 
                 c("true", 0,0, 7,8),
                 c("false", 0,0, 7,7),
-                c("@then", 0,0, 7,7, 8,8),
+                c("@then", 0,0, 7,8),
                 c("@if", 0,0, 7,7));
     }
     
     @Test
     public void testCompIf() throws Exception
     {
-        loadExpression("@if true | false @then 12 @else @call@function from text to(type{Number}, \"34\")@endif");
+        loadExpression("@if true | false @then 12{m} @else @call@function from text to(type{Number{m}}, \"34\")@endif");
         // Will turn into:
-        // @iftrue|false@then12@elsefrom text to(type{Number},"34")
+        // @iftrue|false@then12{m}@elsefrom text to(type{Number{m}},"34")
         checkCompletions(
             // match at the start of every token:
-            c("@match", 0,0, 3,3, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
-            c("@then", 0,0, 3,4, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
-            c("false", 0,0, 3,3, 8,13, 18,18, 25,26, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
-            c("type{}", 0,0, 3,4, 8,8, 18,18, 25,25, 38,38, 50,50, 51,51, 55,55, 56,56, 62,62),
-            c("Boolean", 43, 43)
+            c("@match", 0,0, 3,3, 8,8, 18,18, 23,23, 28,28, 41,41, 56,56, 57,57, 61,61, 62,62),
+            c("@then", 0,0, 3,4, 8,8, 18,18, 23,23, 28,28, 41,41, 56,56, 57,57, 61,61, 62,62),
+            c("false", 0,0, 3,3, 8,13, 18,18, 23,23, 28,29, 41,41, 56,56, 57,57, 61,61, 62,62),
+            c("type{}", 0,0, 3,4, 8,8, 18,18, 23,23, 28,28, 41,41, 56,56, 57,57, 61,61, 62,62),
+            c("Boolean", 46, 46),
+            c("min", 21,22, 53,54),
+            c("hour", 21,21, 53, 53)
         );
     }
     
@@ -262,8 +265,11 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         @SuppressWarnings("units") // Because passes through IntStream
         @CanonicalLocation int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
         double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
-        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getScene() == completions.get(0).getScene()).queryAll());
-        double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> t.localToScreen(t.getBoundsInLocal()).getMinX()).min()).orElse(-1);
+        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && !((Text)n).getText().isEmpty() && !((Text)n).getText().equals("Related") && n.getScene() == completions.get(0).getScene()).queryAll());
+        double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> {
+            Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
+            return t.localToScreen(t.getBoundsInLocal()).getMinX();
+        }).average()).orElse(-1);
         MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 0.5));
     }
 

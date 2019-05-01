@@ -2,8 +2,10 @@ package records.gui.lexeditor.completion;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledString;
+import utility.Utility;
 
 import java.util.OptionalInt;
 
@@ -37,5 +39,15 @@ public class LexCompletionGroup
             return new LexCompletionGroup(filtered);
         else
             return new LexCompletionGroup(filtered, header, minCollapsed.getAsInt());
+    }
+
+    public LexCompletionGroup offsetBy(@CanonicalLocation int offsetBy)
+    {
+        ImmutableList<LexCompletion> offset = Utility.mapListI(completions, c -> c.offsetBy(offsetBy));
+
+        if (header == null || !minCollapsed.isPresent())
+            return new LexCompletionGroup(offset);
+        else
+            return new LexCompletionGroup(offset, header, minCollapsed.getAsInt());
     }
 }
