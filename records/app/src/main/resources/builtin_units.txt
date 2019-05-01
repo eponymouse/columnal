@@ -26,6 +26,10 @@ UNIT g "Grams"
 UNIT kg "Kilograms" = 1000 * g
 UNIT mg "Milligrams" = 10^-3 * g
 
+UNIT Hz "Hertz"
+UNIT kHz "Kilohertz" = 1000 * Hz
+UNIT MHz "Megahertz" = 10^6 * Hz
+UNIT GHz "Gigahertz" = 10^9 * Hz
 
 UNIT USD "US Dollars" PREFIX "$"
 // ALIAS $ = USD
