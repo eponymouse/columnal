@@ -53,7 +53,7 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
-    public static @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom)
+    public static @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceIfEndsAt)
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         Lexer lexer = new ExpressionLexer(inputStream);
@@ -67,20 +67,23 @@ public class IdentifierUtility
         {
             @SuppressWarnings("units")
             @RawInputLocation int end = startFrom + token.getStopIndex() + 1;
-            return new Pair<>(token.getText(), end);
+            if (end + 1 == includeTrailingSpaceIfEndsAt && end < content.length() && content.charAt(end) == ' ')
+                return new Pair<>(token.getText() + " ", end + RawInputLocation.ONE);
+            else
+                return new Pair<>(token.getText(), end);
         }
         else
             return null;
     }
 
-    public static @Nullable Pair<String, @RawInputLocation Integer> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom)
+    public static @Nullable Pair<String, @RawInputLocation Integer> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceIfEndsAt)
     {
-        @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom);
+        @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceIfEndsAt);
         if (before != null)
         {
             if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == ':')
             {
-                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE);
+                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE, includeTrailingSpaceIfEndsAt);
                 if (after != null)
                 {
                     return new Pair<>(before.getFirst() + ":" + after.getFirst(), after.getSecond());

@@ -111,7 +111,9 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     private void checkCompletions(CompletionCheck... checks)
     {
         EditorDisplay editorDisplay = lookup(".editor-display").query();
-        push(KeyCode.HOME);
+        // We go from end in case there is a trailing space,
+        // which will be removed once we go backwards:
+        push(KeyCode.END);
         int prevPos = -1;
         int curPos;
         while (prevPos != (curPos = TestUtil.fx(() -> editorDisplay.getCaretPosition())))
@@ -149,7 +151,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
                 }
             }
             prevPos = curPos;
-            push(KeyCode.RIGHT);
+            push(KeyCode.LEFT);
         }
     }
     
@@ -160,8 +162,10 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkCompletions(c("My Number", 0, 0));
         write("My Nu");
         checkCompletions(c("My Number", 0, 5));
+        push(KeyCode.END);
         write("Q");
         checkCompletions(c("My Number", 0, 5));
+        push(KeyCode.END);
         write("+t");
         // Content is now:
         // My NuQ+t
@@ -349,5 +353,19 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
         assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @column My Number", finish().toString());
+    }
+    
+    @Test
+    public void testCompPartial() throws Exception
+    {
+        // From a failing test:
+        loadExpression("@unfinished \"\"");
+        write("as type(type{Number{1}},from ");
+        // Get rid of auto-inserted bracket:
+        push(KeyCode.DELETE);
+        checkCompletions(
+            c("type{}", 0,0, 8,8, 23,23, 24,24),
+            c("from text()", 0,0, 8,8, 23,23, 24,29)
+        );
     }
 }

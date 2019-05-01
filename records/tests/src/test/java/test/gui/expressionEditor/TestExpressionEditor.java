@@ -21,6 +21,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryBooleanColumn;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -239,7 +240,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             DataType.BOOLEAN, // Type is unused here
             ImmutableList.of(),
             dummyManager.getTypeManager(),
-            new KnownLengthRecordSet(ImmutableList.of(), 0),
+            new KnownLengthRecordSet(ImmutableList.of(rs -> new MemoryBooleanColumn(rs, new ColumnId("Col1"), ImmutableList.of(), true)), 0),
             expression,
             null
         ), new Random(0));
@@ -559,5 +560,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testConcat() throws Exception
     {
         testSimple("\"\";(\"A\";\"B\")");
+    }
+    
+    @Test
+    public void testColumnReference() throws Exception
+    {
+        testSimple("@entire Col1");
     }
 }
