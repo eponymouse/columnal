@@ -130,7 +130,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
 
             int pageHeight = TestUtil.fx(() -> virtualGrid.calcPageHeight());
 
-            push(KeyCode.CONTROL, KeyCode.HOME);
+            push(KeyCode.SHORTCUT, KeyCode.HOME);
             // First go to correct row:
             for (int i = 0; i < target.rowIndex / pageHeight; i++)
             {

@@ -62,7 +62,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         TestUtil.fx_(windowToUse::requestFocus);
         assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
         Log.debug("Focus owner: " + TestUtil.fx(() -> windowToUse.getScene().getFocusOwner()));
-        push(KeyCode.CONTROL, KeyCode.HOME);        
+        push(KeyCode.SHORTCUT, KeyCode.HOME);        
         assertEquals(Optional.of(true), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN))));
         checkSelectionOnScreen("Origin", virtualGrid);
         @SuppressWarnings("nullness")
