@@ -53,6 +53,31 @@
         </example>
     </function>
     
+    <function name="element or">
+        <synonym>previous</synonym>
+        <typeArg>t</typeArg>
+        <argType name="list">[@typevar t]</argType>
+        <argType name="position">Number</argType>
+        <argType name="default">@typevar t</argType>
+        <returnType name="list item">@typevar t</returnType>
+        <description>
+            <p>If the number is within the bounds of the list, gives back the element at that position (e.g. 3 gets the 3rd item in the list).  But if the number is 0 or less, or greater than the list size, the third parameter will be returned instead.</p>
+            <p>This is particularly useful for accessing the previous row of a column and avoiding an error on the first element, for example <code>@call @function element or(@entire Totals, row - 1, 0)</code> in a Calculate will give the value from the Totals column in the previous row, or 0 if this is the first row of the table.</p>
+        </description>
+        <example>
+            <inputArg>(["a", "b"], 0, "z")</inputArg>
+            <output>"z"</output>
+        </example>
+        <example>
+            <inputArg>([7, 8, 9], 3, 0)</inputArg>
+            <output>9</output>
+        </example>
+        <example>
+            <inputArg>([true, true, true], 5, false)</inputArg>
+            <output>false</output>
+        </example>
+    </function>
+    
     <function name="in list">
         <synonym>contains</synonym>
         

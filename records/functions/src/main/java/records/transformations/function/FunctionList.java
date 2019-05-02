@@ -50,6 +50,7 @@ public class FunctionList
             new DaysBetween(),
             new ExtractNumber(),
             new GetElement(),
+            new GetElementOrDefault(),
             new InList(),
             new JoinLists(),
             new KeepFunction(),
