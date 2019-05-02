@@ -54,7 +54,7 @@ class LexCompletionList extends Region
     // The top Y coordinate of the header (if present, first item if not) of each group in curCompletions.  These coordinates
     // are relative to the pane.  Due to the pinning, it is possible
     // that the next group begins before the previous one ends.
-    // These may also change as scrolling happens
+    // These will change as scrolling happens
     private double[] groupTopY = new double[0];
     // Scroll from top, if nothing was pinned.  Always zero or positive
     private double scrollOffset;
@@ -177,19 +177,27 @@ class LexCompletionList extends Region
     {
         Insets insets = getInsets();
         double width = getWidth() - insets.getRight() - insets.getLeft();
-        double y = insets.getTop() - (scrollOffset % ITEM_HEIGHT);
-        double maxY = getHeight() - insets.getTop() - insets.getBottom();
         int rowSize = allDisplayRows.size();
-        for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < rowSize && y < maxY; i++, y += ITEM_HEIGHT)
+
+        for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
-            CompletionRow flow = visible.get(allDisplayRows.get(i));
-            // Should always be non-null, but need to guard
-            if (flow != null)
+            LexCompletionGroup group = curCompletionGroups.get(groupIndex);
+            double y = groupTopY[groupIndex];
+            double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeight() - insets.getTop() - insets.getBottom();
+            for (int i = group.header != null ? -1 : 0; i < group.completions.size() && y < maxY; i++, y += ITEM_HEIGHT)
             {
-                flow.resizeRelocate(insets.getLeft(), y, width, ITEM_HEIGHT);
-                flow.clip.setWidth(width);
-                flow.clip.setY(Math.max(y, insets.getTop()) - y);
-                flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
+                if (y >= -ITEM_HEIGHT)
+                {
+                    CompletionRow flow = visible.get(i == -1 ? Either.right(group) : Either.left(group.completions.get(i)));
+                    // Should always be non-null, but need to guard
+                    if (flow != null)
+                    {
+                        flow.resizeRelocate(insets.getLeft(), y, width, ITEM_HEIGHT);
+                        flow.clip.setWidth(width);
+                        flow.clip.setY(Math.max(y, insets.getTop()) - y);
+                        flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
+                    }
+                }
             }
         }
     }
@@ -198,27 +206,30 @@ class LexCompletionList extends Region
     {
         Set<Either<LexCompletion, LexCompletionGroup>> toKeep = Sets.newHashSet();
         groupTopY = new double[curCompletionGroups.size()];
-        for (int i = 0; i < groupTopY.length; i++)
-        {
-            groupTopY[i] = Double.MAX_VALUE;
-        }
         LexCompletion sel = selectedItem.get();
-        double y = -(scrollOffset % ITEM_HEIGHT);
-        int rowSize = allDisplayRows.size();
-        for (int i = (int)(scrollOffset / ITEM_HEIGHT); i < rowSize && y < computePrefHeight(-1); i++, y += ITEM_HEIGHT)
+        double y = getInsets().getTop() -scrollOffset;
+        // We go up from bottom, presuming that the top group takes left-over space:
+        for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
-            Either<LexCompletion, LexCompletionGroup> row = allDisplayRows.get(i);
-            double thisY = y;
-            row.ifLeft(c -> {
-                Pair<Integer, Integer> indexes = completionIndexes.get(c);
-                if (indexes != null)
-                    groupTopY[indexes.getFirst()] = Math.min(groupTopY[indexes.getFirst()], thisY - ((indexes.getSecond() + (curCompletionGroups.get(indexes.getFirst()).header != null ? 1 : 0)) * ITEM_HEIGHT));
-            });
+            groupTopY[groupIndex] = y;
+            double maxY = computePrefHeight(-1) - getInsets().getTop() - getInsets().getBottom() - curCompletionGroups.stream().skip(groupIndex + 1).mapToDouble(g -> ITEM_HEIGHT * ((g.header != null ? 1 : 0) + Math.min(g.completions.size(), g.minCollapsed.orElse(0)))).sum();
+
+            LexCompletionGroup group = curCompletionGroups.get(groupIndex);
+
+            for (int i = group.header != null ? -1 : 0; i < group.completions.size() && y < maxY; i++, y += ITEM_HEIGHT)
+            {
+                if (y >= -ITEM_HEIGHT)
+                {
+                    Either<LexCompletion, LexCompletionGroup> row = i == -1 ? Either.right(group) : Either.left(group.completions.get(i));
+                    CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
+                    FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
+                    toKeep.add(row);
+                }
+            }
             
-            CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
-            FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
-            toKeep.add(row);
+            y = maxY;
         }
+        
         visible.entrySet().removeIf(e -> !toKeep.contains(e.getKey()));
         requestLayout();
     }
@@ -261,14 +272,27 @@ class LexCompletionList extends Region
     {
         selectionIndex = target;
         selectedItem.setValue(target == null ? null : curCompletionGroups.get(target.getFirst()).completions.get(target.getSecond()));
-
-        double minY = Math.max(0, allDisplayRows.indexOf(target == null ? null : Either.left(completionIndexes.inverse().get(target)))) * ITEM_HEIGHT;
-        double maxY = minY + ITEM_HEIGHT;
-        if (minY < scrollOffset)
-            scrollOffset = minY;
-        else if (getHeight() >= ITEM_HEIGHT && maxY > scrollOffset + getHeight())
-            scrollOffset = maxY - getHeight();
         
+        if (target == null)
+        {
+            scrollOffset = 0;
+        }
+        else
+        {
+            // In terms of virtual coordinates from very top of list
+            double selectedTopY = Math.max(0, allDisplayRows.indexOf(Either.left(completionIndexes.inverse().get(target)))) * ITEM_HEIGHT;
+            double selectedBottomY = selectedTopY + ITEM_HEIGHT;
+            // In terms of pane coordinates
+            double groupBottomY;
+            if (target == null || target.getFirst() + 1 >= groupTopY.length)
+                groupBottomY = getHeight();
+            else
+                groupBottomY = groupTopY[target.getFirst() + 1];
+            if (selectedTopY < scrollOffset)
+                scrollOffset = selectedTopY;
+            else if (groupBottomY >= ITEM_HEIGHT && selectedBottomY > scrollOffset + groupBottomY)
+                scrollOffset = selectedBottomY - groupBottomY;
+        }
         // Update graphics:
         recalculateChildren();
     }
