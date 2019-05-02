@@ -182,6 +182,8 @@
             <xs:sequence>
                 <xs:element ref="guide" minOccurs="1" maxOccurs="unbounded"/>
             </xs:sequence>
+            <!-- For when it's imported by XInclude -->
+            <xs:attribute ref="xml:base"/>
         </xs:complexType>
     </xs:element>
     
@@ -365,9 +367,10 @@
 
     <xs:element name="all">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="functionDocumentation" maxOccurs="unbounded"/>
-            </xs:sequence>
+            <xs:choice minOccurs="1" maxOccurs="unbounded">
+                <xs:element ref="functionDocumentation"/>
+                <xs:element ref="guides"/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
 </xs:schema>
