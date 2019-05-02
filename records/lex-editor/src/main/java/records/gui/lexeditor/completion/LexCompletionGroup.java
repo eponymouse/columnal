@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledString;
 import utility.Utility;
 
+import java.util.Optional;
 import java.util.OptionalInt;
 
 public class LexCompletionGroup
@@ -32,9 +33,11 @@ public class LexCompletionGroup
         this.minCollapsed = OptionalInt.of(minCollapsed);
     }
     
-    public LexCompletionGroup filterForPos(@CanonicalLocation int caretPos)
+    public @Nullable LexCompletionGroup filterForPos(@CanonicalLocation int caretPos)
     {
         ImmutableList<LexCompletion> filtered = completions.stream().filter(c -> c.startPos <= caretPos && caretPos <= c.lastShowPosIncl).collect(ImmutableList.<LexCompletion>toImmutableList());
+        if (filtered.isEmpty())
+            return null;
         if (header == null || !minCollapsed.isPresent())
             return new LexCompletionGroup(filtered);
         else

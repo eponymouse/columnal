@@ -48,6 +48,7 @@ import utility.gui.FXUtility;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -123,7 +124,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
             List<LexCompletion> showing = TestUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
             for (CompletionCheck check : checks)
             {
-                ImmutableList<LexCompletion> matching = showing.stream().filter(l -> l.content.equals(check.content)).collect(ImmutableList.toImmutableList());
+                ImmutableList<LexCompletion> matching = showing.stream().filter(l -> Objects.equals(l.content, check.content)).collect(ImmutableList.toImmutableList());
                 
                 boolean wasChecked = false;
                 for (Pair<Integer, Integer> startInclToEndIncl : check.startInclToEndIncl)

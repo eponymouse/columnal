@@ -98,7 +98,11 @@ public class LexAutoCompleteWindow extends PopupControl
     @OnThread(Tag.FXPlatform)
     public @Nullable String _test_getSelectedContent()
     {
-        return Utility.onNullable(listView.getSelectedItem(), l -> l.content);
+        LexCompletion selectedItem = listView.getSelectedItem();
+        if (selectedItem == null)
+            return null;
+        else
+            return selectedItem.content;
     }
 
     public ImmutableList<LexCompletion> _test_getShowing()

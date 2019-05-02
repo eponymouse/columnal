@@ -1,6 +1,7 @@
 package records.gui.lexeditor.completion;
 
 import annotation.units.CanonicalLocation;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import styled.StyledString;
@@ -17,23 +18,26 @@ public class LexCompletion
 {
     public final @CanonicalLocation int startPos;
     public final @CanonicalLocation int lastShowPosIncl;
-    public String content;
+    // If null, completing does not change content, but rather 
+    public @MonotonicNonNull String content;
     StyledString display;
     public int relativeCaretPos;
     LexSelectionBehaviour selectionBehaviour;
     // HTML file name (e.g. function-abs.html) and optional anchor
-    @Nullable Pair<String, @Nullable String> furtherDetailsURL;
-    String sideText = "";
+    public @MonotonicNonNull Pair<String, @Nullable String> furtherDetailsURL;
+    String sideText;
 
-    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL, String sideText)
+    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, @Nullable String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL, String sideText)
     {
         this.startPos = startPos;
         this.lastShowPosIncl = lastShowPosIncl;
-        this.content = content;
+        if (content != null)
+            this.content = content;
         this.display = display;
         this.relativeCaretPos = relativeCaretPos;
         this.selectionBehaviour = selectionBehaviour;
-        this.furtherDetailsURL = furtherDetailsURL;
+        if (furtherDetailsURL != null)
+            this.furtherDetailsURL = furtherDetailsURL;
         this.sideText = sideText;
     }
 
@@ -47,7 +51,12 @@ public class LexCompletion
         this.display = StyledString.s(content);
         this.relativeCaretPos = content.length();
         this.selectionBehaviour = LexSelectionBehaviour.NO_AUTO_SELECT;
-        this.furtherDetailsURL = null;
+        this.sideText = "";
+    }
+    
+    public LexCompletion(@CanonicalLocation int startIncl, @CanonicalLocation int endIncl, StyledString display, String htmlPageName)
+    {
+        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, new Pair<>(htmlPageName, null), "");
     }
     
     public LexCompletion withReplacement(String newContent)
@@ -84,7 +93,8 @@ public class LexCompletion
     
     public LexCompletion withFurtherDetailsURL(@Nullable String url)
     {
-        this.furtherDetailsURL = url == null ? null : new Pair<>(url, null);
+        if (url != null)
+            this.furtherDetailsURL = new Pair<>(url, null);
         return this;
     }
     
@@ -102,7 +112,7 @@ public class LexCompletion
         LexCompletion that = (LexCompletion) o;
         return startPos == that.startPos &&
                 relativeCaretPos == that.relativeCaretPos &&
-                content.equals(that.content) &&
+                Objects.equals(content, that.content) &&
                 display.equals(that.display) &&
                 selectionBehaviour == that.selectionBehaviour &&
                 Objects.equals(furtherDetailsURL, that.furtherDetailsURL);

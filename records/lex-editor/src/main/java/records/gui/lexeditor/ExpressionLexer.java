@@ -524,7 +524,24 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         addKeywordCompletions(completions, stem, canonIndex);
 
-        return new ExpressionCompletionContext(sort(completions.build()));
+        ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> directAndRelated = completions.build();
+        ImmutableList.Builder<LexCompletion> guides = ImmutableList.builder();
+        // Only add guides at positions where there are already completions:
+        if (!directAndRelated.isEmpty())
+        {
+            @SuppressWarnings("units") // Due to IntStream use
+            @CanonicalLocation int start = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.startPos).min().orElse(canonIndex);
+            @SuppressWarnings("units") // Due to IntStream use
+            @CanonicalLocation int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).min().orElse(canonIndex);
+            guides.add(guideCompletion("Expressions", "expressions", start, end));
+        }
+        
+        return new ExpressionCompletionContext(sort(directAndRelated, guides.build()));
+    }
+
+    private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
+    {
+        return new LexCompletion(start, end, StyledString.s(name), "guide-" + guideFileName + ".html");
     }
 
     private void addKeywordCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> completions, String stem, @CanonicalLocation int canonIndex)
@@ -938,7 +955,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
     
-    private static ImmutableList<LexCompletionGroup> sort(ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> completions)
+    private static ImmutableList<LexCompletionGroup> sort(ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> completions, ImmutableList<LexCompletion> guides)
     {
         ImmutableList.Builder<LexCompletionGroup> groups = ImmutableList.builder();
 
@@ -952,12 +969,23 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             groups.add(new LexCompletionGroup(related, StyledString.s("Related"), 2));
         }
+        if (!guides.isEmpty())
+        {
+            groups.add(new LexCompletionGroup(guides, StyledString.s("Help"), 1));
+        }
         
         return groups.build();
     }
     private static ImmutableList<LexCompletion> sort(Stream<ExpressionCompletion> completions)
     {
-        return completions.sorted(Comparator.<ExpressionCompletion, Integer>comparing(c -> c.completionType.ordinal()).thenComparing((c1, c2) -> c1.completion.content.compareToIgnoreCase(c2.completion.content))).map(c -> c.completion).collect(ImmutableList.<LexCompletion>toImmutableList());
+        return completions.sorted(Comparator.<ExpressionCompletion, Integer>comparing(c -> c.completionType.ordinal()).thenComparing((c1, c2) -> {
+            if (c1.completion.content == null)
+                return -1;
+            else if (c2.completion.content == null)
+                return 1;
+            else
+                return c1.completion.content.compareToIgnoreCase(c2.completion.content);
+        })).map(c -> c.completion).collect(ImmutableList.<LexCompletion>toImmutableList());
     }
     
     private static enum WordPosition

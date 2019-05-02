@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // Like a ListView, but with customisations to allow pinned "related" section
@@ -211,7 +212,7 @@ class LexCompletionList extends Region
             row.ifLeft(c -> {
                 Pair<Integer, Integer> indexes = completionIndexes.get(c);
                 if (indexes != null)
-                    groupTopY[indexes.getFirst()] = Math.min(groupTopY[indexes.getFirst()], thisY - (indexes.getSecond() * ITEM_HEIGHT));
+                    groupTopY[indexes.getFirst()] = Math.min(groupTopY[indexes.getFirst()], thisY - ((indexes.getSecond() + (curCompletionGroups.get(indexes.getFirst()).header != null ? 1 : 0)) * ITEM_HEIGHT));
             });
             
             CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
@@ -283,10 +284,14 @@ class LexCompletionList extends Region
         {
             if (selectionIndex.getSecond() > 0)
                 select(selectionIndex.mapSecond(n -> n - 1));
-            else if (selectionIndex.getFirst() > 0)
-                select(new Pair<>(selectionIndex.getFirst() - 1, curCompletionGroups.get(selectionIndex.getFirst() - 1).completions.size() - 1));
             else
-                select(null);
+            {
+                OptionalInt prevNonEmpty = Utility.findLastIndex(curCompletionGroups.subList(0, selectionIndex.getFirst()), g -> !g.completions.isEmpty());
+                if (prevNonEmpty.isPresent())
+                    select(new Pair<>(prevNonEmpty.getAsInt(), curCompletionGroups.get(prevNonEmpty.getAsInt()).completions.size() - 1));
+                else
+                    select(null);
+            }
         }
     }
 

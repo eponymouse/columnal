@@ -20,6 +20,8 @@ import javafx.scene.text.Text;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
@@ -39,6 +41,12 @@ import utility.gui.FXUtility;
 import utility.gui.TextEditorBase;
 import utility.gui.TimedFocusable;
 
+import javax.swing.SwingUtilities;
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.BitSet;
 import java.util.OptionalInt;
 
@@ -310,8 +318,27 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     @SuppressWarnings("units")
     private void triggerSelection(LexCompletion p)
     {
-        content.replaceText(p.startPos, content.getCaretPosition(), p.content);
-        content.positionCaret(p.startPos + p.relativeCaretPos, true);
+        if (p.content != null)
+        {
+            content.replaceText(p.startPos, content.getCaretPosition(), p.content);
+            content.positionCaret(p.startPos + p.relativeCaretPos, true);
+        }
+        else if (p.furtherDetailsURL != null)
+        {
+            @NonNull Pair<String, @Nullable String> furtherDetailsURL = p.furtherDetailsURL;
+            SwingUtilities.invokeLater(() -> {
+                try
+                {
+                    URL resource = getClass().getResource("/" + furtherDetailsURL.getFirst());
+                    if (resource != null)
+                        Desktop.getDesktop().browse(resource.toURI());
+                }
+                catch (Exception e)
+                {
+                    Log.log(e);
+                }
+            });
+        }
     }
 
     private void render(boolean contentChanged)

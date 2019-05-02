@@ -22,6 +22,6 @@ public class CodeCompletionContext
 
     public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int caretPos)
     {
-        return Utility.mapListI(completions, g -> g.filterForPos(caretPos));
+        return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
     }
 }
