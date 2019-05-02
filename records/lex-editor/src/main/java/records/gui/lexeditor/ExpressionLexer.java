@@ -532,7 +532,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             @SuppressWarnings("units") // Due to IntStream use
             @CanonicalLocation int start = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.startPos).min().orElse(canonIndex);
             @SuppressWarnings("units") // Due to IntStream use
-            @CanonicalLocation int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).min().orElse(canonIndex);
+            @CanonicalLocation int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).max().orElse(canonIndex);
             guides.add(guideCompletion("Expressions", "expressions", start, end));
         }
         
