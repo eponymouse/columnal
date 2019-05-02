@@ -192,7 +192,7 @@ public class ArrayExpression extends Expression
         return items.hashCode();
     }
 
-    public ImmutableList<@Recorded Expression> _test_getElements()
+    public ImmutableList<@Recorded Expression> getElements()
     {
         return items;
     }

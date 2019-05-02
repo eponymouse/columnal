@@ -246,7 +246,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     public void testListBracketFix3() throws UserException, InternalException
     {
         // If user tries to use array index syntax, offer the element function instead:
-        testFix("@entire ACC1[3]+1", "3", dotCssClassFor("@call @function element(@entire ACC1, 3)"), "@call @function element(@entire ACC1,3)+1");
+        testFix("@entire ACC1[3]+2", "1", "." + ExpressionUtil.makeCssClass("element(@entire ACC1, 3)"), "@call @function element(@entire ACC1,3)+2");
     }
     
     @Test

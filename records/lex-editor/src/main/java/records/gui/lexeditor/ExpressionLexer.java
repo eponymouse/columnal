@@ -33,6 +33,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import records.typeExp.TypeExp;
@@ -54,6 +55,19 @@ import java.util.stream.Stream;
 
 public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionContext>
 {
+    private static ImmutableList<StandardFunctionDefinition> getAllFunctions(FunctionLookup functionLookup)
+    {
+        try
+        {
+            return functionLookup.getAllFunctions();
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            return ImmutableList.of();
+        }
+    }
+
     /**
      * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
      * item, and thus always completes immediately when directly matched.
@@ -124,15 +138,18 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     
     private final ObservableObjectValue<ColumnLookup> columnLookup;
     private final TypeManager typeManager;
-    private ImmutableList<StandardFunctionDefinition> allFunctions;
+    private final FunctionLookup functionLookup;
+    private final ImmutableList<StandardFunctionDefinition> allFunctions;
     private final FXPlatformSupplierInt<TypeState> makeTypeState;
     private final @Nullable DataType expectedType;
 
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, ImmutableList<StandardFunctionDefinition> functions, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
         this.columnLookup = columnLookup;
         this.typeManager = typeManager;
-        this.allFunctions = functions;
+        this.functionLookup = functionLookup;
+        // Get functions once rather than every time we need them:
+        this.allFunctions = getAllFunctions(functionLookup);
         this.makeTypeState = makeTypeState;
         this.expectedType = expectedType;
     }
@@ -140,7 +157,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     @Override
     public LexerResult<Expression, ExpressionCompletionContext> process(String content, @RawInputLocation int curCaretPos)
     {
-        ExpressionSaver saver = new ExpressionSaver();
+        ExpressionSaver saver = new ExpressionSaver(functionLookup);
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         // Index is in original parameter "content":
         RemovedCharacters removedChars = new RemovedCharacters();

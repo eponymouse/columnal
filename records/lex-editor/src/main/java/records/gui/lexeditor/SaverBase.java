@@ -533,9 +533,23 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected class CollectedItems
     {
+        private class InvalidReason
+        {
+            private final CanonicalSpan location;
+            private final StyledString error;
+            private final ImmutableList<TextQuickFix> fixes;
+
+            public InvalidReason(CanonicalSpan location, StyledString error, ImmutableList<TextQuickFix> fixes)
+            {
+                this.location = location;
+                this.error = error;
+                this.fixes = fixes;
+            }
+        }
+        
         // This is like a boolean; empty means valid, non-empty means invalid
         // because of those errors.
-        private ArrayList<Pair<CanonicalSpan, StyledString>> invalidReasons;
+        private ArrayList<InvalidReason> invalidReasons;
         private final ArrayList<Either<OpAndNode, @Recorded EXPRESSION>> invalid;
         private final ArrayList<@Recorded EXPRESSION> validOperands;
         private final ArrayList<OpAndNode> validOperators;
@@ -550,9 +564,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             @Recorded EXPRESSION expression = record(location, makeInvalid.apply(
                     Utility.<Either<OpAndNode, @Recorded EXPRESSION>, @Recorded EXPRESSION>mapListI(invalid, et -> et.<@Recorded EXPRESSION>either(o -> record(o.sourceNode, opToInvalid(o.op)), x -> x))
             ));
-            for (Pair<CanonicalSpan, StyledString> invalidReason : invalidReasons)
+            for (InvalidReason invalidReason : invalidReasons)
             {
-                locationRecorder.addErrorAndFixes(invalidReason.getFirst(), invalidReason.getSecond(), ImmutableList.of());
+                locationRecorder.addErrorAndFixes(invalidReason.location, invalidReason.error, invalidReason.fixes);
             }
             return expression;
         }
@@ -594,7 +608,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     if (lastWasOperand.get() && iFinal > 0)
                     {
                         CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression);
-                        invalidReasons.add(new Pair<>(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator")));
+                        invalidReasons.add(new InvalidReason(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"), fixesForAdjacentOperands(validOperands.get(validOperands.size() - 2), expression)));
                     }
                     lastWasOperand.set(true);
                     lastNodeSpan.set(recorderFor(expression));
@@ -621,7 +635,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         else
                         {
                             CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : op.sourceNode;
-                            invalidReasons.add(new Pair<>(CanonicalSpan.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators")));
+                            invalidReasons.add(new InvalidReason(CanonicalSpan.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators"), ImmutableList.of()));
                         }
                     }
                     lastWasOperand.set(false);
@@ -632,9 +646,15 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             // Must end with operand:
             if (!lastWasOperand.get() && lastNodeSpan.get() != null)
             {
-                invalidReasons.add(new Pair<>(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator.")));
+                invalidReasons.add(new InvalidReason(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator."), ImmutableList.of()));
             }
         }
+    }
+    
+    // For overriding in child classes
+    protected ImmutableList<TextQuickFix> fixesForAdjacentOperands(@Recorded EXPRESSION first, @Recorded EXPRESSION second)
+    {
+        return ImmutableList.of();
     }
 
     /**

@@ -9,7 +9,6 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.scene.input.DataFormat;
 import javafx.util.Duration;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -18,7 +17,6 @@ import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -26,7 +24,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.function.FunctionLookup;
-import records.transformations.expression.function.StandardFunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -43,7 +40,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, @Nullable DataType expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? null : startingValue.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, getAllFunctions(functionLookup), makeTypeState, expectedType), onChangeHandler, "expression-editor");
+        super(startingValue == null ? null : startingValue.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), onChangeHandler, "expression-editor");
         
         FXUtility.onceNotNull(display.sceneProperty(), s -> {
             FXUtility.onceNotNull(s.windowProperty(), w -> {
@@ -83,19 +80,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
         return new Dimension2D(500.0, 65.0);
     }
 
-    private static ImmutableList<StandardFunctionDefinition> getAllFunctions(FunctionLookup functionLookup)
-    {
-        try
-        {
-            return functionLookup.getAllFunctions();
-        }
-        catch (InternalException e)
-        {
-            Log.log(e);
-            return ImmutableList.of();
-        }
-    }
-    
     @OnThread(Tag.FXPlatform)
     public static interface ColumnPicker
     {

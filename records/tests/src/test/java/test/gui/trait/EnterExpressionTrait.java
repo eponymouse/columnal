@@ -71,7 +71,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             ArrayExpression t = (ArrayExpression)expression;
             write("[");
             push(KeyCode.DELETE);
-            ImmutableList<Expression> members = t._test_getElements();
+            ImmutableList<Expression> members = t.getElements();
             for (int i = 0; i < members.size(); i++)
             {
                 if (i > 0)

@@ -231,11 +231,6 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return locationRecorder.recordUnit(location, unitExpression);
     }
 
-    public static ImmutableList<OperatorExpressionInfo> getOperators()
-    {
-        return new UnitSaver().OPERATORS;
-    }
-
     @Override
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded UnitExpression expression)
     {

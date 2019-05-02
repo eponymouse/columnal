@@ -12,14 +12,18 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -47,6 +51,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             this.expressions = expressions;
         }
+    }
+    
+    private final FunctionLookup functionLookup;
+
+    public ExpressionSaver(FunctionLookup functionLookup)
+    {
+        this.functionLookup = functionLookup;
     }
 
     @Override
@@ -764,11 +775,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         return locationRecorder.record(location, expression);
     }
-    
-    public static ImmutableList<ImmutableList<OperatorExpressionInfo>> getOperators()
-    {
-        return new ExpressionSaver().OPERATORS;
-    }
 
     @Override
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
@@ -777,5 +783,32 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY),
             DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY)
         );
+    }
+
+    @Override
+    protected ImmutableList<TextQuickFix> fixesForAdjacentOperands(@Recorded Expression first, @Recorded Expression second)
+    {
+        // We look for things where people have tried to use
+        // C/Java style array indexing of lists.  Because it's invalid
+        // we can't know types, so we use syntax.
+        // For the list we look for @entire column references
+        // (most likely item by far to be a list).
+        if (first instanceof ColumnReference && second instanceof ArrayExpression)
+        {
+            ColumnReference columnReference = (ColumnReference) first;
+            ArrayExpression arrayExpression = (ArrayExpression) second;
+            
+            if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN && arrayExpression.getElements().size() == 1)
+            {
+                CanonicalSpan location = new CanonicalSpan(locationRecorder.recorderFor(first).start, locationRecorder.recorderFor(second).end);
+                
+                return ImmutableList.of(new <Expression>TextQuickFix("fix.useElement",location, () -> {
+                    Expression callElement = new CallExpression(functionLookup, "element", first, arrayExpression.getElements().get(0));
+                    return new Pair<>(callElement.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), callElement.toStyledString());
+                }));
+            }
+        }
+        
+        return super.fixesForAdjacentOperands(first, second);
     }
 }
