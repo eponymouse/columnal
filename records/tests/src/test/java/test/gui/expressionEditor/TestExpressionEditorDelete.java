@@ -180,7 +180,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
-        clickOn(".cancel-button");
+        moveAndDismissPopupsAtPos(point(".cancel-button"));
+        clickOn();
     }
     
     private void testBackspaceRetype(String original, int deleteBefore, int deleteCount, String retype, Random r) throws Exception
@@ -208,7 +209,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         assertEquals(originalExp, after);
 
-        clickOn(".cancel-button");
+        moveAndDismissPopupsAtPos(point(".cancel-button"));
+        clickOn();
     }
 
     private void testDeleteBackspace(String original, int deleteAfterPos, int deleteCount, String expectedStr, Random r, int... cutCount) throws Exception
@@ -273,7 +275,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         assertEquals(expectedExp, after);
 
-        clickOn(".cancel-button");
+        moveAndDismissPopupsAtPos(point(".cancel-button"));
+        clickOn();
     }
 
     private void testCut(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
@@ -315,6 +318,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private EditorDisplay enter(Expression expression, Random r) throws Exception
     {
         Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+        push(KeyCode.SHORTCUT, KeyCode.HOME);
         for (int i = 0; i < 2; i++)
             clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         clickOn(".id-new-transform");
