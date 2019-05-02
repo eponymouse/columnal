@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<guides xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd">
+    <guide id="expressions">
+        <section id="overview">
+            <title>Expressions</title>
+            <p>Example expressions are <code>1 + 2</code>, <code>row / 5</code>, <code>@if row &lt; 10 @then 0 @else row @endif</code>.  Expressions are called formulas in spreadsheets.  They are a way of performing some calculation, generally as part of a larger transformation.  For example, Calculate processes the expression once per row and shows the value, Filter processes the expression once per row and keeps only certain rows.</p>
+            <p>Expressions very often use the values of columns in them.  Unlike spreadsheets, columns are referred to by name (rather than cell references like B6).  Columns can be referred to either as a single value on the current row, or as a list of all the values in the column.</p>
+        </section>
+        <section id="columns">
+            <title>Columns</title>
+            <p>Most expressions use a column.  This might be to use a column value to filter out some rows (e.g. <code>Sales &gt; 0</code>, or to subtract the value in one column from the value in another (e.g. <code>After - Before</code>.</p>
+            <p>To use the value of a column on the current row in a Filter or Calculate, just type the name of the column, e.g. <code>Price</code>.  If you need to use the whole column as a list, type <code>@entire Price</code>.  The entire column can be useful if you need access to specific entries using the <link namespace="list" function="element"/> or <link namespace="list" function="element or"/> functions, but an Aggregate transformation which helps to calculate column totals, averages, etc, may be more appropriate.</p>
+        </section>
+        <section id="maths">
+            <title>Numeric calculations</title>
+            <p>The standard add (+), subtract (-), multiply (*), divide (/) and raise-to-power (^) operators can be used to perform calculations.  If the order of operations is unclear, the operators must be bracketed, e.g. <code>1 + 2 * 3</code> is not allowed, it must either be written <code>(1 + 2) * 3</code> or <code>1 + (2 * 3)</code>.</p>
+            <p>A useful feature to avoid mistakes is the idea of units of measure.  Numbers can be given units, and they will be tracked through calculations, converted between, and checked.  For example, <code>15{m}</code> means 15 metres, and <code>15{m} / 60{s}</code> will give 0.25{m/s}.  If you try to compare mismatching units such as <code>(15{m} / 60{s}) &lt; 10{mile/hour}</code> then you will get an error, which helps avoid mistakes with different quantities.  More information on this is available in the <link guide="units">units guide</link>.</p>
+        </section>
+        <section id="text">
+            <title>Text manipulation</title>
+            <p>Text values can be joined together using the ; operator.  For example, <code>"a" ; "bc" ; "d"</code> gives "abcd".  Lists of text can be joined together with <link namespace="text" function="join text"/> or if a separator (e.g. a comma) is needed between each item then <link namespace="text" function="join text with"/>.</p>
+            <p>Text is stored as Unicode, meaning that it can deal with non-English characters, emoji and the rest of the Unicode standard.</p>
+        </section>
+        <section id="comparisons">
+            <title>Comparison</title>
+            <p>You can use the less-than (&lt;), less-than-or-equal-to (&lt;=), greater-than (&gt;) and greater-than-or-equal-to(&gt;=) operators to compare values.  You can also chain together several operators of the same direction, for example <code>1 &lt;= row &lt;= 10</code> checks if row is between 1 and 10 (inclusive).</p>
+            <p>If you need the lowest or highest item in a list, you can use the <link namespace="comparison" function="minimum"/> and <link namespace="comparison" function="maximum"/>, which work on any types (numbers, text, dates, etc).</p>
+        </section>
+        <section id="equality">
+            <title>Equality</title>
+            <p>You can use the equals (=) and not equals (&lt;&gt;) operators to compare values for being the same.  You can only compare items which have the same type.</p>
+            <p>It is also possible to compare a value against a pattern such as <code>5 &#x00B1; 0.01</code> (meaning within 0.01 of 5) or <code>"The" ; _</code> (meaning any text beginning with "The").  See the section <a href="#pattern">on patterns</a> for more details.</p>
+        </section>
+        <section id="pattern">
+            <title>Patterns</title>
+            <p>A pattern is a way to flexibly compare against a value.  For example, you may want to check if two columns have almost the same numeric value, <code>Actual = Forecast</code> will be false if say Actual was 2.356 and Forecast was 2.353.  Instead you can use <code>Actual = Forecast &#x00B1; 0.01</code> which checks if they are within 0.01 of each other.</p>
+            <p>Another example where patterns are very useful is in text matching.   Often you want to match the beginning, something in the middle, or the end, but not the entire text.  <code>Animal = _ ; "cat"</code> will check if the Animal text ends with "cat".  Underscore means match anything, as you want to match anything followed by cat.  If you want to use the value of part of the pattern afterwards then you can put a name with the underscore, for example <code>@if Animal = _type ; "cat" @then "Cat type: " ; type @else "Not a cat" @endif</code> applied to "Wildcat" will give back "Cat type: Wild".</p>
+        </section>
+        <section id="ifthenelse">
+            <title>If Then Else</title>
+            <p>It is very common to need to choose between two alternatives based on some condition.  For example, <code>@if Amount &gt;= 0 @then "Incoming" @else "Outgoing" @endif</code> chooses which text to display based on the value in the amount column.</p>
+            <p>The format is always <code>@if condition @then value_if_true @else value_if_false @endif</code>.  The condition part usually involves <a href="#comparison">a comparison</a> or <a href="#equality">an equality check</a>, the latter of which may feature a <a href="#pattern">pattern</a>.</p>
+            <p>If you need to compare one value against many possibilities, you may find a <a href="#match">match expression</a> better than multiple if-then-else expressions.</p>
+        </section>
+        <section id="match">
+            <title>Match Expressions</title>
+            <p>Sometimes you may want to compare a value against multiple possible alternatives.  For example, <code>@match Level @case "High" @then 2 @case "Medium" @then 1 @case "Low" @then 0 @endmatch</code> matches Level against High/Medium/Low and gives back the number 2/1/0 respectively.</p>
+            <p>It is also possible to attach extra conditions to each case using @given, for example <code>@match Amount @case _n @given n &lt; 0 @then "Negative" @case 0 @then "Zero" @case _n @given n &gt; 0 @then "Positive" @endmatch</code> works out whether the number is negative, zero or positive.</p>
+            <p>Cases inside a match are checked in order, so often the last item can be @case _ meaning match anything, given that that the earlier matches failed.  If no cases match then an error will occur.</p>
+        </section>
+    </guide>
+    <guide id="conversion">
+        <section id="overview">
+            <title>Converting between types</title>
+            <p>Projects often have a mix of different types, and it is common to require conversion between different types.  Which conversion is required depends on which types are involved.</p>
+            <ul>
+                <li><a href="#from_text">Converting from text to another type.</a></li>
+                <li><a href="#to_text">Converting from a type into text.</a></li>
+                <li><a href="#units">Converting numbers between different units.</a></li>
+                <li><a href="#temporal">Converting between different date and time types.</a></li>
+            </ul>
+        </section>
+        <section id="from_text">
+            <title>Converting from text to another type</title>
+            <p>Converting from text is primarily done using the <link namespace="conversion" function="from text"/> and <link namespace="conversion" function="from text to"/> functions.  The destination type that is being converted from needs to be known ahead of time.  Often this is apparent from the context and thus the simpler <link namespace="conversion" function="from text"/> can be used.  In cases where this is not possible, you will be prompted to use <link namespace="conversion" function="from text to"/> instead, where the type is specified.</p>
+            <example>
+                <description>Converts to number</description>
+                <input>@call @function from text("63.3") + 1</input>
+                <output>64.3</output>
+            </example>
+            <example>
+                <input>@if @call @function from text("true") @then 1 @else 0 @endif</input>
+                <output>1</output>
+            </example>
+            <example>
+                <description>Tries converting to number, but text is not a valid number</description>
+                <input>@call @function from text("true") + 1</input>
+                <output>error</output>
+            </example>
+            <example>
+                <description>Converts to a time</description>
+                <input>@call @function from text to(type{Time}, "7:35PM")</input>
+                <output>time{19:35}</output>
+            </example>
+            <example>
+                <description>Converts to list of numbers (note the square brackets)</description>
+                <input>@call @function from text to(type{[Number]}, "[1, 2]")</input>
+                <output>[1, 2]</output>
+            </example>
+        </section>
+        <section id="to_text">
+            <title>Converting from another type to text</title>
+            <p>Converting to text is primarily done using the <link namespace="conversion" function="to text"/> function.  This converts each type into its standard text form.  Several examples are below.  Most types are straightforward, although note that times convert to the 24-hour clock and dates convert to the ISO 8601 YYYY-MM-DD format.</p>
+            <example>
+                <input>@call @function to text(10 - 45.60)</input>
+                <output>"-35.6"</output>
+            </example>
+            <example>
+                <input>@call @function to text([true, "a" = "b"])</input>
+                <output>"[true, false]"</output>
+            </example>
+            <example>
+                <input>@call @function to text(datetime{14 April 2008 5:38PM})</input>
+                <output>"2018-04-14 17:38"</output>
+            </example>
+        </section>
+        <section id="units">
+            <title>Converting numbers between different units</title>
+            <p>There are three main types of conversion (with more examples below):</p>
+            <ul>
+                <li>Converting between related units.  For example, you may want to convert from inches to metres.  This is done using the <link namespace="core" function="as unit"/> function.  For example, <code>@call @function as unit({s}, 1.25{min})</code> will return 75{s} (s being the unit for seconds, min being minutes).</li>
+                <li>Converting from a plain number to a number with units.  This is done by multiplying by the number 1 with the attached unit.  For example, to convert the row number to a number of minutes, use <code>row * 1{min}</code>.  More examples are below</li>
+                <li>Converting from a number with units to a plain number.  This is done by dividing by the number 1 with the units to get rid of.  For example, <code>12{hour} / 1{hour}</code> will give the result 12 without units.</li>
+            </ul>
+            <example>
+                <input>@call @function as unit({mile/hour}, 10{m/s})</input>
+                <outputPattern>22.369 &#x00b1; 0.001</outputPattern>
+            </example>
+            <example>
+                <input>@call @function as unit({m/s}, 1{mile} / 4{min})</input>
+                <outputPattern>6.705 &#x00b1; 0.001</outputPattern>
+            </example>
+            <example>
+                <input>5262.3 * 1{kg}</input>
+                <output>5262.3{kg}</output>
+            </example>
+            <example>
+                <input>32.5{year} / 1{year}</input>
+                <output>32.5</output>
+            </example>
+        </section>
+        <section id="temporal">
+            <title>Converting between different date and time types</title>
+            <p>Converting between different date and time types is usually a matter of composing, decomposing or differencing.</p>
+            <p>Composing means making smaller parts into larger, for example converting a Date and a Time into a DateTime, or converting a year and a month into a DateYM.  Such functions are:</p>
+            <ul>
+                <li><link namespace="datetime" function="date"/></li>
+                <li><link namespace="datetime" function="time"/></li>
+                <li><link namespace="datetime" function="datetime"/></li>
+                <li><link namespace="datetime" function="dateym"/></li>
+                <li><link namespace="datetime" function="datetimezoned"/></li>
+            </ul>
+            <p>Decomposing larger parts into smaller items, for example extracting the Date from a DateTime, or the year from a Date.  Such functions are:</p>
+            <ul>
+                <li><link namespace="datetime" function="date from datetime"/></li>
+                <li><link namespace="datetime" function="date from datetimezoned"/></li>
+                <li><link namespace="datetime" function="time from datetime"/></li>
+                <li><link namespace="datetime" function="time from datetimezoned"/></li>
+                <li><link namespace="datetime" function="datetime from datetimezoned"/></li>
+                <li><link namespace="datetime" function="dateym from date"/></li>
+            </ul>
+            <p>Differencing means comparing two items of the same date or time type, to work out the distance between them.  Such functions are:</p>
+            <ul>
+                <li><link namespace="datetime" function="days between"/></li>
+                <li><link namespace="datetime" function="seconds between"/></li>
+            </ul>
+            <example>
+                <input>@call @function dateym(2008{year}, 3{month})</input>
+                <output>dateym{2008-03}</output>
+            </example>
+        </section>
+    </guide>
+    <guide id="units">
+        <section>
+            <title>Units of measure</title>
+            <p>Numbers often relate to some unit, such as metres, dollars, grams, items sold, and so on.  Units of measure all you to track which units a number is measured in, which can help you to remember the units, and also check that two numbers with different units are not compared (e.g. comparing centimetres to metres, or dollars to euros).</p>
+            <p>Units are written after the Number type in curly brackets.  To associate a numeric column with a unit, change its type from Number to for example, Number{mile}.  To write a number in an expression with a given unit, write the unit after the number, for example 60{s} or 2.54{cm} or 10{m/s}.</p>
+            <p>Units can be multiplied together or divided, for example speed might use the unit {m/s} (metres per second) and acceleration might be {m^2/s}.  These units are tracked when you multiply or divide, so <code>10{m} / 4{s}</code> gives 2.5{m/s}, and <code>30{USD}/2{hour}</code> gives 15{USD/hour}.</p>
+            <p>Several units are built-in to the software, such as m (metres), s (seconds), year, USD (US dollars) and more.</p>
+            <p>Many numeric functions work on numbers with units, and preserve them, e.g. <code>abs(-1{hour})</code> will give back 1{hour}.</p>
+            <p>For information on converting between units, see the <link guide="conversion">conversion guide</link>.</p>
+        </section>
+    </guide>
+</guides>

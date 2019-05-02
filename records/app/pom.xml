@@ -305,6 +305,7 @@
                             <otherDepends>conversion.xml</otherDepends>
                             <otherDepends>core.xml</otherDepends>
                             <otherDepends>datetime.xml</otherDepends>
+                            <otherDepends>guides.xml</otherDepends>
                             <otherDepends>list.xml</otherDepends>
                             <otherDepends>listprocess.xml</otherDepends>
                             <otherDepends>literals.xml</otherDepends>

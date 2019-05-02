@@ -163,7 +163,19 @@ body.indiv .seeAlso .seeAlsoHeader {
     }
 }
 
-.description code {
+code {
     background-color: grey(95%);
     font-family: "Noto Sans";
+}
+
+div.section {
+    p, .examples {
+        padding-left: 20pt;
+    }
+}
+span.title {
+    font-size: 150%;
+    font-weight: bold;
+    padding-top: 15pt;
+    padding-bottom: 10pt; 
 }

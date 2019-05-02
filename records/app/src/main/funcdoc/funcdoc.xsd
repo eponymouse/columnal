@@ -152,6 +152,39 @@
         </xs:complexType>
     </xs:element>
     
+    <xs:element name="guide">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="section" minOccurs="1" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="title" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                            <xs:choice minOccurs="1" maxOccurs="unbounded">
+                                <xs:element ref="p"/>
+                                <xs:element ref="ul"/>
+                            </xs:choice>
+                            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                                <xs:element ref="example"/>
+                                <xs:element ref="exampleGroup"/>
+                            </xs:choice>
+                            <xs:element ref="seeAlso" minOccurs="0" maxOccurs="1"/>
+                        </xs:sequence>
+                        <xs:attribute name="id" type="xs:string" use="optional"/>
+                    </xs:complexType>
+                </xs:element>                
+            </xs:sequence>
+            <xs:attribute name="id" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="guides">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="guide" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
     <xs:element name="syntax">
         <xs:complexType>
             <xs:sequence>
@@ -281,37 +314,43 @@
                     <xs:attribute name="literal" use="optional" type="xs:string"/>
                     <xs:attribute name="namespace" use="optional" type="xs:string"/>
                     <xs:attribute name="type" use="optional" type="xs:string"/>
+                    <xs:attribute name="guide" use="optional" type="xs:string"/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="p">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="a"/>
+                <xs:element ref="link"/>
+                <xs:element name="code" type="xs:string"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ul">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+                <xs:element name="li">
+                    <xs:complexType mixed="true">
+                        <xs:choice minOccurs="0" maxOccurs="unbounded">
+                            <xs:element ref="a"/>
+                            <xs:element ref="link"/>
+                            <xs:element name="code" type="xs:string"/>
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
     <xs:element name="description">
         <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element name="p">
-                    <xs:complexType mixed="true">
-                        <xs:sequence>
-                            <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
-                            <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
-                            <xs:element name="code" minOccurs="0" maxOccurs="unbounded"/>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-                <xs:element name="ul">
-                    <xs:complexType>
-                        <xs:sequence maxOccurs="unbounded">
-                            <xs:element name="li">
-                                <xs:complexType mixed="true">
-                                    <xs:sequence>
-                                        <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
-                                        <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
+            <xs:choice minOccurs="1" maxOccurs="unbounded">
+                <xs:element ref="p"/>
+                <xs:element ref="ul"/>
             </xs:choice>
         </xs:complexType>
     </xs:element>

@@ -5,6 +5,7 @@
     <xi:include href="conversion.xml"/>
     <xi:include href="core.xml"/>
     <xi:include href="datetime.xml"/>
+    <xi:include href="guides.xml"/>
     <xi:include href="list.xml"/>
     <xi:include href="listprocess.xml"/>
     <xi:include href="literals.xml"/>

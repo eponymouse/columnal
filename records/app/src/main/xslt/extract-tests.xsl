@@ -119,4 +119,8 @@
             <xsl:call-template name="processSyntax"/>
         </xsl:for-each>
     </xsl:template>
+
+    <!-- Skip other nodes (e.g. guides) -->
+    <xsl:template match="@*|node()">
+    </xsl:template>
 </xsl:stylesheet>

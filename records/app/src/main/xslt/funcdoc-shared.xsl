@@ -237,10 +237,11 @@
         </div>
     </xsl:template>
 
-    <!-- Copy all p, ul, li, code as-is: -->
-    <xsl:template match="p|ul|li|code">
+    <!-- Copy all a, p, ul, li, code as-is: -->
+    <xsl:template match="a|p|ul|li|code">
          <xsl:copy>
-               <xsl:apply-templates select="@* | node()" />
+             <xsl:copy-of select="@*"/>
+             <xsl:apply-templates select="node()" />
          </xsl:copy>
     </xsl:template>
 
