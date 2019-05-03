@@ -2,8 +2,11 @@ package test.gui.trait;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import log.Log;
@@ -55,18 +58,33 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         }
         dataType.apply(new DataTypeVisitor<UnitType>()
         {
+            private void writeOrPaste(String content)
+            {
+                if (r.nextInt(3) == 1)
+                {
+                    TestUtil.fx_(() -> {
+                        Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content));
+                    });
+                    push(KeyCode.SHORTCUT, KeyCode.V);
+                }
+                else
+                {
+                    write(content, DELAY);    
+                }
+            }
+            
             @Override
             public UnitType number(NumberInfo numberInfo) throws InternalException, UserException
             {                
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
-                write(num, DELAY);
+                writeOrPaste(num);
                 return UnitType.UNIT;
             }
 
             @Override
             public UnitType text() throws InternalException, UserException
             {
-                write("\"" + GrammarUtility.escapeChars(Utility.cast(value, String.class)) + "\"", DELAY);
+                writeOrPaste("\"" + GrammarUtility.escapeChars(Utility.cast(value, String.class)) + "\"");
                 return UnitType.UNIT;
             }
 
@@ -110,7 +128,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             public UnitType bool() throws InternalException, UserException
             {
                 // Delete the false which is a placeholder:
-                write(Boolean.toString(Utility.cast(value, Boolean.class)), DELAY);
+                writeOrPaste(Boolean.toString(Utility.cast(value, Boolean.class)));
                 return UnitType.UNIT;
             }
             
@@ -118,7 +136,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                write(DataTypeUtility.valueToString(dataType, value, null));
+                writeOrPaste(DataTypeUtility.valueToString(dataType, value, null));
                 return UnitType.UNIT;
             }
 

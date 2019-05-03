@@ -12,6 +12,7 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -139,7 +140,7 @@ public class  DocumentTextField extends TextEditorBase implements DocumentListen
         {
             if (FXUtility.checkKeyTyped(keyEvent))
             {
-                document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), keyEvent.getCharacter());
+                replaceSelection(keyEvent.getCharacter());
                 moveAnchorToCaret();
             }
         }
@@ -206,10 +207,17 @@ public class  DocumentTextField extends TextEditorBase implements DocumentListen
                 anchorPosition.moveTo(0);
                 caretPosition.moveTo(document.getLength());
             }
+
+            if (keyEvent.getCode() == KeyCode.V && keyEvent.isShortcutDown())
+            {
+                String clip = Clipboard.getSystemClipboard().getString();
+                if (clip != null && !clip.isEmpty())
+                    replaceSelection(clip);
+            }
             
             if ((keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) && caretPosition.getPosition() != anchorPosition.getPosition())
             {
-                document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), "");
+                replaceSelection("");
             }
             else if (keyEvent.getCode() == KeyCode.BACK_SPACE && caretPosition.getPosition() > 0)
             {
@@ -225,6 +233,11 @@ public class  DocumentTextField extends TextEditorBase implements DocumentListen
                 document.defocus(keyEvent.getCode());
             }
         }
+    }
+
+    private void replaceSelection(String character)
+    {
+        document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), character);
     }
 
     private void moveAnchorToCaret()
