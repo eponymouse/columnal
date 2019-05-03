@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
-    <Product Version='19.4.17' Id='f2ba1501-064c-4522-b486-e9c834dcbf49'
+    <Product Version='19.5.3' Id='050a413f-799e-4af3-8de9-e2c7c66d5436'
              Name='Columnal' UpgradeCode='365af26c-7f60-4f62-a734-607da8d2e637'
              Language='1033' Codepage='1252' Manufacturer='Eponymouse'>
 
