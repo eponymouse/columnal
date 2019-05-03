@@ -139,4 +139,9 @@ public class LexCompletion
     {
         return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText);
     }
+
+    public boolean showFor(@CanonicalLocation int caretPos)
+    {
+        return startPos <= caretPos && caretPos <= lastShowPosIncl;
+    }
 }

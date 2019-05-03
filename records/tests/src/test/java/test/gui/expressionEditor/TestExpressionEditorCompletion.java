@@ -160,12 +160,27 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     public void testCompColumn() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        checkCompletions(c("My Number", 0, 0));
+        checkCompletions(
+            c("My Number", 0, 0),
+            c("@entire My Number", 0, 0),
+            c("My Calc"), // Shouldn't see our own column
+            c("@entire My Calc")
+        );
         write("My Nu");
-        checkCompletions(c("My Number", 0, 5));
+        checkCompletions(
+            c("My Number", 0, 5),
+            c("@entire My Number", 0, 5),
+            c("My Calc"), // Shouldn't see our own column
+            c("@entire My Calc")
+        );
         push(KeyCode.END);
         write("Q");
-        checkCompletions(c("My Number", 0, 5));
+        checkCompletions(
+            c("My Number", 0, 5),
+            c("@entire My Number", 0, 5),
+            c("My Calc"), // Shouldn't see our own column
+            c("@entire My Calc")
+        );
         push(KeyCode.END);
         write("+t");
         // Content is now:
@@ -250,7 +265,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@unfinished \"\"");
         write("@ent");
         checkPosition();
-        push(KeyCode.DOWN);
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());

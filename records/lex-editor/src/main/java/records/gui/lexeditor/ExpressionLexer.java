@@ -49,7 +49,6 @@ import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -656,13 +655,16 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
             {
                 String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + ":") + availableColumn.getColumnId().getRaw();
-                Optional<Pair<CompletionStatus, LexCompletion>> entire = matchWordStart(stem, canonIndex, "@entire " + withoutEntire, WordPosition.FIRST_WORD).map(c -> c.mapFirst(w -> CompletionStatus.DIRECT));
-                if (!entire.isPresent())
+                ArrayList<Pair<CompletionStatus, LexCompletion>> colCompletions = new ArrayList<>();
+                matchWordStart(stem, canonIndex, "@entire " + withoutEntire, WordPosition.FIRST_WORD).map(c -> c.mapFirst(w -> CompletionStatus.DIRECT)).ifPresent(colCompletions::add);
+                
+                // Add a related item if matches without the entire
+                matchWordStart(stem, canonIndex, withoutEntire, WordPosition.FIRST_WORD_NON_EMPTY).map(p -> p.map(w -> CompletionStatus.RELATED, c -> c.withReplacement("@entire " + withoutEntire))).ifPresent(colCompletions::add);
+
+                for (Pair<CompletionStatus, LexCompletion> p : colCompletions)
                 {
-                    // Add a related item if matches without the entire
-                    entire = matchWordStart(stem, canonIndex, withoutEntire, WordPosition.FIRST_WORD).map(p -> p.map(w -> CompletionStatus.RELATED, c -> c.withReplacement("@entire " + withoutEntire)));
+                    identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN)));
                 }
-                entire.ifPresent(p -> identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
         }
     }
@@ -1011,6 +1013,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private static enum WordPosition
     {
         FIRST_WORD,
+        FIRST_WORD_NON_EMPTY,
         LATER_WORD
     }
 
@@ -1038,6 +1041,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             return Optional.of(new Pair<>(WordPosition.FIRST_WORD, new LexCompletion(startPos, 0, completionText)));
 
         boolean firstWord = Arrays.asList(possiblePositions).contains(WordPosition.FIRST_WORD);
+        boolean firstWordNonEmpty = Arrays.asList(possiblePositions).contains(WordPosition.FIRST_WORD_NON_EMPTY);
         boolean laterWord = Arrays.asList(possiblePositions).contains(WordPosition.LATER_WORD);
         int curCompletionStart = 0;
         do
@@ -1045,7 +1049,18 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             int len = Utility.longestCommonStartIgnoringCase(completionText, curCompletionStart, src.getFirst(), src.getSecond());
             if (len > 0 || (firstWord && len == 0 && curCompletionStart == 0))
             {
-                return Optional.of(new Pair<>(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(startPos, len, completionText)));
+                return Optional.of(new Pair<>(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(startPos, len, completionText) {
+                    @Override
+                    public boolean showFor(@CanonicalLocation int caretPos)
+                    {
+                        if (firstWordNonEmpty)
+                        {
+                            return startPos < caretPos && caretPos <= lastShowPosIncl;
+                        }
+                        else
+                            return super.showFor(caretPos);
+                    }
+                }));
             }
             curCompletionStart = completionText.indexOf(' ', curCompletionStart);
             // If not -1, it's one char past the space, otherwise leave as -1:

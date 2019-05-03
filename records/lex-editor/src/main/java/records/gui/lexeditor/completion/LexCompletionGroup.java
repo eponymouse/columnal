@@ -2,12 +2,10 @@ package records.gui.lexeditor.completion;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledString;
 import utility.Utility;
 
-import java.util.Optional;
 import java.util.OptionalInt;
 
 public class LexCompletionGroup
@@ -35,7 +33,7 @@ public class LexCompletionGroup
     
     public @Nullable LexCompletionGroup filterForPos(@CanonicalLocation int caretPos)
     {
-        ImmutableList<LexCompletion> filtered = completions.stream().filter(c -> c.startPos <= caretPos && caretPos <= c.lastShowPosIncl).collect(ImmutableList.<LexCompletion>toImmutableList());
+        ImmutableList<LexCompletion> filtered = completions.stream().filter(c -> c.showFor(caretPos)).collect(ImmutableList.<LexCompletion>toImmutableList());
         if (filtered.isEmpty())
             return null;
         if (header == null || !minCollapsed.isPresent())
