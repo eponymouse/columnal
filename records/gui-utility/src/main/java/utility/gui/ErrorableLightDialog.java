@@ -50,7 +50,7 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
                 }
                 else
                 {
-                    Log.logStackTrace("OK pressed successfully but blank result");
+                    Log.logStackTrace("OK pressed successfully but blank result for " + getClass());
                 }
             }
             return null;

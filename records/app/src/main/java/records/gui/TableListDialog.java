@@ -44,7 +44,6 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
         this.parent = parent;
         this.excludeTables = ImmutableSet.of(destTable);
         tableList = new TableList(originalItems);            
-        getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         Region tableListNode = tableList.getNode();
         tableListNode.setMinWidth(200.0);
         tableListNode.setMinHeight(150.0);
