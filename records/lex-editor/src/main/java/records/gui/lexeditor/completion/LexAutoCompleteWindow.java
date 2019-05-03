@@ -35,6 +35,10 @@ public class LexAutoCompleteWindow extends PopupControl
         this.listView = new LexCompletionList(triggerCompletion);
         WebView webView = new WebView();
         webView.setFocusTraversable(false);
+        FXUtility.addChangeListenerPlatformNN(webView.visibleProperty(), vis -> {
+            webView.managedProperty().set(vis);
+            sizeToScene();
+        });
         webView.setPrefWidth(400.0);
         webView.setVisible(false);
         listView.setMaxHeight(400.0);
