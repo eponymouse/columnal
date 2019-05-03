@@ -270,7 +270,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         @SuppressWarnings("units") // Because passes through IntStream
         @CanonicalLocation int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
         double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
-        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && !((Text)n).getText().isEmpty() && !((Text)n).getText().equals("Related") && n.getScene() == completions.get(0).getScene()).queryAll());
+        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && !((Text)n).getText().isEmpty() && !((Text)n).getText().equals("Related") && !((Text)n).getText().equals("Help") && n.getScene() == completions.get(0).getScene()).queryAll());
         double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> {
             Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
             return t.localToScreen(t.getBoundsInLocal()).getMinX();
