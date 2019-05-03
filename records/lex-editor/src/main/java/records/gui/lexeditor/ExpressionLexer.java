@@ -45,6 +45,7 @@ import utility.FXPlatformSupplierInt;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.*;
@@ -649,7 +650,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
             {
-                matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond(), CompletionType.COLUMN))));
+                matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond().withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
             
             if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
@@ -661,9 +662,28 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     // Add a related item if matches without the entire
                     entire = matchWordStart(stem, canonIndex, withoutEntire, WordPosition.FIRST_WORD).map(p -> p.map(w -> CompletionStatus.RELATED, c -> c.withReplacement("@entire " + withoutEntire)));
                 }
-                entire.ifPresent(p -> identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c, CompletionType.COLUMN))));
+                entire.ifPresent(p -> identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
         }
+    }
+
+    private String htmlForColumn(ColumnReference c)
+    {
+        String funcdocURL = FXUtility.getStylesheet("funcdoc.css");
+        String webURL = FXUtility.getStylesheet("web.css");
+        
+        return "<html>\n" +
+                "   <head>\n" +
+                "      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
+                "      <link rel=\"stylesheet\" href=\"" + funcdocURL + "\">\n" +
+                "      <link rel=\"stylesheet\" href=\"" + webURL + "\">\n" +
+                "   </head>\n" +
+                "   <body class=\"indiv\">\n" +
+                "      <div class=\"column-item\"><span class=\"column-header\"/>" + (c.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + (c.getTableId() != null ? c.getTableId().getRaw() + ":<wbr>" : "") + c.getColumnId().getRaw() + "</span>" +
+                (c.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW ? 
+                    ("<p>This uses the value of the column in the current row.</p>") :
+                    ("<p>This gives the whole set of values from the column as a list.</p>")) +
+                "</div></body></html>";
     }
 
     /**

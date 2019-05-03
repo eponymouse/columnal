@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import styled.StyledString;
+import utility.Either;
 import utility.Pair;
 
 import java.util.Objects;
@@ -23,11 +24,13 @@ public class LexCompletion
     StyledString display;
     public int relativeCaretPos;
     LexSelectionBehaviour selectionBehaviour;
-    // HTML file name (e.g. function-abs.html) and optional anchor
-    public @MonotonicNonNull Pair<String, @Nullable String> furtherDetailsURL;
+    // Either:
+    //   - Left(HTML content)
+    //   - Right(HTML file name (e.g. function-abs.html), optional anchor)
+    public @MonotonicNonNull Either<String, Pair<String, @Nullable String>> furtherDetails;
     String sideText;
 
-    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, @Nullable String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Pair<String, @Nullable String> furtherDetailsURL, String sideText)
+    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, @Nullable String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Either<String, Pair<String, @Nullable String>> furtherDetails, String sideText)
     {
         this.startPos = startPos;
         this.lastShowPosIncl = lastShowPosIncl;
@@ -36,8 +39,8 @@ public class LexCompletion
         this.display = display;
         this.relativeCaretPos = relativeCaretPos;
         this.selectionBehaviour = selectionBehaviour;
-        if (furtherDetailsURL != null)
-            this.furtherDetailsURL = furtherDetailsURL;
+        if (furtherDetails != null)
+            this.furtherDetails = furtherDetails;
         this.sideText = sideText;
     }
 
@@ -56,7 +59,7 @@ public class LexCompletion
     
     public LexCompletion(@CanonicalLocation int startIncl, @CanonicalLocation int endIncl, StyledString display, String htmlPageName)
     {
-        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, new Pair<>(htmlPageName, null), "");
+        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, Either.right(new Pair<>(htmlPageName, null)), "");
     }
     
     public LexCompletion withReplacement(String newContent)
@@ -94,7 +97,13 @@ public class LexCompletion
     public LexCompletion withFurtherDetailsURL(@Nullable String url)
     {
         if (url != null)
-            this.furtherDetailsURL = new Pair<>(url, null);
+            this.furtherDetails = Either.right(new Pair<>(url, null));
+        return this;
+    }
+
+    public LexCompletion withFurtherDetailsHTMLContent(String content)
+    {
+        this.furtherDetails = Either.left(content);
         return this;
     }
     
@@ -111,21 +120,23 @@ public class LexCompletion
         if (o == null || getClass() != o.getClass()) return false;
         LexCompletion that = (LexCompletion) o;
         return startPos == that.startPos &&
+                lastShowPosIncl == that.lastShowPosIncl &&
                 relativeCaretPos == that.relativeCaretPos &&
                 Objects.equals(content, that.content) &&
                 display.equals(that.display) &&
                 selectionBehaviour == that.selectionBehaviour &&
-                Objects.equals(furtherDetailsURL, that.furtherDetailsURL);
+                Objects.equals(furtherDetails, that.furtherDetails) &&
+                Objects.equals(sideText, that.sideText);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(startPos, content, display, relativeCaretPos, selectionBehaviour, furtherDetailsURL);
+        return Objects.hash(startPos, lastShowPosIncl, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText);
     }
 
     public LexCompletion offsetBy(@CanonicalLocation int offsetBy)
     {
-        return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetailsURL, sideText);
+        return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText);
     }
 }

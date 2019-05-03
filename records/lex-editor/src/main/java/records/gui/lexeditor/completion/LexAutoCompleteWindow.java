@@ -60,11 +60,12 @@ public class LexAutoCompleteWindow extends PopupControl
             });
         }
         FXUtility.addChangeListenerPlatform(listView.selectedItemProperty(), selected -> {
-            if (selected != null)
+            if (selected != null && selected.furtherDetails != null)
             {
-                @Nullable Pair<String, @Nullable String> fileNameAndAnchor = selected.furtherDetailsURL;
-                if (fileNameAndAnchor != null)
-                {
+                selected.furtherDetails.either_(htmlContent -> {
+                    webView.getEngine().loadContent(htmlContent);
+                    webView.setVisible(true);
+                }, (Pair<String, @Nullable String> fileNameAndAnchor) -> {
                     URL url = getClass().getResource("/" + fileNameAndAnchor.getFirst());
                     if (url != null)
                     {
@@ -76,9 +77,7 @@ public class LexAutoCompleteWindow extends PopupControl
                         Log.error("Missing file: " + fileNameAndAnchor.getFirst());
                         webView.setVisible(false);
                     }
-                }
-                else
-                    webView.setVisible(false);
+                });
             }
             else
                 webView.setVisible(false);

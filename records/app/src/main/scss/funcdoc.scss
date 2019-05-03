@@ -21,12 +21,12 @@ body {
     padding: 25pt;
 }
 body.indiv {
-    .function-item, .operator-item, .type-item {
+    .function-item, .operator-item, .type-item, .column-item {
         padding: 5pt;
     }
 }
 
-.function-item, .operator-item, .type-item {
+.function-item, .operator-item, .type-item, .column-item {
     border-width: 0 0 1px 0;
     border-color: lightgray;
     border-style: solid;
@@ -38,14 +38,14 @@ body.indiv {
     }
 }
 
-.syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header {
+.syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header, .column-header {
     font-weight: bold;
 }
 .function-header, .function-type, 
-.syntax-type, .operator-type, .operator-name-header, .syntax-name-header {
+.syntax-type, .operator-type, .operator-name-header, .syntax-name-header, .column-header {
     display:block;
 }
-.type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header, .literal-name-header {
+.type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header, .literal-name-header, .column-header {
     font-size: 18pt;
     background-color: #e3e3ff;
     padding: 8;
@@ -58,7 +58,7 @@ body.indiv {
 }
 
 body.indiv {
-    .type-name-header, .function-header, .operator-type, .syntax-name-header, .variable-name-header {
+    .type-name-header, .function-header, .operator-type, .syntax-name-header, .variable-name-header, .column-header {
      font-size: 14pt;
     }
     .function-type {

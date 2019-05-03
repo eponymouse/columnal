@@ -323,20 +323,21 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             content.replaceText(p.startPos, content.getCaretPosition(), p.content);
             content.positionCaret(p.startPos + p.relativeCaretPos, true);
         }
-        else if (p.furtherDetailsURL != null)
+        else if (p.furtherDetails != null)
         {
-            @NonNull Pair<String, @Nullable String> furtherDetailsURL = p.furtherDetailsURL;
-            SwingUtilities.invokeLater(() -> {
-                try
-                {
-                    URL resource = getClass().getResource("/" + furtherDetailsURL.getFirst());
-                    if (resource != null)
-                        Desktop.getDesktop().browse(resource.toURI());
-                }
-                catch (Exception e)
-                {
-                    Log.log(e);
-                }
+            p.furtherDetails.ifRight((Pair<String, @Nullable String> furtherDetailsURL) -> {
+                SwingUtilities.invokeLater(() -> {
+                    try
+                    {
+                        URL resource = getClass().getResource("/" + furtherDetailsURL.getFirst());
+                        if (resource != null)
+                            Desktop.getDesktop().browse(resource.toURI());
+                    }
+                    catch (Exception e)
+                    {
+                        Log.log(e);
+                    }
+                });
             });
         }
     }
