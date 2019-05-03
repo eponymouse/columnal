@@ -663,7 +663,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
                 for (Pair<CompletionStatus, LexCompletion> p : colCompletions)
                 {
-                    identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN)));
+                    identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.ENTIRE_COLUMN)));
                 }
             }
         }
@@ -956,7 +956,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     // Used for ordering, so the order here is significant
     private static enum CompletionType
     {
-        COLUMN, VARIABLE, FUNCTION, CONSTRUCTOR, NESTED_LITERAL, KEYWORD_CHAIN, KEYWORD; 
+        COLUMN, VARIABLE, FUNCTION, CONSTRUCTOR, NESTED_LITERAL, ENTIRE_COLUMN, KEYWORD_CHAIN, KEYWORD; 
     }
     
     private static enum CompletionStatus
