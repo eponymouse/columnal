@@ -12,6 +12,7 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.DataItemPosition;
 import records.data.Table;
@@ -40,6 +41,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -94,8 +96,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propCheckDataWrite(
+        @When(seed=3375937526543971356L)
             @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
+            @When(seed=-4229410648382525645L)
             @From(GenRandom.class) Random r,
+            @When(seed=-8122706588978184353L)
             @From(GenValueSpecifiedType.class) GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
     {
 
@@ -117,6 +122,33 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
                 this.tableId = tableId;
                 this.row = row;
                 this.col = col;
+            }
+
+            @Override
+            public boolean equals(@Nullable Object o)
+            {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                Location location = (Location) o;
+                return row == location.row &&
+                    col == location.col &&
+                    tableId.equals(location.tableId);
+            }
+
+            @Override
+            public int hashCode()
+            {
+                return Objects.hash(tableId, row, col);
+            }
+
+            @Override
+            public String toString()
+            {
+                return "Location{" +
+                    "tableId=" + tableId +
+                    ", row=" + row +
+                    ", col=" + col +
+                    '}';
             }
         }
         Map<Location, String> writtenData = new HashMap<>();
@@ -163,7 +195,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
                 // Need to wait for hop to simulation thread and back:
                 TestUtil.delay(2000);
                 String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
-                assertEquals(written, copiedFromTable);
+                assertEquals("Position " + target, written, copiedFromTable);
             }
             catch (UserException e)
             {
