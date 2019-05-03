@@ -12,7 +12,7 @@
             <xsl:result-document method="html" href="file:///{$myOutputDir}/function-{$namespace}-{@name}.html">
                 <html>
                     <head>
-                        <title><xsl:value-of select="$namespace"/>/<xsl:value-of select="@id"/></title>
+                        <title><xsl:value-of select="$namespace"/>/<xsl:value-of select="@name"/></title>
                         <link rel="stylesheet" href="funcdoc.css"/>
                         <link rel="stylesheet" href="web.css"/>
                     </head>
