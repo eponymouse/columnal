@@ -4,6 +4,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -18,6 +19,10 @@ import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow.AnchorLocation;
 import log.Log;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.resizers.configurations.Antialiasing;
+import net.coobird.thumbnailator.resizers.configurations.Rendering;
+import net.coobird.thumbnailator.resizers.configurations.ScalingMode;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -36,6 +41,7 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
+import java.io.File;
 import java.net.URL;
 import java.util.*;
 
@@ -264,7 +270,7 @@ public class TranslationUtility
         return Bindings.createStringBinding(() -> update.get(), values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
     }
 
-    public static @Nullable ImageView makeImageView(String filename)
+    public static @Nullable ImageView makeImageView(String filename, @Nullable Integer maxWidth, @Nullable Integer maxHeight)
     {
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
         if (systemClassLoader != null)
@@ -272,7 +278,47 @@ public class TranslationUtility
             URL imageURL = systemClassLoader.getResource(filename);
             if (imageURL != null)
             {
-                return new ImageView(imageURL.toExternalForm());
+                ImageView imageView;
+                try
+                {
+                    File destFile = File.createTempFile("img", ".png");
+                    destFile.deleteOnExit();
+                    Thumbnails.of(imageURL)
+                            .scalingMode(ScalingMode.BICUBIC)
+                            .rendering(Rendering.QUALITY)
+                            .antialiasing(Antialiasing.ON)
+                            .outputQuality(1.0)
+                            .size(maxWidth == null ? 1000 : maxWidth.intValue(), maxHeight == null ? 1000 : maxHeight.intValue())
+                            .keepAspectRatio(true)
+                            .allowOverwrite(true)
+                            .toFile(destFile);
+                    File destFile2x = new File(destFile.getAbsolutePath().replace(".png", "@2x.png"));
+                    destFile2x.deleteOnExit();
+                    Thumbnails.of(imageURL)
+                            .scalingMode(ScalingMode.BICUBIC)
+                            .rendering(Rendering.QUALITY)
+                            .antialiasing(Antialiasing.ON)
+                            .outputQuality(1.0)
+                            .size(maxWidth == null ? 2000 : maxWidth.intValue() * 2, maxHeight == null ? 2000 : maxHeight.intValue() * 2)
+                            .keepAspectRatio(true)
+                            .allowOverwrite(true)
+                            .toFile(destFile);
+                    
+                    imageView = new ImageView(destFile.toURI().toURL().toExternalForm());
+                }
+                catch (Exception e)
+                {
+                    Log.log(e);
+                    // Give up resizing:
+                    imageView = new ImageView(imageURL.toExternalForm());
+                }
+                if (maxHeight != null)
+                    imageView.setFitHeight(maxHeight);
+                if (maxWidth != null)
+                    imageView.setFitWidth(maxWidth);
+                imageView.setSmooth(true);
+                imageView.setPreserveRatio(true);
+                return imageView;
             }
         }
         return null;

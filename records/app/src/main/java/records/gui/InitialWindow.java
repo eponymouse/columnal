@@ -13,11 +13,14 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
@@ -93,34 +96,18 @@ public class InitialWindow
         });
         
         mruListView.getItems().setAll(Utility.readRecentFilesList());
-        Label titleLabel = GUI.label("us", "initial-title");
-        ImageView logo = TranslationUtility.makeImageView("logo.png");
-        if (logo != null)
-        {
-            logo.setPreserveRatio(true);
-            logo.setSmooth(true);
-            logo.fitHeightProperty().bind(titleLabel.heightProperty().multiply(0.7));
-            @NonNull ImageView logoFinal = logo;
-            // Problem is that the imageView is too large initially because it shows at original size
-            // and only sizes down once the label has been sized, but by then it's too late and the window
-            // sizing is ruined.  So we only add the logo once the label height is set right:
-            titleLabel.heightProperty().addListener(new ChangeListener<Number>()
-            {
-                @Override
-                public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
-                {
-                    if (newVal.doubleValue() >= 1.0)
-                    {
-                        titleLabel.setGraphic(logoFinal);
-                        titleLabel.heightProperty().removeListener(this);
-                    }
-                }
-            });
-        }
+        ImageView title = TranslationUtility.makeImageView("columnal.png", null, 90);
+        ImageView logo = TranslationUtility.makeImageView("logo.png", null, 100);
+        HBox hBox = new HBox(Utility.streamNullable(title, logo).toArray(Node[]::new));
+        hBox.getStyleClass().add("logo-container");
+        hBox.setAlignment(Pos.BOTTOM_CENTER);
+        
         VBox content = GUI.vbox("initial-content",
-                titleLabel,
-                headed("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
-                headed("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.vbox("initial-recent", GUI.label("initial.open.recent", "initial-subheading"), mruListView))
+                hBox,
+                GUI.vbox("body-container",
+                    headed("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
+                    headed("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.vbox("initial-recent", GUI.label("initial.open.recent", "initial-subheading"), mruListView))
+                )
         );
         Scene scene = new Scene(new BorderPane(content, menuBar, null, null, null));
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
