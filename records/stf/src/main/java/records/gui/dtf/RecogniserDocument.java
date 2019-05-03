@@ -88,6 +88,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         if (!focused)
         {
             recognise(!getText().equals(valueOnFocusGain));
+            notifyListeners();
             if (onFocusLost != null)
                 onFocusLost.run();
         }
