@@ -196,7 +196,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     }
     
     @Property(trials = 2)
-    public void testDeleteColumn(@When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testDeleteColumn(@From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // Pick a table and column:
         ImmutableList<Pair<TableId, ColumnId>> columns = tableManager.getAllTables().stream().<Pair<TableId, ColumnId>>flatMap(t -> {
@@ -235,7 +235,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     }
 
     @Property(trials = 2)
-    public void testDeleteTable(@When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testDeleteTable(@From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // Pick a table and column:
         Table picked = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
@@ -255,6 +255,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
         sleep(500);
         assertNull(tableManager.getSingleTableOrNull(picked.getId()));
+        assertTrue("New button showing", lookup(".create-table-grid-button").tryQuery().isPresent());
+        assertTrue("New button showing", lookup(".create-table-grid-button").query().isVisible());
     }
     
     @Property(trials = 2, shrink = false)

@@ -178,9 +178,12 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             save(true);
             //overlays.remove(t); // Listener removes them from display
             TableDisplayBase displayBase = t.getDisplay();
+            CellPosition topLeft = displayBase == null ? CellPosition.ORIGIN : displayBase.getMostRecentPosition();
+            boolean wasSelected = false;
             if (displayBase != null && displayBase instanceof TableDisplay)
             {
                 TableDisplay display = (TableDisplay) displayBase;
+                wasSelected = mainPane.selectionIncludes(display);
                 // Call this first so that the nodes are actually removed when we call removeGridArea:
                 display.cleanupFloatingItems(getGrid().getFloatingSupplier());
                 dataCellSupplier.removeGrid(display);
@@ -193,10 +196,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             else if (displayBase != null && displayBase instanceof CheckDisplay)
             {
                 CheckDisplay checkDisplay = (CheckDisplay) displayBase;
+                wasSelected = mainPane.selectionIncludes(checkDisplay);
                 checkDisplay.cleanupFloatingItems(getGrid().getFloatingSupplier());
                 mainPane.removeSelectionListener(checkDisplay);
                 // This goes last because it will redo layout:
                 mainPane.removeGridArea(checkDisplay);
+            }
+            if (wasSelected)
+            {
+                mainPane.findAndSelect(Either.left(topLeft));
             }
             hintMessage.updateState();
         });

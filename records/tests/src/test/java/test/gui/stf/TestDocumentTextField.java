@@ -297,7 +297,7 @@ public class TestDocumentTextField extends FXApplicationTest
     }
     
     @Property(trials=3)
-    public void testHorizScroll(@When(seed=-3415317297380063618L) @From(GenString.class) String s)
+    public void testHorizScroll(@From(GenString.class) String s)
     {
         s = removeNonPrintable(s);
         Assume.assumeFalse(s.isEmpty());
