@@ -96,11 +96,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propCheckDataWrite(
-        @When(seed=3375937526543971356L)
             @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @When(seed=-4229410648382525645L)
             @From(GenRandom.class) Random r,
-            @When(seed=-8122706588978184353L)
             @From(GenValueSpecifiedType.class) GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
     {
 
