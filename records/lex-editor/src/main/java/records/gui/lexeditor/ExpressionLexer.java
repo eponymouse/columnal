@@ -698,21 +698,31 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         for (StandardFunctionDefinition function : allFunctions)
         {
-            Optional<Pair<CompletionStatus, LexCompletion>> lexCompletion = matchWordStart(stem, canonIndex, function.getName(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).map(p -> p.mapFirst(word -> word == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED));
+            ArrayList<Pair<CompletionStatus, LexCompletion>> lexCompletions = new ArrayList<>(); 
+                    
+            matchWordStart(stem, canonIndex, function.getName(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).map(p -> p.mapFirst(word -> word == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED)).ifPresent(lexCompletions::add);
+
             
-            if (!lexCompletion.isPresent() && stem != null && stem.length() >= 3)
+            if (stem != null && stem.length() >= 2)
             {
                 for (String synonym : function.getSynonyms())
                 {
-                    lexCompletion = matchWordStart(stem, canonIndex, synonym, WordPosition.FIRST_WORD).map(c -> {
+                    Optional<Pair<CompletionStatus, LexCompletion>> lexCompletion;
+                    lexCompletion = matchWordStart(stem, canonIndex, synonym, WordPosition.FIRST_WORD_NON_EMPTY).map(c -> {
                         return new Pair<>(CompletionStatus.RELATED, c.getSecond().withReplacement(function.getName()).withSideText("\u2248 " + synonym));
                     });
                     if (lexCompletion.isPresent())
+                    {
+                        lexCompletions.add(lexCompletion.get());
                         break;
+                    }
                 }
             }
-            
-            lexCompletion.ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst(), new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION))));
+
+            for (Pair<CompletionStatus, LexCompletion> c : lexCompletions)
+            {
+                identCompletions.add(new Pair<>(c.getFirst(), new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION)));
+            }
         }
     }
 
