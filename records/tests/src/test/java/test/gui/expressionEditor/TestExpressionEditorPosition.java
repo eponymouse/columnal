@@ -8,6 +8,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Test;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -75,91 +76,105 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPos1()
     {
-        testCaretPositionsAndDisplay("1", "1", 0, 1);
+        testCaretPositionsAndDisplay("1", "1", p(0, 1));
     }
 
     @Test
     public void testPos2()
     {
-        testCaretPositionsAndDisplay("1+2", "1 + 2", 0, 1, 2, 3);
+        testCaretPositionsAndDisplay("1+2", "1 + 2", p(0, 1, 2, 3));
     }
 
     @Test
     public void testPos3()
     {
-        testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true @then sum(3 + \"az\") @else false @endif ", 0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39);
+        testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true @then sum(3 + \"az\") @else false @endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
+        p(0, 3, 7, 12, 15,16,17,18,19,21,22,23,28,33,39)
+        );
     }
 
     @Test
     public void testPos4()
     {
-        testCaretPositionsAndDisplay("ACC1>ACC2", "ACC1 > ACC2", 0,1,2,3,4, 5,6,7,8,9);
+        testCaretPositionsAndDisplay("ACC1>ACC2", "ACC1 > ACC2", p(0,1,2,3,4, 5,6,7,8,9), p(0, 4, 5, 9));
     }
 
     @Test
     public void testPos5()
     {
-        testCaretPositionsAndDisplay("Str>Str", "Str > Str", 0,1,2,3, 4,5,6,7);
+        testCaretPositionsAndDisplay("Str>Str", "Str > Str", p(0,1,2,3, 4,5,6,7), p(0, 3, 4, 7));
     }
 
     @Test
     public void testPos6()
     {
-        testCaretPositionsAndDisplay("ACC1<>3{(m/s)/s}", "ACC1 <> 3{(m/s)/s}", 0,1,2,3,4, 6,7,8,9,10,11,12,13,14,15,16);
+        testCaretPositionsAndDisplay("ACC1<>3{(m/s)/s}", "ACC1 <> 3{(m/s)/s}", p(0,1,2,3,4, 6,7,8,9,10,11,12,13,14,15,16),
+            p(0,4,6,7,8,9,10,11,12,13,14,15,16));
     }
 
     @Test
     public void testPos7()
     {
-        testCaretPositionsAndDisplay("abs(1+2)=sum([3/4])", "abs(1 + 2) = sum([3 / 4])", 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+        testCaretPositionsAndDisplay("abs(1+2)=sum([3/4])", "abs(1 + 2) = sum([3 / 4])", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19),
+            p(0,3,4,5,6,7,8,9,12,13,14,15,16,17,18,19)
+                );
     }
 
     @Test
     public void testPos8()
     {
-        testCaretPositionsAndDisplay("from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 51 + TypeManager.MAYBE_NAME.length())).toArray());
+        int m = TypeManager.MAYBE_NAME.length();
+        testCaretPositionsAndDisplay("from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 51 + m)).toArray(),
+            p(0, 14, 15, 20, 20+m, 21+m, 27+m,28+m,29+m,30+m,31+m,35+m,36+m,37+m,38+m,39+m,48+m,49+m,50+m));
     }
 
     @Test
     public void testPosIncomplete1()
     {
-        testCaretPositionsAndDisplay("1+", "1 +  ", 0, 1, 2);
+        testCaretPositionsAndDisplay("1+", "1 +  ", p(0, 1, 2));
     }
     
     @Test
     public void testPosIncomplete2()
     {
-        testCaretPositionsAndDisplay("1<", "1 <  ", 0, 1, 2);
+        testCaretPositionsAndDisplay("1<", "1 <  ", p(0, 1, 2));
     }
     
     @Test
     public void testPosIncomplete2b()
     {
-        testCaretPositionsAndDisplay("1<=", "1 <=  ", 0, 1, 3);
+        testCaretPositionsAndDisplay("1<=", "1 <=  ", p(0, 1, 3));
     }
     
     @Test
     public void testPosIncomplete3()
     {
-        testCaretPositionsAndDisplay("@i", "@i", 0, 1, 2);
+        testCaretPositionsAndDisplay("@i", "@i", p(0, 1, 2), p(0,2));
     }
 
     @Test
     public void testPosIncomplete4()
     {
-        testCaretPositionsAndDisplay("@if", "@if  ", 0, 3);
+        testCaretPositionsAndDisplay("@if", "@if  ", p(0, 3));
     }
 
     @Test
     public void testPosIncompleteCase()
     {
-        testCaretPositionsAndDisplay("@case", "  @case ", 0, 5);
+        testCaretPositionsAndDisplay("@case", "  @case ", p(0, 5));
     }
 
+    private int[] p(int... values)
+    {
+        return values;
+    }
 
     @SuppressWarnings("identifier")
-    private void testCaretPositionsAndDisplay(String internalContent, String display, int... internalCaretPos)
+    private void testCaretPositionsAndDisplay(String internalContent, String display, int[] internalCaretPos, int... wordBoundaryCaretPos)
     {
+        // If last param missing, means it's same as penultimate:
+        if (wordBoundaryCaretPos.length == 0)
+            wordBoundaryCaretPos = internalCaretPos;
         try
         {
             UnitManager u = new UnitManager();
@@ -231,6 +246,27 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     curIndex -= 1;
                     push(KeyCode.LEFT);
                 }
+
+                push(KeyCode.HOME);
+                curIndex = 0;
+                KeyCode wordKey = SystemUtils.IS_OS_MAC_OSX ? KeyCode.ALT : KeyCode.CONTROL;
+                press(wordKey);
+                while (curIndex < wordBoundaryCaretPos.length)
+                {
+                    assertEquals("Index " + curIndex, wordBoundaryCaretPos[curIndex], getPosition().getSecond().intValue());
+                    curIndex += 1;
+                    push(KeyCode.RIGHT);
+                }
+                push(KeyCode.END);
+                curIndex = wordBoundaryCaretPos.length - 1;
+                while (curIndex >= 0)
+                {
+                    assertEquals(wordBoundaryCaretPos[curIndex], getPosition().getSecond().intValue());
+                    curIndex -= 1;
+                    push(KeyCode.LEFT);
+                }
+                release(wordKey);
+                // TODO try double click
 
                 for (int clickIndex = 0; clickIndex < caretCentres.length; clickIndex++)
                 {

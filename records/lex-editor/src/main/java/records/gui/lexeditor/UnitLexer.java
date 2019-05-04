@@ -26,6 +26,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.stream.IntStream;
 
@@ -83,7 +84,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     {
         UnitSaver saver = new UnitSaver();
         RemovedCharacters removedCharacters = new RemovedCharacters();
-        ImmutableList.Builder<ContentChunk> chunks = ImmutableList.builder();
+        ArrayList<ContentChunk> chunks = new ArrayList<>();
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         nextToken: while (curIndex < content.length())
         {
@@ -143,8 +144,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             curIndex += RawInputLocation.ONE;
         }
         @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
-        @SuppressWarnings("units")
-        ImmutableList<CaretPos> caretPositions = IntStream.range(0, content.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPositions = calculateCaretPos(chunks);
         
         if (requireConcrete)
         {
@@ -161,9 +161,8 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 }
             }
         }
-        
-        
-        return new LexerResult<>(saved, content, removedCharacters, false, caretPositions, StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks.build(), this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
+
+        return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)

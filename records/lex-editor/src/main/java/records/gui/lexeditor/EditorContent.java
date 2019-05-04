@@ -19,6 +19,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
 {
@@ -168,6 +169,18 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
                 return i;
         }
         return 0;
+    }
+    
+    public @CanonicalLocation int prevWordPosition()
+    {
+        int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> p.positionInternal < curCaretPosition).orElse(0);
+        return curContent.wordBoundaryCaretPositions.get(index).positionInternal;
+    }
+
+    public @CanonicalLocation int nextWordPosition()
+    {
+        int index = Utility.findFirstIndex(curContent.wordBoundaryCaretPositions, p -> p.positionInternal > curCaretPosition).orElse(curContent.wordBoundaryCaretPositions.size() - 1);
+        return curContent.wordBoundaryCaretPositions.get(index).positionInternal;
     }
 
     public boolean suppressBracketMatch(int caretPosition)

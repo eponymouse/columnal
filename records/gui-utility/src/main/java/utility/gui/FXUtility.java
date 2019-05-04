@@ -796,6 +796,11 @@ public class FXUtility
         });
     }
 
+    public static boolean wordSkip(KeyEvent keyEvent)
+    {
+        return SystemUtils.IS_OS_MAC_OSX ? keyEvent.isAltDown() : keyEvent.isControlDown();
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

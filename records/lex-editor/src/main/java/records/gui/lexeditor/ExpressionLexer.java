@@ -51,6 +51,7 @@ import utility.gui.TranslationUtility;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionContext>
@@ -228,7 +229,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 if (endQuote != -1)
                 {
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE), c -> {});
-                    chunks.add(new ContentChunk(content.substring(curIndex, endQuote + 1), ChunkType.NON_IDENT, "expression-string-literal"));
+                    String stringLit = content.substring(curIndex, endQuote + 1);
+                    @SuppressWarnings("units")
+                    ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+                    @SuppressWarnings("units")
+                    ImmutableList<CaretPos> wordCaretPos = IntStream.of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+                    chunks.add(new ContentChunk(stringLit, StyledString.s(stringLit).withStyle(new StyledCSS("expression-string-literal")), caretPositions, wordCaretPos, ChunkType.NON_IDENT));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + RawInputLocation.ONE;
                     continue nextToken;
@@ -497,12 +503,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         
         String internalContent = chunks.stream().map(c -> c.internalContent).collect(Collectors.joining());
         StyledString display = chunks.stream().map(c -> c.displayContent).filter(d -> d.getLength() > 0).collect(StyledString.joining(""));
-        ArrayList<CaretPos> caretPos = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPos = calculateCaretPos(chunks);
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
-        display = Lexer.padZeroWidthErrors(display, caretPos, errors);
+        display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
 
-        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
@@ -877,7 +883,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @SuppressWarnings("units")
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<CaretPos> wordBoundaryCaretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             CaretPos initialPos = new CaretPos(0, 0);
@@ -887,10 +893,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 caretPosIncludingPrefixSuffix.add(new CaretPos(p.positionInternal + prefix.length(), p.positionDisplay + prefix.length()));
             }
             caretPosIncludingPrefixSuffix.add(new CaretPos(prefix.length() + internalContent.length() + suffix.length(), prefix.length() + displayContent.getLength() + suffix.length()));
+            ImmutableList.Builder<CaretPos> wordPosIncludingPrefixSuffix = ImmutableList.builder();
+            wordPosIncludingPrefixSuffix.add(initialPos);
+            for (CaretPos p : wordBoundaryCaretPos)
+            {
+                wordPosIncludingPrefixSuffix.add(new CaretPos(p.positionInternal + prefix.length(), p.positionDisplay + prefix.length()));
+            }
+            wordPosIncludingPrefixSuffix.add(new CaretPos(prefix.length() + internalContent.length() + suffix.length(), prefix.length() + displayContent.getLength() + suffix.length()));
             this.chunk = new ContentChunk(
                 prefix + internalContent + suffix,
                 StyledString.concat(StyledString.s(prefix), displayContent, StyledString.s(suffix)),
-                caretPosIncludingPrefixSuffix.build(), ChunkType.NESTED_START);
+                caretPosIncludingPrefixSuffix.build(), wordPosIncludingPrefixSuffix.build(), ChunkType.NESTED_START);
             this.expression = expression;
             this.removedChars = removedChars;
             this.nestedErrors = errors;
@@ -910,12 +923,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer(typeManager, true, false);
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             }),
             new Pair<>("{", c -> {
                 UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
                 LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
+                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             })
         );
     }

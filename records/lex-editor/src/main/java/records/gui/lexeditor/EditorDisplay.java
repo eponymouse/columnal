@@ -167,11 +167,15 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             switch (keyEvent.getCode())
             {
                 case LEFT:
-                    if (caretPosIndex > 0)
+                    if (FXUtility.wordSkip(keyEvent))
+                        content.positionCaret(content.prevWordPosition(), !keyEvent.isShiftDown());
+                    else if (caretPosIndex > 0)
                         content.positionCaret(caretPositions[caretPosIndex - 1], !keyEvent.isShiftDown());
                     break;
                 case RIGHT:
-                    if (caretPosIndex + 1 < caretPositions.length)
+                    if (FXUtility.wordSkip(keyEvent))
+                        content.positionCaret(content.nextWordPosition(), !keyEvent.isShiftDown());
+                    else if (caretPosIndex + 1 < caretPositions.length)
                         content.positionCaret(caretPositions[caretPosIndex + 1], !keyEvent.isShiftDown());
                     break;
                 case HOME:

@@ -223,12 +223,12 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         }
         @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         
-        ArrayList<CaretPos> caretPositions = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPositions = calculateCaretPos(chunks);
         StyledString built = chunks.stream().map(c -> c.displayContent).collect(StyledString.joining(""));
         if (built.getLength() == 0)
             built = StyledString.s(" ");
         ImmutableList<ErrorDetails> errors = saver.getErrors();
-        built = padZeroWidthErrors(built, caretPositions, errors);
+        built = padZeroWidthErrors(built, caretPositions.getFirst(), errors);
         
         if (errors.isEmpty() && requireConcrete)
         {
@@ -305,7 +305,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         if (saved.isEmpty() && emptyAllowed)
             errors = ImmutableList.of();
         
-        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
