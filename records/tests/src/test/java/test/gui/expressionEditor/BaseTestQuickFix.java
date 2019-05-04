@@ -147,6 +147,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(targetField);
+                assertTrue(TestUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
             int moveDist = TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
@@ -161,6 +162,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 moveDist +=1;
             }
             // Check we're actually now in bounds:
+            assertTrue(TestUtil.fx(() -> targetFinal.isFocused()));
             assertEquals(0, TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
             
             TestUtil.delay(500);
