@@ -67,12 +67,12 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
         setResizable(true);
         initModality(Modality.NONE);
         
-        SimpleObjectProperty<ColumnLookup> curColumnLoookup = new SimpleObjectProperty<>(makeColumnLookup.apply(initialName));
+        SimpleObjectProperty<ColumnLookup> curColumnLookup = new SimpleObjectProperty<>(makeColumnLookup.apply(initialName));
 
         nameField = new ColumnNameTextField(initialName);
         FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> {
             notifyModified();
-            curColumnLoookup.set(makeColumnLookup.apply(v));
+            curColumnLookup.set(makeColumnLookup.apply(v));
         });
         if (srcTable != null)
         {
@@ -149,7 +149,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                 parent.disablePickingMode();
             }
         };
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLoookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             notifyModified();
         }) {
