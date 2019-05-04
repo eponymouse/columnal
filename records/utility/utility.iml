@@ -31,13 +31,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.5.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.5.7" level="project" />
-    <orderEntry type="library" name="Maven: org.antlr:antlr4:4.7.1" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4-runtime:4.7.1" level="project" />
-    <orderEntry type="library" name="Maven: org.antlr:antlr-runtime:3.5.2" level="project" />
-    <orderEntry type="library" name="Maven: org.antlr:ST4:4.0.8" level="project" />
-    <orderEntry type="library" name="Maven: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
-    <orderEntry type="library" name="Maven: org.glassfish:javax.json:1.0.4" level="project" />
-    <orderEntry type="library" name="Maven: com.ibm.icu:icu4j:58.2" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:java-smt:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:common:0.3000-38-gcdb252b" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
