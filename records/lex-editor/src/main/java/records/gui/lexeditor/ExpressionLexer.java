@@ -872,9 +872,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public final ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions;
         public final @Nullable EditorLocationAndErrorRecorder locationRecorder;
         
+        @SuppressWarnings("units")
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
-            this.chunk = new ContentChunk(source.prefix + source.innerContent + (source.terminatedProperly ? "}" : ""), ChunkType.NESTED_START);
+            String content = source.prefix + source.innerContent + (source.terminatedProperly ? "}" : "");
+            this.chunk = new ContentChunk(content, StyledString.s(content), IntStream.concat(IntStream.concat(IntStream.of(0), IntStream.range(0, source.innerContent.length() + 1).map(n -> n + source.prefix.length())), IntStream.range(source.terminatedProperly ? content.length() - 1 : content.length(), content.length() + 1)).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()), 
+                    IntStream.of(0, source.prefix.length(), source.terminatedProperly ? content.length() - 1 : content.length(), content.length()).distinct().mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()),
+                    ChunkType.NESTED_START);
             this.expression = expression;
             this.removedChars = new RemovedCharacters();
             this.nestedErrors = ImmutableList.of();

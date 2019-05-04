@@ -129,6 +129,17 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Test
+    public void testPos9()
+    {
+        // Space added in unit because it's an error
+        testCaretPositionsAndDisplay("date{2019}<=time{20:10}<type{Number{}}",
+            "date{2019} <= time{20:10} < type{Number{ }}",
+            p(0, 5,6,7,8,9,10, 12, 17,18,19,20,21,22,23, 24, 29,30,31,32,33,34,35,36,37,38),
+            p(0, 5, 9, 10, 12, 17, 22,23,24, 29, 35,36,37,38)
+        );
+    }
+
+    @Test
     public void testPosIncomplete1()
     {
         testCaretPositionsAndDisplay("1+", "1 +  ", p(0, 1, 2));
