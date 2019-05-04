@@ -171,9 +171,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return 0;
     }
     
-    public @CanonicalLocation int prevWordPosition()
+    public @CanonicalLocation int prevWordPosition(boolean canStaySame)
     {
-        int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> p.positionInternal < curCaretPosition).orElse(0);
+        int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> canStaySame ? p.positionInternal <= curCaretPosition : p.positionInternal < curCaretPosition).orElse(0);
         return curContent.wordBoundaryCaretPositions.get(index).positionInternal;
     }
 

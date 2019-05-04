@@ -14,6 +14,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
@@ -133,7 +134,22 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             }
             event.consume();
         });
-        addEventHandler(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
+        addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            if (event.isStillSincePress() && event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY)
+            {
+                @CanonicalLocation int start = content.prevWordPosition(true);
+                content.positionCaret(start, true);
+                @CanonicalLocation int end = content.nextWordPosition();
+                if (start == end)
+                {
+                    start = content.prevWordPosition(false);
+                    content.positionCaret(start, true);
+                }
+                content.positionCaret(end, false);
+                //Log.debug("Double clicked: " + start + " to " + end);
+            }
+            event.consume();
+        });
         addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
             @Nullable HitInfo hit = hitTest(event.getX(), event.getY());
             if (hit != null)
@@ -167,13 +183,25 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             switch (keyEvent.getCode())
             {
                 case LEFT:
-                    if (FXUtility.wordSkip(keyEvent))
-                        content.positionCaret(content.prevWordPosition(), !keyEvent.isShiftDown());
+                    if (caretPosition != content.getAnchorPosition())
+                    {
+                        @SuppressWarnings("units")
+                        @CanonicalLocation int start = Math.min(caretPosition, content.getAnchorPosition());
+                        content.positionCaret(start, true);
+                    }
+                    else if (FXUtility.wordSkip(keyEvent))
+                        content.positionCaret(content.prevWordPosition(false), !keyEvent.isShiftDown());
                     else if (caretPosIndex > 0)
                         content.positionCaret(caretPositions[caretPosIndex - 1], !keyEvent.isShiftDown());
                     break;
                 case RIGHT:
-                    if (FXUtility.wordSkip(keyEvent))
+                    if (caretPosition != content.getAnchorPosition())
+                    {
+                        @SuppressWarnings("units")
+                        @CanonicalLocation int end = Math.max(caretPosition, content.getAnchorPosition());
+                        content.positionCaret(end, true);
+                    }
+                    else if (FXUtility.wordSkip(keyEvent))
                         content.positionCaret(content.nextWordPosition(), !keyEvent.isShiftDown());
                     else if (caretPosIndex + 1 < caretPositions.length)
                         content.positionCaret(caretPositions[caretPosIndex + 1], !keyEvent.isShiftDown());

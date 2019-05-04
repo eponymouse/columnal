@@ -1,5 +1,6 @@
 package test.gui.expressionEditor;
 
+import com.google.common.primitives.Ints;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -38,6 +39,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -277,17 +279,27 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     push(KeyCode.LEFT);
                 }
                 release(wordKey);
-                // TODO try double click
 
                 for (int clickIndex = 0; clickIndex < caretCentres.length; clickIndex++)
                 {
-                    sleep(200);
                     System.out.println("Clicking on " + clickIndex + ": " + caretCentres[clickIndex]);
                     //TestUtil.fx_(() -> dumpScreenshot());
                     moveAndDismissPopupsAtPos(point(caretCentres[clickIndex]));
-                    sleep(300);
+                    sleep(400);
                     clickOn(caretCentres[clickIndex].add(1, 0));
                     assertEquals("Clicked: " + caretCentres[clickIndex].add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
+                    // Try double-click just after the position:
+                    push(KeyCode.LEFT);
+                    // Prevent joining to other clicks:
+                    sleep(400);
+                    doubleClickOn(caretCentres[clickIndex].add(3, 0));
+                    int lhsSel = findPrev(wordBoundaryCaretPos, internalCaretPos[clickIndex == internalCaretPos.length - 1 ? clickIndex - 1 : clickIndex]);
+                    assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), lhsSel, getAnchorPosition());
+                    assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), findNext(wordBoundaryCaretPos, internalCaretPos[clickIndex]), getPosition().getSecond().intValue());
+                    
+                    // Cancel selection:
+                    push(KeyCode.LEFT);
+                    assertEquals("Left after click: " + caretCentres[clickIndex].add(1, 0), lhsSel, getPosition().getSecond().intValue());
                 }
 
                 // Dismiss dialog:
@@ -311,7 +323,17 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             throw new RuntimeException(e);
         }
     }
-    
+
+    private int findPrev(int[] wordBoundaryCaretPos, int caretPos)
+    {
+        return wordBoundaryCaretPos[Utility.findLastIndex(Ints.asList(wordBoundaryCaretPos), w -> w <= caretPos).orElse(0)];
+    }
+
+    private int findNext(int[] wordBoundaryCaretPos, int caretPos)
+    {
+        return wordBoundaryCaretPos[Utility.findFirstIndex(Ints.asList(wordBoundaryCaretPos), w -> w > caretPos).orElse(wordBoundaryCaretPos.length - 1)];
+    }
+
     // Tests that you can get back to the caret positions 
     // that were seen during insertion, by using left and
     // right cursor keys
@@ -406,6 +428,15 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
         EditorDisplay textField = (EditorDisplay) focusOwner;
         return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
+    }
+
+    private int getAnchorPosition()
+    {
+        Node focusOwner = getFocusOwner();
+        if (!(focusOwner instanceof EditorDisplay))
+            throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
+        EditorDisplay textField = (EditorDisplay) focusOwner;
+        return TestUtil.fx(() -> textField.getAnchorPosition());
     }
     
     private Point2D getCaretPosOnScreen()
