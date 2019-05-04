@@ -279,7 +279,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         for (ErrorDetails error : Utility.iterableStream(errors.stream().sorted(Comparator.comparing(e -> e.location.start))))
         {
             // If an error only occupies one caret position, add an extra char there:
-            if (error.location.start == error.location.end)
+            if (error.location.start == error.location.end && (error.displayLocation == null || error.displayLocation.start == error.displayLocation.end))
             {
                 // Find caret pos:
                 @DisplayLocation int displayOffset = DisplayLocation.ZERO;
