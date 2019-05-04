@@ -486,7 +486,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.Simulation)
     private DocumentTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
     {
         // Make sure we aren't already selecting that cell:
@@ -509,7 +509,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
         if (choice != 2)
         {
-            assertFocusOwner(textField);
+            assertFocusOwner("Choice: " + choice, textField);
         }
         value.eitherEx(s -> {
             if (needDeleteAll)
@@ -519,11 +519,11 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 push(KeyCode.HOME);
             }
             write(s);
-            assertFocusOwner(textField);
+            assertFocusOwner("Writing complete invalid", textField);
             return UnitType.UNIT;
         }, p -> {
             enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll);
-            assertFocusOwner(textField);
+            assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getFirst(),p.getSecond(), null) + " after choice " + choice, textField);
             return UnitType.UNIT;
         });
         defocusSTFAndCheck(value.either(s -> true, p -> !p.getFirst().hasNumber()), () -> {
@@ -537,13 +537,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @OnThread(Tag.Any)
-    private void assertFocusOwner(@NonNull DocumentTextField textField)
+    private void assertFocusOwner(String description, @NonNull DocumentTextField textField)
     {
         Node focused = getFocusOwner();
         assertNotNull(focused);
         if (focused == null) // Satisfy checker
             return;
-        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
+        assertTrue(description + " focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
     }
 
     @OnThread(Tag.Any)

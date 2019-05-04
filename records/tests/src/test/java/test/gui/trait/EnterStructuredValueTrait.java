@@ -58,9 +58,12 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         }
         dataType.apply(new DataTypeVisitor<UnitType>()
         {
+            // Can't paste as first item, in case unfocused
+            boolean haveWritten = false;
+            
             private void writeOrPaste(String content)
             {
-                if (r.nextInt(3) == 1)
+                if (haveWritten && r.nextInt(3) == 1)
                 {
                     TestUtil.fx_(() -> {
                         Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content));
@@ -69,7 +72,8 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 }
                 else
                 {
-                    write(content, DELAY);    
+                    write(content, DELAY);
+                    haveWritten = true;
                 }
             }
             
@@ -121,6 +125,8 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                     write(zone.getId(), DELAY);
                 }
                 
+                haveWritten = true;
+                
                 return UnitType.UNIT;
             }
 
@@ -145,6 +151,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 write("(");
+                haveWritten = true;
                 @Value Object[] tuple = Utility.castTuple(value, inner.size());
                 for (int i = 0; i < tuple.length; i++)
                 {
@@ -168,6 +175,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 if (inner != null)
                 {
                     write("[");
+                    haveWritten = true;
                     ListEx listEx = Utility.cast(value, ListEx.class);
                     for (int i = 0; i < listEx.size(); i++)
                     {
