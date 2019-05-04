@@ -148,6 +148,10 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 content.positionCaret(end, false);
                 //Log.debug("Double clicked: " + start + " to " + end);
             }
+            else if (event.isStillSincePress() && event.getClickCount() >= 3 && event.getButton() == MouseButton.PRIMARY)
+            {
+                selectAll();
+            }
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
