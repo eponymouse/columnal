@@ -146,8 +146,8 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 Log.debug("Focusing target field: " + targetFinal);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
-                clickOn(targetField);
-                assertTrue(TestUtil.fx(() -> targetFinal.isFocused()));
+                clickOn(point(targetField));
+                assertTrue("Clicked " + point(targetField).toString(), TestUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
             int moveDist = TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
