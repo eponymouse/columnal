@@ -11,6 +11,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
@@ -23,10 +24,12 @@ import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.ApplyTypeExpressionContext;
 import records.grammar.FormatParser.ArrayTypeExpressionContext;
+import records.grammar.FormatParser.DateContext;
 import records.grammar.FormatParser.InvalidOpsTypeExpressionContext;
 import records.grammar.FormatParser.RoundTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
+import records.grammar.GrammarUtility;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
@@ -217,7 +220,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
         }
     }
 
-    public static TypeExpression parseTypeExpression(TypeManager typeManager, String src) throws UserException, InternalException
+    public static TypeExpression parseTypeExpression(String src) throws UserException, InternalException
     {
         class WrappedUserException extends RuntimeException
         {
@@ -257,14 +260,44 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                             String withCurly = ctx.UNIT().getText();
                             return new UnitLiteralTypeExpression(UnitExpression.load(withCurly.substring(1, withCurly.length() - 1)));
                         }
-                        else
+                        else if (ctx.number() != null)
                         {
-                            
-                                // Bit weird to reparse, but saves code duplication:
-                                return TypeExpression.fromDataType(typeManager.loadTypeUse(ctx.getText()));
-                            // TODO number is special
+                            if (ctx.number().UNIT() != null)
+                            {
+                                String withCurly = ctx.number().UNIT().getText();
+                                return new NumberTypeExpression(UnitExpression.load(withCurly.substring(1, withCurly.length() - 1)));
+                            }
+                            else
+                                return new NumberTypeExpression(null);
                         }
-                    //return super.visitTypeExpressionTerminal(ctx);
+                        else if (ctx.BOOLEAN() != null)
+                        {
+                            return new TypePrimitiveLiteral(DataType.BOOLEAN);
+                        }
+                        else if (ctx.TEXT() != null)
+                        {
+                            return new TypePrimitiveLiteral(DataType.TEXT);
+                        }
+                        else if (ctx.ident() != null)
+                        {
+                            return new IdentTypeExpression(IdentifierUtility.fromParsed(ctx.ident()));
+                        }
+                        else if (ctx.date() != null)
+                        {
+                            DateContext d = ctx.date();
+                            if (d.YEARMONTHDAY() != null)
+                                return new TypePrimitiveLiteral(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
+                            else if (d.YEARMONTH() != null)
+                                return new TypePrimitiveLiteral(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+                            else if (d.DATETIME() != null)
+                                return new TypePrimitiveLiteral(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+                            else if (d.DATETIMEZONED() != null)
+                                return new TypePrimitiveLiteral(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
+                            else if (d.TIMEOFDAY() != null)
+                                return new TypePrimitiveLiteral(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
+                        }
+                        
+                        throw new UserException("Cannot parse: " + ctx.getText() + " unknown case");
                     }
                     catch (UserException e)
                     {

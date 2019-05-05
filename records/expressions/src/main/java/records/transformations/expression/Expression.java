@@ -688,7 +688,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
             ImmutableList<Lit<?>> loaders = ImmutableList.of(
                 new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, InvalidSingleUnitExpression::identOrUnfinished),
-                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), InvalidIdentTypeExpression::identOrUnfinished
+                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(t), InvalidIdentTypeExpression::identOrUnfinished
                 ),
                 new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
                 new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
