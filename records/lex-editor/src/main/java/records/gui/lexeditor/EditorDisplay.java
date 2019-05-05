@@ -118,6 +118,10 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             positionCaret(event.getX(), event.getY(), true);
             event.consume();
         });
+        addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            FXUtility.mouse(this).requestFocus();
+            event.consume();
+        });
         addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
             FXUtility.mouse(this).requestFocus();
             positionCaret(event.getX(), event.getY(), false);
