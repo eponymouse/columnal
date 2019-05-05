@@ -762,6 +762,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @Override
+    @OnThread(Tag.FXPlatform)
     public Window dimWhileShowing(@UnknownInitialization(Dialog.class) Dialog<?> dialog)
     {
         Effect dim = new ColorAdjust(0.0, 0.0, -0.2, 0.0);
