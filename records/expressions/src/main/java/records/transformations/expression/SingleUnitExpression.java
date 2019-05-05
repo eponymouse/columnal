@@ -3,13 +3,18 @@ package records.transformations.expression;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.Scene;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.QuickFix.QuickFixAction;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 
@@ -36,8 +41,18 @@ public class SingleUnitExpression extends UnitExpression
         }
         catch (InternalException | UserException e)
         {
-            ImmutableList<QuickFix<@Recorded UnitExpression>> possibles = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription())).<QuickFix<@Recorded UnitExpression>>map(su -> new QuickFix<@Recorded UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName()))).collect(ImmutableList.<QuickFix<@Recorded UnitExpression>>toImmutableList());
-            throw new UnitLookupException(StyledString.s(e.getLocalizedMessage()), this, possibles);
+            Stream<QuickFix<@Recorded UnitExpression>> similarNames = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription()))
+                .<QuickFix<@Recorded UnitExpression>>map(su -> new QuickFix<@Recorded UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName())));
+            QuickFix<@Recorded UnitExpression> makeNew = new QuickFix<@Recorded UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) void doAction(FixHelper fixHelper, Scene editorScene)
+                {
+                    fixHelper.createNewUnit(name, editorScene);
+                }
+            });
+            ImmutableList<QuickFix<@Recorded UnitExpression>> fixes = Stream.<QuickFix<@Recorded UnitExpression>>concat(similarNames, Stream.<QuickFix<@Recorded UnitExpression>>of(makeNew)).collect(ImmutableList.<QuickFix<@Recorded UnitExpression>>toImmutableList());
+            throw new UnitLookupException(StyledString.s(e.getLocalizedMessage()), this, fixes);
         }
     }
 

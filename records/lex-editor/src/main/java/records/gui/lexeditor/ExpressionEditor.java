@@ -22,6 +22,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.FixHelper;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.function.FunctionLookup;
 import threadchecker.OnThread;
@@ -38,9 +39,9 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
 {
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, @Nullable DataType expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, @Nullable DataType expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FixHelper fixHelper, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? null : startingValue.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), onChangeHandler, "expression-editor");
+        super(startingValue == null ? null : startingValue.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), fixHelper, onChangeHandler, "expression-editor");
         
         FXUtility.onceNotNull(display.sceneProperty(), s -> {
             FXUtility.onceNotNull(s.windowProperty(), w -> {

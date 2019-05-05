@@ -11,10 +11,14 @@ import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.QuickFixAction;
+import records.transformations.expression.QuickFix.QuickFixReplace;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
@@ -35,18 +39,23 @@ public final class TextQuickFix
     private final StyledString title;
     // Identified by position:
     private final CanonicalSpan replacementTarget;
-    private final FXPlatformSupplierInt<Pair<String, StyledString>> makeReplacement;
+    private final Either<QuickFixAction, QuickFixReplace<Pair<String, StyledString>>> actionOrMakeReplacement;
     private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
     private @MonotonicNonNull StyledString cachedTitle;
 
-    public TextQuickFix(@LocalizableKey String titleKey, CanonicalSpan replacementTarget, FXPlatformSupplierInt<Pair<String, StyledString>> makeReplacement)
+    public TextQuickFix(@LocalizableKey String titleKey, CanonicalSpan replacementTarget, QuickFixReplace<Pair<String, StyledString>> makeReplacement)
     {
         this(StyledString.s(TranslationUtility.getString(titleKey)),
             ImmutableList.of(),
             replacementTarget, makeReplacement);
     }
+
+    public TextQuickFix(StyledString title, ImmutableList<String> cssClasses, CanonicalSpan replacementTarget, QuickFixReplace<Pair<String, StyledString>> makeReplacement)
+    {
+        this(title, cssClasses, replacementTarget, Either.right(makeReplacement));
+    }
     
-    public TextQuickFix(StyledString title, ImmutableList<String> cssClasses, CanonicalSpan replacementTarget, FXPlatformSupplierInt<Pair<String, StyledString>> makeReplacement)
+    private TextQuickFix(StyledString title, ImmutableList<String> cssClasses, CanonicalSpan replacementTarget, Either<QuickFixAction, QuickFixReplace<Pair<String, StyledString>>> actionOrMakeReplacement)
     {
         this.title = title;
         this.cssClasses = new FXPlatformSupplier<ImmutableList<String>>()
@@ -57,7 +66,7 @@ public final class TextQuickFix
             {
                 try
                 {
-                    return Utility.<String>concatI(cssClasses, ImmutableList.<String>of(ExpressionUtil.makeCssClass(makeReplacement.get().getFirst())));
+                    return Utility.<String>concatI(cssClasses, actionOrMakeReplacement.<ImmutableList<String>>eitherInt(a -> ImmutableList.<String>of(), m -> ImmutableList.<String>of(ExpressionUtil.makeCssClass(m.makeReplacement().getFirst()))));
                 }
                 catch (InternalException e)
                 {
@@ -67,15 +76,15 @@ public final class TextQuickFix
             }
         };
         this.replacementTarget = replacementTarget;
-        this.makeReplacement = makeReplacement;
+        this.actionOrMakeReplacement = actionOrMakeReplacement;
     }
     
     public <@NonNull EXPRESSION extends StyledShowable> TextQuickFix(CanonicalSpan location, Function<@UnknownIfRecorded EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
     {
-        this(treeFix.getTitle(), treeFix.getCssClasses(), location, () -> {
-            @UnknownIfRecorded EXPRESSION s = treeFix.getReplacement().getSecond();
+        this(treeFix.getTitle(), treeFix.getCssClasses(), location, treeFix.getActionOrReplacement().map((QuickFixReplace<@UnknownIfRecorded EXPRESSION> m) -> () -> {
+            @UnknownIfRecorded EXPRESSION s = m.makeReplacement();
             return new Pair<>(toText.apply(s), s.toStyledString());
-        });
+        }));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -87,7 +96,7 @@ public final class TextQuickFix
         StyledString replacement;
         try
         {
-            replacement = makeReplacement.get().getSecond();
+            replacement = actionOrMakeReplacement.eitherInt(a -> StyledString.s(""), m -> m.makeReplacement().getSecond());
         }
         catch (InternalException e)
         {
@@ -100,9 +109,9 @@ public final class TextQuickFix
     
     @OnThread(Tag.FXPlatform)
     // Gets the replacement target (first item) and replacement (second item)
-    public Pair<CanonicalSpan, String> getReplacement() throws InternalException
+    public Either<QuickFixAction, Pair<CanonicalSpan, String>> getReplacement() throws InternalException
     {
-        return new Pair<>(replacementTarget, makeReplacement.get().getFirst());
+        return actionOrMakeReplacement.mapInt(m -> new Pair<>(replacementTarget, m.makeReplacement().getFirst()));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -113,6 +122,6 @@ public final class TextQuickFix
 
     public TextQuickFix offsetBy(@CanonicalLocation int caretPosOffset)
     {
-        return new TextQuickFix(title, cssClasses.get(), replacementTarget.offsetBy(caretPosOffset), makeReplacement);
+        return new TextQuickFix(title, cssClasses.get(), replacementTarget.offsetBy(caretPosOffset), actionOrMakeReplacement);
     }
 }

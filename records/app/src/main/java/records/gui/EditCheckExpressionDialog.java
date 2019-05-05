@@ -48,7 +48,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
         SimpleObjectProperty<ColumnLookup> columnLookupProperty = new SimpleObjectProperty<>(columnLookup.apply(initialCheckType));
         FXUtility.addChangeListenerPlatform(combo.getSelectionModel().selectedItemProperty(), ct -> columnLookupProperty.set(columnLookup.apply(ct == null ? initialCheckType : ct)));
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, DataType.BOOLEAN, parent, parent.getManager().getTypeManager(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), combo.getSelectionModel().getSelectedItem()), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, DataType.BOOLEAN, parent, parent.getManager().getTypeManager(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), combo.getSelectionModel().getSelectedItem()), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {

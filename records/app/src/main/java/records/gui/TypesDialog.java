@@ -67,9 +67,11 @@ import java.util.stream.Stream;
 public class TypesDialog extends Dialog<Void>
 {
     private final TypeManager typeManager;
+    private final View owner;
 
-    public TypesDialog(DimmableParent owner, TypeManager typeManager)
+    public TypesDialog(View owner, TypeManager typeManager)
     {
+        this.owner = owner;
         this.typeManager = typeManager;
         initModality(Modality.WINDOW_MODAL);
         initOwner(owner.dimWhileShowing(this));
@@ -382,7 +384,7 @@ public class TypesDialog extends Dialog<Void>
                 }
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
-                this.innerType = new TypeEditor(typeManager, startingExpression, false, true, latest -> {
+                this.innerType = new TypeEditor(typeManager, startingExpression, false, true, owner.getFixHelper(), latest -> {
                     updateCurrentValue(latest);
                 });
                 //innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));

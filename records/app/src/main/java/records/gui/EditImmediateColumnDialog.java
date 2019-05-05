@@ -81,7 +81,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private @Nullable @Value Object defaultValue;
     
     @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(DimmableParent parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
+    public EditImmediateColumnDialog(View parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
     {
         super(parent, true);
         setResizable(true);
@@ -115,7 +115,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 Log.log(e);
             }
         }
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, true, false, t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, true, false, parent.getFixHelper(), t -> {
             clearErrorLabel();
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);

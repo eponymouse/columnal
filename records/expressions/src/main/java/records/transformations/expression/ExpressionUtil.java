@@ -42,6 +42,7 @@ import records.transformations.expression.IdentExpression;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.QuickFixReplace;
 import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.TypeState;
@@ -104,7 +105,7 @@ public class ExpressionUtil
     public static List<QuickFix<Expression>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
-        FXPlatformSupplierInt<Expression> makeTypeFix = () -> {
+        QuickFixReplace<Expression> makeTypeFix = () -> {
             return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
         };
         quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));

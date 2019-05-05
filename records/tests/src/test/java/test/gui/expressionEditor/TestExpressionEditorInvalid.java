@@ -80,12 +80,12 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             {
                 return Stream.of();
             }
-
+            
             @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
                 return Stream.of();
             }
-        }), null, null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        }), null, null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {}));
     }
 }

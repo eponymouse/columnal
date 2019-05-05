@@ -149,7 +149,7 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                 parent.disablePickingMode();
             }
         };
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {
             curValue = e;
             notifyModified();
         }) {

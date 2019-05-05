@@ -10,6 +10,7 @@ import javafx.animation.Timeline;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -27,12 +28,15 @@ import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.transformations.expression.FixHelper;
+import records.transformations.expression.QuickFix.QuickFixAction;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -59,11 +63,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     protected final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
     private final ErrorMessagePopup errorMessagePopup;
+    private final FixHelper fixHelper;
     private boolean hiding;
 
     // package-visible
-    TopLevelEditor(@Nullable String originalContent, LEXER lexer, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
+    TopLevelEditor(@Nullable String originalContent, LEXER lexer, FixHelper fixHelper, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
     {
+        this.fixHelper = fixHelper;
         errorMessagePopup = new ErrorMessagePopup();
         content = new EditorContent<>(originalContent == null ? "" : originalContent, lexer);
         display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n), this));
@@ -181,8 +187,14 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
             try
             {
-                Pair<CanonicalSpan, String> replacement = f.getReplacement();
-                content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
+                Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
+                actionOrReplacement.eitherInt_(a -> {
+                    @SuppressWarnings("nullness")
+                    @NonNull Scene scene = getContainer().getScene();
+                    a.doAction(fixHelper, scene);
+                }, replacement -> {
+                    content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
+                });
             }
             catch (InternalException e)
             {

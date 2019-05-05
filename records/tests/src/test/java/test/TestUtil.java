@@ -1,6 +1,7 @@
 package test;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -19,6 +20,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -1427,6 +1429,17 @@ public class TestUtil
         });
         
         Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
+    }
+
+    public static FixHelper blankFixHelper()
+    {
+        return new FixHelper()
+        {
+            @Override
+            public void createNewUnit(@UnitIdentifier String newUnitName, Scene editorScene)
+            {
+            }
+        };
     }
 
     public static interface TestRunnable
