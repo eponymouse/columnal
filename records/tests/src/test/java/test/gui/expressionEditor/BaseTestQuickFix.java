@@ -142,12 +142,11 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             @NonNull Node targetFinal = targetField;
             if (!TestUtil.fx(() -> targetFinal.isFocused()))
             {
-                //TestUtil.fx_(() -> dumpScreenshot());
                 Log.debug("Focusing target field: " + targetFinal);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(point(targetField));
-                assertTrue("Clicked " + point(targetField).query().toString(), TestUtil.fx(() -> targetFinal.isFocused()));
+                assertTrue("Clicked " + point(targetField).query().toString() + " focus is: " + TestUtil.<@Nullable Node>fx(() -> getFocusOwner()), TestUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
             int moveDist = TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
@@ -183,11 +182,11 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertNotEquals(Utility.listToString(fixStyles), "", key);
             Log.debug("Pressing: SHIFT-" + key);
             push(KeyCode.SHIFT, KeyCode.valueOf(key));
+            WaitForAsyncUtils.waitForFxEvents();
+            afterClick.run();
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
-            WaitForAsyncUtils.waitForFxEvents();
-            afterClick.run();
             TestUtil.doubleOk(this);
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();

@@ -1,12 +1,10 @@
 package test.gui.expressionEditor;
 
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.ExpressionUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -110,7 +108,7 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testUnitLiteralFix9() throws UserException, InternalException
     {
-        testFix("type{Number{new/s}}", "new", dotCssClassFor("new"), "type{Number{new/s}}", () -> {
+        testFix("type{Number{new/s}}", "new", ".quick-fix-action", "type{Number{new/s}}", () -> {
             clickOn(".edit-unit-dialog .ok-button");
         });
     }
