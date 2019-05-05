@@ -58,6 +58,25 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @SuppressWarnings("recorded") // Don't need to record when making a fix
     public static Expression fixType(FunctionLookup functionLookup, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
     {
+        // Special case -- if it's "from text", switch to "from text to":
+        if (expression instanceof CallExpression)
+        {
+            CallExpression call = (CallExpression) expression;
+            if (call.getFunction() instanceof StandardFunction)
+            {
+                StandardFunction func = (StandardFunction) call.getFunction();
+                if (func.getName().equals("from text"))
+                {
+                    StandardFunctionDefinition fromTextTo = functionLookup.lookup("from text to");
+                    if (fromTextTo != null)
+                    {
+                        return new CallExpression(new StandardFunction(fromTextTo), ImmutableList.of(new TypeLiteralExpression(fixTo),
+                            call.getParams().get(0)));
+                    }
+                }
+            }
+        }
+        
         StandardFunctionDefinition asType = functionLookup.lookup( "as type");
         if (asType == null)
             throw new InternalException("Missing as type function");

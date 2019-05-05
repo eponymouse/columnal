@@ -116,7 +116,13 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testAsType1()
     {
-        testSimpleFix("from text(\"\")", "from", "@call @function as type(type{@invalidtypeops()},@call @function from text(\"\"))");
+        testSimpleFix("minimum([])", "minimum", "@call @function as type(type{@invalidtypeops()},@call @function minimum([]))");
+    }
+
+    @Test
+    public void testAsType1b()
+    {
+        testSimpleFix("from text(\"\")", "from", "@call @function from text to(type{@invalidtypeops()}, \"\")");
     }
 
     @Test

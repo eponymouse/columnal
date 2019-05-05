@@ -51,6 +51,7 @@ import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
+import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -106,7 +107,7 @@ public class ExpressionUtil
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
         QuickFixReplace<Expression> makeTypeFix = () -> {
-            return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
+            return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidOpTypeExpression(ImmutableList.<@Recorded TypeExpression>of()) : TypeExpression.fromDataType(fix), src);
         };
         quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)

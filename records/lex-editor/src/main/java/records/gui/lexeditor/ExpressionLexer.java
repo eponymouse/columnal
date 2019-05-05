@@ -484,9 +484,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 if (expectedType != null)
                     TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType));
                 @RawInputLocation int lastIndex = curIndex;
-                typeExp.toConcreteType(typeManager, false).ifLeft(err -> {
-                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedChars.map(lastIndex)), err.getErrorText(), ImmutableList.of(/*asType fix?  Only if ambig?*/));
-                });
+                saver.locationRecorder.getRecorder().recordLeftError(typeManager, functionLookup, saved, typeExp.toConcreteType(typeManager, false));
             }
         }
         catch (InternalException | UserException e)

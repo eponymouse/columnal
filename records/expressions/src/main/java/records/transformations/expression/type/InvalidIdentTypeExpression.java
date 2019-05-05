@@ -30,7 +30,7 @@ public class InvalidIdentTypeExpression extends TypeExpression
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.s("Invalid: \"" + value + "\"");
+        return StyledString.s(value);
     }
 
     @Override
