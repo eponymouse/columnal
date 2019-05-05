@@ -290,9 +290,10 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     assertEquals("Clicked: " + caretCentres[clickIndex].add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
                     // Try double-click just after the position:
                     push(KeyCode.LEFT);
-                    // Prevent joining to other clicks:
-                    sleep(400);
-                    doubleClickOn(caretCentres[clickIndex].add(3, 0));
+                    // Double click is unreliable in TestFX, so fake it:
+                    Point2D doubleClick = caretCentres[clickIndex].add(1, 0);
+                    EditorDisplay editorDisplay = getEditorDisplay();
+                    TestUtil.fx_(() -> editorDisplay._test_doubleClickOn(doubleClick));
                     int lhsSel = findPrev(wordBoundaryCaretPos, internalCaretPos[clickIndex == internalCaretPos.length - 1 ? clickIndex - 1 : clickIndex]);
                     assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), lhsSel, getAnchorPosition());
                     assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), findNext(wordBoundaryCaretPos, internalCaretPos[clickIndex]), getPosition().getSecond().intValue());
@@ -423,19 +424,21 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
 
     private Pair<EditorDisplay, Integer> getPosition()
     {
-        Node focusOwner = getFocusOwner();
-        if (!(focusOwner instanceof EditorDisplay))
-            throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
-        EditorDisplay textField = (EditorDisplay) focusOwner;
+        EditorDisplay textField = getEditorDisplay();
         return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
     }
 
-    private int getAnchorPosition()
+    private EditorDisplay getEditorDisplay()
     {
         Node focusOwner = getFocusOwner();
         if (!(focusOwner instanceof EditorDisplay))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
-        EditorDisplay textField = (EditorDisplay) focusOwner;
+        return (EditorDisplay) focusOwner;
+    }
+
+    private int getAnchorPosition()
+    {
+        EditorDisplay textField = getEditorDisplay();
         return TestUtil.fx(() -> textField.getAnchorPosition());
     }
     

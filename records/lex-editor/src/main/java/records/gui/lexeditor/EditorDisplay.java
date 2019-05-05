@@ -115,41 +115,23 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         
         addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
             FXUtility.mouse(this).requestFocus();
-            HitInfo hitInfo = hitTest(event.getX(), event.getY());
-            if (hitInfo != null)
-            {
-                @SuppressWarnings("units")
-                @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
-                content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), true);
-            }
+            positionCaret(event.getX(), event.getY(), true);
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
-            HitInfo hitInfo = hitTest(event.getX(), event.getY());
-            if (hitInfo != null)
-            {
-                @SuppressWarnings("units")
-                @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
-                content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), false);
-            }
+            FXUtility.mouse(this).requestFocus();
+            positionCaret(event.getX(), event.getY(), false);
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             if (event.isStillSincePress() && event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY)
             {
-                @CanonicalLocation int start = content.prevWordPosition(true);
-                content.positionCaret(start, true);
-                @CanonicalLocation int end = content.nextWordPosition();
-                if (start == end)
-                {
-                    start = content.prevWordPosition(false);
-                    content.positionCaret(start, true);
-                }
-                content.positionCaret(end, false);
-                //Log.debug("Double clicked: " + start + " to " + end);
+                FXUtility.mouse(this).requestFocus();
+                selectWordAt(event.getX(), event.getY());
             }
             else if (event.isStillSincePress() && event.getClickCount() >= 3 && event.getButton() == MouseButton.PRIMARY)
             {
+                FXUtility.mouse(this).requestFocus();
                 selectAll();
             }
             event.consume();
@@ -316,6 +298,38 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         content.addChangeListener(() -> render(true));
         content.addCaretPositionListener(c -> render(false));
         render(true);
+    }
+    
+    public void _test_doubleClickOn(Point2D screenPoint)
+    {
+        Point2D local = screenToLocal(screenPoint);
+        selectWordAt(local.getX(), local.getY());
+    }
+
+    private void selectWordAt(double localX, double localY)
+    {
+        positionCaret(localX, localY, true);
+        @CanonicalLocation int start = content.prevWordPosition(true);
+        content.positionCaret(start, true);
+        @CanonicalLocation int end = content.nextWordPosition();
+        if (start == end)
+        {
+            start = content.prevWordPosition(false);
+            content.positionCaret(start, true);
+        }
+        content.positionCaret(end, false);
+        //Log.debug("Double clicked: " + start + " to " + end);
+    }
+
+    private void positionCaret(double localX, double localY, boolean moveAnchor)
+    {
+        HitInfo hitInfo = hitTest(localX, localY);
+        if (hitInfo != null)
+        {
+            @SuppressWarnings("units")
+            @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
+            content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), moveAnchor);
+        }
     }
 
     @Override
