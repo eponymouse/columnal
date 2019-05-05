@@ -173,7 +173,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             switch (keyEvent.getCode())
             {
                 case LEFT:
-                    if (caretPosition != content.getAnchorPosition())
+                    if (caretPosition != content.getAnchorPosition() && !keyEvent.isShiftDown())
                     {
                         @SuppressWarnings("units")
                         @CanonicalLocation int start = Math.min(caretPosition, content.getAnchorPosition());
@@ -185,7 +185,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                         content.positionCaret(caretPositions[caretPosIndex - 1], !keyEvent.isShiftDown());
                     break;
                 case RIGHT:
-                    if (caretPosition != content.getAnchorPosition())
+                    if (caretPosition != content.getAnchorPosition() && !keyEvent.isShiftDown())
                     {
                         @SuppressWarnings("units")
                         @CanonicalLocation int end = Math.max(caretPosition, content.getAnchorPosition());
