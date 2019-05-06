@@ -47,6 +47,12 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String fromParsed(records.grammar.FormatParser.ColumnNameContext parsedIdent)
+    {
+        return parsedIdent.getText();
+    }
+
+    @SuppressWarnings("identifier")
     public static @UnitIdentifier String fromParsed(SingleUnitContext parsedIdent)
     {
         return parsedIdent.IDENT().getText();

@@ -114,7 +114,7 @@ public abstract class DataSource extends Table
                 ColumnNameContext colName;
                 if (column == null || (colName = column.columnName()) == null)
                     throw new UserException("Problem on line " + line.getText());
-                ColumnId name = new ColumnId(IdentifierUtility.fromParsed(colName.ident()));
+                ColumnId name = new ColumnId(IdentifierUtility.fromParsed(colName));
                 if (r.stream().anyMatch(pr -> pr.columnId.equals(name)))
                     throw new UserException("Duplicate column name: \"" + name + "\"");
 
