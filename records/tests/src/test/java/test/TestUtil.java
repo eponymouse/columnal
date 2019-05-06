@@ -53,6 +53,7 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.error.InvalidImmediateValueException;
+import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
@@ -293,6 +294,15 @@ public class TestUtil
             if (l != null)
             {
                 keywords.add(l.substring(1, l.length() - 1));
+            }
+        }
+
+        for (int i = 0; i < FormatLexer.VOCABULARY.getMaxTokenType(); i++)
+        {
+            String l = FormatLexer.VOCABULARY.getLiteralName(i);
+            if (l != null)
+            {
+                keywords.add(l);
             }
         }
         return keywords;
