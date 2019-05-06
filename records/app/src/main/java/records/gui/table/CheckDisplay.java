@@ -283,7 +283,6 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     @Override
     public @OnThread(Tag.FXPlatform) void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display)
     {
-        mostRecentBounds.set(position);
         this.setPosition(position);
     }
 
@@ -418,6 +417,6 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     {
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
-            mostRecentBounds.set(cellPosition);
+            mostRecentBounds.set(getPosition());
     }
 }

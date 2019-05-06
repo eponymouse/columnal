@@ -467,7 +467,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
-            mostRecentBounds.set(cellPosition);
+            updateMostRecentBounds();
     }
     
     /*
@@ -658,7 +658,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @RequiresNonNull({"mostRecentBounds"})
-    private void updateMostRecentBounds(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    private void updateMostRecentBounds(@UnknownInitialization(GridArea.class) TableDisplay this)
     {
         mostRecentBounds.set(getPosition());
     }
@@ -778,7 +778,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public void loadPosition(CellPosition cellPosition, Pair<Display, ImmutableList<ColumnId>> display)
     {
-        mostRecentBounds.set(cellPosition);
         this.setPosition(cellPosition);
         this.columnDisplay.set(display);
     }

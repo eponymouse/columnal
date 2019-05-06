@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -98,7 +99,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     private @NonNull TableManager tableManager;
     
     private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(2));
-    private final CellPosition transformTopLeft = new CellPosition(CellPosition.row(4), CellPosition.col(8));
+    private final CellPosition transform1TopLeft = new CellPosition(CellPosition.row(4), CellPosition.col(6));
+    private final CellPosition transform2TopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(9));
     private final int originalRows = 3;
     private final int originalColumns = 2;
     @OnThread(Tag.Any)
@@ -122,15 +124,24 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), sortBy);
+                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted1"), transform1TopLeft, null), src.getId(), sortBy);
                 dummyManager.record(sort);
+                Sort sort2 = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted2"), transform2TopLeft, null), sort.getId(), sortBy);
+                dummyManager.record(sort2);
                 @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
                     MainWindowActions details = supplier.get();
                     this.tableManager = details._test_getTableManager();
                     virtualGrid = details._test_getVirtualGrid();
+                    // Make columns thinner so everything fits on screen easily:
+                    TestUtil.fx_(() -> {
+                        for (int c = 0; c < 12; c++)
+                        {
+                            virtualGrid._test_setColumnWidth(c, 60.0);
+                        }
+                    });
                     finish.complete(Optional.empty());
-                    Platform.runLater(() -> com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
+                    Platform.runLater(() -> Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
                 }).start();
             }
             catch (Exception e)
@@ -148,9 +159,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
-        // 2 tables, 2 columns:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+        // 3 tables, 2 columns each:
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(0, originalColumns));
         clickOnItemInBounds(lookup(".table-display-table-title .text-field"), virtualGrid, rectangleBounds);
         selectAllCurrentTextField();
@@ -164,19 +175,19 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Renaming involves thread hopping, so wait for a bit:
         TestUtil.sleep(1000);
 
-        assertEquals(ImmutableSet.of("Sorted", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
+        assertEquals(ImmutableSet.of("Sorted1", "Sorted2", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
         // Check we haven't amassed multiple tables during the rename re-runs:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
     }
 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
-        // 2 tables, 2 columns:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+        // 3 tables, 2 columns each:
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, 0));
         clickOnItemInBounds(lookup(".table-display-column-title"), virtualGrid, rectangleBounds);
         TestUtil.delay(1000);
@@ -189,10 +200,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         TestUtil.sleep(1000);
 
         // Fetch the sorted transformation and check the column names (checks rename, and propagation):
-        assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getData().getColumnIds()));
+        assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted1")).getData().getColumnIds()));
+        assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted2")).getData().getColumnIds()));
         // Check we haven't amassed multiple tables during the rename re-runs:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
     }
     
     @Property(trials = 2)
@@ -279,7 +291,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         // Check neither table moved:
         assertEquals(originalTableTopLeft, TestUtil.tablePosition(tableManager, srcId));
-        assertEquals(transformTopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted")));
+        assertEquals(transform1TopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted1")));
+        assertEquals(transform2TopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted2")));
         
         for (Table table : tableManager.getAllTables())
         {
@@ -301,9 +314,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
-        // 2 tables, 2 columns:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
+        // 3 tables, 2 columns each:
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
         // 2 columns which you can add to, 3 rows plus 2 column headers:
         assertEquals(originalColumns + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
 
@@ -322,8 +335,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         TestUtil.sleep(500);
 
         // Should now be one more column in each table:
-        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(3, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(9, lookup(".table-display-column-title").queryAll().size());
         // One extra column:
         assertEquals(originalColumns + 1 + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
         
@@ -347,7 +360,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
     
-    @Property(trials = 10)
+    @Property(trials = 15)
     @OnThread(Tag.Simulation)
     public void testTableDrag(@From(GenRandom.class) Random r)
     {
@@ -358,7 +371,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         CellPosition original = TestUtil.fx(() -> tableDisplay.getPosition());
         keyboardMoveTo(virtualGrid, original.offsetByRowCols(-1, -1));
-        CellPosition dest = original.offsetByRowCols(r.nextInt(5) - 2, r.nextInt(5) - 2);
+        CellPosition dest = original.offsetByRowCols(r.nextInt(5) - 2, r.nextInt(12) - 2);
         
         Rectangle2D start = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
         Rectangle2D end = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
@@ -373,14 +386,37 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         sleep(1000);
         
-        // Check table actually moved:
-        assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, TestUtil.fx(() -> tableDisplay.getPosition()));
+        // TODO Check table actually moved to somewhere reasonable:
+        /*assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, TestUtil.fx(() -> tableDisplay.getPosition()));
         TextField tableNameTextField = (TextField)withItemInBounds(lookup(".table-name-text-field"), virtualGrid, new RectangleBounds(dest, dest), (n, p) -> {});
         assertNotNull(tableNameTextField);
         assertEquals(table.getId().getRaw(), TestUtil.fx(() -> tableNameTextField.getText()));
+        */
         // TODO check drag overlays
+        
+        // Check tables aren't overlapping:
+        ImmutableList<Table> allTables = tableManager.getAllTables();
+        for (Table a : allTables)
+        {
+            RectangleBounds aBounds = TestUtil.fx(() -> getBounds(a));
+            for (Table b : allTables)
+            {
+                if (a != b)
+                {
+                    RectangleBounds bBounds = TestUtil.fx(() -> getBounds(b));
+
+                    assertFalse("Bounds " + a.getId() + aBounds + " and " + b.getId() + bBounds + " touching", aBounds.touches(bBounds));
+                }
+            }
+        }
     }
-    
+
+    @SuppressWarnings("nullness")
+    private RectangleBounds getBounds(Table table)
+    {
+        return new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
+    }
+
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testChangeColumnType(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
