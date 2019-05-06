@@ -2,6 +2,7 @@ package test.gui.table;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -24,6 +25,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
+import records.data.Table.TableDisplayBase;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
@@ -35,8 +37,17 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.lexeditor.EditorDisplay;
 import records.gui.table.TableDisplay;
+import records.transformations.Calculate;
+import records.transformations.Filter;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
+import records.transformations.expression.AndExpression;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.Expression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.type.TypeExpression;
 import test.DummyManager;
 import test.TestUtil;
@@ -72,6 +83,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -84,12 +96,27 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait, PopupTrait, ClickOnTableHeaderTrait
 {
+    /*
+     * We glue together all combinations of two transforms, from:
+     *  - Sort
+     *  - Filter
+     *  - Calculate
+     *  - ManualEdit
+     * 
+     * We also make some Concatenates and Aggregates
+     */
+    
     @OnThread(Tag.Any)
     private final List<Boolean> booleans = Arrays.asList(true, false, false);
     @OnThread(Tag.Any)
     private final List<Integer> numbers = Arrays.asList(5, 4, 3);
+    
     @OnThread(Tag.Any)
-    private final ImmutableList<Pair<ColumnId, Direction>> sortBy = ImmutableList.of(new Pair<>(new ColumnId("B"), Direction.ASCENDING), new Pair<>(new ColumnId("A"), Direction.DESCENDING));
+    private final ImmutableList<Pair<ColumnId, Direction>> sortBy = ImmutableList.of(new Pair<>(new ColumnId("Boolean"), Direction.ASCENDING), new Pair<>(new ColumnId("Number"), Direction.DESCENDING));
+    
+    @OnThread(Tag.Any)
+    private final Expression filterCalcExpression = new AndExpression(ImmutableList.of(new ComparisonExpression(ImmutableList.of(new ColumnReference(new ColumnId("Number"), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(4, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));  
+    
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
@@ -99,12 +126,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     private @NonNull TableManager tableManager;
     
     private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(2));
-    private final CellPosition transform1TopLeft = new CellPosition(CellPosition.row(4), CellPosition.col(6));
-    private final CellPosition transform2TopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(9));
+    @OnThread(Tag.Simulation)
+    private final HashMap<TableId, CellPosition> transformPositions = new HashMap<>();
     private final int originalRows = 3;
     private final int originalColumns = 2;
-    @OnThread(Tag.Any)
-    private final CompletableFuture<Optional<Exception>> finish = new CompletableFuture<>();
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private TableId srcId;
@@ -114,20 +139,20 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void start(Stage stage) throws Exception
     {
         super.start(stage);
+        final CompletableFuture<Optional<Exception>> finish = new CompletableFuture<>();
         TableManager dummyManager = new DummyManager();
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {
             try
             {
-                SimulationFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("A"), booleans.stream().map(b -> Either.<String, Boolean>right(b)).collect(Collectors.toList()), false);
-                SimulationFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, numbers.stream().map(n -> Either.<String, Number>right(n)).collect(Collectors.toList()), 6);
+                SimulationFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("Boolean"), booleans.stream().map(b -> Either.<String, Boolean>right(b)).collect(Collectors.toList()), false);
+                SimulationFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("Number"), NumberInfo.DEFAULT, numbers.stream().map(n -> Either.<String, Number>right(n)).collect(Collectors.toList()), 6);
                 ImmutableList<SimulationFunction<RecordSet, EditableColumn>> columns = ImmutableList.of(a, b);
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted1"), transform1TopLeft, null), src.getId(), sortBy);
-                dummyManager.record(sort);
-                Sort sort2 = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted2"), transform2TopLeft, null), sort.getId(), sortBy);
-                dummyManager.record(sort2);
+                
+                addTransforms(dummyManager, srcId, 0, nextPos(src));
+                
                 @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
                     MainWindowActions details = supplier.get();
@@ -154,7 +179,57 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(finish);
         //assertNull(finish.get(5, TimeUnit.SECONDS).orElse(null));
     }
+
+    // Returns next target position
+    @SuppressWarnings("identifier")
+    @OnThread(Tag.Simulation)
+    private CellPosition addTransforms(TableManager dummyManager, TableId srcId, int depth, CellPosition targetPos) throws InternalException, UserException
+    {
+        TableId sortId = new TableId(srcId.getRaw() + " then Sort");
+        Sort sort = new Sort(dummyManager, new InitialLoadDetails(sortId, targetPos, null), srcId, sortBy);
+        dummyManager.record(sort);
+        transformPositions.put(sortId, targetPos);
+        targetPos = nextPos(sort);
+
+        TableId filterId = new TableId(srcId.getRaw() + " then Filter");
+        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, filterCalcExpression);
+        dummyManager.record(filter);
+        transformPositions.put(filterId, targetPos);
+        targetPos = nextPos(filter);
+
+        TableId calculateId = new TableId(srcId.getRaw() + " then Calculate");
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), filterCalcExpression));
+        dummyManager.record(calc);
+        transformPositions.put(calculateId, targetPos);
+        targetPos = nextPos(calc);
+        
+        // TODO manual edit
+        
+        if (depth < 2)
+        {
+            depth += 1;
+            targetPos = addTransforms(dummyManager, sortId, depth, targetPos);
+            targetPos = addTransforms(dummyManager, filterId, depth, targetPos);
+            targetPos = addTransforms(dummyManager, calculateId, depth, targetPos);
+        }
+        
+        return targetPos;
+    }
     
+    @OnThread(Tag.Simulation)
+    private CellPosition nextPos(Table table) throws InternalException, UserException
+    {
+        CellPosition right = table._test_getPrevPosition().offsetByRowCols(0, table.getData().getColumns().size() + 1);
+        // Wrap beyond certain point:
+        if (right.columnIndex > 20)
+        {
+            CellPosition below = table._test_getPrevPosition().offsetByRowCols(table.getData().getLength() + 2, 0);
+            return below;
+        }
+        else
+            return right;
+    }
+
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
@@ -289,10 +364,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         TestUtil.sleep(500);
         
-        // Check neither table moved:
+        // Check no tables moved:
         assertEquals(originalTableTopLeft, TestUtil.tablePosition(tableManager, srcId));
-        assertEquals(transform1TopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted1")));
-        assertEquals(transform2TopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted2")));
+        for (Entry<TableId, CellPosition> entry : transformPositions.entrySet())
+        {
+            assertEquals(entry.getValue(), TestUtil.tablePosition(tableManager, entry.getKey()));
+        }
         
         for (Table table : tableManager.getAllTables())
         {

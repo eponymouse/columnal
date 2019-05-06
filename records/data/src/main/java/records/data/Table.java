@@ -326,6 +326,11 @@ public abstract class Table
         return mgr;
     }
 
+    public synchronized final CellPosition _test_getPrevPosition()
+    {
+        return prevPosition;
+    }
+
     public synchronized InitialLoadDetails getDetailsForCopy()
     {
         return new InitialLoadDetails(id, prevPosition, showColumns);
