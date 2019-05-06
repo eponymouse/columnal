@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
@@ -15,7 +14,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
@@ -25,7 +23,6 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.Table.TableDisplayBase;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
@@ -113,10 +110,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     
     @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Direction>> sortBy = ImmutableList.of(new Pair<>(new ColumnId("Boolean"), Direction.ASCENDING), new Pair<>(new ColumnId("Number"), Direction.DESCENDING));
-    
-    @OnThread(Tag.Any)
-    private final Expression filterCalcExpression = new AndExpression(ImmutableList.of(new ComparisonExpression(ImmutableList.of(new ColumnReference(new ColumnId("Number"), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(4, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));  
-    
+
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
@@ -133,6 +127,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private TableId srcId;
+
+    @OnThread(Tag.Any)
+    private static Expression makeFilterCalcExpression()
+    {
+        return new AndExpression(ImmutableList.of(new ComparisonExpression(ImmutableList.of(new ColumnReference(new ColumnId("Number"), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(4, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
+    }
 
 
     @Override
@@ -192,22 +192,22 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         targetPos = nextPos(sort);
 
         TableId filterId = new TableId(srcId.getRaw() + " then Filter");
-        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, filterCalcExpression);
+        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, makeFilterCalcExpression());
         dummyManager.record(filter);
         transformPositions.put(filterId, targetPos);
         targetPos = nextPos(filter);
 
         TableId calculateId = new TableId(srcId.getRaw() + " then Calculate");
-        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), filterCalcExpression));
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), makeFilterCalcExpression()));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
         
         // TODO manual edit
-        
+
+        depth += 1;
         if (depth < 2)
         {
-            depth += 1;
             targetPos = addTransforms(dummyManager, sortId, depth, targetPos);
             targetPos = addTransforms(dummyManager, filterId, depth, targetPos);
             targetPos = addTransforms(dummyManager, calculateId, depth, targetPos);
