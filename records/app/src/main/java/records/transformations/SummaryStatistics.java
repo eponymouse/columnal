@@ -450,14 +450,14 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         for (Pair<ColumnId, Expression> entry : summaries)
         {
             b.kw("SUMMARY");
-            b.id(renames.columnId(getId(), entry.getFirst()).getSecond());
+            b.id(renames.columnId(getId(), entry.getFirst(), null).getSecond());
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
             b.raw(entry.getSecond().save(true, BracketedStatus.DONT_NEED_BRACKETS, renames));
             b.nl();
         }
         for (ColumnId c : splitBy)
         {
-            b.kw("SPLIT").id(renames.columnId(srcTableId, c).getSecond()).nl();
+            b.kw("SPLIT").id(renames.columnId(srcTableId, c, null).getSecond()).nl();
         }
         return b.toLines();
     }

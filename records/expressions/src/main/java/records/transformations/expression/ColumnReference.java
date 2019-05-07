@@ -101,7 +101,7 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName);
+        final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName, null);
 
         final @Nullable TableId renamedTableId = renamed.getFirst();
         String tableColonColumn = (renamedTableId != null ? (renamedTableId.getRaw() + ":") : "") + renamed.getSecond().getRaw();

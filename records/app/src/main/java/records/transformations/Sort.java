@@ -138,12 +138,26 @@ public class Sort extends Transformation implements SingleSourceTransformation
         }
         @Nullable RecordSet theResult = null;
         @Nullable List<Pair<Column, Direction>> theSortBy = null;
+        
         try
         {
+            RecordSet srcData;
+            int srcDataLength;
+            try
+            {
+                srcData = this.src.getData();
+                srcDataLength = srcData.getLength();
+            }
+            catch (UserException e)
+            {
+                throw new UserException("Error in source table: " + this.src.getId());
+            }
+            
             List<Pair<Column, Direction>> sortByColumns = new ArrayList<>();
             for (Pair<ColumnId, Direction> c : originalSortBy)
             {
-                @Nullable Column column = this.src.getData().getColumn(c.getFirst());
+                
+                @Nullable Column column = srcData.getColumnOrNull(c.getFirst());
                 if (column == null)
                 {
                     sortByColumns = null;
@@ -156,12 +170,11 @@ public class Sort extends Transformation implements SingleSourceTransformation
 
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
 
-            RecordSet srcRecordSet = src.getData();
-            this.stillToOrder = new int[srcRecordSet.getLength() + 1];
+            this.stillToOrder = new int[srcDataLength + 1];
             for (int i = 0; i < stillToOrder.length - 1; i++)
                 stillToOrder[i] = i + 1;
             stillToOrder[stillToOrder.length - 1] = -1;
-            for (Column c : srcRecordSet.getColumns())
+            for (Column c : srcData.getColumns())
             {
                 columns.add(rs -> new Column(rs, c.getName())
                 {
@@ -189,13 +202,13 @@ public class Sort extends Transformation implements SingleSourceTransformation
                 @Override
                 public boolean indexValid(int index) throws UserException, InternalException
                 {
-                    return srcRecordSet.indexValid(index);
+                    return srcData.indexValid(index);
                 }
 
                 @Override
                 public @TableDataRowIndex int getLength() throws UserException, InternalException
                 {
-                    return srcRecordSet.getLength();
+                    return srcData.getLength();
                 }
             };
         }
@@ -387,7 +400,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
     {
         OutputBuilder b = new OutputBuilder();
         for (Pair<ColumnId, Direction> c : originalSortBy)
-            b.kw(c.getSecond().toString()).id(renames.columnId(srcTableId, c.getFirst()).getSecond()).nl();
+            b.kw(c.getSecond().toString()).id(renames.columnId(getId(), c.getFirst(), srcTableId).getSecond()).nl();
         return b.toLines();
     }
 

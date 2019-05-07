@@ -52,7 +52,7 @@ public class ImmediateDataSource extends DataSource
         {
             for (Column c : data.getColumns())
             {
-                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(renames.columnId(getId(), c.getName()).getSecond());
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(renames.columnId(getId(), c.getName(), null).getSecond());
                 b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
                 c.getType().getType().save(b);
 

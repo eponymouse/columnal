@@ -148,7 +148,7 @@ public class HideColumns extends Transformation implements SingleSourceTransform
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : hideIds)
-            b.kw("HIDE").id(renames.columnId(getId(), c).getSecond()).nl();
+            b.kw("HIDE").id(renames.columnId(getId(), c, srcTableId).getSecond()).nl();
         return b.toLines();
     }
 

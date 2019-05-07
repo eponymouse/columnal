@@ -206,7 +206,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         targetPos = nextPos(calc);
         
         // TODO manual edit
+        
+        // TODO concatenate some of the others
 
+        // TODO increase depth by one
+        
         depth += 1;
         if (depth < 2)
         {

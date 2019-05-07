@@ -28,6 +28,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -192,7 +193,8 @@ public class Calculate extends Transformation implements SingleSourceTransformat
     {
         return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getKey()).getSecond());
+            Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);
+            b.kw("CALCULATE").id(renamed.getSecond());
             b.kw("@EXPRESSION");
             b.raw(entry.getValue().save(true, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
             return b.toString();
