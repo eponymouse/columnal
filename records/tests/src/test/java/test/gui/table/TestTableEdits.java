@@ -36,6 +36,7 @@ import records.gui.lexeditor.EditorDisplay;
 import records.gui.table.TableDisplay;
 import records.transformations.Calculate;
 import records.transformations.Filter;
+import records.transformations.ManualEdit;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.expression.AndExpression;
@@ -204,8 +205,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
-        
-        // TODO manual edit
+
+        TableId manualId = new TableId(srcId.getRaw() + " then Edit");
+        ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, targetPos, null), srcId, new Pair<>(new ColumnId("Number"), DataType.NUMBER), ImmutableMap.of());
+        dummyManager.record(manualEdit);
+        transformPositions.put(manualId, targetPos);
+        targetPos = nextPos(manualEdit);
         
         // TODO concatenate some of the others
 
