@@ -879,7 +879,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.FX)
-    public static void setPseudoclass(Node node, String className, boolean on)
+    public static void setPseudoclass(@UnknownInitialization(Node.class) Node node, String className, boolean on)
     {
         node.pseudoClassStateChanged(PseudoClass.getPseudoClass(className), on);
     }

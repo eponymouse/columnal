@@ -92,6 +92,8 @@ class Node
     WritableImage snapshot(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable SnapshotParameters params, @Nullable WritableImage image);
     
     void setAccessibleText(@UnknownInitialization(javafx.scene.Node.class) Node this, String value);
+    
+    public final void pseudoClassStateChanged(@UnknownInitialization(javafx.scene.Node.class) Node this, PseudoClass pseudoClass, boolean active);
 }
 class Scene
 {

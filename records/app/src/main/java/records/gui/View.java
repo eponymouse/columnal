@@ -209,6 +209,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 mainPane.findAndSelect(Either.left(topLeft));
             }
             hintMessage.updateState();
+            FXUtility.setPseudoclass(View.this, "empty", tableManager.getAllTables().isEmpty());
         });
     }
 
@@ -586,6 +587,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     {
         diskFile = new SimpleObjectProperty<>(location);
         hintMessage = new HintMessage();
+        FXUtility.setPseudoclass(View.this, "empty", true);
         tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
         {
             // No-one will add tables after the constructor, so this is okay:
@@ -603,6 +605,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 FXUtility.runFX(() -> {
                     thisView.hintMessage.updateState();
+                    FXUtility.setPseudoclass(View.this, "empty", false);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource));
                     thisView.save(true);
@@ -615,6 +618,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 FXUtility.runFX(() ->
                 {
                     thisView.hintMessage.updateState();
+                    FXUtility.setPseudoclass(View.this, "empty", false);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     if (transformation instanceof Check)
                     {
@@ -985,7 +989,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         {
             super(ViewOrder.STANDARD_CELLS);
             label = new Label(TranslationUtility.getString("main.emptyHint"));
-            label.getStyleClass().add("main-empty-hint");
+            label.getStyleClass().add("main-hint");
             label.setWrapText(true);
             label.setMaxWidth(400.0);
             label.setMouseTransparent(true);

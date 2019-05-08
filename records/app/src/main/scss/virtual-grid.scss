@@ -5,6 +5,15 @@
     -fx-background-color: $table-empty-background;
 }
 
+.virt-grid-line {
+    -fx-stroke-width: 1;
+    -fx-stroke: $table-divider;
+    .view:empty & {
+        -fx-stroke: derive($table-divider, -15%);
+    }
+}
+
+
 .table-display-table-title {
     -fx-background-color: $table-header-background-color;
     &.transformation-table-title {
@@ -65,11 +74,6 @@
     &:column-header-floating {
         -fx-effect: dropshadow(gaussian, grey(70%), 10, 0.4, 0, 3);
     }
-}
-
-.virt-grid-line {
-    -fx-stroke-width: 1;
-    -fx-stroke: $table-divider;
 }
 
 .table-data-cell {
