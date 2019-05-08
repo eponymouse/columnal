@@ -203,6 +203,7 @@ public final class VirtualGrid implements ScrollBindable
     static final double defaultColumnWidth = 100;
 
     private final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
+    private double @Nullable[] cachedColumnLeftX;
 
     // null means the grid doesn't have focus:
     private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
@@ -801,15 +802,23 @@ public final class VirtualGrid implements ScrollBindable
      */
     private double sumColumnWidths(@AbsColIndex int startColIndexIncl, @AbsColIndex int endColIndexExcl)
     {
-        double total = 0;
-        for (int i = startColIndexIncl; i < endColIndexExcl; i++)
+        if (cachedColumnLeftX == null || endColIndexExcl >= cachedColumnLeftX.length)
         {
-            total += getColumnWidth(i);
+            cachedColumnLeftX = new double[Math.max(endColIndexExcl + 1, currentColumns.get() + 1)];
+
+            double x = 0;
+            for (int i = 0; i < cachedColumnLeftX.length; i++)
+            {
+                cachedColumnLeftX[i] = x;
+                x += getColumnWidth(i);
+            }
         }
-        return total;
+        
+        return cachedColumnLeftX[endColIndexExcl] - cachedColumnLeftX[startColIndexIncl];
     }
 
-    public double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
+    @Pure
+    public final double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
     {
         return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }
