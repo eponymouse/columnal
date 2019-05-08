@@ -139,6 +139,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private TableId curTableId;
 
     private final FXPlatformRunnable onModify;
+    private boolean queuedUpdateRows = false;
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -160,9 +161,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
     {
         @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
-        if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSet != null)
+        if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSet != null && !queuedUpdateRows)
         {
             final @NonNull RecordSet recordSetFinal = recordSet;
+            queuedUpdateRows = true;
             Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
                 try
                 {
@@ -186,6 +188,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @SuppressWarnings("units")
                         @TableDataRowIndex int length = recordSetFinal.getLength();
                         Platform.runLater(() -> {
+                            queuedUpdateRows = false;
                             currentKnownRows = length;
                             currentKnownRowsIsFinal = true;
                             updateSizeAndPositions.run();
