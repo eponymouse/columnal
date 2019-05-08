@@ -214,10 +214,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         // TODO concatenate some of the others
 
-        // TODO increase depth by one
-        
         depth += 1;
-        if (depth < 2)
+        if (depth < 3)
         {
             targetPos = addTransforms(dummyManager, sortId, depth, targetPos);
             targetPos = addTransforms(dummyManager, filterId, depth, targetPos);
