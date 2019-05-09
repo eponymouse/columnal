@@ -1065,9 +1065,11 @@ public final class VirtualGrid implements ScrollBindable
         setColumnWidth(CellPosition.col(columnIndex), width);
     }
 
+    // package-visible
     private void setColumnWidth(@AbsColIndex int columnIndex, double width)
     {
         customisedColumnWidths.put(CellPosition.col(columnIndex), width);
+        cachedColumnLeftX = null;
         updateSizeAndPositions();
     }
 
@@ -2254,7 +2256,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (e.getButton() == MouseButton.PRIMARY && !e.isShiftDown())
                 {
                     @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
-                    if (colIndex != null)
+                    if (colIndex != null && colIndex > 0)
                     {
                         resizingColumn = new ColumnResize(colIndex, e.getX());
                         e.consume();
@@ -2265,9 +2267,8 @@ public final class VirtualGrid implements ScrollBindable
                 // Don't update cursor if resizing
                 if (resizingColumn != null)
                 {
-                    // TODO shouldn't use _test_ method here
                     @NonNull ColumnResize c = this.resizingColumn;
-                    _test_setColumnWidth(c.colIndex, Math.max(20, e.getX() - c.startPosX + c.originalWidth));
+                    setColumnWidth(c.colIndex, Math.max(20, e.getX() - c.startPosX + c.originalWidth));
                 }
                 else
                     updateCursor(e);
@@ -2300,7 +2301,7 @@ public final class VirtualGrid implements ScrollBindable
             @AbsColIndex int col;
             for (col = logicalScrollColumnIndex; col < lastColExcl && x < getWidth(); col++)
             {
-                Pair<Line, Path> rhs = columnRightHandLines.computeIfAbsent(col, k -> makeLine());
+                Pair<Line, Path> rhs = columnRightHandLines.computeIfAbsent(col, k -> makeLine(k > 0));
                 x += getColumnWidth(col);
                 rhs.getFirst().setTranslateX(x);
                 rhs.getSecond().setTranslateX(x);
@@ -2309,7 +2310,7 @@ public final class VirtualGrid implements ScrollBindable
             columnRightHandLines.entrySet().removeIf(e -> e.getKey() > lastRendered);
         }
 
-        protected Pair<Line, Path> makeLine()
+        protected Pair<Line, Path> makeLine(boolean showArrows)
         {
             // -0.5 to make line appear in the middle of the pixel:
             Line line = new Line(-0.5, 0, -0.5, getHeight());
@@ -2317,6 +2318,7 @@ public final class VirtualGrid implements ScrollBindable
             Path arrows = new Path(new MoveTo(-3.5, 2.5), new LineTo(-5.5, 4.5), new LineTo(-3.5, 6.5),
                 new MoveTo(2.5, 2.5), new LineTo(4.5, 4.5), new LineTo(2.5, 6.5));
             arrows.getStyleClass().add("column-header-arrow");
+            arrows.setVisible(showArrows);
             return new Pair<>(
                 line,
                 arrows
@@ -2327,7 +2329,9 @@ public final class VirtualGrid implements ScrollBindable
         private @Nullable @AbsColIndex Integer updateCursor(MouseEvent mouseEvent)
         {
             // First is X dist, second is column index
-            Pair<Double, @AbsColIndex Integer> nearest = columnRightHandLines.entrySet().stream().<Pair<Double, @AbsColIndex Integer>>map((Entry<@AbsColIndex Integer, Pair<Line, Path>> entry) ->
+            Pair<Double, @AbsColIndex Integer> nearest = columnRightHandLines.entrySet().stream()
+                .filter(e -> e.getKey() > 0)
+                .<Pair<Double, @AbsColIndex Integer>>map((Entry<@AbsColIndex Integer, Pair<Line, Path>> entry) ->
                 new Pair<Double, @AbsColIndex Integer>(Math.abs(mouseEvent.getX() - entry.getValue().getFirst().getTranslateX()), entry.getKey()))
                 .filter(p -> p.getFirst() <= 6.0)
                 .min(Comparator.comparing(p -> p.getFirst())).<@Nullable Pair<Double, @AbsColIndex Integer>>orElse(null);
