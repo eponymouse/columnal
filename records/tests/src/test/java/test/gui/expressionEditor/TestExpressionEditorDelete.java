@@ -45,7 +45,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private MainWindowActions mainWindowActions;
-    private final CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
+    private final CellPosition targetPos = new CellPosition(CellPosition.row(2), CellPosition.col(2));
 
     @Before
     public void setupWindow() throws Exception

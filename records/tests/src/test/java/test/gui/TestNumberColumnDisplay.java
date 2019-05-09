@@ -76,6 +76,8 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         //if (SystemUtils.IS_OS_WINDOWS)
             //TestUtil.fx_(() -> mwa._test_getVirtualGrid()._test_setColumnWidth(0, 100));
         
+        CellPosition tablePos = mwa._test_getTableManager().getAllTables().get(0)._test_getPrevPosition();
+        
         TestUtil.sleep(2000);
 
         ArrayList<@Nullable VersionedSTF> cells = new ArrayList<>(expectedGUI.size());
@@ -84,7 +86,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         {
             final int iFinal = i;
             @Nullable String cellText = TestUtil.<@Nullable String>fx(() -> {
-                @Nullable VersionedSTF cell = mwa._test_getDataCell(new CellPosition(CellPosition.row(3 + iFinal), CellPosition.col(0)));
+                @Nullable VersionedSTF cell = mwa._test_getDataCell(tablePos.offsetByRowCols(3 + iFinal, 0));
                 synchronized (this)
                 {
                     cells.add(cell);
@@ -287,7 +289,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         ), values.size()));
         
         Supplier<List<String>> getCurShowing = () ->
-                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(0)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> getText(s))).collect(ImmutableList.toImmutableList());
+                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(1)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> getText(s))).collect(ImmutableList.toImmutableList());
         
         checkNumericSorted(getCurShowing.get());
 

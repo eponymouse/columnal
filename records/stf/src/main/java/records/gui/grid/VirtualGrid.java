@@ -1349,13 +1349,14 @@ public final class VirtualGrid implements ScrollBindable
 
         private void ctrlHome()
         {
+            CellPosition topLeft = CellPosition.ORIGIN.offsetByRowCols(1, 1);
             for (GridArea gridArea : gridAreas)
             {
-                @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(CellPosition.ORIGIN);
+                @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(topLeft);
                 if (possibleSel != null)
                     select(possibleSel);
             }
-            select(new EmptyCellSelection(CellPosition.ORIGIN.offsetByRowCols(1, 1)));
+            select(new EmptyCellSelection(topLeft));
         }
 
         private void setNudgeScroll(boolean enabled)

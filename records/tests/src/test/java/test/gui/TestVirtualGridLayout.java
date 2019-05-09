@@ -210,7 +210,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
             MatcherAssert.assertThat(columnDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
             for (Line columnDivider : columnDividers)
             {
-                assertEquals(0.0, (columnDivider.getLayoutX() + 0.5 + curScrollOffset) % 100, 0.01);
+                assertEquals(0.0, (columnDivider.getLayoutX() + 0.5 + curScrollOffset - 20.0) % 100, 0.01);
             }
             // Should all be different X:
             assertEquals(columnDividers.size(), columnDividers.stream().mapToDouble(l -> l.getLayoutX()).distinct().count());

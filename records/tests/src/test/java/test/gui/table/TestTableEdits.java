@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
@@ -232,7 +233,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Wrap beyond certain point:
         if (right.columnIndex > 20)
         {
-            CellPosition below = table._test_getPrevPosition().offsetByRowCols(table.getData().getLength() + 2, 0);
+            CellPosition below = new CellPosition(table._test_getPrevPosition().offsetByRowCols(table.getData().getLength() + 2, 0).rowIndex, CellPosition.col(2));
             return below;
         }
         else

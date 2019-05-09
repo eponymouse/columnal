@@ -117,11 +117,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     @OnThread(Tag.Any)
     default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
     {
-        Random r = new Random(target.rowIndex * 100 + target.rowIndex);
+        Random r = new Random(target.rowIndex * 100 + target.columnIndex);
         Log.debug("Moving to position " + target);
         // Lots of tests use this method, so to speed things up,
         // we usually skip the GUI step and call a direct method:
-        if (r.nextInt(10) != 1)
+        boolean bypassGUI = r.nextInt(10) != 1;
+        if (bypassGUI)
         {
             TestUtil.fx_(() -> virtualGrid._test_keyboardMoveTo(target));
         }
@@ -153,7 +154,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         TestUtil.sleep(300);
 
         Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
-        assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner(), TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
+        assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner() + (bypassGUI ? " bypassed GUI" : " used GUI"), TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
     }
 
     @OnThread(Tag.Any)
