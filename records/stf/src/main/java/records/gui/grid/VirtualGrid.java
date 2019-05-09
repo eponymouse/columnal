@@ -198,9 +198,9 @@ public final class VirtualGrid implements ScrollBindable
     private final ObjectProperty<@AbsRowIndex Integer> currentKnownLastRowIncl = new SimpleObjectProperty<>();
     private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>();
 
-    // Package visible to let sidebars access it
-    static final double rowHeight = 24;
-    static final double defaultColumnWidth = 100;
+    private static final double rowHeight = 24;
+    private static final double defaultColumnWidth = 100;
+    private static final double fixedFirstColumnWidth = 20;
 
     private final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
     private double @Nullable[] cachedColumnLeftX;
@@ -820,7 +820,10 @@ public final class VirtualGrid implements ScrollBindable
     @Pure
     public final double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
     {
-        return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
+        if (columnIndex == 0)
+            return fixedFirstColumnWidth;
+        else
+            return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }
 
     private @AbsRowIndex int getLastSelectableRowGlobal()
@@ -877,7 +880,13 @@ public final class VirtualGrid implements ScrollBindable
         return sumColumnWidths(CellPosition.col(0), pos == null ? logicalScrollColumnIndex : pos.getFirst()) - (pos == null ? logicalScrollColumnOffset : pos.getSecond());
     }
 
-    public void select(@Nullable CellSelection cellSelection)
+    public void select(CellSelection cellSelection)
+    {
+        selectInternal(cellSelection);
+    }
+
+    // Only private method allows null selection:
+    private void selectInternal(@Nullable CellSelection cellSelection)
     {
         /*
         visibleCells.forEach((visPos, visCell) -> {
@@ -906,22 +915,24 @@ public final class VirtualGrid implements ScrollBindable
 
 
     // Selects cell so that you can navigate around with keyboard
-    public void findAndSelect(@Nullable Either<CellPosition, CellSelection> target)
+    public void findAndSelect(Either<CellPosition, CellSelection> target)
     {
-        select(target == null ? null : target.<@Nullable CellSelection>either(
-            p -> {
-                // See if the position is in a grid area:
-                for (GridArea gridArea : gridAreas)
+        target.<Optional<CellSelection>>either(p -> {
+            // See if the position is in a grid area:
+            for (GridArea gridArea : gridAreas)
+            {
+                if (gridArea.contains(p))
                 {
-                    if (gridArea.contains(p))
-                    {
-                        return gridArea.getSelectionForSingleCell(p);
-                    }
+                    return Optional.ofNullable(gridArea.getSelectionForSingleCell(p));
                 }
-                return new EmptyCellSelection(p);
+            }
+            if (p.rowIndex > 0 && p.columnIndex > 0)
+                return Optional.of(new EmptyCellSelection(p));
+            else
+                return Optional.empty();
             },
-            s -> s
-        ));
+            s -> Optional.of(s)
+        ).ifPresent(this::select);
     }
 
     public Region getNode()
@@ -1196,7 +1207,7 @@ public final class VirtualGrid implements ScrollBindable
                             }
                         }
 
-                        if (!foundInGrid)
+                        if (!foundInGrid && cellPositionFinal.columnIndex > 0 && cellPositionFinal.rowIndex > 0)
                         {
                             // Belongs to no-one; we must handle it:
                             select(new EmptyCellSelection(cellPositionFinal));
@@ -1271,7 +1282,7 @@ public final class VirtualGrid implements ScrollBindable
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
-                    select(null);
+                    selectInternal(null);
                     FXUtility.mouse(this).redoLayout();
                 }
             });
@@ -1342,7 +1353,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (possibleSel != null)
                     select(possibleSel);
             }
-            select(new EmptyCellSelection(CellPosition.ORIGIN));
+            select(new EmptyCellSelection(CellPosition.ORIGIN.offsetByRowCols(1, 1)));
         }
 
         private void setNudgeScroll(boolean enabled)
@@ -2001,8 +2012,8 @@ public final class VirtualGrid implements ScrollBindable
             @AbsRowIndex int byRows = CellPosition.row(_byRows);
             @AbsColIndex int byColumns = CellPosition.col(_byColumns);
             CellPosition newPos = new CellPosition(
-                Utility.minRow(currentKnownLastRowIncl.get(), Utility.maxRow(position.rowIndex + byRows, CellPosition.row(0))), 
-                Utility.minCol(currentColumns.get() - CellPosition.col(1), Utility.maxCol(position.columnIndex + byColumns, CellPosition.col(0)))
+                Utility.minRow(currentKnownLastRowIncl.get(), Utility.maxRow(position.rowIndex + byRows, CellPosition.row(1))), 
+                Utility.minCol(currentColumns.get() - CellPosition.col(1), Utility.maxCol(position.columnIndex + byColumns, CellPosition.col(1)))
             );
             if (newPos.equals(position))
                 return Either.right(this); // Not moving
@@ -2176,7 +2187,7 @@ public final class VirtualGrid implements ScrollBindable
     {
         suppressSelectionUpdate = true;
         container.ctrlHome();
-        for (int i = 0; i < target.rowIndex; i++)
+        for (int i = 1; i < target.rowIndex; i++)
         {
             container.move(false, 1, 0);
         }

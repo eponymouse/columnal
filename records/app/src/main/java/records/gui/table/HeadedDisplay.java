@@ -52,6 +52,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 
@@ -375,6 +376,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             if (pos.isPresent())
             {
                 destPosition = pos.get();
+                destPosition = new CellPosition(Utility.maxRow(destPosition.rowIndex, CellPosition.row(1)), Utility.maxCol(destPosition.columnIndex, CellPosition.col(1)));
                 return Optional.of(Either.<BoundingBox, RectangleBounds>right(new RectangleBounds(
                         destPosition,
                         destPosition.offsetByRowCols(getBottomRightIncl().rowIndex - getPosition().rowIndex, getBottomRightIncl().columnIndex - getPosition().columnIndex)

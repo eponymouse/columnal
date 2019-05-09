@@ -63,7 +63,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
         Log.debug("Focus owner: " + TestUtil.fx(() -> windowToUse.getScene().getFocusOwner()));
         push(KeyCode.SHORTCUT, KeyCode.HOME);        
-        assertEquals(Optional.of(true), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN))));
+        assertEquals(Optional.of(true), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1)))));
         checkSelectionOnScreen("Origin", virtualGrid);
         @SuppressWarnings("nullness")
         String tableSummary = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> (TableDisplay)t.getDisplay()).map(t -> t.getPosition() + " - " + t.getBottomRightIncl()).collect(Collectors.joining()));
@@ -123,7 +123,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
             checkSelectionOnScreen("Index " + i + " " + paths.get(i).getSecond().toString() + (i < paths.size() - 1 ? (" (from " + paths.get(i + 1).getSecond() + ")") : "") + " tables: " + tableSummary, virtualGrid);
         }
         // Should be back at origin:
-        assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
+        assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1))).orElse(false)));
     }
 
     @SuppressWarnings("nullness")

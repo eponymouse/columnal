@@ -8,6 +8,7 @@ import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import utility.Utility;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,9 +26,11 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     @Override
     protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {
-        double lowestX = visibleBounds.getXCoord(visibleBounds.firstColumnIncl);
+        @AbsColIndex int drawFirstCol = Utility.maxCol(visibleBounds.firstColumnIncl, CellPosition.col(1));
+        @AbsRowIndex int drawFirstRow = Utility.maxRow(visibleBounds.firstRowIncl, CellPosition.row(1));
+        double lowestX = visibleBounds.getXCoord(drawFirstCol);
         double highestX = visibleBounds.getXCoordAfter(visibleBounds.lastColumnIncl);
-        double lowestY = visibleBounds.getYCoord(visibleBounds.firstRowIncl);
+        double lowestY = visibleBounds.getYCoord(drawFirstRow);
         double highestY = visibleBounds.getYCoordAfter(visibleBounds.lastRowIncl);
         
         Set<Line> linesToKeep = Sets.newIdentityHashSet();

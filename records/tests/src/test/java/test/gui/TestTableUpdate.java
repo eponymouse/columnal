@@ -79,10 +79,10 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                     colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
                     colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
             ), () -> tableLength);
-            dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN, null), origRecordSet));
+            dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
             // Now add two transformations:
-            addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(0, 3), r);
-            addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(0, 6), r);
+            addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(1, 4), r);
+            addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
 
             MainWindowActions details = TestUtil.openDataAsTable(windowToUse, dummy).get();
             TestUtil.sleep(1000);

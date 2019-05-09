@@ -537,6 +537,15 @@ public abstract class DataDisplay extends HeadedDisplay
                     removeCellStyle(isDown ? CellStyle.HOVERING_EXPAND_DOWN : CellStyle.HOVERING_EXPAND_RIGHT);
             }
         }
+
+        // For debugging:
+        @Override
+        public String toString()
+        {
+            return "SingleCellSelection{" +
+                "pos=" + pos +
+                '}';
+        }
     }
 
     
@@ -789,7 +798,9 @@ public abstract class DataDisplay extends HeadedDisplay
         new GotoRowDialog(parent).showAndWait().ifPresent(row -> {
             withParent_(g -> {
                 CellPosition p = new CellPosition(getAbsRowIndexFromTableRow(row), currentCol);
-                g.select(getSelectionForSingleCell(p));
+                CellSelection selection = getSelectionForSingleCell(p);
+                if (selection != null)
+                    g.select(selection);
             });
         });
     }

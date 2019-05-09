@@ -158,7 +158,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
 
     private void testFailureExplanation(String... lines)
     {
-        TestUtil.fx_(() -> mainWindowActions._test_getVirtualGrid().findAndSelect(Either.left(CellPosition.ORIGIN)));
+        TestUtil.fx_(() -> mainWindowActions._test_getVirtualGrid().findAndSelect(Either.left(CellPosition.ORIGIN.offsetByRowCols(1, 1))));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), CHECK_POS);
         clickOn("Fail");
         sleep(1000);

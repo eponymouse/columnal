@@ -130,7 +130,8 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                         if (t != null && l.rowIndex.isPresent() && t.getDisplay() instanceof DataDisplay)
                         {
                             CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex.get());
-                            withParent_(g -> g.select(selection));
+                            if (selection != null)
+                                withParent_(g -> g.select(selection));
                         }
                     }, item -> {
                         withParent_(g -> {

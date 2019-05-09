@@ -394,7 +394,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         
         public SimpleGridArea()
         {
-            setPosition(CellPosition.ORIGIN);
+            setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 1));
         }
         
         @Override
