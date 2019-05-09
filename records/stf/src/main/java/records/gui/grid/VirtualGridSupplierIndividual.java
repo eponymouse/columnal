@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
@@ -112,6 +113,74 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
             }
         }
 
+        for (Entry<GridArea, GRID_AREA_INFO> gridArea : gridAreas.entrySet())
+        {
+            for (RectangleBounds rectangleBounds : gridArea.getValue().getCellBounds())
+            {
+
+                // Layout each row:
+                for (@AbsRowIndex int rowIndex = Utility.maxRow(visibleBounds.firstRowIncl, rectangleBounds.topLeftIncl.rowIndex); rowIndex <= Utility.minRow(visibleBounds.lastRowIncl, rectangleBounds.bottomRightIncl.rowIndex); rowIndex++)
+                {
+                    final double y = visibleBounds.getYCoord(rowIndex);
+                    for (@AbsColIndex int columnIndex = Utility.maxCol(visibleBounds.firstColumnIncl, rectangleBounds.topLeftIncl.columnIndex); columnIndex <= Utility.minCol(visibleBounds.lastColumnIncl, rectangleBounds.bottomRightIncl.columnIndex); columnIndex++)
+                    {
+                        CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
+                        Optional<Pair<Pair<GridArea, GRID_AREA_INFO>, GridAreaCellPosition>> gridForItemResult =
+                                Optional.ofNullable(gridArea.getValue().cellAt(cellPosition)).map(c -> new Pair<>(new Pair<>(gridArea.getKey(), gridArea.getValue()), c));
+                        if (!gridForItemResult.isPresent())
+                            continue;
+
+                        final double x = visibleBounds.getXCoord(columnIndex);
+
+                        Pair<GridArea, GRID_AREA_INFO> gridForItem = gridForItemResult.get().getFirst();
+
+                        ItemDetails<T> cell = visibleItems.get(cellPosition);
+                        // If cell isn't present, grab from spareCells:
+                        if (cell == null)
+                        {
+                            Pair<T, StyleUpdater> newCell;
+                            if (!spareItems.isEmpty())
+                            {
+                                newCell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.getSecond().styleForAllCells());
+                                resetForReuse(newCell.getFirst());
+                                containerChildren.changeViewOrder(newCell.getFirst(), viewOrderFor(newCell.getFirst()));
+                            }
+                            else
+                            {
+                                newCell = withStyle(makeNewItem(virtualGrid), gridForItem.getSecond().styleForAllCells());
+                                containerChildren.add(newCell.getFirst(), viewOrderFor(newCell.getFirst()));
+                            }
+                            cell = new ItemDetails<>(newCell.getFirst(), newCell.getSecond(), gridForItem, gridForItemResult.get().getSecond());
+
+                            visibleItems.put(cellPosition, cell);
+                            gridForItem.getSecond().fetchFor(cell.gridAreaCellPosition, pos -> {
+                                ItemDetails<T> item = visibleItems.get(pos);
+                                return item == null ? null : item.node;
+                            }, this::scheduleStyleAllTogether);
+                        }
+                        else
+                        {
+                            containerChildren.changeViewOrder(cell.node, viewOrderFor(cell.node));
+                            cell.styleUpdater.listenTo(gridForItem.getSecond().styleForAllCells());
+                            if (cell.originator.getFirst() != gridForItem.getFirst()
+                                    || !cell.gridAreaCellPosition.equals(gridForItemResult.get().getSecond())
+                                    || !gridForItem.getSecond().checkCellUpToDate(cell.gridAreaCellPosition, cell.node))
+                            {
+                                visibleItems.put(cellPosition, cell.withPosition(gridForItemResult.get().getSecond()));
+                                gridForItem.getSecond().fetchFor(gridForItemResult.get().getSecond(), pos -> {
+                                    ItemDetails<T> item = visibleItems.get(pos);
+                                    return item == null ? null : item.node;
+                                }, this::scheduleStyleAllTogether);
+                            }
+                        }
+                        cell.node.setVisible(true);
+                        sizeAndLocateCell(x, y, columnIndex, rowIndex, cell.node, visibleBounds);
+                    }
+                }
+            }
+        }
+        
+        /*
         // Layout each row:
         for (@AbsRowIndex int rowIndex = visibleBounds.firstRowIncl; rowIndex <= visibleBounds.lastRowIncl; rowIndex++)
         {
@@ -173,6 +242,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                 sizeAndLocateCell(x, y, columnIndex, rowIndex, cell.node, visibleBounds);
             }
         }
+        */
 
         // Don't let spare cells be more than N visible rows or columns:
         int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(visibleBounds.lastRowIncl - visibleBounds.firstRowIncl + 1, visibleBounds.lastColumnIncl - visibleBounds.firstRowIncl + 1);
@@ -267,6 +337,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     @OnThread(Tag.FXPlatform)
     public static interface GridCellInfo<T, S>
     {
+        // Gets the list of rectangles where cellAt will return non-null.
+        public ImmutableList<RectangleBounds> getCellBounds();
+        
         // Does the GridArea have a cell of this type at the given position?  No assumptions are made
         // about contiguity of grid areas, we ask all grid cell infos for all positions.
         // If there is a cell, return its position, else return null

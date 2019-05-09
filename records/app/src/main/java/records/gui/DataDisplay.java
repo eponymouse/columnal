@@ -295,6 +295,12 @@ public abstract class DataDisplay extends HeadedDisplay
             }
 
             @Override
+            public ImmutableList<RectangleBounds> getCellBounds()
+            {
+                return ImmutableList.of(new RectangleBounds(getPosition().offsetByRowCols(getHeaderRowCount(), 0), getPosition().offsetByRowCols(currentKnownRows + getHeaderRowCount(), displayColumns.size())));
+            }
+
+            @Override
             public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable VersionedSTF> getCell, FXPlatformRunnable scheduleStyleTogether)
             {
                 // Blank then queue fetch:

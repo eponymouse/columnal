@@ -29,6 +29,7 @@ import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
@@ -428,6 +429,12 @@ public class TestVirtualGridLayout extends FXApplicationTest
                 return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
             else
                 return null;
+        }
+
+        @Override
+        public ImmutableList<RectangleBounds> getCellBounds()
+        {
+            return ImmutableList.of(new RectangleBounds(getPosition(), getBottomRightIncl()));
         }
 
         @Override

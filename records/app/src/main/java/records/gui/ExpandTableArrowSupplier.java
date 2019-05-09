@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
@@ -10,6 +11,7 @@ import records.data.CellPosition;
 import records.data.TableOperations.AppendRows;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridAreaCellPosition;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -26,6 +28,7 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
@@ -92,6 +95,20 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 }
                 else
                     return null;
+            }
+
+            @Override
+            public ImmutableList<RectangleBounds> getCellBounds()
+            {
+                CellPosition tablePos = tableDisplay.getMostRecentPosition();
+                CellPosition bottomRightDataPos = tableDisplay.getDataDisplayBottomRightIncl().from(tablePos);
+                int numCols = tableDisplay.getDisplayColumns().size();
+                return ImmutableList.of(
+                    // Right-hand side arrows:
+                    new RectangleBounds(new CellPosition(tablePos.rowIndex + CellPosition.row(1), bottomRightDataPos.columnIndex + CellPosition.col(1)), new CellPosition(bottomRightDataPos.rowIndex, bottomRightDataPos.columnIndex + CellPosition.col(1))),
+                    // Bottom arrows:
+                    new RectangleBounds(new CellPosition(bottomRightDataPos.rowIndex + CellPosition.row(1), tablePos.columnIndex), new CellPosition(bottomRightDataPos.rowIndex + CellPosition.row(1), bottomRightDataPos.columnIndex))
+                );
             }
 
             @OnThread(Tag.FXPlatform)
