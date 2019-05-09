@@ -5,6 +5,8 @@ import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
@@ -23,16 +25,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
-import records.gui.DataCellSupplier.CellStyle;
-import records.gui.DataDisplay;
 import records.gui.EntireTableSelection;
 import records.gui.ErrorableTextField;
 import records.gui.TableNameTextField;
@@ -41,7 +39,6 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.SelectionListener;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -57,7 +54,6 @@ import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -114,10 +110,13 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         private final VirtualGridSupplierFloating floatingItems;
         private @MonotonicNonNull ErrorableTextField<TableId> tableNameField;
         private @MonotonicNonNull BorderPane borderPane;
+        private final DoubleProperty maxSize;
 
+        @OnThread(Tag.FXPlatform)
         public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, Table table, VirtualGridSupplierFloating floatingItems)
         {
             super(ViewOrder.STANDARD_CELLS);
+            this.maxSize = new SimpleDoubleProperty(100.0);
             this.tableManager = tableManager;
             this.table = table;
             this.initialTableName = initialTableName;
@@ -131,6 +130,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             double x = visibleBounds.getXCoord(getPosition().columnIndex);
             double y = visibleBounds.getYCoord(getPosition().rowIndex);
             double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
+            maxSize.set(width);
             // Only one row tall:
             double height = visibleBounds.getYCoordAfter(getPosition().rowIndex) - y;
             return Optional.of(new BoundingBox(
@@ -158,7 +158,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         {
             tableNameField = new TableNameTextField(tableManager, initialTableName, false, () -> withParent_(g -> g.select(new EntireTableSelection(HeadedDisplay.this, getPosition().columnIndex))));
             tableNameField.getNode().setFocusTraversable(false);
-            tableNameField.sizeToFit(30.0, 30.0);
+            tableNameField.sizeToFit(30.0, 30.0, maxSize);
             // We have to use PRESSED because if we do CLICKED, the field
             // will already have been focused:
             tableNameField.getNode().addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {

@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -13,7 +14,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -193,9 +193,9 @@ public class ErrorableTextField<T> implements TimedFocusable
         return field.getStyleClass();
     }
 
-    public void sizeToFit(@Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
+    public void sizeToFit(@Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused, @Nullable DoubleExpression maxSize)
     {
-        FXUtility.sizeToFit(field, minSizeFocused, minSizeUnfocused);
+        FXUtility.sizeToFit(field, minSizeFocused, minSizeUnfocused, maxSize);
     }
 
     public void setEditable(boolean editable)

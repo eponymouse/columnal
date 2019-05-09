@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -164,7 +165,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.FX)
-    public static void sizeToFit(TextField tf, @Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
+    public static void sizeToFit(TextField tf, @Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused, @Nullable DoubleExpression maxSize)
     {
         // Partly taken from http://stackoverflow.com/a/25643696/412908:
         // Set Max and Min Width to PREF_SIZE so that the TextField is always PREF
@@ -177,6 +178,8 @@ public class FXUtility
                 super.bind(tf.promptTextProperty());
                 super.bind(tf.fontProperty());
                 super.bind(tf.focusedProperty());
+                if (maxSize != null)
+                    super.bind(maxSize);
             }
             @Override
             @OnThread(Tag.FX)
@@ -190,7 +193,7 @@ public class FXUtility
                     //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField
                     + tf.getInsets().getLeft() + tf.getInsets().getRight()
                     + 1d; // Add some spacing
-                return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
+                return Math.min(Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width), maxSize == null ? Double.MAX_VALUE : maxSize.get());
             }
         });
     }
