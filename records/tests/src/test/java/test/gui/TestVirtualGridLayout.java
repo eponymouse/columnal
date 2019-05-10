@@ -5,13 +5,13 @@ import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multiset;
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
-import javafx.geometry.VerticalDirection;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -19,12 +19,10 @@ import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.controlsfx.control.spreadsheet.Grid;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.testfx.framework.junit.ApplicationTest;
+import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -37,21 +35,25 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import test.TestUtil;
+import test.gen.GenRandom;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
-import utility.gui.FXUtility;
+import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+@RunWith(JUnitQuickcheck.class)
 public class TestVirtualGridLayout extends FXApplicationTest
 {
     public static final int WINDOW_WIDTH = 810;
@@ -284,6 +286,89 @@ public class TestVirtualGridLayout extends FXApplicationTest
             TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
         }
     }
+    
+    private static final class BoundsGridArea extends SimpleGridArea
+    {
+        private final RectangleBounds origBounds;
+
+        public BoundsGridArea(RectangleBounds bounds)
+        {
+            this.origBounds = bounds;
+            setPosition(bounds.topLeftIncl);
+            getAndUpdateBottomRow(CellPosition.row(1000), () -> {});
+        }
+
+        @Override
+        protected CellPosition recalculateBottomRightIncl()
+        {
+            return getPosition().offsetByRowCols(origBounds.bottomRightIncl.rowIndex - origBounds.topLeftIncl.rowIndex, origBounds.bottomRightIncl.columnIndex - origBounds.topLeftIncl.columnIndex);
+        }
+    }
+    
+    private void checkOverlap(List<RectangleBounds> bounds)
+    {
+        List<BoundsGridArea> gridAreas = Utility.mapList(bounds, r -> {
+            return new BoundsGridArea(r);
+        });
+        TestUtil.fx_(() -> virtualGrid.addGridAreas(gridAreas));
+        sleep(1000);
+        // Should already not be touching:
+        for (BoundsGridArea a : gridAreas)
+        {
+            RectangleBounds aBounds = new RectangleBounds(a.getPosition(), a.getBottomRightIncl());
+            for (BoundsGridArea b : gridAreas)
+            {
+                RectangleBounds bBounds = new RectangleBounds(b.getPosition(), b.getBottomRightIncl());
+                if (a != b)
+                {
+                    assertFalse("Bounds " + aBounds + " should not touch " + bBounds, aBounds.touches(bBounds));
+                }
+            }
+            
+        }
+    }
+    
+    private RectangleBounds b(int x0, int y0, int x1, int y1)
+    {
+        return new RectangleBounds(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)), new CellPosition(CellPosition.row(y1), CellPosition.col(x1)));
+    }
+    
+    @Test
+    public void testOverlap1()
+    {
+        checkOverlap(ImmutableList.of(
+            b(1,1, 2, 3),
+            // This should shunt:
+            b(2, 2, 3, 2)
+        ));
+    }
+
+    @Test
+    public void testOverlap2()
+    {
+        checkOverlap(ImmutableList.of(
+                b(1,1, 2, 3),
+                // This should shunt and cause knock-on shunt:
+                b(2, 2, 3, 2),
+                b(3,1, 5, 3)
+        ));
+    }
+    
+    @Property(trials = 30)
+    public void testOverlap(@From(GenRandom.class) Random r)
+    {
+        ArrayList<RectangleBounds> gridAreas = new ArrayList<>();
+        for (int i = 0; i < 20; i++)
+        {
+            CellPosition topLeft = new CellPosition(CellPosition.row(1 + r.nextInt(40)), CellPosition.col(1 + r.nextInt(40)));
+            CellPosition bottomRight = topLeft.offsetByRowCols(r.nextInt(15), r.nextInt(15));
+            gridAreas.add(new RectangleBounds(topLeft, bottomRight));
+        }
+        checkOverlap(gridAreas);
+    }
+    
+    
+    
     /*
     @Test
     public void testSetColumns()
@@ -391,6 +476,8 @@ public class TestVirtualGridLayout extends FXApplicationTest
 
     private static class SimpleGridArea extends GridArea implements GridCellInfo<Label,String>
     {
+        private static int nextId = 0;
+        int id = nextId++;
         Multiset<GridAreaCellPosition> fetches = HashMultiset.create();
         
         public SimpleGridArea()
@@ -419,7 +506,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         @Override
         public String getSortKey()
         {
-            return "" + hashCode();
+            return Utility.codePointToString(id);
         }
 
         @Override
