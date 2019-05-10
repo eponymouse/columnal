@@ -10,12 +10,14 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -79,6 +81,7 @@ import utility.gui.FXUtility;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +91,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
@@ -229,11 +233,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     private CellPosition nextPos(Table table) throws InternalException, UserException
     {
-        CellPosition right = table._test_getPrevPosition().offsetByRowCols(0, table.getData().getColumns().size() + 2);
+        CellPosition right = table._test_getPrevPosition().offsetByRowCols(0, 5);
         // Wrap beyond certain point:
         if (right.columnIndex > 20)
         {
-            CellPosition below = new CellPosition(table._test_getPrevPosition().offsetByRowCols(table.getData().getLength() + 2, 0).rowIndex, CellPosition.col(2));
+            CellPosition below = new CellPosition(table._test_getPrevPosition().offsetByRowCols(8, 0).rowIndex, CellPosition.col(2));
             return below;
         }
         else
@@ -453,6 +457,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     public void testTableDrag(@From(GenRandom.class) Random r)
     {
+        checkNoOverlap();
         // Pick a table:
         Table table = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
         @SuppressWarnings("nullness")
@@ -460,13 +465,49 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         CellPosition original = TestUtil.fx(() -> tableDisplay.getPosition());
         keyboardMoveTo(virtualGrid, original.offsetByRowCols(-1, -1));
-        CellPosition dest = original.offsetByRowCols(r.nextInt(5) - 2, r.nextInt(12) - 2);
+        CellPosition dest = original.offsetByRowCols(r.nextInt(4) - 1, r.nextInt(7) - 1);
+        Rectangle2D start;
+        BoundingBox windowBoundsOnScreen = TestUtil.fx(() -> FXUtility.getWindowBounds(windowToUse));
+        Rectangle2D end;
+        int attempts = 0;
+        do
+        {
+            sleep(400);
+            start = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
+            end = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
+            final double scrollX;
+            final double scrollY;
+            if (end.getMinX() < windowBoundsOnScreen.getMinX())
+            {
+                scrollX = windowBoundsOnScreen.getMinX() - end.getMinX() - 50;
+                scrollY = 0;
+            }
+            else if (end.getMaxX() >= windowBoundsOnScreen.getMaxX())
+            {
+                scrollX = end.getMaxX() - windowBoundsOnScreen.getMaxX() + 50;
+                scrollY = 0;
+            }
+            else if (end.getMinY() < windowBoundsOnScreen.getMinY())
+            {
+                scrollX = 0;
+                scrollY = windowBoundsOnScreen.getMinY() - end.getMinY() - 50;
+            }
+            else if (end.getMaxY() >= windowBoundsOnScreen.getMaxY())
+            {
+                scrollX = 0;
+                scrollY = end.getMaxY() - windowBoundsOnScreen.getMaxY() + 50;
+            }
+            else
+                break;
+            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-scrollX, -scrollY));
+        }
+        while (++attempts < 10);
+        assertTrue(attempts < 10);
         
-        Rectangle2D start = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
-        Rectangle2D end = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
         
         Point2D dragFrom = new Point2D(Math.round(start.getMinX() + 2), Math.round(start.getMinY() + 2));
         Point2D dragTo = new Point2D(Math.round(end.getMinX() + 2),  Math.round(end.getMinY() + 2));
+        clickOn(dragFrom);
         //TestUtil.debugEventRecipient_(this, dragFrom, MouseEvent.DRAG_DETECTED, () -> {
             drag(dragFrom);
             dropTo(dragTo);
@@ -475,14 +516,22 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         sleep(1000);
         
-        // TODO Check table actually moved to somewhere reasonable:
-        /*assertEquals("Dragged from " + dragFrom + " to " + dragTo, dest, TestUtil.fx(() -> tableDisplay.getPosition()));
+        // Check table actually moved:
+        if (dest.columnIndex >= original.columnIndex && dest.rowIndex >= original.rowIndex && !dest.equals(original))
+            assertNotEquals("Dragged from " + dragFrom + " to " + dragTo, original, TestUtil.fx(() -> tableDisplay.getPosition()));
+        /*
         TextField tableNameTextField = (TextField)withItemInBounds(lookup(".table-name-text-field"), virtualGrid, new RectangleBounds(dest, dest), (n, p) -> {});
         assertNotNull(tableNameTextField);
         assertEquals(table.getId().getRaw(), TestUtil.fx(() -> tableNameTextField.getText()));
         */
         // TODO check drag overlays
-        
+        checkNoOverlap();
+
+    }
+
+    @OnThread(Tag.Simulation)
+    private void checkNoOverlap()
+    {
         // Check tables aren't overlapping:
         ImmutableList<Table> allTables = tableManager.getAllTables();
         for (Table a : allTables)
@@ -498,6 +547,37 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 }
             }
         }
+
+        Rectangle2D screenRect = Screen.getPrimary().getBounds();
+        BoundingBox screenBounds = new BoundingBox(screenRect.getMinX(), screenRect.getMinY(), screenRect.getWidth(), screenRect.getHeight());
+        
+        // Check no cells overlap:
+        // We don't test column headers because they can overlap through floating when scrolling.
+        // Instead, just check fixed cell items:
+        ImmutableList<Pair<Node, BoundingBox>> cells = Stream.<Node>concat(
+            lookup(".table-data-cell").match(Node::isVisible).<Node>queryAll().stream(),
+            lookup(".expand-arrow").match(Node::isVisible).<Node>queryAll().stream()
+        ).map(n -> new Pair<>(n, TestUtil.fx(() -> shave(n.localToScreen(n.getBoundsInLocal())))))
+            // Put on-screen first as that's easier to debug:
+            .sorted(Comparator.comparing(p -> !p.getSecond().intersects(screenBounds)))
+            .collect(ImmutableList.toImmutableList());
+
+        for (Pair<Node, BoundingBox> a : cells)
+        {
+            for (Pair<Node, BoundingBox> b : cells)
+            {
+                if (a.getFirst() != b.getFirst())
+                {
+                    assertFalse(a.toString() + " is touching " + b.toString(), a.getSecond().intersects(b.getSecond()));
+                }
+            }
+        }
+    }
+
+    // Removes 2 pixels from each side:
+    private BoundingBox shave(Bounds bounds)
+    {
+        return new BoundingBox(bounds.getMinX() + 2, bounds.getMinY() + 2, bounds.getWidth() - 4, bounds.getHeight() - 4);
     }
 
     @SuppressWarnings("nullness")
