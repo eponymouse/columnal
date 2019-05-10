@@ -1699,7 +1699,7 @@ public final class VirtualGrid implements ScrollBindable
                 }
             }
             // Close any grid areas that we have gone to the right of:
-            openGridAreas.removeIf(p -> p.getSecond().getBottomRightIncl().columnIndex <= cur.getSecond().getPosition().columnIndex);
+            openGridAreas.removeIf(p -> p.getSecond().getBottomRightIncl().columnIndex < cur.getSecond().getPosition().columnIndex);
             
             // Add ourselves to the open areas:
             openGridAreas.add(cur);
@@ -1809,7 +1809,7 @@ public final class VirtualGrid implements ScrollBindable
             scrollGroup.requestScrollBy(-deltaX, -deltaY);
     }
     
-    public void addGridAreas(Collection<GridArea> gridAreas)
+    public void addGridAreas(Collection<? extends GridArea> gridAreas)
     {
         this.gridAreas.addAll(gridAreas);
         for (GridArea gridArea : gridAreas)
