@@ -1,6 +1,7 @@
 package records.transformations;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
@@ -52,6 +54,8 @@ public class Filter extends Transformation implements SingleSourceTransformation
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
     // Each item is a source index in the original list
     private final NumericColumnStorage indexMap;
+    // Maps original row indexes to errors:
+    private final HashMap<Integer, @Localized String> errorsDuringFilter = new HashMap<>();
     private final @Nullable RecordSet recordSet;
     @OnThread(Tag.Any)
     private String error;
@@ -89,6 +93,9 @@ public class Filter extends Transformation implements SingleSourceTransformation
                             return addManualEditSet(getName(), c.getType().copyReorder(i ->
                             {
                                 fillIndexMapTo(i, columnLookup, data);
+                                @Nullable @Localized String error = errorsDuringFilter.get(i);
+                                if (error != null)
+                                    throw new UserException(error);
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             }));
                         }
@@ -158,7 +165,17 @@ public class Filter extends Transformation implements SingleSourceTransformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = Utility.cast(filterExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).value, Boolean.class);
+            boolean keep;
+            try
+            {
+                keep = Utility.cast(filterExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).value, Boolean.class);
+            }
+            catch (UserException e)
+            {
+                // The row has an error, keep it but also record error:
+                errorsDuringFilter.put(nextIndexToExamine, e.getLocalizedMessage());
+                keep = true;
+            }
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;
