@@ -105,7 +105,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
                 @Value Object newVal = colType.makeValue();
 
-                keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
+                keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
                 push(KeyCode.ENTER);
                 enterStructuredValue(colType.getType(), newVal, r, true);
                 push(KeyCode.ENTER);
