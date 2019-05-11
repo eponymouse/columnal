@@ -150,7 +150,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
             }
             catch (UserException e)
             {
-                throw new UserException("Error in source table: " + this.src.getId());
+                throw new UserException("Error in source table: " + this.src.getId() + " error: " + e.getLocalizedMessage());
             }
             
             List<Pair<Column, Direction>> sortByColumns = new ArrayList<>();

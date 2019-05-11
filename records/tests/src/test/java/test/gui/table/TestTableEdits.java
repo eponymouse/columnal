@@ -29,6 +29,7 @@ import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
@@ -50,6 +51,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenColumnId;
@@ -137,9 +139,23 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     private TableId srcId;
 
     @OnThread(Tag.Any)
-    private static Expression makeFilterCalcExpression()
+    private Expression makeFilterCalcExpression(TypeManager typeManager)
     {
-        return new AndExpression(ImmutableList.of(new ComparisonExpression(ImmutableList.of(new ColumnReference(new ColumnId("Number"), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(4, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
+        // This is the original expression.  But to prevent type errors we adjust it to the below which
+        // will only give runtime errors, not type-checker errors:
+        //String src = "(@column Number >= 4) & @column Boolean";
+        String src = //"@if (@call @function type of(@column Number) = type{Number}) & (@call @function type of(@column Boolean) = type{Boolean}) @then " +
+            "(@column Number >= @call @function from text(\"4\")) & (@column Boolean = @call @function from text(\"true\"))"
+            //+ "@else true @endif";
+            ;
+        try
+        {
+            return Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -200,19 +216,19 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         targetPos = nextPos(sort);
 
         TableId filterId = new TableId(srcId.getRaw() + " then Filter");
-        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, makeFilterCalcExpression());
+        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, makeFilterCalcExpression(dummyManager.getTypeManager()));
         dummyManager.record(filter);
         transformPositions.put(filterId, targetPos);
         targetPos = nextPos(filter);
 
         TableId calculateId = new TableId(srcId.getRaw() + " then Calculate");
-        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), makeFilterCalcExpression()));
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
 
         TableId manualId = new TableId(srcId.getRaw() + " then Edit");
-        ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, targetPos, null), srcId, new Pair<>(new ColumnId("Number"), DataType.NUMBER), ImmutableMap.of());
+        ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, targetPos, null), srcId, null, ImmutableMap.of());
         dummyManager.record(manualEdit);
         transformPositions.put(manualId, targetPos);
         targetPos = nextPos(manualEdit);
@@ -603,17 +619,22 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         @Value Object swappedValue = swappedType.makeValue();
         int swappedValueIndex = r.nextInt(originalRows);
         CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBoolean ? 0 : 1);
+        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
+        sleep(500);
         clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
         push(KeyCode.ENTER);
         enterStructuredValue(swappedType.getDataType(), swappedValue, r, true);
         push(KeyCode.ENTER);
         
         
+        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
+        sleep(500);
         assertNull(lookup(".type-editor").tryQuery().orElse(null));
         clickOnItemInBounds(
             r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
             virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBoolean ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBoolean ? 0 : 1))
         );
+        sleep(300);
         assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
         sleep(300);
         clickOn(".type-editor");
@@ -637,12 +658,13 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertNull(lookup(".type-editor").tryQuery().orElse(null));
 
         SimulationSupplier<DataSource> findOriginal = () -> tableManager.getAllTables().stream().filter(t -> t instanceof DataSource).map(t -> (DataSource)t).findFirst().orElseThrow(() -> new RuntimeException("Could not find data source"));
-        
-        SimulationSupplier<Sort> findSort = () -> tableManager.getAllTables().stream().filter(t -> t instanceof Sort).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("Could not find sort"));
-        
-        // Check the type propagated to the sorted transformation
+
+        // Check the type propagated to the transformations
         ColumnId changedColumnId = new ColumnId(changeBoolean ? "Boolean" : "Number");
-        assertEquals(swappedType.getDataType(), findSort.get().getData().getColumn(changedColumnId).getType().getType());
+        for (Table table : tableManager.getAllTables())
+        {
+            assertEquals(table.getId().getRaw(), swappedType.getDataType(), table.getData().getColumn(changedColumnId).getType().getType());
+        }
         
         // Work out what values we now expect in that column:
         List<Either<String, @Value Object>> expectedAfterChange;
@@ -677,39 +699,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         expectedAfterChange.set(swappedValueIndex, Either.right(swappedValue));
         
         TestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
-        
-        // Check the sorted values:
-        List<Map<ColumnId, Either<String, @Value Object>>> actualSortData = new AbstractList<Map<ColumnId, Either<String, @Value Object>>>()
-        {
-            RecordSet recordSet = findSort.get().getData();
-            int length = recordSet.getLength();
-            
-            @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public Map<ColumnId, Either<String, @Value Object>> get(int index)
-            {
-                try
-                {
-                    Map<ColumnId, Either<String, @Value Object>> map = new HashMap<>();
-                    for (Column column : recordSet.getColumns())
-                    {
-                        map.put(column.getName(), TestUtil.getSingleCollapsedData(column.getType(), index));
-                    }
-                    return map;
-                }
-                catch (InternalException | UserException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public int size()
-            {
-                return length;
-            }
-        };
-        TestSort.checkSorted(originalRows, sortBy, actualSortData);
         
         // Now change type back:
         clickOnItemInBounds(
