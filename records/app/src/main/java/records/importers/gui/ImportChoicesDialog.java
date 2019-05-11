@@ -131,12 +131,10 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
 
         RowLabelSupplier srcRowLabels = new RowLabelSupplier(srcGrid);
-        srcRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         srcGrid.addNodeSupplier(srcRowLabels);
         srcRowLabels.addTable(srcGrid, srcDataDisplay, true);
 
         RowLabelSupplier destRowLabels = new RowLabelSupplier(destGrid);
-        destRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         destGrid.addNodeSupplier(destRowLabels);
         destRowLabels.addTable(destGrid, destData, true);
 
@@ -194,11 +192,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 destData.setColumns(ImmutableList.of(), null, null);
             }
         });
-
-        // Crucial that these use the same margins, to get the scrolling to line up:
-        Insets insets = new Insets(SrcDataDisplay.VERT_INSET, 0, SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET);
-        StackPane.setMargin(srcGrid.getNode(), insets);
-        StackPane.setMargin(destGrid.getNode(), insets);
         
         srcGrid.addMousePane(srcDataDisplay.getMousePane());
         SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode()), new StackPane(destGrid.getNode()));
@@ -262,7 +255,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             @Override
             public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
             {
-                return CellPosition.ORIGIN;
+                return CellPosition.ORIGIN.offsetByRowCols(1, 1);
             }
 
             @SuppressWarnings("units")
@@ -344,7 +337,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         public RecordSetDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, boolean showColumnTypes, ObjectExpression<@Nullable RecordSet> recordSetProperty)
         {
             super(new TableId(IdentifierUtility.fixExpressionIdentifier(suggestedName, "Table")), destColumnHeaderSupplier, true, showColumnTypes);
-            setPosition(CellPosition.ORIGIN);
+            setPosition(CellPosition.ORIGIN.offsetByRowCols(0, 1));
             this.recordSetProperty = recordSetProperty;
         }
 
@@ -433,8 +426,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     // class is public for testing purposes
     public class SrcDataDisplay extends RecordSetDataDisplay
     {
-        public static final double HORIZ_INSET = 22;
-        public static final double VERT_INSET = 0;
         private final RectangleOverlayItem selectionRectangle;
         private final GridArea destData;
         @OnThread(Tag.FXPlatform)
@@ -453,7 +444,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         {
             super(suggestedName, srcColumnHeaderSupplier, false, recordSetProperty);
             this.destData = destData;
-            setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 0));
+            setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 1));
             this.mousePane = new Pane();
             this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
             // Will be set right at first layout:
@@ -482,13 +473,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             };
             srcColumnHeaderSupplier.addItem(this.selectionRectangle);
             mousePane.setOnMouseMoved(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
                 e.consume();
             });
             @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
                 withParent_(g -> g.setNudgeScroll(false));
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
                 if (pendingTrim[0] != null)
                 {
                     FXUtility.mouse(this).setTrim(pendingTrim[0], true);
@@ -564,7 +555,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                     pendingTrim[0] = new TrimChoice(
                             curSelectionBounds.topLeftIncl.rowIndex - getDataDisplayTopLeftIncl().rowIndex - getPosition().rowIndex,
                             getBottomRightIncl().rowIndex - curSelectionBounds.bottomRightIncl.rowIndex,
-                            curSelectionBounds.topLeftIncl.columnIndex,
+                            curSelectionBounds.topLeftIncl.columnIndex - getDataDisplayTopLeftIncl().columnIndex - getPosition().columnIndex,
                             getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
                     );
                     FXUtility.mouse(this).updateDescription(curSelectionBounds);
@@ -574,7 +565,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 withParent_(g -> g.getScrollGroup().requestScroll(e));
                 // In case of small slide scroll, need to recalculate cursor:
                 withParent(g -> g.getVisibleBounds()).ifPresent(b -> selectionRectangle.calculatePosition(b));
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
                 e.consume();
             });
                     

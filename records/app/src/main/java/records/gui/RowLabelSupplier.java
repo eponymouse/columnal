@@ -52,16 +52,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     // For displaying the border/shadow overlays without repeating code:
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
-    private double minRowTranslateX = 0.0;
     private @MonotonicNonNull DoubleExpression containerTranslateX;
     // Used to make sure we don't queue up multiple requests for a relayout:
     private @Nullable FXPlatformRunnable cancelRelayout;
 
-    public void setMinRowTranslateX(double t)
-    {
-        this.minRowTranslateX = t;
-    }
-    
     private void setContainerTranslateX(DoubleExpression containerTranslateX)
     {
         if (this.containerTranslateX == null)
@@ -83,7 +77,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         private final RowLabelBorder borderShadowRectangle;
         private final DataDisplay dataDisplay;
         private boolean floating = false;
-        private double minTranslateX = 0.0;
         private double maxTranslateXRight;
 
         private RowLabels(DataDisplay dataDisplay)
@@ -238,7 +231,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 
                 // The furthest we go is to the left edge of the rightmost data cell:
                 labels.maxTranslateXRight = visibleBounds.getXCoord(dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition()).columnIndex) - x;
-                labels.minTranslateX = colIndex == 0 ? minRowTranslateX : 0.0;
                 
                 boolean anyWidthZero = false;
                 
@@ -459,8 +451,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             
             // We try to translate ourselves to equivalent layout X of zero, but without moving ourselves leftwards, or further across than maxTranslateXRight:
             double tx = containerTranslateX == null ? 0.0 : containerTranslateX.doubleValue();
-            double min = rowLabels.minTranslateX - width;
-            double clampedRight = Utility.clampIncl(min, minRowTranslateX - (getLayoutX() + tx), rowLabels.maxTranslateXRight - width);
+            double min = 0.0 - width;
+            double clampedRight = Utility.clampIncl(min, 0.0 - (getLayoutX() + tx), rowLabels.maxTranslateXRight - width);
             setTranslateX(clampedRight);
             rowLabels.setFloating(clampedRight > min + 1.0);
 
