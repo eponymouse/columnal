@@ -1363,9 +1363,9 @@ public class Utility
             public int length()
             {
                 int length;
-                for (length = startPos; length < original.length() && length < translateWrappedToOriginalPos(original.length()); length++)
+                for (length = startPos - 1; length < original.length() && translateWrappedToOriginalPos(length) < original.length(); length++)
                 {
-                    charAt(length);
+                    checkUpTo(length + 1);
                 }
                 return length;
             }
@@ -1377,22 +1377,23 @@ public class Utility
             }
 
             // Translated pos, and true if in a replaced range
-            private Pair<Integer, Boolean> translateWrappedToOriginal(int target)
+            private Pair<Integer, Boolean> translateWrappedToOriginal(int wrapped)
             {
+                // Wrapped to original is identity transformation with no ranges.
+                // Effect of range is to condense range into one char
+                int add = 0;
                 for (IndexRange rr : replaceRanges)
                 {
-                    if (target >= rr.start)
+                    if (wrapped + add == rr.start)
                     {
-                        if (target < rr.end)
-                        {
-                            return new Pair<>(rr.start, true);
-                        }
-                        else
-                        {
-                            // Ranges are start(incl) to end(excl) and are replaced by single space.
-                            // So e.g. given "a   b" range will be 1, 4 and we should subtract two chars:
-                            target -= (rr.end - rr.start - 1);
-                        }
+                        // Falls in range; replace with single space.
+                        return new Pair<>(rr.start, true);
+                    }
+                    else if (wrapped + add > rr.start)
+                    {
+                        // Ranges are start(incl) to end(excl) and are replaced by single space.
+                        // So e.g. given "a   b" range will be 1, 4 and we should subtract two chars:
+                        add += (rr.end - rr.start - 1);
                     }
                     else
                     {
@@ -1401,7 +1402,7 @@ public class Utility
                         break;
                     }
                 }
-                return new Pair<>(target, false);
+                return new Pair<>(wrapped + add, false);
             }
 
             @Override
@@ -1411,11 +1412,24 @@ public class Utility
                     throw new IllegalArgumentException("Index cannot be negative: " + index);
                 if (index < startPos)
                     return original.charAt(index);
-                
+
+                checkUpTo(index);
+
+                Pair<Integer, Boolean> mapped = translateWrappedToOriginal(index);
+                if (mapped.getSecond())
+                    return ' ';
+                else
+                    return original.charAt(mapped.getFirst());
+            }
+
+            private void checkUpTo(int index)
+            {
                 while (checkedUpToInOriginal < index && checkedUpToInOriginal < firstColonIndexInOriginal)
                 {
                     // Must do more checking:
                     checkedUpToInOriginal += 1;
+                    if (checkedUpToInOriginal >= original.length())
+                        return;
                     char c = original.charAt(checkedUpToInOriginal);
                     if (c == ':')
                     {
@@ -1434,12 +1448,6 @@ public class Utility
                         checkedUpToInOriginal = end;
                     }
                 }
-
-                Pair<Integer, Boolean> mapped = translateWrappedToOriginal(index);
-                if (mapped.getSecond())
-                    return ' ';
-                else
-                    return original.charAt(mapped.getFirst());
             }
 
             @Override

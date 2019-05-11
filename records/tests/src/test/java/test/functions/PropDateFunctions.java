@@ -122,6 +122,11 @@ public class PropDateFunctions
         checkDate(LocalDate.of(2012, 12, 12), "12/12/12");
         assertThrows(UserException.class, () -> strTo("11/12/12", DateTimeType.YEARMONTHDAY));
         checkDate(LocalDate.of(9345, 8, 6), "9345-08-06");
+        checkDate(LocalDate.of(2016, 12, 01), "2016 12 01");
+        checkDate(LocalDate.of(2016, 12, 01), "2016  12  01");
+        checkDate(LocalDate.of(1984, 6, 21), "June 21, 1984");
+        checkDate(LocalDate.of(1984, 6, 21), "June 21. 1984\n");
+        assertThrows(UserException.class, () -> strTo("June 21. 1984 23:", DateTimeType.YEARMONTHDAY));
 
         assertThrows(UserException.class, () -> strTo("1:2", DateTimeType.TIMEOFDAY));
         checkTime(LocalTime.of(1, 2), "1:02");
