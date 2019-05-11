@@ -635,7 +635,7 @@ public abstract class DataDisplay extends HeadedDisplay
             // The furthest down we go is to sit just above the last data row of the table:
             maxTranslateY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)) - y;
                                 
-            updateTranslate(getNode());
+            updateTranslate(getNode(), width);
             
             return Optional.of(new BoundingBox(
                     x,
@@ -715,11 +715,11 @@ public abstract class DataDisplay extends HeadedDisplay
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
         {
             containerTranslateY = newValue.doubleValue();
-            updateTranslate(getNode());
+            updateTranslate(getNode(), null);
         }
 
         @OnThread(Tag.FX)
-        private void updateTranslate(@Nullable Label label)
+        private void updateTranslate(@Nullable Label label, @Nullable Double futureWidth)
         {
             if (label != null)
             {
@@ -728,7 +728,7 @@ public abstract class DataDisplay extends HeadedDisplay
                 
                 FXUtility.setPseudoclass(label, "column-header-floating", label.getTranslateY() != 0.0);
                 
-                label.setClip(new Rectangle(0, 0, label.getWidth(), label.getHeight() + 20.0));
+                label.setClip(new Rectangle(0, 0, futureWidth != null ? futureWidth : label.getWidth(), label.getHeight() + 20.0));
             }
         }
     }
