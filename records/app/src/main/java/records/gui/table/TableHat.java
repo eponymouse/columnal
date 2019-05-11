@@ -563,6 +563,16 @@ class TableHat extends FloatingItem<TableHatDisplay>
         display.requestLayout();
         FXUtility.runAfterDelay(Duration.millis(100), () -> tableDisplay.relayoutGrid());
     }
+    
+    void setCollapsed(boolean collapsed)
+    {
+        if (this.collapsed != collapsed)
+        {
+            TableHatDisplay tableHatDisplay = getNode();
+            if (tableHatDisplay != null)
+                toggleCollapse(tableHatDisplay);
+        }
+    }
 
     @Override
     public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)

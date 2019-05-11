@@ -45,6 +45,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.*;
 import records.data.Table.FullSaver;
 import records.data.Table.InitialLoadDetails;
+import records.data.Table.TableDisplayBase;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.ListExDTV;
 import records.data.datatype.TaggedTypeDefinition;
@@ -57,6 +58,8 @@ import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.grid.VirtualGrid;
+import records.gui.table.TableDisplay;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
@@ -1450,6 +1453,22 @@ public class TestUtil
             {
             }
         };
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void collapseAllTableHats(TableManager tableManager, VirtualGrid virtualGrid)
+    {
+        for (Table table : tableManager.getAllTables())
+        {
+            fx_(() -> {
+                TableDisplayBase display = table.getDisplay();
+                if (display instanceof TableDisplay)
+                {
+                    ((TableDisplay)display)._test_collapseTableHat();
+                }
+            });
+        }
+        fx_(() -> virtualGrid.redoLayoutAfterScroll());
     }
 
     public static interface TestRunnable

@@ -1027,7 +1027,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             )
         ));
     }
-    
+
+    public void _test_collapseTableHat()
+    {
+        if (tableHat != null)
+            tableHat.setCollapsed(true);
+    }
+
     private static interface MakeColumnTransformation
     {
         @OnThread(Tag.Simulation)
