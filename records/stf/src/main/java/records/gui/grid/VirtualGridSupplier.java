@@ -47,6 +47,12 @@ public abstract class VirtualGridSupplier<T extends Node>
     }
 
     /**
+     * Gets preferred width for the given column among any nodes that are in
+     * that column, where preferred means the width needed to display the full-content.
+     */
+    public abstract double getPrefColumnWidth(@AbsColIndex int colIndex);
+
+    /**
      * EDITING means it has focus and should receive all mouse events.
      * DIRECTLY_CLICKABLE means if you click it should be activated
      * NOT_CLICKABLE means there is something there, but clicking does nothing.

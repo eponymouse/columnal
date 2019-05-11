@@ -609,6 +609,13 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
+        @OnThread(Tag.FXPlatform)
+        protected double getPrefWidthForItem(Label node)
+        {
+            return node.prefWidth(-1);
+        }
+
+        @Override
         @OnThread(value = Tag.FXPlatform)
         public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
@@ -744,6 +751,12 @@ public abstract class DataDisplay extends HeadedDisplay
         private CellPosition getFloatingPosition()
         {
             return new CellPosition(getPosition().rowIndex + CellPosition.row((headerRows.showingTableNameRow ? 1 : 0) + (headerRows.showingColumnNameRow ? 1 : 0)), getPosition().columnIndex + CellPosition.col(columnIndex));
+        }
+        
+        @Override
+        protected double getPrefWidthForItem(Label node)
+        {
+            return node.prefWidth(-1);
         }
 
         @Override

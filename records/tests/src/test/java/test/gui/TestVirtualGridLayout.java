@@ -430,6 +430,12 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
+        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        {
+            return 0;
+        }
+
+        @Override
         protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition)
         {
             return null;
@@ -454,6 +460,12 @@ public class TestVirtualGridLayout extends FXApplicationTest
             Label label = new Label("X");
             label.getStyleClass().add("simple-cell");
             return label;
+        }
+
+        @Override
+        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        {
+            return 0;
         }
 
         @Override

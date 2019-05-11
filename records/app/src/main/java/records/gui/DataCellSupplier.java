@@ -64,6 +64,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
+    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        return getItemsInColumn(colIndex).stream().mapToDouble(n -> n.calcWidthToFitContent()).max().orElse(0.0);
+    }
+
+    @Override
     protected ItemState getItemState(VersionedSTF stf, Point2D screenPos)
     {
         if (stf.isFocused())

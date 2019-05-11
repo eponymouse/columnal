@@ -120,6 +120,7 @@ public final class VirtualGrid implements ScrollBindable
 {
     private static final double MAX_EXTRA_X_PIXELS = 800;
     private static final double MAX_EXTRA_Y_PIXELS = 800;
+    public static final int MIN_COL_WIDTH = 20;
     // How many columns beyond last table to show in the grid
     // (logical, not to do with rendering/scrolling)
     private final int columnsToRight;
@@ -1940,6 +1941,14 @@ public final class VirtualGrid implements ScrollBindable
             return cellPosition.equals(buttonPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
         }
 
+        @Override
+        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        {
+            // The button is transient, so don't use it
+            // to determine long-term column width:
+            return 0;
+        }
+
         @OnThread(Tag.FXPlatform)
         public void addButtonVisibleListener(FXPlatformConsumer<Boolean> newButtonVisibleListener)
         {
@@ -2206,6 +2215,17 @@ public final class VirtualGrid implements ScrollBindable
         container.move(false, -1, 0);
     }
 
+    private double calcPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        double width = MIN_COL_WIDTH;
+        for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+        {
+            width = Math.max(width, nodeSupplier.getPrefColumnWidth(colIndex));
+        }
+        // Let's not go crazy with the width:
+        return Math.min(width, 400.0);
+    }
+
     @OnThread(Tag.FXPlatform)
     private final class ResizableColumnBar extends Region implements ScrollBindable 
     {
@@ -2269,7 +2289,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (resizingColumn != null)
                 {
                     @NonNull ColumnResize c = this.resizingColumn;
-                    setColumnWidth(c.colIndex, Math.max(20, e.getX() - c.startPosX + c.originalWidth));
+                    setColumnWidth(c.colIndex, Math.max(MIN_COL_WIDTH, e.getX() - c.startPosX + c.originalWidth));
                 }
                 else
                     updateCursor(e);
@@ -2277,6 +2297,17 @@ public final class VirtualGrid implements ScrollBindable
             setOnMouseReleased(e -> {
                 resizingColumn = null;
                 updateCursor(e);
+            });
+            setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() >= 2)
+                {
+                    @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
+                    if (colIndex != null && colIndex > 0)
+                    {
+                        setColumnWidth(colIndex, calcPrefColumnWidth(colIndex));
+                    }
+                    e.consume();
+                }
             });
         }
 

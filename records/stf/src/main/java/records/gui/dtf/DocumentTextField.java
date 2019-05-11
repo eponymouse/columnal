@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
 @OnThread(Tag.FXPlatform)
-public class  DocumentTextField extends TextEditorBase implements DocumentListener
+public class DocumentTextField extends TextEditorBase implements DocumentListener
 {
     private Document.TrackedPosition anchorPosition;
     private Document.TrackedPosition caretPosition;

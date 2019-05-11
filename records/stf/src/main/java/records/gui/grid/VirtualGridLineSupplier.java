@@ -104,6 +104,12 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
         // Not applicable
     }
 
+    @Override
+    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        return 0;
+    }
+
     public Collection<Line> _test_getColumnDividers()
     {
         return xLinesInUse.values();

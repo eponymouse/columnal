@@ -381,6 +381,13 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         }
     }
 
+    @Override
+    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        // Row labels float, so we don't use them to size a column:
+        return 0;
+    }
+
     public static enum Visible { VISIBLE }
     
     @OnThread(Tag.FXPlatform)

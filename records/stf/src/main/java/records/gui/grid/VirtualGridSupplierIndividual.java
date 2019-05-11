@@ -410,6 +410,12 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     {
         return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.node).orElse(null);
     }
+    
+    // Useful for preferred column width
+    protected final ImmutableList<T> getItemsInColumn(@AbsColIndex int colIndex)
+    {
+        return visibleItems.entrySet().stream().filter(e -> e.getKey().columnIndex == colIndex).map(e -> e.getValue().node).collect(ImmutableList.<T>toImmutableList());
+    }
 
     @Override
     protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)

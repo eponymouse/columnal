@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.geometry.Point2D;
@@ -72,6 +73,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     protected @OnThread(Tag.FX) void adjustStyle(Button item, CellStyle style, boolean on)
     {
         style.applyStyle(item, on);
+    }
+
+    @Override
+    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        return getItemsInColumn(colIndex).stream().mapToDouble(b -> b.prefWidth(-1)).max().orElse(0.0);
     }
 
     @Override

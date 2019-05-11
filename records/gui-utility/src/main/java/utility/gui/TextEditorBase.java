@@ -294,4 +294,10 @@ public abstract class TextEditorBase extends Region
             getChildren().setAll(cs.backgroundsPane, cs.errorUnderlinePane, textFlow);
         }
     }
+
+    @OnThread(Tag.FXPlatform)
+    public final double calcWidthToFitContent()
+    {
+        return textFlow.prefWidth(-1);
+    }
 }

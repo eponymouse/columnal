@@ -116,6 +116,12 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
 
+    @Override
+    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    {
+        return items.stream().mapToDouble(n -> n.getPrefWidthForColumn(colIndex)).max().orElse(0.0);
+    }
+
     /**
      * A wrapper around a GUI item of type T that handles
      * various layout operations.
@@ -154,6 +160,16 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         protected final @Pure @Nullable T getNode(@UnknownInitialization(FloatingItem.class) FloatingItem<T> this)
         {
             return node;
+        }
+
+        protected double getPrefWidthForItem(T node)
+        {
+            return 0;
+        }
+        
+        public final double getPrefWidthForColumn(@AbsColIndex int columnIndex)
+        {
+            return node == null ? 0 : getPrefWidthForItem(node);
         }
         
         // Only called by outer class, so can be private
