@@ -428,15 +428,20 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         TestUtil.sleep(500);
 
         // Should now be one more column in each table:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 3, lookup(".table-display-column-title").queryAll().size());
+        ImmutableList<Table> allTables = tableManager.getAllTables();
+        assertEquals(tableCount, allTables.size());
+        assertEquals(tableCount * 3, TestUtil.fx(() -> allTables.stream().mapToInt(t -> {
+            @SuppressWarnings("nullness")
+            @NonNull TableDisplay display = (TableDisplay) t.getDisplay();
+            return display.getDisplayColumns().size();
+        }).sum()).intValue());
         // One extra column:
         //assertEquals(originalColumns + 1 + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
         
         int newPosition = (Math.abs(positionIndicator) % originalColumns) + (positionIndicator < 0 ? 0 : 1);
         
         // Check that the existing columns are at right indexes:
-        for (Table table : tableManager.getAllTables())
+        for (Table table : allTables)
         {
             // Check that the column count is now right on all tables:
             List<Column> columns = table.getData().getColumns();
