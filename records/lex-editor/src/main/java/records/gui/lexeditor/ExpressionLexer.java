@@ -529,18 +529,29 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         addKeywordCompletions(completions, stem, canonIndex);
 
         ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> directAndRelated = completions.build();
-        ImmutableList.Builder<LexCompletion> guides = ImmutableList.builder();
-        // Only add guides at positions where there are already completions:
+        ArrayList<LexCompletion> guides = new ArrayList<>();
+        matchWordStart(stem, canonIndex, "conversion", WordPosition.FIRST_WORD_NON_EMPTY).ifPresent(p -> {
+            guides.add(guideCompletion("Conversion", "conversion", p.getSecond().startPos, p.getSecond().lastShowPosIncl).withSideText("\u2248 conversion"));
+        });
+        matchWordStart(stem, canonIndex, "units", WordPosition.FIRST_WORD_NON_EMPTY).ifPresent(p -> {
+            guides.add(guideCompletion("Units", "units", p.getSecond().startPos, p.getSecond().lastShowPosIncl).withSideText("\u2248 units"));
+        });
+        
+        // Only add expression guide at positions where there are already completions:
         if (!directAndRelated.isEmpty())
         {
             @SuppressWarnings("units") // Due to IntStream use
             @CanonicalLocation int start = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.startPos).min().orElse(canonIndex);
             @SuppressWarnings("units") // Due to IntStream use
             @CanonicalLocation int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).max().orElse(canonIndex);
-            guides.add(guideCompletion("Expressions", "expressions", start, end));
+            
+            if (guides.isEmpty())
+            {
+                guides.add(guideCompletion("Expressions", "expressions", start, end));
+            }
         }
         
-        return new ExpressionCompletionContext(sort(directAndRelated, guides.build()));
+        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)));
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
@@ -1038,6 +1049,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private static enum WordPosition
     {
         FIRST_WORD,
+        // Match first word, but only if there is a non-empty match:
         FIRST_WORD_NON_EMPTY,
         LATER_WORD
     }
