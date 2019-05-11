@@ -63,9 +63,7 @@ import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;

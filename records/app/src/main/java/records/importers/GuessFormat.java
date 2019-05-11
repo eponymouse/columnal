@@ -51,7 +51,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.LabelledGrid;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.io.File;
 import java.math.BigDecimal;

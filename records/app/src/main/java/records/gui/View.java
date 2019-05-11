@@ -29,7 +29,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
 import log.Log;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -70,7 +69,7 @@ import utility.*;
 import utility.Workers.Priority;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;

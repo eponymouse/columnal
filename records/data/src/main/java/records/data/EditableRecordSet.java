@@ -5,6 +5,7 @@ import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,7 +33,6 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
-import utility.gui.FXUtility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -218,7 +218,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> FXUtility.showError("Error inserting rows", e));
+            ErrorHandler.getErrorHandler().showError("Error inserting rows", e);
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -227,7 +227,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException e2)
                 {
-                    Platform.runLater(() -> FXUtility.showError("Error reversing row insertion", e2));
+                    ErrorHandler.getErrorHandler().showError("Error reversing row insertion", e2);
                 }
             }
             return null;
@@ -264,7 +264,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> FXUtility.showError("Error removing rows", e));
+            ErrorHandler.getErrorHandler().showError("Error removing rows", e);
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -273,7 +273,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException e2)
                 {
-                    Platform.runLater(() -> FXUtility.showError("Error reversing row removal", e2));
+                    ErrorHandler.getErrorHandler().showError("Error reversing row removal", e2);
                 }
             }
             return null;

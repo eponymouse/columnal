@@ -1,4 +1,4 @@
-package records.gui.expressioneditor;
+package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.control.skin.TextFieldSkin;
@@ -26,7 +26,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Window;
 import log.Log;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -35,25 +34,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.Completion.CompletionContent;
+import records.gui.AutoComplete.Completion;
+import records.gui.AutoComplete.Completion.CompletionContent;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExBiFunction;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.Instruction;
-import utility.gui.TranslationUtility;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -99,6 +92,7 @@ public class AutoComplete<C extends Completion>
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
+    @OnThread(Tag.FXPlatform)
     public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy)
     {
         this.textField = textField;
@@ -308,7 +302,7 @@ public class AutoComplete<C extends Completion>
     
     public abstract static @Interned class Completion
     {
-
+        @OnThread(Tag.FXPlatform)
         protected final class CompletionContent
         {
             private final ObservableStringValue completion;
@@ -337,8 +331,10 @@ public class AutoComplete<C extends Completion>
          * Given a property with the latest text, what graphical node and text property
          * should we show for the item?
          */
+        @OnThread(Tag.FXPlatform)
         public abstract CompletionContent makeDisplay(ObservableStringValue currentText);
 
+        @OnThread(Tag.FXPlatform)
         public String _test_getContent()
         {
             return makeDisplay(new ReadOnlyStringWrapper("")).completion.get();
@@ -349,6 +345,7 @@ public class AutoComplete<C extends Completion>
          * 
          * @param text The current user-entered text (independent of this item)
          */
+        @OnThread(Tag.FXPlatform)
         public String getDisplaySortKey(String text)
         {
             return makeDisplay(new ReadOnlyStringWrapper(text)).completion.get();
@@ -358,6 +355,7 @@ public class AutoComplete<C extends Completion>
          * Gets the URL of the details to show to the right of the list.  If null, nothing
          * is shown to the right.
          */
+        @OnThread(Tag.FXPlatform)
         public @Nullable String getFurtherDetailsURL()
         {
             return null;
@@ -432,6 +430,11 @@ public class AutoComplete<C extends Completion>
     // For reasons I'm not clear about, this listener needs to be its own class, not anonymous:
     private class NumberChangeListener implements ChangeListener<Number>
     {
+        @OnThread(Tag.FXPlatform)
+        public NumberChangeListener()
+        {
+        }
+
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
@@ -443,7 +446,14 @@ public class AutoComplete<C extends Completion>
 
     private class WindowChangeListener implements ChangeListener<@Nullable Window>
     {
-        final ChangeListener<Number> positionListener = new NumberChangeListener();
+        @OnThread(Tag.FXPlatform)
+        final ChangeListener<Number> positionListener;
+
+        @OnThread(Tag.FXPlatform)
+        private WindowChangeListener()
+        {
+            positionListener = new NumberChangeListener();
+        }
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)

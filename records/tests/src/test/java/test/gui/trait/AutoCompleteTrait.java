@@ -1,13 +1,12 @@
 package test.gui.trait;
 
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.testfx.api.FxRobotInterface;
-import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.AutoComplete.Completion;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import test.TestUtil;
 import threadchecker.OnThread;

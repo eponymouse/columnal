@@ -8,20 +8,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.ColumnId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.gui.DimmableParent;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.GUI;
-import utility.gui.LightDialog;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Lets you pick a column, or select to use row numbers

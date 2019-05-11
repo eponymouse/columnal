@@ -29,7 +29,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;

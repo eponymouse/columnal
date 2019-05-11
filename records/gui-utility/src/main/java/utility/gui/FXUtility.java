@@ -12,12 +12,14 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -34,9 +36,14 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -47,11 +54,17 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
+import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.stage.Screen;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import log.ErrorHandler.RunOrError;
 import log.Log;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.resizers.configurations.Antialiasing;
+import net.coobird.thumbnailator.resizers.configurations.Rendering;
+import net.coobird.thumbnailator.resizers.configurations.ScalingMode;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -63,6 +76,10 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.AcceleratorBaseVisitor;
+import records.grammar.AcceleratorLexer;
+import records.grammar.AcceleratorParser;
+import records.grammar.AcceleratorParser.AcceleratorContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -804,6 +821,204 @@ public class FXUtility
         return SystemUtils.IS_OS_MAC_OSX ? keyEvent.isAltDown() : keyEvent.isControlDown();
     }
 
+    /**
+     * Like getString, but lets the substitutions be dynamic.  If they change,
+     * the returned binding will be updated.
+     */
+    @SuppressWarnings("i18n") // Because checker doesn't recognise what we're doing
+    @OnThread(Tag.FXPlatform)
+    public static @Localized StringBinding bindString(@LocalizableKey String key, ObservableStringValue firstValue, ObservableStringValue... moreValues)
+    {
+    List<ObservableStringValue> values = new ArrayList<>();
+    values.add(firstValue);
+    values.addAll(Arrays.asList(moreValues));
+    // This gets it without substitution:
+    String unsub = TranslationUtility.getString(key);
+    FXPlatformSupplier<String> update = () -> {
+        String sub = unsub;
+        for (int i = 0; i < values.size(); i++)
+        {
+            sub = sub.replace("$" + (i+1), values.get(i).get());
+        }
+        return sub;
+    };
+    return Bindings.createStringBinding(() -> update.get(), values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
+}
+
+    public static @Nullable ImageView makeImageView(String filename, @Nullable Integer maxWidth, @Nullable Integer maxHeight)
+    {
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        if (systemClassLoader != null)
+        {
+            URL imageURL = systemClassLoader.getResource(filename);
+            if (imageURL != null)
+            {
+                ImageView imageView;
+                try
+                {
+                    File destFile = File.createTempFile("img", ".png");
+                    destFile.deleteOnExit();
+                    Thumbnails.of(imageURL)
+                        .scalingMode(ScalingMode.BICUBIC)
+                        .rendering(Rendering.QUALITY)
+                        .antialiasing(Antialiasing.ON)
+                        .outputQuality(1.0)
+                        .size(maxWidth == null ? 1000 : maxWidth.intValue(), maxHeight == null ? 1000 : maxHeight.intValue())
+                        .keepAspectRatio(true)
+                        .allowOverwrite(true)
+                        .toFile(destFile);
+                    File destFile2x = new File(destFile.getAbsolutePath().replace(".png", "@2x.png"));
+                    destFile2x.deleteOnExit();
+                    Thumbnails.of(imageURL)
+                        .scalingMode(ScalingMode.BICUBIC)
+                        .rendering(Rendering.QUALITY)
+                        .antialiasing(Antialiasing.ON)
+                        .outputQuality(1.0)
+                        .size(maxWidth == null ? 2000 : maxWidth.intValue() * 2, maxHeight == null ? 2000 : maxHeight.intValue() * 2)
+                        .keepAspectRatio(true)
+                        .allowOverwrite(true)
+                        .toFile(destFile);
+
+                    imageView = new ImageView(destFile.toURI().toURL().toExternalForm());
+                }
+                catch (Exception e)
+                {
+                    Log.log(e);
+                    // Give up resizing:
+                    imageView = new ImageView(imageURL.toExternalForm());
+                }
+                if (maxHeight != null)
+                    imageView.setFitHeight(maxHeight);
+                if (maxWidth != null)
+                    imageView.setFitWidth(maxWidth);
+                imageView.setSmooth(true);
+                imageView.setPreserveRatio(true);
+                return imageView;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * In the simple case, takes a localization key and returns a singleton list with a Text
+     * item containg the corresponding localization value + "\n"
+     *
+     * If the localization value contains any substitutions like ${date}, then that is transformed
+     * into a hover-over definition and/or hyperlink, and thus multiple nodes may be returned.
+     */
+    @SuppressWarnings("i18n") // Because of substring processing
+    public static List<Node> makeTextLine(@LocalizableKey String key, String styleclass)
+    {
+        ArrayList<Node> r = new ArrayList<>();
+        @Localized String original = TranslationUtility.getString(key);
+        @Localized String remaining = original;
+        for (int subst = remaining.indexOf("${"); subst != -1; subst = remaining.indexOf("${"))
+        {
+            int endSubst = remaining.indexOf("}", subst);
+            String target = remaining.substring(subst + 2, endSubst);
+            String before = remaining.substring(0, subst);
+            r.add(new Text(before));
+            Hyperlink link = new Hyperlink(target);
+            FXUtility.addChangeListenerPlatformNN(link.hoverProperty(), new FXPlatformConsumer<Boolean>()
+            {
+                private @Nullable PopupControl info;
+                @Override
+                public @OnThread(Tag.FXPlatform) void consume(Boolean hovering)
+                {
+                    if (hovering && info == null)
+                    {
+                        info = new PopupControl();
+                        PopupControl ctrl = info;
+                        Label label = new Label("More info on " + target);
+                        ctrl.setSkin(new Skin<PopupControl>()
+                        {
+                            @Override
+                            @OnThread(Tag.FX)
+                            public PopupControl getSkinnable()
+                            {
+                                return ctrl;
+                            }
+
+                            @Override
+                            @OnThread(Tag.FX)
+                            public Node getNode()
+                            {
+                                return label;
+                            }
+
+                            @Override
+                            @OnThread(Tag.FX)
+                            public void dispose()
+                            {
+                            }
+                        });
+                        Bounds bounds = link.localToScreen(link.getBoundsInLocal());
+                        ctrl.setAnchorLocation(AnchorLocation.CONTENT_BOTTOM_LEFT);
+                        ctrl.show(link, bounds.getMinX(), bounds.getMinY());
+                    }
+                    else if (!hovering && info != null)
+                    {
+                        info.hide();
+                        info = null;
+                    }
+                }
+            });
+            r.add(link);
+            remaining = remaining.substring(endSubst + 1);
+        }
+        r.add(new Text(remaining + "\n"));
+        for (Node node : r)
+        {
+            node.getStyleClass().add(styleclass);
+        }
+        return r;
+    }
+
+    @SuppressWarnings("i18n") // Because we return original if there's an issue
+    @OnThread(Tag.FXPlatform)
+    public static Pair<@Localized String, @Nullable KeyCombination> getStringAndShortcut(@LocalizableKey String key)
+    {
+        String original = TranslationUtility.getString(key);
+        int atIndex = original.indexOf("@");
+        if (atIndex != -1)
+        {
+            @Nullable KeyCombination shortcut = null;
+            try
+            {
+                shortcut = Utility.<@Nullable KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1).trim(), AcceleratorLexer::new, AcceleratorParser::new, p ->
+                {
+                    return new AcceleratorBaseVisitor<@Nullable KeyCombination>()
+                    {
+                        @Override
+                        public @Nullable KeyCombination visitAccelerator(AcceleratorContext ctx)
+                        {
+                            List<Modifier> modifiers = new ArrayList<>();
+                            if (ctx.SHORTCUT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.SHORTCUT_DOWN);
+                            if (ctx.ALT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.ALT_DOWN);
+                            if (ctx.SHIFT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.SHIFT_DOWN);
+                            if (ctx.KEY().getText().equals("Esc"))
+                                return new KeyCodeCombination(KeyCode.ESCAPE, modifiers.toArray(new Modifier[0]));
+                            else
+                                return new KeyCharacterCombination(ctx.KEY().getText(), modifiers.toArray(new Modifier[0]));
+                        }
+                    }.visit(p.accelerator());
+                });
+            }
+            catch (InternalException | UserException e)
+            {
+                // No need to tell the user, it's an internal error:
+                Log.log(e);
+            }
+            return new Pair<>(original.substring(0, atIndex), shortcut);
+        }
+        else
+            return new Pair<>(original, null);
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
@@ -1113,12 +1328,6 @@ public class FXUtility
     {
         @OnThread(Tag.Simulation)
         T run() throws InternalException, UserException;
-    }
-
-    public static interface RunOrError
-    {
-        @OnThread(Tag.Simulation)
-        void run() throws InternalException, UserException;
     }
 
     public static interface GenOrErrorFX<T>

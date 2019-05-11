@@ -46,7 +46,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.*;
 import java.util.function.Function;

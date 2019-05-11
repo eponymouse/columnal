@@ -3,6 +3,7 @@ package records.data;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import log.ErrorHandler;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -30,7 +31,6 @@ import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.*;
@@ -481,7 +481,7 @@ public class TableManager
         for (String script : scripts)
         {
             Log.debug("Reloading:\n" + script);
-            FXUtility.alertOnError_("Error re-running transformations", () -> {
+            ErrorHandler.getErrorHandler().alertOnError_("Error re-running transformations", () -> {
                 loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table()));
             });
         }
@@ -510,7 +510,7 @@ public class TableManager
     public RenameTable getRenameTableOperation(Table table)
     {
         return newName -> {
-            FXUtility.alertOnError_("Error renaming table", () -> {
+            ErrorHandler.getErrorHandler().alertOnError_("Error renaming table", () -> {
                 this.<Table>edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };

@@ -27,7 +27,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.io.File;
 import java.net.MalformedURLException;

@@ -26,7 +26,6 @@ import records.error.UserException;
 import records.gui.dtf.Document;
 import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.ReadOnlyDocument;
-import records.gui.dtf.RecogniserDocument;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -39,7 +38,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.Collection;
 import java.util.Map.Entry;

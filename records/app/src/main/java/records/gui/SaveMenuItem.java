@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.time.Instant;
 
@@ -34,7 +34,7 @@ final class SaveMenuItem extends MenuItem
         FXUtility.onceNotNull(parentMenuProperty(), menu -> menu.addEventHandler(Menu.ON_SHOWING, e -> {
             text.invalidate();
         }));
-        textProperty().bind(TranslationUtility.bindString("menu.project.save", text));
+        textProperty().bind(FXUtility.bindString("menu.project.save", text));
         setOnAction(e -> view.save(true));
     }
 

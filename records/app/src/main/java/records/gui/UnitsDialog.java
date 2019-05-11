@@ -39,13 +39,12 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.DimmableParent;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.Comparator;
 import java.util.Map.Entry;

@@ -37,7 +37,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TimedFocusable;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.Collections;

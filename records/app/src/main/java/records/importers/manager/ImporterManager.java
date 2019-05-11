@@ -23,9 +23,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.TableManager;
-import records.gui.ErrorableTextField;
-import records.gui.ErrorableTextField.ConversionResult;
-import records.importers.ClipboardUtils;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -35,7 +32,7 @@ import utility.Pair;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;

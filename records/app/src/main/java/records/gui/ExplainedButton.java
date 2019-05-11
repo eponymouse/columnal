@@ -10,8 +10,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,9 +17,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
-import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.net.URL;
 

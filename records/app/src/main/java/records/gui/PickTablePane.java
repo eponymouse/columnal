@@ -2,39 +2,24 @@ package records.gui;
 
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.PopupWindow.AnchorLocation;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Table;
-import records.data.TableId;
-import records.gui.expressioneditor.AutoComplete;
-import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.CompletionListener;
-import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
-import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.AutoComplete.CompletionListener;
+import records.gui.AutoComplete.SimpleCompletion;
+import records.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.Instruction;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
-import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
 public class PickTablePane extends BorderPane
@@ -77,6 +62,7 @@ public class PickTablePane extends BorderPane
         return new CompletionListener<TableCompletion>()
         {
             @Override
+            @OnThread(Tag.FXPlatform)
             public String doubleClick(String currentText, TableCompletion selectedItem)
             {
                 return complete(selectedItem.t);
@@ -90,6 +76,7 @@ public class PickTablePane extends BorderPane
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable TableCompletion selectedItem, boolean wasTab)
             {
                 if (selectedItem != null)

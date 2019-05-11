@@ -3,10 +3,8 @@ package records.gui;
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
@@ -25,8 +23,7 @@ import utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
-import utility.gui.LightDialog;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 // Shows an editable list of table ids
 @OnThread(Tag.FXPlatform)

@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableOperations.DeleteColumn;
@@ -14,7 +15,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Workers;
 import utility.Workers.Priority;
-import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.Optional;
@@ -48,7 +48,7 @@ public class ImmediateDataSource extends DataSource
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(renames.tableId(getId())).t(MainLexer.FORMAT).begin().nl();
         String errorTitle = "Error saving table: " + getId().getRaw();
-        FXUtility.alertOnError_(errorTitle, () ->
+        ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () ->
         {
             for (Column c : data.getColumns())
             {
@@ -66,7 +66,7 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.FORMAT).nl();
-        FXUtility.alertOnError_(errorTitle, () -> {
+        ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () -> {
             b.t(MainLexer.VALUES).begin().nl();
             for (int i = 0; data.indexValid(i); i++)
             {
@@ -94,7 +94,7 @@ public class ImmediateDataSource extends DataSource
                 data.deleteColumn(deleteColumnName);
             }
         }, appendRowCount -> {
-            FXUtility.alertOnError_("Error find table length for: " + getId().getRaw(), () ->
+            ErrorHandler.getErrorHandler().alertOnError_("Error find table length for: " + getId().getRaw(), () ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
             });

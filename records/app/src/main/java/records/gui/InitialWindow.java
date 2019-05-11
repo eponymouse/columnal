@@ -1,10 +1,7 @@
 package records.gui;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -12,31 +9,24 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Created by neil on 17/04/2017.
@@ -96,8 +86,8 @@ public class InitialWindow
         });
         
         mruListView.getItems().setAll(Utility.readRecentFilesList());
-        ImageView title = TranslationUtility.makeImageView("columnal.png", null, 90);
-        ImageView logo = TranslationUtility.makeImageView("logo.png", null, 100);
+        ImageView title = FXUtility.makeImageView("columnal.png", null, 90);
+        ImageView logo = FXUtility.makeImageView("logo.png", null, 100);
         HBox hBox = new HBox(Utility.streamNullable(title, logo).toArray(Node[]::new));
         hBox.getStyleClass().add("logo-container");
         hBox.setAlignment(Pos.BOTTOM_CENTER);

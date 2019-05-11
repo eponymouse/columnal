@@ -25,13 +25,10 @@ import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.GuessFormat.FinalTextFormat;
-import records.importers.GuessFormat.ImportInfo;
-import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -42,7 +39,7 @@ import utility.Utility.ReadState;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -61,7 +58,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**

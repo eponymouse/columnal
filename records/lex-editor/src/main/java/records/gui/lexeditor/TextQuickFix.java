@@ -23,7 +23,7 @@ import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.function.Function;
 

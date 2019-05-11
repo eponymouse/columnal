@@ -38,7 +38,7 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;

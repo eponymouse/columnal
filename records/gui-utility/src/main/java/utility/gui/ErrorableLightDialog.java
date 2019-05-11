@@ -4,8 +4,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.stage.Window;
 import javafx.util.Callback;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -15,6 +13,7 @@ import records.gui.ErrorableTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.TranslationUtility;
 
 /**
  * A dialog which has an error label, and a single converter function which returns

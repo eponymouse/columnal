@@ -8,7 +8,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 abstract class Clickable extends Style<Clickable>
 {

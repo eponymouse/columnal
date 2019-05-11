@@ -1,6 +1,5 @@
 package records.gui;
 
-import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
@@ -22,10 +21,9 @@ import records.data.Table;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.AutoComplete;
-import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.CompletionListener;
-import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.AutoComplete.Completion;
+import records.gui.AutoComplete.CompletionListener;
+import records.gui.AutoComplete.WhitespacePolicy;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.lexeditor.TopLevelEditor.Focus;
@@ -37,7 +35,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
@@ -45,7 +42,6 @@ import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
-import utility.gui.LightDialog;
 import utility.gui.TimedFocusable;
 
 import java.util.List;
@@ -82,12 +78,14 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
                 AutoComplete<ColumnCompletion> autoComplete = new AutoComplete<ColumnCompletion>(nameField.getFieldForComplete(), s -> columnIds.stream().map(ColumnCompletion::new), new CompletionListener<ColumnCompletion>()
                 {
                     @Override
+                    @OnThread(Tag.FXPlatform)
                     public @Nullable String doubleClick(String currentText, ColumnCompletion selectedItem)
                     {
                         return selectedItem.columnId.getRaw();
                     }
 
                     @Override
+                    @OnThread(Tag.FXPlatform)
                     public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable ColumnCompletion selectedItem, boolean wasTab)
                     {
                         FXUtility.keyboard(EditColumnExpressionDialog.this).expressionEditor.focus(Focus.LEFT);

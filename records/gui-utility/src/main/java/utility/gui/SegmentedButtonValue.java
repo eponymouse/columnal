@@ -11,6 +11,7 @@ import org.controlsfx.control.SegmentedButton;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.TranslationUtility;
 
 import java.util.IdentityHashMap;
 

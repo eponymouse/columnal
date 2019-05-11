@@ -2,9 +2,6 @@ package records.transformations;
 
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
-import javafx.scene.layout.Pane;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataTypeValue;
@@ -17,19 +14,12 @@ import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
-import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.SimulationFunction;
-import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.GUI;
-import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 

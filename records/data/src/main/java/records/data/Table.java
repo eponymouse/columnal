@@ -28,7 +28,7 @@ import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;

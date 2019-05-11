@@ -12,22 +12,18 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
-import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.Help.HelpInfo;
-
-import java.util.List;
 
 /**
  * A little question mark in a circle which offers a short toolip when hovered over,

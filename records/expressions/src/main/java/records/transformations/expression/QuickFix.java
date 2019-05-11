@@ -18,7 +18,7 @@ import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 /**
  * A quick fix for an error.  Has a title to display, and a thunk to run

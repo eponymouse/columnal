@@ -7,7 +7,7 @@ import records.data.ColumnId;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 /**
  * Created by neil on 30/04/2017.

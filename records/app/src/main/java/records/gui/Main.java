@@ -1,9 +1,12 @@
 package records.gui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
+import log.ErrorHandler;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
 import records.importers.ExcelImporter;
@@ -18,6 +21,7 @@ import utility.gui.FXUtility;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 
 /**
  * Created by neil on 18/10/2016.
@@ -32,6 +36,14 @@ public class Main extends Application
     {
         System.setProperty("storageDirectory", Utility.getStorageDirectory().getAbsolutePath());
         Log.normal("Started application");
+        ErrorHandler.setErrorHandler(new ErrorHandler()
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+            {
+                Platform.runLater(() -> FXUtility.showError(title, errWrap, e));
+            }
+        });
         
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");

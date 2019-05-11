@@ -1,7 +1,6 @@
 package utility.gui;
 
 import annotation.help.qual.HelpKey;
-import annotation.qual.Value;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -26,11 +25,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,12 +41,12 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.TranslationUtility;
 import utility.Utility;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by neil on 17/04/2017.
@@ -138,7 +135,7 @@ public class GUI
 
     public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction)
     {
-        @OnThread(Tag.FXPlatform) Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = TranslationUtility.getStringAndShortcut(menuItemKey);
+        @OnThread(Tag.FXPlatform) Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
         MenuItem item = new MenuItem(stringAndShortcut.getFirst());
         item.setOnAction(e -> onAction.run());
         if (stringAndShortcut.getSecond() != null)

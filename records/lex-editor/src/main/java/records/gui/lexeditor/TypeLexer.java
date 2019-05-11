@@ -45,7 +45,7 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.DescriptiveErrorListener;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;

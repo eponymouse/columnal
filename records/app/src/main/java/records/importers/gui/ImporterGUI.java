@@ -1,13 +1,9 @@
 package records.importers.gui;
 
-import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -15,10 +11,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
-import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
 import records.importers.ChoiceDetails;
@@ -31,13 +25,10 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid.Row;
-import utility.gui.TranslationUtility;
+import utility.TranslationUtility;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 public class ImporterGUI

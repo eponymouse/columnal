@@ -19,11 +19,6 @@
         </dependency>
         <dependency>
             <groupId>groupId</groupId>
-            <artifactId>gui-utility</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>groupId</groupId>
             <artifactId>data</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
@@ -55,18 +50,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.controlsfx</groupId>
-            <artifactId>controlsfx</artifactId>
-            <version>8.40.12</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.fxmisc.wellbehaved</groupId>
-            <artifactId>wellbehavedfx</artifactId>
-            <version>0.3</version>
-        </dependency>
-
-        <dependency>
             <groupId>ch.obermuhlner</groupId>
             <artifactId>big-math</artifactId>
             <version>2.0.0</version>
@@ -84,14 +67,6 @@
             <artifactId>threadchecker</artifactId>
             <version>0.1</version>
             <scope>provided</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.fxexperience</groupId>
-            <artifactId>scenic-view</artifactId>
-            <version>8.7.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
         </dependency>
     </dependencies>
 
