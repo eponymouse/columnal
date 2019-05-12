@@ -498,7 +498,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
 
         // 10 is fudge factor; if you set exactly its desired width,
         // it can sometimes wrap the text anyway.
-        double wholeTextWidth = textFlow.prefWidth(-1) + 10;
+        double wholeTextWidth = textFlow.prefWidth(-1);
         double wholeTextHeight = textFlow.prefHeight(getWidth());
 
         CaretAndSelectionNodes cs = this.caretAndSelectionNodes;
