@@ -94,6 +94,23 @@ public class TestNumberColumnDisplay extends FXApplicationTest
             assertEquals("Row " + i, expectedGUI.get(i), cellText);
         }
         
+        ArrayList<Double> rightOfLowestIntDigit = new ArrayList<>();
+        for (@Nullable VersionedSTF cell : cells)
+        {
+            if (cell != null)
+            {
+                String cellText = TestUtil.fx(() -> cell._test_getGraphicalText());
+                int lastIntDigit = cellText.indexOf('.') - 1;
+                if (lastIntDigit < 0)
+                    lastIntDigit = cellText.length() - 1;
+                int lastIntDigitFinal = lastIntDigit;
+                rightOfLowestIntDigit.add(TestUtil.fx(() -> cell._test_getCharacterBoundsOnScreen(lastIntDigitFinal).getMaxX()));
+            }
+        }
+        double leftmostX = rightOfLowestIntDigit.stream().mapToDouble(d -> d).min().orElse(0);
+        double rightmostX = rightOfLowestIntDigit.stream().mapToDouble(d -> d).max().orElse(Double.MAX_VALUE);
+        MatcherAssert.assertThat(rightmostX, Matchers.closeTo(leftmostX, 1));
+        
         // Check what happens when you click into number to edit:
 
         for (int i = 0; i < expectedGUI.size(); i++)
