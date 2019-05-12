@@ -237,7 +237,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
                 destRecordSet.getColumns().size());
             assertEquals(srcRecordSet.getLength() - internal.trimFromTop - internal.trimFromBottom,
                 destRecordSet.getLength());
-            assertEquals(CellPosition.ORIGIN.offsetByRowCols(internal.trimFromTop, internal.trimFromLeft),
+            assertEquals(CellPosition.ORIGIN.offsetByRowCols(internal.trimFromTop, 1 + internal.trimFromLeft),
                 TestUtil.fx(() -> destDataDisplay.getPosition()));    
         }
     }

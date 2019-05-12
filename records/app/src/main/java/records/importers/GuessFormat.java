@@ -532,7 +532,7 @@ public class GuessFormat
                     if (changed)
                         alphabetsChanged += 1;
                 }
-                if (alphabetsChanged >= (numColumns < 4 ? numColumns / 2 : numColumns / 4))
+                if (alphabetsChanged >= (numColumns < 4 ? Math.max(1, numColumns / 2) : numColumns / 4))
                 {
                     trimFromTop = row + 1;
                     break;
