@@ -1998,7 +1998,7 @@ public class Utility
     public static <T> Stream<T> findAlternatives(String raw, Stream<T> possibleItems, Function<T, Stream<String>> extractString)
     {
         Damerau d = new Damerau();
-        double threshold = 2;
+        double threshold = raw.length() <= 4 ? 1 : 2;
         Stream<Pair<Double, T>> withDistance = possibleItems.flatMap(item -> {
             // For each item, only keep the string that is the closest match:
             return extractString.apply(item).map(s -> new Pair<>(d.distance(raw.toLowerCase(), s.toLowerCase()), item)).sorted(Comparator.comparing(Pair::getFirst)).limit(1);
