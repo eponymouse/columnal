@@ -554,7 +554,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             // wide by restricting to our own width plus some.
             // (We don't use our own width because this causes text wrapping
             // of long words, but we actually want to see those truncated)
-            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.min(getWidth() + 300, wholeTextWidth), getHeight());
+            textFlow.resizeRelocate(-horizTranslation, -vertTranslation, Math.max(getWidth(), Math.min(getWidth() + 300, wholeTextWidth)), getHeight());
         }
         //Log.debug("Text flow: " + textFlow.getWidth() + ", " + textFlow.getHeight() + " for text: " + _test_getGraphicalText());
         if (cs != null)
