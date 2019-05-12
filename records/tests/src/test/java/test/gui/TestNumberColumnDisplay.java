@@ -137,19 +137,17 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     String guiMinusEllipsis = gui.replaceAll("\u2026", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
-                        Optional<Bounds> b;
+                        Bounds b;
                         String curText = TestUtil.fx(() -> getText(cellFinal));
                         if (n < curText.length())
                         {
                             b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n));
-                            if (b.isPresent())
-                                return new Point2D(b.get().getMinX(), b.get().getMinY() + b.get().getHeight() * 0.5);
+                            return new Point2D(b.getMinX(), b.getMinY() + b.getHeight() * 0.5);
                         }
                         else if (n == curText.length())
                         {
                             b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n - 1));
-                            if (b.isPresent())
-                                return new Point2D(b.get().getMaxX(), b.get().getMinY() + b.get().getHeight() * 0.5);
+                            return new Point2D(b.getMaxX(), b.getMinY() + b.getHeight() * 0.5);
                         }
                         
                         fail("Character not on screen: " + n);

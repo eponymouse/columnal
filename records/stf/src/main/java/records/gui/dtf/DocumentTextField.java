@@ -375,7 +375,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         return textFlow.getChildren().stream().filter(t -> t instanceof Text).map(n -> ((Text)n).getText()).collect(Collectors.joining());
     }
 
-    public Optional<Bounds> _test_getCharacterBoundsOnScreen(int charAfter)
+    public Bounds _test_getCharacterBoundsOnScreen(int charAfter)
     {
         try
         {
@@ -384,7 +384,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             Rectangle2D clipped = FXUtility.intersectRect(
                     FXUtility.boundsToRect(actualBounds),
                     FXUtility.boundsToRect(localToScreen(getBoundsInLocal())));
-            return Optional.of(new BoundingBox(clipped.getMinX(), clipped.getMinY(), clipped.getWidth(), clipped.getHeight()));
+            return new BoundingBox(clipped.getMinX(), clipped.getMinY(), clipped.getWidth(), clipped.getHeight());
         }
         catch (Exception e)
         {
