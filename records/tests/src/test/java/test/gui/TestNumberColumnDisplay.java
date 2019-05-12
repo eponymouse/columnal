@@ -71,11 +71,6 @@ public class TestNumberColumnDisplay extends FXApplicationTest
             new MemoryNumericColumn(rs, new ColumnId("C"), new NumberInfo(Unit.SCALAR), actualValues.stream())
         ), actualValues.size()));
         
-        // Bit of a hack, but font rendering seems different by OS:
-        // Not necessary any more?
-        //if (SystemUtils.IS_OS_WINDOWS)
-            //TestUtil.fx_(() -> mwa._test_getVirtualGrid()._test_setColumnWidth(0, 100));
-        
         CellPosition tablePos = mwa._test_getTableManager().getAllTables().get(0)._test_getPrevPosition();
         
         TestUtil.sleep(2000);
@@ -183,6 +178,11 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                             break;
                         case FAR_RIGHT:
                             clickOnScreenPos = posOfCaret.apply(gui.trim().length());
+                            if (!gui.endsWith(" "))
+                            {
+                                Bounds cellScreenBounds = TestUtil.fx(() -> cell.localToScreen(cell.getBoundsInLocal()));
+                                MatcherAssert.assertThat(clickOnScreenPos.getX(), Matchers.closeTo(cellScreenBounds.getMaxX(), 5.0));
+                            }
                             afterIndex = nonEllipsisPos + guiMinusEllipsis.length() + (gui.endsWith("\u2026") ? 1 : 0);
                             break;
                         default: // MIDDLE
@@ -193,8 +193,8 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     }
                     clickOn(clickOnScreenPos);
                     
-                    assertTrue("Clicked on: " + clickOnScreenPos, TestUtil.fx(() -> cellFinal.isFocused()));
-                    assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual, afterIndex, 
+                    assertTrue("Clicked on: " + clickOnScreenPos + " focus owner: " + getFocusOwner(), TestUtil.fx(() -> cellFinal.isFocused()));
+                    assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual + " pos: " + clickOnScreenPos, afterIndex, 
                         (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
                     );
                     // Double-check cellText while we're here:
