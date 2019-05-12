@@ -94,11 +94,21 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                     display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
                 }
 
-                display.displayDotVisible = !display.fullFracPart.isEmpty();
+                if (maxRightLength == 0)
+                    display.displayDotState = DotStatus.NOT_PRESENT;
+                else if (display.fullFracPart.trim().isEmpty())
+                    display.displayDotState = DotStatus.INVISIBLE;
+                else
+                    display.displayDotState = DotStatus.VISIBLE;
 
                 display.updateDisplay();
             }
         }
+    }
+    
+    private static enum DotStatus
+    {
+        NOT_PRESENT, INVISIBLE, VISIBLE;
     }
     
     private class NumberDetails
@@ -108,7 +118,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private final String fullIntegerPart;
         private String displayFracPart;
         private String displayIntegerPart;
-        private boolean displayDotVisible;
+        private DotStatus displayDotState;
 
         public NumberDetails(DocumentTextField textField, Number n)
         {
@@ -118,7 +128,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             // TODO should these be taken from NumberEntry?
             displayIntegerPart = fullIntegerPart;
             displayFracPart = fullFracPart;
-            displayDotVisible = true;
+            displayDotState = DotStatus.VISIBLE;
         }
 
         private void updateDisplay()
@@ -131,7 +141,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             {
                 editorKit.setUnfocusedDocument(ImmutableList.of(
                         new Pair<>(ImmutableSet.of("stf-number-int"), displayIntegerPart),
-                        new Pair<>(ImmutableSet.of("stf-number-dot"), displayDotVisible ? "." : ""),
+                        new Pair<>(!displayFracPart.trim().isEmpty() ? ImmutableSet.of("stf-number-dot") : ImmutableSet.of("stf-number-dot", "stf-number-dot-invisible"), !displayFracPart.isEmpty() ? "." : ""),
                         new Pair<>(ImmutableSet.of("stf-number-frac"), displayFracPart)
                 ), n -> {
                     // Clicking the left always stays left most:
@@ -140,7 +150,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                     else
                     {
                         int prevInt = displayIntegerPart.length();
-                        int prevDot = displayDotVisible ? 1 : 0;
+                        int prevDot = displayDotState != DotStatus.NOT_PRESENT ? 1 : 0;
                         if (n <= prevInt)
                             // Right-align the position:
                             return fullIntegerPart.length() - (prevInt - n);

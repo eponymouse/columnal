@@ -151,7 +151,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     clickOn(cell);
                     TestUtil.sleep(400);
                     String gui = expectedGUI.get(i);
-                    String guiMinusEllipsis = gui.replaceAll("\u2026", "").trim();
+                    String guiMinusEllipsis = gui.replaceAll("\u2026", "").replaceAll("\\. ", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
                         Bounds b;
@@ -188,7 +188,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                             afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? 0 : 1);
                             break;
                         case INSIDE_RIGHT:
-                            clickOnScreenPos = posOfCaret.apply(gui.trim().length() - 1);
+                            clickOnScreenPos = posOfCaret.apply(gui.trim().length() - (gui.trim().endsWith(".") ? 2 : 1));
                             afterIndex = nonEllipsisPos + guiMinusEllipsis.length() + (gui.endsWith("\u2026") ? 0 : -1); 
                             break;
                         case FAR_RIGHT:
@@ -209,7 +209,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     clickOn(clickOnScreenPos);
                     
                     assertTrue("Clicked on: " + clickOnScreenPos + " focus owner: " + getFocusOwner(), TestUtil.fx(() -> cellFinal.isFocused()));
-                    assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual + " pos: " + clickOnScreenPos, afterIndex, 
+                    assertEquals("Clicking " + target + " before: \"" + gui + "\" after: \"" + actual + "\" pos: " + clickOnScreenPos, afterIndex, 
                         (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
                     );
                     // Double-check cellText while we're here:
@@ -269,13 +269,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
     @Test
     public void testMixedUnaltered() throws Exception
     {
-        testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2    ", "0.3456"));
+        testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2.    ", "0.3456"));
     }
 
     @Test
     public void testBothEnds() throws Exception
     {
-        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890  "));
+        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890.  "));
     }
     
     @Property(trials = 1)
