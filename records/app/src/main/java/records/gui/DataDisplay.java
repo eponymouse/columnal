@@ -598,9 +598,14 @@ public abstract class DataDisplay extends HeadedDisplay
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected double getPrefWidthForItem(Label node)
+        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
         {
-            return node.prefWidth(-1);
+            if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
+            {
+                return node.prefWidth(-1);
+            }
+            else
+                return 0;
         }
 
         @Override
@@ -740,11 +745,17 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             return new CellPosition(getPosition().rowIndex + CellPosition.row((headerRows.showingTableNameRow ? 1 : 0) + (headerRows.showingColumnNameRow ? 1 : 0)), getPosition().columnIndex + CellPosition.col(columnIndex));
         }
-        
+
         @Override
-        protected double getPrefWidthForItem(Label node)
+        @OnThread(Tag.FXPlatform)
+        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
         {
-            return node.prefWidth(-1);
+            if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
+            {
+                return node.prefWidth(-1);
+            }
+            else
+                return 0;
         }
 
         @Override

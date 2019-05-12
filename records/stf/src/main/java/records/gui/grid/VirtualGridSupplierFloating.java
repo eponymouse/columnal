@@ -162,14 +162,14 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             return node;
         }
 
-        protected double getPrefWidthForItem(T node)
+        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, T node)
         {
             return 0;
         }
         
         public final double getPrefWidthForColumn(@AbsColIndex int columnIndex)
         {
-            return node == null ? 0 : getPrefWidthForItem(node);
+            return node == null ? 0 : getPrefWidthForItem(columnIndex, node);
         }
         
         // Only called by outer class, so can be private
