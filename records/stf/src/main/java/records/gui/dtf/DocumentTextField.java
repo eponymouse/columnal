@@ -379,7 +379,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     {
         try
         {
-            Path path = new Path(textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, 0, 0));
+            Path path = new Path(textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, (float)textFlow.getInsets().getLeft(), 0));
             Bounds actualBounds = localToScreen(path.getBoundsInLocal());
             Rectangle2D clipped = FXUtility.intersectRect(
                     FXUtility.boundsToRect(actualBounds),
