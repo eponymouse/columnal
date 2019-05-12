@@ -18,6 +18,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -58,7 +59,8 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     protected double vertTranslation;
     protected boolean expanded;
     protected boolean scrollable;
-    
+    protected TextAlignment unfocusedAlignment = TextAlignment.LEFT;
+
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         super(makeTextNodes(new ReadOnlyDocument("").getStyledSpans(false)));
@@ -248,6 +250,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
 
     public void setDocument(Document document)
     {
+        this.unfocusedAlignment = TextAlignment.LEFT;
         this.document.removeListener(this);
         this.document = document;
         this.document.addListener(this);
@@ -447,6 +450,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     public void refreshDocument(boolean focused)
     {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(focused)));
+        textFlow.setTextAlignment(focused ? TextAlignment.LEFT : unfocusedAlignment);
         requestLayout();
     }
     
@@ -566,6 +570,15 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             cs.inverter.setLayoutY(-vertTranslation);
             cs.inverterPane.resizeRelocate(0, 0, getWidth(), getHeight());
             cs.selectionPane.resizeRelocate(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    public void setUnfocusedAlignment(TextAlignment textAlignment)
+    {
+        this.unfocusedAlignment = textAlignment;
+        if (!isFocused())
+        {
+            textFlow.setTextAlignment(textAlignment);
         }
     }
 }

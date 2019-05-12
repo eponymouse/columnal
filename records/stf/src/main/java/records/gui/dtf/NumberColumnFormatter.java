@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.EditorKitCache;
@@ -36,16 +37,14 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
         for (DocumentTextField visibleCell : vis.visibleCells)
         {
-            if (visibleCell != null)
+            visibleCell.setUnfocusedAlignment(TextAlignment.RIGHT);
+            RecogniserDocument<Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
+            if (editorKit != null)
             {
-                RecogniserDocument<Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
-                if (editorKit != null)
+                @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
+                if (value != null)
                 {
-                    @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
-                    if (value != null)
-                    {
-                        visibleItems.add(new NumberDetails(visibleCell, value));
-                    }
+                    visibleItems.add(new NumberDetails(visibleCell, value));
                 }
             }
         }
