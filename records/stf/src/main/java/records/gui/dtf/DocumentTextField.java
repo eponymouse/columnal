@@ -60,6 +60,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     protected boolean expanded;
     protected boolean scrollable;
     protected TextAlignment unfocusedAlignment = TextAlignment.LEFT;
+    private @Nullable Double idealWidth = null;
 
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
@@ -250,6 +251,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
 
     public void setDocument(Document document)
     {
+        this.idealWidth = null;
         this.unfocusedAlignment = TextAlignment.LEFT;
         this.document.removeListener(this);
         this.document = document;
@@ -580,5 +582,19 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         {
             textFlow.setTextAlignment(textAlignment);
         }
+    }
+
+    public void setIdealWidth(double idealWidth)
+    {
+        this.idealWidth = idealWidth;
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) double calcWidthToFitContent()
+    {
+        if (idealWidth != null)
+            return idealWidth;
+        else
+            return super.calcWidthToFitContent();
     }
 }

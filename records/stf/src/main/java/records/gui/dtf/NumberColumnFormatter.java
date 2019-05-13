@@ -161,6 +161,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                 });
                 
                 textField.refreshDocument(textField.isFocused());
+                textField.setIdealWidth(fullSize(fullIntegerPart.length(), fullFracPart.length()));
             }
             
             /*
@@ -470,17 +471,17 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             root.getStyleClass().add("stf-cell-number");
             Scene scene = new Scene(root);
             scene.getStylesheets().addAll(FXUtility.getSceneStylesheets());
-            t.setText("0000000000");
+            t.setText("00000000000000000000");
             t.getStyleClass().setAll("stf-number-int");
             t.applyCss();
-            LEFT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
-            t.setText("0000000000");
+            LEFT_DIGIT_WIDTH = t.prefWidth(-1) / 20.0;
+            t.setText("00000000000000000000");
             t.getStyleClass().setAll("stf-number-frac");
             t.applyCss();
-            RIGHT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
-            t.setText("...........");
+            RIGHT_DIGIT_WIDTH = t.prefWidth(-1) / 20.0;
+            t.setText("......................");
             t.getStyleClass().setAll("stf-number-dot");
-            DOT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+            DOT_WIDTH = t.prefWidth(-1) / 20.0;
         }
     }
     private static @MonotonicNonNull DigitSizes SIZES;
@@ -505,6 +506,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         if (SIZES == null)
             SIZES = new DigitSizes();
 
-        return left * SIZES.LEFT_DIGIT_WIDTH + (right == 0 ? 0 : (SIZES.DOT_WIDTH + SIZES.RIGHT_DIGIT_WIDTH * right));
+        return 1.1 * left * SIZES.LEFT_DIGIT_WIDTH + (right == 0 ? 0 : (SIZES.DOT_WIDTH + SIZES.RIGHT_DIGIT_WIDTH * right * 1.1));
     }
 }

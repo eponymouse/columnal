@@ -296,7 +296,7 @@ public abstract class TextEditorBase extends Region
     }
 
     @OnThread(Tag.FXPlatform)
-    public final double calcWidthToFitContent()
+    public double calcWidthToFitContent()
     {
         return textFlow.prefWidth(-1);
     }
