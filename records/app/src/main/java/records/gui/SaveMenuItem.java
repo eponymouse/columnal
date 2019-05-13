@@ -28,13 +28,13 @@ final class SaveMenuItem extends MenuItem
             if (lastSave == null)
                 return TranslationUtility.getString("menu.project.modified");
             else
-                return "" + (Instant.now().getEpochSecond() - lastSave.getEpochSecond());
+                return TranslationUtility.getString("menu.project.save", "" + (Instant.now().getEpochSecond() - lastSave.getEpochSecond()));
         }, view.lastSaveTime(), dummyNowBinding);
         // Invalidating this binding on show will force re-evaluation of the time gap:
         FXUtility.onceNotNull(parentMenuProperty(), menu -> menu.addEventHandler(Menu.ON_SHOWING, e -> {
             text.invalidate();
         }));
-        textProperty().bind(FXUtility.bindString("menu.project.save", text));
+        textProperty().bind(text);
         setOnAction(e -> view.save(true));
     }
 
