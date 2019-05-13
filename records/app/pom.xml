@@ -450,13 +450,81 @@
                 <version>1.8</version>
                 <executions>
                     <execution>
+                        <id>create-logos</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <target>
+                                <property name="imagemagick_bin" value="S:/imagemagick"/>
+                                <exec dir="target/classes" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="convert"/>
+                                    <arg line="../../src/main/resources/logo.png"/>
+                                    <!-- Sizes from https://docs.microsoft.com/en-us/windows/desktop/uxguide/vis-icons -->
+                                    <arg line="( +clone -resize 256x256 -write logo-256.png +delete )"/>
+                                    <arg line="( +clone -resize 64x64 -write logo-64.png +delete )"/>
+                                    <arg line="( +clone -resize 48x48 -write logo-48.png +delete )"/>
+                                    <arg line="( +clone -resize 32x32 -write logo-32.png +delete )"/>
+                                    <arg line="( +clone -resize 24x24 -write logo-24.png +delete )"/>
+                                    <arg line="-resize 16x16 logo-16.png"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>build-msi</id>
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <!-- TODO add step to run launch4j automatically -->
-                                
                                 <property name="wix_bin" value="C:/Program Files (x86)/WiX Toolset v3.10/bin"/>
-                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe">
+                                <property name="launch4j_bin" value="C:/Program Files (x86)/Launch4j"/>
+                                <property name="imagemagick_bin" value="S:/imagemagick"/>
+                                
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="convert"/>
+                                    <arg line="../../app/src/main/resources/logo.png"/>
+                                    <arg line="-resize 256x256"/>
+                                    <arg line="-define icon:auto-resize=256,48,32,24,16"/>
+                                    <arg line="logo.ico"/>
+                                </exec>
+
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="convert ../../app/src/main/resources/columnal.png -background white -gravity east -resize 400x50 -splice 70x0 -extent 493x58 columnal-banner-left.png"/>
+                                </exec>
+
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="composite"/>
+                                    <!-- From https://stackoverflow.com/questions/5466138/imagemagick-composite-resizes-image-before-composing -->
+                                    <arg line="-resize '1x1&lt;'"/>
+                                    <arg line="( ../../app/src/main/resources/logo.png -resize 58x58 )"/>
+                                    <arg line="columnal-banner-left.png"/>
+                                    <arg line="-gravity southeast"/>
+                                    <arg line="installer-banner.bmp"/>
+                                </exec>
+
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="convert ../../app/src/main/resources/columnal.png -background white -gravity northwest -resize 140x50 -splice 10x50 -extent 493x312 columnal-background-top.png"/>
+                                </exec>
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="convert ../../app/src/main/resources/logo.png -background white -gravity east -resize 100x100 -extent 130x100 columnal-background-logo.png"/>
+                                </exec>
+
+                                <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                    <arg line="composite"/>
+                                    <!-- From https://stackoverflow.com/questions/5466138/imagemagick-composite-resizes-image-before-composing -->
+                                    <arg line="-resize '1x1&lt;'"/>
+                                    <arg line="columnal-background-logo.png"/>
+                                    <arg line="columnal-background-top.png"/>
+                                    <arg line="-gravity west"/>
+                                    <arg line="installer-background.bmp"/>
+                                </exec>
+                                
+                                <exec dir="../installers/windows_msi" executable="${launch4j_bin}/launch4jc.exe" failonerror="true">
+                                    <arg line="launch4j.xml"/>
+                                </exec>
+                                
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe" failonerror="true">
                                     <arg line="-arch x64"/>
                                     <arg line="main.wxs"/>
                                 </exec>
@@ -467,16 +535,16 @@
 
                                 <!-- The heat tool scans all the files in the JRE and generates
                                      a WiX file that has a list of all the files -->
-                                <exec dir="../installers/windows_msi" executable="${wix_bin}/heat.exe">
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/heat.exe" failonerror="true">
                                     <arg line="dir SourceDir -cg JREFiles -dr INSTALLDIR -ke -gg -srd -sfrag -template fragment -out jre-files.wxs"/>
                                 </exec>
-                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe">
+                                <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe" failonerror="true">
                                     <arg line="-arch x64"/>
                                     <arg line="jre-files.wxs"/>
                                 </exec>
 
                                 <exec dir="../installers/windows_msi" executable="${wix_bin}/light.exe">
-                                    <arg line="-ext WixUIExtension main.wixobj jre-files.wixobj -o columnal.msi"/>
+                                    <arg line="-ext WixUIExtension -ext WixUtilExtension main.wixobj jre-files.wixobj -o columnal.msi"/>
                                 </exec>
                                 
 

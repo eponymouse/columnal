@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>C:\Users\neil\intellij\records\records\app\target\app-1.0-SNAPSHOT-jar-with-dependencies.jar</jar>
-  <outfile>C:\Users\neil\intellij\records\records\installers\windows_msi\Columnal.exe</outfile>
+  <jar>..\..\app\target\app-1.0-SNAPSHOT-jar-with-dependencies.jar</jar>
+  <outfile>Columnal.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,7 +13,7 @@
   <stayAlive>true</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon></icon>
+  <icon>logo.ico</icon>
   <singleInstance>
     <mutexName>ColumnalSingleInstance</mutexName>
     <windowTitle></windowTitle>

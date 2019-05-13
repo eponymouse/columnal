@@ -103,6 +103,7 @@ public class InitialWindow
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
         stage.setScene(scene);
         stage.setTitle(TranslationUtility.getString("us"));
+        FXUtility.setIcon(stage);
         stage.show();
         //org.scenicview.ScenicView.show(scene);
     }

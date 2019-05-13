@@ -36,6 +36,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -56,6 +57,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.stage.Screen;
+import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
@@ -1322,6 +1324,28 @@ public class FXUtility
         }
         
         return false;
+    }
+    
+    public static void setIcon(Stage stage)
+    {
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        if (systemClassLoader != null)
+        {
+            for (int size : new int[]{16, 24, 32, 48, 64, 256})
+            {
+
+                InputStream icon = systemClassLoader.getResourceAsStream("logo-" + size + ".png");
+                if (icon != null)
+                {
+                    stage.getIcons().add(new Image(icon));
+                } else
+                {
+                    Log.error("Could not find file: logo-" + size + ".png");
+                }
+            }
+        }
+        else
+            Log.error("No system classloader!");
     }
 
     public static interface GenOrError<T>

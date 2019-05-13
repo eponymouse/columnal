@@ -12,6 +12,8 @@
         <!-- Embeds all the files to install inside the MSI -->
         <Media Id='1' Cabinet='Columnal.cab' EmbedCab='yes' />
 
+        <WixVariable Id="WixUILicenseRtf" Value="licence.rtf" />
+
         <Property Id="REINSTALLMODE" Value="amus" />
         <MajorUpgrade AllowDowngrades="yes" />
 
@@ -22,7 +24,6 @@
         <Property Id="WixAppFolder" Value="WixPerUserFolder"/>
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
         <WixVariable Id="WixUISupportPerUser" Value="1" />
-        <UIRef Id="WixUI_Minimal" />
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         
         <Directory Id='TARGETDIR' Name='SourceDir'>
@@ -46,6 +47,20 @@
             </Directory>
         </Directory>
 
+        <!-- From http://wixtoolset.org/documentation/manual/v3/howtos/ui_and_localization/run_program_after_install.html -->
+        <!-- and http://windows-installer-xml-wix-toolset.687559.n2.nabble.com/How-to-set-the-checkbox-as-checked-by-default-for-launching-application-at-last-page-of-install-td3751091.html -->
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Columnal now" />
+        <Property Id="WixShellExecTarget" Value="[#Launcher]" />
+        <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+        <UI>
+            <UIRef Id="WixUI_Minimal" />
+            <Publish Dialog="ExitDialog"
+                     Control="Finish"
+                     Event="DoAction"
+                     Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+        </UI>
+
         <Component Id='CompLauncher' Directory="INSTALLDIR">
             <File Id='Launcher' Name='Columnal.exe' DiskId='1' Source='Columnal.exe' KeyPath='yes' />
         </Component>
@@ -56,8 +71,8 @@
             <ComponentRef Id='ProgramMenuShortcut' />
         </Feature>
 
-        <!-- <Icon Id="Icon.ico" SourceFile="" /> -->
-        <!-- <WixVariable Id="WixUIBannerBmp" Value=""/> -->
-        <!-- <WixVariable Id="WixUIDialogBmp" Value=""/> -->
+        <Icon Id="Icon.ico" SourceFile="logo.ico" />
+        <WixVariable Id="WixUIBannerBmp" Value="installer-banner.bmp"/>
+        <WixVariable Id="WixUIDialogBmp" Value="installer-background.bmp"/>
     </Product>
 </Wix>

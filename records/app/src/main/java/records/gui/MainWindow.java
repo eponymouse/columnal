@@ -156,6 +156,7 @@ public class MainWindow
         stage.setScene(scene);
         stage.setWidth(1000);
         stage.setHeight(800);
+        FXUtility.setIcon(stage);
 
         if (src != null)
         {
