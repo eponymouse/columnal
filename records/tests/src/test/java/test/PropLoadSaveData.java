@@ -51,9 +51,9 @@ public class PropLoadSaveData extends FXApplicationTest
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Map<TableId, Table> loaded = toMap(mgr1.loadAll(savedMangled));
+            Map<TableId, Table> loaded = toMap(mgr1.loadAll(savedMangled, w -> {}));
             String savedAgain = TestUtil.save(mgr1);
-            Map<TableId, Table> loadedAgain = toMap(mgr2.loadAll(savedAgain));
+            Map<TableId, Table> loadedAgain = toMap(mgr2.loadAll(savedAgain, w -> {}));
 
 
             assertEquals(saved, savedAgain);

@@ -27,6 +27,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -133,9 +134,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
 
     void doSaveTo(boolean keepPrevForUndo, File dest)
     {
+        ImmutableList<String> displayDetailLines = mainPane.getCustomisedColumnWidths().entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).map(e -> String.format("COLUMNWIDTH %d %d", e.getKey(), Math.round(e.getValue()))).collect(ImmutableList.<String>toImmutableList());
         Workers.onWorkerThread("Saving file", Priority.SAVE, () ->
         {
-            FullSaver fetcher = new FullSaver();
+            FullSaver fetcher = new FullSaver(displayDetailLines);
             tableManager.save(dest, fetcher);
             String completeFile = fetcher.getCompleteFile();
             try
@@ -389,7 +391,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             
             try
             {
-                getManager().loadAll(previousVersion);
+                getManager().loadAll(previousVersion, this::loadColumnWidths);
             }
             catch (UserException | InternalException e)
             {
@@ -417,6 +419,18 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 readOnly = false;
                 save(false);
             });
+        });
+    }
+
+    @SuppressWarnings("units") // Because of AbsColIndex
+    @OnThread(Tag.Simulation)
+    void loadColumnWidths(ImmutableList<Pair<Integer, Double>> columnWidths)
+    {
+        Platform.runLater(() -> {
+            for (Pair<Integer, Double> columnWidth : columnWidths)
+            {
+                getGrid().setColumnWidth(columnWidth.getFirst(), columnWidth.getSecond(), false);
+            }
         });
     }
 
@@ -651,6 +665,23 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         VirtualGridManager vgManager = new VirtualGridManager()
         {
+            private @Nullable FXPlatformRunnable cancelSave;
+
+            @Override
+            public @OnThread(Tag.FXPlatform) void notifyColumnSizeChanged()
+            {
+                // Save after five seconds of no resizing:
+                if (cancelSave != null)
+                {
+                    cancelSave.run();
+                    cancelSave = null;
+                }
+                cancelSave = FXUtility.runAfterDelay(Duration.seconds(5), () -> {
+                    cancelSave = null;
+                    Utility.later(View.this).modified();
+                });
+            }
+
             @Override
             @OnThread(Tag.FXPlatform)
             public void createTable(CellPosition cellPos, Point2D mousePos, VirtualGrid grid)

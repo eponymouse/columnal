@@ -866,7 +866,7 @@ public class TestUtil
 
         try
         {
-            FullSaver saver = new FullSaver();
+            FullSaver saver = new FullSaver(null);
             tableManager.save(null, saver);
             f.complete(saver.getCompleteFile());
         }

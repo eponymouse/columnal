@@ -54,9 +54,9 @@ public class PropLoadSaveTransformation
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Table loaded = mgr1.loadAll(savedMangled).get(0);
+            Table loaded = mgr1.loadAll(savedMangled, w -> {}).get(0);
             String savedAgain = save(mgr1);
-            Table loadedAgain = mgr2.loadAll(savedAgain).get(0);
+            Table loadedAgain = mgr2.loadAll(savedAgain, w -> {}).get(0);
 
 
             assertEquals(saved, savedAgain);
@@ -78,7 +78,7 @@ public class PropLoadSaveTransformation
         String[] r = new String[] {""};
         try
         {
-            original.save(null, new FullSaver() {
+            original.save(null, new FullSaver(null) {
                 @Override
                 public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
                 {

@@ -164,7 +164,7 @@ public class MainWindow
                 Platform.runLater(() -> updateBanner(v, banner, false));
                 return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
             }, () -> {
-                v.getManager().loadAll(srcFinal.getSecond());
+                v.getManager().loadAll(srcFinal.getSecond(), v::loadColumnWidths);
                 Platform.runLater(() -> {
                     v.enableWriting();
                     updateBanner(v, banner, false);

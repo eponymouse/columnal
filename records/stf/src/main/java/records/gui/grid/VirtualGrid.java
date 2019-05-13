@@ -9,6 +9,7 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UnknownIfUserIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -231,6 +232,9 @@ public final class VirtualGrid implements ScrollBindable
 
         @OnThread(Tag.FXPlatform)
         public void pasteIntoEmpty(CellPosition target);
+
+        @OnThread(Tag.FXPlatform)
+        public void notifyColumnSizeChanged();
     }
     
     @OnThread(Tag.FXPlatform)
@@ -827,6 +831,12 @@ public final class VirtualGrid implements ScrollBindable
             return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }
 
+    @Pure
+    public final ImmutableMap<@AbsColIndex Integer, Double> getCustomisedColumnWidths()
+    {
+        return ImmutableMap.copyOf(customisedColumnWidths);
+    }
+
     private @AbsRowIndex int getLastSelectableRowGlobal()
     {
         return CellPosition.row(currentKnownLastRowIncl.get());
@@ -1063,15 +1073,16 @@ public final class VirtualGrid implements ScrollBindable
     
     public void _test_setColumnWidth(int columnIndex, double width)
     {
-        setColumnWidth(CellPosition.col(columnIndex), width);
+        setColumnWidth(CellPosition.col(columnIndex), width, false);
     }
 
-    // package-visible
-    private void setColumnWidth(@AbsColIndex int columnIndex, double width)
+    public void setColumnWidth(@AbsColIndex int columnIndex, double width, boolean sizedByUser)
     {
         customisedColumnWidths.put(CellPosition.col(columnIndex), width);
         cachedColumnLeftX = null;
         updateSizeAndPositions();
+        if (sizedByUser && manager != null)
+            manager.notifyColumnSizeChanged();
     }
 
     public Optional<CellSelection> _test_getSelection()
@@ -2289,7 +2300,7 @@ public final class VirtualGrid implements ScrollBindable
                 if (resizingColumn != null)
                 {
                     @NonNull ColumnResize c = this.resizingColumn;
-                    setColumnWidth(c.colIndex, Math.max(MIN_COL_WIDTH, e.getX() - c.startPosX + c.originalWidth));
+                    setColumnWidth(c.colIndex, Math.max(MIN_COL_WIDTH, e.getX() - c.startPosX + c.originalWidth), true);
                 }
                 else
                     updateCursor(e);
@@ -2304,7 +2315,7 @@ public final class VirtualGrid implements ScrollBindable
                     @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
                     if (colIndex != null && colIndex > 0)
                     {
-                        setColumnWidth(colIndex, calcPrefColumnWidth(colIndex));
+                        setColumnWidth(colIndex, calcPrefColumnWidth(colIndex), true);
                     }
                     e.consume();
                 }

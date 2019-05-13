@@ -31,14 +31,11 @@ dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
 
 blank : NEWLINE;
 
-// Position is X, Y, Width, Height.  Snapped to is Table ID, width
-displayTablePosition : POSITION item item NEWLINE;
-displayShowColumns : SHOWCOLUMNS (ALL | ALTERED | COLLAPSED | EXCEPT item*) NEWLINE;
-display : displayTablePosition displayShowColumns;
+display : DISPLAY detail DISPLAY NEWLINE;
 
-table : (dataSource | transformation) display END tableId NEWLINE;
+table : (dataSource | transformation) display? END tableId NEWLINE;
 
 units : UNITS detail UNITS NEWLINE;
 types : TYPES detail TYPES NEWLINE;
 
-file : VERSION item NEWLINE blank* units blank* types blank* (table blank*)*;
+file : VERSION item NEWLINE blank* units blank* types blank* (table blank*)* (display blank*)?;

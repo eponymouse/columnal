@@ -18,7 +18,11 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DisplayLexer;
+import records.grammar.DisplayParser;
+import records.grammar.DisplayParser.TableDisplayDetailsContext;
 import records.grammar.MainLexer;
+import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.DisplayContext;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
@@ -155,6 +159,12 @@ public abstract class Table
         private final List<String> units = new ArrayList<>();
         private final List<String> types = new ArrayList<>();
         private final List<String> tables = new ArrayList<>();
+        private final @Nullable ImmutableList<String> displayDetailLines;
+
+        public FullSaver(@Nullable ImmutableList<String> displayDetailLines)
+        {
+            this.displayDetailLines = displayDetailLines;
+        }
 
         @Override
         public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
@@ -185,6 +195,7 @@ public abstract class Table
                 + types.stream().collect(Collectors.joining())
                 + "@END TYPES\n"
                 + tables.stream().collect(Collectors.joining("\n"))
+                + (displayDetailLines == null ? "" : ("DISPLAY @BEGIN\n" + displayDetailLines.stream().collect(Collectors.joining("\n")) + "\n@END DISPLAY"))
                 + "\n";
         }
     }
@@ -210,7 +221,16 @@ public abstract class Table
         display.loadPosition(prevPosition, showColumns);
     }
 
-    public static InitialLoadDetails loadDetails(TableId tableId, DisplayContext displayContext) throws UserException
+    public static InitialLoadDetails loadDetails(TableId tableId, @Nullable DisplayContext detailContext) throws UserException, InternalException
+    {
+        if (detailContext == null)
+            return new InitialLoadDetails(tableId, null, null);
+        return Utility.parseAsOne(detailContext.detail().DETAIL_LINE().stream().map(d -> d.getText()).collect(Collectors.joining()), DisplayLexer::new, DisplayParser::new, p -> {
+            return loadDetails(tableId, p.tableDisplayDetails());
+        });
+    }
+
+    public static InitialLoadDetails loadDetails(TableId tableId, TableDisplayDetailsContext displayContext) throws UserException
     {
         try
         {
@@ -252,19 +272,21 @@ public abstract class Table
         {
             prevPosition = display.getMostRecentPosition();
         }
-        out.t(MainLexer.POSITION).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
-        out.t(MainLexer.SHOWCOLUMNS);
+        out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().nl();
+        out.t(DisplayLexer.POSITION, DisplayLexer.VOCABULARY).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
+        out.t(DisplayLexer.SHOWCOLUMNS, DisplayLexer.VOCABULARY);
         switch (showColumns.getFirst())
         {
-            case ALL: out.t(MainLexer.ALL); break;
-            case ALTERED: out.t(MainLexer.ALTERED); break;
-            case COLLAPSED: out.t(MainLexer.COLLAPSED); break;
+            case ALL: out.t(DisplayLexer.ALL, DisplayLexer.VOCABULARY); break;
+            case ALTERED: out.t(DisplayLexer.ALTERED, DisplayLexer.VOCABULARY); break;
+            case COLLAPSED: out.t(DisplayLexer.COLLAPSED, DisplayLexer.VOCABULARY); break;
             case CUSTOM:
-                out.t(MainLexer.EXCEPT);
+                out.t(DisplayLexer.EXCEPT, DisplayLexer.VOCABULARY);
                 // TODO output the list;
                 break;
         }
         out.nl();
+        out.end().t(MainLexer.DISPLAY, MainLexer.VOCABULARY).nl();
     }
 
     @OnThread(Tag.Any)

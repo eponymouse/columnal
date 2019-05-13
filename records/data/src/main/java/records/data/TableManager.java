@@ -17,6 +17,10 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DisplayLexer;
+import records.grammar.DisplayParser;
+import records.grammar.DisplayParser.ColumnWidthContext;
+import records.grammar.DisplayParser.GlobalDisplayDetailsContext;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.FileContext;
@@ -130,7 +134,7 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public synchronized List<Table> loadAll(String completeSrc) throws UserException, InternalException
+    public synchronized List<Table> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
         unitManager.clearAllUser();
@@ -148,6 +152,27 @@ public class TableManager
         for (TableContext tableContext : file.table())
         {
             loadOneTable(tableContext).either_(exceptions::add, loaded::add);
+        }
+        
+        if (file.display() != null)
+        {
+            ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
+            GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(file.display().detail().DETAIL_LINE().stream().map(l -> l.getText()).collect(Collectors.joining()), DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
+            for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
+            {
+                try
+                {
+                    int columnIndex = Integer.parseInt(columnWidthContext.item(0).getText());
+                    double columnWidth = Double.parseDouble(columnWidthContext.item(1).getText());
+                    widths.add(new Pair<>(columnIndex, columnWidth));
+                }
+                catch (NumberFormatException e)
+                {
+                    // Not a big deal, log but don't worry user
+                    Log.log(e);
+                }
+            }
+            setColumnWidths.consume(widths.build());
         }
 
         if (exceptions.isEmpty())
