@@ -253,6 +253,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     {
         this.idealWidth = null;
         this.unfocusedAlignment = TextAlignment.LEFT;
+        textFlow.setTextAlignment(TextAlignment.LEFT);
         this.document.removeListener(this);
         this.document = document;
         this.document.addListener(this);
