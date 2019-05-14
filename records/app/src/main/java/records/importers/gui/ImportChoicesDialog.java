@@ -664,7 +664,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             // Rows take account of +1 for one-based indexes, but -2 for header rows.
             sel.append("Rows \u2195 ").append(-1 + selectionBounds.topLeftIncl.rowIndex).append("-").append(-1 + selectionBounds.bottomRightIncl.rowIndex)
                 .append(" of ").append(srcDataDisplay.currentKnownRows).append(".  ");
-            sel.append("Columns \u2194 ").append(1 + selectionBounds.topLeftIncl.columnIndex).append("-").append(1 + selectionBounds.bottomRightIncl.columnIndex)
+            sel.append("Columns \u2194 ").append( selectionBounds.topLeftIncl.columnIndex).append("-").append(selectionBounds.bottomRightIncl.columnIndex)
                 .append(" of ").append(srcDataDisplay.displayColumns.size()).append(".");
 
             curSelectionDescription.setText(sel.toString());
