@@ -35,7 +35,7 @@ public class CommonStyles
         @Override
         protected void style(Text t)
         {
-            // TODO
+            t.setStyle("-fx-font-style: italic;");
         }
     }
     

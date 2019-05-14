@@ -37,6 +37,7 @@ import records.transformations.expression.type.TypeExpression.JellyRecorder;
 import records.transformations.expression.type.TypeExpression.UnJellyableTypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
+import styled.CommonStyles;
 import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -311,10 +312,13 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
     {
         return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(
-            streamDataTypes().map(t -> {
-                int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);
-                return typeCompletion(t, canonIndex, len);
-            }).collect(ImmutableList.<LexCompletion>toImmutableList())
+            Stream.<LexCompletion>concat(
+                streamDataTypes().<LexCompletion>map(t -> {
+                    int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);
+                    return typeCompletion(t, canonIndex, len);
+                }),
+                Stream.<LexCompletion>of(typeCompletion(DataType.NUMBER, canonIndex, Utility.longestCommonStartIgnoringCase("Number{}", 0, stem, 0)).withReplacement("Number{}", StyledString.concat(StyledString.s("Number{"), StyledString.styled("unit", CommonStyles.ITALIC), StyledString.s("}"))).withCaretPosAfterCompletion("Number{".length()))
+            ).collect(ImmutableList.<LexCompletion>toImmutableList())
         )));
     }
 
