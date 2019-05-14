@@ -22,6 +22,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.AutoComplete.Completion;
+import records.gui.AutoComplete.CompletionCalculator;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.WhitespacePolicy;
 import records.gui.lexeditor.ExpressionEditor;
@@ -37,6 +38,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
@@ -48,6 +50,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
@@ -75,7 +78,22 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
             try
             {
                 List<ColumnId> columnIds = srcTable.getData().getColumnIds();
-                AutoComplete<ColumnCompletion> autoComplete = new AutoComplete<ColumnCompletion>(nameField.getFieldForComplete(), s -> columnIds.stream().map(ColumnCompletion::new), new CompletionListener<ColumnCompletion>()
+                AutoComplete<ColumnCompletion> autoComplete = new AutoComplete<ColumnCompletion>(nameField.getFieldForComplete(), new CompletionCalculator<ColumnCompletion>()
+                {
+                    boolean contentHasChanged = false;
+                    @Override
+                    public Stream<ColumnCompletion> calculateCompletions(String textFieldContent) throws InternalException, UserException
+                    {
+                        if (!contentHasChanged && !textFieldContent.equals(initialName == null ? "" : initialName.getRaw()))
+                            contentHasChanged = true;
+                        // Show nothing until content has changed, otherwise it's really annoying to have to click the autocomplete away
+                        // before being able to focus the expression.
+                        if (contentHasChanged)
+                            return columnIds.stream().filter(c -> Utility.startsWithIgnoreCase(c.getRaw(), textFieldContent)).map(ColumnCompletion::new);
+                        else
+                            return Stream.of();
+                    }
+                }, new CompletionListener<ColumnCompletion>()
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)
