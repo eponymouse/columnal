@@ -520,6 +520,7 @@ public class AutoComplete<C extends Completion>
             FXUtility.listen(completions.getItems(), change -> {
                 FXUtility.runAfter(() -> updateHeight(completions));
             });
+            updateHeight(completions);
 
             completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
 
