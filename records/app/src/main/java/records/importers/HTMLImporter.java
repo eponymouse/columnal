@@ -2,12 +2,17 @@ package records.importers;
 
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
@@ -18,6 +23,7 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
@@ -49,6 +55,8 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.TranslationUtility;
+import utility.gui.GUI;
+import utility.gui.LabelledGrid;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +66,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -231,8 +240,32 @@ public class HTMLImporter implements Importer
 
         ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
 
-        Import<UnitType, PlainImportInfo> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
+        ImportPlainTable imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
         {
+            // By default, trim:
+            @OnThread(Tag.Any)
+            AtomicBoolean trimWhitespace = new AtomicBoolean(true);
+            @MonotonicNonNull LabelledGrid labelledGrid;
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public Node getGUI()
+            {
+                if (labelledGrid == null)
+                {
+                    CheckBox checkBox = new CheckBox();
+                    checkBox.setSelected(trimWhitespace.get());
+                    FXUtility.addChangeListenerPlatformNN(checkBox.selectedProperty(), b -> {
+                        trimWhitespace.set(b);
+                        // Force refresh:
+                        format.set(null);
+                        format.set(UnitType.UNIT);
+                    });
+                    labelledGrid = new LabelledGrid(GUI.labelledGridRow("import.trimWhitespace", "guess-format/trimWhitespace", checkBox));
+                }
+                return labelledGrid;
+            }
+
             @Override
             public ColumnId srcColumnName(int index)
             {
@@ -244,6 +277,16 @@ public class HTMLImporter implements Importer
                     return columnId;
                 }
             }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<? extends List<String>> processTrimmed(List<List<String>> all)
+            {
+                if (trimWhitespace.get())
+                    return Utility.mapListI(all, line -> Utility.mapListI(line, CharMatcher.whitespace()::trimFrom));
+                else
+                    return all;
+            }
         };
 
         results.add(() -> {
@@ -252,7 +295,7 @@ public class HTMLImporter implements Importer
             if (outcome != null)
             {
                 @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
                 return makeDataSource;
             } else
                 return null;

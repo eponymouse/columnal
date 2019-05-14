@@ -51,5 +51,10 @@
         <full><p>The columns in each row need to be separated by a particular
             character, such as a comma or semi-colon.</p></full>
     </help>
-
+    <help id="trimWhitespace" title="Remove leading/trailing spaces">
+        <short>Removes spaces at the beginning and end of each cell on import</short>
+        <full>
+            <p>The import can either keep the values exactly as they appear in the HTML including all spaces (in which case leave this box empty) or it can remove these extra spaces, which is usually preferred (in which case tick the box).</p>
+        </full>
+    </help>
 </dialog>
