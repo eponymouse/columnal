@@ -1338,7 +1338,8 @@ public class FXUtility
                 if (icon != null)
                 {
                     stage.getIcons().add(new Image(icon));
-                } else
+                }
+                else
                 {
                     Log.error("Could not find file: logo-" + size + ".png");
                 }
