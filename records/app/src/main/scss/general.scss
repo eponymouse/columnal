@@ -15,6 +15,40 @@
     -fx-text-fill: black !important;
 }
 
+/* Reduce the oversize padding on menu items that JavaFX adds by default: */
+.menu, .menu-item {
+    -fx-padding: 3 5 3 5;
+}
+.context-menu {
+    -fx-padding: 1;
+    -fx-background-color: grey(50%), $control-background;
+    -fx-background-insets: 0, 1;
+}
+/* Change menu colours to our scheme: */
+.menu-item, .menu {
+    &:focused {
+        -fx-background-insets: 0;
+        -fx-background-color: $focus-color;
+        & .label {
+            -fx-text-fill: white !important; 
+        }
+    }
+}
+.menu-bar {
+    -fx-background-color: grey(50%), $control-background;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+.menu-bar > .container > .menu-button {
+    -fx-background-color:  transparent;
+    -fx-text-fill: black;
+}
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:focused,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color:  $focus-color;
+    -fx-text-fill: white;
+}
+
 .list-view {
     -fx-background-color: -fx-box-border, $list-background;
 }
