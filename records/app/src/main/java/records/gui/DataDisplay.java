@@ -27,6 +27,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -667,8 +668,16 @@ public abstract class DataDisplay extends HeadedDisplay
                     style.applyStyle(columnName, cellStyles.contains(style));
                 }
             });
-
+            
             ContextMenu contextMenu = new ContextMenu();
+            // Fix sizing issue where menu on Windows can often appear too small given its own layout calculations:
+            contextMenu.setOnShown(e -> {
+                FXUtility.runAfterDelay(Duration.millis(200), () -> {
+                    Window window = contextMenu.getScene().getWindow();
+                    if (window != null)
+                        window.sizeToScene();
+                });
+            });
             if (columnActions != null)
                 contextMenu.getItems().setAll(Utility.mapList(columnActions.contextOperations(), c -> c.makeMenuItem()));
             if (contextMenu.getItems().isEmpty())
