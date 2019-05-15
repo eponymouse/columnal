@@ -12,10 +12,10 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
+import records.gui.lexeditor.ExpressionSaver.BracketContent;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -23,7 +23,6 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
-import records.transformations.expression.function.StandardFunctionDefinition;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -39,10 +38,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, ExpressionSaver.Context, ExpressionSaver.BracketContent>
+public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, BracketContent>
 {
-    public class Context {}
-    
     public class BracketContent
     {
         private final ImmutableList<@Recorded Expression> expressions;
@@ -101,13 +98,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     // Note: if we are copying to clipboard, callback will not be called
-    public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer)
     {
         Supplier<ImmutableList<@Recorded Expression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, new InvalidIdentExpression(keyword.getContent())));
         
         if (keyword == Keyword.QUEST)
         {
-            saveOperand(new ImplicitLambdaArg(), errorDisplayer, withContext);
+            saveOperand(new ImplicitLambdaArg(), errorDisplayer);
         }
         else if (keyword == Keyword.OPEN_ROUND)
         {
@@ -187,7 +184,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 {
                     return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
                 }
-            }, keyword, errorDisplayer, withContext);
+            }, keyword, errorDisplayer);
         }
     }
 
@@ -549,7 +546,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new Terminator(choices.stream().map(c -> c.keyword.getContent()).collect(Collectors.joining(" or ")))
         {
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
             BracketAndNodes<Expression, ExpressionSaver, BracketContent> brackets = miscBrackets(CanonicalSpan.fromTo(start, keywordErrorDisplayer));
             
@@ -581,7 +578,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
 
     @Override
-    public void saveOperand(@UnknownIfRecorded Expression singleItem, CanonicalSpan location, FXPlatformConsumer<Context> withContext)
+    public void saveOperand(@UnknownIfRecorded Expression singleItem, CanonicalSpan location)
     {
         ArrayList<Either<@Recorded Expression, OpAndNode>> curItems = currentScopes.peek().items;
         if (singleItem instanceof UnitLiteralExpression && curItems.size() >= 1)
@@ -596,7 +593,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
         }
         
-        super.saveOperand(singleItem, location, withContext);
+        super.saveOperand(singleItem, location);
     }
 
     @Override

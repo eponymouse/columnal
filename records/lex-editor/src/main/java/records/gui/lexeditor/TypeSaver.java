@@ -14,6 +14,7 @@ import records.data.TableAndColumnRenames;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
+import records.gui.lexeditor.TypeSaver.BracketContent;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
-public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, TypeSaver.Context, TypeSaver.BracketContent>
+public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, BracketContent>
 {
     public static final DataFormat TYPE_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     
@@ -55,8 +56,6 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         })
     );
 
-    public class Context {}
-    
     public class BracketContent
     {
         private final ImmutableList<@Recorded TypeExpression> typeExpressions;
@@ -67,7 +66,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
 
-    public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer)
     {
         Supplier<ImmutableList<@Recorded TypeExpression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, new InvalidIdentTypeExpression(keyword.getContent())));
         
@@ -115,7 +114,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             {
                 addTopLevelScope();
             }
-            cur.terminator.terminate(new FetchMake(cur), keyword, errorDisplayer, withContext);
+            cur.terminator.terminate(new FetchMake(cur), keyword, errorDisplayer);
         }
     }
 
@@ -189,7 +188,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     
 
     @Override
-    public void saveOperand(TypeExpression singleItem, CanonicalSpan location, FXPlatformConsumer<Context> withContext)
+    public void saveOperand(TypeExpression singleItem, CanonicalSpan location)
     {
         if (singleItem instanceof UnitLiteralTypeExpression)
         {
@@ -201,7 +200,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     if (t instanceof NumberTypeExpression && !((NumberTypeExpression) t).hasUnit())
                     {
                         curItems.remove(curItems.size() - 1);
-                        super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression) singleItem).getUnitExpression()), CanonicalSpan.fromTo(locationRecorder.recorderFor(t), location), withContext);
+                        super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression) singleItem).getUnitExpression()), CanonicalSpan.fromTo(locationRecorder.recorderFor(t), location));
                         return true;
                     }
                     return false;
@@ -211,7 +210,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 }
             }
         }
-        super.saveOperand(singleItem, location, withContext);
+        super.saveOperand(singleItem, location);
     }
 
     @Override

@@ -14,7 +14,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.UnitLexer.UnitBracket;
 import records.gui.lexeditor.UnitLexer.UnitOp;
-import records.gui.lexeditor.UnitSaver.Context;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Context, Void>// implements ErrorAndTypeRecorder
+public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Void>// implements ErrorAndTypeRecorder
 {
     public static final DataFormat UNIT_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     
@@ -94,8 +93,6 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
     //UnitManager getUnitManager();
 
-    class Context {}
-    
     @Override
     protected @Recorded UnitExpression makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
     {
@@ -170,14 +167,14 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new Pair<>(op, TranslationUtility.getString(key));
     }
 
-    public void saveBracket(UnitBracket bracket, CanonicalSpan errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveBracket(UnitBracket bracket, CanonicalSpan errorDisplayer)
     {
         if (bracket == UnitBracket.OPEN_ROUND)
         {
             currentScopes.push(new Scope(errorDisplayer, new Terminator(")")
             {
                 @Override
-                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer)
                 {
                     BracketAndNodes<UnitExpression, UnitSaver, Void> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, keywordErrorDisplayer));
                     if (terminator == UnitBracket.CLOSE_ROUND)
@@ -209,7 +206,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             {
                 addTopLevelScope();
             }
-            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription), bracket, errorDisplayer, withContext);
+            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver, Void> brackets) -> makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription), bracket, errorDisplayer);
         }
     }
 

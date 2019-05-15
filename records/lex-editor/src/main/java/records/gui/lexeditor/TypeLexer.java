@@ -141,7 +141,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (content.startsWith(bracket.getContent(), curIndex))
                 {
-                    saver.saveKeyword(bracket, removedCharacters.map(curIndex, bracket.getContent()), c -> {});
+                    saver.saveKeyword(bracket, removedCharacters.map(curIndex, bracket.getContent()));
                     curIndex += rawLength(bracket.getContent());
                     chunks.add(new ContentChunk(bracket.getContent(), ChunkType.NON_IDENT));
                     continue nextToken;
@@ -151,7 +151,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             {
                 if (content.startsWith(op.getContent(), curIndex))
                 {
-                    saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()), c -> {});
+                    saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()));
                     curIndex += rawLength(op.getContent());
                     chunks.add(new ContentChunk(op.getContent(), StyledString.s(op.getContent() + " "), ChunkType.NON_IDENT));
                     continue nextToken;
@@ -167,7 +167,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     // We don't require concrete as we do that bit so don't want do it twice:
                     UnitLexer unitLexer = new UnitLexer( typeManager.getUnitManager(), false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
-                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE), c -> {});
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE));
                     chunks.add(new ContentChunk("{", ChunkType.NESTED_START));
                     @SuppressWarnings("units")
                     @DisplayLocation int displayOffset = chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
@@ -187,7 +187,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
-                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content), c -> {});
+                    saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content));
                     chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NON_IDENT));
                     curIndex = rawLength(content);
                 }
@@ -204,11 +204,10 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 
                 final @RawInputLocation int curIndexFinal = curIndex;
                 parsed.getFirst().either_(dataType -> {
-                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndexFinal, parsed.getSecond()), c -> {});
+                    saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndexFinal, parsed.getSecond()));
                     
                 }, ident -> {
-                    saver.saveOperand(new IdentTypeExpression(ident), removedCharacters.map(curIndexFinal, parsed.getSecond()), c -> {
-                    });
+                    saver.saveOperand(new IdentTypeExpression(ident), removedCharacters.map(curIndexFinal, parsed.getSecond()));
                 });
                 curIndex = parsed.getSecond();
                 chunks.add(new ContentChunk(match, ChunkType.IDENT));
@@ -216,7 +215,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             }
 
             CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
-            saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation);
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             chunks.add(new ContentChunk("" + content.charAt(curIndex), ChunkType.NON_IDENT));
             

@@ -196,7 +196,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 if (content.startsWith(keyword.getContent(), curIndex))
                 {
-                    saver.saveKeyword(keyword, removedChars.map(curIndex, keyword.getContent()), c -> {});
+                    saver.saveKeyword(keyword, removedChars.map(curIndex, keyword.getContent()));
                     if (keyword.getContent().startsWith("@"))
                     {
                         boolean addLeadingSpace = chunks.stream().mapToInt(c -> c.internalContent.length()).sum() > 0;
@@ -213,7 +213,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 if (content.startsWith(op.getContent(), curIndex))
                 {
-                    saver.saveOperator(op, removedChars.map(curIndex, op.getContent()), c -> {});
+                    saver.saveOperator(op, removedChars.map(curIndex, op.getContent()));
                     boolean addLeadingSpace = !op.getContent().equals(",");
                     chunks.add(new ContentChunk(addLeadingSpace, op, ChunkType.NON_IDENT, true));
                     curIndex += rawLength(op.getContent());
@@ -228,7 +228,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 @RawInputLocation int endQuote = content.indexOf("\"", curIndex + 1);
                 if (endQuote != -1)
                 {
-                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE), c -> {});
+                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE));
                     String stringLit = content.substring(curIndex, endQuote + 1);
                     @SuppressWarnings("units")
                     ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
@@ -243,7 +243,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     // Unterminated string:
                     saver.locationRecorder.addErrorAndFixes(removedChars.map(curIndex, content), StyledString.s("Missing closing quote around text"), ImmutableList.of());
-                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), removedChars.map(curIndex, content), c -> {});
+                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), removedChars.map(curIndex, content));
                     chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NON_IDENT));
                     suppressBracketMatching.set(curIndex + 1, content.length() + 1);
                     curIndex = rawLength(content);
@@ -272,7 +272,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 Optional<@Value Number> number = Utility.parseNumberOpt(content.substring(numberStart, curIndex));
                 if (number.isPresent())
                 {
-                    saver.saveOperand(new NumericLiteral(number.get(), null), removedChars.map(numberStart, curIndex), c -> {});
+                    saver.saveOperand(new NumericLiteral(number.get(), null), removedChars.map(numberStart, curIndex));
                     chunks.add(new ContentChunk(content.substring(numberStart, curIndex), ChunkType.IDENT));
                     continue nextToken;
                 }
@@ -284,7 +284,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 if (nestedOutcome != null)
                 {
                     LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome);
-                    saver.saveOperand(outcome.expression, removedChars.map(curIndex, nestedOutcome.positionAfter), c -> {});
+                    saver.saveOperand(outcome.expression, removedChars.map(curIndex, nestedOutcome.positionAfter));
                     @SuppressWarnings("units")
                     @DisplayLocation int displayOffset = curIndex + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
                     @CanonicalLocation int caretPosOffset = removedChars.map(curIndex + rawLength(nestedLiteral.getFirst()));
@@ -304,15 +304,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> varName = IdentifierUtility.consumeExpressionIdentifier(content, curIndex + RawInputLocation.ONE, curCaretPos);
                 if (varName == null)
                 {
-                    saver.saveOperand(new MatchAnythingExpression(), removedChars.map(curIndex, curIndex + RawInputLocation.ONE), c -> {
-                    });
+                    saver.saveOperand(new MatchAnythingExpression(), removedChars.map(curIndex, curIndex + RawInputLocation.ONE));
                     chunks.add(new ContentChunk("_", ChunkType.IDENT));
                     curIndex += RawInputLocation.ONE;
                     continue nextToken;
                 }
                 else
                 {
-                    saver.saveOperand(new VarDeclExpression(varName.getFirst()), removedChars.map(curIndex, varName.getSecond()), c -> {});
+                    saver.saveOperand(new VarDeclExpression(varName.getFirst()), removedChars.map(curIndex, varName.getSecond()));
                     chunks.add(new ContentChunk("_" + varName.getFirst(), ChunkType.IDENT));
                     curIndex = varName.getSecond();
                     continue nextToken;
@@ -332,8 +331,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                                 ((tableId == null && columnIdRaw.equals(parsed.getFirst()))
                                 || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(parsed.getFirst()))))
                         {
-                            saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.getSecond()), c -> {
-                            });
+                            saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.getSecond()));
                             chunks.add(new ContentChunk("@entire " + parsed.getFirst(), StyledString.s("@entire " + parsed.getFirst()).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
                             curIndex = parsed.getSecond();
                             continue nextToken;
@@ -363,8 +361,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                                                 || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
                                 ))
                         {
-                            saver.saveOperand(new ColumnReference(availableColumn), location, c -> {
-                            });
+                            saver.saveOperand(new ColumnReference(availableColumn), location);
                             wasColumn = true;
                             break;
                         }
@@ -373,8 +370,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                                 ((tableId == null && ("@entire " + columnIdRaw).equals(text))
                                         || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
                         {
-                            saver.saveOperand(new ColumnReference(availableColumn), location, c -> {
-                            });
+                            saver.saveOperand(new ColumnReference(availableColumn), location);
                             wasColumn = true;
                             break;
                         }
@@ -387,7 +383,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         {
                             if (function.getName().equals(text))
                             {
-                                saver.saveOperand(new StandardFunction(function), location, c -> {});
+                                saver.saveOperand(new StandardFunction(function), location);
                                 wasFunction = true;
                                 break;
                             }
@@ -402,7 +398,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                                 {
                                     if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + ":" + tag.getName()))
                                     {
-                                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), location, c -> {});
+                                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), location);
                                         wasTagged = true;
                                         break;
                                     }
@@ -410,8 +406,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                             }
 
                             if (!wasTagged)
-                                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), location, c -> {
-                                });
+                                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), location);
                         }
                     }
                 }
@@ -449,7 +444,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
                 // We skip to next non-letter to prevent trying to complete the keyword as a function:
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
-                saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), removedChars.map(curIndex, nonLetter), c -> {});
+                saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), removedChars.map(curIndex, nonLetter));
                 saver.locationRecorder.addErrorAndFixes(removedChars.map(curIndex, nonLetter), StyledString.s("Unknown keyword: " + attemptedKeyword), ImmutableList.of());
                 chunks.add(new ContentChunk(attemptedKeyword, ChunkType.NON_IDENT));
                 curIndex = nonLetter;
@@ -461,14 +456,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             boolean nextFalse = content.startsWith("false", curIndex);
             if (nextTrue || nextFalse)
             {
-                saver.saveOperand(new BooleanLiteral(nextTrue), removedChars.map(curIndex, nextTrue ? "true" : "false"), c -> {});
+                saver.saveOperand(new BooleanLiteral(nextTrue), removedChars.map(curIndex, nextTrue ? "true" : "false"));
                 chunks.add(new ContentChunk(nextTrue ? "true" : "false", ChunkType.IDENT));
                 curIndex += rawLength(nextTrue ? "true" : "false");
                 continue nextToken;
             }
             
             CanonicalSpan invalidCharLocation = removedChars.map(curIndex, curIndex + RawInputLocation.ONE);
-            saver.saveOperand(new InvalidIdentExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation, c -> {});
+            saver.saveOperand(new InvalidIdentExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation);
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             chunks.add(new ContentChunk(content.substring(curIndex, curIndex + 1), ChunkType.IDENT));
             curIndex += RawInputLocation.ONE;

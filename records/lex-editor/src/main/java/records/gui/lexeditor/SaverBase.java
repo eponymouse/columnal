@@ -40,10 +40,9 @@ import java.util.stream.Collectors;
  * @param <SAVER> A saver (the subclass of this class) for the expressions
  * @param <OP> Operators that go between operands in an expression
  * @param <KEYWORD> Keywords that can alter scope levels, either beginning or ending scopes
- * @param <CONTEXT> Context for reporting back to the expressions.
  * @param <BRACKET_CONTENT> The content of brackets.  For units this is EXPRESSION, for others it is list of expression and operators (which will be commas)
  */
-public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP extends ExpressionToken, KEYWORD extends ExpressionToken, CONTEXT, BRACKET_CONTENT> implements ClipboardSaver
+public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP extends ExpressionToken, KEYWORD extends ExpressionToken, BRACKET_CONTENT> implements ClipboardSaver
 {
     /**
      * Gets all special keywords available in child operators,
@@ -376,7 +375,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
          * @param keywordErrorDisplayer The error displayer for the keyword.
          * @param keywordContext The callback with the context for the keyword.
          */
-        public abstract void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext);
+        public abstract void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer);
     }
     
     // Op is typically an enum so we can't identity-hash-map it to a node, hence this wrapper
@@ -431,7 +430,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
     }
     
-    protected abstract BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> expectSingle(@UnknownInitialization(Object.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT>this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location);
+    protected abstract BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> expectSingle(@UnknownInitialization(Object.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT>this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location);
     
     public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> miscBrackets(CanonicalSpan location)
     {
@@ -453,26 +452,26 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         addTopLevelScope();
     }
     
-    public void saveOperator(@NonNull OP operator, CanonicalSpan errorDisplayer, FXPlatformConsumer<CONTEXT> withContext)
+    public void saveOperator(@NonNull OP operator, CanonicalSpan errorDisplayer)
     {
         currentScopes.peek().items.add(Either.right(new OpAndNode(operator, errorDisplayer)));
     }
 
     protected abstract @Recorded EXPRESSION makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> items);
 
-    public void addTopLevelScope(@UnknownInitialization(SaverBase.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT>this)
+    public void addTopLevelScope(@UnknownInitialization(SaverBase.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT>this)
     {
         @SuppressWarnings("nullness") // Pending fix for Checker Framework #2052
         final @NonNull Stack<Scope> currentScopesFinal = this.currentScopes;
         currentScopesFinal.push(new Scope(CanonicalSpan.START, new Terminator("end")
         {
             @Override
-            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
+            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
             {
                 CanonicalSpan start = CanonicalSpan.START;
                 CanonicalSpan end = keywordErrorDisplayer;
                 locationRecorder.addErrorAndFixes(end, StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
-                @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
+                @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
                 currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
                 if (terminator != null)
                     currentScopesFinal.peek().items.add(Either.left(thisSaver.record(keywordErrorDisplayer, thisSaver.keywordToInvalid(terminator))));
@@ -503,7 +502,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // The error should be given by terminate when terminator is null
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, errorDisplayer.start, null), null, errorDisplayer, c -> {});
+            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, errorDisplayer.start, null), null, errorDisplayer);
         }
 
         Scope closed = currentScopes.pop();
@@ -521,7 +520,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     }
 
     // Note: if we are copying to clipboard, callback will not be called
-    public void saveOperand(EXPRESSION singleItem, CanonicalSpan location, FXPlatformConsumer<CONTEXT> withContext)
+    public void saveOperand(EXPRESSION singleItem, CanonicalSpan location)
     {
         currentScopes.peek().items.add(Either.left(record(location, singleItem)));
     }
@@ -855,7 +854,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         return new Terminator(expected.get(0).getContent()) {
             @Override
-            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
+            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
             {
                 int termIndex = expected.indexOf(terminator);
                 if (termIndex == 0)
