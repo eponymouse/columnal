@@ -357,8 +357,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo = null;
             if (keyboardErrorInfo != null)
                 errorInfo = keyboardErrorInfo;
-            else if (mouseErrorInfo != null)
-                errorInfo = mouseErrorInfo;
+            //else if (mouseErrorInfo != null)
+                //errorInfo = mouseErrorInfo;
 
             if (errorInfo != null)
             {
