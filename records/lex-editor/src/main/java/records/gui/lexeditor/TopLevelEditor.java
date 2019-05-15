@@ -251,6 +251,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         {
             setDetachable(false);
             getStyleClass().add("expression-info-popup");
+            setArrowSize(0);
+            setArrowIndent(0);
             setArrowLocation(ArrowLocation.BOTTOM_CENTER);
             // If we let the position vary to fit on screen, we end up with the popup bouncing in and out
             // as the mouse hovers on item then on popup then hides.  Better to let the item be off-screen

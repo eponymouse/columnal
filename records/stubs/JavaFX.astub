@@ -390,6 +390,8 @@ class PopOver
     void setDetachable(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
     BooleanProperty detachedProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
     void show(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, @NonNull Node owner);
+    void setArrowIndent(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, double x);
+    void setArrowSize(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, double x);
     void setArrowLocation(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, ArrowLocation location);
     StackPane getRoot(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
     void setContentNode(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, Node content);
