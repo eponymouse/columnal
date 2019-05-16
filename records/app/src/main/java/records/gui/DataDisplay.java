@@ -670,14 +670,6 @@ public abstract class DataDisplay extends HeadedDisplay
             });
             
             ContextMenu contextMenu = new ContextMenu();
-            // Fix sizing issue where menu on Windows can often appear too small given its own layout calculations:
-            contextMenu.setOnShown(e -> {
-                FXUtility.runAfterDelay(Duration.millis(200), () -> {
-                    Window window = contextMenu.getScene().getWindow();
-                    if (window != null)
-                        window.sizeToScene();
-                });
-            });
             if (columnActions != null)
                 contextMenu.getItems().setAll(columnActions.contextOperations());
             if (contextMenu.getItems().isEmpty())
@@ -686,7 +678,6 @@ public abstract class DataDisplay extends HeadedDisplay
                 menuItem.setDisable(true);
                 contextMenu.getItems().setAll(menuItem);
             }
-            columnName.setOnContextMenuRequested(e -> contextMenu.show(columnName, e.getScreenX(), e.getScreenY()));
             columnName.setContextMenu(contextMenu);
             
             return columnName;
