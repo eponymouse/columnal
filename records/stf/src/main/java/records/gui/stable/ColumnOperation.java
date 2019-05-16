@@ -24,9 +24,14 @@ public abstract class ColumnOperation
     @OnThread(Tag.FXPlatform)
     public final MenuItem makeMenuItem()
     {
-        return GUI.menuItem(nameKey, () -> executeFX());
+        return GUI.menuItem(nameKey, () -> executeFX(), getStyleClasses());
     }
-    
+
+    protected String[] getStyleClasses()
+    {
+        return new String[0];
+    }
+
     @OnThread(Tag.FXPlatform)
     public abstract void executeFX();
 }

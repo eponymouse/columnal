@@ -133,7 +133,7 @@ public class GUI
         return addIdClass(menu, menuNameKey);
     }
 
-    public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction)
+    public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction, String... styleClasses)
     {
         @OnThread(Tag.FXPlatform) Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
         MenuItem item = new MenuItem(stringAndShortcut.getFirst());
@@ -142,6 +142,7 @@ public class GUI
             item.setAccelerator(stringAndShortcut.getSecond());
         item.setId(makeId(menuItemKey));
         addIdClass(item, menuItemKey);
+        item.getStyleClass().addAll(styleClasses);
         return item;
     }
 
