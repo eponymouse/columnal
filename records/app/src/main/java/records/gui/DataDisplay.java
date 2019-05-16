@@ -564,7 +564,7 @@ public abstract class DataDisplay extends HeadedDisplay
 
     public static interface ColumnHeaderOps
     {
-        public ImmutableList<ColumnOperation> contextOperations();
+        public ImmutableList<MenuItem> contextOperations();
         
         @Pure
         public @Nullable ColumnOperation getDeleteOperation();
@@ -679,7 +679,7 @@ public abstract class DataDisplay extends HeadedDisplay
                 });
             });
             if (columnActions != null)
-                contextMenu.getItems().setAll(Utility.mapList(columnActions.contextOperations(), c -> c.makeMenuItem()));
+                contextMenu.getItems().setAll(columnActions.contextOperations());
             if (contextMenu.getItems().isEmpty())
             {
                 MenuItem menuItem = new MenuItem("No operations");

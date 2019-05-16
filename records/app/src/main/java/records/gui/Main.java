@@ -44,7 +44,8 @@ public class Main extends Application
                 Platform.runLater(() -> FXUtility.showError(title, errWrap, e));
             }
         });
-        
+
+        FXUtility.ensureFontLoaded("Kalam-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSansSymbols-Regular.ttf");

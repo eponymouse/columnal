@@ -32,4 +32,10 @@ public abstract class SimpleColumnOperation extends ColumnOperation
         CellPosition insertPosition = tableManager.getNextInsertPosition(toRightOf);
         Workers.onWorkerThread(nameKey, Priority.SAVE, () -> execute(insertPosition));
     }
+
+    @Override
+    protected String[] getStyleClasses()
+    {
+        return new String[] {"recipe-menu-item"};
+    }
 }

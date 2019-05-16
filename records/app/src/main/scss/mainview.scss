@@ -116,3 +116,28 @@
 .guidance-highlight {
     -fx-background-color: blue;
 }
+
+
+.recipe-menu-item, .recipe-header-menu-item, .recipe-header-menu-item:disabled, .recipe-header-menu-item:disabled:focused {
+    -fx-font-family: "Kalam";
+    -fx-background-color: grey(50%), hsb(48, 25%, 95%);
+    -fx-opacity: 1.0; /* Counter-act disabled state in default CSS */
+    & .label {
+        -fx-text-fill: hsb(57, 100%, 20%) !important;
+        -fx-opacity: 1.0; /* Counter-act disabled state in default CSS */
+    } 
+}
+.recipe-header-menu-item, .recipe-header-menu-item:disabled:focused {
+    -fx-background-insets: 0, 1 0 0 0;
+    /* Add two to our usual padding: */
+    -fx-padding: 5 5 3 5;
+    & .label {
+        -fx-underline: true;
+    }
+}
+.recipe-menu-item {
+    -fx-background-insets: 0, 0;
+    & .label {
+        -fx-label-padding: 0 0 0 10px;
+    }
+}
