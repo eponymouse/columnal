@@ -564,6 +564,7 @@ public abstract class DataDisplay extends HeadedDisplay
 
     public static interface ColumnHeaderOps
     {
+        @OnThread(Tag.FXPlatform)
         public ImmutableList<MenuItem> contextOperations();
         
         @Pure
@@ -572,6 +573,20 @@ public abstract class DataDisplay extends HeadedDisplay
         // Used as the hyperlinked edit operation on column headers, if non-null.
         @Pure
         public @Nullable FXPlatformRunnable getPrimaryEditOperation(); 
+    }
+
+    private void setColumnOperationContextMenu(Label columnHeader, @Nullable ColumnHeaderOps columnActions)
+    {
+        ContextMenu contextMenu = new ContextMenu();
+        if (columnActions != null)
+            contextMenu.getItems().setAll(columnActions.contextOperations());
+        if (contextMenu.getItems().isEmpty())
+        {
+            MenuItem menuItem = new MenuItem("No operations");
+            menuItem.setDisable(true);
+            contextMenu.getItems().setAll(menuItem);
+        }
+        columnHeader.setContextMenu(contextMenu);
     }
 
     private class ColumnNameItem extends FloatingItem<Label> implements ChangeListener<Number>
@@ -668,18 +683,9 @@ public abstract class DataDisplay extends HeadedDisplay
                     style.applyStyle(columnName, cellStyles.contains(style));
                 }
             });
-            
-            ContextMenu contextMenu = new ContextMenu();
-            if (columnActions != null)
-                contextMenu.getItems().setAll(columnActions.contextOperations());
-            if (contextMenu.getItems().isEmpty())
-            {
-                MenuItem menuItem = new MenuItem("No operations");
-                menuItem.setDisable(true);
-                contextMenu.getItems().setAll(menuItem);
-            }
-            columnName.setContextMenu(contextMenu);
-            
+
+            setColumnOperationContextMenu(columnName, columnActions);
+
             return columnName;
         }
 
@@ -731,12 +737,14 @@ public abstract class DataDisplay extends HeadedDisplay
         private final int columnIndex;
         private final ColumnDetails column;
         private final @Nullable FXPlatformRunnable editOp;
+        private final @Nullable ColumnHeaderOps columnActions;
 
         public ColumnTypeItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnHeaderOps)
         {
             super(ViewOrder.STANDARD_CELLS);
             this.columnIndex = columnIndex;
             this.column = column;
+            this.columnActions = columnHeaderOps;
             this.editOp = columnHeaderOps == null ? null : columnHeaderOps.getPrimaryEditOperation();
         }
 
@@ -794,6 +802,7 @@ public abstract class DataDisplay extends HeadedDisplay
                     }
                 });
             }
+            setColumnOperationContextMenu(typeLabel, columnActions);
             return typeLabel;
         }
 

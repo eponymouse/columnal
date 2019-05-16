@@ -811,7 +811,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public ColumnHeaderOps getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)
     {
-        ImmutableList.Builder<MenuItem> r = ImmutableList.builder();
+        ImmutableList.Builder<FXPlatformSupplier<MenuItem>> r = ImmutableList.builder();
 
         TableOperations operations = table.getOperations();
         @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumn = addColumnOperation(table);
@@ -826,7 +826,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 {
                     addColumnFinal.consume(c);
                 }
-            }.makeMenuItem());
+            }::makeMenuItem);
 
             try
             {
@@ -844,7 +844,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         {
                             addColumnFinal.consume(columnAfter);
                         }
-                    }.makeMenuItem());
+                    }::makeMenuItem);
                 }
             }
             catch (UserException | InternalException e)
@@ -867,7 +867,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     });
                 }
             };
-            r.add(deleteOp.makeMenuItem());
+            r.add(deleteOp::makeMenuItem);
         }
         else
             deleteOp = null;
@@ -876,7 +876,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         try
         {
             type = table.getData().getColumn(c).getType().getType();
-            r.add(new MenuItem("Recipes") {
+            r.add(() -> new MenuItem("Recipes") {
                 {
                     setDisable(true);
                     getStyleClass().add("recipe-header-menu-item");
@@ -888,18 +888,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
                     return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
-                }).makeMenuItem());
+                })::makeMenuItem);
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
                     return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
-                }).makeMenuItem());
+                })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
                 return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
-            }).makeMenuItem());
+            })::makeMenuItem);
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
                 return new Sort(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
-            }).makeMenuItem());
+            })::makeMenuItem);
         }
         catch (InternalException | UserException e)
         {
@@ -907,13 +907,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Nullable DataType typeFinal = type;
-        ImmutableList<MenuItem> ops = r.build();
+        ImmutableList<FXPlatformSupplier<MenuItem>> menuItemMakers = r.build();
         return new ColumnHeaderOps()
         {
             @Override
+            @OnThread(Tag.FXPlatform)
             public ImmutableList<MenuItem> contextOperations()
             {
-                return ops;
+                return Utility.mapListI(menuItemMakers, maker -> maker.get());
             }
 
             @Override
