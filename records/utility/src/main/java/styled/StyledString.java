@@ -298,13 +298,6 @@ public final class StyledString
             return append(StyledString.s(unstyled));
         }
         
-        // It's a bit hacky to have a length method on a builder, but it
-        // makes some bits of code much more convenient:
-        public int getLengthSoFar()
-        {
-            return contents.stream().mapToInt(StyledString::getLength).sum();
-        }
-        
         public StyledString build()
         {
             return StyledString.concat(contents.toArray(new StyledString[0]));
