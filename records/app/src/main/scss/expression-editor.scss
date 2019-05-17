@@ -31,12 +31,29 @@ $string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
 
 .expression-info-popup.popover {
     -fx-cursor: null;
-    & > .content {
-        -fx-background-color: hsb(350, 5%, 98%);
-    }
     & > .border {
-        -fx-stroke: red;
         -fx-stroke-width: 1.5;
+    }
+    
+    &.error > .content {
+        -fx-background-color: $editor-popup-error;
+    }
+    &.error > .border {
+        -fx-stroke: $editor-popup-error-border;
+    }
+    
+    &.information > .content {
+        -fx-background-color: $editor-popup-information;
+    }
+    &.information > .border {
+        -fx-stroke: $editor-popup-information-border;
+    }
+    
+    &.prompt > .content {
+        -fx-background-color: $editor-popup-prompt;
+    }
+    &.prompt > .border {
+        -fx-stroke: $editor-popup-prompt-border;
     }
 }
 

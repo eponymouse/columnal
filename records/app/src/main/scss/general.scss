@@ -269,10 +269,10 @@
         }
     }
     .error-underline {
-        -fx-stroke: red;
-        -fx-fill: pink;
+        -fx-stroke: $editor-error-stroke;
+        -fx-fill: $editor-error-background;
         &:contains-caret {
-            -fx-stroke: pink;
+            -fx-stroke: $editor-error-background;
         }
     }
 }

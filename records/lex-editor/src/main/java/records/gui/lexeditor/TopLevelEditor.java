@@ -219,6 +219,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     }
     */
     
+    // Note -- these names are used in lower-case for styleclasses so change the CSS
+    // if you change the names here.
     public static enum DisplayType
     {
         ERROR,
@@ -335,10 +337,10 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
         private void showPopup()
         {
-            // Shouldn't be non-null already, but just in case:
-            if (!isShowing() && !hiding)
+            if (!hiding)
             {
-                Log.debug("Showing InformationPopup");
+                // Need to call show even if already showing in order
+                // to fix the position if our contents have changed:
                 show(scrollPane);
                 //org.scenicview.ScenicView.show(getScene());
             }
@@ -377,6 +379,18 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
         private void show(DisplayType displayType, Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
         {
+            // We can't use pseudoclasses here because they don't seem to work properly
+            // with popups, so fall back to adding/removing style-classes
+            for (DisplayType dt : DisplayType.values())
+            {
+                if (dt.equals(displayType))
+                {
+                    if (!getStyleClass().contains(dt.name().toLowerCase()))
+                        getStyleClass().add(dt.name().toLowerCase());
+                }
+                else
+                    getStyleClass().remove(dt.name().toLowerCase());
+            }
             textFlow.getChildren().setAll(errorInfo.getFirst().toGUI().toArray(new Node[0]));
             textFlow.setVisible(!errorInfo.getFirst().toPlain().isEmpty());
             fixList.setFixes(Utility.mapListI(errorInfo.getSecond(), makeFixInfo()));

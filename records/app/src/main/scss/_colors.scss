@@ -55,3 +55,13 @@ $light-dialog-background-dark: grey(92%);
 
 $error-outline: hsl(354, 80%, 34%);
 $error-text: hsl(354, 80%, 34%);
+
+$editor-error-background: hsb(350, 20%, 100%);
+$editor-error-stroke: hsb(350, 95%, 60%);
+
+$editor-popup-error: hsb(350, 5%, 98%);
+$editor-popup-error-border: $editor-error-stroke; 
+$editor-popup-information: hsb(180, 15%, 92%);
+$editor-popup-information-border: hsb(180, 82%, 42%);
+$editor-popup-prompt: hsb(101, 5%, 90%);
+$editor-popup-prompt-border: hsb(101, 66%, 46%); 
