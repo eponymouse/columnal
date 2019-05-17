@@ -23,7 +23,9 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
+import styled.StyledCSS;
 import styled.StyledString;
+import styled.StyledString.Builder;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -121,15 +123,46 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     applyBrackets = c -> new ApplyBrackets<BracketContent, Expression>()
                     {
                         @Override
-                        public @Nullable @Recorded Expression apply(@NonNull BracketContent args)
+                        public @NonNull @Recorded Expression apply(@NonNull BracketContent args)
                         {
+                            if (callTarget instanceof StandardFunction)
+                            {
+                                StandardFunction function = (StandardFunction) callTarget;
+                                ImmutableList<String> paramNames = function.getFunction().getParamNames();
+                                for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
+                                {
+                                    locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i));
+                                }
+                            }
+                            
                             return locationRecorder.record(CanonicalSpan.fromTo(locationRecorder.recorderFor(callTarget), c), new CallExpression(callTarget, args.expressions));
+                        }
+
+                        private StyledString makeParamPrompt(String functionName, ImmutableList<String> paramNames, int paramIndex)
+                        {
+                            StyledString.Builder r = new Builder();
+                            r.append(functionName).append("(");
+                            for (int i = 0; i < paramNames.size(); i++)
+                            {
+                                if (i > 0)
+                                    r.append(", ");
+                                if (i == paramIndex)
+                                {
+                                    r.append(StyledString.styled(paramNames.get(i), new StyledCSS("entry-prompt-bold")));
+                                }
+                                else
+                                {
+                                    r.append(paramNames.get(i));
+                                }
+                            }
+                            r.append(")");
+                            return r.build().withStyle(new StyledCSS("entry-prompt"));
                         }
 
                         @Override
                         public @NonNull @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
                         {
-                            return locationRecorder.record(CanonicalSpan.fromTo(locationRecorder.recorderFor(callTarget), c), new CallExpression(callTarget, ImmutableList.<@Recorded Expression>of(singleItem)));
+                            return apply(new BracketContent(ImmutableList.<@Recorded Expression>of(singleItem)));
                         }
                     };
                     invalidPrefix = () -> {
@@ -808,4 +841,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
         return super.fixesForAdjacentOperands(first, second);
     }
+
+    public @Nullable StyledString getEntryPromptFor(@CanonicalLocation int canonIndex)
+    {
+        return locationRecorder.getPromptFor(canonIndex);
+    }
+
 }

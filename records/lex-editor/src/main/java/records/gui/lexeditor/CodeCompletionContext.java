@@ -2,8 +2,10 @@ package records.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
+import styled.StyledString;
 import utility.Utility;
 
 public class CodeCompletionContext
@@ -23,5 +25,10 @@ public class CodeCompletionContext
     public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int caretPos)
     {
         return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
+    }
+
+    public @Nullable StyledString getEntryPrompt()
+    {
+        return null;
     }
 }

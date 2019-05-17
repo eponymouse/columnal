@@ -33,5 +33,7 @@ public interface StandardFunctionDefinition
 
     public @Localized String getMiniDescription();
     
+    public ImmutableList<String> getParamNames();
+    
     public ImmutableList<String> getSynonyms();
 }

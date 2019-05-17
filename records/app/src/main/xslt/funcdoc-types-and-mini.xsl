@@ -39,6 +39,13 @@
         <xsl:text>&#xa;</xsl:text>
     </xsl:template>
 
+    <xsl:template name="processFunctionSignature">
+        <xsl:param name="namespace" select="."/>
+
+        <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>\:sig=<xsl:value-of select="argType/@name" separator=";"/>
+        <xsl:text>&#xa;</xsl:text>
+    </xsl:template>
+
     <xsl:template name="processFunctionUnitArgs">
         <xsl:param name="namespace" select="."/>
 
@@ -104,6 +111,9 @@
                 <xsl:variable name="namespace" select="@namespace"/>
                 <xsl:for-each select=".//function">
                     <xsl:call-template name="processFunctionTypes">
+                        <xsl:with-param name="namespace" select="$namespace"/>
+                    </xsl:call-template>
+                    <xsl:call-template name="processFunctionSignature">
                         <xsl:with-param name="namespace" select="$namespace"/>
                     </xsl:call-template>
                 </xsl:for-each>

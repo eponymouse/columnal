@@ -21,14 +21,19 @@ import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
+import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 /**
@@ -151,6 +156,7 @@ public class EditorLocationAndErrorRecorder
     private final IdentityHashMap<UnitExpression, CanonicalSpan> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<TypeExpression, CanonicalSpan> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, StyledString> entryPrompts = new IdentityHashMap<>();
 
     private static interface UnresolvedErrorDetails
     {
@@ -417,5 +423,33 @@ public class EditorLocationAndErrorRecorder
         }
         
         return r.build();
+    }
+
+
+    public @Nullable StyledString getPromptFor(@CanonicalLocation int canonIndex)
+    {
+        ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
+        for (Entry<Expression, CanonicalSpan> expLocation : expressionDisplayers.entrySet())
+        {
+            if (expLocation.getValue().touches(canonIndex))
+            {
+                StyledString prompt = entryPrompts.get(expLocation.getKey());
+                if (prompt != null)
+                    relevantPrompts.add(new Pair<>(prompt, expLocation.getValue()));
+            }
+        }
+
+        Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantPrompts, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
+        
+        if (relevantPrompts.isEmpty())
+            return null;
+        else
+            return relevantPrompts.stream().map(p -> p.getFirst()).distinct().collect(StyledString.joining("\n"));
+    }
+
+
+    public void recordEntryPrompt(@Recorded Expression expression, StyledString prompt)
+    {
+        entryPrompts.put(expression, prompt);
     }
 }

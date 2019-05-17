@@ -240,6 +240,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     {
         private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> keyboardErrorInfo;
         private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> mouseErrorInfo;
+        private @Nullable StyledString entryPrompt;
 
         private final TextFlow errorLabel;
         private final FixList fixList;
@@ -361,6 +362,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 errorInfo = keyboardErrorInfo;
             //else if (mouseErrorInfo != null)
                 //errorInfo = mouseErrorInfo;
+            else if (entryPrompt != null)
+                errorInfo = new Pair<>(entryPrompt, ImmutableList.of());
 
             if (errorInfo != null)
             {
@@ -438,6 +441,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 keyboardErrorInfo = null;
             else
                 keyboardErrorInfo = new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build());
+            
+            entryPrompt = content.getEntryPromptFor(newCaretPos);
             
             updateShowHide(true);
         }

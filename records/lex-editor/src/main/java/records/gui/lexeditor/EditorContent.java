@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import javafx.scene.text.Text;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
@@ -216,5 +217,11 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public StyledString getDisplay()
     {
         return curContent.display;
+    }
+
+    public @Nullable StyledString getEntryPromptFor(@CanonicalLocation int newCaretPos)
+    {
+        StyledString prompt = Utility.filterOutNulls(curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<@Nullable StyledString>map(acd -> acd.codeCompletionContext.getEntryPrompt())).collect(StyledString.joining("\n"));
+        return prompt.toPlain().isEmpty() ? null : prompt;
     }
 }

@@ -50,6 +50,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     private final TypeMatcher typeMatcher;
     private final @Localized String miniDescription;
     private final ImmutableList<String> synonyms;
+    private final ImmutableList<String> paramNames;
 
     public FunctionDefinition(@FuncDocKey String funcDocKey) throws InternalException
     {
@@ -58,6 +59,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         this.miniDescription = details.miniDescription;
         this.typeMatcher = details.typeMatcher;
         this.synonyms = details.synonyms;
+        this.paramNames = details.paramNames;
     }
 
     private static String extractNamespace(@FuncDocKey String funcDocKey)
@@ -82,12 +84,14 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     {
         private final @Localized String miniDescription;
         private final ImmutableList<String> synonyms;
+        private final ImmutableList<String> paramNames;
         private final TypeMatcher typeMatcher;
 
-        private Details(@Localized String miniDescription, ImmutableList<String> synonyms, TypeMatcher typeMatcher)
+        private Details(@Localized String miniDescription, ImmutableList<String> synonyms, ImmutableList<String> paramNames, TypeMatcher typeMatcher)
         {
             this.miniDescription = miniDescription;
             this.synonyms = synonyms;
+            this.paramNames = paramNames;
             this.typeMatcher = typeMatcher;
         }
     }
@@ -103,6 +107,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
             return new Details(
                 FUNCTION_MINIS.getString(key),
                 ImmutableList.copyOf(StringUtils.split(FUNCTION_SYNONYMS.getString(key), ";")),
+                ImmutableList.copyOf(StringUtils.split(FUNCTION_TYPES.getString(key + ":sig"), ";")),
                 parseFunctionType(functionName,
                     Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(key), ";")),
                     Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(key), ";")),
@@ -197,6 +202,12 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     {
         @Nullable TypeExp paramType = getLikelyParamType();
         return paramType == null ? "" : paramType.toString();
+    }
+    
+    @Override
+    public ImmutableList<String> getParamNames()
+    {
+        return paramNames;
     }
 
     /**

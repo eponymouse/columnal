@@ -501,7 +501,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
 
-        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, (s, p) -> makeCompletions(s, p, saver)), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
@@ -509,7 +509,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ExpressionSaver expressionSaver)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -546,7 +546,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
         
-        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)));
+        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)), expressionSaver.getEntryPromptFor(canonIndex));
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
