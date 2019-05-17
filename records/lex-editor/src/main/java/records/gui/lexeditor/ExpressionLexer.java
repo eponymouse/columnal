@@ -49,6 +49,7 @@ import utility.gui.FXUtility;
 import utility.TranslationUtility;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -501,7 +502,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
 
-        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, (s, p) -> makeCompletions(s, p, saver)), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new BiFunction<String, @CanonicalLocation Integer, ExpressionCompletionContext>()
+        {
+            // Must be anon inner class to avoid lambda annotation bug in checker framework
+            // https://github.com/typetools/checker-framework/issues/2173
+            // Can be swapped back in Java 9
+            @Override
+            public ExpressionCompletionContext apply(String s, @CanonicalLocation Integer p)
+            {
+                return ExpressionLexer.this.makeCompletions(s, p, saver);
+            }
+        }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
 
     private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
