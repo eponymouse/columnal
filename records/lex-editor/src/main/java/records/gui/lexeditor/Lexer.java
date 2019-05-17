@@ -89,9 +89,13 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             if (chunk.chunkType != ChunkType.NESTED)
             {
                 @SuppressWarnings("units")
-                @CanonicalLocation int start = prevChunkType == ChunkType.IDENT ? curPos + 1 : curPos;
+                @CanonicalLocation int start = curPos;
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
-                acd.add(new AutoCompleteDetails<>(location, makeCompletions.apply(chunk.internalContent, curPos)));
+                if (chunk.chunkType == ChunkType.IDENT)
+                {
+                    CCC context = makeCompletions.apply(chunk.internalContent, curPos);
+                    acd.add(new AutoCompleteDetails<>(location, context));
+                }
             }
             
             curPos = nextPos;
