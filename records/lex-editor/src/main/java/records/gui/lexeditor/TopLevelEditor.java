@@ -36,7 +36,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -44,6 +43,8 @@ import utility.gui.ScrollPaneFill;
 import utility.gui.TimedFocusable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
 /**
@@ -62,7 +63,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     protected final EditorContent<EXPRESSION, CODE_COMPLETION_CONTEXT> content;
     protected final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
-    private final ErrorMessagePopup errorMessagePopup;
+    private final InformationPopup informationPopup;
     private final FixHelper fixHelper;
     private boolean hiding;
 
@@ -70,9 +71,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     TopLevelEditor(@Nullable String originalContent, LEXER lexer, FixHelper fixHelper, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
     {
         this.fixHelper = fixHelper;
-        errorMessagePopup = new ErrorMessagePopup();
+        informationPopup = new InformationPopup();
         content = new EditorContent<>(originalContent == null ? "" : originalContent, lexer);
-        display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).errorMessagePopup.triggerFix(n), this));
+        display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).informationPopup.triggerFix(n), this));
         if (originalContent != null)
             display.markAsPreviouslyFocused();
         scrollPane = new ScrollPaneFill(new StackPane(display))  {
@@ -101,7 +102,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save());
         });
-        content.addCaretPositionListener(errorMessagePopup::caretMoved);
+        content.addCaretPositionListener(informationPopup::caretMoved);
         content.addCaretPositionListener((@CanonicalLocation Integer n) -> {
             display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
@@ -123,11 +124,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     public void setDisable(boolean disabled)
     {
         display.setDisable(disabled);
-    }
-
-    void mouseHover(@Nullable ImmutableList<ErrorDetails> hoveringOn)
-    {
-        errorMessagePopup.mouseHover(hoveringOn);
     }
 
     public static enum Focus { LEFT, RIGHT };
@@ -156,7 +152,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     public void cleanup()
     {
         hiding = true;
-        errorMessagePopup.hidePopup(true);
+        informationPopup.hidePopup(true);
     }
 
     protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
@@ -222,33 +218,39 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         void keyboardFocusExited(@Nullable ErrorInfo errorInfo, @SourceLocation int newCaretPos);
     }
     */
+    
+    public static enum DisplayType
+    {
+        ERROR,
+        WARNING,
+        // Things that are like warnings but information, e.g.
+        // this could be refactored, or this column is overridden in this calculate
+        INFORMATION,
+        // Information for entry.
+        PROMPT;
+    }
 
 
     /**
-     * A popup to show error messages.  This is shared between all the items in the same top-level editor.
+     * A popup to show information messages at the top of the editor.  This is shared between all the items in the same top-level editor.
      *
-     * The rules for anchoring and showing are as follows:
-     *   - If there is no mouse hover, the error for the current keyboard position is shown, if any.
-     *   - If keyboard moves, the mouse hover is cancelled until mouse moves.
-     *   - If mouse moves to hover over an error, this is shown instead of keyboard error.
-     *   - Quick fixes are only shown for the keyboard position.  If mouse hover has fixes, says "click to show fixes".
-     *     (Because moving mouse away may cancel that message, frustrating to users if they go to try to click.
-     *     Clicking causes keyboard focus which is more persistent.)
+     * The popup only tracks caret position, not mouse hover.  Tracking both leads
+     * to lots of awkward states and would require different content (e.g. entry
+     * prompt should only show for keyboard).  So we keep it simple and just use
+     * the caret.
      */
     @OnThread(Tag.FXPlatform)
-    private class ErrorMessagePopup extends PopOver //implements ErrorMessageDisplayer
+    private class InformationPopup extends PopOver //implements ErrorMessageDisplayer
     {
-        private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> keyboardErrorInfo;
-        private @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> mouseErrorInfo;
-        private @Nullable StyledString entryPrompt;
+        private final EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> displays = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
 
-        private final TextFlow errorLabel;
+        private final TextFlow textFlow;
         private final FixList fixList;
 
         // null when definitely stopped.
         private @Nullable Animation hidingAnimation;
 
-        public ErrorMessagePopup()
+        public InformationPopup()
         {
             setDetachable(false);
             getStyleClass().add("expression-info-popup");
@@ -268,13 +270,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             });
 
             //Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
-            errorLabel = new TextFlow();
-            errorLabel.getStyleClass().add("expression-info-error");
-            errorLabel.managedProperty().bind(errorLabel.visibleProperty());
+            textFlow = new TextFlow();
+            textFlow.getStyleClass().add("expression-info-error");
+            textFlow.managedProperty().bind(textFlow.visibleProperty());
 
             fixList = new FixList(ImmutableList.of());
 
-            BorderPane container = new BorderPane(errorLabel, null, null, fixList, null);
+            BorderPane container = new BorderPane(textFlow, null, null, fixList, null);
             container.getStyleClass().add("expression-info-content");
 
             setContentNode(container);
@@ -285,9 +287,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 getScene().addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.MIDDLE)
                     {
-                        // Will come back if user hovers or moves keyboard:
-                        keyboardErrorInfo = null;
-                        mouseErrorInfo = null;
+                        // Will come back if user moves keyboard:
+                        displays.clear();
                         FXUtility.mouse(this).updateShowHide(true);
                         e.consume();
                     }
@@ -297,7 +298,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 FXUtility.mouse(this).cancelHideAnimation();
             });
             container.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
-                if (keyboardErrorInfo == null)
+                if (displays.isEmpty())
                     FXUtility.mouse(this).hidePopup(false);
             });
 
@@ -337,7 +338,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             // Shouldn't be non-null already, but just in case:
             if (!isShowing() && !hiding)
             {
-                Log.debug("Showing ErrorMessagePopup");
+                Log.debug("Showing InformationPopup");
                 show(scrollPane);
                 //org.scenicview.ScenicView.show(getScene());
             }
@@ -357,19 +358,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         private void updateShowHide(boolean hideImmediately)
         {
             //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
-            @Nullable Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo = null;
-            if (keyboardErrorInfo != null)
-                errorInfo = keyboardErrorInfo;
-            //else if (mouseErrorInfo != null)
-                //errorInfo = mouseErrorInfo;
-            else if (entryPrompt != null)
-                errorInfo = new Pair<>(entryPrompt, ImmutableList.of());
+            // EnumMap returns entries in order of enum keys,
+            // so this will get errors ahead of warnings ahead of information ahead of prompt, as we want:
+            @Nullable Entry<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> curDisplay = displays.entrySet().stream().findFirst().orElse(null);
 
-            if (errorInfo != null)
+            if (curDisplay != null)
             {
                 // Make sure to cancel any hide animation:
                 cancelHideAnimation();
-                show(errorInfo);
+                show(curDisplay.getKey(), curDisplay.getValue());
                 showPopup();
             }
             else
@@ -378,10 +375,10 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         }
 
-        private void show(Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
+        private void show(DisplayType displayType, Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
         {
-            errorLabel.getChildren().setAll(errorInfo.getFirst().toGUI().toArray(new Node[0]));
-            errorLabel.setVisible(!errorInfo.getFirst().toPlain().isEmpty());
+            textFlow.getChildren().setAll(errorInfo.getFirst().toGUI().toArray(new Node[0]));
+            textFlow.setVisible(!errorInfo.getFirst().toPlain().isEmpty());
             fixList.setFixes(Utility.mapListI(errorInfo.getSecond(), makeFixInfo()));
         }
 
@@ -438,24 +435,17 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
             
             if (errors.isEmpty())
-                keyboardErrorInfo = null;
+                displays.remove(DisplayType.ERROR);
             else
-                keyboardErrorInfo = new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build());
-            
-            entryPrompt = content.getEntryPromptFor(newCaretPos);
+                displays.put(DisplayType.ERROR, new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build()));
+
+            @Nullable StyledString entryPrompt = content.getEntryPromptFor(newCaretPos);
+            if (entryPrompt == null)
+                displays.remove(DisplayType.PROMPT);
+            else
+                displays.put(DisplayType.PROMPT, new Pair<>(entryPrompt, ImmutableList.<TextQuickFix>of()));
             
             updateShowHide(true);
-        }
-
-        public void mouseHover(@Nullable ImmutableList<ErrorDetails> errorInfo)
-        {
-            if (errorInfo == null || errorInfo.isEmpty())
-                mouseErrorInfo = null;
-            else
-            {
-                mouseErrorInfo = new Pair<>(errorInfo.stream().map(e -> e.error).collect(StyledString.joining("\n")), errorInfo.stream().flatMap(e -> e.quickFixes.stream()).collect(ImmutableList.<TextQuickFix>toImmutableList()));
-            }
-            updateShowHide(errorInfo != null);
         }
 
         public void triggerFix(int fixIndex)

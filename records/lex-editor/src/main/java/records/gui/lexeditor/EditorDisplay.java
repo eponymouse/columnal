@@ -140,24 +140,6 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             }
             event.consume();
         });
-        addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
-            @Nullable HitInfo hit = hitTest(event.getX(), event.getY());
-            if (hit != null)
-            {
-                FXUtility.mouse(editor).mouseHover(hasBeenFocused ? content.getErrors().stream().filter(e -> {
-                    @SuppressWarnings("units")
-                    @DisplayLocation int displayIndex = hit.getCharIndex();
-                    return e.displayLocation != null && e.displayLocation.touches(displayIndex) && e.caretHasLeftSinceEdit;
-                }).collect(ImmutableList.<ErrorDetails>toImmutableList()) : null);
-            }
-            else
-            {
-                FXUtility.mouse(editor).mouseHover(null);
-            }
-        });
-        addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
-            FXUtility.mouse(editor).mouseHover(null);
-        });
         
         addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
             OptionalInt fKey = FXUtility.FKeyNumber(keyEvent.getCode());
