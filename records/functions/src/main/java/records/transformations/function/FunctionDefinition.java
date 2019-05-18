@@ -104,10 +104,13 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         @LocalizableKey String key = funcDocKey;
         try
         {
+            // TODO move the signature to its own file?
+            @SuppressWarnings("all")
+            @LocalizableKey String sigKey = key + ":sig";
             return new Details(
                 FUNCTION_MINIS.getString(key),
                 ImmutableList.copyOf(StringUtils.split(FUNCTION_SYNONYMS.getString(key), ";")),
-                ImmutableList.copyOf(StringUtils.split(FUNCTION_TYPES.getString(key + ":sig"), ";")),
+                ImmutableList.copyOf(StringUtils.split(FUNCTION_TYPES.getString(sigKey), ";")),
                 parseFunctionType(functionName,
                     Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(key), ";")),
                     Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(key), ";")),
