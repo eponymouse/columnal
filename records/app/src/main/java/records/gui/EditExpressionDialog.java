@@ -23,6 +23,9 @@ import utility.gui.LightDialog;
 
 import java.util.Optional;
 
+/**
+ * Edit an expression by itself, used primarily for filter.
+ */
 @OnThread(Tag.FXPlatform)
 public class EditExpressionDialog extends LightDialog<Expression>
 {

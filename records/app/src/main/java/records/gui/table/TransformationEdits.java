@@ -59,8 +59,8 @@ public class TransformationEdits
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
         // expression may still be null
         
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
-            ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
+        EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
+            ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.columnId, newDetails.expression);
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSrcTableId(), newColumns), null)
@@ -162,14 +162,14 @@ public class TransformationEdits
         Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
         if (expression != null)
         {
-            new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
+            EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
                 ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
                 boolean added = false;
                 for (Pair<ColumnId, Expression> oldColumn : oldColumns)
                 {
                     if (oldColumn.getFirst().equals(columnId) && !added)
                     {
-                        newColumns.add(newDetails);
+                        newColumns.add(new Pair<>(newDetails.columnId, newDetails.expression));
                     }
                     else
                     {

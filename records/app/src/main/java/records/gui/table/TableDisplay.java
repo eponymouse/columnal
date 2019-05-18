@@ -994,7 +994,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1003,7 +1003,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
-                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
+                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression)), null);
                 })
             );
         });
@@ -1011,7 +1011,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null);
 
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);
@@ -1020,7 +1020,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                     FXUtility.alertOnError_("Error adding column", () -> {
                         parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(),
-                                agg.getSrcTableId(), Utility.appendToList(agg.getColumnExpressions(), p), agg.getSplitBy()), null);
+                                agg.getSrcTableId(), Utility.appendToList(agg.getColumnExpressions(), new Pair<>(p.columnId, p.expression)), agg.getSplitBy()), null);
                     })
             );
         });
@@ -1164,14 +1164,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof SummaryStatistics)
         {
             SummaryStatistics aggregate = (SummaryStatistics)table;
-            Optional<Pair<ColumnId, Expression>> newColumn = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
+            Optional<EditColumnExpressionDialog<UnitType>.Result> newColumn = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait();
             if (newColumn.isPresent())
             {
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
                     try
                     {
                         SummaryStatistics newAggregate = parent.getManager().<SummaryStatistics>edit(aggregate.getId(), () -> {
-                            return new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), newColumn.get()), aggregate.getSplitBy());
+                            return new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(newColumn.get().columnId, newColumn.get().expression)), aggregate.getSplitBy());
                         }, null);
                         Platform.runLater(() -> {
                             TransformationEdits.editAggregateSplitBy(parent, newAggregate);

@@ -38,6 +38,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
+import utility.UnitType;
 import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DoubleOKLightDialog;
@@ -54,15 +55,39 @@ import java.util.stream.Stream;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
-public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnId, Expression>>
+public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColumnExpressionDialog<T>.Result>
 {
+    public class Result
+    {
+        public final ColumnId columnId;
+        public final Expression expression;
+        public final T extra;
+
+        public Result(ColumnId columnId, Expression expression, T extra)
+        {
+            this.columnId = columnId;
+            this.expression = expression;
+            this.extra = extra;
+        }
+    }
+    
+    public interface SidePane<T>
+    {
+        public @Nullable Node getSidePane();
+        
+        // null if not currently valid.
+        public @Nullable T getResult();
+    }
+    
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
     private final ColumnNameTextField nameField;
+    private final SidePane<T> sidePane;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, SidePane<T> sidePane)
     {
         super(parent, new DialogPaneWithSideButtons());
+        this.sidePane = sidePane;
         setResizable(true);
         initModality(Modality.NONE);
         
@@ -214,7 +239,26 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 
-    public Optional<Pair<ColumnId, Expression>> showAndWaitCentredOn(Point2D mouseScreenPos)
+    public static EditColumnExpressionDialog<UnitType> withoutSidePane(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    {
+        return new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, expectedType, new SidePane<UnitType>()
+        {
+            @Override
+            public @Nullable Node getSidePane()
+            {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public UnitType getResult()
+            {
+                return UnitType.UNIT;
+            }
+        });
+    }
+
+    public Optional<Result> showAndWaitCentredOn(Point2D mouseScreenPos)
     {
         return super.showAndWaitCentredOn(mouseScreenPos, 400, 200);
     }
@@ -243,13 +287,14 @@ public class EditColumnExpressionDialog extends DoubleOKLightDialog<Pair<ColumnI
     }
 
     @Override
-    protected @Nullable Pair<ColumnId, Expression> calculateResult()
+    protected @Nullable Result calculateResult()
     {
         @Nullable ColumnId name = nameField.valueProperty().getValue();
-        if (name == null)
+        @Nullable T t = sidePane.getResult();
+        if (name == null || t == null)
             return null;
         else
-            return new Pair<>(name, curValue);
+            return new Result(name, curValue, t);
     }
 
     @Override
