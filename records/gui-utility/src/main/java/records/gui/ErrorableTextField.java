@@ -167,7 +167,7 @@ public class ErrorableTextField<T> implements TimedFocusable
     public void requestFocusWhenInScene()
     {
         FXUtility.onceNotNull(field.sceneProperty(), sc -> {
-            field.requestFocus();
+            FXUtility.runAfter(() -> field.requestFocus());
         });
     }
 

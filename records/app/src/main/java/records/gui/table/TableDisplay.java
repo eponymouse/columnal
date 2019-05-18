@@ -1170,12 +1170,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
                     try
                     {
-                        SummaryStatistics newAggregate = parent.getManager().<SummaryStatistics>edit(aggregate.getId(), () -> {
+                        parent.getManager().<SummaryStatistics>edit(aggregate.getId(), () -> {
                             return new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
                         }, null);
-                        Platform.runLater(() -> {
-                            TransformationEdits.editAggregateSplitBy(parent, newAggregate);
-                        });
                     }
                     catch (InternalException e)
                     {
@@ -1185,7 +1182,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
             else
             {
-                TransformationEdits.editAggregateSplitBy(parent, aggregate);
+                Workers.onWorkerThread("Cancelling aggregate", Priority.SAVE, () -> {
+                    parent.getManager().remove(aggregate.getId());
+                });
             }
         }
         else if (table instanceof Sort)

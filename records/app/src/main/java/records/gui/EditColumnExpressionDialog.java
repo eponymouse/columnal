@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
@@ -82,6 +83,12 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
 
         // null if not currently valid.
         public @Nullable T calculateResult();
+
+        ImmutableList<? extends TimedFocusable> getTimedFocusables();
+
+        boolean includeColumn(TimedFocusable item, Pair<Table, ColumnId> column);
+
+        void pickColumn(TimedFocusable item, Pair<Table, ColumnId> column);
     }
     
     private final ExpressionEditor expressionEditor;
@@ -156,7 +163,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
             {
                 parent.enableColumnPickingMode(screenPos, tc -> {
-                    @Nullable TimedFocusable item = TimedFocusable.getRecentlyFocused(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField);
+                    @Nullable TimedFocusable item = getRecentlyFocused();
                     if (expressionEditor == item)
                     {
                         return expEdIncludeColumn.test(tc);
@@ -172,12 +179,17 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                             return false;
                         }
                     }
+                    else if (item != null)
+                    {
+                        return sidePane.includeColumn(item, tc);
+                    }
                     else
                     {
                         return false;
                     }
                 }, tc -> {
-                    @Nullable TimedFocusable item = TimedFocusable.getRecentlyFocused(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField);
+                    @Nullable TimedFocusable item = getRecentlyFocused();
+                    
                     if (item == expressionEditor)
                     {
                         expEdOnPick.consume(tc);
@@ -186,7 +198,18 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     {
                         nameField.setText(tc.getSecond().getRaw());
                     }
+                    else if (item != null)
+                    {
+                        sidePane.pickColumn(item, tc);
+                    }
                 });
+            }
+
+            @OnThread(Tag.FXPlatform)
+            @Nullable
+            private TimedFocusable getRecentlyFocused()
+            {
+                return TimedFocusable.getRecentlyFocused(Stream.<TimedFocusable>concat(Stream.<TimedFocusable>of(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField), sidePane.getTimedFocusables().stream()).toArray(TimedFocusable[]::new));
             }
 
             @Override
@@ -264,7 +287,6 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             @Override
             public void showAllErrors()
             {
-
             }
 
             @Nullable
@@ -272,6 +294,23 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             public UnitType calculateResult()
             {
                 return UnitType.UNIT;
+            }
+
+            @Override
+            public ImmutableList<? extends TimedFocusable> getTimedFocusables()
+            {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public boolean includeColumn(TimedFocusable item, Pair<Table, ColumnId> column)
+            {
+                return false;
+            }
+
+            @Override
+            public void pickColumn(TimedFocusable item, Pair<Table, ColumnId> column)
+            {
             }
         });
     }

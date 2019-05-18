@@ -39,7 +39,9 @@ import utility.gui.DoubleOKLightDialog.Validity;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.Instruction;
+import utility.gui.TimedFocusable;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -133,6 +135,11 @@ public class AggregateSplitByPane extends BorderPane
                 // Add to end:
                 addToEnd(Optional.of(t.getSecond()), false);
             }
+        }
+
+        public ImmutableList<ColumnNameTextField> getFields()
+        {
+            return streamCells().map(c -> c.getContent().columnField).collect(ImmutableList.<ColumnNameTextField>toImmutableList());
         }
     }
 
@@ -229,9 +236,11 @@ public class AggregateSplitByPane extends BorderPane
     private static class EditColumnSidePane implements EditColumnExpressionDialog.SidePane<ImmutableList<ColumnId>>
     {
         private final AggregateSplitByPane pane;
+        private final @Nullable Table srcTable;
 
         public EditColumnSidePane(@Nullable Table srcTable, ImmutableList<ColumnId> initialSplitBy, @Nullable Pair<ColumnId, ImmutableList<String>> example)
         {
+            this.srcTable = srcTable;
             this.pane = new AggregateSplitByPane(srcTable, initialSplitBy, example);
         }
 
@@ -257,6 +266,24 @@ public class AggregateSplitByPane extends BorderPane
         public void showAllErrors()
         {
             // Nothing extra needed
+        }
+
+        @Override
+        public ImmutableList<? extends TimedFocusable> getTimedFocusables()
+        {
+            return pane.splitList.getFields();
+        }
+
+        @Override
+        public boolean includeColumn(TimedFocusable item, Pair<Table, ColumnId> column)
+        {
+            return Objects.equals(srcTable, column.getFirst());
+        }
+
+        @Override
+        public void pickColumn(TimedFocusable item, Pair<Table, ColumnId> column)
+        {
+            pane.pickColumnIfEditing(column);
         }
     }
 
