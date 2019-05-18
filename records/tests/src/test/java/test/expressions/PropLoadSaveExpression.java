@@ -94,7 +94,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         ColumnLookup columnLookup = new ColumnLookup()
         {
             @Override
-            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 return null;
             }

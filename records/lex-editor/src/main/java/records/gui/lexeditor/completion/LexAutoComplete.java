@@ -1,40 +1,20 @@
 package records.gui.lexeditor.completion;
 
-import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableMap;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Region;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
 public class LexAutoComplete

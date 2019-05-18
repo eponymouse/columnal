@@ -34,6 +34,11 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     }
 
     @Override
+    public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString error)
+    {
+    }
+
+    @Override
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
     {
         // Ignore them, just interested in errors

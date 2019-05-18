@@ -854,7 +854,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         }
         
         @Override
-        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             boolean grouped = false;
             if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
@@ -889,18 +889,18 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
                     case CORRESPONDING_ROW:
                         if (grouped)
                         {
-                            return new Pair<>(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
+                            return new FoundColumn(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
                                 Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
                                 return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
-                            }));
+                            }), null);
                         }
                         else
                         {
                             // If not grouped, must be in split by
-                            return new Pair<>(table.getId(), columnFinal.getType());
+                            return new FoundColumn(table.getId(), columnFinal.getType(), null);
                         }
                     case WHOLE_COLUMN:
-                        return new Pair<>(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
+                        return new FoundColumn(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
                 }
             }
             catch (InternalException e)

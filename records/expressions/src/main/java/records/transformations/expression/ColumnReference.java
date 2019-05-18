@@ -71,14 +71,18 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable Pair<TableId, DataTypeValue> col = dataLookup.getColumn(tableName, columnName, referenceType);
+        Expression.ColumnLookup.@Nullable FoundColumn col = dataLookup.getColumn(tableName, columnName, referenceType);
         if (col == null)
         {
             onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + ":")) + columnName));
             return null;
         }
-        resolvedTableName = col.getFirst();
-        column = col.getSecond();
+        if (col.information != null)
+        {
+            onError.recordInformation(this, col.information);
+        }
+        resolvedTableName = col.tableId;
+        column = col.dataTypeValue;
         return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column.getType()));
     }
 

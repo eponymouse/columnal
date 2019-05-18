@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
@@ -31,6 +32,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -157,6 +159,7 @@ public class EditorLocationAndErrorRecorder
     private final IdentityHashMap<TypeExpression, CanonicalSpan> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, StyledString> entryPrompts = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, StyledString> information = new IdentityHashMap<>();
 
     private static interface UnresolvedErrorDetails
     {
@@ -348,6 +351,13 @@ public class EditorLocationAndErrorRecorder
                 }
             }
 
+            @Override
+            public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString info)
+            {
+                if (src instanceof Expression)
+                    information.put((Expression)src, info);
+            }
+
             @SuppressWarnings("unchecked")
             @Override
             public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
@@ -426,9 +436,10 @@ public class EditorLocationAndErrorRecorder
     }
 
 
-    public @Nullable StyledString getPromptFor(@CanonicalLocation int canonIndex)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex)
     {
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
+        ArrayList<Pair<StyledString, CanonicalSpan>> relevantInformation = new ArrayList<>();
         for (Entry<Expression, CanonicalSpan> expLocation : expressionDisplayers.entrySet())
         {
             if (expLocation.getValue().touches(canonIndex))
@@ -436,15 +447,26 @@ public class EditorLocationAndErrorRecorder
                 StyledString prompt = entryPrompts.get(expLocation.getKey());
                 if (prompt != null)
                     relevantPrompts.add(new Pair<>(prompt, expLocation.getValue()));
+                StyledString info = information.get(expLocation.getKey());
+                if (info != null)
+                    relevantInformation.add(new Pair<>(info, expLocation.getValue()));
             }
         }
 
         Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantPrompts, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
+        Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantInformation, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
+
+        EnumMap<DisplayType, StyledString> combined = new EnumMap<DisplayType, StyledString>(DisplayType.class);
+        for (Pair<StyledString, CanonicalSpan> prompt : relevantPrompts)
+        {
+            combined.merge(DisplayType.PROMPT, prompt.getFirst(), (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b)));
+        }
+        for (Pair<StyledString, CanonicalSpan> info : relevantInformation)
+        {
+            combined.merge(DisplayType.INFORMATION, info.getFirst(), (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b)));
+        }
         
-        if (relevantPrompts.isEmpty())
-            return null;
-        else
-            return relevantPrompts.stream().map(p -> p.getFirst()).distinct().collect(StyledString.joining("\n"));
+        return ImmutableMap.copyOf(combined);
     }
 
 

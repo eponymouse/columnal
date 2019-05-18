@@ -3,6 +3,7 @@ package records.gui.lexeditor;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -453,11 +454,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             else
                 displays.put(DisplayType.ERROR, new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build()));
 
-            @Nullable StyledString entryPrompt = content.getEntryPromptFor(newCaretPos);
-            if (entryPrompt == null)
-                displays.remove(DisplayType.PROMPT);
-            else
-                displays.put(DisplayType.PROMPT, new Pair<>(entryPrompt, ImmutableList.<TextQuickFix>of()));
+            ImmutableMap<DisplayType, StyledString> infoAndPrompt = content.getDisplayFor(newCaretPos);
+            displays.remove(DisplayType.PROMPT);
+            displays.remove(DisplayType.INFORMATION);
+            for (Entry<DisplayType, StyledString> entry : infoAndPrompt.entrySet())
+            {
+                displays.put(entry.getKey(), new Pair<>(entry.getValue(), ImmutableList.of()));
+            }
             
             updateShowHide(true);
         }

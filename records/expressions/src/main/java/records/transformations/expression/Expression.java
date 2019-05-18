@@ -83,6 +83,7 @@ import records.transformations.expression.type.TypeExpression;
 import records.typeExp.ExpressionBase;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
+import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
 import styled.StyledString.Style;
@@ -113,12 +114,26 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
     public static interface ColumnLookup
     {
+        public static class FoundColumn
+        {
+            public final TableId tableId;
+            public final DataTypeValue dataTypeValue;
+            public final @Nullable StyledString information;
+
+            public FoundColumn(TableId tableId, DataTypeValue dataTypeValue, @Nullable StyledString information)
+            {
+                this.tableId = tableId;
+                this.dataTypeValue = dataTypeValue;
+                this.information = information;
+            }
+        }
+        
         // If you pass null for table, you get the default table (or null if none)
         // If no such table/column is found, null is returned
         // If columnReferenceType is CORRESPONDING_ROW, called getCollapsed
         // with row number should get corresponding value.  If it is
         // WHOLE_COLUMN then passing 0 to getValue should get whole column as ListEx.
-        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
+        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
 
         // This is really for the editor, but it doesn't rely on any GUI
         // functionality so can be here:
@@ -917,6 +932,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      */
     public static class MultipleTableLookup implements ColumnLookup
     {
+        // Only null during testing
         private final @Nullable TableId us;
         private final TableManager tableManager;
         private final @Nullable Table srcTable;
@@ -1001,7 +1017,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
@@ -1025,9 +1041,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     switch (columnReferenceType)
                     {
                         case CORRESPONDING_ROW:
-                            return new Pair<>(rs.getFirst(), columnType);
+                            return new FoundColumn(rs.getFirst(), columnType, checkRedefined(tableId, columnId));
                         case WHOLE_COLUMN:
-                            return new Pair<>(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                            return new FoundColumn(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), checkRedefined(tableId, columnId));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }
@@ -1037,6 +1053,33 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             catch (InternalException | UserException e)
             {
                 Log.log(e);
+            }
+            return null;
+        }
+
+        // If column is redefined in this table, issue a warning
+        private @Nullable StyledString checkRedefined(@Nullable TableId tableId, ColumnId columnId)
+        {
+            if (tableId == null && us != null)
+            {
+                try
+                {
+                    Table ourTable = tableManager.getSingleTableOrNull(us);
+                    if (ourTable == null)
+                        return null;
+                    RecordSet rs = ourTable.getData();
+                    Column c = rs.getColumnOrNull(columnId);
+                    if (c != null && c.isAltered())
+                    {
+                        return StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table."));
+                        // TODO could add quick fix here to split into separate calculate.
+                    }
+                }
+                catch (InternalException | UserException e)
+                {
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                }
             }
             return null;
         }

@@ -16,6 +16,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
 import records.gui.lexeditor.ExpressionSaver.BracketContent;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -842,9 +843,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return super.fixesForAdjacentOperands(first, second);
     }
 
-    public @Nullable StyledString getEntryPromptFor(@CanonicalLocation int canonIndex)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex)
     {
-        return locationRecorder.getPromptFor(canonIndex);
+        return locationRecorder.getDisplayFor(canonIndex);
     }
 
 }

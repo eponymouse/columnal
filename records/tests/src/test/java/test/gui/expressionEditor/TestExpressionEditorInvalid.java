@@ -70,7 +70,7 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
         return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(new ColumnLookup()
         {
             @Override
-            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 return null;
             }

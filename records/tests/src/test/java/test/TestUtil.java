@@ -1079,6 +1079,11 @@ public class TestUtil
             }
 
             @Override
+            public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton)
+            {
+            }
+
+            @Override
             public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
             {
             }
@@ -1190,7 +1195,7 @@ public class TestUtil
         return new ColumnLookup()
         {
             @Override
-            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 return null;
             }
@@ -1556,7 +1561,7 @@ public class TestUtil
         }
 
         @Override
-        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
@@ -1568,9 +1573,9 @@ public class TestUtil
                     switch (columnReferenceType)
                     {
                         case CORRESPONDING_ROW:
-                            return new Pair<>(new TableId("SingleTableLookup"), column.getType());
+                            return new FoundColumn(new TableId("SingleTableLookup"), column.getType(), null);
                         case WHOLE_COLUMN:
-                            return new Pair<>(new TableId("SingleTableLookup"), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                            return new FoundColumn(new TableId("SingleTableLookup"), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }

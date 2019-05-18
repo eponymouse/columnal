@@ -125,6 +125,11 @@ public class PropTypecheck
                 }
 
                 @Override
+                public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton)
+                {
+                }
+
+                @Override
                 public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
                 {
                 }

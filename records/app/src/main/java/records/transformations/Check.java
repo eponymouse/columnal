@@ -170,7 +170,7 @@ public class Check extends Transformation implements SingleSourceTransformation
         return new ColumnLookup()
         {
             @Override
-            public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
             {
                 try
                 {
@@ -205,10 +205,10 @@ public class Check extends Transformation implements SingleSourceTransformation
                                 if (checkType == CheckType.STANDALONE)
                                     return null;
                                 else
-                                    return new Pair<>(column.getFirst(), column.getSecond().getType());
+                                    return new FoundColumn(column.getFirst(), column.getSecond().getType(), null);
                             case WHOLE_COLUMN:
                                 Column columnFinal = column.getSecond();
-                                return new Pair<>(column.getFirst(), DataTypeValue.array(columnFinal.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))));
+                                return new FoundColumn(column.getFirst(), DataTypeValue.array(columnFinal.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
                             default:
                                 throw new InternalException("Unknown reference type: " + columnReferenceType);
                         }

@@ -273,16 +273,16 @@ public class TestFromDoc
 
         @Override
         @SuppressWarnings("nullness")
-        public @Nullable Pair<TableId, DataTypeValue> getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             try
             {
                 Column column = tables.get(tableId).getColumn(columnId);
                 DataTypeValue type = column.getType();
                 if (columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW)
-                    return new Pair<>(tableId, type);
+                    return new FoundColumn(tableId, type, null);
                 else
-                    return new Pair<>(tableId, DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))));
+                    return new FoundColumn(tableId, DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
             }
             catch (Exception e)
             {

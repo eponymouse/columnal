@@ -86,10 +86,14 @@ public interface ErrorAndTypeRecorder
     }
 
     /**
-     * Records an error source and error message, and a list of possible quick fixes
+     * Records an error source and error message.
      */
-    // TODO make the String @Localized
     public <EXPRESSION> void recordError(EXPRESSION src, StyledString error);
+
+    /**
+     * Records an source and information message.
+     */
+    public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton);
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 

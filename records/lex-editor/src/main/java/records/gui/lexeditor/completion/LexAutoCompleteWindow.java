@@ -21,6 +21,7 @@ import utility.gui.FXUtility;
 
 import java.net.URL;
 import java.util.List;
+import java.util.function.Consumer;
 
 
 // public for testing purposes
@@ -69,17 +70,22 @@ public class LexAutoCompleteWindow extends PopupControl
                 selected.furtherDetails.either_(htmlContent -> {
                     webView.getEngine().loadContent(htmlContent);
                     webView.setVisible(true);
-                }, (Pair<String, @Nullable String> fileNameAndAnchor) -> {
-                    URL url = getClass().getResource("/" + fileNameAndAnchor.getFirst());
-                    if (url != null)
+                }, new Consumer<Pair<String, @Nullable String>>()
+                {
+                    @Override
+                    public void accept(Pair<String, @Nullable String> fileNameAndAnchor)
                     {
-                        webView.getEngine().load(url.toExternalForm() + (fileNameAndAnchor.getSecond() != null ? "#" + fileNameAndAnchor.getSecond() : ""));
-                        webView.setVisible(true);
-                    }
-                    else
-                    {
-                        Log.error("Missing file: " + fileNameAndAnchor.getFirst());
-                        webView.setVisible(false);
+                        URL url = LexAutoCompleteWindow.this.getClass().getResource("/" + fileNameAndAnchor.getFirst());
+                        if (url != null)
+                        {
+                            webView.getEngine().load(url.toExternalForm() + (fileNameAndAnchor.getSecond() != null ? "#" + fileNameAndAnchor.getSecond() : ""));
+                            webView.setVisible(true);
+                        }
+                        else
+                        {
+                            Log.error("Missing file: " + fileNameAndAnchor.getFirst());
+                            webView.setVisible(false);
+                        }
                     }
                 });
             }

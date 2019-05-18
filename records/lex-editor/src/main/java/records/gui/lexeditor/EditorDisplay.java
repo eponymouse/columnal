@@ -50,6 +50,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.BitSet;
 import java.util.OptionalInt;
+import java.util.function.Consumer;
 
 @OnThread(Tag.FXPlatform)
 public final class EditorDisplay extends TextEditorBase implements TimedFocusable
@@ -361,19 +362,24 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         }
         else if (p.furtherDetails != null)
         {
-            p.furtherDetails.ifRight((Pair<String, @Nullable String> furtherDetailsURL) -> {
-                SwingUtilities.invokeLater(() -> {
-                    try
-                    {
-                        URL resource = getClass().getResource("/" + furtherDetailsURL.getFirst());
-                        if (resource != null)
-                            Desktop.getDesktop().browse(resource.toURI());
-                    }
-                    catch (Exception e)
-                    {
-                        Log.log(e);
-                    }
-                });
+            p.furtherDetails.ifRight(new Consumer<Pair<String, @Nullable String>>()
+            {
+                @Override
+                public void accept(Pair<String, @Nullable String> furtherDetailsURL)
+                {
+                    SwingUtilities.invokeLater(() -> {
+                        try
+                        {
+                            URL resource = EditorDisplay.this.getClass().getResource("/" + furtherDetailsURL.getFirst());
+                            if (resource != null)
+                                Desktop.getDesktop().browse(resource.toURI());
+                        }
+                        catch (Exception e)
+                        {
+                            Log.log(e);
+                        }
+                    });
+                }
             });
         }
     }

@@ -4,13 +4,17 @@ import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import javafx.scene.text.Text;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Table.Display;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -19,6 +23,7 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -219,9 +224,12 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.display;
     }
 
-    public @Nullable StyledString getEntryPromptFor(@CanonicalLocation int newCaretPos)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int newCaretPos)
     {
-        StyledString prompt = Utility.filterOutNulls(curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<@Nullable StyledString>map(acd -> acd.codeCompletionContext.getEntryPrompt())).collect(StyledString.joining("\n"));
-        return prompt.toPlain().isEmpty() ? null : prompt;
+        EnumMap<DisplayType, StyledString> accum = new EnumMap<DisplayType, StyledString>(DisplayType.class);
+        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt()).forEach(m -> {
+            m.forEach((k, v) -> accum.merge(k, v, (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b))));
+        });
+        return ImmutableMap.copyOf(accum);
     }
 }
