@@ -71,12 +71,17 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         }
     }
     
+    @OnThread(Tag.FXPlatform)
     public interface SidePane<T>
     {
         public @Nullable Node getSidePane();
         
+        public Validity checkValidity();
+
+        public void showAllErrors();
+
         // null if not currently valid.
-        public @Nullable T getResult();
+        public @Nullable T calculateResult();
     }
     
     private final ExpressionEditor expressionEditor;
@@ -219,8 +224,9 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         
         content.addRow(GUI.labelledGridRow("edit.column.expression",
                 "edit-column/column-expression", expressionEditor.getContainer()));
-        
-        getDialogPane().setContent(content);
+
+        Node sidePaneNode = sidePane.getSidePane();
+        getDialogPane().setContent(new BorderPane(content, null, null, null, sidePaneNode));
 
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
@@ -249,9 +255,21 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 return null;
             }
 
+            @Override
+            public Validity checkValidity()
+            {
+                return Validity.NO_ERRORS;
+            }
+
+            @Override
+            public void showAllErrors()
+            {
+
+            }
+
             @Nullable
             @Override
-            public UnitType getResult()
+            public UnitType calculateResult()
             {
                 return UnitType.UNIT;
             }
@@ -283,14 +301,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         else if (expressionEditor.hasErrors())
             return Validity.ERROR_BUT_CAN_SAVE;
         else
-            return Validity.NO_ERRORS;
+            return sidePane.checkValidity();
     }
 
     @Override
     protected @Nullable Result calculateResult()
     {
         @Nullable ColumnId name = nameField.valueProperty().getValue();
-        @Nullable T t = sidePane.getResult();
+        @Nullable T t = sidePane.calculateResult();
         if (name == null || t == null)
             return null;
         else
@@ -301,6 +319,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     protected void showAllErrors()
     {
         expressionEditor.showAllErrors();
+        sidePane.showAllErrors();
     }
 
     private static class ColumnCompletion extends Completion

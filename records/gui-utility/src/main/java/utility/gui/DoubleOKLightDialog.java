@@ -28,7 +28,7 @@ public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
     private boolean modifiedSinceLastOK = true;
     private long lastOKPress = System.currentTimeMillis();
     
-    protected static enum Validity
+    public static enum Validity
     {
         IMPOSSIBLE_TO_SAVE,
         ERROR_BUT_CAN_SAVE,

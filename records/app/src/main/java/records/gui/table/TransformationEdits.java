@@ -21,6 +21,7 @@ import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
+import records.gui.AggregateSplitByPane;
 import records.gui.EditAggregateSplitByDialog;
 import records.gui.EditColumnExpressionDialog;
 import records.gui.EditImmediateColumnDialog;
@@ -162,7 +163,7 @@ public class TransformationEdits
         Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
         if (expression != null)
         {
-            EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
+            AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null, agg.getSplitBy()).showAndWait().ifPresent(newDetails -> {
                 ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
                 boolean added = false;
                 for (Pair<ColumnId, Expression> oldColumn : oldColumns)
@@ -178,7 +179,7 @@ public class TransformationEdits
                 }
                 Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                     FXUtility.alertOnError_("Error saving column", () ->
-                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), agg.getSplitBy()), null)
+                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), newDetails.extra), null)
                     );
                 });
             });
