@@ -88,7 +88,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
     {
         public TableList(ImmutableList<TableId> originalItems)
         {
-            super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, () -> "");
+            super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, true);
             getStyleClass().add("table-list");
         }
         

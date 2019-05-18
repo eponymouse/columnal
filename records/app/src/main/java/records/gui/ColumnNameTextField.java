@@ -32,6 +32,7 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
             setText(initial.getRaw());
     }
 
+    // Overridden to change return type to be more specific:
     @Override
     public ColumnNameTextField withArrowLocation(ArrowLocation location)
     {

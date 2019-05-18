@@ -8,6 +8,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -43,11 +44,15 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
     public ManualEditEntriesDialog(DimmableParent parent, @Nullable ColumnId keyColumn, ExFunction<ColumnId, DataType> lookupColumnType, ImmutableList<Entry> originalEntries)
     {
         super(parent);
-        FancyList<Entry, HBox> fancyList = new FancyList<Entry, HBox>(originalEntries, true, false, null)
+        FancyList<Entry, HBox> fancyList = new FancyList<Entry, HBox>(originalEntries, true, false, false)
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(Entry initialContent, boolean editImmediately)
+            protected @OnThread(Tag.FXPlatform) Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(@Nullable Entry initialContentNull, boolean editImmediately)
             {
+                // Can't be null because we don't allow adding items:
+                @SuppressWarnings("nullness")
+                @NonNull Entry initialContent = initialContentNull;
+                
                 HBox content = new HBox(new Label("Loading..."));
                 Workers.onWorkerThread("Loading replacement values", Priority.FETCH, () -> {
                     try

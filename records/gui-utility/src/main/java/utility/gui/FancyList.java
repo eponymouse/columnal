@@ -47,7 +47,7 @@ import java.util.stream.Stream;
  * A ListView which allows deletion of selected items using a little cross to the right (or pressing backspace/delete), which is
  * animated by sliding out the items.
  */
-public abstract class FancyList<T, CELL_CONTENT extends Node>
+public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
 {
     private final VBox children = GUI.vbox("fancy-list-children");
     private final ObservableList<Cell> cells = FXCollections.observableArrayList();
@@ -69,7 +69,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
      *                    will be called to make a new value.  If null,
      *                    insertion is not allowed.
      */
-    public FancyList(ImmutableList<T> initialItems, boolean allowDeleting, boolean allowReordering, @Nullable FXPlatformSupplier<T> makeNewItem)
+    public FancyList(ImmutableList<T> initialItems, boolean allowDeleting, boolean allowReordering, boolean allowAdding)
     {
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
@@ -116,10 +116,10 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         {
             cells.add(new Cell(initialItem, false));
         }
-        if (makeNewItem != null)
+        if (allowAdding)
         {
             addButton = GUI.button("fancylist.add", () -> {
-                addToEnd(makeNewItem.get(), true);
+                addToEnd(null, true);
             });
             bottomPane.setCenter(addButton);
             BorderPane.setMargin(addButton, new Insets(6));
@@ -212,7 +212,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
      * graphical component.
      */
     @OnThread(Tag.FXPlatform)
-    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(T initialContent, boolean editImmediately);
+    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
     {
@@ -348,7 +348,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         protected final CELL_CONTENT content;
         private final FXPlatformSupplier<T> value;
         
-        public Cell(T initialContent, boolean editImmediately)
+        public Cell(@Nullable T initialContent, boolean editImmediately)
         {
             getStyleClass().add("fancy-list-cell");
             deleteButton = new SmallDeleteButton();
@@ -463,7 +463,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         return index < 0 ? false : selection.get(index);
     }
     
-    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, T content, boolean editImmediately)
+    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
     {
         cells.add(new Cell(content, editImmediately));
         updateChildren();

@@ -5,6 +5,7 @@ import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
@@ -232,6 +233,11 @@ public class ErrorableTextField<T> implements TimedFocusable
     public TextField getFieldForComplete()
     {
         return field;
+    }
+
+    public ReadOnlyBooleanProperty focusedProperty()
+    {
+        return field.focusedProperty();
     }
 
     public static class ConversionResult<@NonNull T>

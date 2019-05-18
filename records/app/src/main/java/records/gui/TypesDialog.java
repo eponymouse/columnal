@@ -444,7 +444,7 @@ public class TypesDialog extends Dialog<Void>
             @OnThread(Tag.FXPlatform)
             public InnerValueTagList(@Nullable TaggedTypeDefinition existing)
             {
-                super(existing == null ? ImmutableList.<Either<@Localized String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapListI(existing.getTags(), x -> Either.<@Localized String, TagType<JellyType>>right(x)), true, true, () -> Either.<@Localized String, TagType<JellyType>>right(new TagType<JellyType>("", null)));
+                super(existing == null ? ImmutableList.<Either<@Localized String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapListI(existing.getTags(), x -> Either.<@Localized String, TagType<JellyType>>right(x)), true, true, true);
                 listenForCellChange(c -> innerValueChanged());
             }
 
@@ -459,9 +459,9 @@ public class TypesDialog extends Dialog<Void>
 
             @Override
             @OnThread(Tag.FXPlatform)
-            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
+            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
             {
-                TagValueEdit tagValueEdit = new TagValueEdit(initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
+                TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
                 return new Pair<>(tagValueEdit, tagValueEdit.currentValue::get);
             }
 

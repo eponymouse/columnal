@@ -40,6 +40,7 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.Instruction;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,27 +76,25 @@ public class AggregateSplitByPane extends BorderPane
         splitList.pickColumnIfEditing(t);
     }
 
-    public Either<@Localized String, ImmutableList<ColumnId>> getItems()
+    public @Nullable ImmutableList<ColumnId> getItems()
     {
         ImmutableList.Builder<ColumnId> r = ImmutableList.builder();
-        for (String item : splitList.getItems())
+        for (Optional<ColumnId> item : splitList.getItems())
         {
-            @Nullable @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(item);
-            if (s != null)
-                r.add(new ColumnId(s));
-            else
-                return Either.left(TranslationUtility.getString("edit.column.invalid.column.name"));
+            if (!item.isPresent())
+                return null;
+            r.add(item.get());
         }
-        return Either.right(r.build());
+        return r.build();
     }
 
 
     @OnThread(Tag.FXPlatform)
-    private class SplitList extends FancyList<String, ColumnPane>
+    private class SplitList extends FancyList<Optional<ColumnId>, ColumnPane>
     {
         public SplitList(ImmutableList<ColumnId> initialItems)
         {
-            super(Utility.mapListI(initialItems, c -> c.getRaw()), true, true, () -> "");
+            super(Utility.mapListI(initialItems, x -> Optional.of(x)), true, true, true);
             getStyleClass().add("split-list");
             setAddButtonText(TranslationUtility.getString("aggregate.add.column"));
 
@@ -106,10 +105,10 @@ public class AggregateSplitByPane extends BorderPane
         }
 
         @Override
-        protected Pair<ColumnPane, FXPlatformSupplier<String>> makeCellContent(String initialContent, boolean editImmediately)
+        protected Pair<ColumnPane, FXPlatformSupplier<Optional<ColumnId>>> makeCellContent(@Nullable Optional<ColumnId> initialContent, boolean editImmediately)
         {
-            ColumnPane columnPane = new ColumnPane(initialContent, editImmediately);
-            return new Pair<>(columnPane, columnPane.currentValue()::get);
+            ColumnPane columnPane = new ColumnPane(initialContent == null ? null : initialContent.orElse(null), editImmediately);
+            return new Pair<>(columnPane, () -> Optional.ofNullable(columnPane.currentValue().getValue()));
         }
 
         public void pickColumnIfEditing(Pair<Table, ColumnId> t)
@@ -132,7 +131,7 @@ public class AggregateSplitByPane extends BorderPane
             else
             {
                 // Add to end:
-                addToEnd(t.getSecond().getRaw(), false);
+                addToEnd(Optional.of(t.getSecond()), false);
             }
         }
     }
@@ -140,19 +139,17 @@ public class AggregateSplitByPane extends BorderPane
     @OnThread(Tag.FXPlatform)
     private class ColumnPane extends BorderPane
     {
-        private final SimpleObjectProperty<String> currentValue;
-        private final TextField columnField;
+        private final ColumnNameTextField columnField;
         private final AutoComplete autoComplete;
         private long lastEditTimeMillis = -1;
 
-        public ColumnPane(String initialContent, boolean editImmediately)
+        public ColumnPane(@Nullable ColumnId initialContent, boolean editImmediately)
         {
-            currentValue = new SimpleObjectProperty<>(initialContent);
-            columnField = new TextField(initialContent);
+            columnField = new ColumnNameTextField(initialContent);
             if (editImmediately)
-                FXUtility.onceNotNull(columnField.sceneProperty(), s -> FXUtility.runAfter(columnField::requestFocus));
-            BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
-            autoComplete = new AutoComplete<ColumnCompletion>(columnField,
+                columnField.requestFocusWhenInScene();
+            BorderPane.setMargin(columnField.getNode(), new Insets(0, 2, 2, 5));
+            autoComplete = new AutoComplete<ColumnCompletion>(columnField.getFieldForComplete(),
                 s -> {
                     try
                     {
@@ -172,12 +169,9 @@ public class AggregateSplitByPane extends BorderPane
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();
             });
-            FXUtility.addChangeListenerPlatformNN(columnField.textProperty(), t -> {
-                currentValue.set(t);
-            });
             Instruction instruction = new Instruction("pick.column.instruction");
-            instruction.showAboveWhenFocused(columnField);
-            setCenter(columnField);
+            instruction.showAboveWhenFocused(columnField.getFieldForComplete());
+            setCenter(columnField.getNode());
             getStyleClass().add("column-pane");
 
         }
@@ -212,12 +206,11 @@ public class AggregateSplitByPane extends BorderPane
         public void setContent(ColumnId columnId)
         {
             autoComplete.setContentDirect(columnId.getRaw(), true);
-            currentValue.set(columnId.getRaw());
         }
 
-        public ObjectExpression<String> currentValue()
+        public ObjectExpression<@Nullable ColumnId> currentValue()
         {
-            return currentValue;
+            return columnField.valueProperty();
         }
     }
 
@@ -251,19 +244,19 @@ public class AggregateSplitByPane extends BorderPane
         @Override
         public @Nullable ImmutableList<ColumnId> calculateResult()
         {
-            return pane.getItems().leftToNull();
+            return pane.getItems();
         }
 
         @Override
         public Validity checkValidity()
         {
-            return pane.getItems().isLeft() ? Validity.IMPOSSIBLE_TO_SAVE : Validity.NO_ERRORS;
+            return pane.getItems() == null ? Validity.IMPOSSIBLE_TO_SAVE : Validity.NO_ERRORS;
         }
 
         @Override
         public void showAllErrors()
         {
-            // TODO
+            // Nothing extra needed
         }
     }
 

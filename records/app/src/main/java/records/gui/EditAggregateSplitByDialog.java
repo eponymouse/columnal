@@ -79,6 +79,10 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
     @Override
     protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<ColumnId>> calculateResult()
     {
-        return splitList.getItems();
+        @Nullable ImmutableList<ColumnId> items = splitList.getItems();
+        if (items == null)
+            return Either.left(TranslationUtility.getString("edit.column.invalid.column.name"));
+        else
+            return Either.right(items);
     }
 }

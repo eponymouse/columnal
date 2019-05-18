@@ -118,7 +118,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
     {
         public SortList(ImmutableList<Pair<String, Direction>> initialItems)
         {
-            super(initialItems, true, true, () -> new Pair<>("", Direction.ASCENDING));
+            super(initialItems, true, true, true);
             getStyleClass().add("sort-list");
             listenForCellChange(c -> {
                 updateButtonWidths();
