@@ -638,6 +638,7 @@ public class AutoComplete<C extends Completion>
             // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
             double itemHeight = CELL_HEIGHT;
             completions.setPrefHeight(Math.min(300.0, 2 + itemHeight * completions.getItems().size()));
+            completions.setVisible(!completions.getItems().isEmpty());
             sizeToScene();
         }
 
