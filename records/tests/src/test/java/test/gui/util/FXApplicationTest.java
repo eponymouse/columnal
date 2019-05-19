@@ -8,6 +8,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.ContextMenuEvent;
@@ -192,10 +193,17 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
                 Bounds screen = node.localToScreen(local);
                 Point2D localMid = Utility.middle(local);
                 Point2D screenMid = Utility.middle(screen);
-                ContextMenuEvent contextMenuEvent = new ContextMenuEvent(ContextMenuEvent.CONTEXT_MENU_REQUESTED,
-                        localMid.getX(), localMid.getY(),
-                        screenMid.getX(), screenMid.getY(), false, null);
-                node.getOnContextMenuRequested().handle(contextMenuEvent);
+                if (node.getOnContextMenuRequested() != null)
+                {
+                    ContextMenuEvent contextMenuEvent = new ContextMenuEvent(ContextMenuEvent.CONTEXT_MENU_REQUESTED,
+                            localMid.getX(), localMid.getY(),
+                            screenMid.getX(), screenMid.getY(), false, null);
+                    node.getOnContextMenuRequested().handle(contextMenuEvent);
+                }
+                else if (node instanceof Control && ((Control)node).getContextMenu() != null)
+                {
+                    ((Control)node).getContextMenu().show(node, screenMid.getX(), screenMid.getY());
+                }
             });
             return this;
         }
