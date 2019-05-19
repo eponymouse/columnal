@@ -447,7 +447,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
                 saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), removedChars.map(curIndex, nonLetter));
                 saver.locationRecorder.addErrorAndFixes(removedChars.map(curIndex, nonLetter), StyledString.s("Unknown keyword: " + attemptedKeyword), ImmutableList.of());
-                chunks.add(new ContentChunk(attemptedKeyword, ChunkType.NON_IDENT));
+                chunks.add(new ContentChunk(attemptedKeyword, ChunkType.PARTIAL_KEYWORD));
                 curIndex = nonLetter;
                 preserveNextSpace = true;
                 continue nextToken;

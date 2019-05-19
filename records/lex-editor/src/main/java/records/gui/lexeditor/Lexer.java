@@ -91,7 +91,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
                 @SuppressWarnings("units")
                 @CanonicalLocation int start = curPos;
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
-                if (chunk.chunkType == ChunkType.IDENT)
+                if (chunk.chunkType == ChunkType.IDENT || chunk.chunkType == ChunkType.PARTIAL_KEYWORD)
                 {
                     CCC context = makeCompletions.apply(chunk.internalContent, curPos);
                     acd.add(new AutoCompleteDetails<>(location, context));
@@ -314,7 +314,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     
     protected static enum ChunkType
     {
-        IDENT, NON_IDENT, NESTED, NESTED_START;
+        IDENT, NON_IDENT, PARTIAL_KEYWORD, NESTED, NESTED_START;
     }
 
     protected static class ContentChunk
