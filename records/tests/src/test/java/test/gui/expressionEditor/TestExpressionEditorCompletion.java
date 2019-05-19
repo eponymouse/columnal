@@ -4,6 +4,7 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
@@ -74,7 +75,8 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
         // Not much more to do -- just edit the expression 
-        clickOn("My Calc");
+        correctTargetWindow();
+        clickOn(lookup(".column-title").match((Label l) -> TestUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query());
         push(KeyCode.TAB);
     }
     
