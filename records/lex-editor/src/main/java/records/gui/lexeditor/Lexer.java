@@ -91,7 +91,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
                 @SuppressWarnings("units")
                 @CanonicalLocation int start = curPos;
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
-                if (chunk.chunkType == ChunkType.IDENT || chunk.chunkType == ChunkType.PARTIAL_KEYWORD)
+                if (showCompletions(chunk.chunkType) || !showCompletions(prevChunkType))
                 {
                     CCC context = makeCompletions.apply(chunk.internalContent, curPos);
                     acd.add(new AutoCompleteDetails<>(location, context));
@@ -101,8 +101,20 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             curPos = nextPos;
             prevChunkType = chunk.chunkType;
         }
+        if (!showCompletions(prevChunkType))
+        {
+            // Add completions beyond last item:
+            CanonicalSpan location = new CanonicalSpan(curPos, curPos);
+            CCC context = makeCompletions.apply("", curPos);
+            acd.add(new AutoCompleteDetails<>(location, context));
+        }
         
         return acd.build();
+    }
+
+    private static boolean showCompletions(ChunkType chunkType)
+    {
+        return chunkType == ChunkType.IDENT || chunkType == ChunkType.PARTIAL_KEYWORD;
     }
 
     static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
