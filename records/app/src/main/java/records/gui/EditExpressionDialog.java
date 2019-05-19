@@ -5,6 +5,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
@@ -19,6 +20,7 @@ import threadchecker.Tag;
 import utility.FXPlatformSupplierInt;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.LightDialog;
 
 import java.util.Optional;
@@ -32,7 +34,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String topMessageKey)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
@@ -40,8 +42,9 @@ public class EditExpressionDialog extends LightDialog<Expression>
 
         expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {curValue = e;});
         curValue = expressionEditor.save();
-        
-        getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));
+
+        BorderPane borderPane = new BorderPane(expressionEditor.getContainer(), topMessageKey == null ? null : GUI.label(topMessageKey), null, null, null);
+        getDialogPane().setContent(borderPane);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");

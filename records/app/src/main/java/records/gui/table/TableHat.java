@@ -15,6 +15,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -103,7 +104,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s(" "),
                 editSourceLink(parent, filter),
                 StyledString.s(", keeping rows where: "),
-                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, newExp ->
+                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, "filter.header", newExp ->
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                         table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
             );
@@ -230,7 +231,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 editSourceLink(parent, check),
                 StyledString.s(" that "),
                 StyledString.s(type),
-                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSrcTableId()), check.getColumnLookup(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), check.getCheckType()), DataType.BOOLEAN, e -> 
+                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSrcTableId()), check.getColumnLookup(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), check.getCheckType()), DataType.BOOLEAN, "check.header", e -> 
                     parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSrcTableId(), check.getCheckType(), e), null)
                 )
             );
@@ -625,7 +626,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         });
     }
 
-    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
+    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String headerKey, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toStyledString().limit(60).withStyle(new Clickable() {
             @Override
@@ -634,7 +635,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, makeTypeState, expectedType).showAndWait().ifPresent(newExp -> {
+                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, makeTypeState, expectedType, headerKey).showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }

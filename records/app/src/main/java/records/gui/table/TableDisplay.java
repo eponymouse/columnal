@@ -986,7 +986,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             SummaryStatistics agg = (SummaryStatistics) table;
             return beforeColumn -> {
-                FXUtility.mouse(this).addColumnBefore_Agg(agg, beforeColumn, null);
+                FXUtility.mouse(this).addColumnBefore_Agg(agg, beforeColumn);
             };
         }
         return null;
@@ -1009,12 +1009,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
-    private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
+    private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn)
     {
         EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null, agg.getSplitBy());
-
-        if (topMessageKey != null)
-            dialog.addTopMessage(topMessageKey);
 
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
@@ -1154,7 +1151,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 filter.getFilterExpression(),
                 new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
                     () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
-                DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
+                DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
             {
                 
                     parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
@@ -1213,7 +1210,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
-    private StyledString fixExpressionLink(EditableExpression fixer)
+    private StyledString fixExpressionLink(EditableExpression fixer, @Nullable @LocalizableKey String headerKey)
     {
         return StyledString.styled("Edit expression", new Clickable() {
             @Override
@@ -1222,7 +1219,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType)
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType, headerKey)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->
@@ -1276,7 +1273,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 if (err instanceof ExpressionErrorException)
                 {
                     ExpressionErrorException eee = (ExpressionErrorException) err;
-                    message = StyledString.concat(message, StyledString.s("\n"), fixExpressionLink(eee.editableExpression));
+                    message = StyledString.concat(message, StyledString.s("\n"), fixExpressionLink(eee.editableExpression, null));
                 }
                 textFlowFinal.getChildren().setAll(message.toGUI());
                 containerFinal.applyCss();

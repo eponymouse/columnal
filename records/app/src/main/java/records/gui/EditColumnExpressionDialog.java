@@ -92,7 +92,8 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
 
         void pickColumn(TimedFocusable item, Pair<Table, ColumnId> column);
     }
-    
+
+    private final BorderPane mainContent;
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
     private final ColumnNameTextField nameField;
@@ -263,7 +264,8 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         Node sidePaneNode = sidePane.getSidePane();
         if (sidePaneNode != null)
             BorderPane.setMargin(sidePaneNode, new Insets(0, 10, 0, 0));
-        BorderPane borderPane = new BorderPane(content, null, null, null, sidePaneNode);
+        mainContent = new BorderPane(content);
+        BorderPane borderPane = new BorderPane(mainContent, null, null, null, sidePaneNode);
         borderPane.getStyleClass().add("edit-column-expression-root");
         getDialogPane().setContent(borderPane);
 
@@ -340,12 +342,8 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     {
         TextFlow display = GUI.textFlowKey(topMessage, "edit-column-top-message");
         display.setMaxWidth(9999.0);
-        Node oldContent = getDialogPane().getContent();
-        getDialogPane().setContent(GUI.borderTopCenter(
-            display,
-                oldContent
-        ));
-        BorderPane.setMargin(oldContent, new Insets(10, 0, 0, 0));
+        mainContent.setTop(display);
+        BorderPane.setMargin(mainContent.getCenter(), new Insets(10, 0, 0, 0));
     }
 
     @Override

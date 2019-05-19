@@ -324,6 +324,8 @@ public class AggregateSplitByPane extends BorderPane
 
     public static EditColumnExpressionDialog<ImmutableList<ColumnId>> editColumn(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, ImmutableList<ColumnId> initialSplitBy)
     {
-        return new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, expectedType, new EditColumnSidePane(srcTable, initialSplitBy, null));
+        EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, expectedType, new EditColumnSidePane(srcTable, initialSplitBy, null));
+        dialog.addTopMessage("aggregate.header");
+        return dialog;
     }
 }
