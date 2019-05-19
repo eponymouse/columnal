@@ -13,6 +13,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -78,10 +80,11 @@ public class AggregateSplitByPane extends BorderPane
             new LabelledGrid.Row(splitList.getNode())
         );
         setCenter(grid);
+        /*
         String splitFooter = (example == null || example.getSecond().size() < 2 ? "" : "\n\nFor example, if column " + example.getFirst().getRaw() + " is selected , there will be one result for rows with value " + example.getSecond().stream().map(AggregateSplitByPane::truncate).collect(Collectors.joining(", one for rows with value ")) + ", etc");
         if (!splitFooter.isEmpty())
-            setBottom(new Label(splitFooter));
-        
+            setBottom(new TextFlow(new Text(splitFooter)));
+        */
         FXUtility.addChangeListenerPlatformNN(toggleGroup.selectedToggleProperty(), toggle -> {
             if (Utility.indexOfRef(toggleGroup.getToggles(), toggle) == 0)
             {
