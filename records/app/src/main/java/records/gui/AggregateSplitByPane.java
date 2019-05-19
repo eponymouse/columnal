@@ -7,7 +7,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.Effect;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import log.Log;
@@ -38,7 +42,10 @@ import utility.Utility;
 import utility.gui.DoubleOKLightDialog.Validity;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
+import utility.gui.GUI;
 import utility.gui.Instruction;
+import utility.gui.LabelledGrid;
+import utility.gui.LabelledGrid.Row;
 import utility.gui.TimedFocusable;
 
 import java.util.Objects;
@@ -56,13 +63,40 @@ public class AggregateSplitByPane extends BorderPane
     public AggregateSplitByPane(@Nullable Table srcTable, ImmutableList<ColumnId> originalSplitBy, @Nullable Pair<ColumnId, ImmutableList<String>> example)
     {
         this.srcTable = srcTable;
-        String header = "Calculate each expression:";
-        Label label = new Label(header + "\n ");
+        getStyleClass().add("split-by-pane");
+        String header = "Calculate each expression\nonce per:";
+        Label label = new Label(header);
         setTop(label);
+        ToggleGroup toggleGroup = new ToggleGroup();
+        LabelledGrid.Row wholeTableRow = GUI.radioGridRow("agg.split.whole.table", "split-by/whole-table", toggleGroup);
+        LabelledGrid.Row splitByRow = GUI.radioGridRow("agg.split.columns", "split-by/by-columns", toggleGroup);
         this.splitList = new SplitList(originalSplitBy);
-        // TODO add radio buttons
-        setCenter(splitList.getNode());
+        splitList.getNode().setMinHeight(130.0);
+        LabelledGrid grid = new LabelledGrid(
+            wholeTableRow,
+            splitByRow,
+            new LabelledGrid.Row(splitList.getNode())
+        );
+        setCenter(grid);
         String splitFooter = (example == null || example.getSecond().size() < 2 ? "" : "\n\nFor example, if column " + example.getFirst().getRaw() + " is selected , there will be one result for rows with value " + example.getSecond().stream().map(AggregateSplitByPane::truncate).collect(Collectors.joining(", one for rows with value ")) + ", etc");
+        if (!splitFooter.isEmpty())
+            setBottom(new Label(splitFooter));
+        
+        FXUtility.addChangeListenerPlatformNN(toggleGroup.selectedToggleProperty(), toggle -> {
+            if (Utility.indexOfRef(toggleGroup.getToggles(), toggle) == 0)
+            {
+                splitList.getNode().setVisible(false);
+            }
+            else
+            {
+                splitList.getNode().setVisible(true);
+                if (splitList.getFields().isEmpty())
+                {
+                    splitList.addToEnd(null, true);
+                }
+            }
+        });
+        toggleGroup.selectToggle(toggleGroup.getToggles().get(originalSplitBy.isEmpty() ? 0 : 1));
     }
 
     private static String truncate(String orig)

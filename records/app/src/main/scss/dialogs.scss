@@ -196,6 +196,18 @@
     -fx-border-style: solid inside;
     -fx-border-color: grey(70%); 
 }
+.edit-column-expression-root .split-by-pane {
+    -fx-background-color: grey(50%), grey(85%);
+    -fx-background-insets: 0, 1;
+    -fx-padding: 6;
+    .scroll-pane-fill {
+        -fx-background-color: grey(85%);
+        -fx-background-insets: 0;
+        & > .viewport {
+            -fx-background-color: grey(85%);
+        }
+    }
+}
 
 /*
 .units-dialog-content {

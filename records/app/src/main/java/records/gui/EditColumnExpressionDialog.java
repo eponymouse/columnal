@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -16,6 +17,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
@@ -229,6 +231,16 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 if (button != null && becauseOfTab)
                     button.requestFocus();
             }
+
+            @Override
+            @SuppressWarnings("initialization") // Mainly because awkward to refer to our own type
+            protected Dimension2D getEditorDimension()
+            {
+                if (sidePane == null)
+                    return super.getEditorDimension();
+                else
+                    return new Dimension2D(300.0, 130.0);
+            }
         };
         curValue = expressionEditor.save();
         // Tab doesn't seem to work right by itself:
@@ -249,7 +261,11 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 "edit-column/column-expression", expressionEditor.getContainer()));
 
         Node sidePaneNode = sidePane.getSidePane();
-        getDialogPane().setContent(new BorderPane(content, null, null, null, sidePaneNode));
+        if (sidePaneNode != null)
+            BorderPane.setMargin(sidePaneNode, new Insets(0, 10, 0, 0));
+        BorderPane borderPane = new BorderPane(content, null, null, null, sidePaneNode);
+        borderPane.getStyleClass().add("edit-column-expression-root");
+        getDialogPane().setContent(borderPane);
 
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");

@@ -23,7 +23,7 @@ public class LabelledGrid extends GridPane
 {
     private int rows = 0;
 
-    public static class Row
+    public static final class Row
     {
         private final Node lhs;
         private final @Nullable HelpBox helpBox;

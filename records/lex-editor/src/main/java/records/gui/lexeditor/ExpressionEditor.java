@@ -78,7 +78,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     @Override
     protected Dimension2D getEditorDimension(@UnknownInitialization(Object.class) ExpressionEditor this)
     {
-        return new Dimension2D(500.0, 65.0);
+        return new Dimension2D(450.0, 65.0);
     }
 
     @OnThread(Tag.FXPlatform)
