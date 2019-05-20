@@ -2,13 +2,13 @@
 <dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="help.xsd"
         id="split-by" title="Aggregate Split By" >
-    <help id="whole-table" title="Whole Table">
+    <help id="whole-table" title="Whole table">
         <short>Calculates the Aggregate expression(s) once for the whole table.</short>
         <full>
             <p>This will produce one output row for the Aggregate transformation, which calculates each expression once, using the whole table.  For example, group count will be the length of the table.</p>
         </full>
     </help>
-    <help id="check-expression" title="Check Expression">
+    <help id="by-columns" title="Split by column values">
         <short>Calculates the Aggregate expression(s) multiple times, once for each unique combination of the chosen columns.</short>
         <full>
             <p>This will produce multiple output rows for the Aggregate transformation -- one for each unique combination of values in the chosen columns.  So if you have a column Animal with values like "Cat" and "Dog", and you split by Cat, you will calculate your expressions once for all Cat rows, and once for all Dog rows (and so on).  If you also split by a Size column (with values like "Small", "Large"), you'll get one output for Small Cat rows, one for Large Cat rows, one for Small Dog and so on.</p>
