@@ -16,7 +16,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,9 +31,20 @@ import records.error.UserException;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.SimpleCompletion;
 import records.gui.AutoComplete.WhitespacePolicy;
+import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
+import records.gui.recipe.ExpressionRecipe;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.function.FunctionList;
+import records.transformations.function.Max;
+import records.transformations.function.Min;
+import records.transformations.function.Sum;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -53,6 +66,7 @@ import utility.gui.TimedFocusable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -327,8 +341,44 @@ public class AggregateSplitByPane extends BorderPane
 
     public static EditColumnExpressionDialog<ImmutableList<ColumnId>> editColumn(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, ImmutableList<ColumnId> initialSplitBy)
     {
-        EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, expectedType, new EditColumnSidePane(srcTable, initialSplitBy, null));
+        ExpressionRecipe count = new ExpressionRecipe("expression.recipe.count") {
+            @Override
+            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            {
+                return new IdentExpression(TypeState.GROUP_COUNT);
+            }
+        };
+        ExpressionRecipe sum = columnRecipe("expression.recipe.sum", srcTable, DataType::isNumber, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, c));
+        ExpressionRecipe min = columnRecipe("expression.recipe.min", srcTable, dt -> true, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Min.NAME, c));
+        ExpressionRecipe max = columnRecipe("expression.recipe.max", srcTable, dt -> true, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Max.NAME, c));
+        
+        EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, ImmutableList.of(count, sum, min, max), expectedType, new EditColumnSidePane(srcTable, initialSplitBy, null));
         dialog.addTopMessage("aggregate.header");
         return dialog;
+    }
+    
+    private static ExpressionRecipe columnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Predicate<DataType> filterByType, Function<ColumnReference, Expression> makeExpression)
+    {
+        return new ExpressionRecipe(nameKey)
+        {
+            @Override
+            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            {
+                return new SelectColumnDialog(parentWindow, srcTable, columnPicker, (Column c) -> {
+                    try
+                    {
+                        return filterByType.test(c.getType().getType());
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        if (e instanceof InternalException)
+                            Log.log(e);
+                    }
+                    return true;
+                }).showAndWait()
+                    .map(c -> makeExpression.apply(new ColumnReference(null, c, ColumnReferenceType.CORRESPONDING_ROW)))
+                    .orElse(null);
+            }
+        };
     }
 }

@@ -14,6 +14,8 @@ import records.transformations.expression.function.ValueFunction;
 
 public class Max extends FunctionDefinition
 {
+    public static final String NAME = "maximum";
+    
     public Max() throws InternalException
     {
         super("comparison:maximum");

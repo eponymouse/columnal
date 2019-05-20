@@ -199,6 +199,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         });
     }
+    
+    public void setContent(String text)
+    {
+        this.content.replaceText(0, this.content.getText().length(), text);
+    }
 
     // Interface to access a singleton-per-editor error-displayer.
     // Lets us hide the other functionality from people using the class

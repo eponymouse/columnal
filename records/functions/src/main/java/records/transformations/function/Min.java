@@ -14,6 +14,8 @@ import records.transformations.expression.function.ValueFunction;
 
 public class Min extends FunctionDefinition
 {
+    public static final String NAME = "minimum";
+    
     public Min() throws InternalException
     {
         super("comparison:minimum");

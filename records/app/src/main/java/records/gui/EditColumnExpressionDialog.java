@@ -13,14 +13,20 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
+import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
+import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -31,6 +37,8 @@ import records.gui.AutoComplete.WhitespacePolicy;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.lexeditor.TopLevelEditor.Focus;
+import records.gui.recipe.ExpressionRecipe;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
@@ -97,9 +105,11 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
     private final ColumnNameTextField nameField;
+    private final @Nullable RecipeBar recipeBar;
     private final SidePane<T> sidePane;
+    private @Nullable SubPicker subPicker = null;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, SidePane<T> sidePane)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, ImmutableList<ExpressionRecipe> recipes, @Nullable DataType expectedType, SidePane<T> sidePane)
     {
         super(parent, new DialogPaneWithSideButtons());
         this.sidePane = sidePane;
@@ -167,7 +177,11 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             {
                 parent.enableColumnPickingMode(screenPos, tc -> {
                     @Nullable TimedFocusable item = getRecentlyFocused();
-                    if (expressionEditor == item)
+                    if (subPicker != null)
+                    {
+                        return subPicker.includeColumn.test(tc);
+                    }
+                    else if (expressionEditor == item)
                     {
                         return expEdIncludeColumn.test(tc);
                     }
@@ -193,7 +207,11 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 }, tc -> {
                     @Nullable TimedFocusable item = getRecentlyFocused();
                     
-                    if (item == expressionEditor)
+                    if (subPicker != null)
+                    {
+                        subPicker.onPick.consume(tc);
+                    }
+                    else if (item == expressionEditor)
                     {
                         expEdOnPick.consume(tc);
                     }
@@ -223,6 +241,9 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         };
         expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {
             curValue = e;
+            @Nullable RecipeBar recipeBar = Utility.later(this).recipeBar;
+            if (recipeBar != null)
+                recipeBar.update(e);
             notifyModified();
         }) {
             @Override
@@ -258,6 +279,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
 
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", nameField.getNode()));
         
+        if (!recipes.isEmpty())
+        {
+            recipeBar = new RecipeBar(recipes);
+            content.addRow(new LabelledGrid.Row(recipeBar));
+        }
+        else
+            recipeBar = null;
+        
         content.addRow(GUI.labelledGridRow("edit.column.expression",
                 "edit-column/column-expression", expressionEditor.getContainer()));
 
@@ -288,7 +317,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
 
     public static EditColumnExpressionDialog<UnitType> withoutSidePane(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
     {
-        return new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, expectedType, new SidePane<UnitType>()
+        return new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, ImmutableList.of(), expectedType, new SidePane<UnitType>()
         {
             @Override
             public @Nullable Node getSidePane()
@@ -388,6 +417,61 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(columnId.getRaw(), null);
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private final class RecipeBar extends FlowPane
+    {
+        public RecipeBar(ImmutableList<ExpressionRecipe> recipes)
+        {
+            for (ExpressionRecipe recipe : recipes)
+            {
+                getChildren().add(GUI.buttonLocal(recipe.getTitle(), () -> {
+                    @SuppressWarnings("nullness")
+                    @NonNull Window window = getScene().getWindow();
+                    Expression expression = recipe.makeExpression(window, makeColumnPicker());
+                    if (expression != null)
+                        expressionEditor.setContent(expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+                }));
+            }
+        }
+        
+        public void update(Expression curContent)
+        {
+            boolean empty = curContent.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY).trim().isEmpty();
+            setVisible(empty);
+        }
+        
+        private ColumnPicker makeColumnPicker()
+        {
+            return new ColumnPicker()
+            {
+                @Override
+                public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+                {
+                    // Column picking already enabled, just need to register ourselves:
+                    subPicker = new SubPicker(includeColumn, onPick);
+                }
+
+                @Override
+                public void disablePickingMode()
+                {
+                    subPicker = null;
+                }
+            };
+        }
+    }
+    
+    private static class SubPicker
+    {
+        private final Predicate<Pair<Table, ColumnId>> includeColumn;   
+        private final FXPlatformConsumer<Pair<Table, ColumnId>> onPick;
+
+        public SubPicker(Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+        {
+            this.includeColumn = includeColumn;
+            this.onPick = onPick;
         }
     }
 }

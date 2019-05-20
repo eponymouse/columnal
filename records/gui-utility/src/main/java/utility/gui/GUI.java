@@ -65,6 +65,14 @@ public class GUI
         return button;
     }
 
+    public static Button buttonLocal(@Localized String title, FXPlatformRunnable onAction, String... styleClasses)
+    {
+        Button button = new Button(title);
+        button.setOnAction(e -> onAction.run());
+        button.getStyleClass().addAll(styleClasses);
+        return button;
+    }
+
     /**
      * Makes a button which, when pressed, shows a context menu immediately beneath it.  If the menu is
      * already showing, hides it instead.
