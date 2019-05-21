@@ -615,7 +615,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             map(matchWordStart(stem, canonIndex, nestedLiteral.getFirst(), WordPosition.FIRST_WORD), c -> c.withReplacement(nestedLiteral.getFirst() + "}", StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
                     .withCaretPosAfterCompletion(nestedLiteral.getFirst().length())
                     .withFurtherDetailsURL("literal-" + nestedLiteral.getFirst().replace("{", "") + ".html")).forEach((k, v) -> {
-                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(v, CompletionType.NESTED_LITERAL)));
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(v, nestedLiteral.getFirst().equals("{") ? CompletionType.UNIT_LITERAL : CompletionType.NESTED_LITERAL)));
             });
         }
     }
@@ -1005,7 +1005,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     // Used for ordering, so the order here is significant
     private static enum CompletionType
     {
-        COLUMN, VARIABLE, FUNCTION, CONSTRUCTOR, NESTED_LITERAL, ENTIRE_COLUMN, KEYWORD_CHAIN, KEYWORD; 
+        COLUMN, VARIABLE, NESTED_LITERAL, FUNCTION, CONSTRUCTOR, UNIT_LITERAL, ENTIRE_COLUMN, KEYWORD_CHAIN, KEYWORD; 
     }
     
     private static enum CompletionStatus
