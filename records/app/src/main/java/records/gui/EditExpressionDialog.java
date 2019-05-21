@@ -34,7 +34,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String topMessageKey)
+    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, boolean selectAll, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String topMessageKey)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
@@ -55,7 +55,11 @@ public class EditExpressionDialog extends LightDialog<Expression>
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(() -> expressionEditor.focus(Focus.LEFT));
+            FXUtility.runAfter(() -> {
+                expressionEditor.focus(Focus.LEFT);
+                if (selectAll)
+                    expressionEditor.selectAll();
+            });
         });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }

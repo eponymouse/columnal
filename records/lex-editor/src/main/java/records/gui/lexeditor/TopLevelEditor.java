@@ -127,6 +127,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         display.setDisable(disabled);
     }
 
+    public void selectAll()
+    {
+        display.selectAll();
+    }
+
     public static enum Focus { LEFT, RIGHT };
 
     public void focus(Focus side)

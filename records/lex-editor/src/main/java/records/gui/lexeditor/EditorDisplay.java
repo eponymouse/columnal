@@ -346,7 +346,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @SuppressWarnings("units")
-    private void selectAll()
+    void selectAll()
     {
         content.positionCaret(0, true);
         content.positionCaret(content.getText().length(), false);

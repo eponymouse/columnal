@@ -1148,7 +1148,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Filter filter = (Filter)table;
             new EditExpressionDialog(parent, 
                 parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
-                filter.getFilterExpression(),
+                filter.getFilterExpression(), true,
                 new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
                     () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
                 DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
@@ -1219,7 +1219,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType, headerKey)
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, false, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType, headerKey)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->

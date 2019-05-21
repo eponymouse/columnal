@@ -633,7 +633,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditExpressionDialog(parent, srcTable, curExpression, columnLookup, makeTypeState, expectedType, headerKey).showAndWait().ifPresent(newExp -> {
+                    new EditExpressionDialog(parent, srcTable, curExpression, false, columnLookup, makeTypeState, expectedType, headerKey).showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }
