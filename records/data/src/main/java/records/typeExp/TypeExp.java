@@ -294,7 +294,7 @@ public abstract class TypeExp implements StyledShowable
             public TypeExp date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 @SuppressWarnings("identifier")
-                @ExpressionIdentifier String typeName = dateTimeInfo.getType().toString();
+                @ExpressionIdentifier String typeName = dataType.toString();
                 return new TypeCons(src, typeName, ALL_TYPE_CLASSES);
             }
 
