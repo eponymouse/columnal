@@ -19,8 +19,12 @@ public abstract class TransformationRecordSet extends RecordSet
         super(columns);
     }
 
-    public void buildColumn(SimulationFunctionInt<RecordSet, Column> makeColumn) throws InternalException
+    public void buildColumn(SimulationFunctionInt<RecordSet, Column> makeColumn) throws InternalException, UserException
     {
         columns.add(makeColumn.apply(this));
+        if (columns.stream().map(Column::getName).distinct().count() != columns.size())
+        {
+            throw new UserException("Duplicate column names found");
+        }
     }
 }

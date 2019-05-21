@@ -35,6 +35,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.SimulationFunctionInt;
 import utility.Utility;
 
 import java.io.File;
@@ -182,9 +183,8 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
             return;
         }
         
-        this.error = theError;
         this.splits = theSplits;
-        this.result = new TransformationRecordSet()
+        TransformationRecordSet theResult = new TransformationRecordSet()
         {
             @Override
             public boolean indexValid(int index) throws UserException
@@ -200,57 +200,69 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
             }
         };
 
-        
-        if (!splitBy.isEmpty())
+        try
         {
-            for (int i = 0; i < splitBy.size(); i++)
+            if (!splitBy.isEmpty())
             {
-                Column orig = theSplits.columns.get(i);
-                int splitColumnIndex = i;
-                result.buildColumn(rs -> new Column(rs, orig.getName())
+                for (int i = 0; i < splitBy.size(); i++)
                 {
-                    private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    Column orig = theSplits.columns.get(i);
+                    int splitColumnIndex = i;
+                    theResult.buildColumn(rs -> new Column(rs, orig.getName())
                     {
-                        return Utility.getI(Utility.getI(splits.valuesAndOccurrences,index).getFirst(), splitColumnIndex);
-                    }
+                        private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                        {
+                            return Utility.getI(Utility.getI(splits.valuesAndOccurrences, index).getFirst(), splitColumnIndex);
+                        }
 
-                    @Override
-                    public DataTypeValue getType() throws InternalException, UserException
-                    {
-                        return addManualEditSet(getName(), orig.getType().getType().fromCollapsed(this::getWithProgress));
-                    }
+                        @Override
+                        public DataTypeValue getType() throws InternalException, UserException
+                        {
+                            return addManualEditSet(getName(), orig.getType().getType().fromCollapsed(this::getWithProgress));
+                        }
 
-                    @Override
-                    public boolean isAltered()
-                    {
-                        return true;
-                    }
-                });
+                        @Override
+                        public boolean isAltered()
+                        {
+                            return true;
+                        }
+                    });
+                }
+            }
+
+            ColumnLookup columnLookup = new AggTableLookup(getManager());
+
+            // It's important that our splits and record set are initialised
+            // before trying to calculate these expressions:
+            for (Pair<ColumnId, Expression> e : summaries)
+            {
+                Expression expression = e.getSecond();
+                ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
+                SimulationFunctionInt<RecordSet, Column> column;
+                try
+                {
+                    @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
+                    @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
+                    if (type == null || concrete == null)
+                        throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
+                    @NonNull DataType typeFinal = concrete;
+                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr, errors, i)).value);
+                    
+                }
+                catch (UserException ex)
+                {
+                    column = rs -> new ErrorColumn(rs, getManager().getTypeManager(), e.getFirst(), ex.getStyledMessage());
+                }
+                theResult.buildColumn(column);
             }
         }
-        
-        ColumnLookup columnLookup = new AggTableLookup(getManager());
-            
-        // It's important that our splits and record set are initialised
-        // before trying to calculate these expressions:
-        for (Pair<ColumnId, Expression> e : summaries)
+        catch (UserException e)
         {
-            Expression expression = e.getSecond();
-            ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            try
-            {
-                @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
-                @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
-                if (type == null || concrete == null)
-                    throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
-                @NonNull DataType typeFinal = concrete;
-                result.buildColumn(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr, errors, i)).value));
-            }
-            catch (UserException ex)
-            {
-                result.buildColumn(rs -> new ErrorColumn(rs, getManager().getTypeManager(), e.getFirst(), ex.getStyledMessage()));
-            }
+            theError = e.getLocalizedMessage();
+            theResult = null;
         }
+        this.error = theError;
+        this.result = theResult;
     }
 
     private static EvaluateState makeEvaluateState(JoinedSplit splits, TableManager mgr, ErrorAndTypeRecorderStorer errors, int rowIndex) throws InternalException
