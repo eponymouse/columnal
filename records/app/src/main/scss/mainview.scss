@@ -118,7 +118,7 @@
 }
 
 
-.recipe-menu-item, .recipe-header-menu-item, .recipe-header-menu-item:disabled, .recipe-header-menu-item:disabled:focused {
+.recipe-menu-item, .recipe-header-menu-item, .recipe-header-menu-item:disabled, .recipe-header-menu-item:disabled:focused, .recipe-button {
     -fx-font-family: "Kalam";
     -fx-opacity: 1.0; /* Counter-act disabled state in default CSS */
     & .label {
@@ -141,4 +141,10 @@
     & .label {
         -fx-label-padding: 0 0 0 10px;
     }
+}
+.recipe-button {
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 5;
+    -fx-background-color: grey(50%), $recipe-background;
+    -fx-padding: 0 4 0 4;
 }

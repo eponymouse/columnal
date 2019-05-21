@@ -10,6 +10,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -282,7 +283,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         if (!recipes.isEmpty())
         {
             recipeBar = new RecipeBar(recipes);
-            content.addRow(new LabelledGrid.Row(recipeBar));
+            content.addRow(new LabelledGrid.Row(new Label(" "), null, recipeBar));
         }
         else
             recipeBar = null;
@@ -425,6 +426,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     {
         public RecipeBar(ImmutableList<ExpressionRecipe> recipes)
         {
+            setHgap(12);
             for (ExpressionRecipe recipe : recipes)
             {
                 getChildren().add(GUI.buttonLocal(recipe.getTitle(), () -> {
@@ -433,7 +435,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     Expression expression = recipe.makeExpression(window, makeColumnPicker());
                     if (expression != null)
                         expressionEditor.setContent(expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
-                }));
+                }, "recipe-button"));
             }
         }
         

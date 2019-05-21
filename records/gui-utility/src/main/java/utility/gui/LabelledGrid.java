@@ -66,11 +66,13 @@ public class LabelledGrid extends GridPane
     public int addRow(@UnknownInitialization(GridPane.class) LabelledGrid this, Row row)
     {
         int col = 0;
-        add(row.lhs, col++, rows);
+        add(row.lhs, col, rows);
+        col += 1;
         if (row.helpBox != null)
-            add(row.helpBox, col++, rows);
+            add(row.helpBox, col, rows);
+        col += 1;
         if (row.item != null)
-            add(row.item, col++, rows);
+            add(row.item, col, rows);
         return rows++;
     }
     
