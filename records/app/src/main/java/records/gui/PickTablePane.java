@@ -41,7 +41,7 @@ public class PickTablePane extends BorderPane
         setCenter(tableField);
         instruction = new Instruction("pick.table.instruction");
         instruction.showAboveWhenFocused(tableField);
-        setMargin(tableField, new Insets(0, 4, 4, 4));
+        setMargin(tableField, new Insets(4, 4, 4, 4));
         
         FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
             // Update whether focus is arriving or leaving:

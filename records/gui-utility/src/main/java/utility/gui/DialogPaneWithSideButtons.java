@@ -10,6 +10,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -121,11 +122,11 @@ public class DialogPaneWithSideButtons extends DialogPane
         
         double buttonBarWidth = buttonBar.prefWidth(h);
         double buttonBarHeight = buttonBar.minHeight(buttonBarWidth);
-        // We align button bar to the bottom, to get cancel to line up with text field
-        // Bit of a hack: we adjust for content's padding
-        double contentBottomPadding = getContent() instanceof Pane ? ((Pane)getContent()).snappedBottomInset() : 0;
-        buttonBar.resizeRelocate(leftPadding + w - buttonBarWidth, topPadding + h - buttonBarHeight - contentBottomPadding, buttonBarWidth, buttonBarHeight);
-        Optional.ofNullable(getContent()).ifPresent(c -> c.resizeRelocate(leftPadding, topPadding, w - buttonBarWidth, h));
+        // We align button bar to the bottom, to get lower button to line roughly with content
+        Node content = getContent();
+        buttonBar.resizeRelocate(leftPadding + w - buttonBarWidth, topPadding + h - buttonBarHeight, buttonBarWidth, buttonBarHeight);
+        if (content != null)
+            content.resizeRelocate(leftPadding, topPadding, w - buttonBarWidth, h);
     }
 
     @Override
