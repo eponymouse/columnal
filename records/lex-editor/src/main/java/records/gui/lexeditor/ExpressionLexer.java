@@ -9,6 +9,7 @@ import annotation.units.RawInputLocation;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,6 +52,7 @@ import utility.TranslationUtility;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -536,11 +538,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> directAndRelated = completions.build();
         ArrayList<LexCompletion> guides = new ArrayList<>();
-        matchWordStart(stem, canonIndex, "conversion", WordPosition.FIRST_WORD_NON_EMPTY).ifPresent(p -> {
-            guides.add(guideCompletion("Conversion", "conversion", p.getSecond().startPos, p.getSecond().lastShowPosIncl).withSideText("\u2248 conversion"));
+        matchWordStart(stem, canonIndex, "conversion", WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
+            guides.add(guideCompletion("Conversion", "conversion", v.startPos, v.lastShowPosIncl).withSideText("\u2248 conversion"));
         });
-        matchWordStart(stem, canonIndex, "units", WordPosition.FIRST_WORD_NON_EMPTY).ifPresent(p -> {
-            guides.add(guideCompletion("Units", "units", p.getSecond().startPos, p.getSecond().lastShowPosIncl).withSideText("\u2248 units"));
+        matchWordStart(stem, canonIndex, "units", WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
+            guides.add(guideCompletion("Units", "units", v.startPos, v.lastShowPosIncl).withSideText("\u2248 units"));
         });
         
         // Only add expression guide at positions where there are already completions:
@@ -610,12 +612,19 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals())
         {
-            matchWordStart(stem, canonIndex, nestedLiteral.getFirst(), WordPosition.FIRST_WORD).map(p -> p.mapSecond(c -> c.withReplacement(nestedLiteral.getFirst() + "}", StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
+            map(matchWordStart(stem, canonIndex, nestedLiteral.getFirst(), WordPosition.FIRST_WORD), c -> c.withReplacement(nestedLiteral.getFirst() + "}", StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
                     .withCaretPosAfterCompletion(nestedLiteral.getFirst().length())
-                    .withFurtherDetailsURL("literal-" + nestedLiteral.getFirst().replace("{", "") + ".html"))).ifPresent(c -> {
-                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(c.getSecond(), CompletionType.NESTED_LITERAL)));
+                    .withFurtherDetailsURL("literal-" + nestedLiteral.getFirst().replace("{", "") + ".html")).forEach((k, v) -> {
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(v, CompletionType.NESTED_LITERAL)));
             });
         }
+    }
+    
+    private static ImmutableMap<WordPosition, LexCompletion> map(ImmutableMap<WordPosition, LexCompletion> items, UnaryOperator<LexCompletion> withEach)
+    {
+        ImmutableMap.Builder<WordPosition, LexCompletion> r = ImmutableMap.builder();
+        items.forEach((k, v) -> r.put(k, withEach.apply(v)));
+        return r.build();
     }
 
     /**
@@ -628,8 +637,8 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         for (String bool : ImmutableList.of("true", "false"))
         {
-            matchWordStart(stem, canonIndex, bool, WordPosition.FIRST_WORD).ifPresent(p -> {
-                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(p.getSecond(), CompletionType.VARIABLE)));
+            matchWordStart(stem, canonIndex, bool, WordPosition.FIRST_WORD).forEach((k, v) -> {
+                identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(v, CompletionType.VARIABLE)));
             });
         }
         
@@ -637,7 +646,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             for (String availableVariable : makeTypeState.get().getAvailableVariables())
             {
-                matchWordStart(stem, canonIndex, availableVariable, WordPosition.FIRST_WORD, WordPosition.LATER_WORD).map(p -> p.mapSecond(c -> {
+                map(matchWordStart(stem, canonIndex, availableVariable, WordPosition.FIRST_WORD, WordPosition.LATER_WORD), c -> {
                     // Special cases for in-built variables with attached documentation:
                     if (availableVariable.equals(TypeState.GROUP_COUNT))
                     {
@@ -649,7 +658,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     }
                     else
                         return c;
-                })).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond(), CompletionType.VARIABLE))));
+                }).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v, CompletionType.VARIABLE))));
             }
         }
         catch (InternalException e)
@@ -670,17 +679,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
             {
-                matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).ifPresent(c -> identCompletions.add(new Pair<>(c.getFirst() == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(c.getSecond().withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
+                matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
             
             if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
             {
                 String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + ":") + availableColumn.getColumnId().getRaw();
                 ArrayList<Pair<CompletionStatus, LexCompletion>> colCompletions = new ArrayList<>();
-                matchWordStart(stem, canonIndex, "@entire " + withoutEntire, WordPosition.FIRST_WORD).map(c -> c.mapFirst(w -> CompletionStatus.DIRECT)).ifPresent(colCompletions::add);
+                matchWordStart(stem, canonIndex, "@entire " + withoutEntire, WordPosition.FIRST_WORD).values().forEach(c -> colCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
                 
                 // Add a related item if matches without the entire
-                matchWordStart(stem, canonIndex, withoutEntire, WordPosition.FIRST_WORD_NON_EMPTY).map(p -> p.map(w -> CompletionStatus.RELATED, c -> c.withReplacement("@entire " + withoutEntire))).ifPresent(colCompletions::add);
+                matchWordStart(stem, canonIndex, withoutEntire, WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> colCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@entire " + withoutEntire))));
 
                 for (Pair<CompletionStatus, LexCompletion> p : colCompletions)
                 {
@@ -721,22 +730,20 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             ArrayList<Pair<CompletionStatus, LexCompletion>> lexCompletions = new ArrayList<>(); 
                     
-            matchWordStart(stem, canonIndex, function.getName(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).map(p -> p.mapFirst(word -> word == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED)).ifPresent(lexCompletions::add);
+            matchWordStart(stem, canonIndex, function.getName(), WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> lexCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, v)));
 
             
             if (stem != null && stem.length() >= 2)
             {
                 for (String synonym : function.getSynonyms())
                 {
-                    Optional<Pair<CompletionStatus, LexCompletion>> lexCompletion;
-                    lexCompletion = matchWordStart(stem, canonIndex, synonym, WordPosition.FIRST_WORD_NON_EMPTY).map(c -> {
-                        return new Pair<>(CompletionStatus.RELATED, c.getSecond().withReplacement(function.getName()).withSideText("\u2248 " + synonym));
+                    boolean[] added = new boolean[] {false};
+                    matchWordStart(stem, canonIndex, synonym, WordPosition.FIRST_WORD_NON_EMPTY).values().forEach(c -> {
+                        lexCompletions.add(new Pair<>(CompletionStatus.RELATED, c.withReplacement(function.getName()).withSideText("\u2248 " + synonym)));
+                        added[0] = true;
                     });
-                    if (lexCompletion.isPresent())
-                    {
-                        lexCompletions.add(lexCompletion.get());
+                    if (added[0])
                         break;
-                    }
                 }
             }
 
@@ -1078,21 +1085,25 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param completionText The completion text to search for.
      * @return True, completion if at very start; False, completion if it maps a later word.
      */
-    private static Optional<Pair<WordPosition, LexCompletion>> matchWordStart(@Nullable Pair<String, Integer> src, @CanonicalLocation int startPos, String completionText, WordPosition... possiblePositions)
+    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(@Nullable Pair<String, Integer> src, @CanonicalLocation int startPos, String completionText, WordPosition... possiblePositions)
     {
         if (src == null)
-            return Optional.of(new Pair<>(WordPosition.FIRST_WORD, new LexCompletion(startPos, 0, completionText)));
+            return ImmutableMap.of(WordPosition.FIRST_WORD, new LexCompletion(startPos, 0, completionText));
 
         boolean firstWord = Arrays.asList(possiblePositions).contains(WordPosition.FIRST_WORD);
         boolean firstWordNonEmpty = Arrays.asList(possiblePositions).contains(WordPosition.FIRST_WORD_NON_EMPTY);
         boolean laterWord = Arrays.asList(possiblePositions).contains(WordPosition.LATER_WORD);
+        int prevCompletionLength = 0;
         int curCompletionStart = 0;
+        ImmutableMap.Builder<WordPosition, LexCompletion> r = ImmutableMap.builder();
         do
         {
             int len = Utility.longestCommonStartIgnoringCase(completionText, curCompletionStart, src.getFirst(), src.getSecond());
-            if (len > 0 || (firstWord && len == 0 && curCompletionStart == 0))
+            if ((firstWord && len == 0 && curCompletionStart == 0) || (len > 0 && len > prevCompletionLength))
             {
-                return Optional.of(new Pair<>(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(startPos, len, completionText) {
+                @SuppressWarnings("units")
+                @CanonicalLocation int adjStartPos = startPos + prevCompletionLength;
+                r.put(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(adjStartPos, len - (adjStartPos - startPos), completionText) {
                     @Override
                     public boolean showFor(@CanonicalLocation int caretPos)
                     {
@@ -1103,7 +1114,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         else
                             return super.showFor(caretPos);
                     }
-                }));
+                });
+                // No need to add related word again later:
+                if (curCompletionStart != 0)
+                    break;
+                else
+                    prevCompletionLength = len + 1;
             }
             curCompletionStart = completionText.indexOf(' ', curCompletionStart);
             // If not -1, it's one char past the space, otherwise leave as -1:
@@ -1112,11 +1128,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
         while (laterWord && curCompletionStart >= 0);
 
-        return Optional.empty();
+        return r.build();
     }
 
     // Helper for above that uses zero as the src start position
-    private static Optional<Pair<WordPosition, LexCompletion>> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText, WordPosition... possiblePositions)
+    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText, WordPosition... possiblePositions)
     {
         return matchWordStart(src == null ? null : new Pair<>(src, 0), startPos, completionText, possiblePositions);
     }
