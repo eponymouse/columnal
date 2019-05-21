@@ -130,9 +130,17 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                             {
                                 StandardFunction function = (StandardFunction) callTarget;
                                 ImmutableList<String> paramNames = function.getFunction().getParamNames();
-                                for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
+                                if (args.expressions.isEmpty())
                                 {
-                                    locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i));
+                                    // No params yet, need to add in the empty bit between brackers
+                                    locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0));
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
+                                    {
+                                        locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i));
+                                    }
                                 }
                             }
                             

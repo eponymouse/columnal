@@ -158,7 +158,7 @@ public class EditorLocationAndErrorRecorder
     private final IdentityHashMap<UnitExpression, CanonicalSpan> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<TypeExpression, CanonicalSpan> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
-    private final IdentityHashMap<Expression, StyledString> entryPrompts = new IdentityHashMap<>();
+    private final ArrayList<Pair<CanonicalSpan, StyledString>> entryPrompts = new ArrayList<>();
     private final IdentityHashMap<Expression, StyledString> information = new IdentityHashMap<>();
 
     private static interface UnresolvedErrorDetails
@@ -444,13 +444,15 @@ public class EditorLocationAndErrorRecorder
         {
             if (expLocation.getValue().touches(canonIndex))
             {
-                StyledString prompt = entryPrompts.get(expLocation.getKey());
-                if (prompt != null)
-                    relevantPrompts.add(new Pair<>(prompt, expLocation.getValue()));
                 StyledString info = information.get(expLocation.getKey());
                 if (info != null)
                     relevantInformation.add(new Pair<>(info, expLocation.getValue()));
             }
+        }
+        for (Pair<CanonicalSpan, StyledString> entryPrompt : entryPrompts)
+        {
+            if (entryPrompt.getFirst().touches(canonIndex))
+                relevantPrompts.add(new Pair<>(entryPrompt.getSecond(), entryPrompt.getFirst()));
         }
 
         Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantPrompts, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
@@ -472,6 +474,13 @@ public class EditorLocationAndErrorRecorder
 
     public void recordEntryPrompt(@Recorded Expression expression, StyledString prompt)
     {
-        entryPrompts.put(expression, prompt);
+        CanonicalSpan canonicalSpan = expressionDisplayers.get(expression);
+        if (canonicalSpan != null)
+            entryPrompts.add(new Pair<>(canonicalSpan, prompt));
+    }
+
+    public void recordEntryPrompt(CanonicalSpan canonicalSpan, StyledString prompt)
+    {
+        entryPrompts.add(new Pair<>(canonicalSpan, prompt));
     }
 }
