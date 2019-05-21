@@ -382,6 +382,8 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 }
             });
         }
+        // Hide for now, will redisplay if user moves caret or types:
+        autoComplete.hide();
     }
 
     private void render(boolean contentChanged)
