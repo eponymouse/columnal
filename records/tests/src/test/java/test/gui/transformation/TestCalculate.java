@@ -159,7 +159,8 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         }
         else
         {
-            // Use autocomplete
+            // Use autocomplete, but need to write one char for it to show up:
+            write(columnNameToReplace.substring(0, 1));
             autoComplete(columnNameToReplace, true);
         }
         
