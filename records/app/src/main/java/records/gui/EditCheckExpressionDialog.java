@@ -23,6 +23,7 @@ import utility.Either;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
@@ -30,10 +31,11 @@ import utility.gui.LightDialog;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
-public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expression>>
+public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckType, Expression>>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
+    private final ComboBox<CheckType> combo;
 
     public EditCheckExpressionDialog(View parent, @Nullable Table srcTable, CheckType initialCheckType, @Nullable Expression initialExpression, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
     {
@@ -41,7 +43,7 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         setResizable(true);
         initModality(Modality.NONE);
 
-        ComboBox<CheckType> combo = new ComboBox<>();
+        combo = new ComboBox<>();
         combo.getStyleClass().add("check-type-combo");
         combo.getItems().setAll(CheckType.values());
         combo.getSelectionModel().select(initialCheckType);
@@ -86,13 +88,6 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
         FXUtility.preventCloseOnEscape(getDialogPane());
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
-        setResultConverter(bt -> {
-            @Nullable CheckType checkType = combo.getSelectionModel().getSelectedItem();
-            if (bt == ButtonType.OK && checkType != null)
-                return new Pair<>(checkType, curValue);
-            else
-                return null;
-        });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
             FXUtility.runAfter(() -> expressionEditor.focus(Focus.LEFT));
@@ -103,4 +98,30 @@ public class EditCheckExpressionDialog extends LightDialog<Pair<CheckType, Expre
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 
+    @Override
+    protected void showAllErrors()
+    {
+        expressionEditor.showAllErrors();
+    }
+
+    @Override
+    protected Validity checkValidity()
+    {
+        if (combo.getSelectionModel().getSelectedItem() == null)
+            return Validity.IMPOSSIBLE_TO_SAVE;
+        else if (expressionEditor.hasErrors())
+            return Validity.ERROR_BUT_CAN_SAVE;
+        else
+            return Validity.NO_ERRORS;
+    }
+
+    @Override
+    protected @Nullable Pair<CheckType, Expression> calculateResult()
+    {
+        @Nullable CheckType checkType = combo.getSelectionModel().getSelectedItem();
+        if (checkType != null)
+            return new Pair<>(checkType, curValue);
+        else
+            return null;
+    }
 }

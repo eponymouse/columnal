@@ -19,6 +19,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplierInt;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
@@ -29,7 +30,7 @@ import java.util.Optional;
  * Edit an expression by itself, used primarily for filter.
  */
 @OnThread(Tag.FXPlatform)
-public class EditExpressionDialog extends LightDialog<Expression>
+public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
@@ -49,7 +50,6 @@ public class EditExpressionDialog extends LightDialog<Expression>
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
-        setResultConverter(bt -> bt == ButtonType.OK ? curValue : null);
         setOnHiding(e -> {
             expressionEditor.cleanup();
         });
@@ -67,5 +67,26 @@ public class EditExpressionDialog extends LightDialog<Expression>
     public Optional<Expression> showAndWaitCentredOn(Point2D mouseScreenPos)
     {
         return super.showAndWaitCentredOn(mouseScreenPos, 400, 200);
+    }
+
+    @Override
+    protected void showAllErrors()
+    {
+        expressionEditor.showAllErrors();
+    }
+
+    @Override
+    protected Validity checkValidity()
+    {
+        if (expressionEditor.hasErrors())
+            return Validity.ERROR_BUT_CAN_SAVE;
+        else
+            return Validity.NO_ERRORS;
+    }
+
+    @Override
+    protected @Nullable Expression calculateResult()
+    {
+        return curValue;
     }
 }
