@@ -45,8 +45,8 @@ import records.gui.grid.VirtualGrid;
 import records.gui.table.HeadedDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
+import records.transformations.Aggregate;
 import records.transformations.Check.CheckType;
-import records.transformations.SummaryStatistics;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -244,7 +244,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             TestUtil.sleep(3000);
 
             // Should be one column at the moment, with the distinct split values, and maybe the first calculation:
-            SummaryStatistics aggTable = (SummaryStatistics) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
+            Aggregate aggTable = (Aggregate) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
             assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
             @ExpressionIdentifier String aggId = aggTable.getId().getRaw();
             ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);

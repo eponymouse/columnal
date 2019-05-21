@@ -51,7 +51,7 @@ import java.util.stream.Stream;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class SummaryStatistics extends Transformation implements SingleSourceTransformation
+public class Aggregate extends Transformation implements SingleSourceTransformation
 {
     public static final String NAME = "aggregate";
     private final @Nullable Table src;
@@ -141,7 +141,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         */
     }
 
-    public SummaryStatistics(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
+    public Aggregate(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
@@ -387,7 +387,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
 
 
     //@OnThread(Tag.FXPlatform)
-    //public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
+    //public static void withGUICreate(RecordSet src, FXPlatformConsumer<Aggregate> andThen) throws InternalException, UserException
     //{
 //        Map<String, Set<SummaryType>> summaries = new HashMap<>();
 //        for (Column c : src.getColumns())
@@ -398,7 +398,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
 //
 //        Workers.onWorkerThread("Create summary statistics", () -> {
 //            Utility.alertOnError(() -> {
-//                SummaryStatistics ss = new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
+//                Aggregate ss = new Aggregate(src, summaries, Collections.singletonList("Mistake"));
 //                Platform.runLater(() -> andThen.consume(ss));
 //                return (Void)null;
 //            });
@@ -434,7 +434,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         @Override
         public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new SummaryStatistics(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
+            return new Aggregate(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
         }
 
         @Override
@@ -451,7 +451,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
             }
             @SuppressWarnings("identifier")
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
-            return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
+            return new Aggregate(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
         }
     }
 
@@ -483,7 +483,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new SummaryStatistics(getManager(), getDetailsForCopy(), newSrcTableId, summaries, splitBy);
+        return new Aggregate(getManager(), getDetailsForCopy(), newSrcTableId, summaries, splitBy);
     }
 
     @Override
@@ -817,7 +817,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        SummaryStatistics that = (SummaryStatistics) o;
+        Aggregate that = (Aggregate) o;
 
         if (!srcTableId.equals(that.srcTableId)) return false;
         if (!summaries.equals(that.summaries)) return false;
@@ -839,7 +839,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
     @Override
     public boolean transformationEquals(Transformation o)
     {
-        SummaryStatistics that = (SummaryStatistics) o;
+        Aggregate that = (Aggregate) o;
 
         if (!srcTableId.equals(that.srcTableId)) return false;
         if (!summaries.equals(that.summaries)) return false;
@@ -877,7 +877,7 @@ public class SummaryStatistics extends Transformation implements SingleSourceTra
 
             try
             {
-                Table table = tableId == null || tableId.equals(getId()) ? SummaryStatistics.this : tableManager.getSingleTableOrNull(tableId);
+                Table table = tableId == null || tableId.equals(getId()) ? Aggregate.this : tableManager.getSingleTableOrNull(tableId);
                 if (table == null)
                     return null;
                 Column column = table.getData().getColumnOrNull(columnId);

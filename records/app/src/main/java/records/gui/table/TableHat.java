@@ -46,6 +46,7 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.table.TableHat.TableHatDisplay;
+import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.Check;
 import records.transformations.Concatenate;
@@ -54,7 +55,6 @@ import records.transformations.HideColumns;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
-import records.transformations.SummaryStatistics;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
@@ -67,7 +67,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformSupplierInt;
-import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
@@ -77,7 +76,6 @@ import utility.gui.FXUtility;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,9 +133,9 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 sourceText
             );
         }
-        else if (table instanceof SummaryStatistics)
+        else if (table instanceof Aggregate)
         {
-            SummaryStatistics aggregate = (SummaryStatistics)table;
+            Aggregate aggregate = (Aggregate)table;
             StyledString.Builder builder = new StyledString.Builder();
             builder.append(collapsedContent = StyledString.s("Aggregate"));
             builder.append(" ");

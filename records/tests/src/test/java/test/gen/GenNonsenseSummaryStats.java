@@ -9,7 +9,7 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.SummaryStatistics;
+import records.transformations.Aggregate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -23,7 +23,6 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by neil on 16/11/2016.
@@ -47,7 +46,7 @@ public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
             DummyManager mgr = new DummyManager();
             List<Pair<ColumnId, Expression>> summaries = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
                 new CallExpression(FunctionList.getFunctionLookup(mgr.getUnitManager()),"count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness), ColumnReferenceType.WHOLE_COLUMN))));
-            return new Transformation_Mgr(mgr, new SummaryStatistics(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
+            return new Transformation_Mgr(mgr, new Aggregate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
         }
         catch (InternalException | UserException e)
         {

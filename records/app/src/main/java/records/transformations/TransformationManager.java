@@ -22,7 +22,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,7 @@ public class TransformationManager implements TransformationLoader
         // but is otherwise unimportant.
         return ImmutableList.of(
             new Calculate.Info(),
-            new SummaryStatistics.Info(),
+            new Aggregate.Info(),
             new Filter.Info(),
             new Sort.Info(),
             new Check.Info(),

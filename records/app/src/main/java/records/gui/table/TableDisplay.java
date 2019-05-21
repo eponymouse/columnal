@@ -68,13 +68,13 @@ import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
+import records.transformations.Aggregate;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.SummaryStatistics;
 import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -887,15 +887,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 })::makeMenuItem);
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
-                    return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
-                return new SummaryStatistics(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
+                return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
             })::makeMenuItem);
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
                 return new Sort(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
@@ -934,15 +934,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         TransformationEdits.editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
-                else if (table instanceof SummaryStatistics)
+                else if (table instanceof Aggregate)
                 {
-                    SummaryStatistics summaryStatistics = (SummaryStatistics) table;
-                    for (Pair<ColumnId, Expression> columnExpression : summaryStatistics.getColumnExpressions())
+                    Aggregate aggregate = (Aggregate) table;
+                    for (Pair<ColumnId, Expression> columnExpression : aggregate.getColumnExpressions())
                     {
                         if (columnExpression.getFirst().equals(c))
                         {
                             return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
-                                TransformationEdits.editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, summaryStatistics, c);
+                                TransformationEdits.editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, aggregate, c);
                             });
                         }
                     }
@@ -982,9 +982,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 addColumnBefore_Calc(FXUtility.mouse(this).parent, calc, beforeColumn, null);
             };
         }
-        else if (table instanceof SummaryStatistics)
+        else if (table instanceof Aggregate)
         {
-            SummaryStatistics agg = (SummaryStatistics) table;
+            Aggregate agg = (Aggregate) table;
             return beforeColumn -> {
                 FXUtility.mouse(this).addColumnBefore_Agg(agg, beforeColumn);
             };
@@ -1009,14 +1009,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
     }
 
-    private void addColumnBefore_Agg(SummaryStatistics agg, @Nullable ColumnId beforeColumn)
+    private void addColumnBefore_Agg(Aggregate agg, @Nullable ColumnId beforeColumn)
     {
-        EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null, agg.getSplitBy());
+        EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, agg.getSplitBy());
 
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                     FXUtility.alertOnError_("Error adding column", () -> {
-                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(),
+                        parent.getManager().edit(agg.getId(), () -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(),
                                 agg.getSrcTableId(), Utility.appendToList(agg.getColumnExpressions(), new Pair<>(p.columnId, p.expression)), p.extra), null);
                     })
             );
@@ -1158,17 +1158,17 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null);
             })));    
         }
-        else if (table instanceof SummaryStatistics)
+        else if (table instanceof Aggregate)
         {
-            SummaryStatistics aggregate = (SummaryStatistics)table;
-            Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
+            Aggregate aggregate = (Aggregate)table;
+            Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
             if (result.isPresent())
             {
                 Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
                     try
                     {
-                        parent.getManager().<SummaryStatistics>edit(aggregate.getId(), () -> {
-                            return new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
+                        parent.getManager().<Aggregate>edit(aggregate.getId(), () -> {
+                            return new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
                         }, null);
                     }
                     catch (InternalException e)

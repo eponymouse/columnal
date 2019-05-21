@@ -26,8 +26,8 @@ import records.gui.EditAggregateSplitByDialog;
 import records.gui.EditColumnExpressionDialog;
 import records.gui.EditImmediateColumnDialog;
 import records.gui.View;
+import records.transformations.Aggregate;
 import records.transformations.Calculate;
-import records.transformations.SummaryStatistics;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
@@ -71,7 +71,7 @@ public class TransformationEdits
     }
 
     @OnThread(Tag.FXPlatform)
-    static void editAggregateSplitBy(View parent, SummaryStatistics aggregate)
+    static void editAggregateSplitBy(View parent, Aggregate aggregate)
     {
         CompletableFuture<Optional<Pair<ColumnId, ImmutableList<String>>>> exampleSplitColumn = new CompletableFuture<>();
         new Thread(() -> {
@@ -102,7 +102,7 @@ public class TransformationEdits
             final @Nullable Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
             FXUtility.runAfter(() -> {
                 new EditAggregateSplitByDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), exampleFinal, aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new SummaryStatistics(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
+                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
                 }));
             });
         }).start();
@@ -156,14 +156,14 @@ public class TransformationEdits
     }
 
     @OnThread(Tag.FXPlatform)
-    static void editColumn_Agg(View parent, SummaryStatistics agg, ColumnId columnId) throws InternalException, UserException
+    static void editColumn_Agg(View parent, Aggregate agg, ColumnId columnId) throws InternalException, UserException
     {
         // Start with the existing value.
         ImmutableList<Pair<ColumnId, Expression>> oldColumns = agg.getColumnExpressions();
         Expression expression = Utility.pairListToMap(oldColumns).get(columnId);
         if (expression != null)
         {
-            AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> SummaryStatistics.makeTypeState(parent.getManager()), null, agg.getSplitBy()).showAndWait().ifPresent(newDetails -> {
+            AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), columnId, expression, _ed -> agg.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, agg.getSplitBy()).showAndWait().ifPresent(newDetails -> {
                 ImmutableList.Builder<Pair<ColumnId, Expression>> newColumns = ImmutableList.builderWithExpectedSize(oldColumns.size() + 1);
                 boolean added = false;
                 for (Pair<ColumnId, Expression> oldColumn : oldColumns)
@@ -179,7 +179,7 @@ public class TransformationEdits
                 }
                 Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                     FXUtility.alertOnError_("Error saving column", () ->
-                        parent.getManager().edit(agg.getId(), () -> new SummaryStatistics(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), newDetails.extra), null)
+                        parent.getManager().edit(agg.getId(), () -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), newDetails.extra), null)
                     );
                 });
             });
