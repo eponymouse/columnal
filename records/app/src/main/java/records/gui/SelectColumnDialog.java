@@ -28,6 +28,8 @@ import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
+import utility.gui.Instruction;
 
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -44,6 +46,9 @@ public class SelectColumnDialog extends ErrorableLightDialog<ColumnId>
         super(d -> parent, true);
         initOwner(parent);
         initModality(Modality.NONE);
+        FXUtility.onceNotNull(columnField.sceneProperty(), sc -> {
+            FXUtility.runAfter(() -> columnField.requestFocus());
+        });
 
         BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
         autoComplete = new AutoComplete<ColumnCompletion>(columnField,
@@ -63,9 +68,9 @@ public class SelectColumnDialog extends ErrorableLightDialog<ColumnId>
             // Update whether focus is arriving or leaving:
             lastEditTimeMillis = System.currentTimeMillis();
         });
-        Label label = new Label("Type column name or click on column");
-        label.visibleProperty().bind(columnField.focusedProperty());
-        getDialogPane().setContent(new BorderPane(columnField, label, null, null, null));
+        Instruction instruction = new Instruction("pick.column.instruction");
+        instruction.showAboveWhenFocused(columnField);
+        getDialogPane().setContent(new BorderPane(columnField));
         setOnShown(e -> {
             columnPicker.enableColumnPickingMode(null, p -> p.getFirst() == srcTable, p -> {
                 columnField.setText(p.getSecond().getRaw());
