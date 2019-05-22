@@ -186,7 +186,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             afterClick.run();
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
-            assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
+            assertTrue("Popup still showing: " + errorPopup, isShowingErrorPopup());
             TestUtil.doubleOk(this);
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
@@ -210,6 +210,12 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
         {
             throw t;
         }
+    }
+
+    private boolean isShowingErrorPopup()
+    {
+        // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
+        return lookup(".expression-info-popup.error").tryQuery().isPresent();
     }
 
     private String textFlowToString(Node n)

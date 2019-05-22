@@ -302,7 +302,8 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
 
     private boolean isShowingErrorPopup()
     {
-        return lookup(".expression-info-popup").tryQuery().isPresent();
+        // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
+        return lookup(".expression-info-popup.error").tryQuery().isPresent();
     }
     
     private static class Error
