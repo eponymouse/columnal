@@ -125,14 +125,13 @@ public class TypeCons extends TypeExp
                     return ret;
                 return Either.right(DataType.function(arg.getRight("Impossible"), ret.getRight("Impossible")));
             default:
-                try
+                for (DateTimeType dtt : DateTimeType.values())
                 {
-                    return Either.right(DataType.date(new DateTimeInfo(DateTimeType.valueOf(name))));
+                    DataType dataType = DataType.date(new DateTimeInfo(dtt));
+                    if (dataType.toString().equals(name))
+                        return Either.right(dataType);
                 }
-                catch (IllegalArgumentException e) // Thrown by valueOf()
-                {
-                    // Not a date type, continue...
-                }
+                // Not a date type, continue...
                 Either<TypeConcretisationError, ImmutableList<Either<Unit, DataType>>> errOrOperandsAsTypes = Either.<TypeConcretisationError, Either<Unit, DataType>, Either<UnitExp, TypeExp>>mapMEx(operands, o -> {
                     // So, the outer either here is for units versus types, but the return type is either error or either-unit-or-type.
                     return o.eitherEx(u -> {
