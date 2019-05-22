@@ -21,6 +21,7 @@ import records.error.UserException;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.SimpleCompletion;
 import records.gui.AutoComplete.WhitespacePolicy;
+import records.gui.SelectColumnDialog.SelectInfo;
 import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.recipe.ExpressionRecipe;
 import records.transformations.expression.CallExpression;
@@ -36,6 +37,8 @@ import records.transformations.function.comparison.Max;
 import records.transformations.function.comparison.MaxIndex;
 import records.transformations.function.comparison.Min;
 import records.transformations.function.Sum;
+import records.transformations.function.comparison.MinIndex;
+import records.transformations.function.list.GetElement;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
@@ -53,6 +56,7 @@ import utility.gui.TimedFocusable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -335,26 +339,41 @@ public class AggregateSplitByPane extends BorderPane
                 return new IdentExpression(TypeState.GROUP_COUNT);
             }
         };
-        ExpressionRecipe sum = columnRecipe("expression.recipe.sum", srcTable, DataType::isNumber, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, c));
-        ExpressionRecipe min = columnRecipe("expression.recipe.min", srcTable, dt -> true, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Min.NAME, c));
-        ExpressionRecipe max = columnRecipe("expression.recipe.max", srcTable, dt -> true, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Max.NAME, c));
+        ExpressionRecipe sum = numberColumnRecipe("expression.recipe.sum", srcTable, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, c));
+        ExpressionRecipe min = dualColumnRecipe("expression.recipe.min", srcTable, directOrByIndex(parent, Min.NAME, MinIndex.NAME));
+        ExpressionRecipe max = dualColumnRecipe("expression.recipe.max", srcTable, directOrByIndex(parent, Max.NAME, MaxIndex.NAME));
         
         EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, ImmutableList.of(count, sum, min, max), expectedType, new EditColumnSidePane(srcTable, initialSplitBy, null));
         dialog.addTopMessage("aggregate.header");
         return dialog;
     }
-    
-    private static ExpressionRecipe columnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Predicate<DataType> filterByType, Function<ColumnReference, Expression> makeExpression)
+
+    private static BiFunction<ColumnReference, ColumnReference, Expression> directOrByIndex(View parent, String directFunctionName, String getIndexFunctionName)
+    {
+        return (main, show) -> {
+            FunctionLookup functionLookup = FunctionList.getFunctionLookup(parent.getManager().getUnitManager());
+            if (main.equals(show))
+            {
+                return new CallExpression(functionLookup, directFunctionName, main);
+            }
+            else
+            {
+                return new CallExpression(functionLookup, GetElement.NAME, show, new CallExpression(functionLookup, getIndexFunctionName, main));
+            }
+        };
+    }
+
+    private static ExpressionRecipe numberColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Function<ColumnReference, Expression> makeExpression)
     {
         return new ExpressionRecipe(nameKey)
         {
             @Override
             public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
-                return new SelectColumnDialog(parentWindow, srcTable, columnPicker, (Column c) -> {
+                return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(new SelectInfo("agg.recipe.pick.calc", (Column c) -> {
                     try
                     {
-                        return filterByType.test(c.getType().getType());
+                        return c.getType().getType().isNumber();
                     }
                     catch (InternalException | UserException e)
                     {
@@ -362,8 +381,26 @@ public class AggregateSplitByPane extends BorderPane
                             Log.log(e);
                     }
                     return true;
-                }).showAndWait()
-                    .map(c -> makeExpression.apply(new ColumnReference(null, c, ColumnReferenceType.CORRESPONDING_ROW)))
+                }))).showAndWait()
+                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0), ColumnReferenceType.CORRESPONDING_ROW)))
+                    .orElse(null);
+            }
+        };
+    }
+
+    private static ExpressionRecipe dualColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, BiFunction<ColumnReference, ColumnReference, Expression> makeExpression)
+    {
+        return new ExpressionRecipe(nameKey)
+        {
+            @Override
+            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            {
+                return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(
+                        new SelectInfo("agg.recipe.pick.calc", "agg-recipe/calc-column", t -> true, false),
+                        new SelectInfo("agg.recipe.pick.result", "agg-recipe/result-column", t -> true, true)
+                    )
+                ).showAndWait()
+                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0), ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(null, c.get(1), ColumnReferenceType.CORRESPONDING_ROW)))
                     .orElse(null);
             }
         };

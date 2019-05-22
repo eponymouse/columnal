@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="agg-recipe" title="Aggregate Min/Mac Recipe" >
+    <help id="calc-column" title="Column to compare">
+        <short>This is the column used to compare to find the lowest/highest value.</short>
+        <full>
+            <p></p>
+        </full>
+    </help>
+    <help id="result-column" title="Result column">
+        <short>This is the column that will actually be used as the result.  You can pick a different comparison and result column, for example if you want to compare prices for the lowest (price is the comparison column) but show the name of the lowest priced item (name is the result column).</short>
+        <full>
+            <p>If you want the lowest/highest value to be the result, use the same column for the calculation column and result column.</p>
+        </full>
+    </help>
+</dialog>

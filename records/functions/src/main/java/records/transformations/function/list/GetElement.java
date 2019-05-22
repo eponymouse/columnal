@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
  */
 public class GetElement extends FunctionDefinition
 {
+    public static final String NAME = "element";
+    
     // Takes parameters: column/array, index
     public GetElement() throws InternalException
     {
