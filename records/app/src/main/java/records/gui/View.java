@@ -23,6 +23,7 @@ import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -282,6 +283,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             if (e.getButton() == MouseButton.PRIMARY && picked[0] != null)
                 onPick.consume(picked[0]);
         });
+        pickPaneMouseFinal.addEventFilter(ScrollEvent.ANY, scrollEvent -> {
+            getGrid().getScrollGroup().requestScroll(scrollEvent);
+            scrollEvent.consume();
+        });
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
         mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
@@ -322,6 +327,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         pickPaneMouseFinal.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY && picked.pick != null)
                 onPick.consume(picked.pick);
+        });
+        pickPaneMouseFinal.addEventFilter(ScrollEvent.ANY, scrollEvent -> {
+            getGrid().getScrollGroup().requestScroll(scrollEvent);
+            scrollEvent.consume();
         });
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
