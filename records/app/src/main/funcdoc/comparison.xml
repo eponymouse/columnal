@@ -88,4 +88,81 @@
             <output>error</output>
         </example>
     </function>
+
+    <function name="minimum index">
+        <typeArg>t</typeArg>
+        <typeConstraint>Comparable t</typeConstraint>
+        <argType name="items">[@typevar t]</argType>
+        <returnType name="index of lowest">Number</returnType>
+        <description>
+            <p>Gets the index of the lowest item in the list (where the first item is index 1, the second is index 2 and so on).</p>
+            <p>Lowest is determined in the same way as <link operator="&lt;"/> -- see the documentation for more details.</p>
+        </description>
+        <seeAlso>
+            <link namespace="comparison" function="minimum"/>
+            <link namespace="comparison" function="maximum index"/>
+        </seeAlso>
+        <equivalence display="false">
+            <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
+            <forany name="x">[@typevar t]</forany>
+            <lhs>1 &lt;= @call @function minimum index(x) &lt;= @call @function list length(x)</lhs>
+            <rhs>true</rhs>
+        </equivalence>
+        <equivalence display="true">
+            <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
+            <forany name="x">[@typevar t]</forany>
+            <lhs>@call @function element(x, @call @function minimum index(x))</lhs>
+            <rhs>@call @function minimum(x)</rhs>
+        </equivalence>
+        <example>
+            <inputArg>[54, 82, -7]</inputArg>
+            <output>3</output>
+        </example>
+        <example>
+            <inputArg>["cat", "aardvark", "bear"]</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>[]</inputArg>
+            <output>error</output>
+        </example>
+    </function>
+    <function name="maximum index">
+        <typeArg>t</typeArg>
+        <typeConstraint>Comparable t</typeConstraint>
+        <argType name="items">[@typevar t]</argType>
+        <returnType name="index of highest">Number</returnType>
+        <description>
+            <p>Gets the index of the highest item in the list (where the first item is index 1, the second is index 2 and so on).</p>
+            <p>Highest is determined in the same way as <link operator="&lt;"/> -- see the documentation for more details.</p>
+        </description>
+        <seeAlso>
+            <link namespace="comparison" function="maximum"/>
+            <link namespace="comparison" function="minimum index"/>
+        </seeAlso>
+        <equivalence display="false">
+            <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
+            <forany name="x">[@typevar t]</forany>
+            <lhs>1 &lt;= @call @function maximum index(x) &lt;= @call @function list length(x)</lhs>
+            <rhs>true</rhs>
+        </equivalence>
+        <equivalence display="true">
+            <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
+            <forany name="x">[@typevar t]</forany>
+            <lhs>@call @function element(x, @call @function maximum index(x))</lhs>
+            <rhs>@call @function maximum(x)</rhs>
+        </equivalence>
+        <example>
+            <inputArg>[54, 82, -7]</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>["cat", "aardvark", "bear"]</inputArg>
+            <output>1</output>
+        </example>
+        <example>
+            <inputArg>[]</inputArg>
+            <output>error</output>
+        </example>
+    </function>
 </functionDocumentation>

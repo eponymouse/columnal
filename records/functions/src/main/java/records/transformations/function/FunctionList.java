@@ -7,6 +7,10 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.function.comparison.Max;
+import records.transformations.function.comparison.MaxIndex;
+import records.transformations.function.comparison.Min;
+import records.transformations.function.comparison.MinIndex;
 import records.transformations.function.conversion.ExtractNumber;
 import records.transformations.function.core.AsType;
 import records.transformations.function.core.AsUnit;
@@ -58,8 +62,10 @@ public class FunctionList
             new LogarithmNatural(),
             new MapFunction(),
             new Max(),
+            new MaxIndex(),
             new Mean(),
             new Min(),
+            new MinIndex(),
             new Not(),
             new Round(),
             new RoundDP(),

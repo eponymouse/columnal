@@ -1,24 +1,26 @@
-package records.transformations.function;
+package records.transformations.function.comparison;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.function.ValueFunction;
+import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
-import records.transformations.expression.function.ValueFunction;
 
-public class Min extends FunctionDefinition
+public class MinIndex extends FunctionDefinition
 {
-    public static final String NAME = "minimum";
+    public static final String NAME = "minimum index";
     
-    public Min() throws InternalException
+    public MinIndex() throws InternalException
     {
-        super("comparison:minimum");
+        super("comparison:minimum index");
     }
 
     @Override
@@ -40,13 +42,18 @@ public class Min extends FunctionDefinition
             else
             {
                 @Value Object min = list.get(0);
+                int zeroIndexMin = 0;
                 for (int i = 1; i < list.size(); i++)
                 {
                     @Value Object val = list.get(i);
                     if (Utility.compareValues(min, val) > 0)
+                    {
                         min = val;
+                        zeroIndexMin = i;
+                    }
                 }
-                return min;
+                // Add one to make it one-based:
+                return DataTypeUtility.value(zeroIndexMin + 1);
             }
         }
     }

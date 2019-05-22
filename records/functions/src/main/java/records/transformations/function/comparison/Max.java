@@ -1,4 +1,4 @@
-package records.transformations.function;
+package records.transformations.function.comparison;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
@@ -6,6 +6,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
