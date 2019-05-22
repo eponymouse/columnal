@@ -68,7 +68,7 @@
             <inputArg>datetimezoned{2001-03-04 06:54 UTC}</inputArg>
             <output>@call @function from text("06:54")</output>
         </example>
-    </function>g
+    </function>
 
     <function name="date from datetime">
         <argType name="datetime">DateTime</argType>
@@ -222,5 +222,4 @@
             <output>21{s}</output>
         </example>
     </function>
-    
 </functionDocumentation>
