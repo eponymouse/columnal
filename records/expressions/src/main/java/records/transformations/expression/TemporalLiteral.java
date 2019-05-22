@@ -59,7 +59,7 @@ public class TemporalLiteral extends Literal
     {
         if (value.isLeft())
         {
-            onError.recordError(this, StyledString.concat(StyledString.s("Value "), styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString(), StyledString.s(" because "), value.getLeft("Impossible")));
+            onError.recordError(this, StyledString.concat(styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString()));
             return null;
         }
         

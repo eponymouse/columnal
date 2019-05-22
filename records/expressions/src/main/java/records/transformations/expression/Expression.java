@@ -1089,7 +1089,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // Styles the string to look like a user-typed part of the expression
     protected static StyledString styledExpressionInput(String s)
     {
-        return StyledString.styled(s, new ExpressionInputStyle());
+        return StyledString.fancyQuote(StyledString.styled(s, new ExpressionInputStyle()));
     }
 
     private static class ExpressionInputStyle extends Style<ExpressionInputStyle>

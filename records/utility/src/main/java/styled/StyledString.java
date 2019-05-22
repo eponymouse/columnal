@@ -219,6 +219,11 @@ public final class StyledString
         return StyledString.concat(StyledString.s("["), inner, StyledString.s("]"));
     }
     
+    public static StyledString fancyQuote(StyledString inner)
+    {
+        return StyledString.concat(StyledString.s("\u201c"), inner, StyledString.s("\u201d"));
+    }
+    
     public int getLength()
     {
         return members.stream().mapToInt(p -> p.getSecond().length()).sum();

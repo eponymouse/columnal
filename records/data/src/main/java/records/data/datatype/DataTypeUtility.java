@@ -623,7 +623,7 @@ public class DataTypeUtility
         }
 
         //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
-        throw new UserException("Expected " + dateTimeInfo + " value but found: " + src.snippet());
+        throw new UserException("Expected " + DataType.date(dateTimeInfo).toString() + " value but found: " + src.snippet());
     }
 
     @OnThread(Tag.Simulation)
