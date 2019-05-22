@@ -185,18 +185,19 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
         }
     }
 
-    private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
+    private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean errorPopupShowing)
     {
         Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
         Collection<Path> errorUnderline = lookup(".expression-editor .error-underline").<Path>queryAll();
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
-        if (popupShowing != null)
-            assertEquals("Popup showing", popupShowing, isShowingErrorPopup());
+        if (errorPopupShowing != null)
+            assertEquals("Popup showing", errorPopupShowing, isShowingErrorPopup());
     }
 
     private boolean isShowingErrorPopup()
     {
-        return lookup(".expression-info-popup").tryQuery().isPresent();
+        // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
+        return lookup(".expression-info-popup.error").tryQuery().isPresent();
     }
     
     static class Error
