@@ -877,7 +877,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
 
             try
             {
-                Table table = tableId == null || tableId.equals(getId()) ? Aggregate.this : tableManager.getSingleTableOrNull(tableId);
+                Table table = !grouped && (tableId == null || tableId.equals(getId())) ? Aggregate.this : tableManager.getSingleTableOrNull(tableId == null ? srcTableId : tableId);
                 if (table == null)
                     return null;
                 Column column = table.getData().getColumnOrNull(columnId);
