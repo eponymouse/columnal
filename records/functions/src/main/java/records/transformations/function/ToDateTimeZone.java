@@ -43,7 +43,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", "datetimezoned.from.datetime.zone.mini", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
         */
-        r.add(new FunctionDefinition("datetime:datetimezoned") {
+        r.add(new FunctionDefinition("datetime:datetimezoned from dtz") {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {

@@ -156,7 +156,7 @@
                 <li><link namespace="datetime" function="seconds between"/></li>
             </ul>
             <example>
-                <input>@call @function dateym(2008{year}, 3{month})</input>
+                <input>@call @function dateym from ym(2008{year}, 3{month})</input>
                 <output>dateym{2008-03}</output>
             </example>
         </section>

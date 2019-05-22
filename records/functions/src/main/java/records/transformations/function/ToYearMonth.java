@@ -35,7 +35,7 @@ public class ToYearMonth extends ToTemporalFunction
         r.add(new FunctionDefinition("dateym.from.datetime", "dateym.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionDefinition("dateym.from.datetimezoned", "dateym.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         */
-        r.add(new FunctionDefinition("datetime:dateym") {
+        r.add(new FunctionDefinition("datetime:dateym from ym") {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {

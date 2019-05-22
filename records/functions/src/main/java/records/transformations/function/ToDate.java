@@ -41,7 +41,7 @@ public class ToDate extends ToTemporalFunction
         r.add(new FunctionDefinition("date.from.datetimezoned", "date.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionDefinition("date.from.ym.day", "date.from.ym.day.mini", FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadBuiltIn("day"))))));
         */
-        r.add(new FunctionDefinition("datetime:date") {
+        r.add(new FunctionDefinition("datetime:date from ymd") {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {

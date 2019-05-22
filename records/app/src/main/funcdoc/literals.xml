@@ -9,15 +9,15 @@
         </description>
         <example>
             <inputArg>April 2003</inputArg>
-            <output>@call @function dateym(2003{year}, 4{month})</output>
+            <output>@call @function dateym from ym(2003{year}, 4{month})</output>
         </example>
         <example>
             <inputArg>11/2010</inputArg>
-            <output>@call @function dateym(2010{year}, 11{month})</output>
+            <output>@call @function dateym from ym(2010{year}, 11{month})</output>
         </example>
         <example>
             <inputArg>Sep 1921</inputArg>
-            <output>@call @function dateym(1921{year}, 9{month})</output>
+            <output>@call @function dateym from ym(1921{year}, 9{month})</output>
         </example>
     </literal>
 
@@ -29,15 +29,15 @@
         </description>
         <example>
             <inputArg>10 April 2003</inputArg>
-            <output>@call @function date(2003{year}, 4{month}, 10{day})</output>
+            <output>@call @function date from ymd(2003{year}, 4{month}, 10{day})</output>
         </example>
         <example>
             <inputArg>2010-11-28</inputArg>
-            <output>@call @function date(2010{year}, 11{month}, 28{day})</output>
+            <output>@call @function date from ymd(2010{year}, 11{month}, 28{day})</output>
         </example>
         <example>
             <inputArg>Sep 3 1921</inputArg>
-            <output>@call @function date(1921{year}, 9{month}, 3{day})</output>
+            <output>@call @function date from ymd(1921{year}, 9{month}, 3{day})</output>
         </example>
     </literal>
 
@@ -48,15 +48,15 @@
         </description>
         <example>
             <inputArg>08:57</inputArg>
-            <output>@call @function time(8{hour}, 57{min}, 0{s})</output>
+            <output>@call @function time from hms(8{hour}, 57{min}, 0{s})</output>
         </example>
         <example>
             <inputArg>9:12:03 PM</inputArg>
-            <output>@call @function time(21{hour}, 12{min}, 3{s})</output>
+            <output>@call @function time from hms(21{hour}, 12{min}, 3{s})</output>
         </example>
         <example>
             <inputArg>23:59:59.999999</inputArg>
-            <output>@call @function time(23{hour}, 59{min}, 59.999999{s})</output>
+            <output>@call @function time from hms(23{hour}, 59{min}, 59.999999{s})</output>
         </example>
     </literal>
 
@@ -69,15 +69,15 @@
         </description>
         <example>
             <inputArg>10 April 2003 08:57</inputArg>
-            <output>@call @function datetime(@call @function date(2003{year}, 4{month}, 10{day}), @call @function time(8{hour}, 57{min}, 0{s}))</output>
+            <output>@call @function datetime from dt(@call @function date from ymd(2003{year}, 4{month}, 10{day}), @call @function time from hms(8{hour}, 57{min}, 0{s}))</output>
         </example>
         <example>
             <inputArg>2010-11-28 9:12:03 PM</inputArg>
-            <output>@call @function datetime(@call @function date(2010{year}, 11{month}, 28{day}), @call @function time(21{hour}, 12{min}, 3{s}))</output>
+            <output>@call @function datetime from dt(@call @function date from ymd(2010{year}, 11{month}, 28{day}), @call @function time from hms(21{hour}, 12{min}, 3{s}))</output>
         </example>
         <example>
             <inputArg>Sep 3 1921 23:59:59.999999</inputArg>
-            <output>@call @function datetime(@call @function date(1921{year}, 9{month}, 3{day}), @call @function time(23{hour}, 59{min}, 59.999999{s}))</output>
+            <output>@call @function datetime from dt(@call @function date from ymd(1921{year}, 9{month}, 3{day}), @call @function time from hms(23{hour}, 59{min}, 59.999999{s}))</output>
         </example>
     </literal>
 
@@ -91,15 +91,15 @@
         </description>
         <example>
             <inputArg>10 April 2003 08:57+00:00</inputArg>
-            <output>@call @function datetimezoned(@call @function date(2003{year}, 4{month}, 10{day}), @call @function time(8{hour}, 57{min}, 0{s}), "+00:00")</output>
+            <output>@call @function datetimezoned from dtz(@call @function date from ymd(2003{year}, 4{month}, 10{day}), @call @function time from hms(8{hour}, 57{min}, 0{s}), "+00:00")</output>
         </example>
         <example>
             <inputArg>2010-11-28 9:12:03 PM Asia/Jakarta</inputArg>
-            <output>@call @function datetimezoned(@call @function date(2010{year}, 11{month}, 28{day}), @call @function time(21{hour}, 12{min}, 3{s}), "Asia/Jakarta")</output>
+            <output>@call @function datetimezoned from dtz(@call @function date from ymd(2010{year}, 11{month}, 28{day}), @call @function time from hms(21{hour}, 12{min}, 3{s}), "Asia/Jakarta")</output>
         </example>
         <example>
             <inputArg>Sep 3 1921 23:59:59.999999 Africa/Khartoum</inputArg>
-            <output>@call @function datetimezoned(@call @function date(1921{year}, 9{month}, 3{day}), @call @function time(23{hour}, 59{min}, 59.999999{s}), "Africa/Khartoum")</output>
+            <output>@call @function datetimezoned from dtz(@call @function date from ymd(1921{year}, 9{month}, 3{day}), @call @function time from hms(23{hour}, 59{min}, 59.999999{s}), "Africa/Khartoum")</output>
         </example>
     </literal>
 

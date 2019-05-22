@@ -37,7 +37,7 @@ public class ToTime extends ToTemporalFunction
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
         r.add(new FromTemporal("datetime:time from datetime"));
         r.add(new FromTemporal("datetime:time from datetimezoned"));
-        r.add(new FunctionDefinition("datetime:time") {
+        r.add(new FunctionDefinition("datetime:time from hms") {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {

@@ -2,7 +2,7 @@
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="datetime">
-    <function name="date">
+    <function name="date from ymd">
         <argType name="year">Number{year}</argType>
         <argType name="month">Number{month}</argType>
         <argType name="day">Number{day}</argType>
@@ -13,7 +13,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Date</forany>
-            <lhs>@match @call @function to text(x) @case _y ; "-" ; _m ; "-" ; _d @then @call @function date(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
+            <lhs>@match @call @function to text(x) @case _y ; "-" ; _m ; "-" ; _d @then @call @function date from ymd(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -26,7 +26,7 @@
         </example>
     </function>
 
-    <function name="time">
+    <function name="time from hms">
         <argType name="hour">Number{hour}</argType>
         <argType name="minute">Number{min}</argType>
         <argType name="second">Number{s}</argType>
@@ -36,7 +36,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Time</forany>
-            <lhs>@match @call @function to text(x) @case _h ; ":" ; _m ; ":" ; _s @then @call @function time(@call @function from text(h), @call @function from text(m), @call @function from text(s)) @endmatch</lhs>
+            <lhs>@match @call @function to text(x) @case _h ; ":" ; _m ; ":" ; _s @then @call @function time from hms(@call @function from text(h), @call @function from text(m), @call @function from text(s)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -68,7 +68,7 @@
             <inputArg>datetimezoned{2001-03-04 06:54 UTC}</inputArg>
             <output>@call @function from text("06:54")</output>
         </example>
-    </function>
+    </function>g
 
     <function name="date from datetime">
         <argType name="datetime">DateTime</argType>
@@ -108,7 +108,7 @@
         </example>
     </function>
 
-    <function name="dateym">
+    <function name="dateym from ym">
         <argType name="year">Number{year}</argType>
         <argType name="month">Number{month}</argType>
         <returnType name="dateym">DateYM</returnType>
@@ -137,7 +137,7 @@
         </example>
     </function>
 
-    <function name="datetime">
+    <function name="datetime from dt">
         <argType name="date">Date</argType>
         <argType name="time">Time</argType>
         <returnType name="datetime">DateTime</returnType>
@@ -150,7 +150,7 @@
         </example>
     </function>
     
-    <function name="datetimezoned">
+    <function name="datetimezoned from dtz">
         <argType name="date">Date</argType>
         <argType name="time">Time</argType>
         <argType name="zone">Text</argType>

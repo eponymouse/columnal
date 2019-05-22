@@ -28,7 +28,7 @@
         </example>
         <example>
             <input>@call @function as type(type{Date}, @call @function from text("21 March 2004"))</input>
-            <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
+            <output>@call @function date from ymd(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
             <input>@call @function as type(type{[(Boolean, Number{m})]}, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</input>
@@ -48,7 +48,7 @@
         </description>
         <example>
             <inputArg>(type{Date}, "21 March 2004")</inputArg>
-            <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
+            <output>@call @function date from ymd(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
             <inputArg>(type{[(Boolean, Number{m})]}, "[(True, 0), (FALSE, -1.6)]")</inputArg>
