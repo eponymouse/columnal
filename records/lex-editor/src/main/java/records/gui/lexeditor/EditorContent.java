@@ -227,7 +227,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int newCaretPos)
     {
         EnumMap<DisplayType, StyledString> accum = new EnumMap<DisplayType, StyledString>(DisplayType.class);
-        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt()).forEach(m -> {
+        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos)).distinct().forEach(m -> {
             m.forEach((k, v) -> accum.merge(k, v, (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b))));
         });
         return ImmutableMap.copyOf(accum);

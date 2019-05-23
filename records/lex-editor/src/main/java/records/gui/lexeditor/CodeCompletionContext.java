@@ -32,7 +32,7 @@ public class CodeCompletionContext
         return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
     }
 
-    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt()
+    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt(@CanonicalLocation int position)
     {
         return Maps.<DisplayType, StyledString>immutableEnumMap(ImmutableMap.<DisplayType, StyledString>of());
     }

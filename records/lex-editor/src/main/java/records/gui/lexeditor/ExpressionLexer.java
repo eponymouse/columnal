@@ -559,7 +559,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
         
-        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)), expressionSaver.getDisplayFor(canonIndex));
+        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)

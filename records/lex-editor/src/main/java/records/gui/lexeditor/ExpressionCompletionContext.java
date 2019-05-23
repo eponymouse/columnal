@@ -8,29 +8,30 @@ import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledString;
+import utility.FXPlatformFunction;
 import utility.Utility;
 
 import java.util.EnumSet;
 
 public class ExpressionCompletionContext extends CodeCompletionContext
 {
-    private final ImmutableMap<DisplayType, StyledString> infoAndPrompt;
+    private final FXPlatformFunction<@CanonicalLocation Integer, ImmutableMap<DisplayType, StyledString>> infoAndPromptForPosition;
     
-    public ExpressionCompletionContext(ImmutableList<LexCompletionGroup> completions, ImmutableMap<DisplayType, StyledString> infoAndPrompt)
+    public ExpressionCompletionContext(ImmutableList<LexCompletionGroup> completions, FXPlatformFunction<@CanonicalLocation Integer, ImmutableMap<DisplayType, StyledString>> infoAndPromptForPosition)
     {
         super(completions);
-        this.infoAndPrompt = infoAndPrompt;
+        this.infoAndPromptForPosition = infoAndPromptForPosition;
     }
 
     public ExpressionCompletionContext(CodeCompletionContext nestedCompletions, @CanonicalLocation int offsetBy)
     {
         super(nestedCompletions, offsetBy);
-        this.infoAndPrompt = ImmutableMap.of();
+        this.infoAndPromptForPosition = n -> ImmutableMap.<DisplayType, StyledString>of();
     }
 
     @Override
-    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt()
+    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt(@CanonicalLocation int position)
     {
-        return infoAndPrompt;
+        return infoAndPromptForPosition.apply(position);
     }
 }
