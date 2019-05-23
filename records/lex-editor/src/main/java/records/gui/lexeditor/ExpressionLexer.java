@@ -289,7 +289,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome);
                     saver.saveOperand(outcome.expression, removedChars.map(curIndex, nestedOutcome.positionAfter));
                     @SuppressWarnings("units")
-                    @DisplayLocation int displayOffset = curIndex + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
+                    @DisplayLocation int displayOffset = nestedLiteral.getFirst().length() + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
                     @CanonicalLocation int caretPosOffset = removedChars.map(curIndex + rawLength(nestedLiteral.getFirst()));
                     if (outcome.locationRecorder != null)
                         saver.addNestedLocations(outcome.locationRecorder, caretPosOffset);
