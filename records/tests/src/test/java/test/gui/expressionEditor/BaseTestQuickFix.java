@@ -186,7 +186,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             afterClick.run();
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
-            assertTrue("Popup still showing: " + errorPopup, isShowingErrorPopup());
+            assertFalse("Popup still showing: " + errorPopup, isShowingErrorPopup());
             TestUtil.doubleOk(this);
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
