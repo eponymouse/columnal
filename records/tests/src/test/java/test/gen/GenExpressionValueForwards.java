@@ -377,7 +377,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
-                            return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> call("datetime", dateE, timeE));
+                            return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> call("datetime from dt", dateE, timeE));
                         });
                         break;
                     case DATETIMEZONED:
@@ -394,7 +394,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned", dateE, timeE, new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, new StringLiteral(zone.toString())));
                         });
                         break;
                 }
@@ -417,7 +417,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
                             int day = r.nextInt(1, 28);
-                            return literal(LocalDate.of(year, month, day), call("date",
+                            return literal(LocalDate.of(year, month, day), call("date from ymd",
                                 new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
                                 new NumericLiteral(month, makeUnitExpression(getUnit("month"))),
                                 new NumericLiteral(day, makeUnitExpression(getUnit("day")))
@@ -428,7 +428,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         shallow.add(() -> {
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
-                            return literal(YearMonth.of(year, month), call("dateym",
+                            return literal(YearMonth.of(year, month), call("dateym from ym",
                                 new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
                                 new NumericLiteral(month, makeUnitExpression(getUnit("month")))
                             ));
@@ -440,7 +440,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             int minute = r.nextInt(0, 59);
                             int second = r.nextInt(0, 59);
                             int nano = r.nextInt(0, 999999999);
-                            return literal(LocalTime.of(hour, minute, second, nano), call("time",
+                            return literal(LocalTime.of(hour, minute, second, nano), call("time from hms",
                                 new NumericLiteral(hour, makeUnitExpression(getUnit("hour"))),
                                 new NumericLiteral(minute, makeUnitExpression(getUnit("min"))),
                                 new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), makeUnitExpression(getUnit("s")))
