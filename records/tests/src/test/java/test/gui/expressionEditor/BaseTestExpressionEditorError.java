@@ -1,6 +1,7 @@
 package test.gui.expressionEditor;
 
 import annotation.units.CanonicalLocation;
+import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Scene;
@@ -27,6 +28,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
@@ -114,6 +116,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 for (int i = 0; i < expectedErrors.size(); i++)
                 {
                     assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
+                    assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).displayLocation, actualErrors.get(i).displayLocation);
                     MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), new MultiSubstringMatcher(expectedErrors.get(i).expectedMessageParts));
                 }
 
@@ -203,11 +206,22 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
     static class Error
     {
         private final CanonicalSpan location;
+        private final DisplaySpan displayLocation;
         private final ImmutableList<String> expectedMessageParts;
 
         public Error(@CanonicalLocation int start, @CanonicalLocation int end, ImmutableList<String> expectedMessageParts)
         {
             this.location = new CanonicalSpan(start, end);
+            @SuppressWarnings("units")
+            DisplaySpan displayLocation = TestUtil.fx(() -> new DisplaySpan(start, start == end ? end + 1 : end));
+            this.displayLocation = displayLocation;
+            this.expectedMessageParts = expectedMessageParts;
+        }
+
+        public Error(@CanonicalLocation int start, @CanonicalLocation int end, @DisplayLocation int displayStart, @DisplayLocation int displayEnd, ImmutableList<String> expectedMessageParts)
+        {
+            this.location = new CanonicalSpan(start, end);
+            this.displayLocation = TestUtil.fx(() -> new DisplaySpan(displayStart, displayEnd));
             this.expectedMessageParts = expectedMessageParts;
         }
     }
@@ -216,6 +230,12 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
     static final Error e(int start, int end, String... errorMessagePart)
     {
         return new Error(start, end, ImmutableList.copyOf(errorMessagePart));
+    }
+
+    @SuppressWarnings("units")
+    static final Error e(int start, int end, int displayStart, int displayEnd, String... errorMessagePart)
+    {
+        return new Error(start, end, displayStart, displayEnd, ImmutableList.copyOf(errorMessagePart));
     }
     
     // Also ignores case

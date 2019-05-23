@@ -143,7 +143,24 @@ public class EditorLocationAndErrorRecorder
         {
             return start <= position && position <= end;
         }
-        
+
+        // Used in testing:
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DisplaySpan that = (DisplaySpan) o;
+            return start == that.start &&
+                    end == that.end;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(start, end);
+        }
+
         @Override
         public String toString()
         {

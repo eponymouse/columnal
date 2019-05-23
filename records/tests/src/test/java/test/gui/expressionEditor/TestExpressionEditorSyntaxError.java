@@ -64,13 +64,13 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void test1b()
     {
         // Check basic:
-        testError("1+", e(2, 2, "missing"));
+        testError("1+", e(2,2, 4,5, "missing"));
     }
 
     @Test
     public void test2()
     {
-        testError("foo", e(0, 3, "unknown"));
+        testError("foo", e(0,3, 0,4, "unknown"));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     @Test
     public void test2B()
     {
-        testError("foo+", e(4, 4, "missing"));
+        testError("foo+", e(4, 4, 6,7, "missing"));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("1+/3", e(2, 2, "missing"));
+        testError("1+/3", e(2,2, 4,5, "missing"));
     }
 
     @Test
@@ -104,20 +104,20 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     @Test
     public void test3()
     {
-        testError("@iftrue@then3@else5", e(19, 19, "endif"));
+        testError("@iftrue@then3@else5", e(19,19, 24, 25, "endif"));
     }
 
     @Test
     public void test3A()
     {
-        testError("@if#@then#@else0@endif", e(3,4, "#"), e(9,10, "#"));
+        testError("@if#@then#@else0@endif", e(3,4, 4,5, "#"), e(9,10, 12,13, "#"));
     }
 
     @Test
     public void test3B()
     {
         // Type error
-        testError("@if3@then4@else5@endif", e(3,4, "boolean"));
+        testError("@if3@then4@else5@endif", e(3,4, 4,5, "boolean"));
     }
 
     @Test
@@ -161,6 +161,13 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     {
         testError("type{Optional(zzz)}", e(14, 17, "unknown"));
     }
+    
+    @Test
+    public void testBlankNestedLiteral()
+    {
+        testError("from text to(type{},Initial release date)", e(18, 18, 18,19, "empty"));
+        //####
+    }
 
     @Test
     public void testUnclosedUnitBracket()
@@ -172,29 +179,29 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testEmptyIf()
     {
         testError("@iftrue@then@else1@endif",
-            e(12,12, "missing", "@else"));
+            e(12,12, 15,16, "missing", "@else"));
     }
 
     @Test
     public void testEmptyIf2()
     {
         testError("@iftrue@then@else@endif",
-                e(12,12, "missing", "@else"),
-                e(17,17, "missing", "@endif"));
+                e(12,12, 15,16, "missing", "@else"),
+                e(17,17, 23,24, "missing", "@endif"));
     }
 
     @Test
     public void testPartialIf()
     {
         testError("@if(true>false)",
-                e(15,15, "missing", "@then"));
+                e(15,15, 18,19, "missing", "@then"));
     }
 
     @Test
     public void testPartialIf2()
     {
         testError("@if(ACC1>ACC1)",
-            e(14,14, "missing", "@then"));
+            e(14,14, 17,18, "missing", "@then"));
     }
 
     @Test
@@ -208,7 +215,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testMissingOperator2()
     {
         testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
-                e(25,25, "missing operator"));
+                e(25,25, 32,33, "missing operator"));
     }
 
     @Test
@@ -222,6 +229,6 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testMissingOperator3b()
     {
         testError("ACC1[1]+ACC1[2]",
-                e(4,4, "missing operator"), e(12,12, "missing operator"));
+                e(4,4, 4,5, "missing operator"), e(12,12, 15,16, "missing operator"));
     }
 }
