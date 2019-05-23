@@ -8,6 +8,8 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -21,6 +23,7 @@ import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
@@ -262,6 +265,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
         // null when definitely stopped.
         private @Nullable Animation hidingAnimation;
+        
+        private @MonotonicNonNull DisplayType curDisplayType = null;
+        private Pair<StyledString, ImmutableList<TextQuickFix>> curContent = new Pair<>(StyledString.s(""), ImmutableList.of());
 
         public InformationPopup()
         {
@@ -346,13 +352,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         }
 
 
-        private void showPopup()
+        private void showPopup(boolean contentHasChanged)
         {
-            if (!hiding)
+            if (!hiding && (!isShowing() || contentHasChanged))
             {
                 // Need to call show even if already showing in order
                 // to fix the position if our contents have changed:
+                //setAnimated(!isShowing());
                 show(scrollPane);
+                //setAnimated(true);
                 //org.scenicview.ScenicView.show(getScene());
             }
         }
@@ -379,8 +387,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 // Make sure to cancel any hide animation:
                 cancelHideAnimation();
-                show(curDisplay.getKey(), curDisplay.getValue());
-                showPopup();
+                boolean contentChanged = setContent(curDisplay.getKey(), curDisplay.getValue());
+                showPopup(contentChanged);
             }
             else
             {
@@ -388,8 +396,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         }
 
-        private void show(DisplayType displayType, Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
+        // Returns true if content has changed as a result of the call
+        private boolean setContent(DisplayType displayType, Pair<StyledString, ImmutableList<TextQuickFix>> errorInfo)
         {
+            if (displayType.equals(curDisplayType) && errorInfo.getFirst().equals(curContent.getFirst())
+                && sameFixes(curContent.getSecond(), errorInfo.getSecond()))
+                return false;
+            
             // We can't use pseudoclasses here because they don't seem to work properly
             // with popups, so fall back to adding/removing style-classes
             for (DisplayType dt : DisplayType.values())
@@ -405,6 +418,24 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             textFlow.getChildren().setAll(errorInfo.getFirst().toGUI().toArray(new Node[0]));
             textFlow.setVisible(!errorInfo.getFirst().toPlain().isEmpty());
             fixList.setFixes(Utility.mapListI(errorInfo.getSecond(), makeFixInfo()));
+            this.curDisplayType = displayType;
+            this.curContent = errorInfo;
+            return true;
+        }
+
+        private boolean sameFixes(ImmutableList<TextQuickFix> a, ImmutableList<TextQuickFix> b)
+        {
+            if (a.size() != b.size())
+                return false;
+
+            for (int i = 0; i < a.size(); i++)
+            {
+                if (!a.get(i).getTitle().equals(b.get(i).getTitle()))
+                    return false;
+                if (!a.get(i).getReplacementTarget().equals(b.get(i).getReplacementTarget()))
+                    return false;
+            }
+            return true;
         }
 
         /*

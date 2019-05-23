@@ -83,6 +83,21 @@ public final class StyledString
         {
             this.styleMembers = styleMembers;
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ImmutableStyleMap that = (ImmutableStyleMap) o;
+            return styleMembers.equals(that.styleMembers);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(styleMembers);
+        }
     }
     
     private final ImmutableList<Pair<ImmutableStyleMap, String>> members;

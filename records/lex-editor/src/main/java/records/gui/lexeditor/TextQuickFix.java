@@ -106,7 +106,12 @@ public final class TextQuickFix
         cachedTitle = StyledString.concat(title, StyledString.s(" \u21fe "), replacement);
         return cachedTitle;
     }
-    
+
+    public CanonicalSpan getReplacementTarget()
+    {
+        return replacementTarget;
+    }
+
     @OnThread(Tag.FXPlatform)
     // Gets the replacement target (first item) and replacement (second item)
     public Either<QuickFixAction, Pair<CanonicalSpan, String>> getReplacement() throws InternalException
