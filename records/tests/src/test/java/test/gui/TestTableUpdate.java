@@ -119,8 +119,6 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             clickOn(".id-tableDisplay-menu-delete");
             sleep(500);
             
-            // TODO change data before deletion
-            
             // Now check that the cells are gone for table and dependents:
             for (int i = tableToDelete; i < 3; i++)
             {
@@ -129,7 +127,60 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 assertThrows(RuntimeException.class, () -> withItemInBounds(lookup(".document-text-field"), details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {}));
             }
             
-            // TODO put table back and check everything updates
+            // Put table back and check everything updates:
+
+            switch (tableToDelete)
+            {
+                case 0:
+                    EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
+                        colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                        colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
+                    ), () -> tableLength);
+                    details._test_getTableManager().record(new ImmediateDataSource(details._test_getTableManager(), new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
+                    break;
+                case 1:
+                    addTransformation(details._test_getTableManager(), "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(1, 4), r);
+                    break;
+                case 2:
+                    addTransformation(details._test_getTableManager(), "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
+                    break;
+            }
+            sleep(1000);
+            
+            // Check all cells are found this time, will throw if not:
+            for (int i = tableToDelete; i < 3; i++)
+            {
+                int iFinal = i;
+                CellPosition pos = CellPosition.ORIGIN.offsetByRowCols(1 + 3, 1 + 3 * iFinal);
+                withItemInBounds(lookup(".document-text-field"), details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {});
+            }
+
+            // Check data matches:
+            List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
+            checkAllMatch(latestDataA);
+            List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
+            checkAllMatch(latestDataB);
+
+            // Check changes are properly linked up:
+            int changes = 3;
+            for (int i = 0; i < changes; i++)
+            {
+                int targetColumn = r.nextInt(2);
+                int targetRow = r.nextInt(tableLength);
+                TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
+                @Value Object newVal = colType.makeValue();
+
+                keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
+                push(KeyCode.ENTER);
+                enterStructuredValue(colType.getType(), newVal, r, true);
+                push(KeyCode.ENTER);
+                TestUtil.sleep(2000);
+
+                latestDataA = getDataViaGraphics(details, 0);
+                checkAllMatch(latestDataA);
+                latestDataB = getDataViaGraphics(details, 1);
+                checkAllMatch(latestDataB);
+            }
         });
     }
 
