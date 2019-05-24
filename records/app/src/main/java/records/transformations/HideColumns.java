@@ -85,9 +85,9 @@ public class HideColumns extends Transformation implements SingleSourceTransform
                 }
 
                 @Override
-                public boolean isAltered()
+                public @OnThread(Tag.Any) AlteredState getAlteredState()
                 {
-                    return false;
+                    return AlteredState.UNALTERED;
                 }
             })))
             {

@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
+import records.data.Column.AlteredState;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.Display;
@@ -322,7 +323,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     try
                     {
                         RecordSet data = table.getData();
-                        List<ColumnId> alteredColumnNames = data.getColumns().stream().filter(c -> c.isAltered()).<ColumnId>map(c -> c.getName()).collect(Collectors.<ColumnId>toList());
+                        List<ColumnId> alteredColumnNames = data.getColumns().stream().filter(c -> c.getAlteredState() != AlteredState.UNALTERED).<ColumnId>map(c -> c.getName()).collect(Collectors.<ColumnId>toList());
                         setDisplay(Display.CUSTOM, Utility.<ColumnId>prependToList(columnId, alteredColumnNames));
                     }
                     catch (UserException | InternalException e)
@@ -403,7 +404,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Display display = Display.COLLAPSED;
                 if (recordSet != null)
                 {
-                    long countOfAltered = recordSet.getColumns().stream().filter(Column::isAltered).count();
+                    long countOfAltered = recordSet.getColumns().stream().filter(c -> c.getAlteredState() != AlteredState.UNALTERED).count();
                     // If all or none are altered, that's equivalent to collapsing
                     // or showing all, so just skip it for this cycling:
                     if (countOfAltered != 0 && countOfAltered != recordSet.getColumns().size())

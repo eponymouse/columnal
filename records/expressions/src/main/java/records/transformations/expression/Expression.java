@@ -14,6 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
+import records.data.Column.AlteredState;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
@@ -962,7 +963,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 try
                 {
                     Column column = usTable.getData().getColumnOrNull(columnId);
-                    if (column == null || column.isAltered())
+                    if (column == null || column.getAlteredState() == AlteredState.OVERWRITTEN)
                         return Stream.empty();
                     return Stream.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(columnId, ColumnReferenceType.WHOLE_COLUMN));
                 }
@@ -1041,9 +1042,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     switch (columnReferenceType)
                     {
                         case CORRESPONDING_ROW:
-                            return new FoundColumn(rs.getFirst(), columnType, checkRedefined(tableId, columnId));
+                            return new FoundColumn(rs.getFirst(), columnType, checkRedefined(tableId, columnId, ColumnReferenceType.CORRESPONDING_ROW));
                         case WHOLE_COLUMN:
-                            return new FoundColumn(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), checkRedefined(tableId, columnId));
+                            return new FoundColumn(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), checkRedefined(tableId, columnId, ColumnReferenceType.WHOLE_COLUMN));
                         default:
                             throw new InternalException("Unknown reference type: " + columnReferenceType);
                     }
@@ -1058,7 +1059,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         // If column is redefined in this table, issue a warning
-        private @Nullable StyledString checkRedefined(@Nullable TableId tableId, ColumnId columnId)
+        private @Nullable StyledString checkRedefined(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
         {
             if (tableId == null && us != null)
             {
@@ -1069,7 +1070,10 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                         return null;
                     RecordSet rs = ourTable.getData();
                     Column c = rs.getColumnOrNull(columnId);
-                    if (c != null && c.isAltered())
+                    if (c != null && 
+                        ((columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW && c.getAlteredState() == AlteredState.OVERWRITTEN)
+                            || (columnReferenceType == ColumnReferenceType.WHOLE_COLUMN && c.getAlteredState() != AlteredState.UNALTERED))
+                        )
                     {
                         return StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table."));
                         // TODO could add quick fix here to split into separate calculate.

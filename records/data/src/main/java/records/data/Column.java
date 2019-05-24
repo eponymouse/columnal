@@ -143,19 +143,30 @@ public abstract class Column
             case ALL:
                 return true;
             case ALTERED:
-                return isAltered();
+                return getAlteredState() != AlteredState.UNALTERED;
             case CUSTOM:
                 return columnSelection.getSecond().test(getName());
         }
         return false;
     }
+    
+    public static enum AlteredState
+    {
+        // Completely unchanged from source table of transformation (e.g. unaltered column in Calculate):
+        UNALTERED,
+        // Rows removed or moved, e.g. Filter, Sort,
+        FILTERED_OR_REORDERED,
+        // Values changed, e.g. Calculate and Aggregate destination columns
+        OVERWRITTEN
+    }
 
     /**
-     * Is this column altered in this record set (true) or copied as-is from previous (false).
-     * Used to decide whether we show column if display setting is set to ALTERED
+     * Is this column altered in this record set?
+     * Used to decide whether we show column if display setting is set to ALTERED,
+     * and to decide whether to warn in expression editor about column being changed.
      */
     @OnThread(Tag.Any)
-    public abstract boolean isAltered();
+    public abstract AlteredState getAlteredState();
 
     public static interface ProgressListener
     {

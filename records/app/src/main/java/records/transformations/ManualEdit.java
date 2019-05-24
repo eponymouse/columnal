@@ -515,9 +515,9 @@ edit : editHeader editColumn*;
         }
 
         @Override
-        public @OnThread(Tag.Any) boolean isAltered()
+        public @OnThread(Tag.Any) AlteredState getAlteredState()
         {
-            return replacements.containsKey(getName());
+            return replacements.containsKey(getName()) ? AlteredState.OVERWRITTEN : AlteredState.UNALTERED;
         }
     }
 

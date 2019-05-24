@@ -102,9 +102,9 @@ public class Calculate extends Transformation implements SingleSourceTransformat
                         }
 
                         @Override
-                        public boolean isAltered()
+                        public @OnThread(Tag.Any) AlteredState getAlteredState()
                         {
-                            return false;
+                            return AlteredState.UNALTERED;
                         }
                     });
                 }

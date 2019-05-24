@@ -162,9 +162,9 @@ public class Sort extends Transformation implements SingleSourceTransformation
                     }
 
                     @Override
-                    public boolean isAltered()
+                    public @OnThread(Tag.Any) AlteredState getAlteredState()
                     {
-                        return true;
+                        return AlteredState.FILTERED_OR_REORDERED;
                     }
                 });
             }

@@ -39,9 +39,10 @@ public class ErrorColumn extends Column
     }
 
     @Override
-    public @OnThread(Tag.Any) boolean isAltered()
+    public @OnThread(Tag.Any) AlteredState getAlteredState()
     {
-        return false;
+        // We are an error column because we failed to be a calculation, so count as overwriting:
+        return AlteredState.OVERWRITTEN;
     }
 
     @OnThread(Tag.Any)

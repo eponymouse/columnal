@@ -134,11 +134,10 @@ public final class TextFileColumn extends Column
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public boolean isAltered()
+    public @OnThread(Tag.Any) AlteredState getAlteredState()
     {
         // If we are direct from text file, we must be new:
-        return true;
+        return AlteredState.OVERWRITTEN;
     }
 
     @OnThread(Tag.Any)

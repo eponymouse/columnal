@@ -215,9 +215,9 @@ public class Concatenate extends Transformation
                         }
 
                         @Override
-                        public boolean isAltered()
+                        public @OnThread(Tag.Any) AlteredState getAlteredState()
                         {
-                            return true;
+                            return AlteredState.OVERWRITTEN;
                         }
                     };
                 }
@@ -244,9 +244,9 @@ public class Concatenate extends Transformation
                     }
 
                     @Override
-                    public @OnThread(Tag.Any) boolean isAltered()
+                    public @OnThread(Tag.Any) AlteredState getAlteredState()
                     {
-                        return true;
+                        return AlteredState.OVERWRITTEN;
                     }
                 });
             }

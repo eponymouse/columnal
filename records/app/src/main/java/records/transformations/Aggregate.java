@@ -222,9 +222,9 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                         }
 
                         @Override
-                        public boolean isAltered()
+                        public @OnThread(Tag.Any) AlteredState getAlteredState()
                         {
-                            return true;
+                            return AlteredState.OVERWRITTEN;
                         }
                     });
                 }

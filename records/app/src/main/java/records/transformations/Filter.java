@@ -99,11 +99,11 @@ public class Filter extends Transformation implements SingleSourceTransformation
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             }));
                         }
-
+                        
                         @Override
-                        public boolean isAltered()
+                        public @OnThread(Tag.Any) AlteredState getAlteredState()
                         {
-                            return true;
+                            return AlteredState.FILTERED_OR_REORDERED;
                         }
                     });
                 }

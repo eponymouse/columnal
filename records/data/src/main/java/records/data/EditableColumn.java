@@ -41,10 +41,9 @@ public abstract class EditableColumn extends Column
     public abstract @NonNull @Value Object getDefaultValue();
 
     @Override
-    @OnThread(Tag.Any)
-    public boolean isAltered()
+    public @OnThread(Tag.Any) AlteredState getAlteredState()
     {
         // If we're editable, we must be new:
-        return true;
+        return AlteredState.OVERWRITTEN;
     }
 }

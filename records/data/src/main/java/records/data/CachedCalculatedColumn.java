@@ -62,9 +62,8 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public boolean isAltered()
+    public @OnThread(Tag.Any) AlteredState getAlteredState()
     {
-        return true;
+        return AlteredState.OVERWRITTEN;
     }
 }
