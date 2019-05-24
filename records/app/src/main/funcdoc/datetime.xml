@@ -28,7 +28,7 @@
 
     <function name="time from hms">
         <argType name="hour">Number{hour}</argType>
-        <argType name="minute">Number{min}</argType>
+        <argType name="minute">Number{minute}</argType>
         <argType name="second">Number{s}</argType>
         <returnType name="time">Time</returnType>
         <description>
@@ -40,7 +40,7 @@
             <rhs>x</rhs>
         </equivalence>
         <example>
-            <inputArg>(13{hour}, 31{min}, 0{s})</inputArg>
+            <inputArg>(13{hour}, 31{minute}, 0{s})</inputArg>
             <output>time{13:31:00}</output>
         </example>
     </function>

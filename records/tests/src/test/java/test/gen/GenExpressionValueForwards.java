@@ -442,7 +442,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             int nano = r.nextInt(0, 999999999);
                             return literal(LocalTime.of(hour, minute, second, nano), call("time from hms",
                                 new NumericLiteral(hour, makeUnitExpression(getUnit("hour"))),
-                                new NumericLiteral(minute, makeUnitExpression(getUnit("min"))),
+                                new NumericLiteral(minute, makeUnitExpression(getUnit("minute"))),
                                 new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), makeUnitExpression(getUnit("s")))
                             ));
                         });

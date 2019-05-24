@@ -100,7 +100,7 @@ public class BackwardsTemporal extends BackwardsProvider
                 LocalTime target = (LocalTime) targetValue;
                 deep.add(() -> call("time from hms",
                         parent.make(DataType.number(new NumberInfo(getUnit("hour"))), target.getHour(), maxLevels - 1),
-                        parent.make(DataType.number(new NumberInfo(getUnit("min"))), target.getMinute(), maxLevels - 1),
+                        parent.make(DataType.number(new NumberInfo(getUnit("minute"))), target.getMinute(), maxLevels - 1),
                         // We only generate integers in this class, so generate nanos then divide:
                         new DivideExpression(parent.make(DataType.number(new NumberInfo(getUnit("s"))), (long)target.getSecond() * 1_000_000_000L + target.getNano(), maxLevels - 1), new NumericLiteral(1_000_000_000L, null))
                 ));

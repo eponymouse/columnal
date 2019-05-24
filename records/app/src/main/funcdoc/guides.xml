@@ -109,8 +109,8 @@
             <title>Converting numbers between different units</title>
             <p>There are three main types of conversion (with more examples below):</p>
             <ul>
-                <li>Converting between related units.  For example, you may want to convert from inches to metres.  This is done using the <link namespace="core" function="as unit"/> function.  For example, <code>@call @function as unit({s}, 1.25{min})</code> will return 75{s} (s being the unit for seconds, min being minutes).</li>
-                <li>Converting from a plain number to a number with units.  This is done by multiplying by the number 1 with the attached unit.  For example, to convert the row number to a number of minutes, use <code>row * 1{min}</code>.  More examples are below</li>
+                <li>Converting between related units.  For example, you may want to convert from inches to metres.  This is done using the <link namespace="core" function="as unit"/> function.  For example, <code>@call @function as unit({s}, 1.25{minute})</code> will return 75{s} (s being the unit for seconds, min being minutes).</li>
+                <li>Converting from a plain number to a number with units.  This is done by multiplying by the number 1 with the attached unit.  For example, to convert the row number to a number of minutes, use <code>row * 1{minute}</code>.  More examples are below</li>
                 <li>Converting from a number with units to a plain number.  This is done by dividing by the number 1 with the units to get rid of.  For example, <code>12{hour} / 1{hour}</code> will give the result 12 without units.</li>
             </ul>
             <example>
@@ -118,7 +118,7 @@
                 <outputPattern>22.369 &#x00b1; 0.001</outputPattern>
             </example>
             <example>
-                <input>@call @function as unit({m/s}, 1{mile} / 4{min})</input>
+                <input>@call @function as unit({m/s}, 1{mile} / 4{minute})</input>
                 <outputPattern>6.705 &#x00b1; 0.001</outputPattern>
             </example>
             <example>
