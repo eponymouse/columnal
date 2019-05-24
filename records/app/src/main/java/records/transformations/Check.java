@@ -32,6 +32,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -359,7 +360,7 @@ public class Check extends Transformation implements SingleSourceTransformation
     @OnThread(Tag.Any)
     public static TypeState makeTypeState(TypeManager typeManager, @Nullable CheckType selectedItem) throws InternalException
     {
-        return selectedItem == CheckType.STANDALONE ? new TypeState(typeManager) : TypeState.withRowNumber(typeManager);
+        return selectedItem == CheckType.STANDALONE ? new TypeState(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())) : TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
 
     public static class Info extends SingleSourceTransformationInfo

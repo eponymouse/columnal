@@ -12,7 +12,6 @@ import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
-import records.error.UnimplementedException;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.Expression.ExpressionStyler;
 import records.transformations.expression.MatchExpression;
@@ -32,7 +31,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import styled.StyledString;
 import test.DummyManager;
@@ -53,7 +51,6 @@ import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -347,7 +344,7 @@ public class TestExpressionExplanation
         Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
-        CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null, null), new TypeState(typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
+        CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
         Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer)).makeExplanation(null);
         assertEquals(expectedExplanation, actual);

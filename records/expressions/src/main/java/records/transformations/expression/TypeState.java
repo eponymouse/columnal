@@ -13,6 +13,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Utility;
@@ -28,11 +29,14 @@ import java.util.function.Consumer;
  *
  * It changes based on pattern matches, which introduce new variables.
  */
-public class TypeState
+public final class TypeState
 {
     // In-built variables:
     public static final @ExpressionIdentifier String GROUP_COUNT = "group count";
     public static final @ExpressionIdentifier String ROW_NUMBER = "row";
+    
+    // Doesn't change in modified TypeStates, but is passed through unchanged from initial TypeState.
+    private final FunctionLookup functionLookup;
     
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
@@ -41,21 +45,22 @@ public class TypeState
     private final UnitManager unitManager;
     private int nextLambdaId = 1;
 
-    public TypeState(TypeManager typeManager)
+    public TypeState(TypeManager typeManager, FunctionLookup functionLookup)
     {
-        this(ImmutableMap.of(), typeManager, typeManager.getUnitManager());
+        this(ImmutableMap.of(), typeManager, typeManager.getUnitManager(), functionLookup);
     }
 
-    private TypeState(ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
+    private TypeState(ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager, FunctionLookup functionLookup)
     {
         this.variables = variables;
         this.typeManager = typeManager;
         this.unitManager = unitManager;
+        this.functionLookup = functionLookup;
     }
 
-    public static TypeState withRowNumber(TypeManager typeManager) throws InternalException
+    public static TypeState withRowNumber(TypeManager typeManager, FunctionLookup functionLookup) throws InternalException
     {
-        TypeState typeState = new TypeState(typeManager).add(ROW_NUMBER, TypeExp.plainNumber(null), ss -> {
+        TypeState typeState = new TypeState(typeManager, functionLookup).add(ROW_NUMBER, TypeExp.plainNumber(null), ss -> {
         });
         if (typeState != null)
             return typeState;
@@ -73,7 +78,7 @@ public class TypeState
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
         copy.put(varName, ImmutableList.of(type));
-        return new TypeState(copy.build(), typeManager, unitManager);
+        return new TypeState(copy.build(), typeManager, unitManager, functionLookup);
     }
 
     public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
@@ -93,7 +98,7 @@ public class TypeState
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
         copy.put(varName, ImmutableList.of(type));
-        return new TypeState(copy.build(), typeManager, unitManager);
+        return new TypeState(copy.build(), typeManager, unitManager, functionLookup);
     }
 
     /**
@@ -120,7 +125,7 @@ public class TypeState
                 mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concatI(a, b));
             }
         }
-        return new TypeState(ImmutableMap.copyOf(mergedVars), typeStates.get(0).typeManager, typeStates.get(0).unitManager);
+        return new TypeState(ImmutableMap.copyOf(mergedVars), typeStates.get(0).typeManager, typeStates.get(0).unitManager, typeStates.get(0).functionLookup);
     }
 
     @Override
@@ -242,7 +247,7 @@ public class TypeState
         }
         // Shouldn't be any overlap given earlier checks:
         allNewVars.putAll(original.variables);
-        return new TypeState(ImmutableMap.copyOf(allNewVars), original.typeManager, original.unitManager);
+        return new TypeState(ImmutableMap.copyOf(allNewVars), original.typeManager, original.unitManager, original.functionLookup);
     }
 
     @Override
@@ -261,5 +266,10 @@ public class TypeState
     public ImmutableSet<String> getAvailableVariables()
     {
         return variables.keySet();
+    }
+
+    public FunctionLookup getFunctionLookup()
+    {
+        return functionLookup;
     }
 }

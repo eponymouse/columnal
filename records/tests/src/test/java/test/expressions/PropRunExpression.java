@@ -3,7 +3,6 @@ package test.expressions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -13,7 +12,6 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
-import records.transformations.expression.TypeState;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -47,7 +45,7 @@ public class PropRunExpression
         {
             DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable CheckedExp checked = src.expression.check(src, new TypeState(dummyManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, errors);
+            @Nullable CheckedExp checked = src.expression.check(src, TestUtil.createTypeState(dummyManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, errors);
             assertEquals("Checked iff error", checked == null, errors.getAllErrors().count() != 0);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)

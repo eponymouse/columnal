@@ -19,7 +19,6 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.LocationInfo;
 import test.TestUtil.SingleTableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
-import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
@@ -91,7 +90,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid, new TypeState(valid.typeManager), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
+            if (null == expression.check(valid, TestUtil.createTypeState(valid.typeManager), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)

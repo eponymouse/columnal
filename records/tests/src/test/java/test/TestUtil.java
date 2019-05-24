@@ -39,7 +39,6 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.omg.PortableServer.IdUniquenessPolicy;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.*;
@@ -601,7 +600,7 @@ public class TestUtil
                 typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
             }
             */
-            return new TypeState(typeManager);
+            return createTypeState(typeManager);
         }
         catch (InternalException | UserException e)
         {
@@ -1186,7 +1185,7 @@ public class TestUtil
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
-        expression.check(TestUtil.dummyColumnLookup(), new TypeState(mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
+        expression.check(TestUtil.dummyColumnLookup(), createTypeState(mgr.getTypeManager()), LocationInfo.UNIT_DEFAULT, excOnError());
         return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty(), (m, e) -> {throw new InternalException("No type lookup in runExpression");})).value;
     }
 
@@ -1474,6 +1473,11 @@ public class TestUtil
             });
         }
         fx_(() -> virtualGrid.redoLayoutAfterScroll());
+    }
+
+    public static TypeState createTypeState(TypeManager typeManager)
+    {
+        return new TypeState(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
 
     public static interface TestRunnable

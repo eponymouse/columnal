@@ -40,7 +40,7 @@ import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
-import test.DummyManager;
+import test.TestUtil;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenValueSpecifiedType;
@@ -187,7 +187,7 @@ public class TestFromDoc
 
                 Expression expression = Expression.parse(null, line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                TypeState typeState = new TypeState(typeManager);
+                TypeState typeState = TestUtil.createTypeState(typeManager);
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {
                     typeState = typeState.add(e.getKey(), e.getValue(), s -> {throw new RuntimeException(e.toString());});

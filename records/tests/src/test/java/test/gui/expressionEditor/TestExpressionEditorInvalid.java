@@ -3,7 +3,6 @@ package test.gui.expressionEditor;
 import annotation.recorded.qual.Recorded;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Scene;
@@ -11,13 +10,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.lexeditor.ExpressionEditor;
@@ -25,7 +21,6 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -33,7 +28,6 @@ import test.gen.GenInvalidExpressionSource;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 
 import java.util.stream.Stream;
 
@@ -86,6 +80,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             {
                 return Stream.of();
             }
-        }), null, null, dummyManager.getTypeManager(), () -> new TypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {}));
+        }), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {}));
     }
 }

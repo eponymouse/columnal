@@ -188,7 +188,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     @OnThread(Tag.Any)
     public static TypeState makeTypeState(TypeManager typeManager) throws InternalException
     {
-        return TypeState.withRowNumber(typeManager);
+        return TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
 
     @Override

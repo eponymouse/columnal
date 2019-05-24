@@ -165,7 +165,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
     @OnThread(Tag.Any)
     public static TypeState makeTypeState(TableManager mgr) throws InternalException
     {
-        return TypeState.withRowNumber(mgr.getTypeManager());
+        return TypeState.withRowNumber(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
     }
 
     @Override

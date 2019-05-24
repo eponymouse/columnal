@@ -275,7 +275,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
     @OnThread(Tag.Any)
     public static TypeState makeTypeState(TableManager mgr) throws InternalException
     {
-        TypeState typeState = new TypeState(mgr.getTypeManager());
+        TypeState typeState = new TypeState(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
         typeState = typeState.add(TypeState.GROUP_COUNT, TypeExp.plainNumber(null), ss -> {});
         if (typeState != null)
             return typeState;

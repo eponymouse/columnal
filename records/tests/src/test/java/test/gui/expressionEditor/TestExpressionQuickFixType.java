@@ -26,6 +26,20 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     {
         testFix("\"A\"+S1+\"C\"", "C", "", "\"A\" ; @column S1 ; \"C\"");
     }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testDateSubtractionFix1()
+    {
+        testFix("date from ymd(2019{year}, 1{month}, 1{day}) - date{2018-12-31}", "2019", "", "@call @function days between(date from ymd(2019{year}, 1{month}, 1{day}), date{2018-12-31})");
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTimeSubtractionFix1()
+    {
+        testFix("time from hms(12{hour}, 34{minute}, 56{s}) - time{9:00AM}", "56", "", "@call @function seconds between(time from hms(12{hour}, 34{minute}, 56{s}), time{9:00AM})");
+    }
     
     @Test
     public void testUnitLiteralFix1()

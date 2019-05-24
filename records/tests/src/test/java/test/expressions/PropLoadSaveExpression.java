@@ -11,7 +11,6 @@ import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
-import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -21,7 +20,6 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -32,7 +30,6 @@ import test.gen.GenNonsenseExpression;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 
 import java.util.stream.Stream;
 
@@ -114,7 +111,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         };
         
         
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> new TypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TestUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {
         }).save();
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
