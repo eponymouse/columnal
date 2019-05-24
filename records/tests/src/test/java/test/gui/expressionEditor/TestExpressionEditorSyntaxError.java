@@ -70,7 +70,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     @Test
     public void test2()
     {
-        testError("foo", e(0,3, 0,4, "unknown"));
+        testError("foo", e(0,3, 0,3, "unknown"));
     }
 
     @Test
