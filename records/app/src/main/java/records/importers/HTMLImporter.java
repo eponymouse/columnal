@@ -153,8 +153,6 @@ public class HTMLImporter implements Importer
                 if (!row.tagName().equals("tr"))
                     continue;
                 ArrayList<String> rowVals = new ArrayList<>();
-                if (tableState == TableState.BODY)
-                    vals.add(rowVals);
                 Elements children = row.children();
                 @SuppressWarnings("units")
                 @GridAreaColIndex int columnIndex = 0;
@@ -165,11 +163,15 @@ public class HTMLImporter implements Importer
                     columnIndex += 1 * COL;
                     nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
                 }
+                
+                // If empty, don't count as allTH.  Otherwise start true
+                boolean allTH = !children.isEmpty();
 
                 for (Element cell : children)
                 {
                     if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
                         continue;
+                    allTH = allTH && cell.tagName().equals("th");
                     rowVals.add(cell.wholeText());
                     int rowSpan = 1;
                     int colSpan = 1;
@@ -226,8 +228,9 @@ public class HTMLImporter implements Importer
                     }
                 }
                 
-                if (tableState == TableState.BODY)
+                if (tableState == TableState.BODY && !allTH)
                 {
+                    vals.add(rowVals);
                     rowIndex += 1 * ROW;
                 }
                 else
