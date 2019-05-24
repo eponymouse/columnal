@@ -74,8 +74,13 @@
             }
         }
     }
-    .web-view {
-        -fx-font-smoothing-type: gray;
-        -fx-content-menu-enabled: false;
+    .lex-webview-wrapper {
+        -fx-padding: 1 1 1 0;
+        -fx-background-insets: 0 0 0 -1, 1 1 1 0;
+        -fx-background-color: grey(50%), white;
+        .web-view {
+            -fx-font-smoothing-type: gray;
+            -fx-content-menu-enabled: false;
+        }
     }
 }

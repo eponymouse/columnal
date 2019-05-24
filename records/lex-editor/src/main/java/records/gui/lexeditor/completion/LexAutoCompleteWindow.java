@@ -6,8 +6,10 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.web.WebView;
+import javafx.stage.Screen;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.completion.LexCompletionList;
@@ -40,11 +42,13 @@ public class LexAutoCompleteWindow extends PopupControl
             webView.managedProperty().set(vis);
             sizeToScene();
         });
-        webView.setPrefWidth(400.0);
+        webView.setPrefWidth(Screen.getPrimary().getBounds().getWidth() >= 1200 ? 500.0 : 350.0);
         webView.setVisible(false);
         listView.setMaxHeight(400.0);
         webView.setMaxHeight(400.0);
-        this.pane = new HBox(listView, webView);
+        BorderPane webViewWrapper = new BorderPane(webView);
+        webViewWrapper.getStyleClass().add("lex-webview-wrapper");
+        this.pane = new HBox(listView, webViewWrapper);
         pane.setFillHeight(false);
         pane.setFocusTraversable(false);
         
