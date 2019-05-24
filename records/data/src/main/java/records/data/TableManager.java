@@ -119,13 +119,21 @@ public class TableManager
         tablesForId.add(table);
         if (table instanceof DataSource)
         {
-            if (sources.add((DataSource)table))
+            if (sources.add((DataSource) table))
                 listener.addSource((DataSource) table);
-        }
-        else if (table instanceof Transformation)
+        } else if (table instanceof Transformation)
         {
-            if (transformations.add((Transformation)table))
-                listener.addTransformation((Transformation)table);
+            if (transformations.add((Transformation) table))
+                listener.addTransformation((Transformation) table);
+        }
+
+        try
+        {
+            this.<Table>edit(table.getId(), null, null);
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
         }
     }
 
