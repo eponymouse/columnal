@@ -122,35 +122,44 @@ public class CallExpression extends Expression
         if (TypeExp.isFunction(functionType.typeExp))
         {
             @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
-            if (functionArgTypeExp != null && functionArgTypeExp.size() == paramTypes.size())
+            if (functionArgTypeExp != null)
             {
-                // Set to null if any fail
-                @Nullable ArrayList<@NonNull TypeExp> paramTypeExps = new ArrayList<>();
-                for (int i = 0; i < paramTypes.size(); i++)
+                if (functionArgTypeExp.size() == paramTypes.size())
                 {
-                    Either<StyledString, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
-                    TypeExp t = onError.recordError(arguments.get(i), paramOutcome);
-                    if (t != null && paramTypeExps != null)
-                        paramTypeExps.add(t);
-                    else
-                        paramTypeExps = null;
-                    // We don't short circuit, so that the user sees all type errors in params.
-                }
-
-                @Nullable TypeExp functionResultTypeExp = TypeExp.getFunctionResult(functionType.typeExp);
-                if (functionResultTypeExp != null)
-                {
-                    // Can't fail because unifying with blank MutVar:
-                    TypeExp.unifyTypes(returnType, functionResultTypeExp);
-
-                    // If success:
-                    if (paramTypeExps != null)
+                    // Set to null if any fail
+                    @Nullable ArrayList<@NonNull TypeExp> paramTypeExps = new ArrayList<>();
+                    for (int i = 0; i < paramTypes.size(); i++)
                     {
-                        checked = TypeExp.function(this, ImmutableList.copyOf(paramTypeExps), returnType);
+                        Either<StyledString, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
+                        TypeExp t = onError.recordError(arguments.get(i), paramOutcome);
+                        if (t != null && paramTypeExps != null)
+                            paramTypeExps.add(t);
+                        else
+                            paramTypeExps = null;
+                        // We don't short circuit, so that the user sees all type errors in params.
                     }
+
+                    @Nullable TypeExp functionResultTypeExp = TypeExp.getFunctionResult(functionType.typeExp);
+                    if (functionResultTypeExp != null)
+                    {
+                        // Can't fail because unifying with blank MutVar:
+                        TypeExp.unifyTypes(returnType, functionResultTypeExp);
+
+                        // If success:
+                        if (paramTypeExps != null)
+                        {
+                            checked = TypeExp.function(this, ImmutableList.copyOf(paramTypeExps), returnType);
+                        }
+                    }
+
+                    doneIndivCheck = true;
                 }
-                
-                doneIndivCheck = true;
+                else
+                {
+                    // Wrong number of parameters; say that explicitly:
+                    onError.recordError(this, StyledString.s("Wrong number of parameters: expected " + functionArgTypeExp.size() + " but found " + arguments.size()));
+                    doneIndivCheck = true;
+                }
             }
         }
 

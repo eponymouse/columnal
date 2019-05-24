@@ -104,6 +104,24 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     }
 
     @Test
+    public void testFunctionError3()
+    {
+        testError("element(false)", e(0,14, "parameters"));
+    }
+
+    @Test
+    public void testFunctionError3b()
+    {
+        testError("element()", e(0,9, "parameters"));
+    }
+
+    @Test
+    public void testFunctionError3c()
+    {
+        testError("element(false,false,false)", e(0,26, 0,28, "parameters"));
+    }
+
+    @Test
     public void testUnitError1()
     {
         testError("2{s}+3{m}", e(5, 9, 7,11, "number"));
