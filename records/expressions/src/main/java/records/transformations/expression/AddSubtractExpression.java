@@ -7,9 +7,13 @@ import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -102,6 +106,23 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(AddSubtractOp.ADD)))
             {
                 fixes.add(new QuickFix<Expression>("fix.stringConcat", this, () -> new StringConcatExpression(expressions)));
+            }
+            try
+            {
+                FunctionLookup functionLookup = state.getFunctionLookup();
+                TypeExp pruned = ourType.prune();
+                if (pruned.equals(TypeExp.fromDataType(null, DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)))) && expressions.size() == 2 && ops.size() == 1 && ops.get(0) == AddSubtractOp.SUBTRACT)
+                {
+                    fixes.add(new QuickFix<Expression>("fix.daysBetween", this, () -> new CallExpression(functionLookup, "days between", expressions.toArray(new Expression[0]))));
+                }
+                else if (pruned.equals(TypeExp.fromDataType(null, DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))) && expressions.size() == 2 && ops.size() == 1 && ops.get(0) == AddSubtractOp.SUBTRACT)
+                {
+                    fixes.add(new QuickFix<Expression>("fix.secondsBetween", this, () -> new CallExpression(functionLookup, "seconds between", expressions.toArray(new Expression[0]))));
+                }
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
             }
 
             if (ourType instanceof NumTypeExp)
