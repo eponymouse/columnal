@@ -120,7 +120,8 @@ public class TableAndColumnRenames
     // Are we renaming the given table, or any of its columns?
     public boolean isRenamingTableId(TableId tableId)
     {
-        return renames.containsKey(tableId);
+        Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>> details = renames.get(tableId);
+        return details != null && (details.getFirst() != null || !details.getSecond().isEmpty());
     }
 
     // Copies all renames forward from srcTableId to id
