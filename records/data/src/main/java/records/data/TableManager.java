@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.Table.BlankSaver;
 import records.data.Table.Saver;
 import records.data.Table.TableDisplayBase;
 import records.data.TableOperations.RenameTable;
@@ -491,7 +492,21 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public void remove(TableId tableId)
     {
-        removeAndSerialise(tableId, null, TableAndColumnRenames.EMPTY);
+        removeAndSerialise(tableId, new BlankSaver() {
+            @Override
+            public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+            {
+                // Re-run dependents:
+                try
+                {
+                    TableManager.this.<Table>edit(tableId, null, TableAndColumnRenames.EMPTY);
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
+            }
+        }, TableAndColumnRenames.EMPTY);
     }
 
     /**
