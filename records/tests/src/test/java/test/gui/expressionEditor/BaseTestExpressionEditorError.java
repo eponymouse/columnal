@@ -116,7 +116,6 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 for (int i = 0; i < expectedErrors.size(); i++)
                 {
                     assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
-                    assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).displayLocation, actualErrors.get(i).displayLocation);
                     MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), new MultiSubstringMatcher(expectedErrors.get(i).expectedMessageParts));
                 }
 
@@ -150,6 +149,11 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
                     assertErrorShowing(true, null);
                     assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
+                }
+
+                for (int i = 0; i < expectedErrors.size(); i++)
+                {
+                    assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).displayLocation, actualErrors.get(i).displayLocation);
                 }
                 
                 TestUtil.doubleOk(this);
