@@ -117,6 +117,9 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
             return;
 
         }
+        // Turn off the whitespace-trimming:
+        clickOn(".check-box");
+        
         checkTrim(maybeICD);
         
         setTrim(formatAndData.format.trimChoice, maybeICD);
