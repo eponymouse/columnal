@@ -370,6 +370,16 @@ public abstract class TypeExp implements StyledShowable
         return null;
     }
 
+    public static @Nullable TypeExp getFunctionResult(TypeExp functionTypeExp)
+    {
+        if (isFunction(functionTypeExp))
+        {
+            ImmutableList<Either<UnitExp, TypeExp>> operands = ((TypeCons) functionTypeExp).operands;
+            return operands.get(operands.size() - 1).<@Nullable TypeExp>either(u -> null, t -> t);
+        }
+        return null;
+    }
+
     /**
      * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
      */

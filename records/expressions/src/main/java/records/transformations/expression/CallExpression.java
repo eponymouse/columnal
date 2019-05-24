@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.datatype.DataTypeUtility;
@@ -111,11 +112,55 @@ public class CallExpression extends Expression
         }
         
         TypeExp returnType = new MutVar(this);
+
+        @Nullable TypeExp checked = null;
         
-        TypeExp actualCallType = TypeExp.function(this, Utility.<CheckedExp, TypeExp>mapListI(paramTypes, p -> p.typeExp), returnType);
+        boolean doneIndivCheck = false;
         
-        Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
-        @Nullable TypeExp checked = onError.recordError(this, temp);
+        // If the function type is already known to be a function (which should be true for calling any standard function)
+        // we can individually compare the parameters to give more localised type errors on each parameter:
+        if (TypeExp.isFunction(functionType.typeExp))
+        {
+            @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
+            if (functionArgTypeExp != null && functionArgTypeExp.size() == paramTypes.size())
+            {
+                // Set to null if any fail
+                @Nullable ArrayList<@NonNull TypeExp> paramTypeExps = new ArrayList<>();
+                for (int i = 0; i < paramTypes.size(); i++)
+                {
+                    Either<StyledString, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
+                    TypeExp t = onError.recordError(arguments.get(i), paramOutcome);
+                    if (t != null && paramTypeExps != null)
+                        paramTypeExps.add(t);
+                    else
+                        paramTypeExps = null;
+                    // We don't short circuit, so that the user sees all type errors in params.
+                }
+
+                @Nullable TypeExp functionResultTypeExp = TypeExp.getFunctionResult(functionType.typeExp);
+                if (functionResultTypeExp != null)
+                {
+                    // Can't fail because unifying with blank MutVar:
+                    TypeExp.unifyTypes(returnType, functionResultTypeExp);
+
+                    // If success:
+                    if (paramTypeExps != null)
+                    {
+                        checked = TypeExp.function(this, ImmutableList.copyOf(paramTypeExps), returnType);
+                    }
+                }
+                
+                doneIndivCheck = true;
+            }
+        }
+
+        if (!doneIndivCheck)
+        {
+            TypeExp actualCallType = TypeExp.function(this, Utility.<CheckedExp, TypeExp>mapListI(paramTypes, p -> p.typeExp), returnType);
+            Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
+            checked = onError.recordError(this, temp);
+        }
+        
         if (checked == null)
         {
             // Check after unification attempted, because that will have constrained
