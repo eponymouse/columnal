@@ -2349,7 +2349,7 @@ public final class VirtualGrid implements ScrollBindable
                 rhs.getFirst().setTranslateX(x);
                 rhs.getSecond().setTranslateX(x);
             }
-            @AbsColIndex int lastRendered = col;
+            @AbsColIndex int lastRendered = col - CellPosition.col(1);
             columnRightHandLines.entrySet().removeIf(e -> e.getKey() > lastRendered);
         }
 
