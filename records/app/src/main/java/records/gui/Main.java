@@ -28,7 +28,7 @@ import java.util.function.Function;
  */
 public class Main extends Application
 {
-    public static final String EXTENSION_INCL_DOT = ".rec";
+    public static final String EXTENSION_INCL_DOT = ".clml";
 
     @Override
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)

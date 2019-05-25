@@ -63,6 +63,12 @@
 
         <Component Id='CompLauncher' Directory="INSTALLDIR">
             <File Id='Launcher' Name='Columnal.exe' DiskId='1' Source='Columnal.exe' KeyPath='yes' />
+        
+            <ProgId Id="Columnal" Description="Columnal File" Icon="Launcher" IconIndex="0">
+                <Extension Id="clml" ContentType="application/binary">
+                    <Verb Id="open" TargetFile="Launcher" Argument="&quot;%1&quot;"/>
+                </Extension>
+            </ProgId>
         </Component>
         
         <Feature Title='Columnal' Id='FeatureCore' Level='1' ConfigurableDirectory="INSTALLDIR">

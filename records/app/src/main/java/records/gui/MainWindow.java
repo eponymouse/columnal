@@ -81,6 +81,7 @@ public class MainWindow
                 new SaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {
                     FileChooser fc = new FileChooser();
+                    fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
                     File dest = fc.showSaveDialog(stage);
                     if (dest == null)
                         return;
@@ -89,6 +90,7 @@ public class MainWindow
                 GUI.menuItem("menu.project.saveCopy", () -> {
                     FileChooser fc = new FileChooser();
                     File dest = fc.showSaveDialog(stage);
+                    fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
                     if (dest == null)
                         return;
                     v.doSaveTo(false, dest);
