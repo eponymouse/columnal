@@ -1042,19 +1042,23 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 if (newButtonVisible)
                 {
                     label.setText(TranslationUtility.getString("main.selHint"));
+                    label.setVisible(true);
                 }
                 else
                 {
                     label.setText(TranslationUtility.getString("main.emptyHint"));
+                    label.setVisible(true);
                 }
             }
             else if (allTables.stream().allMatch(t -> t instanceof DataSource))
             {
                 label.setText(TranslationUtility.getString("main.transHint"));
+                label.setVisible(true);
             }
             else
             {
                 label.setText(Utility.universal(""));
+                label.setVisible(false);
             }
         }
         
