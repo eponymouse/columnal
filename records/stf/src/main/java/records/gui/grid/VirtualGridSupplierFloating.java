@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.stream.DoubleStream;
 
 /**
  * An implementation of {@link VirtualGridSupplier} that allows nodes to related to a grid area,
@@ -117,9 +119,15 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
     {
-        return items.stream().mapToDouble(n -> n.getPrefWidthForColumn(colIndex)).max().orElse(0.0);
+        return items.stream().flatMapToDouble(n -> {
+            OptionalDouble optionalDouble = n.getPrefWidthForColumn(colIndex);
+            if (optionalDouble.isPresent())
+                return DoubleStream.of(optionalDouble.getAsDouble());
+            else
+                return DoubleStream.empty();
+        }).max();
     }
 
     /**
@@ -162,14 +170,14 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             return node;
         }
 
-        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, T node)
+        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, T node)
         {
-            return 0;
+            return OptionalDouble.empty();
         }
         
-        public final double getPrefWidthForColumn(@AbsColIndex int columnIndex)
+        public final OptionalDouble getPrefWidthForColumn(@AbsColIndex int columnIndex)
         {
-            return node == null ? 0 : getPrefWidthForItem(columnIndex, node);
+            return node == null ? OptionalDouble.empty() : getPrefWidthForItem(columnIndex, node);
         }
         
         // Only called by outer class, so can be private

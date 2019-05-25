@@ -42,6 +42,7 @@ import utility.gui.ResizableRectangle;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * Row label supplier for all tables for a given grid.
@@ -382,10 +383,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @Override
-    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
     {
         // Row labels float, so we don't use them to size a column:
-        return 0;
+        return OptionalDouble.empty();
     }
 
     public static enum Visible { VISIBLE }

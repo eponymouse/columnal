@@ -15,6 +15,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * A class which manages and supplies nodes of a given type.
@@ -49,8 +50,10 @@ public abstract class VirtualGridSupplier<T extends Node>
     /**
      * Gets preferred width for the given column among any nodes that are in
      * that column, where preferred means the width needed to display the full-content.
+     * 
+     * If no nodes are in that column, returns empty instead.
      */
-    public abstract double getPrefColumnWidth(@AbsColIndex int colIndex);
+    public abstract OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex);
 
     /**
      * EDITING means it has focus and should receive all mouse events.

@@ -81,6 +81,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * A DataDisplay is a GridArea that can be used to display some table data.  Crucially, it does
@@ -614,14 +615,14 @@ public abstract class DataDisplay extends HeadedDisplay
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
+        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
         {
             if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
             {
-                return node.prefWidth(-1);
+                return OptionalDouble.of(node.prefWidth(-1));
             }
             else
-                return 0;
+                return OptionalDouble.empty();
         }
 
         @Override
@@ -756,14 +757,14 @@ public abstract class DataDisplay extends HeadedDisplay
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected double getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
+        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
         {
             if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
             {
-                return node.prefWidth(-1);
+                return OptionalDouble.of(node.prefWidth(-1));
             }
             else
-                return 0;
+                return OptionalDouble.empty();
         }
 
         @Override

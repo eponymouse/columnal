@@ -43,6 +43,7 @@ import utility.TranslationUtility;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
@@ -64,9 +65,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
-    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
     {
-        return getItemsInColumn(colIndex).stream().mapToDouble(n -> n.calcWidthToFitContent()).max().orElse(0.0);
+        return getItemsInColumn(colIndex).stream().mapToDouble(n -> n.calcWidthToFitContent()).max();
     }
 
     @Override

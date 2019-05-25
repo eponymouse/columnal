@@ -44,19 +44,15 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
@@ -93,6 +89,7 @@ import utility.gui.GUI;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 
 /**
@@ -201,7 +198,7 @@ public final class VirtualGrid implements ScrollBindable
     private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>();
 
     private static final double rowHeight = 24;
-    private static final double defaultColumnWidth = 100;
+    private static final double DEFAULT_COLUMN_WIDTH = 100;
     private static final double fixedFirstColumnWidth = 20;
 
     private final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
@@ -828,7 +825,7 @@ public final class VirtualGrid implements ScrollBindable
         if (columnIndex == 0)
             return fixedFirstColumnWidth;
         else
-            return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
+            return customisedColumnWidths.getOrDefault(columnIndex, DEFAULT_COLUMN_WIDTH);
     }
 
     @Pure
@@ -1078,7 +1075,11 @@ public final class VirtualGrid implements ScrollBindable
 
     public void setColumnWidth(@AbsColIndex int columnIndex, double width, boolean sizedByUser)
     {
-        customisedColumnWidths.put(CellPosition.col(columnIndex), width);
+        // This is an exact comparison, but that happens if you double-click empty column:
+        if (width == DEFAULT_COLUMN_WIDTH)
+            customisedColumnWidths.remove(CellPosition.col(columnIndex));
+        else
+            customisedColumnWidths.put(CellPosition.col(columnIndex), width);
         cachedColumnLeftX = null;
         updateSizeAndPositions();
         if (sizedByUser && manager != null)
@@ -1953,11 +1954,11 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
         {
             // The button is transient, so don't use it
             // to determine long-term column width:
-            return 0;
+            return OptionalDouble.empty();
         }
 
         @OnThread(Tag.FXPlatform)
@@ -2228,13 +2229,23 @@ public final class VirtualGrid implements ScrollBindable
 
     private double calcPrefColumnWidth(@AbsColIndex int colIndex)
     {
-        double width = MIN_COL_WIDTH;
-        for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+        OptionalDouble widest = nodeSuppliers.stream().flatMapToDouble(nodeSupplier -> {
+            OptionalDouble optionalDouble = nodeSupplier.getPrefColumnWidth(colIndex);
+            if (optionalDouble.isPresent())
+                return DoubleStream.of(optionalDouble.getAsDouble());
+            else
+                return DoubleStream.empty();
+        }).max();
+        
+        if (widest.isPresent())
         {
-            width = Math.max(width, nodeSupplier.getPrefColumnWidth(colIndex));
+            // Let's not go crazy with the width:
+            return Math.min(600.0, Math.max(MIN_COL_WIDTH, widest.getAsDouble()));
         }
-        // Let's not go crazy with the width:
-        return Math.min(width, 400.0);
+        else
+        {
+            return DEFAULT_COLUMN_WIDTH;
+        }
     }
 
     @OnThread(Tag.FXPlatform)

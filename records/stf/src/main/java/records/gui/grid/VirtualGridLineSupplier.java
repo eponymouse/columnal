@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 
 public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
@@ -105,9 +107,9 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     }
 
     @Override
-    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
     {
-        return 0;
+        return OptionalDouble.empty();
     }
 
     public Collection<Line> _test_getColumnDividers()

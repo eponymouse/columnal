@@ -30,6 +30,7 @@ import utility.gui.FXUtility;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
@@ -76,9 +77,9 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     }
 
     @Override
-    public double getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
     {
-        return getItemsInColumn(colIndex).stream().mapToDouble(b -> b.prefWidth(-1)).max().orElse(0.0);
+        return getItemsInColumn(colIndex).stream().mapToDouble(b -> b.prefWidth(-1)).max();
     }
 
     @Override
