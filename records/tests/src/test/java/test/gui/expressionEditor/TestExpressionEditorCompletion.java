@@ -33,6 +33,8 @@ import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.InvalidOperatorExpression;
@@ -313,7 +315,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
         Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getStyleClass().contains("styled-text") &&  !((Text)n).getText().isEmpty() && !ImmutableList.of("Related", "Operators", "Help").contains(((Text)n).getText()) && n.getScene() == completions.get(0).getScene()).queryAll());
         double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> {
-            Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
+            //Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
             return t.localToScreen(t.getBoundsInLocal()).getMinX();
         }).average()).orElse(-1);
         MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 0.5));
@@ -409,5 +411,41 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
             c("type{}", 0,0, 8,8, 23,23, 24,24),
             c("from text()", 0,0, 8,8, 23,23, 24,29)
         );
+    }
+
+    @Test
+    public void testNumMinus1() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("12");
+        checkPosition();
+        scrollLexAutoCompleteToOption("-");
+        push(KeyCode.ENTER);
+        write("3");
+        assertEquals(new AddSubtractExpression(ImmutableList.of(new NumericLiteral(12, null), new NumericLiteral(3, null)), ImmutableList.of(AddSubtractOp.SUBTRACT)), finish());
+    }
+
+    @Test
+    public void testNumMinus1b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("123");
+        checkPosition();
+        push(KeyCode.LEFT);
+        scrollLexAutoCompleteToOption("-");
+        push(KeyCode.ENTER);
+        assertEquals(new AddSubtractExpression(ImmutableList.of(new NumericLiteral(12, null), new NumericLiteral(3, null)), ImmutableList.of(AddSubtractOp.SUBTRACT)), finish());
+    }
+
+    @Test
+    public void testLongOp() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("1<2");
+        checkPosition();
+        push(KeyCode.LEFT);
+        scrollLexAutoCompleteToOption("<=");
+        push(KeyCode.ENTER);
+        assertEquals(new ComparisonExpression(ImmutableList.of(new NumericLiteral(1, null), new NumericLiteral(2, null)), ImmutableList.of(ComparisonOperator.LESS_THAN_OR_EQUAL_TO)), finish());
     }
 }

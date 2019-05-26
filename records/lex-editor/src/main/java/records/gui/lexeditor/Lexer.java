@@ -79,7 +79,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     
     protected static interface MakeCompletions<CCC extends CodeCompletionContext>
     {
-        public CCC makeCompletions(String chunk, @CanonicalLocation int canonIndex);
+        public CCC makeCompletions(String chunk, @CanonicalLocation int canonIndex, @Nullable String precedingChunk);
     }
     
     protected static <CCC extends CodeCompletionContext> ImmutableList<AutoCompleteDetails<CCC>> makeCompletions(List<ContentChunk> chunks, MakeCompletions<CCC> makeCompletions)
@@ -88,6 +88,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
 
         @CanonicalLocation int curPos = CanonicalLocation.ZERO;
         ChunkType prevChunkType = ChunkType.NON_IDENT;
+        @Nullable String prevChunk = null;
         for (ContentChunk chunk : chunks)
         {
             @SuppressWarnings("units")
@@ -99,19 +100,20 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
                 if (showCompletions(chunk.chunkType) || !showCompletions(prevChunkType))
                 {
-                    CCC context = makeCompletions.makeCompletions(chunk.internalContent, curPos);
+                    CCC context = makeCompletions.makeCompletions(chunk.internalContent, curPos, prevChunk);
                     acd.add(new AutoCompleteDetails<>(location, context));
                 }
             }
             
             curPos = nextPos;
             prevChunkType = chunk.chunkType;
+            prevChunk = chunk.internalContent;
         }
         if (!showCompletions(prevChunkType))
         {
             // Add completions beyond last item:
             CanonicalSpan location = new CanonicalSpan(curPos, curPos);
-            CCC context = makeCompletions.makeCompletions("", curPos);
+            CCC context = makeCompletions.makeCompletions("", curPos, prevChunk);
             acd.add(new AutoCompleteDetails<>(location, context));
         }
         

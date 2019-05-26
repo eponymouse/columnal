@@ -520,9 +520,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             // Can be swapped back in Java 9
 
             @Override
-            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex)
+            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, @Nullable String precedingChunk)
             {
-                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, saver);
+                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, precedingChunk, saver);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
@@ -532,7 +532,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ExpressionSaver expressionSaver)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String precedingChunk, ExpressionSaver expressionSaver)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -568,22 +568,25 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 guides.add(guideCompletion("Expressions", "expressions", start, end));
             }
         }
-
-        ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem);
+        
+        ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem, precedingChunk);
         
         return new ExpressionCompletionContext(sort(directAndRelated, operators, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
     }
 
-    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, String stem)
+    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, String stem, @Nullable String precedingChunk)
     {// Does the preceding chunk match any operators?  If so, only show those in first position:
-        ImmutableList<Op> opsToShowAtStart = Arrays.stream(Op.values()).filter(op -> op.getContent().startsWith(stem)).collect(ImmutableList.<Op>toImmutableList());
-        return Utility.<Op, LexCompletion>mapListI(ImmutableList.<@NonNull Op>copyOf(Op.values()), op -> {
-            // Never show in the first position -- this avoids overlap (prev end will show instead), and we shouldn't
-            // show at very beginning anyway:
-            return new LexCompletion(canonIndex + CanonicalLocation.ONE, stem.length() - 1, op.getContent())
-                .withSideText(TranslationUtility.getString(op.localNameKey))
-                .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html");
-        });
+        ImmutableList<Op> opsToShowAtStart = Arrays.stream(Op.values()).filter(op -> precedingChunk != null && op.getContent().startsWith(precedingChunk) && !op.getContent().equals(precedingChunk)).collect(ImmutableList.<Op>toImmutableList());
+        return Arrays.stream(Op.values()).<LexCompletion>flatMap(op -> {
+            return IntStream.range(opsToShowAtStart.contains(op) ? 0 : 1, stem.length() + 1).<LexCompletion>mapToObj(offset -> {
+                // If offset is 0, we are showing at the first position, partway through the operator.  Assuming
+                // there are only two chars in an operator, we must adjust backwards by 1 for the start position and 
+                // thus extend the length-to-show to 1, so it shows on us
+                return new LexCompletion(canonIndex + ((offset == 0 ? -1 : offset) * CanonicalLocation.ONE), offset == 0 ? 1 : 0, op.getContent())
+                    .withSideText(TranslationUtility.getString(op.localNameKey))
+                    .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html");
+            });
+        }).collect(ImmutableList.<LexCompletion>toImmutableList());
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
