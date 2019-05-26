@@ -230,7 +230,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
             c("false", 0,0, 3,3, 8,13, 18,18, 23,23, 28,29, 41,41, 56,56, 57,57, 61,61, 62,62, 68,68),
             c("type{}", 0,0, 3,4, 8,8, 18,18, 23,23, 28,28, 41,41, 56,56, 57,57, 61,61, 62,62, 68,68),
             c("Boolean", 46,46, 55,55),
-            c("min", 21,22, 53,54),
+            c("minute", 21,22, 53,54),
             c("hour", 21,21, 53, 53)
         );
     }
