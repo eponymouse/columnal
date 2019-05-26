@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
 import records.data.datatype.DataType;
@@ -504,15 +505,16 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
 
-        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new BiFunction<String, @CanonicalLocation Integer, ExpressionCompletionContext>()
+        return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new MakeCompletions<ExpressionCompletionContext>()
         {
             // Must be anon inner class to avoid lambda annotation bug in checker framework
             // https://github.com/typetools/checker-framework/issues/2173
             // Can be swapped back in Java 9
+
             @Override
-            public ExpressionCompletionContext apply(String s, @CanonicalLocation Integer p)
+            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, @Nullable String precedingChunk)
             {
-                return ExpressionLexer.this.makeCompletions(s, p, saver);
+                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, precedingChunk, saver);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
@@ -522,7 +524,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ExpressionSaver expressionSaver)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String precedingChunk, ExpressionSaver expressionSaver)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -559,7 +561,24 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
         
-        return new ExpressionCompletionContext(sort(directAndRelated, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
+        ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem.length(), precedingChunk);
+        
+        return new ExpressionCompletionContext(sort(directAndRelated, operators, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
+    }
+
+    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, int chunkLength, @Nullable String precedingChunk)
+    {
+        // Does the preceding chunk match any operators?  If so, only show those in first position:
+        ImmutableList<Op> opsToShowAtStart = Arrays.stream(Op.values()).filter(op -> precedingChunk != null && !precedingChunk.isEmpty() && op.getContent().startsWith(precedingChunk)).collect(ImmutableList.<Op>toImmutableList());
+        return Utility.<Op, LexCompletion>mapListI(ImmutableList.<@NonNull Op>copyOf(Op.values()), op -> {
+            final LexCompletion completion;
+            // Show all the way along if no partial operators, or we are one of them:
+            if (opsToShowAtStart.isEmpty() || opsToShowAtStart.contains(op))
+                completion = new LexCompletion(canonIndex, chunkLength, op.getContent());
+            else
+                completion = new LexCompletion(canonIndex + CanonicalLocation.ONE, chunkLength - 1, op.getContent());
+            return completion.withSideText("TODO").withFurtherDetailsURL("TODO");
+        });
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
@@ -1026,7 +1045,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
     
-    private static ImmutableList<LexCompletionGroup> sort(ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> completions, ImmutableList<LexCompletion> guides)
+    private static ImmutableList<LexCompletionGroup> sort(ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> completions, ImmutableList<LexCompletion> operators, ImmutableList<LexCompletion> guides)
     {
         ImmutableList.Builder<LexCompletionGroup> groups = ImmutableList.builder();
 
@@ -1039,6 +1058,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         if (!related.isEmpty())
         {
             groups.add(new LexCompletionGroup(related, StyledString.s("Related"), 2));
+        }
+        if (!operators.isEmpty())
+        {
+            groups.add(new LexCompletionGroup(operators, StyledString.s("Operators"), 1));
         }
         if (!guides.isEmpty())
         {

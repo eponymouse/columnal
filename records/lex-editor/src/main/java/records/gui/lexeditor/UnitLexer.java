@@ -165,7 +165,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String preceding)
     {
         return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(Utility.mapListI(unitManager.getAllDeclared(), u -> {
             int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);

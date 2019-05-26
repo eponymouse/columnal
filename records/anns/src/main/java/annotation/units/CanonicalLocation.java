@@ -19,4 +19,5 @@ import java.lang.annotation.Target;
 public @interface CanonicalLocation
 {
     public static final @CanonicalLocation int ZERO = 0;
+    public static final @CanonicalLocation int ONE = 1;
 }
