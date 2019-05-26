@@ -29,14 +29,18 @@ import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.transformations.Calculate;
+import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.InvalidOperatorExpression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
+import test.gui.trait.AutoCompleteTrait;
 import test.gui.trait.PopupTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -56,7 +60,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorCompletion extends FXApplicationTest implements PopupTrait
+public class TestExpressionEditorCompletion extends FXApplicationTest implements PopupTrait, AutoCompleteTrait
 {
     @SuppressWarnings("nullness")
     private MainWindowActions mainWindowActions;
@@ -307,7 +311,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         @SuppressWarnings("units") // Because passes through IntStream
         @CanonicalLocation int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
         double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
-        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && !((Text)n).getText().isEmpty() && !((Text)n).getText().equals("Related") && !((Text)n).getText().equals("Help") && n.getScene() == completions.get(0).getScene()).queryAll());
+        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getStyleClass().contains("styled-text") &&  !((Text)n).getText().isEmpty() && !ImmutableList.of("Related", "Operators", "Help").contains(((Text)n).getText()) && n.getScene() == completions.get(0).getScene()).queryAll());
         double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> {
             Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
             return t.localToScreen(t.getBoundsInLocal()).getMinX();
