@@ -111,16 +111,16 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     // One set of operators that can be used to make a particular expression
     protected class OperatorExpressionInfo
     {
-        public final ImmutableList<Pair<OP, @Localized String>> operators;
+        public final ImmutableList<OP> operators;
         public final Either<MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT>, MakeBinary<EXPRESSION, SAVER>> makeExpression;
 
-        public OperatorExpressionInfo(ImmutableList<Pair<OP, @Localized String>> operators, MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT> makeExpression)
+        public OperatorExpressionInfo(ImmutableList<OP> operators, MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT> makeExpression)
         {
             this.operators = operators;
             this.makeExpression = Either.left(makeExpression);
         }
 
-        public OperatorExpressionInfo(ImmutableList<Pair<OP, @Localized String>> operators, MakeNarySimple<EXPRESSION, SAVER, OP> makeExpression)
+        public OperatorExpressionInfo(ImmutableList<OP> operators, MakeNarySimple<EXPRESSION, SAVER, OP> makeExpression)
         {
             this.operators = operators;
             this.makeExpression = Either.left((ImmutableList<@Recorded EXPRESSION> es, List<Pair<OP, CanonicalSpan>> ops, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketAndNodes, EditorLocationAndErrorRecorder _err) -> {
@@ -135,7 +135,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         // I know it's a bit odd, but we distinguish the N-ary constructor from the binary constructor by 
         // making the operators a non-list here.  The only expression with multiple operators
         // is add-subtract, which is N-ary.  And you can't have a binary expression with multiple different operators...
-        protected OperatorExpressionInfo(Pair<OP, @Localized String> operator, MakeBinary<EXPRESSION, SAVER> makeExpression)
+        protected OperatorExpressionInfo(OP operator, MakeBinary<EXPRESSION, SAVER> makeExpression)
         {
             this.operators = ImmutableList.of(operator);
             this.makeExpression = Either.right(makeExpression);
@@ -143,7 +143,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
         public boolean includes(@NonNull OP op)
         {
-            return operators.stream().anyMatch(p -> op.equals(p.getFirst()));
+            return operators.contains(op);
         }
 
         public OperatorSection makeOperatorSection(EditorLocationAndErrorRecorder locationRecorder, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
@@ -158,11 +158,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     public abstract class OperatorSection
     {
         protected final EditorLocationAndErrorRecorder locationRecorder;
-        protected final ImmutableList<Pair<OP, @Localized String>> possibleOperators;
+        protected final ImmutableList<OP> possibleOperators;
         // The ordering in the candidates list:
         public final int operatorSetPrecedence;
 
-        protected OperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<Pair<OP, @Localized String>> possibleOperators, int operatorSetPrecedence)
+        protected OperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<OP> possibleOperators, int operatorSetPrecedence)
         {
             this.locationRecorder = locationRecorder;
             this.possibleOperators = possibleOperators;
@@ -195,7 +195,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         private final int operatorIndex;
         private final OpAndNode operator;
 
-        BinaryOperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SAVER> makeExpression, int initialIndex, OpAndNode operator)
+        BinaryOperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<OP> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SAVER> makeExpression, int initialIndex, OpAndNode operator)
         {
             super(locationRecorder, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
@@ -253,7 +253,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         private final int startingOperatorIndexIncl;
         private int endingOperatorIndexIncl;
 
-        NaryOperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT> makeExpression, int initialIndex, OpAndNode initialOperator)
+        NaryOperatorSection(EditorLocationAndErrorRecorder locationRecorder, ImmutableList<OP> operators, int candidatePrecedence, MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT> makeExpression, int initialIndex, OpAndNode initialOperator)
         {
             super(locationRecorder, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
@@ -265,7 +265,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         @Override
         boolean addOperator(@NonNull OpAndNode operator, int indexOfOperator)
         {
-            if (possibleOperators.stream().anyMatch(p -> operator.op.equals(p.getFirst())) && indexOfOperator == endingOperatorIndexIncl + 1)
+            if (possibleOperators.contains(operator.op) && indexOfOperator == endingOperatorIndexIncl + 1)
             {
                 endingOperatorIndexIncl = indexOfOperator;
                 actualOperators.add(new Pair<>(operator.op, operator.sourceNode));

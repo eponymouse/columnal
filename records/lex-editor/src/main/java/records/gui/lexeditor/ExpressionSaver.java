@@ -667,11 +667,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
      * to a function.
      */
     //List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException;
-
-    private static Pair<Op, @Localized String> opD(Op op, @LocalizableKey String key)
-    {
-        return new Pair<>(op, TranslationUtility.getString(key));
-    }
     
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
@@ -679,77 +674,48 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     final ImmutableList<ImmutableList<OperatorExpressionInfo>> OPERATORS = ImmutableList.<ImmutableList<OperatorExpressionInfo>>of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(
-                opD(Op.RAISE, "op.raise")
-                , (lhs, _n, rhs, _b, _e) -> new RaiseExpression(lhs, rhs))
+            new OperatorExpressionInfo(Op.RAISE, (lhs, _n, rhs, _b, _e) -> new RaiseExpression(lhs, rhs))
         ),
 
         // Arithmetic operators are all one group.  I know we could separate +- from */, but if you see
         // an expression like 1 + 2 * 3, I'm not sure either bracketing is obviously more likely than the other.
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.ADD, "op.plus"),
-                opD(Op.SUBTRACT, "op.minus")
-            ), ExpressionSaver::makeAddSubtract),
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.MULTIPLY, "op.times")
-            ), ExpressionSaver::makeTimes),
-            new OperatorExpressionInfo(
-                opD(Op.DIVIDE, "op.divide")
-                , (lhs, _n, rhs, _b, _e) -> new DivideExpression(lhs, rhs))
+            new OperatorExpressionInfo(ImmutableList.of(Op.ADD, Op.SUBTRACT), ExpressionSaver::makeAddSubtract),
+            new OperatorExpressionInfo(ImmutableList.of(Op.MULTIPLY), ExpressionSaver::makeTimes),
+            new OperatorExpressionInfo(Op.DIVIDE, (lhs, _n, rhs, _b, _e) -> new DivideExpression(lhs, rhs))
         ),
 
         // String concatenation lower than arithmetic.  If you write "val: (" ; 1 * 2; ")" then what you meant
         // is "val: (" ; to.string(1 * 2); ")" which requires an extra function call, but bracketing the arithmetic
         // will be the first step, and much more likely than ("val: (" ; 1) * (2; ")")
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.STRING_CONCAT, "op.stringConcat")
-            ), ExpressionSaver::makeStringConcat)
+            new OperatorExpressionInfo(ImmutableList.of(Op.STRING_CONCAT), ExpressionSaver::makeStringConcat)
         ),
 
         // It's moot really whether this is before or after string concat, but feels odd putting them in same group:
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(
-                opD(Op.PLUS_MINUS, "op.plusminus")
-                , (lhs, _n, rhs, _b, _e) -> new PlusMinusPatternExpression(lhs, rhs))
+            new OperatorExpressionInfo(Op.PLUS_MINUS, (lhs, _n, rhs, _b, _e) -> new PlusMinusPatternExpression(lhs, rhs))
         ),
 
         // Equality and comparison operators:
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.EQUALS, "op.equal")
-            ), ExpressionSaver::makeEqual),
-            new OperatorExpressionInfo(
-                opD(Op.NOT_EQUAL, "op.notEqual")
-                , (lhs, _n, rhs, _b, _e) -> new NotEqualExpression(lhs, rhs)),
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.LESS_THAN, "op.lessThan"),
-                opD(Op.LESS_THAN_OR_EQUAL, "op.lessThanOrEqual")
-            ), ExpressionSaver::makeComparisonLess),
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.GREATER_THAN, "op.greaterThan"),
-                opD(Op.GREATER_THAN_OR_EQUAL, "op.greaterThanOrEqual")
-            ), ExpressionSaver::makeComparisonGreater)
+            new OperatorExpressionInfo(ImmutableList.of(Op.EQUALS), ExpressionSaver::makeEqual),
+            new OperatorExpressionInfo(Op.NOT_EQUAL, (lhs, _n, rhs, _b, _e) -> new NotEqualExpression(lhs, rhs)),
+            new OperatorExpressionInfo(ImmutableList.of(Op.LESS_THAN, Op.LESS_THAN_OR_EQUAL), ExpressionSaver::makeComparisonLess),
+            new OperatorExpressionInfo(ImmutableList.of(Op.GREATER_THAN, Op.GREATER_THAN_OR_EQUAL), ExpressionSaver::makeComparisonGreater)
         ),
 
         // Boolean and, or expressions come near-last.  If you see a = b & c = d, it's much more likely you wanted (a = b) & (c = d) than
         // a = (b & c) = d.
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.AND, "op.and")
-            ), ExpressionSaver::makeAnd),
-            new OperatorExpressionInfo(ImmutableList.of(
-                opD(Op.OR, "op.or")
-            ), ExpressionSaver::makeOr)
+            new OperatorExpressionInfo(ImmutableList.of(Op.AND), ExpressionSaver::makeAnd),
+            new OperatorExpressionInfo(ImmutableList.of(Op.OR), ExpressionSaver::makeOr)
         ),
 
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(
-                opD(Op.COMMA, "op.separator")
-                , (lhs, _n, rhs, _b, _e) -> /* Dummy, see below: */ lhs)
+            new OperatorExpressionInfo(Op.COMMA, (lhs, _n, rhs, _b, _e) -> /* Dummy, see below: */ lhs)
             {
                 @Override
                 public OperatorSection makeOperatorSection(EditorLocationAndErrorRecorder locationRecorder, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)

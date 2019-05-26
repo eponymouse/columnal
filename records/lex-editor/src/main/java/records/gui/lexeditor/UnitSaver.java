@@ -40,12 +40,9 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     public static final DataFormat UNIT_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
-        new OperatorExpressionInfo(ImmutableList.of(
-            opD(UnitOp.MULTIPLY, "op.times")), UnitSaver::makeTimes),
-        new OperatorExpressionInfo(
-            opD(UnitOp.DIVIDE, "op.divide"), UnitSaver::makeDivide),
-        new OperatorExpressionInfo(
-            opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
+        new OperatorExpressionInfo(ImmutableList.of(UnitOp.MULTIPLY), UnitSaver::makeTimes),
+        new OperatorExpressionInfo(UnitOp.DIVIDE, UnitSaver::makeDivide),
+        new OperatorExpressionInfo(UnitOp.RAISE, UnitSaver::makeRaise));
     
     private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
     {

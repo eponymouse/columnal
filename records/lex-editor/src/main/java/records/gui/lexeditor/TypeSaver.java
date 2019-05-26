@@ -45,7 +45,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     public static final DataFormat TYPE_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
-        new OperatorExpressionInfo(ImmutableList.of(new Pair<Operator, @Localized String>(Operator.COMMA, Utility.universal(""))), new MakeNary<TypeExpression, TypeSaver, Operator, BracketContent>()
+        new OperatorExpressionInfo(ImmutableList.of(Operator.COMMA), new MakeNary<TypeExpression, TypeSaver, Operator, BracketContent>()
         {
             @Nullable
             @Override

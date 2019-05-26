@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
@@ -122,15 +123,22 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      */
     public static enum Op implements ExpressionToken
     {
-        AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
-        COMMA(","),
-        LESS_THAN("<"), LESS_THAN_OR_EQUAL("<="), GREATER_THAN(">"), GREATER_THAN_OR_EQUAL(">=");
+        AND("&", "op.and"), OR("|", "op.or"), 
+        MULTIPLY("*", "op.times"), DIVIDE("/", "op.divide"), 
+        ADD("+", "op.plus"), SUBTRACT("-", "op.minus"), 
+        STRING_CONCAT(";", "op.stringConcat"), 
+        EQUALS("=", "op.equal"), NOT_EQUAL("<>", "op.notEqual"), 
+        PLUS_MINUS("\u00B1", "op.plusminus"), RAISE("^", "op.raise"),
+        COMMA(",", "op.separator"),
+        LESS_THAN("<", "op.lessThan"), LESS_THAN_OR_EQUAL("<=", "op.lessThanOrEqual"), GREATER_THAN(">", "op.greaterThan"), GREATER_THAN_OR_EQUAL(">=", "op.greaterThanOrEqual");
 
         private final String op;
+        private final @LocalizableKey String localNameKey;
 
-        private Op(String op)
+        private Op(String op, @LocalizableKey String localNameKey)
         {
             this.op = op;
+            this.localNameKey = localNameKey;
         }
 
         @Override
@@ -577,7 +585,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 completion = new LexCompletion(canonIndex, chunkLength, op.getContent());
             else
                 completion = new LexCompletion(canonIndex + CanonicalLocation.ONE, chunkLength - 1, op.getContent());
-            return completion.withSideText("TODO").withFurtherDetailsURL("TODO");
+            return completion
+                .withSideText(TranslationUtility.getString(op.localNameKey))
+                .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html");
         });
     }
 

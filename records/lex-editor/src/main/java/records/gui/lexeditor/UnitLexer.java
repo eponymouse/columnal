@@ -6,6 +6,7 @@ import annotation.units.CanonicalLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
@@ -34,13 +35,15 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
 {
     public static enum UnitOp implements ExpressionToken
     {
-        MULTIPLY("*"), DIVIDE("/"), RAISE("^");
+        MULTIPLY("*", "op.times"), DIVIDE("/", "op.divide"), RAISE("^", "op.raise");
 
         private final String op;
+        private final @LocalizableKey String localNameKey;
 
-        private UnitOp(String op)
+        private UnitOp(String op, @LocalizableKey String localNameKey)
         {
             this.op = op;
+            this.localNameKey = localNameKey;
         }
 
         @Override
