@@ -46,6 +46,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -430,9 +431,9 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
         {
-            return 0;
+            return OptionalDouble.empty();
         }
 
         @Override
@@ -463,9 +464,9 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public double getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
         {
-            return 0;
+            return OptionalDouble.empty();
         }
 
         @Override
