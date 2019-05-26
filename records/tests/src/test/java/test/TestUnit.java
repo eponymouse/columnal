@@ -144,9 +144,9 @@ public class TestUnit
         test("26.8224", "m/s", "60", "mile/hour");
         test("2682.24", "cm*s^-1", "60", "mile/hour");
         test("45645.2419", "mile/hour^2", "5.6681247", "m/(s*s)");
-        test("817684.876315", "inch^3/min", "223.32424", "l/s");
-        test("817684.876315", "inch^3/min", "223324.24", "ml/s");
-        test("817684.876315", "(inch*inch*inch)/min", "223.32424", "l*s^-1");
+        test("817684.876315", "inch^3/minute", "223.32424", "l/s");
+        test("817684.876315", "inch^3/minute", "223324.24", "ml/s");
+        test("817684.876315", "(inch*inch*inch)/minute", "223.32424", "l*s^-1");
 
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }
