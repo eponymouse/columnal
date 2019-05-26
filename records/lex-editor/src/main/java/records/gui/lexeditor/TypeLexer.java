@@ -308,7 +308,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String preceding)
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex)
     {
         return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(
             Stream.<LexCompletion>concat(

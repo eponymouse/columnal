@@ -19,7 +19,7 @@ public class LexCompletion
 {
     public final @CanonicalLocation int startPos;
     public final @CanonicalLocation int lastShowPosIncl;
-    // If null, completing does not change content, but rather 
+    // If null, completing does not change content, but rather opens the further details in a new window 
     public @MonotonicNonNull String content;
     StyledString display;
     public int relativeCaretPos;
@@ -133,6 +133,22 @@ public class LexCompletion
     public int hashCode()
     {
         return Objects.hash(startPos, lastShowPosIncl, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText);
+    }
+
+    // Used for testing:
+    @Override
+    public String toString()
+    {
+        return "LexCompletion{" +
+            "startPos=" + startPos +
+            ", lastShowPosIncl=" + lastShowPosIncl +
+            ", content='" + content + '\'' +
+            ", display=" + display +
+            ", relativeCaretPos=" + relativeCaretPos +
+            ", selectionBehaviour=" + selectionBehaviour +
+            ", furtherDetails=" + furtherDetails +
+            ", sideText='" + sideText + '\'' +
+            '}';
     }
 
     public LexCompletion offsetBy(@CanonicalLocation int offsetBy)

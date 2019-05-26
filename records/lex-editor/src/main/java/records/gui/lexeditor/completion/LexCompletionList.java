@@ -3,6 +3,7 @@ package records.gui.lexeditor.completion;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableBiMap.Builder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -21,7 +22,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -254,7 +257,23 @@ class LexCompletionList extends Region
                 indexes.put(curCompletionGroups.get(i).completions.get(j), new Pair<>(i, j));
             }
         }
-        this.completionIndexes = indexes.build();
+        try
+        {
+            this.completionIndexes = indexes.build();
+        }
+        catch (Exception e)
+        {
+            // We shouldn't have duplicate completions, but don't let such an exception propagate:
+            this.completionIndexes = ImmutableBiMap.of();
+            try
+            {
+                throw new InternalException("Duplicate completions", e);
+            }
+            catch (InternalException internal)
+            {
+                Log.log(internal);
+            }
+        }
         // Keep same item selected, if still present:
         @Nullable LexCompletion sel = selectedItem.get();
         @Nullable Pair<Integer, Integer> target = sel == null ? null : completionIndexes.get(sel);
