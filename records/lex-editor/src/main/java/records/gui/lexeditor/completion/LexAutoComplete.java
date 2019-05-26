@@ -72,6 +72,16 @@ public class LexAutoComplete
         window.listView.up();
     }
 
+    public void pageDown()
+    {
+        window.listView.pageDown();
+    }
+
+    public void pageUp()
+    {
+        window.listView.pageUp();
+    }
+
     public Optional<LexCompletion> getSelectedCompletion()
     {
         return Optional.ofNullable(window.listView.getSelectedItem());

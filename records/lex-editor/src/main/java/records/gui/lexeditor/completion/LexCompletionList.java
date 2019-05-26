@@ -335,6 +335,40 @@ class LexCompletionList extends Region
                 select(new Pair<>(selectionIndex.getFirst() + 1, 0));
         }
     }
+
+    public void pageUp()
+    {
+        if (selectionIndex != null)
+        {
+            OptionalInt prevNonEmpty = Utility.findLastIndex(curCompletionGroups.subList(0, selectionIndex.getFirst()), g -> !g.completions.isEmpty());
+            if (prevNonEmpty.isPresent())
+            {
+                select(new Pair<>(prevNonEmpty.getAsInt(), 0));
+            }
+            else
+            {
+                select(null);
+            }
+        }
+    }
+
+    public void pageDown()
+    {
+        if (selectionIndex == null)
+        {
+            OptionalInt firstNonEmpty = Utility.findFirstIndex(curCompletionGroups, g -> !g.completions.isEmpty());
+            if (firstNonEmpty.isPresent())
+                select(new Pair<>(firstNonEmpty.getAsInt(), 0));
+        }
+        else
+        {
+            int next = selectionIndex.getFirst() + 1;
+            OptionalInt nextNonEmpty = Utility.findFirstIndex(curCompletionGroups.subList(next, curCompletionGroups.size()), g -> !g.completions.isEmpty());
+            if (nextNonEmpty.isPresent())
+                select(new Pair<>(nextNonEmpty.getAsInt() + next, 0));
+            // else do nothing
+        }
+    }
     
     public Stream<LexCompletion> getItems()
     {

@@ -195,6 +195,14 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     if (autoComplete.isShowing())
                         autoComplete.up();
                     break;
+                case PAGE_DOWN:
+                    if (autoComplete.isShowing())
+                        autoComplete.pageDown();
+                    break;
+                case PAGE_UP:
+                    if (autoComplete.isShowing())
+                        autoComplete.pageUp();
+                    break;
                 case BACK_SPACE:
                     if (caretPosition != content.getAnchorPosition())
                         content.replaceSelection("");
