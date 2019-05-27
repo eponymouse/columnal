@@ -1,0 +1,83 @@
+We have a few type-related problems to solve:
+  1. We have a proliferation of possible conversion functions, e.g. involving single dates alone there is:
+     - date to text
+     - text to date
+     - ymd to date
+     - date to y
+     - date to m
+     - date to d
+     - date to dateym
+     Not to mention extra ones like dateym+d to date, date+time to datetime, etc
+     
+  2. More complex functions may want optional (named) parameters.  For example a "starts with text" function may take an optional text collation argument.  A glance at R functions shows this is a very common need.
+
+  3. Anonymous tuples for larger data structures are painful, named fields are much nicer.
+
+Solutions for 1:
+
+1A: Just have lots of uniquely named functions.
+Pros: Simple, needs no extra typing or cleverness
+Cons: Clogs up function list, a little verbose.
+
+1B: Use Multiparam Typeclasses to define a Convert a b => convert :: a -> b function.
+Pros: Allows lots of conversions under one function
+Cons: Possible nasty type inference errors.  Many cases will need extra type info, so you'll need more like:
+   convert to(type{Number{year}}, date)
+   which is no shorter than year from date(date), and is more confusing.
+
+1C: Use a dynamic casting function to define Typeable a, Typeable b => convert :: a -> b function    
+Pros: Allows lots of conversions under one function.  Avoids MPTC implementation and type errors.
+Cons: Run-time error is not great and goes against our philosophy.  As 1B, will need type clarification usually anyway.
+
+
+Solutions for 2:
+
+2A: Deal with this via syntactic sugar purely for function calls.  Each function can declare (param1::type1, param2::type2, {name3::type3=default3, name3::type3=default3})
+Pros: Requires no extra type magic, avoids complex type errors
+Cons: Only works with direct calls of named functions.  Extra params cannot be stored in records ahead of time (not really needed though?)
+
+2B: Add support for named fields with fixed constructor (see 3) but also allow implicit easy declaration for functions, named something like $functionname$ params.
+Pros: Allows param object types to be deliberately shared between similar functions
+Cons: Requires extra type system logic.
+
+2C: Add support for unconstructed arbitrary records
+Pros: Allows param object types to be automatically shared between identical functions
+Cons: Requires extra type system logic.
+
+Solutions for 3:
+
+3A: Add support for named constructed types, a la Haskell with overloaded fields
+Pros: Strongly typed
+Cons: Requires MPTCs, fundeps, opens up issues of nasty type errors.
+
+3B: Use row-polymorphism style anonymous records.  We probably don't need the operations to add a new field, or change the type of an existing field; we just need get and (type-preserving) set.  We may not even need the (a, b | *) syntax for users -- for function params this is positively dangerous as you can specify non-existent params.  For user-defined records they're unlikely to want such a function.  So I think we only need: foo#x <= (foo :: (x :: a | *)) and foo#{x=y} <= (foo :: (x :: a | *), y :: a).
+
+
+Conclusions:
+ - Row polymorphism style records seem like the best solution, and can subsume tuples (which disappear, or become convenience records with fields t1, t2, etc).
+ - Links for row polymorphism:
+   - One system that avoids duplicate labels (probably not worth the hassle): https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/scopedlabels.pdf
+   - Purescript has them as a feature: http://www.purescript.org/
+   - Haskell proposal: https://github.com/jvanbruegge/ghc-proposals/blob/row-polymorphism/proposals/0000-row-polymorphism.rst
+     And: https://github.com/ghc-proposals/ghc-proposals/pull/180
+     And: https://www.reddit.com/r/haskell/comments/9vj2au/ghc_proposal_row_polymorphism/
+   - Diff for an implementation in ML: https://github.com/tomprimozic/type-systems/commit/5c183a7866aa30f3350a4cab011e376d36dd385e
+     Taken from project: https://github.com/tomprimozic/type-systems/tree/master/extensible_rows
+ - Links for related things:
+   - CHR is a way to improve error messages, but I think requires rewriting type checker:
+     - Wazny's thesis on how to do it: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.110.5050&rep=rep1&type=pdf
+     - CHR generally: https://dtai.cs.kuleuven.be/CHR/about.shtml
+     - JetBrains has a CHR implementation: https://github.com/JetBrains/mps-coderules/tree/master/reactor
+   - Proposal for overloaded fields in Haskell: http://web.archive.org/web/20160322051608/http://research.microsoft.com/en-us/um/people/simonpj/Haskell/records.html
+   - TRex style as a library: https://wiki.haskell.org/CTRex
+   - Various links: https://www.reddit.com/r/haskell/comments/89pu1m/resources_for_writing_a_type_checker/
+   - Paper on fundeps: http://web.cecs.pdx.edu/~mpj/pubs/fundeps-design.pdf
+     And: https://link.springer.com/content/pdf/10.1007/3-540-46425-5_15.pdf
+   - Typing Haskell in Haskell: https://web.cecs.pdx.edu/~mpj/thih/thih.pdf
+   - Modern fundeps implementation: https://gkaracha.github.io/papers/fundeps.pdf
+   - Old type inference paper: https://repository.upenn.edu/cgi/viewcontent.cgi?article=1336&context=cis_papers
+   - Some links: https://kseo.github.io/posts/2016-12-31-type-inference-algorithms-of-haskell-like-languages.html
+   - Modern type inference paper: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/jfp-outsidein.pdf   
+   - Another fundeps paper: https://link.springer.com/content/pdf/10.1007%2F978-3-540-24725-8_5.pdf
+     
+ 
