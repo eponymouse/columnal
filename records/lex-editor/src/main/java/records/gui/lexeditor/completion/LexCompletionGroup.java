@@ -12,23 +12,14 @@ public class LexCompletionGroup
 {
     final ImmutableList<LexCompletion> completions;
     final @Nullable StyledString header;
-    // If empty(), means show as many as you can even if others
-    // are collapsed.  Top group will generally be empty() and other groups
-    // present with 1 or 2.
-    final OptionalInt minCollapsed;
+    // How many items to show as a minimum if the group is collapsed
+    final int minCollapsed;
 
-    public LexCompletionGroup(ImmutableList<LexCompletion> directCompletions)
-    {
-        this.completions = directCompletions;
-        this.header = null;
-        this.minCollapsed = OptionalInt.empty();
-    }
-    
-    public LexCompletionGroup(ImmutableList<LexCompletion> completions, StyledString header, int minCollapsed)
+    public LexCompletionGroup(ImmutableList<LexCompletion> completions, @Nullable StyledString header, int minCollapsed)
     {
         this.completions = completions;
         this.header = header;
-        this.minCollapsed = OptionalInt.of(minCollapsed);
+        this.minCollapsed = minCollapsed;
     }
     
     public @Nullable LexCompletionGroup filterForPos(@CanonicalLocation int caretPos)
@@ -36,19 +27,13 @@ public class LexCompletionGroup
         ImmutableList<LexCompletion> filtered = completions.stream().filter(c -> c.showFor(caretPos)).collect(ImmutableList.<LexCompletion>toImmutableList());
         if (filtered.isEmpty())
             return null;
-        if (header == null || !minCollapsed.isPresent())
-            return new LexCompletionGroup(filtered);
-        else
-            return new LexCompletionGroup(filtered, header, minCollapsed.getAsInt());
+        return new LexCompletionGroup(filtered, header, minCollapsed);
     }
 
     public LexCompletionGroup offsetBy(@CanonicalLocation int offsetBy)
     {
         ImmutableList<LexCompletion> offset = Utility.mapListI(completions, c -> c.offsetBy(offsetBy));
 
-        if (header == null || !minCollapsed.isPresent())
-            return new LexCompletionGroup(offset);
-        else
-            return new LexCompletionGroup(offset, header, minCollapsed.getAsInt());
+        return new LexCompletionGroup(offset, header, minCollapsed);
     }
 }

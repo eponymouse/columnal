@@ -596,7 +596,6 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
     private void addKeywordCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> completions, String stem, @CanonicalLocation int canonIndex)
     {
-
         if (Utility.startsWithIgnoreCase("@i", stem))
         {
             completions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, stem.length(), "@if@then@else@endif").withDisplay(StyledString.s("@if \u2026 @then \u2026 @else \u2026 @endif")).withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(3).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP), CompletionType.KEYWORD_CHAIN)));
@@ -1060,7 +1059,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         ImmutableList<LexCompletion> direct = sort(completions.stream().filter(p -> p.getFirst().equals(CompletionStatus.DIRECT)).map(p -> p.getSecond()));
         if (!direct.isEmpty())
         {
-            groups.add(new LexCompletionGroup(direct));
+            groups.add(new LexCompletionGroup(direct, null, 2));
         }
         ImmutableList<LexCompletion> related = sort(completions.stream().filter(p -> p.getFirst().equals(CompletionStatus.RELATED)).map(p -> p.getSecond()));
         if (!related.isEmpty())

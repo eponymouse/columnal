@@ -318,7 +318,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 }),
                 Stream.<LexCompletion>of(typeCompletion(DataType.NUMBER, canonIndex, Utility.longestCommonStartIgnoringCase("Number{}", 0, stem, 0)).withReplacement("Number{}", StyledString.concat(StyledString.s("Number{"), StyledString.styled("unit", CommonStyles.ITALIC), StyledString.s("}"))).withCaretPosAfterCompletion("Number{".length()))
             ).collect(ImmutableList.<LexCompletion>toImmutableList())
-        )));
+        , null, 2)));
     }
 
     protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start, int lengthToShowFor)

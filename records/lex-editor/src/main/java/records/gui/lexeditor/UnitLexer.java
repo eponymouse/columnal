@@ -173,6 +173,6 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(Utility.mapListI(unitManager.getAllDeclared(), u -> {
             int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);
             return new LexCompletion(canonIndex, len, u.getName());
-        }))));
+        }), null, 2)));
     }
 }
