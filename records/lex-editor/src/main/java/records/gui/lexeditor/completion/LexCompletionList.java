@@ -1,8 +1,7 @@
 package records.gui.lexeditor.completion;
 
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableBiMap.Builder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -14,6 +13,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
@@ -45,13 +45,13 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 class LexCompletionList extends Region
 {
+    private final FXPlatformConsumer<LexCompletion> triggerCompletion;
+    
     // The completions change all at once, so a mutable ImmutableList reference:
     private ImmutableList<LexCompletionGroup> curCompletionGroups = ImmutableList.of();
     
     // Changed when completions change
-    private ImmutableBiMap<LexCompletion, Pair<Integer, Integer>> completionIndexes = ImmutableBiMap.of();
-    
-    private final AbstractList<Either<LexCompletion, LexCompletionGroup>> allDisplayRows;
+    private ImmutableMap<LexCompletion, Pair<Integer, Integer>> completionIndexes = ImmutableMap.of();
     
     // The top Y coordinate of the header (if present, first item if not) of each group in curCompletions.  These coordinates
     // are relative to the pane.  Due to the pinning, it is possible
@@ -77,40 +77,7 @@ class LexCompletionList extends Region
     
     public LexCompletionList(FXPlatformConsumer<LexCompletion> triggerCompletion)
     {
-        this.allDisplayRows = new AbstractList<Either<LexCompletion, LexCompletionGroup>>()
-        {
-            @Override
-            public Either<LexCompletion, LexCompletionGroup> get(int index)
-            {
-                for (LexCompletionGroup group : curCompletionGroups)
-                {
-                    if (group.header != null)
-                    {
-                        index -= 1;
-                        if (index < 0)
-                            return Either.right(group);
-                    }
-                    if (index < group.completions.size())
-                        return Either.left(group.completions.get(index));
-                    index -= group.completions.size();
-                }
-                throw new IndexOutOfBoundsException("Invalid index");
-            }
-
-            @Override
-            public int size()
-            {
-                int total = 0;
-                for (LexCompletionGroup group : curCompletionGroups)
-                {
-                    if (group.header != null)
-                        total++;
-                    total += group.completions.size();
-                }
-                return total;
-            }
-        };
-        
+        this.triggerCompletion = triggerCompletion;
         getStyleClass().add("lex-completion-list");
         setFocusTraversable(false);
         visible.addListener((MapChangeListener<Either<LexCompletion, LexCompletionGroup>, Node>) (MapChangeListener.Change<? extends Either<LexCompletion, LexCompletionGroup>, ? extends Node> c) -> {
@@ -129,22 +96,32 @@ class LexCompletionList extends Region
             FXUtility.mouse(this).recalculateChildren();
             e.consume();
         });
-        setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.PRIMARY)
-            {
-                Pair<Integer, Integer> target = FXUtility.mouse(this).getItemAt(e.getY());
-                boolean wasAlreadySelected = Objects.equals(selectionIndex, target);
-                if (e.getClickCount() >= 1)
-                {
-                    FXUtility.mouse(this).select(target);
-                }
+    }
 
-                // Clicking twice slowly also works this way:
-                LexCompletion sel = selectedItem.get();
-                if ((e.getClickCount() == 2 || wasAlreadySelected) && sel != null)
-                    triggerCompletion.consume(sel);
-            }
-        });
+    protected void clickOnItem(int clickCount, Pair<Integer, Integer> target)
+    {
+        boolean wasAlreadySelected = Objects.equals(selectionIndex, target);
+        if (clickCount >= 1)
+        {
+            FXUtility.mouse(this).select(target);
+        }
+
+        // Clicking twice slowly also works this way:
+        LexCompletion sel = selectedItem.get();
+        if ((clickCount == 2 || wasAlreadySelected) && sel != null)
+            triggerCompletion.consume(sel);
+    }
+
+    protected int calcDisplayRows()
+    {
+        int total = 0;
+        for (LexCompletionGroup group : curCompletionGroups)
+        {
+            if (group.header != null)
+                total++;
+            total += group.completions.size();
+        }
+        return total;
     }
 
     private @Nullable Pair<Integer, Integer> getItemAt(double y)
@@ -174,7 +151,7 @@ class LexCompletionList extends Region
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
-        return Math.min(allDisplayRows.size(), 16) * ITEM_HEIGHT + 2 /* border */;
+        return Math.min(calcDisplayRows(), 16) * ITEM_HEIGHT + 2 /* border */;
     }
 
     @Override
@@ -352,14 +329,24 @@ class LexCompletionList extends Region
         CompletionRow row = new CompletionRow(lexCompletion.either(c -> c.display.toGUI(), g -> (g.header == null ? StyledString.s("") : g.header).toGUI()), lexCompletion.either(c -> c.sideText, g -> ""));
         if (lexCompletion.isRight())
             row.getStyleClass().add("lex-completion-header");
-        row.setMouseTransparent(true);
+        row.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY)
+            {
+                lexCompletion.ifLeft(item -> {
+                    Pair<Integer, Integer> index = completionIndexes.get(item);
+                    // Shouldn't be null, but have to guard:
+                    if (index != null)
+                        clickOnItem(e.getClickCount(), index);
+                });
+            }
+        });
         return row;
     }
 
     public void setCompletions(ImmutableList<LexCompletionGroup> completions)
     {
         this.curCompletionGroups = completions;
-        Builder<LexCompletion, Pair<Integer, Integer>> indexes = ImmutableBiMap.builder();
+        ImmutableMap.Builder<LexCompletion, Pair<Integer, Integer>> indexes = ImmutableMap.builder();
         for (int i = 0; i < curCompletionGroups.size(); i++)
         {
             for (int j = 0; j < curCompletionGroups.get(i).completions.size(); j++)
@@ -374,7 +361,7 @@ class LexCompletionList extends Region
         catch (Exception e)
         {
             // We shouldn't have duplicate completions, but don't let such an exception propagate:
-            this.completionIndexes = ImmutableBiMap.of();
+            this.completionIndexes = ImmutableMap.of();
             try
             {
                 throw new InternalException("Duplicate completions", e);
@@ -539,8 +526,10 @@ class LexCompletionList extends Region
             mainText.getStyleClass().add("lex-completion-text-flow");
             mainText.getChildren().setAll(content);
             mainText.setFocusTraversable(false);
+            mainText.setMouseTransparent(true);
             this.sideText = new Label(sideText);
             this.sideText.getStyleClass().add("side-text");
+            this.sideText.setMouseTransparent(true);
             setClip(clip);
             getChildren().setAll(mainText, this.sideText);
             getStyleClass().add("lex-completion");
