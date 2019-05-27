@@ -448,4 +448,72 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         push(KeyCode.ENTER);
         assertEquals(new ComparisonExpression(ImmutableList.of(new NumericLiteral(1, null), new NumericLiteral(2, null)), ImmutableList.of(ComparisonOperator.LESS_THAN_OR_EQUAL_TO)), finish());
     }
+
+    @Test
+    public void testTrailingOperator1() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("1+");
+        checkCompletions(
+            c("My Number", 0,0, 2,2),
+            c("+", 1, 1),
+            c("*", 1, 1),
+            // Plus-minus shows as multi-char completion of plus:
+            c("\u00B1", 1, 2)
+        );
+    }
+
+    @Test
+    public void testTrailingOperator1b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("(12/34)+");
+        checkCompletions(
+            c("My Number", 0,1, 4,4, 7,8),
+            c("+", 2,3, 5,7),
+            c("*", 2,3, 5,7),
+            // Plus-minus shows as multi-char completion of plus:
+            c("\u00B1", 2,3, 5,8)
+        );
+    }
+
+    @Test
+    public void testTrailingOperator2() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("12<");
+        checkCompletions(
+            c("My Number", 0,0, 3,3),
+            c("+", 1, 2),
+            c("<", 1, 2),
+            c("<=", 1, 3),
+            c("<>", 1, 3)
+        );
+    }
+
+    @Test
+    public void testTrailingOperator2b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("(12/34)<");
+        checkCompletions(
+            c("My Number", 0,1, 4,4, 7,8),
+            c("+", 2,3, 5,7),
+            c("<", 2,3, 5,7),
+            c("<=", 2,3, 5,8),
+            c("<>", 2,3, 5,8)
+        );
+    }
+
+    @Test
+    public void testEndOperator() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("1+2");
+        checkCompletions(
+            c("My Number", 0,0, 2,2),
+            c("+", 1,1, 3,3),
+            c("*", 1,1, 3,3)
+        );
+    }
 }
