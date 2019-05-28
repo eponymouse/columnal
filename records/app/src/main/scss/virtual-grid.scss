@@ -94,8 +94,15 @@
     }
     
     &:expanded {
-        -fx-background-radius: 0 5 5 5;
+        -fx-background-color: hsb(213, 20%, 70%), hsb(213, 3%, 100%); 
+        -fx-background-insets: 0, 1;
+        -fx-background-radius: 0 5 5 5, 0 5 5 5;
         -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 12.0, 0.7, 1.0, 1.0);
+        
+        .inverter-pane, .selection-pane {
+            -fx-background-color: white, black;
+            -fx-background-radius: 0, 0 5 5 5;
+        }
         
         .fade-overlay:more-above {
             -fx-fill: linear-gradient(to bottom, $table-cell 0%, fade-out($table-cell, 0.4) 10%, fade-out($table-cell, 1) 20%, fade-out($table-cell, 1) 100%);
