@@ -84,7 +84,7 @@ public abstract class TextEditorBase extends Region
             // intricate effort to do this while also applying a coloured selection background.
             // This implementation works, and that is good enough, despite it seeming over-the-top.
             selectionPane = new Pane(selectionShape);
-            selectionPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+            selectionPane.getStyleClass().add("selection-pane");
             selectionPane.setBlendMode(BlendMode.LIGHTEN);
             inverter = new Path();
             inverter.setMouseTransparent(true);
@@ -92,7 +92,7 @@ public abstract class TextEditorBase extends Region
             inverter.setFill(Color.WHITE);
             inverter.setStroke(null);
             inverterPane = new Pane(inverter);
-            inverterPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+            inverterPane.getStyleClass().add("inverter-pane");
             inverterPane.setBlendMode(BlendMode.DIFFERENCE);
             
             errorUnderlinePane = new Pane();
