@@ -3,8 +3,16 @@ package records.gui.lexeditor.completion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.ParallelTransition;
+import javafx.animation.Timeline;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -13,13 +21,14 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import styled.StyledString;
@@ -31,9 +40,10 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.OptionalInt;
@@ -43,12 +53,16 @@ import java.util.stream.Stream;
 
 // Like a ListView, but with customisations to allow pinned "related" section
 @OnThread(Tag.FXPlatform)
-class LexCompletionList extends Region
+final class LexCompletionList extends Region
 {
+    private static final double PIXELS_PER_SECOND = 500.0;
     private final FXPlatformConsumer<LexCompletion> triggerCompletion;
     
     // The completions change all at once, so a mutable ImmutableList reference:
     private ImmutableList<LexCompletionGroup> curCompletionGroups = ImmutableList.of();
+    // Ditto:
+    private ImmutableList<DoubleProperty> groupAnimatedTranslate = ImmutableList.of();
+    private ParallelTransition groupAnimation = new ParallelTransition();
     
     // Changed when completions change
     private ImmutableMap<LexCompletion, Pair<Integer, Integer>> completionIndexes = ImmutableMap.of();
@@ -85,6 +99,7 @@ class LexCompletionList extends Region
                 getChildren().remove(c.getValueRemoved());
             if (c.wasAdded())
                 getChildren().add(c.getValueAdded());
+            sortChildren();
         });
         
         setPrefWidth(300.0);
@@ -93,9 +108,45 @@ class LexCompletionList extends Region
             int groupIndex = selectionIndex == null ? 0 : selectionIndex.getFirst();
             double groupMaxScrollY = (curCompletionGroups.get(groupIndex).completions.size() * ITEM_HEIGHT) - groupInternalHeight[groupIndex]; 
             scrollOffsetWithinSelectedGroup = Math.max(0, Math.min(scrollOffsetWithinSelectedGroup - e.getDeltaY(), groupMaxScrollY));
-            FXUtility.mouse(this).recalculateChildren();
+            FXUtility.mouse(this).recalculateChildren(true);
             e.consume();
         });
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(widthProperty());
+        clip.heightProperty().bind(heightProperty());
+        setClip(clip);
+    }
+
+    private void sortChildren()
+    {
+        // First we cache the positions:
+        int pos = 0;
+        for (LexCompletionGroup g : curCompletionGroups)
+        {
+            CompletionRow row = visible.get(Either.right(g));
+            if (row != null)
+                row.cachedPosition = pos++;
+            for (LexCompletion completion : g.completions)
+            {
+                row = visible.get(Either.left(completion));
+                if (row != null)
+                    row.cachedPosition = pos++;
+            }
+        }
+        // Then we make a duplicate collection and sort it:
+        // We can't sort directly, see https://stackoverflow.com/questions/18667297/javafx-changing-order-of-children-in-a-flowpane
+        ArrayList<Node> dupe = new ArrayList<>(getChildren());
+        
+        Collections.sort(dupe, Comparator.<Node, Integer>comparing((Node n) -> {
+            // Should all be CompletionRow:
+            if (n instanceof CompletionRow)
+                return ((CompletionRow) n).cachedPosition;
+            else
+                return -1;
+        }));
+        
+        // And copy back in:
+        getChildren().setAll(dupe);
     }
 
     protected void clickOnItem(int clickCount, Pair<Integer, Integer> target)
@@ -186,7 +237,7 @@ class LexCompletionList extends Region
             boolean selected = selectionIndex == null ? groupIndex == 0 : selectionIndex.getFirst() == groupIndex;
             y -= (selected ? scrollOffsetWithinSelectedGroup : 0);
             double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeight() - insets.getTop() - insets.getBottom();
-            for (int i = 0; i < group.completions.size() && y < maxY; i++)
+            for (int i = 0; i < group.completions.size() && y < maxY + getHeight(); i++)
             {
                 if (y >= groupTopY[groupIndex] - ITEM_HEIGHT)
                 {
@@ -196,19 +247,21 @@ class LexCompletionList extends Region
                     {
                         flow.resizeRelocate(insets.getLeft(), y, width, ITEM_HEIGHT);
                         flow.clip.setWidth(width);
-                        flow.clip.setY(prevBottom - y);
-                        flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
+                        flow.clip.setY(Math.max(prevBottom - y, 0));
+                        flow.clip.setHeight(ITEM_HEIGHT - flow.clip.getY());
+                        //flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
                     }
                 }
                 y += ITEM_HEIGHT;
-                prevBottom = Math.max(prevBottom, y);
             }
+            prevBottom = Math.max(prevBottom, maxY);
         }
     }
     
-    private void recalculateChildren()
+    private void recalculateChildren(boolean attemptAnimate)
     {
         Set<Either<LexCompletion, LexCompletionGroup>> toKeep = Sets.newHashSet();
+        double[] oldTopY = groupTopY;
         groupTopY = new double[curCompletionGroups.size()];
         groupInternalHeight = new double[curCompletionGroups.size()];
         LexCompletion sel = selectedItem.get();
@@ -299,6 +352,7 @@ class LexCompletionList extends Region
             if (group.header != null)
             {
                 CompletionRow headerRow = visible.computeIfAbsent(Either.right(group), this::makeFlow);
+                headerRow.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                 FXUtility.setPseudoclass(headerRow, "selected", false);
                 toKeep.add(Either.right(group));
                 y += ITEM_HEIGHT;
@@ -306,12 +360,13 @@ class LexCompletionList extends Region
 
             if (groupIndex == (selectionIndex == null ? 0 : selectionIndex.getFirst()))
                 y -= scrollOffsetWithinSelectedGroup;
-            for (int i = 0; i < group.completions.size() && y < maxY; i++, y += ITEM_HEIGHT)
+            for (int i = 0; i < group.completions.size() && y < maxY + getHeight(); i++, y += ITEM_HEIGHT)
             {
                 if (y >= -ITEM_HEIGHT)
                 {
                     Either<LexCompletion, LexCompletionGroup> row = i == -1 ? Either.right(group) : Either.left(group.completions.get(i));
                     CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
+                    item.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                     FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
                     toKeep.add(row);
                 }
@@ -322,6 +377,31 @@ class LexCompletionList extends Region
         
         visible.entrySet().removeIf(e -> !toKeep.contains(e.getKey()));
         requestLayout();
+
+        // Stop all current animations:
+        groupAnimation.stop();
+        if (attemptAnimate && oldTopY.length == groupTopY.length)
+        {
+            // Animate the group's transitions
+            for (int i = 0; i < groupAnimatedTranslate.size(); i++)
+            {
+                DoubleProperty prop = groupAnimatedTranslate.get(i);
+                prop.set(prop.get() + (oldTopY[i] - groupTopY[i]));
+            }
+            groupAnimation = new ParallelTransition(groupAnimatedTranslate.stream().map(prop -> {
+                Timeline t = new Timeline(new KeyFrame(Duration.seconds(Math.abs(prop.get()) / PIXELS_PER_SECOND), new KeyValue(prop, 0.0, Interpolator.LINEAR)));
+                t.setCycleCount(1);
+                return t;
+            }).toArray(Animation[]::new));
+            groupAnimation.playFromStart();
+        }
+        else
+        {
+            for (DoubleProperty value : groupAnimatedTranslate)
+            {
+                value.set(0.0);
+            }
+        }
     }
 
     private CompletionRow makeFlow(Either<LexCompletion, LexCompletionGroup> lexCompletion)
@@ -345,6 +425,13 @@ class LexCompletionList extends Region
 
     public void setCompletions(ImmutableList<LexCompletionGroup> completions)
     {
+        boolean headersMatch = completions.size() == curCompletionGroups.size();
+        for (int i = 0; i < curCompletionGroups.size() && headersMatch; i++)
+        {
+            if (!Objects.equals(curCompletionGroups.get(i).header, completions.get(i).header))
+                headersMatch = false;
+        }
+        
         this.curCompletionGroups = completions;
         ImmutableMap.Builder<LexCompletion, Pair<Integer, Integer>> indexes = ImmutableMap.builder();
         for (int i = 0; i < curCompletionGroups.size(); i++)
@@ -371,8 +458,16 @@ class LexCompletionList extends Region
                 Log.log(internal);
             }
         }
+        
+        if (!headersMatch)
+        {
+            groupAnimation.stop();
+            groupAnimatedTranslate.forEach(d -> d.setValue(0.0));
+            groupAnimatedTranslate = Utility.replicateM(curCompletionGroups.size(), SimpleDoubleProperty::new);
+        }
+        
         // Need to update internal heights as select() will try to keep in view:
-        recalculateChildren();
+        recalculateChildren(headersMatch);
         // Keep same item selected, if still present:
         @Nullable LexCompletion sel = selectedItem.get();
         @Nullable Pair<Integer, Integer> target = sel == null ? null : completionIndexes.get(sel);
@@ -392,7 +487,7 @@ class LexCompletionList extends Region
         selectedItem.setValue(target == null ? null : curCompletionGroups.get(target.getFirst()).completions.get(target.getSecond()));
 
         // Need to recalculate children as size of group may change as different groups get selected:
-        recalculateChildren();
+        recalculateChildren(true);
         
         // Then fix our scroll offsets:
         if (target == null)
@@ -414,7 +509,7 @@ class LexCompletionList extends Region
                 scrollOffsetWithinSelectedGroup = Math.min(totalGroupHeight - groupInternalHeight[target.getFirst()], selectedBottomY - groupInternalHeight[target.getFirst()]);
         }
         // Update graphics after scroll change:
-        recalculateChildren();
+        recalculateChildren(true);
     }
     
     public @Nullable LexCompletion getSelectedItem()
@@ -518,6 +613,8 @@ class LexCompletionList extends Region
         private final TextFlow mainText;
         private final Label sideText;
         private final Rectangle clip = new Rectangle();
+        
+        private int cachedPosition;
 
         public CompletionRow(Collection<Text> content, String sideText)
         {
