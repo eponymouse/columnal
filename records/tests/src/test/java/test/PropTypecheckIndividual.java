@@ -42,6 +42,7 @@ import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.transformations.function.FunctionList;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -94,19 +95,7 @@ public class PropTypecheckIndividual
         {
             throw new InternalException("Testing");
         }
-
-        @Override
-        public Stream<ColumnReference> allColumnReferences()
-        {
-            return Stream.empty();
-        }
-
-        @Override
-        public Stream<String> allVariableReferences()
-        {
-            return Stream.empty();
-        }
-
+        
         @Override
         public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
         {
@@ -148,6 +137,12 @@ public class PropTypecheckIndividual
         public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
             return this == toReplace ? replaceWith : this;
+        }
+
+        @Override
+        public <T> T visit(ExpressionVisitor<T> visitor)
+        {
+            throw new RuntimeException("DummyExpression.visit");
         }
     }
 
@@ -397,18 +392,6 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Stream<ColumnReference> allColumnReferences()
-        {
-            return Stream.empty();
-        }
-
-        @Override
-        public Stream<String> allVariableReferences()
-        {
-            return Stream.empty();
-        }
-
-        @Override
         public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
@@ -448,6 +431,12 @@ public class PropTypecheckIndividual
         public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
             return this == toReplace ? replaceWith : this;
+        }
+
+        @Override
+        public <T> T visit(ExpressionVisitor<T> visitor)
+        {
+            throw new RuntimeException("DummyPatternMatch.visit");
         }
     }
     
