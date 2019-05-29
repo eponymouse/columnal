@@ -9,6 +9,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
@@ -139,5 +140,11 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     {
         int index = r.nextInt(expressions.size());
         return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(type)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.comparison(this, expressions, operators);
     }
 }

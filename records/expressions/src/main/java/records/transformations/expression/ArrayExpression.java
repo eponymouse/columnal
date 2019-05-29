@@ -11,6 +11,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -108,18 +109,6 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return items.stream().flatMap(Expression::allColumnReferences);
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return items.stream().flatMap(Expression::allVariableReferences);
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "[" + items.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + "]";
@@ -205,5 +194,11 @@ public class ArrayExpression extends Expression
             return replaceWith;
         else
             return new ArrayExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.list(this, items);
     }
 }

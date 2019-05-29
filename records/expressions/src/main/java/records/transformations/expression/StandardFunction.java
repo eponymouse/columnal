@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -66,18 +67,6 @@ public class StandardFunction extends NonOperatorExpression
                 t2 -> t2
             ));
         })), state);
-    }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.empty();
     }
 
     @Override
@@ -138,4 +127,9 @@ public class StandardFunction extends NonOperatorExpression
         return this == toReplace ? replaceWith : this;
     }
 
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.standardFunction(this, functionDefinition);
+    }
 }

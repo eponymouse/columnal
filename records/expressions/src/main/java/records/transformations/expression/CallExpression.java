@@ -19,6 +19,7 @@ import records.error.UserException;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -302,18 +303,6 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.<ColumnReference>concat(function.allColumnReferences(), arguments.stream().<ColumnReference>flatMap(a -> a.allColumnReferences()));
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.<String>concat(function.allVariableReferences(), arguments.stream().<String>flatMap(a -> a.allVariableReferences()));
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return (structured ? "@call " : "") + function.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "(" + arguments.stream().map(a -> a.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
@@ -402,5 +391,11 @@ public class CallExpression extends Expression
             return replaceWith;
         else
             return new CallExpression(function.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(arguments, a -> a.replaceSubExpression(toReplace, replaceWith)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.call(this, function, arguments);
     }
 }

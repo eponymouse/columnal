@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
@@ -74,5 +75,11 @@ public class StringLiteral extends Literal
     public String editString()
     {
         return GrammarUtility.escapeChars(value);
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.litText(this, value);
     }
 }

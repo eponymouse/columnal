@@ -9,6 +9,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -79,5 +80,11 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     protected LocationInfo argLocationInfo()
     {
         return LocationInfo.UNIT_CONSTRAINED;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.plusMinus(this, lhs, rhs);
     }
 }

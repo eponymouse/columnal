@@ -11,6 +11,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -99,5 +100,11 @@ public class DivideExpression extends BinaryOpExpression
     protected LocationInfo argLocationInfo()
     {
         return LocationInfo.UNIT_MODIFYING;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.divide(this, lhs, rhs);
     }
 }

@@ -7,6 +7,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import styled.StyledString;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -47,18 +48,6 @@ public class InvalidIdentExpression extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot execute invalid ident expression");
-    }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.empty();
     }
 
     @Override
@@ -119,5 +108,11 @@ public class InvalidIdentExpression extends NonOperatorExpression
             return new IdentExpression(valid);
         else
             return new InvalidIdentExpression(src);
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.invalidIdent(this, text);
     }
 }

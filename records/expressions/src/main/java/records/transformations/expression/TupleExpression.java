@@ -11,6 +11,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -93,18 +94,6 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return members.stream().flatMap(Expression::allColumnReferences);
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return members.stream().flatMap(Expression::allVariableReferences);
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String content = members.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
@@ -162,5 +151,11 @@ public class TupleExpression extends Expression
             return replaceWith;
         else
             return new TupleExpression(Utility.mapListI(members, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.tuple(this, members);
     }
 }

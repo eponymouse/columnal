@@ -8,6 +8,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import styled.StyledString;
 import styled.StyledString.Builder;
 import styled.StyledString.Style;
@@ -46,18 +47,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
-    }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return items.stream().flatMap(x -> x.allColumnReferences());
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return items.stream().flatMap(x -> x.allVariableReferences());
     }
 
     @Override
@@ -150,5 +139,11 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     public ImmutableList<@Recorded Expression> _test_getItems()
     {
         return items;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.invalidOps(this, items);
     }
 }

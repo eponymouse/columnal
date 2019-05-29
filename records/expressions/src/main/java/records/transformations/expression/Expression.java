@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -81,6 +82,8 @@ import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.function.ValueFunction.RecordedFunctionResult;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.typeExp.ExpressionBase;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -448,11 +451,37 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     public abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
-    public abstract Stream<ColumnReference> allColumnReferences();
+    public final Stream<ColumnReference> allColumnReferences()
+    {
+        return visit(new ExpressionVisitorStream<ColumnReference>() {
+            @Override
+            public Stream<ColumnReference> column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+            {
+                return Stream.of(self);
+            }
+        });
+    }
 
     // Note that there will be duplicates if referred to multiple times
     @Override
-    public abstract Stream<String> allVariableReferences();
+    public final Stream<String> allVariableReferences()
+    {
+        return visit(new ExpressionVisitorStream<String>() {
+            @Override
+            public Stream<String> ident(IdentExpression self, @ExpressionIdentifier String ident)
+            {
+                return Stream.of(ident);
+            }
+
+            @Override
+            public Stream<String> implicitLambdaArg(ImplicitLambdaArg self)
+            {
+                return Stream.of(self.getVarName());
+            }
+        });
+    }
+    
+    public abstract <T> T visit(ExpressionVisitor<T> visitor);
 
     /**
      * 

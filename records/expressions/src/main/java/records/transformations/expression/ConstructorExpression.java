@@ -16,6 +16,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -91,18 +92,6 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (structured)
@@ -170,5 +159,11 @@ public class ConstructorExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.constructor(this, tag);
     }
 }

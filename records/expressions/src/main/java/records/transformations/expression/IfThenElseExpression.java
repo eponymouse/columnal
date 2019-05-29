@@ -7,6 +7,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
@@ -94,18 +95,6 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.of(condition, thenExpression, elseExpression).flatMap(Expression::allColumnReferences);
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.of(condition, thenExpression, elseExpression).flatMap(Expression::allVariableReferences);
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String content = "@if " + condition.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS,renames) + " @else " + elseExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
@@ -189,5 +178,11 @@ public class IfThenElseExpression extends NonOperatorExpression
                 thenExpression.replaceSubExpression(toReplace, replaceWith),
                 elseExpression.replaceSubExpression(toReplace, replaceWith)
             );
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.ifThenElse(this, condition, thenExpression, elseExpression);
     }
 }

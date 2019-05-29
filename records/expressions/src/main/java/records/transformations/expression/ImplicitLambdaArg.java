@@ -9,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -61,18 +62,6 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         return result(state.get(getVarName()), state);
-    }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.of(getVarName());
     }
 
     @Override
@@ -180,5 +169,11 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.implicitLambdaArg(this);
     }
 }

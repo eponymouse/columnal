@@ -10,6 +10,7 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -120,4 +121,9 @@ public class RaiseExpression extends BinaryOpExpression
         return new Pair<>(DataTypeUtility.value(Utility.raiseNumber(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class))), ImmutableList.of(lhsValue, rhsValue));
     }
 
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.raise(this, lhs, rhs);
+    }
 }

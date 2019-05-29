@@ -14,6 +14,7 @@ import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.Explanation.ExplanationSource;
 import records.transformations.expression.explanation.ExplanationLocation;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -360,20 +361,6 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.<ColumnReference>concat(expression.allColumnReferences(), 
-            clauses.stream().<ColumnReference>flatMap(c -> 
-                Stream.<ColumnReference>concat(c.patterns.stream().<ColumnReference>flatMap(p -> p.allColumnReferences()), c.outcome.allColumnReferences())));
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.<String>concat(expression.allVariableReferences(), clauses.stream().<String>flatMap(c -> c.outcome.allVariableReferences()));
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String inner = "@match " + expression.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + clauses.stream().map(c -> c.save(structured, renames)).collect(Collectors.joining("")) + " @endmatch";
@@ -495,5 +482,11 @@ public class MatchExpression extends NonOperatorExpression
             return replaceWith;
         else
             return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.match(this, expression, clauses);
     }
 }

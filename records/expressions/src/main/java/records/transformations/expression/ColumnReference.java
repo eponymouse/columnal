@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.explanation.ExplanationLocation;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -130,19 +131,7 @@ public class ColumnReference extends NonOperatorExpression
             columnName.toStyledString()
         ), this);
     }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.of(this);
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.of();
-    }
-
+    
     @Override
     public boolean hideFromExplanation(boolean skipIfTrivial)
     {
@@ -209,6 +198,12 @@ public class ColumnReference extends NonOperatorExpression
         if (resolvedTableName != null)
             return new ExplanationLocation(resolvedTableName, columnName, index);
         throw new InternalException("Cannot explain unresolved table for column " + columnName);
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.column(this, tableName, columnName, referenceType);
     }
 }
 

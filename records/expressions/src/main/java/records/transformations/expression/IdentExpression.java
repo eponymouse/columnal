@@ -7,6 +7,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
@@ -65,18 +66,6 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.of(text);
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return text;
@@ -121,5 +110,11 @@ public class IdentExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.ident(this, text);
     }
 }

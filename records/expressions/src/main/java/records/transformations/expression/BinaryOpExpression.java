@@ -84,18 +84,6 @@ public abstract class BinaryOpExpression extends Expression
     protected abstract String saveOp();
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.concat(lhs.allColumnReferences(), rhs.allColumnReferences());
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.concat(lhs.allVariableReferences(), rhs.allVariableReferences());
-    }
-
-    @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

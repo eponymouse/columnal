@@ -53,18 +53,6 @@ public abstract class NaryOpExpression extends Expression
 
     public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return expressions.stream().flatMap(Expression::allColumnReferences);
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return expressions.stream().flatMap(Expression::allVariableReferences);
-    }
-
     // Will be same length as expressions, if null use existing
     public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
     {

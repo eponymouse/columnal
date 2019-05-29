@@ -12,6 +12,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.StringView;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -124,5 +125,11 @@ public class TemporalLiteral extends Literal
     public int hashCode()
     {
         return Objects.hash(content, value, literalType);
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.litTemporal(this, literalType, content, value);
     }
 }

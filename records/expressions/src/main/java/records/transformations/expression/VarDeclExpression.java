@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import utility.Pair;
@@ -69,19 +70,6 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        // This isn't a reference, it's a declaration
-        return Stream.empty();
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "_" + varName;
@@ -131,5 +119,11 @@ public class VarDeclExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.varDecl(this, varName);
     }
 }

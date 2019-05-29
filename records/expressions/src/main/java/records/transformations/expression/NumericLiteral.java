@@ -15,6 +15,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.UnitExpression.UnitLookupException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -154,5 +155,11 @@ public class NumericLiteral extends Literal
     public @Value Number getNumber()
     {
         return value;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.litNumber(this, value, unit);
     }
 }

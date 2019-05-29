@@ -14,6 +14,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -37,13 +38,13 @@ public class AddSubtractExpression extends NaryOpTotalExpression
 {
     public static enum AddSubtractOp
     { ADD, SUBTRACT };
-    private final List<AddSubtractOp> ops;
+    private final ImmutableList<AddSubtractOp> ops;
     private @Nullable CheckedExp type;
 
     public AddSubtractExpression(List<@Recorded Expression> expressions, List<AddSubtractOp> addSubtractOps)
     {
         super(expressions);
-        this.ops = addSubtractOps;
+        this.ops = ImmutableList.copyOf(addSubtractOps);
         if (addSubtractOps.isEmpty())
             Log.logStackTrace("Ops empty");
     }
@@ -153,5 +154,11 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     {
         int index = r.nextInt(expressions.size());
         return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(type == null ? null : type.typeExp)));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.addSubtract(this, expressions, ops);
     }
 }

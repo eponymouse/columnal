@@ -7,6 +7,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -69,5 +70,11 @@ public class BooleanLiteral extends Literal
     public String editString()
     {
         return value.toString();
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.litBoolean(this, value);
     }
 }

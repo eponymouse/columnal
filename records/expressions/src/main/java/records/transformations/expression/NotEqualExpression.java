@@ -9,6 +9,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -97,5 +98,11 @@ public class NotEqualExpression extends BinaryOpExpression
     protected LocationInfo argLocationInfo()
     {
         return LocationInfo.UNIT_CONSTRAINED;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.notEqual(this, lhs, rhs);
     }
 }

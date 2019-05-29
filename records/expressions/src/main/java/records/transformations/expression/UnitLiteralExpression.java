@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.UnitExpression.UnitLookupException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -60,18 +61,6 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "unit{" + unitExpression.save(structured, true) + "}";
@@ -119,5 +108,11 @@ public class UnitLiteralExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.litUnit(this, unitExpression);
     }
 }

@@ -8,6 +8,7 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -100,5 +101,11 @@ public class TimesExpression extends NaryOpTotalExpression
     {
         int index = r.nextInt(expressions.size());
         return copy(makeNullList(index, newExpressionOfDifferentType.getNonNumericType()));
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.multiply(this, expressions);
     }
 }

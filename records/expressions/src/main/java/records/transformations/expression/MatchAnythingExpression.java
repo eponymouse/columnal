@@ -9,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -47,18 +48,6 @@ public class MatchAnythingExpression extends NonOperatorExpression
     public boolean hideFromExplanation(boolean skipIfTrivial)
     {
         return skipIfTrivial;
-    }
-
-    @Override
-    public Stream<ColumnReference> allColumnReferences()
-    {
-        return Stream.empty();
-    }
-
-    @Override
-    public Stream<String> allVariableReferences()
-    {
-        return Stream.empty();
     }
 
     @Override
@@ -101,5 +90,11 @@ public class MatchAnythingExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @Override
+    public <T> T visit(ExpressionVisitor<T> visitor)
+    {
+        return visitor.matchAnything(this);
     }
 }
