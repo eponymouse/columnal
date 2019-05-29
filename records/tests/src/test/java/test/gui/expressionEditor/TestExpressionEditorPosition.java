@@ -172,6 +172,12 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Test
+    public void testPosIncomplete5()
+    {
+        testCaretPositionsAndDisplay("@if@then@else@endif", "@if   @then   @else   @endif ", p(0, 3, 8, 13, 19));
+    }
+
+    @Test
     public void testPosIncompleteCase()
     {
         testCaretPositionsAndDisplay("@case", "  @case ", p(0, 5));
