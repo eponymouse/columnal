@@ -850,7 +850,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, CanonicalSpan, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, boolean isBracket)
+    public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, CanonicalSpan, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, @Nullable StyledString promptIfUnfinished, boolean isBracket)
     {
         return new Terminator(expected.get(0).getContent()) {
             @Override
@@ -860,7 +860,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (termIndex == 0)
                 {
                     // All is well:
-                    Either<@Recorded EXPRESSION, Terminator> result = onSuccessfulClose.apply(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
+                    @Recorded EXPRESSION content = makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer));
+                    Either<@Recorded EXPRESSION, Terminator> result = onSuccessfulClose.apply(content, keywordErrorDisplayer);
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
                 }
                 else
@@ -877,7 +878,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> items = ImmutableList.builder();
                     items.addAll(Utility.<@Recorded EXPRESSION, Either<OpAndNode, @Recorded EXPRESSION>>mapListI(prefixItemsOnFailedClose.get(), (@Recorded EXPRESSION e) -> Either.<OpAndNode, @Recorded EXPRESSION>right(e)));
-                    items.add(Either.right(makeContent.fetchContent(unclosedBrackets(makeBrackets.apply(keywordErrorDisplayer)))));
+                    @Recorded EXPRESSION content = makeContent.fetchContent(unclosedBrackets(makeBrackets.apply(keywordErrorDisplayer)));
+                    if (promptIfUnfinished != null)
+                        locationRecorder.recordEntryPromptG(content, promptIfUnfinished);
+                    items.add(Either.right(content));
                     if (terminator != null)
                         items.add(Either.right(record(keywordErrorDisplayer, keywordToInvalid(terminator))));
                     ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> built = items.build();

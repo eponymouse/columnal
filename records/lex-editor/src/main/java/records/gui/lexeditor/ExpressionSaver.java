@@ -132,7 +132,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                                 ImmutableList<String> paramNames = function.getFunction().getParamNames();
                                 if (args.expressions.isEmpty())
                                 {
-                                    // No params yet, need to add in the empty bit between brackers
+                                    // No params yet, need to add in the empty bit between brackets
                                     locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0));
                                 }
                                 else
@@ -182,14 +182,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             Function<CanonicalSpan, ApplyBrackets<BracketContent, Expression>> applyBracketsFinal = applyBrackets;
             currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<>(applyBracketsFinal.apply(close), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()), (bracketed, bracketEnd) -> {
                 return Either.<@Recorded Expression, Terminator>left(bracketed);
-            }, invalidPrefix, true)));
+            }, invalidPrefix, null, true)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
             currentScopes.push(new Scope(errorDisplayer,
                 expect(ImmutableList.of(Keyword.CLOSE_SQUARE),
                     close -> new BracketAndNodes<Expression, ExpressionSaver, BracketContent>(makeList(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, close)), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()),
-                    (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword, true)));
+                    (e, c) -> Either.<@Recorded Expression, Terminator>left(e), prefixKeyword, null, true)));
         }
         else if (keyword == Keyword.IF)
         {
@@ -203,9 +203,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     invalid.add(record(thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
                     return Either.right(expect(ImmutableList.of(Keyword.ENDIF), miscBracketsFrom(thenEnd), (elsePart, elseEnd) -> {
                         return Either.<@Recorded Expression, Terminator>left(locationRecorder.record(CanonicalSpan.fromTo(errorDisplayer, elseEnd), new IfThenElseExpression(condition, thenPart, elsePart)));
-                    }, invalid::build, false));
-                }, invalid::build, false));
-            }, invalid::build, false)));
+                    }, invalid::build, ifPrompt(2), false));
+                }, invalid::build, ifPrompt(1), false));
+            }, invalid::build, ifPrompt(0), false)));
         }
         else if (keyword == Keyword.MATCH)
         {            
@@ -228,6 +228,25 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
             }, keyword, errorDisplayer);
         }
+    }
+
+    private StyledString ifPrompt(int partToBold)
+    {
+        ArrayList<StyledString> parts = new ArrayList<>();
+        parts.add(StyledString.s(" condition "));
+        parts.add(StyledString.s(" value if true "));
+        parts.add(StyledString.s(" value if false "));
+        
+        parts.set(partToBold, parts.get(partToBold).withStyle(new StyledCSS("entry-prompt-bold")));
+        return StyledString.concat(
+            StyledString.s(Keyword.IF.getContent()),
+            parts.get(0),
+            StyledString.s(Keyword.THEN.getContent()),
+            parts.get(1),
+            StyledString.s(Keyword.ELSE.getContent()),
+            parts.get(2),
+            StyledString.s(Keyword.ENDIF.getContent())
+        );
     }
 
     @Override

@@ -488,6 +488,11 @@ public class EditorLocationAndErrorRecorder
         return ImmutableMap.copyOf(combined);
     }
 
+    public <EXPRESSION> void recordEntryPromptG(@Recorded EXPRESSION expression, StyledString prompt)
+    {
+        if (expression instanceof Expression)
+            recordEntryPrompt((Expression)expression, prompt);
+    }
 
     public void recordEntryPrompt(@Recorded Expression expression, StyledString prompt)
     {
