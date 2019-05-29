@@ -147,7 +147,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             curIndex += RawInputLocation.ONE;
         }
         @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
-        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPositions = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPositions = calculateCaretPos(chunks);
         
         if (requireConcrete)
         {

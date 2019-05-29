@@ -179,14 +179,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     
     public @CanonicalLocation int prevWordPosition(boolean canStaySame)
     {
-        int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> canStaySame ? p.positionInternal <= curCaretPosition : p.positionInternal < curCaretPosition).orElse(0);
-        return curContent.wordBoundaryCaretPositions.get(index).positionInternal;
+        int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> canStaySame ? p <= curCaretPosition : p < curCaretPosition).orElse(0);
+        return curContent.wordBoundaryCaretPositions.get(index);
     }
 
     public @CanonicalLocation int nextWordPosition()
     {
-        int index = Utility.findFirstIndex(curContent.wordBoundaryCaretPositions, p -> p.positionInternal > curCaretPosition).orElse(curContent.wordBoundaryCaretPositions.size() - 1);
-        return curContent.wordBoundaryCaretPositions.get(index).positionInternal;
+        int index = Utility.findFirstIndex(curContent.wordBoundaryCaretPositions, p -> p > curCaretPosition).orElse(curContent.wordBoundaryCaretPositions.size() - 1);
+        return curContent.wordBoundaryCaretPositions.get(index);
     }
 
     public boolean suppressBracketMatch(int caretPosition)

@@ -223,7 +223,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         }
         @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         
-        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPositions = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPositions = calculateCaretPos(chunks);
         StyledString built = chunks.stream().map(c -> c.displayContent).collect(StyledString.joining(""));
         if (built.getLength() == 0)
             built = StyledString.s(" ");

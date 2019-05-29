@@ -29,10 +29,10 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
 {
     // First is all caret pos, second is word boundary
     @SuppressWarnings("units")
-    protected static Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> calculateCaretPos(ArrayList<ContentChunk> chunks)
+    protected static Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> calculateCaretPos(ArrayList<ContentChunk> chunks)
     {
         ArrayList<CaretPos> caretPos = new ArrayList<>();
-        ArrayList<CaretPos> wordBoundaryCaretPos = new ArrayList<>();
+        ArrayList<@CanonicalLocation Integer> wordBoundaryCaretPos = new ArrayList<>();
         @CanonicalLocation int internalLenSoFar = 0;
         @DisplayLocation int displayLenSoFar = 0;
         for (ContentChunk chunk : chunks)
@@ -41,9 +41,10 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             {
                 addCaretPos(caretPos, new CaretPos(caretPosition.positionInternal + internalLenSoFar, caretPosition.positionDisplay + displayLenSoFar));
             }
-            for (CaretPos caretPosition : chunk.wordBoundaryCaretPositions)
+            for (@CanonicalLocation int caretPosition : chunk.wordBoundaryCaretPositions)
             {
-                addCaretPos(wordBoundaryCaretPos, new CaretPos(caretPosition.positionInternal + internalLenSoFar, caretPosition.positionDisplay + displayLenSoFar));
+                if (!wordBoundaryCaretPos.contains(caretPosition + internalLenSoFar))
+                    wordBoundaryCaretPos.add(caretPosition + internalLenSoFar);
             }
             internalLenSoFar += chunk.internalContent.length();
             displayLenSoFar += chunk.displayContent.getLength();
@@ -53,9 +54,9 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         {
             chunks.add(new ContentChunk("", StyledString.s(" "), ChunkType.IDENT));
             caretPos.add(new CaretPos(0, 0));
-            wordBoundaryCaretPos.add(new CaretPos(0, 0));
+            wordBoundaryCaretPos.add(0);
         }
-        return new Pair<>(caretPos, wordBoundaryCaretPos);
+        return new Pair<>(caretPos, ImmutableList.copyOf(wordBoundaryCaretPos));
     }
 
     private static void addCaretPos(ArrayList<CaretPos> caretPos, CaretPos newPos)
@@ -156,7 +157,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         public final boolean reLexOnCaretMove;
         // Valid caret positions
         public final ImmutableList<CaretPos> caretPositions;
-        public final ImmutableList<CaretPos> wordBoundaryCaretPositions;
+        public final ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions;
         // The content to display in the TextFlow
         public final StyledString display;
         
@@ -170,7 +171,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         public final boolean bracketsAreBalanced;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<CaretPos> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -342,7 +343,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         protected final String internalContent;
         // Positions are relative to this chunk:
         protected final ImmutableList<CaretPos> caretPositions;
-        protected final ImmutableList<CaretPos> wordBoundaryCaretPositions;
+        protected final ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions;
         protected final StyledString displayContent;
         protected final ChunkType chunkType;
 
@@ -357,7 +358,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             internalContent = simpleContent;
             displayContent = styledString;
             caretPositions = IntStream.range(0, simpleContent.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
-            wordBoundaryCaretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(simpleContent.length(), simpleContent.length()));
+            wordBoundaryCaretPositions = ImmutableList.of(0, simpleContent.length());
             this.chunkType = chunkType;
         }
         
@@ -368,11 +369,11 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             internalContent = specialContent.getContent();
             displayContent = StyledString.concat(StyledString.s(addLeadingSpace ? " " : ""), specialContent.toStyledString(), StyledString.s(addTrailingSpace ? " " : ""));
             caretPositions = ImmutableList.of(new CaretPos(0, 0), new CaretPos(specialContent.getContent().length(), displayContent.getLength()));
-            wordBoundaryCaretPositions = caretPositions;
+            wordBoundaryCaretPositions = Utility.mapListI(caretPositions, p -> p.positionInternal);
             this.chunkType = chunkType;
         }
 
-        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions, ImmutableList<CaretPos> wordBoundaryCaretPositions, ChunkType chunkType)
+        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, ChunkType chunkType)
         {
             this.internalContent = internalContent;
             this.caretPositions = caretPositions;

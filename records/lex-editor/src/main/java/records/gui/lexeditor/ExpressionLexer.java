@@ -13,7 +13,6 @@ import com.google.common.collect.ImmutableMap;
 import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
 import records.data.datatype.DataType;
@@ -52,7 +51,6 @@ import utility.gui.FXUtility;
 import utility.TranslationUtility;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -245,7 +243,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     @SuppressWarnings("units")
                     ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
                     @SuppressWarnings("units")
-                    ImmutableList<CaretPos> wordCaretPos = IntStream.of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
+                    ImmutableList<@CanonicalLocation Integer> wordCaretPos = Stream.<Integer>of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().collect(ImmutableList.<@CanonicalLocation Integer>toImmutableList());
                     chunks.add(new ContentChunk(stringLit, StyledString.s(stringLit).withStyle(new StyledCSS("expression-string-literal")), caretPositions, wordCaretPos, ChunkType.NON_IDENT));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + RawInputLocation.ONE;
@@ -508,7 +506,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         
         String internalContent = chunks.stream().map(c -> c.internalContent).collect(Collectors.joining());
         StyledString display = chunks.stream().map(c -> c.displayContent).filter(d -> d.getLength() > 0).collect(StyledString.joining(""));
-        Pair<ArrayList<CaretPos>, ArrayList<CaretPos>> caretPos = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPos = calculateCaretPos(chunks);
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
@@ -925,7 +923,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             String content = source.prefix + source.innerContent + (source.terminatedProperly ? "}" : "");
             this.chunk = new ContentChunk(content, StyledString.s(content), IntStream.concat(IntStream.concat(IntStream.of(0), IntStream.range(0, source.innerContent.length() + 1).map(n -> n + source.prefix.length())), IntStream.range(source.terminatedProperly ? content.length() - 1 : content.length(), content.length() + 1)).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()), 
-                    IntStream.of(0, source.prefix.length(), source.terminatedProperly ? content.length() - 1 : content.length(), content.length()).distinct().mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()),
+                    Stream.<Integer>of(0, source.prefix.length(), source.terminatedProperly ? content.length() - 1 : content.length(), content.length()).distinct().collect(ImmutableList.<@CanonicalLocation Integer>toImmutableList()),
                     ChunkType.NESTED_START);
             this.expression = expression;
             this.removedChars = new RemovedCharacters();
@@ -935,7 +933,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @SuppressWarnings("units")
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<CaretPos> wordBoundaryCaretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             CaretPos initialPos = new CaretPos(0, 0);
@@ -945,13 +943,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 caretPosIncludingPrefixSuffix.add(new CaretPos(p.positionInternal + prefix.length(), p.positionDisplay + prefix.length()));
             }
             caretPosIncludingPrefixSuffix.add(new CaretPos(prefix.length() + internalContent.length() + suffix.length(), prefix.length() + displayContent.getLength() + suffix.length()));
-            ImmutableList.Builder<CaretPos> wordPosIncludingPrefixSuffix = ImmutableList.builder();
-            wordPosIncludingPrefixSuffix.add(initialPos);
-            for (CaretPos p : wordBoundaryCaretPos)
+            ImmutableList.Builder<@CanonicalLocation Integer> wordPosIncludingPrefixSuffix = ImmutableList.builder();
+            wordPosIncludingPrefixSuffix.add(initialPos.positionInternal);
+            for (@CanonicalLocation Integer p : wordBoundaryCaretPos)
             {
-                wordPosIncludingPrefixSuffix.add(new CaretPos(p.positionInternal + prefix.length(), p.positionDisplay + prefix.length()));
+                wordPosIncludingPrefixSuffix.add(p + prefix.length());
             }
-            wordPosIncludingPrefixSuffix.add(new CaretPos(prefix.length() + internalContent.length() + suffix.length(), prefix.length() + displayContent.getLength() + suffix.length()));
+            wordPosIncludingPrefixSuffix.add(prefix.length() + internalContent.length() + suffix.length());
             this.chunk = new ContentChunk(
                 prefix + internalContent + suffix,
                 StyledString.concat(StyledString.s(prefix), displayContent, StyledString.s(suffix)),
