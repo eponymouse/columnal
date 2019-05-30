@@ -38,6 +38,7 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.typeExp.TypeExp;
 import styled.StyledCSS;
 import styled.StyledString;
@@ -510,6 +511,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
+        
+        try
+        {
+            display = addIndents(display, caretPos.getFirst(), saved, saver.locationRecorder);
+        }
+        catch (InternalException e)
+        {
+            // Just abandon adding the indents, user will live without
+            Log.log(e);
+        }
+        
 
         return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new MakeCompletions<ExpressionCompletionContext>()
         {
@@ -523,6 +535,69 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 return ExpressionLexer.this.makeCompletions(chunk, canonIndex, precedingChunk, saver);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+    }
+
+    private StyledString addIndents(StyledString display, ArrayList<CaretPos> caretPos, @Recorded Expression expression, EditorLocationAndErrorRecorder locations) throws InternalException
+    {
+        ImmutableList<AddedSpace> addedSpaces = expression.visit(new ExpressionVisitorStream<AddedSpace>() {
+            @Override
+            public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+            {
+                return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
+                    new AddedSpace(locations.recorderFor(condition).end, "\n    "),
+                    new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
+                    new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
+                ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
+            }
+
+            private Stream<AddedSpace> increaseIndent(Stream<AddedSpace> indents)
+            {
+                return indents.map(a -> new AddedSpace(a.addedAtInternalPos, a.added + "    "));
+            }
+        }).sorted(Comparator.<AddedSpace, Integer>comparing(a -> a.addedAtInternalPos)).collect(ImmutableList.<AddedSpace>toImmutableList());
+
+        for (AddedSpace addedSpace : addedSpaces)
+        {
+            display = addDisplayAfter(display, caretPos, addedSpace.addedAtInternalPos, addedSpace.added);
+        }
+        
+        return display;
+    }
+    
+    private class AddedSpace
+    {
+        private final @CanonicalLocation int addedAtInternalPos;
+        private final String added;
+
+        public AddedSpace(@CanonicalLocation int addedAtInternalPos, String added)
+        {
+            this.addedAtInternalPos = addedAtInternalPos;
+            this.added = added;
+        }
+    }
+    
+    private StyledString addDisplayAfter(StyledString display, ArrayList<CaretPos> caretPos, @CanonicalLocation int after, String displayContentToAdd) throws InternalException
+    {
+        // We find the caret pos at the end of the span:
+        CaretPos posAfter = caretPos.stream().filter(p -> p.positionInternal == after).findFirst().orElse(null);
+        if (posAfter == null)
+            throw new InternalException("Could not find caret pos: " + after);
+        StyledString displayBefore = display.substring(0, posAfter.positionDisplay);
+        StyledString displayAfter = display.substring(posAfter.positionDisplay, display.getLength());
+
+        for (int i = 0; i < caretPos.size(); i++)
+        {
+            CaretPos p = caretPos.get(i);
+            if (p.positionInternal > posAfter.positionInternal)
+            {
+                // Don't change internal position, only display position:
+                @SuppressWarnings("units")
+                CaretPos adjusted = new CaretPos(p.positionInternal, p.positionDisplay + displayContentToAdd.length());
+                caretPos.set(i, adjusted);
+            }
+        }
+        
+        return StyledString.concat(displayBefore, StyledString.s(displayContentToAdd), displayAfter);
     }
 
     private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
