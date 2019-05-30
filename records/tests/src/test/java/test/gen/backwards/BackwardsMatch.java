@@ -168,14 +168,15 @@ public class BackwardsMatch extends BackwardsProvider
     {
         return ImmutableList.of(
             () -> makeMatch(maxLevels, targetType, targetValue),
-            () -> makeMatchIf(maxLevels, targetType, targetValue)
+            () -> makeMatchIf(maxLevels, targetType, targetValue),
+            () -> makeMatchDefine(maxLevels, targetType, targetValue)
         );
     }
 
     /**
-     * Make a match expression with a match.
+     * Make a match expression with an if-then-else.
      *
-     * @return A MatchExpression that evaluates to the correct outcome.
+     * @return An IfThenElseExpression that evaluates to the correct outcome.
      * @throws InternalException
      * @throws UserException
      */
@@ -214,6 +215,37 @@ public class BackwardsMatch extends BackwardsProvider
         
         return cur;
     }
+
+    /**
+     * Make a define expression.
+     *
+     * @return A DefineExpression that evaluates to the correct outcome.
+     * @throws InternalException
+     * @throws UserException
+     */
+    @OnThread(Tag.Simulation)
+    private DefineExpression makeMatchDefine(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    {
+        DataType t = parent.makeType();
+        @Value Object actual = parent.makeValue(t);
+        
+        // Add var context for successful pattern:
+        varContexts.add(new ArrayList<>());
+        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
+        Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
+        Expression guard = parent.make(DataType.BOOLEAN, true, maxLevels - 1);
+        @Nullable Expression extraGuard = match.guard;
+        if (extraGuard != null)
+            guard = new AndExpression(Arrays.asList(extraGuard, guard));
+        PatternInfo successful = new PatternInfo(match.pattern, guard);
+        
+        // Remove for successful pattern:
+        varContexts.remove(varContexts.size() -1);
+
+        Expression toMatch = parent.make(t, actual, maxLevels - 1);
+        return new DefineExpression(ImmutableList.<EqualExpression>of(new EqualExpression(ImmutableList.of(match.pattern, toMatch)), new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true)))), correctOutcome);
+    }
+
 
     /**
      * Make a match expression with a match.

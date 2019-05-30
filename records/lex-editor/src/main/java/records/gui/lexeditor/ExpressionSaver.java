@@ -6,8 +6,6 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,10 +26,8 @@ import styled.StyledCSS;
 import styled.StyledString;
 import styled.StyledString.Builder;
 import utility.Either;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,6 +206,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         else if (keyword == Keyword.MATCH)
         {            
             currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new Case(errorDisplayer)), Stream.<Supplier<@Recorded Expression>>of(() -> record(errorDisplayer, new InvalidIdentExpression(keyword.getContent()))))));
+        }
+        else if (keyword == Keyword.DEFINE)
+        {
+            currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new FurtherDefine(errorDisplayer, ImmutableList.of()), new DefineBody(ImmutableList.of())), Stream.<Supplier<@Recorded Expression>>of(() -> record(errorDisplayer, new InvalidIdentExpression(keyword.getContent()))))));
         }
         else
         {
@@ -600,7 +600,68 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             ), prefixIfInvalid));
         }
     }
+
+    // Looks for @define after initial
+    private class FurtherDefine extends Choice
+    {
+        private final CanonicalSpan firstDefineKeyword;
+        private final ImmutableList<Pair<@Recorded Expression, CanonicalSpan>> definesBeforeThis;
+        
+        // Looks for first further @define after an initial @define
+        public FurtherDefine(CanonicalSpan firstDefine, ImmutableList<Pair<@Recorded Expression, CanonicalSpan>> definesBeforeThis)
+        {
+            super(Keyword.DEFINE);
+            this.firstDefineKeyword = firstDefine;
+            this.definesBeforeThis = definesBeforeThis;
+        }
+
+        @Override
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, CanonicalSpan node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        {
+            return Either.right(expectOneOf(node, ImmutableList.of(new FurtherDefine(firstDefineKeyword, Utility.appendToList(definesBeforeThis, new Pair<>(expressionBefore, node))), new DefineBody(makeDefines(expressionBefore))), Stream.<Supplier<Expression>>concat(Stream.<Supplier<Expression>>of(() -> keywordToInvalid(Keyword.DEFINE)), definesBeforeThis.stream().<Supplier<Expression>>flatMap(p -> Stream.<Supplier<Expression>>of(() -> p.getFirst(), () -> keywordToInvalid(Keyword.DEFINE))))));
+        }
+
+        private ImmutableList<Pair<CanonicalSpan, Expression>> makeDefines(Expression lastDefine)
+        {
+            ImmutableList.Builder<Pair<CanonicalSpan, Expression>> r = ImmutableList.builder();
+            CanonicalSpan lastDefineKW = firstDefineKeyword;
+            for (Pair<Expression, CanonicalSpan> def : definesBeforeThis)
+            {
+                r.add(new Pair<>(lastDefineKW, def.getFirst()));
+                lastDefineKW = def.getSecond();
+            }
+            r.add(new Pair<>(lastDefineKW, lastDefine));
+            return r.build();
+        }
+    }
     
+    private class DefineBody extends Choice
+    {
+        private final ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines;
+
+        public DefineBody(ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines)
+        {
+            super(Keyword.DEFINEBODY);
+            this.defines = defines;
+        }
+
+        @Override
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, CanonicalSpan start, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
+        {
+            return Either.right(expect(ImmutableList.of(Keyword.ENDDEFINE), miscBracketsFrom(start), (e, s) -> Either.<@Recorded Expression, Terminator>left(defineOrInvalid(Utility.<@Recorded Expression>appendToList(Utility.<Pair<CanonicalSpan, @Recorded Expression>, @Recorded Expression>mapListI(defines, p -> p.getSecond()), expressionBefore), e)), () -> {
+                return Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE), expressionBefore)).collect(ImmutableList.<@Recorded Expression>toImmutableList());
+            }, null, false));
+        }
+    }
+
+    private Expression defineOrInvalid(ImmutableList<Expression> defines, Expression body)
+    {
+        if (defines.stream().allMatch(e -> e instanceof EqualExpression))
+            return new DefineExpression(Utility.mapListI(defines, e -> (EqualExpression)e), body);
+        else
+            return new InvalidOperatorExpression(Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(e -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE), e)), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINEBODY), body, keywordToInvalid(Keyword.ENDDEFINE))).collect(ImmutableList.<@Recorded Expression>toImmutableList()));
+    }
+
 
     public Terminator expectOneOf(CanonicalSpan start, ImmutableList<Choice> choices, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
     {

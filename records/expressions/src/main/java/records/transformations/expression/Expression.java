@@ -33,40 +33,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.AddSubtractExpressionContext;
-import records.grammar.ExpressionParser.AndExpressionContext;
-import records.grammar.ExpressionParser.AnyContext;
-import records.grammar.ExpressionParser.ArrayExpressionContext;
-import records.grammar.ExpressionParser.BooleanLiteralContext;
-import records.grammar.ExpressionParser.BracketedExpressionContext;
-import records.grammar.ExpressionParser.CallExpressionContext;
-import records.grammar.ExpressionParser.ColumnRefContext;
-import records.grammar.ExpressionParser.ConstructorContext;
-import records.grammar.ExpressionParser.CustomLiteralExpressionContext;
-import records.grammar.ExpressionParser.DivideExpressionContext;
-import records.grammar.ExpressionParser.ExpressionContext;
-import records.grammar.ExpressionParser.GreaterThanExpressionContext;
-import records.grammar.ExpressionParser.IfThenElseExpressionContext;
-import records.grammar.ExpressionParser.ImplicitLambdaParamContext;
-import records.grammar.ExpressionParser.InvalidOpExpressionContext;
-import records.grammar.ExpressionParser.InvalidOpItemContext;
-import records.grammar.ExpressionParser.LessThanExpressionContext;
-import records.grammar.ExpressionParser.MatchClauseContext;
-import records.grammar.ExpressionParser.MatchContext;
-import records.grammar.ExpressionParser.NotEqualExpressionContext;
-import records.grammar.ExpressionParser.NumericLiteralContext;
-import records.grammar.ExpressionParser.OrExpressionContext;
-import records.grammar.ExpressionParser.PatternContext;
-import records.grammar.ExpressionParser.PlusMinusPatternContext;
-import records.grammar.ExpressionParser.RaisedExpressionContext;
-import records.grammar.ExpressionParser.StandardFunctionContext;
-import records.grammar.ExpressionParser.StringConcatExpressionContext;
-import records.grammar.ExpressionParser.StringLiteralContext;
-import records.grammar.ExpressionParser.TableIdContext;
-import records.grammar.ExpressionParser.TimesExpressionContext;
-import records.grammar.ExpressionParser.TopLevelExpressionContext;
-import records.grammar.ExpressionParser.TupleExpressionContext;
-import records.grammar.ExpressionParser.VarRefContext;
+import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -613,7 +580,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public Expression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
+        public EqualExpression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
         {
             return new EqualExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
         }
@@ -690,6 +657,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
         {
             return new IfThenElseExpression(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
+        }
+
+        @Override
+        public Expression visitDefineExpression(DefineExpressionContext ctx)
+        {
+            return new DefineExpression(Utility.mapListI(ctx.equalExpression(), this::visitEqualExpression), visitTopLevelExpression(ctx.topLevelExpression()));
         }
 
         @Override

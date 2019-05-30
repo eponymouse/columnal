@@ -12,11 +12,13 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Random;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -308,6 +310,32 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         else if (c == ImplicitLambdaArg.class)
         {
             write("?");
+        }
+        else if (c == DefineExpression.class)
+        {
+            expression.visit(new ExpressionVisitorStream<Void>() {
+                @Override
+                public Stream<Void> define(DefineExpression self, ImmutableList<@Recorded EqualExpression> defines, @Recorded Expression body)
+                {
+                    try
+                    {
+                        for (EqualExpression define : defines)
+                        {
+                            write("@define");
+                            enterExpression(typeManager, define, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                        }
+                        write("@in");
+                        enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                        write("@endin");
+                    }
+                    catch (InternalException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    
+                    return super.define(self, defines, body);
+                }
+            });
         }
         else
         {

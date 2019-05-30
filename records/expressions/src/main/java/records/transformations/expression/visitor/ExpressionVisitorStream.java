@@ -9,44 +9,12 @@ import records.data.ColumnId;
 import records.data.TableId;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager.TagInfo;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.ConstructorExpression;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.ImplicitLambdaArg;
-import records.transformations.expression.InvalidIdentExpression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.MatchAnythingExpression;
-import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.PlusMinusPatternExpression;
-import records.transformations.expression.RaiseExpression;
-import records.transformations.expression.StandardFunction;
-import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TemporalLiteral;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.TupleExpression;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.expression.UnitExpression;
-import records.transformations.expression.UnitLiteralExpression;
-import records.transformations.expression.VarDeclExpression;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
@@ -263,6 +231,12 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
             Stream<T> outcomeStream = clause.getOutcome().visit(this);
             return Stream.<T>concat(patternsStream, outcomeStream);
         }));
+    }
+
+    @Override
+    public Stream<T> define(DefineExpression self, ImmutableList<@Recorded EqualExpression> defines, @Recorded Expression body)
+    {
+        return Stream.<T>concat(defines.stream().<T>flatMap(e -> e.visit(this)), body.<Stream<T>>visit(this));
     }
 
     protected Stream<T> visitPattern(Pattern pattern)

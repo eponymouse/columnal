@@ -163,4 +163,10 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     {
         return visitor.equal(this, expressions);
     }
+
+    @Override
+    public EqualExpression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return (EqualExpression)super.replaceSubExpression(toReplace, replaceWith);
+    }
 }

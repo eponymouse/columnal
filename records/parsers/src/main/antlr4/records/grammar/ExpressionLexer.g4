@@ -45,6 +45,9 @@ RAISEDTO : '^';
 COMMA: ',';
 STRING_CONCAT : ';';
 IMPLICIT_LAMBDA_PARAM : '?';
+DEFINE: '@define';
+DEFINEBODY: '@in';
+ENDDEFINE: '@endin';
 
 NUMBER : [0-9]+ ('.' [0-9]+)?;
 

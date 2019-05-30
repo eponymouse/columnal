@@ -85,7 +85,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         CASE(records.grammar.ExpressionLexer.CASE),
         ORCASE(records.grammar.ExpressionLexer.ORCASE),
         GIVEN(records.grammar.ExpressionLexer.CASEGUARD),
-        ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH);
+        ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH),
+        DEFINE(records.grammar.ExpressionLexer.DEFINE),
+        DEFINEBODY(records.grammar.ExpressionLexer.DEFINEBODY),
+        ENDDEFINE(records.grammar.ExpressionLexer.ENDDEFINE);
 
         private final String keyword;
 

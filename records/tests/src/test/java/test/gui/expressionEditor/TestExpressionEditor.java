@@ -567,4 +567,10 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("@entire Col1");
     }
+
+    @Test
+    public void testDefine() throws Exception
+    {
+        testSimple("@define _x = 3 @define _y = x @in x / y @endin");
+    }
 }
