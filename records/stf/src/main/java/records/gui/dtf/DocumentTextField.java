@@ -266,7 +266,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     private void queueUpdateCaretShape()
     {
         if (caretAndSelectionNodes != null)
-            caretAndSelectionNodes.queueUpdateCaretShape();
+            caretAndSelectionNodes.queueUpdateCaretShape(false);
     }
 
     @Override

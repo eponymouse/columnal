@@ -137,8 +137,7 @@ public abstract class TextEditorBase extends Region
         {
             if (focused)
             {
-                caretBlink.playFromStart();
-                queueUpdateCaretShape();
+                queueUpdateCaretShape(true);
             }
             else
             {
@@ -147,8 +146,11 @@ public abstract class TextEditorBase extends Region
             }
         }
 
-        public void queueUpdateCaretShape()
+        public void queueUpdateCaretShape(boolean restartCaretBlink)
         {
+            if (restartCaretBlink)
+                caretBlink.playFromStart();
+            
             if (!updateCaretShapeQueued)
             {
                 FXUtility.runAfterNextLayout(() -> updateCaretShape(false));

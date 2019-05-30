@@ -399,7 +399,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         if (contentChanged)
             textFlow.getChildren().setAll(content.getDisplayText());
         if (caretAndSelectionNodes != null)
-            caretAndSelectionNodes.queueUpdateCaretShape();
+            caretAndSelectionNodes.queueUpdateCaretShape(contentChanged);
     }
     
     void showCompletions(@Nullable ImmutableList<LexCompletionGroup> completions)
@@ -421,7 +421,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     public void _test_queueUpdateCaret()
     {
         if (caretAndSelectionNodes != null)
-            caretAndSelectionNodes.queueUpdateCaretShape();
+            caretAndSelectionNodes.queueUpdateCaretShape(true);
     }
 
     public @Nullable Point2D getCaretBottomOnScreen()
