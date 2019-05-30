@@ -56,25 +56,25 @@ import java.util.List;
 
 public interface ExpressionVisitor<T>
 {
-    T notEqual(NotEqualExpression self, Expression lhs, Expression rhs);
-    T divide(DivideExpression self, Expression lhs, Expression rhs);
+    T notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
+    T divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
 
-    T addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops);
+    T addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops);
 
-    T and(AndExpression self, ImmutableList<Expression> expressions);
-    T or(OrExpression self, ImmutableList<Expression> expressions);
+    T and(AndExpression self, ImmutableList<@Recorded Expression> expressions);
+    T or(OrExpression self, ImmutableList<@Recorded Expression> expressions);
 
-    T list(ArrayExpression self, ImmutableList<Expression> items);
+    T list(ArrayExpression self, ImmutableList<@Recorded Expression> items);
 
     T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType);
 
     T litBoolean(BooleanLiteral self, @Value Boolean value);
 
-    T call(CallExpression self, @Recorded Expression callTarget, ImmutableList<Expression> arguments);
+    T call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments);
 
-    T comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators);
+    T comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators);
     // Singular name to avoid clash with Object.equals
-    T equal(EqualExpression self, ImmutableList<Expression> expressions);
+    T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions);
 
     T ident(IdentExpression self, @ExpressionIdentifier String text);
 
@@ -84,7 +84,7 @@ public interface ExpressionVisitor<T>
 
     T implicitLambdaArg(ImplicitLambdaArg self);
 
-    T invalidOps(InvalidOperatorExpression self, ImmutableList<Expression> items);
+    T invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items);
 
     T matchAnything(MatchAnythingExpression self);
 
@@ -96,15 +96,15 @@ public interface ExpressionVisitor<T>
 
     T standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition);
 
-    T concatText(StringConcatExpression self, ImmutableList<Expression> expressions);
+    T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions);
 
     T litText(StringLiteral self, @Value String value);
 
     T litTemporal(TemporalLiteral self, DateTimeType literalType, String content, Either<StyledString, TemporalAccessor> value);
 
-    T multiply(TimesExpression self, ImmutableList<Expression> expressions);
+    T multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions);
 
-    T tuple(TupleExpression self, ImmutableList<Expression> members);
+    T tuple(TupleExpression self, ImmutableList<@Recorded Expression> members);
 
     T litType(TypeLiteralExpression self, TypeExpression type);
 

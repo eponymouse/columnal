@@ -64,47 +64,47 @@ import java.util.stream.Stream;
 public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
 {
     @Override
-    public Stream<T> notEqual(NotEqualExpression self, Expression lhs, Expression rhs)
+    public Stream<T> notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
     {
         return apply(lhs, rhs);
     }
 
-    private Stream<T> apply(Expression... expressions)
+    private Stream<T> apply(@Recorded Expression... expressions)
     {
         return apply(ImmutableList.copyOf(expressions));
     }
     
-    private Stream<T> apply(ImmutableList<Expression> expressions)
+    private Stream<T> apply(ImmutableList<@Recorded Expression> expressions)
     {
         return expressions.stream().flatMap(e -> e.visit(this));
     }
 
     @Override
-    public Stream<T> divide(DivideExpression self, Expression lhs, Expression rhs)
+    public Stream<T> divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
     {
         return apply(lhs, rhs);
     }
 
     @Override
-    public Stream<T> addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops)
+    public Stream<T> addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
     {
         return apply(expressions);
     }
 
     @Override
-    public Stream<T> and(AndExpression self, ImmutableList<Expression> expressions)
+    public Stream<T> and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
     }
 
     @Override
-    public Stream<T> or(OrExpression self, ImmutableList<Expression> expressions)
+    public Stream<T> or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
     }
 
     @Override
-    public Stream<T> list(ArrayExpression self, ImmutableList<Expression> items)
+    public Stream<T> list(ArrayExpression self, ImmutableList<@Recorded Expression> items)
     {
         return apply(items);
     }
@@ -122,19 +122,19 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> call(CallExpression self, @Recorded Expression callTarget, ImmutableList<Expression> arguments)
+    public Stream<T> call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
     {
         return apply(Utility.prependToList(callTarget, arguments));
     }
 
     @Override
-    public Stream<T> comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators)
+    public Stream<T> comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
     {
         return apply(expressions);
     }
 
     @Override
-    public Stream<T> equal(EqualExpression self, ImmutableList<Expression> expressions)
+    public Stream<T> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
     }
@@ -164,7 +164,7 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> invalidOps(InvalidOperatorExpression self, ImmutableList<Expression> items)
+    public Stream<T> invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items)
     {
         return apply(items);
     }
@@ -200,7 +200,7 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> concatText(StringConcatExpression self, ImmutableList<Expression> expressions)
+    public Stream<T> concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
     }
@@ -218,13 +218,13 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> multiply(TimesExpression self, ImmutableList<Expression> expressions)
+    public Stream<T> multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
     }
 
     @Override
-    public Stream<T> tuple(TupleExpression self, ImmutableList<Expression> members)
+    public Stream<T> tuple(TupleExpression self, ImmutableList<@Recorded Expression> members)
     {
         return apply(members);
     }
