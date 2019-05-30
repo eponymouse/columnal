@@ -105,6 +105,8 @@ public class FXUtility
 {
     private static boolean testingMode = false;
     private static final Set<String> loadedFonts = new HashSet<>();
+    // Need to keep strong reference until they run:
+    private static ArrayList<TKPulseListener> pulseListeners = new ArrayList<>();
 
     @OnThread(Tag.FXPlatform)
     public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
@@ -807,15 +809,19 @@ public class FXUtility
     public static void runAfterNextLayout(final FXPlatformRunnable action)
     {
         //TODO In Java 9, use public toolkit
-        Toolkit.getToolkit().addSceneTkPulseListener(new TKPulseListener()
+        TKPulseListener pulseListener = new TKPulseListener()
         {
             @Override
             public void pulse()
             {
                 runAfter(action);
-                Toolkit.getToolkit().removeSceneTkPulseListener(this);
+                Toolkit.getToolkit().removePostSceneTkPulseListener(this);
+                pulseListeners.remove(this);
             }
-        });
+        };
+        // Need to keep strong reference, as Toolkit only keeps weak reference so it may get GCed: 
+        pulseListeners.add(pulseListener);
+        Toolkit.getToolkit().addPostSceneTkPulseListener(pulseListener);
     }
 
     public static boolean wordSkip(KeyEvent keyEvent)
