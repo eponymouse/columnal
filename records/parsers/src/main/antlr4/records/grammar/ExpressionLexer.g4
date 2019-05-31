@@ -35,6 +35,7 @@ ELSE : '@else';
 ENDIF : '@endif';
 CASEGUARD: '@given';
 FUNCTION : '@function';
+ENDFUNCTION : '@endfunction';
 VAR : '_';
 UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';

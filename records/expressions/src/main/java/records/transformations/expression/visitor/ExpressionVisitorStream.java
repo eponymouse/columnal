@@ -245,6 +245,12 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
         return type.visit(this);
     }
 
+    @Override
+    public Stream<T> lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
+    {
+        return Stream.<T>concat(parameters.stream().<T>flatMap(e -> e.visit(this)), body.<Stream<T>>visit(this));
+    }
+
     protected Stream<T> visitPattern(Pattern pattern)
     {
         Stream<T> patStream = pattern.getPattern().visit(this);

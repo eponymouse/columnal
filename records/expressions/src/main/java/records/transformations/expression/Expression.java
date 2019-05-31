@@ -717,6 +717,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
+        public Expression visitLambdaExpression(LambdaExpressionContext ctx)
+        {
+            List<TopLevelExpressionContext> es = ctx.topLevelExpression();
+            return new LambdaExpression(Utility.mapListI(es.subList(0, es.size() - 1), e -> visitTopLevelExpression(e)), visitTopLevelExpression(es.get(es.size() - 1)));
+        }
+
+        @Override
         public Expression visitCustomLiteralExpression(CustomLiteralExpressionContext ctx)
         {
             String literalContent = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");

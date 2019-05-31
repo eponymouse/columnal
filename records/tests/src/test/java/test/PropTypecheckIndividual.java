@@ -559,4 +559,28 @@ public class PropTypecheckIndividual
         // Duplicate definition incl type:
         checkConcreteType((DataType)null, "@define _x :: type{Number} @define _x = 1 @define _x = 1 @in x @endin");
     }
+    
+    @Test
+    public void checkFunction1() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.NUMBER, "@define _f = (? + 1) @in @call f(3) @endin");
+    }
+
+    @Test
+    public void checkFunction1b() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.NUMBER, "@define _f :: type{@apply Function(Number)(Number)} @define _f = (? + 1) @in @call f(3) @endin");
+    }
+
+    @Test
+    public void checkFunction2() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.NUMBER, "@define _f = @function (_x) @then x + 1 @endfunction @in @call f(3) @endin");
+    }
+
+    @Test
+    public void checkFunction2b() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.NUMBER, "@define _f :: type{@apply Function(Number)(Number)} @define _f = @function (_x) @then x + 1 @endfunction @in @call f(3) @endin");
+    }
 }

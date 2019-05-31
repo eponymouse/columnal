@@ -87,4 +87,6 @@ public interface ExpressionVisitor<T>
     T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body);
 
     T hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
+
+    T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body);
 }

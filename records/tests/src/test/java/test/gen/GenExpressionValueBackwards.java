@@ -53,6 +53,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
             columnProvider,
             new BackwardsBooleans(r, this),
             new BackwardsFixType(r, this),
+            new BackwardsFunction(r, this),
             new BackwardsFromText(r, this),
             new BackwardsLiteral(r, this),
             new BackwardsMatch(r, this),
