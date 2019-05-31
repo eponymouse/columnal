@@ -22,6 +22,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -240,11 +241,20 @@ public class BackwardsMatch extends BackwardsProvider
         PatternInfo successful = new PatternInfo(match.pattern, guard);
         
         // Remove for successful pattern:
-        varContexts.remove(varContexts.size() -1);
+        ArrayList<VarInfo> declVars = varContexts.remove(varContexts.size() - 1);
 
         Expression toMatch = parent.make(t, actual, maxLevels - 1);
         
-        return new DefineExpression(ImmutableList.<Either<HasTypeExpression, EqualExpression>>of(Either.right(new EqualExpression(ImmutableList.of(match.pattern, toMatch))), Either.right(new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true))))), correctOutcome);
+        ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>> defines = ImmutableList.builder();
+        if (!declVars.isEmpty())
+        {
+            VarInfo v = declVars.get(r.nextInt(declVars.size()));
+            defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
+        }
+        defines.add(Either.right(new EqualExpression(ImmutableList.of(match.pattern, toMatch))));
+        defines.add(Either.right(new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true)))));
+        
+        return new DefineExpression(defines.build(), correctOutcome);
     }
 
 
