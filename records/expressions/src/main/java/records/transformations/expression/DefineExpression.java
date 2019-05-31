@@ -1,7 +1,10 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -11,44 +14,87 @@ import records.transformations.expression.visitor.ExpressionVisitor;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DefineExpression extends Expression
 {
-    private final ImmutableList<@Recorded EqualExpression> defines;
+    private final ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines;
     private final @Recorded Expression body;
 
-    public DefineExpression(ImmutableList<@Recorded EqualExpression> defines, @Recorded Expression body)
+    public DefineExpression(ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body)
     {
         this.defines = defines;
         this.body = body;
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, final TypeState original, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        for (EqualExpression define : defines)
+        TypeState typeState = original;
+        
+        HashSet<String> shouldBeDeclaredInNextDefine = new HashSet<>();
+        
+        for (Either<@Recorded HasTypeExpression, @Recorded EqualExpression> define : defines)
         {
-            @Nullable CheckedExp checkEq = define.check(dataLookup, typeState, locationInfo, onError);
+            TypeState typeStateThisTime = typeState;
+            ExFunction<@Recorded Expression, @Nullable CheckedExp> typeCheck = e -> e.check(dataLookup, typeStateThisTime, locationInfo, onError);
+            @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
+                if (!shouldBeDeclaredInNextDefine.add(hasType.getVarName()))
+                {
+                    onError.recordError(hasType, StyledString.s("Duplicate type for variable " + hasType.getVarName()));
+                    return null;
+                }
+                return hasType.check(dataLookup, typeStateThisTime, locationInfo, onError);
+            }, equal -> {
+                // We observe the declared variables by differencing TypeState before and after:
+                CheckedExp checkedExp = equal.check(dataLookup, typeStateThisTime, locationInfo, onError);
+                if (checkedExp != null)
+                {
+                    Set<String> declared = Sets.difference(checkedExp.typeState.getAvailableVariables(), typeStateThisTime.getAvailableVariables());
+                    Set<String> typedButNotDeclared = Sets.difference(shouldBeDeclaredInNextDefine, declared);
+                    if (!typedButNotDeclared.isEmpty())
+                    {
+                        onError.recordError(equal, StyledString.s("Type was given above for " + typedButNotDeclared.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+                        return null;
+                    }
+                }
+                shouldBeDeclaredInNextDefine.clear();
+                return checkedExp;
+            });
             if (checkEq == null)
                 return null;
             typeState = checkEq.typeState;
         }
-        
-        return body.check(dataLookup, typeState, locationInfo, onError);
+
+        if (!shouldBeDeclaredInNextDefine.isEmpty())
+        {
+            onError.recordError(defines.get(defines.size() - 1).<Expression>either(x -> x, x -> x), StyledString.s("Type was given for " + shouldBeDeclaredInNextDefine.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+            return null;
+        }
+
+        CheckedExp checkedBody = body.check(dataLookup, typeState, locationInfo, onError);
+        if (checkedBody == null)
+            return null;
+        else
+            return new CheckedExp(checkedBody.typeExp, original, checkedBody.expressionKind);
     }
 
     @Override
     public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        for (EqualExpression define : defines)
+        for (EqualExpression define : Either.getRights(defines))
         {
             ValueResult outcome = define.calculateValue(state);
             if (Utility.cast(outcome.value, Boolean.class).booleanValue() == false)
@@ -69,7 +115,7 @@ public class DefineExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return defines.stream().map(e -> "@define " + e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(" ")) + " @in " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endin";
+        return defines.stream().map(e -> "@define " + e.either(x -> x, x -> x).save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(" ")) + " @in " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endin";
     }
 
     @Override
@@ -105,7 +151,7 @@ public class DefineExpression extends Expression
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@define "),
-            defines.stream().map(e -> e.toStyledString()).collect(StyledString.joining(" @define ")),
+            defines.stream().map(e -> e.either(x -> x, x -> x).toStyledString()).collect(StyledString.joining(" @define ")),
             StyledString.s(" @in "),
             body.toStyledString(),
             StyledString.s(" @endin")
@@ -119,6 +165,6 @@ public class DefineExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new DefineExpression(Utility.mapListI(defines, e -> e.replaceSubExpression(toReplace, replaceWith)), body.replaceSubExpression(toReplace, replaceWith));
+            return new DefineExpression(Utility.mapListI(defines, e -> e.mapBoth(x -> (HasTypeExpression)x.replaceSubExpression(toReplace, replaceWith), x -> (EqualExpression)x.replaceSubExpression(toReplace, replaceWith))), body.replaceSubExpression(toReplace, replaceWith));
     }
 }

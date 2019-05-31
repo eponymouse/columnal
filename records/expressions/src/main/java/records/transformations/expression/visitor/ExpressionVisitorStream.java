@@ -234,9 +234,15 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> define(DefineExpression self, ImmutableList<@Recorded EqualExpression> defines, @Recorded Expression body)
+    public Stream<T> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body)
     {
-        return Stream.<T>concat(defines.stream().<T>flatMap(e -> e.visit(this)), body.<Stream<T>>visit(this));
+        return Stream.<T>concat(defines.stream().<T>flatMap(e -> e.either(x -> x.visit(this), x -> x.visit(this))), body.<Stream<T>>visit(this));
+    }
+
+    @Override
+    public Stream<T> hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+    {
+        return type.visit(this);
     }
 
     protected Stream<T> visitPattern(Pattern pattern)

@@ -243,7 +243,8 @@ public class BackwardsMatch extends BackwardsProvider
         varContexts.remove(varContexts.size() -1);
 
         Expression toMatch = parent.make(t, actual, maxLevels - 1);
-        return new DefineExpression(ImmutableList.<EqualExpression>of(new EqualExpression(ImmutableList.of(match.pattern, toMatch)), new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true)))), correctOutcome);
+        
+        return new DefineExpression(ImmutableList.<Either<HasTypeExpression, EqualExpression>>of(Either.right(new EqualExpression(ImmutableList.of(match.pattern, toMatch))), Either.right(new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true))))), correctOutcome);
     }
 
 

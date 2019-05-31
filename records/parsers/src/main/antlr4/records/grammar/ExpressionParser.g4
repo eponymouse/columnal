@@ -73,7 +73,9 @@ pattern : topLevelExpression (CASEGUARD topLevelExpression)?;
 matchClause : CASE pattern (ORCASE pattern)* THEN topLevelExpression;
 match : MATCH topLevelExpression matchClause+ ENDMATCH;
 
-defineExpression: (DEFINE equalExpression)+ DEFINEBODY topLevelExpression ENDDEFINE;
+hasTypeExpression : newVariable HAS_TYPE customLiteralExpression;
+definition : equalExpression | hasTypeExpression;
+defineExpression: (DEFINE definition)+ DEFINEBODY topLevelExpression ENDDEFINE;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor

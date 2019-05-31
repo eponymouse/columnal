@@ -623,7 +623,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         @Override
         public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, CanonicalSpan node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
-            return Either.<@Recorded Expression, Terminator>right(expectOneOf(node, ImmutableList.<Choice>of(new FurtherDefine(firstDefineKeyword, Utility.<Pair<@Recorded Expression, CanonicalSpan>>appendToList(definesBeforeThis, new Pair<>(expressionBefore, node))), new DefineBody(makeDefines(expressionBefore), node)), Stream.<Supplier<@Recorded Expression>>concat(Stream.<Supplier<@Recorded Expression>>of(() -> keywordToInvalid(Keyword.DEFINE, firstDefineKeyword)), definesBeforeThis.stream().<Supplier<@Recorded Expression>>flatMap(p -> Stream.<Supplier<@Recorded Expression>>of(() -> p.getFirst(), () -> keywordToInvalid(Keyword.DEFINE, p.getSecond()))))));
+            //TODO do we need to calculate all this, can't we just concat to prefixIfInvalid?
+            Stream<Supplier<@Recorded Expression>> prefixIfInvalid1 = Stream.<Supplier<@Recorded Expression>>concat(Stream.<Supplier<@Recorded Expression>>of(() -> keywordToInvalid(Keyword.DEFINE, firstDefineKeyword)), definesBeforeThis.stream().<Supplier<@Recorded Expression>>flatMap(p -> Stream.<Supplier<@Recorded Expression>>of(() -> p.getFirst(), () -> keywordToInvalid(Keyword.DEFINE, p.getSecond()))));
+            return Either.<@Recorded Expression, Terminator>right(expectOneOf(node, ImmutableList.<Choice>of(new FurtherDefine(firstDefineKeyword, Utility.<Pair<@Recorded Expression, CanonicalSpan>>appendToList(definesBeforeThis, new Pair<>(expressionBefore, node))), new DefineBody(makeDefines(expressionBefore), node)), prefixIfInvalid1));
         }
 
         private ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> makeDefines(@Recorded Expression lastDefine)
@@ -664,8 +666,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     private @Recorded Expression defineOrInvalid(ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines, CanonicalSpan beginLocation, @Recorded Expression body, CanonicalSpan endLocation)
     {
         CanonicalSpan overallLocation = new CanonicalSpan(defines.get(0).getFirst().start, endLocation.end);
-        if (defines.stream().allMatch(p -> p.getSecond() instanceof EqualExpression))
-            return locationRecorder.record(overallLocation, new DefineExpression(Utility.<Pair<CanonicalSpan, @Recorded Expression>, @Recorded EqualExpression>mapListI(defines, p -> (EqualExpression)p.getSecond()), body));
+        if (defines.stream().allMatch(p -> p.getSecond() instanceof EqualExpression || p.getSecond() instanceof HasTypeExpression))
+            return locationRecorder.record(overallLocation, new DefineExpression(Utility.<Pair<CanonicalSpan, @Recorded Expression>, Either<@Recorded HasTypeExpression, @Recorded EqualExpression>>mapListI(defines, p -> p.getSecond() instanceof HasTypeExpression ? Either.<@Recorded HasTypeExpression, @Recorded EqualExpression>left((HasTypeExpression)p.getSecond()) : Either.<@Recorded HasTypeExpression, @Recorded EqualExpression>right((EqualExpression)p.getSecond())), body));
         else
             return locationRecorder.record(overallLocation, new InvalidOperatorExpression(Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, p.getFirst()), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINEBODY, beginLocation), body, keywordToInvalid(Keyword.ENDDEFINE, endLocation))).collect(ImmutableList.<@Recorded Expression>toImmutableList())));
     }

@@ -60,6 +60,7 @@ import styled.StyledString;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -662,7 +663,57 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitDefineExpression(DefineExpressionContext ctx)
         {
-            return new DefineExpression(Utility.mapListI(ctx.equalExpression(), this::visitEqualExpression), visitTopLevelExpression(ctx.topLevelExpression()));
+            return visitDefinitions(ctx.definition()).either(bad -> {
+                ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                for (Expression expression : bad)
+                {
+                    b.add(new InvalidIdentExpression("@define"));
+                    b.add(expression);
+                }
+                b.add(new InvalidIdentExpression("@in"));
+                b.add(visitTopLevelExpression(ctx.topLevelExpression()));
+                b.add(new InvalidIdentExpression("@endin"));
+                return new InvalidOperatorExpression(b.build());
+            }, mixed -> new DefineExpression(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
+        }
+        
+        private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, EqualExpression>>> visitDefinitions(List<DefinitionContext> definitionContexts)
+        {
+            Either<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>> builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>>right(ImmutableList.<Either<HasTypeExpression, EqualExpression>>builder());
+
+            for (DefinitionContext def : definitionContexts)
+            {
+                if (def.equalExpression() != null)
+                {
+                    EqualExpression equalExpression = visitEqualExpression(def.equalExpression());
+                    builders.either_(b -> b.add(equalExpression), b -> b.add(Either.right(equalExpression)));
+                }
+                else
+                {
+                    Expression expression = visitHasTypeExpression(def.hasTypeExpression());
+                    if (!(expression instanceof HasTypeExpression))
+                    {
+                        builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>>left(builders.<ImmutableList.Builder<Expression>>either(b -> b, mixed -> {
+                            ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                            b.addAll(Utility.mapListI(mixed.build(), e -> e.either(x -> x, x -> x)));
+                            return b;
+                        }));
+                    }
+                                
+                    builders.either_(b -> b.add(expression), b -> b.add(Either.left((HasTypeExpression)expression)));
+                }
+            }
+            
+            return builders.mapBoth(b -> b.build(), b -> b.build());
+        }
+
+        @Override
+        public Expression visitHasTypeExpression(HasTypeExpressionContext ctx)
+        {
+            Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
+            if (customLiteralExpression instanceof TypeLiteralExpression)
+                return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.newVariable().ident()), (TypeLiteralExpression)customLiteralExpression);
+            return new InvalidOperatorExpression(ImmutableList.of(new VarDeclExpression(IdentifierUtility.fromParsed(ctx.newVariable().ident())), new InvalidIdentExpression("::"), customLiteralExpression));
         }
 
         @Override

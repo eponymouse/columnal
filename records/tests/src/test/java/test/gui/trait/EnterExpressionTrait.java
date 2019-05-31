@@ -15,6 +15,7 @@ import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.visitor.ExpressionVisitorStream;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Utility;
 
 import java.util.Random;
@@ -315,14 +316,14 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             expression.visit(new ExpressionVisitorStream<Void>() {
                 @Override
-                public Stream<Void> define(DefineExpression self, ImmutableList<@Recorded EqualExpression> defines, @Recorded Expression body)
+                public Stream<Void> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression,@Recorded EqualExpression>> defines, @Recorded Expression body)
                 {
                     try
                     {
-                        for (EqualExpression define : defines)
+                        for (Either<@Recorded HasTypeExpression, @Recorded EqualExpression> define : defines)
                         {
                             write("@define");
-                            enterExpression(typeManager, define, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                            enterExpression(typeManager, define.either(x -> x, x -> x), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                         }
                         write("@in");
                         enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);

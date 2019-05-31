@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.TypeManager;
@@ -16,6 +17,7 @@ import records.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import utility.Either;
 import utility.Utility;
 
 import java.util.HashMap;
@@ -37,9 +39,12 @@ public final class TypeState
     
     // Doesn't change in modified TypeStates, but is passed through unchanged from initial TypeState.
     private final FunctionLookup functionLookup;
-    
+
+    private final ImmutableMap<String, TypeExp> variablePreTypes;
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
+    // These are not @ExpressionIdentifier because there may be internal
+    // names like ?1
     private final ImmutableMap<String, ImmutableList<TypeExp>> variables;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
@@ -47,11 +52,12 @@ public final class TypeState
 
     public TypeState(TypeManager typeManager, FunctionLookup functionLookup)
     {
-        this(ImmutableMap.of(), typeManager, typeManager.getUnitManager(), functionLookup);
+        this(ImmutableMap.of(), ImmutableMap.of(), typeManager, typeManager.getUnitManager(), functionLookup);
     }
 
-    private TypeState(ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager, FunctionLookup functionLookup)
+    private TypeState(ImmutableMap<String, TypeExp> variablePreTypes, ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager, FunctionLookup functionLookup)
     {
+        this.variablePreTypes = variablePreTypes;
         this.variables = variables;
         this.typeManager = typeManager;
         this.unitManager = unitManager;
@@ -68,7 +74,7 @@ public final class TypeState
             throw new InternalException("Could not add row number variable");
     }
 
-    public @Nullable TypeState add(String varName, TypeExp type, Consumer<StyledString> error)
+    public @Nullable TypeState add(@ExpressionIdentifier String varName, TypeExp type, Consumer<StyledString> error) throws InternalException
     {
         if (variables.containsKey(varName))
         {
@@ -77,8 +83,16 @@ public final class TypeState
         }
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
+        @Nullable TypeExp preType = variablePreTypes.get(varName);
+        if (preType != null)
+        {
+            Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(type, preType);
+            unified.ifLeft(error);
+            if (unified.isLeft())
+                return null;
+        }
         copy.put(varName, ImmutableList.of(type));
-        return new TypeState(copy.build(), typeManager, unitManager, functionLookup);
+        return new TypeState(ImmutableMap.<String, TypeExp>copyOf(Maps.<String, TypeExp>filterEntries(variablePreTypes, (Entry<String, TypeExp> e) -> e != null && !e.getKey().equals(varName))), copy.build(), typeManager, unitManager, functionLookup);
     }
 
     public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
@@ -98,7 +112,7 @@ public final class TypeState
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
         copy.put(varName, ImmutableList.of(type));
-        return new TypeState(copy.build(), typeManager, unitManager, functionLookup);
+        return new TypeState(variablePreTypes, copy.build(), typeManager, unitManager, functionLookup);
     }
 
     /**
@@ -125,7 +139,7 @@ public final class TypeState
                 mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concatI(a, b));
             }
         }
-        return new TypeState(ImmutableMap.copyOf(mergedVars), typeStates.get(0).typeManager, typeStates.get(0).unitManager, typeStates.get(0).functionLookup);
+        return new TypeState(ImmutableMap.of(), ImmutableMap.copyOf(mergedVars), typeStates.get(0).typeManager, typeStates.get(0).unitManager, typeStates.get(0).functionLookup);
     }
 
     @Override
@@ -198,58 +212,7 @@ public final class TypeState
     {
         return typeManager;
     }
-
-    /**
-     * Merges a set of TypeState items which came from the same original typestate,
-     * but got passed to different sub expressions in a single pattern (e.g. in a tuple pattern match),
-     * and now needed to be merged.
-     *
-     * Performs some checks and puts them back together.
-     *
-     * @param typeStates
-     * @return Null if there is a user-triggered problem (in which case onError will have been called)
-     */
-    @Pure
-    public static @Nullable TypeState union(TypeState original, Consumer<StyledString> onError, TypeState... typeStates) throws InternalException
-    {
-        if (typeStates.length == 0)
-            throw new InternalException("Attempted to merge type states of zero size");
-        else if (typeStates.length == 1)
-            return typeStates[0];
-
-        Map<String, ImmutableList<TypeExp>> allNewVars = new HashMap<>();
-
-        for (TypeState typeState : typeStates)
-        {
-            // TypeManager and UnitManager should be constant:
-            if (!typeState.typeManager.equals(original.typeManager))
-                throw new InternalException("Type manager changed between different type states");
-            if (!typeState.unitManager.equals(original.unitManager))
-                throw new InternalException("Unit manager changed between different type states");
-            // Variables: we first remove all the variables which already existed
-            // What is left must not overlap
-            MapDifference<String, ImmutableList<TypeExp>> diff = Maps.difference(typeState.variables, original.variables);
-            if (!diff.entriesOnlyOnRight().isEmpty())
-                throw new InternalException("Altered type state is missing some original variables: " + diff.entriesOnlyOnRight());
-            if (!diff.entriesDiffering().isEmpty())
-                throw new InternalException("Altered type state has altered original variables: " + diff.entriesOnlyOnRight());
-
-            // Now diff new vars with other new vars:
-            diff = Maps.difference(diff.entriesOnlyOnLeft(), allNewVars);
-            if (!diff.entriesDiffering().isEmpty() || !diff.entriesInCommon().isEmpty())
-            {
-                // TODO ideally offer a quick fix to rename and add an equality check in guard
-                onError.accept(StyledString.s("Duplicate variables in different parts of pattern: " + diff.entriesDiffering().keySet() + " " + diff.entriesInCommon().keySet()));
-                return null;
-            }
-            // Record the new vars (shouldn't overlap):
-            allNewVars.putAll(diff.entriesOnlyOnLeft());
-        }
-        // Shouldn't be any overlap given earlier checks:
-        allNewVars.putAll(original.variables);
-        return new TypeState(ImmutableMap.copyOf(allNewVars), original.typeManager, original.unitManager, original.functionLookup);
-    }
-
+    
     @Override
     public String toString()
     {
@@ -271,5 +234,19 @@ public final class TypeState
     public FunctionLookup getFunctionLookup()
     {
         return functionLookup;
+    }
+
+    public @Nullable TypeState addPreType(String varName, TypeExp typeExp, Consumer<StyledString> onError)
+    {
+        if (variablePreTypes.containsKey(varName))
+        {
+            onError.accept(StyledString.s("Duplicate types given for variable " + varName));
+            return null;
+        }
+        
+        ImmutableMap.Builder<String, TypeExp> newPreTypes = ImmutableMap.builder();
+        newPreTypes.putAll(variablePreTypes);
+        newPreTypes.put(varName, typeExp);
+        return new TypeState(newPreTypes.build(), variables, typeManager, unitManager, functionLookup);
     }
 }

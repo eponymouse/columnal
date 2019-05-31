@@ -489,4 +489,74 @@ public class PropTypecheckIndividual
     {
         checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call @function from text to(type{A}, @call @function from text to(type{Text}, \"Hello\"))");
     }
+
+    @Test
+    public void checkDefine1() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.BOOLEAN, "@define _x = true @in x @endin");
+    }
+
+    @Test
+    public void checkDefine2() throws UserException, InternalException
+    {
+        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define _dist = (1 * 32{m/s} * 10{s}) @in @call @tag Optional:Is(dist * 3) @endin");
+    }
+
+    @Test
+    public void checkDefine2b() throws UserException, InternalException
+    {
+        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define _dist :: type{Number{m}} @define _dist = (1 * 32{m/s} * 10{s}) @in @call @tag Optional:Is(dist * 3) @endin");
+    }
+
+    @Test
+    public void checkDefine3() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.BOOLEAN, "@define _a :: type{Boolean} @define _b :: type{Boolean} @define (_a, _b) = (true, false) @in a & b @endin");
+    }
+
+    @Test
+    public void checkDefine4() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.BOOLEAN, "@define _a :: type{Boolean} @define _a = @call @function from text(\"\") @define _b = a @in b @endin");
+    }
+
+    @Test
+    public void checkDefineErr1() throws UserException, InternalException
+    {
+        checkConcreteType((DataType)null, "@define _x = x @in x @endin");
+    }
+
+    @Test
+    public void checkDefineErr2() throws UserException, InternalException
+    {
+        checkConcreteType((DataType)null, "@define _x = [] @in x @endin");
+    }
+
+    @Test
+    public void checkDefineErr3() throws UserException, InternalException
+    {
+        // Typing variable we don't define
+        checkConcreteType((DataType)null, "@define _dist2 :: type{@apply Optional(Number{m})} @define _dist = (1 * 32{m/s} * 10{s}) @in @call @tag Optional:Is(dist * 3) @endin");
+    }
+
+    @Test
+    public void checkDefineErr3b() throws UserException, InternalException
+    {
+        // Type after definition
+        checkConcreteType((DataType)null, "@define _dist = (1 * 32{m/s} * 10{s}) @define _dist :: type{@apply Optional(Number{m})} @in @call @tag Optional:Is(dist * 3) @endin");
+    }
+
+    @Test
+    public void checkDefineErr4() throws UserException, InternalException
+    {
+        // Duplicate definition:
+        checkConcreteType((DataType)null, "@define _x = 1 @define _x = 1 @in x @endin");
+    }
+
+    @Test
+    public void checkDefineErr5() throws UserException, InternalException
+    {
+        // Duplicate definition incl type:
+        checkConcreteType((DataType)null, "@define _x :: type{Number} @define _x = 1 @define _x = 1 @in x @endin");
+    }
 }

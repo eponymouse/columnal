@@ -28,8 +28,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * An expression, and a fixed type it should conform to.  Like the :: operator in Haskell expressions,
- * (or like the `asTypeOf` function if you specified a type).  Just wraps an inner expression with a type. 
+ * A type{...} expression. 
  */
 public class TypeLiteralExpression extends NonOperatorExpression
 {

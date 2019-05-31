@@ -48,6 +48,7 @@ IMPLICIT_LAMBDA_PARAM : '?';
 DEFINE: '@define';
 DEFINEBODY: '@in';
 ENDDEFINE: '@endin';
+HAS_TYPE: '::';
 
 NUMBER : [0-9]+ ('.' [0-9]+)?;
 

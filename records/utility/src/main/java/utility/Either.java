@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Immutable Either class
@@ -39,6 +40,11 @@ public class Either<A, B>
     public static <A, B> Either<A, B> right(B b)
     {
         return new Either<>(null, b, false);
+    }
+
+    public static <A, B> ImmutableList<B> getRights(ImmutableList<Either<A, B>> eithers)
+    {
+        return eithers.stream().flatMap(e -> e.<Stream<B>>either(a -> Stream.<B>of(), b -> Stream.<B>of(b))).collect(ImmutableList.<B>toImmutableList());
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
