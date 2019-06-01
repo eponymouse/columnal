@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 public class TypeLiteralExpression extends NonOperatorExpression
 {
     // This may a type expression that doesn't save to a valid type:
-    private final TypeExpression type;
+    private final @Recorded TypeExpression type;
     
     public TypeLiteralExpression(@Recorded TypeExpression type)
     {
@@ -155,7 +155,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
         return Objects.hash(type);
     }
 
-    public TypeExpression getType()
+    public @Recorded TypeExpression getType()
     {
         return type;
     }

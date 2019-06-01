@@ -57,7 +57,7 @@ public class HasTypeExpression extends Expression
             return null;
         
         // Our type shouldn't be directly used, but we don't want to return null, hence void:
-        return new CheckedExp(TypeExp.fromDataType(this, typeState.getTypeManager().getVoidType().instantiate(ImmutableList.of(), typeState.getTypeManager())), typeState, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.fromDataType(this, typeState.getTypeManager().getVoidType().instantiate(ImmutableList.of(), typeState.getTypeManager()))), typeState, ExpressionKind.EXPRESSION);
     }
 
     @Override

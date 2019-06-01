@@ -624,7 +624,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, CanonicalSpan node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
             //TODO do we need to calculate all this, can't we just concat to prefixIfInvalid?
-            Stream<Supplier<@Recorded Expression>> prefixIfInvalid1 = Stream.<Supplier<@Recorded Expression>>concat(Stream.<Supplier<@Recorded Expression>>of(() -> keywordToInvalid(Keyword.DEFINE, firstDefineKeyword)), definesBeforeThis.stream().<Supplier<@Recorded Expression>>flatMap(p -> Stream.<Supplier<@Recorded Expression>>of(() -> p.getFirst(), () -> keywordToInvalid(Keyword.DEFINE, p.getSecond()))));
+            @SuppressWarnings("recorded") // For reasons I can't understand, all these annotations are still not enough:
+            Stream<Supplier<@Recorded Expression>> prefixIfInvalid1 = Stream.<Supplier<@Recorded Expression>>concat(
+                Stream.<Supplier<@Recorded Expression>>of(() -> keywordToInvalid(Keyword.DEFINE, firstDefineKeyword)),
+                definesBeforeThis.stream().<Supplier<@Recorded Expression>>flatMap((Pair<@Recorded Expression, CanonicalSpan> p) -> {
+                    Supplier<@Recorded Expression> supplier1 = () -> p.getFirst();
+                    Supplier<@Recorded Expression> supplier2 = () -> keywordToInvalid(Keyword.DEFINE, p.getSecond());
+                    return Stream.<Supplier<@Recorded Expression>>of(supplier1, supplier2);
+            }));
             return Either.<@Recorded Expression, Terminator>right(expectOneOf(node, ImmutableList.<Choice>of(new FurtherDefine(firstDefineKeyword, Utility.<Pair<@Recorded Expression, CanonicalSpan>>appendToList(definesBeforeThis, new Pair<>(expressionBefore, node))), new DefineBody(makeDefines(expressionBefore), node)), prefixIfInvalid1));
         }
 

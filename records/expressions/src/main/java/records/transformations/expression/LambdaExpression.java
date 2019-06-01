@@ -58,7 +58,7 @@ public class LambdaExpression extends Expression
         if (returnType == null)
             return null;
         
-        return new CheckedExp(TypeExp.function(this, paramTypes.build(), returnType.typeExp), original, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.function(this, paramTypes.build(), returnType.typeExp)), original, ExpressionKind.EXPRESSION);
     }
 
     @Override
@@ -134,6 +134,7 @@ public class LambdaExpression extends Expression
         ), this);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
