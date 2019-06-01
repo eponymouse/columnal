@@ -53,7 +53,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
         boolean lastWasVariable = false;
         for (Expression expression : expressions)
         {
-            if (expression instanceof VarDeclExpression || expression instanceof MatchAnythingExpression)
+            if (isPattern(expression))
             {
                 if (lastWasVariable)
                 {
@@ -106,7 +106,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
         EvaluateState threadedState = originalState;
         for (int i = 0; i < expressions.size(); i++)
         {
-            if (expressions.get(i) instanceof VarDeclExpression || expressions.get(i) instanceof MatchAnythingExpression)
+            if (isPattern(expressions.get(i)))
             {
                 pendingMatch = expressions.get(i);
             }
@@ -159,6 +159,18 @@ public class StringConcatExpression extends NaryOpTotalExpression
 
 
         return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, threadedState, matches.build(), ImmutableList.of(), false);
+    }
+
+    private boolean isPattern(Expression expression)
+    {
+        if (expression instanceof MatchAnythingExpression)
+            return true;
+        if (expression instanceof IdentExpression)
+        {
+            if (((IdentExpression)expression).isVarDeclaration())
+                return true;
+        }
+        return false;
     }
 
     @Override

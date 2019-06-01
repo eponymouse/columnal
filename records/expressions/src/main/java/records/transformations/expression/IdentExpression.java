@@ -1,13 +1,19 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
@@ -33,6 +39,7 @@ public class IdentExpression extends NonOperatorExpression
 {
     // TODO add resolver listener
     private final @ExpressionIdentifier String text;
+    private @MonotonicNonNull Boolean isDeclaration;
 
     public IdentExpression(@ExpressionIdentifier String text)
     {
@@ -49,20 +56,50 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
         
+        ExpressionKind kind = ExpressionKind.EXPRESSION;
+        isDeclaration = false;
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
         {
-            onError.recordError(this, StyledString.s("Unknown column/function/variable: \"" + text + "\""));
-            return null;
+            kind = ExpressionKind.PATTERN;
+            varType = ImmutableList.of(new MutVar(this));
+            isDeclaration = true;
         }
-        // If they're trying to use it, it justifies us trying to unify all the types:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), ExpressionKind.EXPRESSION, state);
+        // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), kind, state);
+    }
+
+    @Override
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        if (isDeclaration == null)
+            throw new InternalException("Calling matchAsPattern on variable without typecheck");
+        else if (isDeclaration)
+            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(text, value), ImmutableList.of(), ImmutableList.of(), false);
+        else
+            return super.matchAsPattern(value, state);
     }
 
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        return result(state.get(text), state);
+        if (isDeclaration == null)
+            throw new InternalException("Calling getValue on variable without typecheck");
+        else if (isDeclaration)
+            throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+        else
+            return result(state.get(text), state);
+    }
+
+    @Override
+    public boolean hideFromExplanation(boolean skipIfTrivial)
+    {
+        // We are a trivial match, no point saying _foo matched successfully if
+        // we appear inside a tuple, etc.
+        if (isDeclaration != null && isDeclaration)
+            return skipIfTrivial;
+        else
+            return super.hideFromExplanation(skipIfTrivial);
     }
 
     @Override
@@ -116,5 +153,13 @@ public class IdentExpression extends NonOperatorExpression
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
         return visitor.ident(this, text);
+    }
+
+    /**
+     * Only valid to call after type-checking!  Before that we can't know.
+     */
+    public boolean isVarDeclaration()
+    {
+        return isDeclaration != null && isDeclaration;
     }
 }

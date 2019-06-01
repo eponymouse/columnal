@@ -13,6 +13,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
@@ -194,12 +195,6 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T varDecl(VarDeclExpression self, @ExpressionIdentifier String varName)
-    {
-        return makeDef(self);
-    }
-
-    @Override
     public T constructor(ConstructorExpression self, Either<String, TagInfo> tag)
     {
         return makeDef(self);
@@ -212,7 +207,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body)
+    public T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
     {
         return makeDef(self);
     }

@@ -19,6 +19,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
@@ -656,7 +657,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         public DefineBody(ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines, CanonicalSpan lastDefine)
         {
-            super(Keyword.DEFINEBODY);
+            super(Keyword.THEN);
             this.defines = defines;
             this.lastDefine = lastDefine;
         }
@@ -673,10 +674,20 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     private @Recorded Expression defineOrInvalid(ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines, CanonicalSpan beginLocation, @Recorded Expression body, CanonicalSpan endLocation)
     {
         CanonicalSpan overallLocation = new CanonicalSpan(defines.get(0).getFirst().start, endLocation.end);
-        if (defines.stream().allMatch(p -> p.getSecond() instanceof EqualExpression || p.getSecond() instanceof HasTypeExpression))
-            return locationRecorder.record(overallLocation, new DefineExpression(Utility.<Pair<CanonicalSpan, @Recorded Expression>, Either<@Recorded HasTypeExpression, @Recorded EqualExpression>>mapListI(defines, p -> p.getSecond() instanceof HasTypeExpression ? Either.<@Recorded HasTypeExpression, @Recorded EqualExpression>left((HasTypeExpression)p.getSecond()) : Either.<@Recorded HasTypeExpression, @Recorded EqualExpression>right((EqualExpression)p.getSecond())), body));
+        if (defines.stream().allMatch(p -> isEqualDefinition(p.getSecond()) || p.getSecond() instanceof HasTypeExpression))
+            return locationRecorder.record(overallLocation, new DefineExpression(Utility.<Pair<CanonicalSpan, @Recorded Expression>, Either<@Recorded HasTypeExpression, Definition>>mapListI(defines, p -> p.getSecond() instanceof HasTypeExpression ? Either.<@Recorded HasTypeExpression, Definition>left((HasTypeExpression)p.getSecond()) : Either.<@Recorded HasTypeExpression, Definition>right(new Definition(((EqualExpression)p.getSecond()).getOperands().get(0), ((EqualExpression)p.getSecond()).getOperands().get(1)))), body));
         else
-            return locationRecorder.record(overallLocation, new InvalidOperatorExpression(Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, p.getFirst()), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINEBODY, beginLocation), body, keywordToInvalid(Keyword.ENDDEFINE, endLocation))).collect(ImmutableList.<@Recorded Expression>toImmutableList())));
+            return locationRecorder.record(overallLocation, new InvalidOperatorExpression(Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, p.getFirst()), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.THEN, beginLocation), body, keywordToInvalid(Keyword.ENDDEFINE, endLocation))).collect(ImmutableList.<@Recorded Expression>toImmutableList())));
+    }
+
+    private boolean isEqualDefinition(Expression expression)
+    {
+        if (expression instanceof EqualExpression)
+        {
+            EqualExpression equalExpression = (EqualExpression) expression;
+            return equalExpression.getOperands().size() == 2 && !equalExpression.lastIsPattern();
+        }
+        return false;
     }
 
 
@@ -797,6 +808,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         // Equality and comparison operators:
         ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(ImmutableList.of(Op.EQUALS), ExpressionSaver::makeEqual),
+            new OperatorExpressionInfo(Op.EQUALS_PATTERN, (lhs, _n, rhs, _b, _e) -> new EqualExpression(ImmutableList.of(lhs, rhs), true)),
             new OperatorExpressionInfo(Op.NOT_EQUAL, (lhs, _n, rhs, _b, _e) -> new NotEqualExpression(lhs, rhs)),
             new OperatorExpressionInfo(ImmutableList.of(Op.LESS_THAN, Op.LESS_THAN_OR_EQUAL), ExpressionSaver::makeComparisonLess),
             new OperatorExpressionInfo(ImmutableList.of(Op.GREATER_THAN, Op.GREATER_THAN_OR_EQUAL), ExpressionSaver::makeComparisonGreater)
@@ -841,9 +853,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new StringConcatExpression(args);
     }
 
-    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, CanonicalSpan>> _ops)
+    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, CanonicalSpan>> ops)
     {
-        return new EqualExpression(args);
+        return new EqualExpression(args, ops.get(ops.size() - 1).getFirst() == Op.EQUALS_PATTERN);
     }
 
     private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<Pair<Op, CanonicalSpan>> ops)

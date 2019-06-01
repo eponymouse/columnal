@@ -27,18 +27,19 @@ import java.util.Random;
  */
 public class EqualExpression extends NaryOpShortCircuitExpression
 {
-    // Calculated during type-checking; which sub-expression, if any, is the single pattern?
-    private OptionalInt patternIndex = OptionalInt.empty();
+    // Is the last item in the operators a pattern?  If so, last operator is =~ rather than =
+    private final boolean lastIsPattern;
     
-    public EqualExpression(List<@Recorded Expression> operands)
+    public EqualExpression(List<@Recorded Expression> operands, boolean lastIsPattern)
     {
         super(operands);
+        this.lastIsPattern = lastIsPattern;
     }
 
     @Override
     public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
-        return new EqualExpression(replacements);
+        return new EqualExpression(replacements, lastIsPattern);
     }
 
     @Override
@@ -50,6 +51,16 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     @Override
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        if (lastIsPattern && expressions.size() > 2)
+        {
+            // If there is a pattern and an expression, we don't allow two expressions, because it's not
+            // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
+            // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
+            onError.recordError(this, StyledString.s("Cannot have a pattern in an equals expression with more than two operands."));
+            // (This shouldn't really be reachable if all other systems are working right, but good as a sanity check)
+            return null;
+        }
+        
         // The one to be returned, but not used for later operands:
         TypeState retTypeState = typeState;
         
@@ -71,27 +82,17 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             }
             else
             {
+                checked.requireEquatable();
                 if (checked.expressionKind == ExpressionKind.PATTERN)
                 {
-                    // Have we already seen a pattern?
-                    if (patternIndex.isPresent() && patternIndex.getAsInt() != i)
+                    if (i == expressions.size() - 1 && lastIsPattern)
                     {
-                        onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
-                        invalid = true;
-                    }
-                    else if (expressions.size() > 2)
-                    {
-                        // If there is a pattern and an expression, we don't allow two expressions, because it's not
-                        // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
-                        // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
-                        onError.recordError(this, StyledString.s("Cannot have a pattern in an equals expression with more than two operands."));
-                        invalid = true;
+                        retTypeState = checked.typeState;
                     }
                     else
                     {
-                        patternIndex = OptionalInt.of(i);
-                        retTypeState = checked.typeState;
-                        checked.requireEquatable(false);
+                        onError.recordError(this, StyledString.s("Only the last item after =~ can be a pattern"));
+                        invalid = true;
                     }
                 }
 
@@ -116,24 +117,18 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             return null;
         }
         
-        
-        if (!patternIndex.isPresent())
-        {
-            type.requireTypeClasses(TypeClassRequirements.require("Equatable", "<equals>"));
-        }
-        
         return onError.recordType(this, ExpressionKind.EXPRESSION, retTypeState, TypeExp.bool(this));
     }
 
     @Override
     public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        if (patternIndex.isPresent())
+        if (lastIsPattern)
         {
             if (expressions.size() > 2)
                 throw new InternalException("Pattern present in equals despite having more than two operands");
-            ValueResult value = expressions.get(1 - patternIndex.getAsInt()).calculateValue(state);
-            ValueResult matchResult = expressions.get(patternIndex.getAsInt()).matchAsPattern(value.value, state);
+            ValueResult value = expressions.get(0).calculateValue(state);
+            ValueResult matchResult = expressions.get(1).matchAsPattern(value.value, state);
             boolean matched = Utility.cast(matchResult.value, Boolean.class);
             return result(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));    
         }
@@ -162,5 +157,15 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
         return visitor.equal(this, expressions);
+    }
+    
+    public ImmutableList<Expression> getOperands()
+    {
+        return expressions;
+    }
+    
+    public boolean lastIsPattern()
+    {
+        return lastIsPattern;
     }
 }

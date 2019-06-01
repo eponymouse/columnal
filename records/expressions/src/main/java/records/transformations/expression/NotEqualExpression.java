@@ -23,10 +23,7 @@ import java.util.Optional;
  * Created by neil on 30/11/2016.
  */
 public class NotEqualExpression extends BinaryOpExpression
-{
-    // null means no pattern, true means left is pattern, false means right.
-    private @Nullable Boolean patternIsLeft;
-    
+{    
     public NotEqualExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
@@ -42,17 +39,14 @@ public class NotEqualExpression extends BinaryOpExpression
     @RequiresNonNull({"lhsType", "rhsType"})
     public @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        if (lhsType.expressionKind == ExpressionKind.PATTERN && rhsType.expressionKind == ExpressionKind.PATTERN)
+        if (lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN)
         {
-            onError.recordError(this, StyledString.s("Only one side of <> can be a pattern"));
+            // TODO add this as a quick fix
+            onError.recordError(this, StyledString.s("Patterns not allowed in <>  Use not(... =~ ...) instead"));
             return null;
         }
-        boolean oneIsPattern = lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN;
-        if (oneIsPattern)
-            patternIsLeft = Boolean.valueOf(lhsType.expressionKind == ExpressionKind.PATTERN); 
-        // If one is pattern, only apply restrictions to the pattern side.  Otherwise if both expressions, apply to both:
-        lhsType.requireEquatable(oneIsPattern);
-        rhsType.requireEquatable(oneIsPattern);
+        lhsType.requireEquatable();
+        rhsType.requireEquatable();
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
         {
             ImmutableList<Optional<TypeExp>> expressionTypes = ImmutableList.<Optional<TypeExp>>of(Optional.<TypeExp>of(lhsType.typeExp), Optional.<TypeExp>of(rhsType.typeExp));
@@ -67,25 +61,9 @@ public class NotEqualExpression extends BinaryOpExpression
     @OnThread(Tag.Simulation)
     public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        if (patternIsLeft != null)
-        {
-            boolean left = patternIsLeft;
-            // Get value from the non-pattern:
-            ValueResult val = (left ? rhs : lhs).calculateValue(state);
-            // Match it against the pattern:
-            ValueResult pattern = (left ? lhs : rhs).matchAsPattern(val.value, state);
-            // Don't forget the not; we are not-equals:
-            boolean result = ! Utility.cast(pattern.value, Boolean.class);
-            // We are not-equals, so looking for failure,
-            // and we don't affect the state:
-            return new Pair<>(DataTypeUtility.value(result), ImmutableList.of(val, pattern));
-        }
-        else
-        {
-            ValueResult lhsVal = lhs.calculateValue(state);
-            ValueResult rhsVal = rhs.calculateValue(state);
-            return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal.value, rhsVal.value)), ImmutableList.of(lhsVal, rhsVal));
-        }
+        ValueResult lhsVal = lhs.calculateValue(state);
+        ValueResult rhsVal = rhs.calculateValue(state);
+        return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal.value, rhsVal.value)), ImmutableList.of(lhsVal, rhsVal));
     }
 
     @Override

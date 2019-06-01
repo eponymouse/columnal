@@ -16,7 +16,7 @@ unfinished : UNFINISHED STRING;
 
 varRef  : ident;
 
-any : VAR;
+any : ANYTHING;
 
 implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
 customLiteralExpression : CUSTOM_LITERAL;
@@ -24,7 +24,7 @@ customLiteralExpression : CUSTOM_LITERAL;
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
 // Similar,y constructor may need an argument, but that's sorted out in type checking.
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | customLiteralExpression | unfinished;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | any | implicitLambdaParam | constructor | standardFunction | customLiteralExpression | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -35,7 +35,7 @@ addSubtractExpression :  expression (ADD_OR_SUBTRACT expression)+;
 timesExpression :  expression (TIMES expression)+;
 divideExpression :  expression DIVIDE expression;
 raisedExpression : expression RAISEDTO expression;
-equalExpression :  expression (EQUALITY expression)+;
+equalExpression :  expression ((EQUALITY expression)+ | (EQUALITY_PATTERN expression));
 notEqualExpression :  expression NON_EQUALITY expression;
 lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
@@ -59,7 +59,6 @@ callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression (COMMA topLeve
 tupleExpression : OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)+ CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (topLevelExpression (COMMA topLevelExpression)*)? CLOSE_SQUARE;
 
-newVariable : VAR ident;
 typeName : ident;
 constructorName : ident;
 pattern : topLevelExpression (CASEGUARD topLevelExpression)?;
@@ -75,9 +74,9 @@ match : MATCH topLevelExpression matchClause+ ENDMATCH;
 
 lambdaExpression : FUNCTION OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)* CLOSE_BRACKET THEN topLevelExpression ENDFUNCTION;
 
-hasTypeExpression : newVariable HAS_TYPE customLiteralExpression;
-definition : equalExpression | hasTypeExpression;
-defineExpression: (DEFINE definition)+ DEFINEBODY topLevelExpression ENDDEFINE;
+hasTypeExpression : varRef HAS_TYPE customLiteralExpression;
+definition : (expression EQUALITY expression) | hasTypeExpression;
+defineExpression: (DEFINE definition)+ THEN topLevelExpression ENDDEFINE;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor

@@ -20,6 +20,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.type.TypeExpression;
@@ -138,7 +139,7 @@ public class BackwardsMatch extends BackwardsProvider
                     else
                     {
                         return ImmutableList.of(() -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "not", new IdentExpression(name)),
-                            () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), new IdentExpression(name)))
+                            () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), new IdentExpression(name)), false)
                         );
                     }
                 }
@@ -245,14 +246,14 @@ public class BackwardsMatch extends BackwardsProvider
 
         Expression toMatch = parent.make(t, actual, maxLevels - 1);
         
-        ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>> defines = ImmutableList.builder();
+        ImmutableList.Builder<Either<HasTypeExpression, Definition>> defines = ImmutableList.builder();
         if (!declVars.isEmpty())
         {
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
             defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
         }
-        defines.add(Either.right(new EqualExpression(ImmutableList.of(match.pattern, toMatch))));
-        defines.add(Either.right(new EqualExpression(ImmutableList.of(guard, new BooleanLiteral(true)))));
+        defines.add(Either.right(new Definition(match.pattern, toMatch)));
+        defines.add(Either.right(new Definition(guard, new BooleanLiteral(true))));
         
         return new DefineExpression(defines.build(), correctOutcome);
     }
@@ -317,9 +318,7 @@ public class BackwardsMatch extends BackwardsProvider
 
         public Expression toEquals(Expression matchAgainst)
         {
-            EqualExpression equalExpression = new EqualExpression(
-                    r.nextBoolean() ? ImmutableList.of(matchAgainst, pattern) : ImmutableList.of(pattern, matchAgainst)
-            );
+            EqualExpression equalExpression = new EqualExpression(ImmutableList.of(matchAgainst, pattern), true);
             return guard == null ? equalExpression : new AndExpression(
                 ImmutableList.of(equalExpression, guard)
             );
@@ -452,7 +451,7 @@ public class BackwardsMatch extends BackwardsProvider
                         @ExpressionIdentifier String varName = "var" + nextVar++;
                         if (!varContexts.isEmpty())
                             varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
-                        return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal)));
+                        return new PatternInfo(new IdentExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal), false));
                     }
                     if (canMatchMore && r.nextInt(0, 5) == 1)
                         return new PatternInfo(new MatchAnythingExpression(), null);

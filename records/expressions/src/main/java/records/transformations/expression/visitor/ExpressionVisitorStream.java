@@ -13,6 +13,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.StandardFunctionDefinition;
@@ -210,12 +211,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> varDecl(VarDeclExpression self, @ExpressionIdentifier String varName)
-    {
-        return Stream.of();
-    }
-
-    @Override
     public Stream<T> constructor(ConstructorExpression self, Either<String, TagInfo> tag)
     {
         return Stream.of();
@@ -234,9 +229,9 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body)
+    public Stream<T> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
     {
-        return Stream.<T>concat(defines.stream().<T>flatMap(e -> e.either(x -> x.visit(this), x -> x.visit(this))), body.<Stream<T>>visit(this));
+        return Stream.<T>concat(defines.stream().<T>flatMap(e -> e.<Stream<T>>either(x -> x.visit(this), x -> Stream.<T>concat(x.lhsPattern.<Stream<T>>visit(this), x.rhsValue.<Stream<T>>visit(this)))), body.<Stream<T>>visit(this));
     }
 
     @Override

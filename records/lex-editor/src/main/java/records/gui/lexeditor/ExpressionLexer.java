@@ -87,7 +87,6 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         GIVEN(records.grammar.ExpressionLexer.CASEGUARD),
         ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH),
         DEFINE(records.grammar.ExpressionLexer.DEFINE),
-        DEFINEBODY(records.grammar.ExpressionLexer.DEFINEBODY),
         ENDDEFINE(records.grammar.ExpressionLexer.ENDDEFINE);
 
         private final String keyword;
@@ -128,7 +127,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         MULTIPLY("*", "op.times"), DIVIDE("/", "op.divide"), 
         ADD("+", "op.plus"), SUBTRACT("-", "op.minus"), 
         STRING_CONCAT(";", "op.stringConcat"), 
-        EQUALS("=", "op.equal"), NOT_EQUAL("<>", "op.notEqual"),
+        EQUALS("=", "op.equal"), EQUALS_PATTERN("=~", "op.equalPattern"), NOT_EQUAL("<>", "op.notEqual"),
         LESS_THAN("<", "op.lessThan"), LESS_THAN_OR_EQUAL("<=", "op.lessThanOrEqual"), GREATER_THAN(">", "op.greaterThan"), GREATER_THAN_OR_EQUAL(">=", "op.greaterThanOrEqual"),
         AND("&", "op.and"), OR("|", "op.or"),
         PLUS_MINUS("\u00B1", "op.plusminus"), RAISE("^", "op.raise"),
@@ -315,21 +314,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
             if (content.startsWith("_", curIndex))
             {
-                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> varName = IdentifierUtility.consumeExpressionIdentifier(content, curIndex + RawInputLocation.ONE, curCaretPos);
-                if (varName == null)
-                {
-                    saver.saveOperand(new MatchAnythingExpression(), removedChars.map(curIndex, curIndex + RawInputLocation.ONE));
-                    chunks.add(new ContentChunk("_", ChunkType.IDENT));
-                    curIndex += RawInputLocation.ONE;
-                    continue nextToken;
-                }
-                else
-                {
-                    saver.saveOperand(new VarDeclExpression(varName.getFirst()), removedChars.map(curIndex, varName.getSecond()));
-                    chunks.add(new ContentChunk("_" + varName.getFirst(), ChunkType.IDENT));
-                    curIndex = varName.getSecond();
-                    continue nextToken;
-                }
+                saver.saveOperand(new MatchAnythingExpression(), removedChars.map(curIndex, curIndex + RawInputLocation.ONE));
+                chunks.add(new ContentChunk("_", ChunkType.IDENT));
+                curIndex += RawInputLocation.ONE;
+                continue nextToken;
             }
             
             if (content.startsWith("@entire", curIndex))

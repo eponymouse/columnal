@@ -1,9 +1,7 @@
 package records.transformations.expression;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -11,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,7 +18,6 @@ import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Random;
@@ -30,10 +28,69 @@ import java.util.stream.Stream;
 
 public class DefineExpression extends Expression
 {
-    private final ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines;
-    private final @Recorded Expression body;
+    public static class Definition
+    {
+        public final @Recorded Expression lhsPattern;
+        public final @Recorded Expression rhsValue;
 
-    public DefineExpression(ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body)
+        public Definition(@Recorded Expression lhsPattern, @Recorded Expression rhsValue)
+        {
+            this.lhsPattern = lhsPattern;
+            this.rhsValue = rhsValue;
+        }
+
+        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        {
+            CheckedExp rhs = rhsValue.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            if (rhs == null)
+                return null;
+            CheckedExp lhs = lhsPattern.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            if (lhs == null)
+                return null;
+            
+            // Need to unify:
+            TypeExp unified = onError.recordError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp));
+            if (unified != null)
+                return new CheckedExp(unified, lhs.typeState, ExpressionKind.EXPRESSION);
+            else
+                return null;
+        }
+
+        @OnThread(Tag.Simulation)
+        public @Nullable EvaluateState evaluate(EvaluateState state) throws InternalException, UserException
+        {
+            ValueResult valueResult = rhsValue.calculateValue(state);
+            valueResult = lhsPattern.matchAsPattern(valueResult.value, valueResult.evaluateState);
+            if (Utility.cast(valueResult.value, Boolean.class))
+                return valueResult.evaluateState;
+            else
+                return null;
+        }
+
+        public String save(boolean structured, TableAndColumnRenames renames)
+        {
+            return lhsPattern.save(structured, BracketedStatus.NEED_BRACKETS, renames) + " = " + rhsValue.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        }
+
+        public Definition replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            return new Definition(lhsPattern.replaceSubExpression(toReplace, replaceWith), rhsValue.replaceSubExpression(toReplace, replaceWith));
+        }
+
+        public StyledString toDisplay(ExpressionStyler expressionStyler)
+        {
+            return StyledString.concat(
+                lhsPattern.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler),
+                StyledString.s(" = "),
+                rhsValue.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler)
+            );
+        }
+    }
+    
+    private final ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines;
+    private final @Recorded Expression body;
+    
+    public DefineExpression(ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
     {
         this.defines = defines;
         this.body = body;
@@ -46,7 +103,7 @@ public class DefineExpression extends Expression
         
         HashSet<String> shouldBeDeclaredInNextDefine = new HashSet<>();
         
-        for (Either<@Recorded HasTypeExpression, @Recorded EqualExpression> define : defines)
+        for (Either<@Recorded HasTypeExpression, Definition> define : defines)
         {
             TypeState typeStateThisTime = typeState;
             ExFunction<@Recorded Expression, @Nullable CheckedExp> typeCheck = e -> e.check(dataLookup, typeStateThisTime, locationInfo, onError);
@@ -56,10 +113,10 @@ public class DefineExpression extends Expression
                     onError.recordError(hasType, StyledString.s("Duplicate type for variable " + hasType.getVarName()));
                     return null;
                 }
-                return hasType.check(dataLookup, typeStateThisTime, locationInfo, onError);
+                return hasType.check(dataLookup, typeStateThisTime, LocationInfo.UNIT_DEFAULT, onError);
             }, equal -> {
                 // We observe the declared variables by differencing TypeState before and after:
-                CheckedExp checkedExp = equal.check(dataLookup, typeStateThisTime, locationInfo, onError);
+                CheckedExp checkedExp = equal.check(dataLookup, typeStateThisTime, onError);
                 if (checkedExp != null)
                 {
                     Set<String> declared = Sets.difference(checkedExp.typeState.getAvailableVariables(), typeStateThisTime.getAvailableVariables());
@@ -80,7 +137,7 @@ public class DefineExpression extends Expression
 
         if (!shouldBeDeclaredInNextDefine.isEmpty())
         {
-            onError.recordError(defines.get(defines.size() - 1).<Expression>either(x -> x, x -> x), StyledString.s("Type was given for " + shouldBeDeclaredInNextDefine.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+            onError.recordError(defines.get(defines.size() - 1).<Expression>either(x -> x, x -> x.lhsPattern), StyledString.s("Type was given for " + shouldBeDeclaredInNextDefine.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
             return null;
         }
 
@@ -94,14 +151,14 @@ public class DefineExpression extends Expression
     @Override
     public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        for (EqualExpression define : Either.getRights(defines))
+        for (Definition define : Either.getRights(defines))
         {
-            ValueResult outcome = define.calculateValue(state);
-            if (Utility.cast(outcome.value, Boolean.class).booleanValue() == false)
+            @Nullable EvaluateState outcome = define.evaluate(state);
+            if (outcome == null)
             {
-                throw new UserException(StyledString.concat(StyledString.s("Pattern did not match: "), define.toStyledString()));
+                throw new UserException(StyledString.concat(StyledString.s("Pattern did not match: "), define.lhsPattern.toStyledString()));
             }
-            state = outcome.evaluateState;
+            state = outcome;
         }
         return body.calculateValue(state);
     }
@@ -115,7 +172,7 @@ public class DefineExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return defines.stream().map(e -> "@define " + e.either(x -> x, x -> x).save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(" ")) + " @in " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endin";
+        return defines.stream().map(e -> "@define " + e.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(" ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
     }
 
     @Override
@@ -151,10 +208,10 @@ public class DefineExpression extends Expression
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@define "),
-            defines.stream().map(e -> e.either(x -> x, x -> x).toStyledString()).collect(StyledString.joining(" @define ")),
-            StyledString.s(" @in "),
+            defines.stream().map(e -> e.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(" @define ")),
+            StyledString.s(" @then "),
             body.toStyledString(),
-            StyledString.s(" @endin")
+            StyledString.s(" @enddefine")
         ), this);
     }
 
@@ -165,6 +222,6 @@ public class DefineExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new DefineExpression(Utility.mapListI(defines, e -> e.mapBoth(x -> (HasTypeExpression)x.replaceSubExpression(toReplace, replaceWith), x -> (EqualExpression)x.replaceSubExpression(toReplace, replaceWith))), body.replaceSubExpression(toReplace, replaceWith));
+            return new DefineExpression(Utility.mapListI(defines, e -> e.mapBoth(x -> (HasTypeExpression)x.replaceSubExpression(toReplace, replaceWith), x -> x.replaceSubExpression(toReplace, replaceWith))), body.replaceSubExpression(toReplace, replaceWith));
     }
 }

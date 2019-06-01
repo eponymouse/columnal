@@ -139,7 +139,7 @@ public class BackwardsBooleans extends BackwardsProvider
             {
                 expressions.add(parent.make(t, valA, maxLevels - 1));
             }
-            return new EqualExpression(expressions);
+            return new EqualExpression(expressions, false);
         }
         else
         {
@@ -167,7 +167,7 @@ public class BackwardsBooleans extends BackwardsProvider
                 expressions.add(parent.make(t, diffValFromA, maxLevels - 1));
             }
         }
-        return new EqualExpression(expressions);
+        return new EqualExpression(expressions, false);
     }
 
     private Expression xor(int maxLevels, boolean b) throws InternalException, UserException

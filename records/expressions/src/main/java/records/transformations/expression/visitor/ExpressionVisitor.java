@@ -13,6 +13,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
@@ -78,13 +79,11 @@ public interface ExpressionVisitor<T>
 
     T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression);
 
-    T varDecl(VarDeclExpression self, @ExpressionIdentifier String varName);
-
     T constructor(ConstructorExpression self, Either<String, TagInfo> tag);
 
     T match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses);
     
-    T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, @Recorded EqualExpression>> defines, @Recorded Expression body);
+    T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body);
 
     T hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
 

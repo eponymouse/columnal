@@ -38,6 +38,7 @@ import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.explanation.Explanation;
@@ -198,20 +199,18 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         /**
          * Make sure this item is equatable.
-         * @param onlyIfPattern Only apply the restrictions if this is a pattern
          */
-        public void requireEquatable(boolean onlyIfPattern)
+        public void requireEquatable()
         {
             TypeClassRequirements equatable = TypeClassRequirements.require("Equatable", "<match>");
             if (expressionKind == ExpressionKind.PATTERN)
             {
                 for (TypeExp t : equalityRequirements)
                 {
-                    
                     t.requireTypeClasses(equatable);
                 }
             }
-            else if (expressionKind == ExpressionKind.EXPRESSION && !onlyIfPattern)
+            else if (expressionKind == ExpressionKind.EXPRESSION)
             {
                 typeExp.requireTypeClasses(equatable);
             }
@@ -583,7 +582,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public EqualExpression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
         {
-            return new EqualExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+            return new EqualExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), ctx.EQUALITY_PATTERN() != null);
         }
 
         @Override
@@ -677,25 +676,26 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }, mixed -> new DefineExpression(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
         }
         
-        private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, EqualExpression>>> visitDefinitions(List<DefinitionContext> definitionContexts)
+        private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, Definition>>> visitDefinitions(List<DefinitionContext> definitionContexts)
         {
-            Either<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>> builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>>right(ImmutableList.<Either<HasTypeExpression, EqualExpression>>builder());
+            Either<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>> builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>right(ImmutableList.<Either<HasTypeExpression, Definition>>builder());
 
             for (DefinitionContext def : definitionContexts)
             {
-                if (def.equalExpression() != null)
+                if (def.expression() != null)
                 {
-                    EqualExpression equalExpression = visitEqualExpression(def.equalExpression());
-                    builders.either_(b -> b.add(equalExpression), b -> b.add(Either.right(equalExpression)));
+                    Expression lhs = visitExpression(def.expression(0));
+                    Expression rhs = visitExpression(def.expression(1));
+                    builders.either_(b -> b.add(new EqualExpression(ImmutableList.of(lhs, rhs), false)), b -> b.add(Either.right(new Definition(lhs, rhs))));
                 }
                 else
                 {
                     Expression expression = visitHasTypeExpression(def.hasTypeExpression());
                     if (!(expression instanceof HasTypeExpression))
                     {
-                        builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, EqualExpression>>>left(builders.<ImmutableList.Builder<Expression>>either(b -> b, mixed -> {
+                        builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>left(builders.<ImmutableList.Builder<Expression>>either(b -> b, mixed -> {
                             ImmutableList.Builder<Expression> b = ImmutableList.builder();
-                            b.addAll(Utility.mapListI(mixed.build(), e -> e.either(x -> x, x -> x)));
+                            b.addAll(Utility.mapListI(mixed.build(), e -> e.either(x -> x, x -> new EqualExpression(ImmutableList.of(x.lhsPattern, x.rhsValue), false))));
                             return b;
                         }));
                     }
@@ -712,8 +712,8 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
             if (customLiteralExpression instanceof TypeLiteralExpression)
-                return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.newVariable().ident()), (TypeLiteralExpression)customLiteralExpression);
-            return new InvalidOperatorExpression(ImmutableList.of(new VarDeclExpression(IdentifierUtility.fromParsed(ctx.newVariable().ident())), new InvalidIdentExpression("::"), customLiteralExpression));
+                return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.varRef().ident()), (TypeLiteralExpression)customLiteralExpression);
+            return new InvalidOperatorExpression(ImmutableList.of(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), new InvalidIdentExpression("::"), customLiteralExpression));
         }
 
         @Override
@@ -873,12 +873,6 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
             return new InvalidIdentExpression(ctx.STRING().getText());
-        }
-
-        @Override
-        public Expression visitNewVariable(ExpressionParser.NewVariableContext ctx)
-        {
-            return new VarDeclExpression(IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override

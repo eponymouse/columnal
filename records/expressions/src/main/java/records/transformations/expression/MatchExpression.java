@@ -244,7 +244,7 @@ public class MatchExpression extends NonOperatorExpression
             if (rhsState == null)
                 return null;
             // No need to check expression versus pattern, either is fine, but we will require Equatable either way:
-            rhsState.requireEquatable(false);
+            rhsState.requireEquatable();
             
             if (guard != null)
             {

@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.transformations.expression.visitor.ExpressionVisitorFlat;
@@ -62,11 +63,11 @@ public class BackwardsFunction extends BackwardsProvider
             else
             {
                 ImmutableList<String> paramNames = IntStream.range(0, paramsAndBody.getFirst().size()).mapToObj(n -> funcName + " param " + n).collect(ImmutableList.toImmutableList());
-                function = new LambdaExpression(Utility.mapListI(paramNames, name -> new VarDeclExpression(name)), paramsAndBody.getSecond().apply(Utility.mapListI(paramNames, name -> new IdentExpression(name))));
+                function = new LambdaExpression(Utility.mapListI(paramNames, name -> new IdentExpression(name)), paramsAndBody.getSecond().apply(Utility.mapListI(paramNames, name -> new IdentExpression(name))));
             }
             
             //Either.left(new HasTypeExpression(funcName, new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(ImmutableList.of())))))
-            return new DefineExpression(ImmutableList.of(Either.right(new EqualExpression(ImmutableList.of(new VarDeclExpression(funcName), function)))), new CallExpression(new IdentExpression(funcName), paramsAndBody.getFirst()));
+            return new DefineExpression(ImmutableList.of(Either.right(new Definition(new IdentExpression(funcName), function))), new CallExpression(new IdentExpression(funcName), paramsAndBody.getFirst()));
         });
     }
     

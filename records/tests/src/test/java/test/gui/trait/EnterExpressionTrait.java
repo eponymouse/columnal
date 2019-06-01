@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.visitor.ExpressionVisitorStream;
@@ -272,12 +273,6 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
                 write(")");
         }
-        else if (c == VarDeclExpression.class)
-        {
-            write("_" + ((VarDeclExpression)expression).getName(), DELAY);
-            // Have to manually move on because it won't auto-complete:
-            push(KeyCode.ENTER);
-        }
         else if (c == IdentExpression.class)
         {
             String ident = ((IdentExpression) expression).getText();
@@ -316,14 +311,19 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         {
             expression.visit(new ExpressionVisitorStream<Void>() {
                 @Override
-                public Stream<Void> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression,@Recorded EqualExpression>> defines, @Recorded Expression body)
+                public Stream<Void> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression,@Recorded Definition>> defines, @Recorded Expression body)
                 {
                     try
                     {
-                        for (Either<@Recorded HasTypeExpression, @Recorded EqualExpression> define : defines)
+                        for (Either<@Recorded HasTypeExpression, Definition> define : defines)
                         {
                             write("@define");
-                            enterExpression(typeManager, define.either(x -> x, x -> x), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                            define.eitherInt_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
+                                x -> {
+                                    enterExpression(typeManager, x.lhsPattern, EntryBracketStatus.SUB_EXPRESSION, r);
+                                    write("=");
+                                    enterExpression(typeManager, x.rhsValue, EntryBracketStatus.SUB_EXPRESSION, r);
+                                });
                         }
                         write("@in");
                         enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);

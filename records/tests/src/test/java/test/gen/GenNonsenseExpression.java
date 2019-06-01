@@ -88,7 +88,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             // Non-terminal:
             return r.<Supplier<Expression>>choose(Arrays.<Supplier<Expression>>asList(
                 () -> new NotEqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new EqualExpression(TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs))),
+                () -> new EqualExpression(TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)), false),
                 () -> {
                     List<Expression> expressions = TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     List<ComparisonOperator> operators = r.nextBoolean() ? Arrays.asList(ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) : Arrays.asList(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
@@ -236,7 +236,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<Expression>>asList(
             () -> genDepth(false, r, depth, gs),
-            () -> new VarDeclExpression(TestUtil.generateVarName(r)),
+            () -> new IdentExpression(TestUtil.generateVarName(r)),
             () ->
             {
                 try

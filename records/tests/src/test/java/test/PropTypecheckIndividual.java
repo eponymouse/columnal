@@ -171,9 +171,9 @@ public class PropTypecheckIndividual
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
-        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b))).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));

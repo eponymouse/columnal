@@ -581,13 +581,13 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             checkExpression = new CallExpression(
                 FunctionList.getFunctionLookup(tableManager.getUnitManager()), function,
                     new ColumnReference(srcColumn.getName(), ColumnReferenceType.WHOLE_COLUMN),
-                    new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression)));
+                    new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression), false));
             
             checkType = CheckType.STANDALONE;
         }
         else
         {
-            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), containedItemExpression));
+            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), containedItemExpression), false);
         }
 
         @SuppressWarnings("nullness")
