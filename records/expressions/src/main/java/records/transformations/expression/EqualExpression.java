@@ -159,7 +159,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         return visitor.equal(this, expressions);
     }
     
-    public ImmutableList<Expression> getOperands()
+    public ImmutableList<@Recorded Expression> getOperands()
     {
         return expressions;
     }

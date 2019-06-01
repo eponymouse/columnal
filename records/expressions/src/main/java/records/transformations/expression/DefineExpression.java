@@ -49,11 +49,7 @@ public class DefineExpression extends Expression
                 return null;
             
             // Need to unify:
-            TypeExp unified = onError.recordError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp));
-            if (unified != null)
-                return new CheckedExp(unified, lhs.typeState, ExpressionKind.EXPRESSION);
-            else
-                return null;
+            return onError.recordTypeAndError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp), ExpressionKind.EXPRESSION, lhs.typeState);
         }
 
         @OnThread(Tag.Simulation)
@@ -72,6 +68,7 @@ public class DefineExpression extends Expression
             return lhsPattern.save(structured, BracketedStatus.NEED_BRACKETS, renames) + " = " + rhsValue.save(structured, BracketedStatus.NEED_BRACKETS, renames);
         }
 
+        @SuppressWarnings("recorded")
         public Definition replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
             return new Definition(lhsPattern.replaceSubExpression(toReplace, replaceWith), rhsValue.replaceSubExpression(toReplace, replaceWith));
