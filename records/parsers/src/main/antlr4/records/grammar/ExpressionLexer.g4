@@ -28,6 +28,7 @@ WHOLECOLUMN: '@entire';
 MATCH : '@match';
 ENDMATCH : '@endmatch';
 CASE : '@case';
+SCOPE : '\\';
 COLON: ':';
 ORCASE : '@orcase';
 IF : '@if';

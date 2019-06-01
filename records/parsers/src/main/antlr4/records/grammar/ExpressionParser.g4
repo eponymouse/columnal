@@ -7,7 +7,7 @@ ident : IDENT;
 tableId : ident;
 columnId : ident;
 columnRefType : COLUMN | WHOLECOLUMN;
-columnRef : columnRefType (tableId COLON)? columnId;
+columnRef : columnRefType (tableId SCOPE)? columnId;
 
 numericLiteral : ADD_OR_SUBTRACT? NUMBER CURLIED?;
 stringLiteral : STRING;
@@ -50,13 +50,13 @@ compoundExpression : addSubtractExpression | timesExpression | divideExpression 
 invalidOpItem : expression;
 invalidOpExpression : INVALIDOPS OPEN_BRACKET (invalidOpItem (COMMA invalidOpItem)*)? CLOSE_BRACKET;
 
-constructor : CONSTRUCTOR typeName COLON constructorName;
+constructor : CONSTRUCTOR typeName SCOPE constructorName;
 
 standardFunction : FUNCTION ident;
 callTarget : varRef | standardFunction | constructor | unfinished;
 callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression (COMMA topLevelExpression)*) CLOSE_BRACKET;
 
-tupleExpression : OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)+ CLOSE_BRACKET;
+recordExpression : OPEN_BRACKET ident COLON topLevelExpression (COMMA ident COLON topLevelExpression)* CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (topLevelExpression (COMMA topLevelExpression)*)? CLOSE_SQUARE;
 
 typeName : ident;
@@ -80,7 +80,7 @@ defineExpression: (DEFINE definition)+ THEN topLevelExpression ENDDEFINE;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
-expression : bracketedExpression | terminal | callExpression | tupleExpression | arrayExpression | ifThenElseExpression | match | defineExpression | lambdaExpression | invalidOpExpression;
+expression : bracketedExpression | terminal | callExpression | recordExpression | arrayExpression | ifThenElseExpression | match | defineExpression | lambdaExpression | invalidOpExpression;
 topLevelExpression : compoundExpression | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;

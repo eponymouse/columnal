@@ -22,16 +22,18 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
+import records.grammar.FormatParser.ApplyArgumentExpressionContext;
 import records.grammar.FormatParser.ApplyTypeExpressionContext;
 import records.grammar.FormatParser.ArrayTypeExpressionContext;
 import records.grammar.FormatParser.DateContext;
+import records.grammar.FormatParser.FunctionTypeExpressionContext;
 import records.grammar.FormatParser.InvalidOpsTypeExpressionContext;
-import records.grammar.FormatParser.RoundTypeExpressionContext;
+import records.grammar.FormatParser.RecordTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
-import records.grammar.GrammarUtility;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
+import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Replaceable;
@@ -40,7 +42,11 @@ import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.IdentifierUtility;
+import utility.Pair;
 import utility.Utility;
+
+import java.util.Comparator;
+import java.util.Map.Entry;
 
 public abstract class TypeExpression implements StyledShowable, Replaceable<TypeExpression>
 {
@@ -88,14 +94,14 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             }
 
             @Override
-            public TypeExpression tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public TypeExpression record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                ImmutableList.Builder<TypeExpression> members = ImmutableList.builder();
-                for (DataType type : inner)
+                ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
+                for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
-                    members.add(fromDataType(type));
+                    b.add(new Pair<>(entry.getKey(), fromDataType(entry.getValue())));
                 }
-                return new TupleTypeExpression(members.build());
+                return new RecordTypeExpression(b.build());
             }
 
             @Override
@@ -149,14 +155,14 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             }
 
             @Override
-            public TypeExpression tuple(ImmutableList<JellyType> inner) throws InternalException, UserException
+            public TypeExpression record(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete) throws InternalException, UserException
             {
-                ImmutableList.Builder<TypeExpression> members = ImmutableList.builder();
-                for (JellyType type : inner)
+                ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
+                for (Entry<@ExpressionIdentifier String, Field> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
-                    members.add(fromJellyType(type, mgr));
+                    b.add(new Pair<>(entry.getKey(), fromJellyType(entry.getValue().getJellyType(), mgr)));
                 }
-                return new TupleTypeExpression(members.build());
+                return new RecordTypeExpression(b.build());
             }
 
             @Override
@@ -316,14 +322,16 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 }
 
                 @Override
-                public TypeExpression visitRoundTypeExpression(RoundTypeExpressionContext ctx)
+                public TypeExpression visitRecordTypeExpression(RecordTypeExpressionContext ctx)
                 {
-                    if (ctx.typeExpression().size() > 1)
+                    ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> members = ImmutableList.builderWithExpectedSize(ctx.typeExpression().size());
+
+                    for (int i = 0; i < ctx.ident().size(); i++)
                     {
-                        return new TupleTypeExpression(Utility.mapListI(ctx.typeExpression(), t -> visitTypeExpression(t)));
+                        members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTypeExpression(ctx.typeExpression(i))));
                     }
-                    // If size 1, ignore brackets, just process inner:
-                    return super.visitTypeExpression(ctx.typeExpression(0));
+                    
+                    return new RecordTypeExpression(members.build());
                 }
 
                 @Override
@@ -339,10 +347,10 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 {
                     @ExpressionIdentifier String typeName = IdentifierUtility.fromParsed(ctx.ident());
 
-                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(ctx.roundTypeExpression().size());
-                    for (RoundTypeExpressionContext roundTypeExpressionContext : ctx.roundTypeExpression())
+                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(ctx.applyArgumentExpression().size());
+                    for (ApplyArgumentExpressionContext applyArgumentExpressionContext : ctx.applyArgumentExpression())
                     {
-                        args.add(Either.right(visitRoundTypeExpression(roundTypeExpressionContext)));
+                        args.add(Either.right(visitApplyArgumentExpression(applyArgumentExpressionContext)));
                     }
                     return new TypeApplyExpression(typeName, args.build());
                 }

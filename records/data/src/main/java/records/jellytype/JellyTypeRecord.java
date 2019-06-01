@@ -61,6 +61,11 @@ public class JellyTypeRecord extends JellyType
             else
                 return mgr.getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(core)), mgr);
         }
+
+        public @Recorded JellyType getJellyType()
+        {
+            return type;
+        }
     }
     
     private final ImmutableMap<@ExpressionIdentifier String, Field> fields;

@@ -852,9 +852,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public Expression visitTupleExpression(TupleExpressionContext ctx)
+        public Expression visitRecordExpression(RecordExpressionContext ctx)
         {
-            return new TupleExpression(Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), c -> visitTopLevelExpression(c)));
+            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
+            for (int i = 0; i < ctx.ident().size(); i++)
+            {
+                members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
+            }
+            return new RecordExpression(members.build());
         }
 
         @Override
