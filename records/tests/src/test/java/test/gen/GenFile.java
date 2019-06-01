@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import test.data.GeneratedTextFile;
 import test.gen.type.GenTypeAndValueGen;
@@ -86,7 +87,7 @@ public class GenFile extends Generator<GeneratedTextFile>
                     @Value Object value = columnTypes[column].makeValue();
                     // We don't want quoting and escaping of strings, so treat them different
                     String string;
-                    if (columnTypes[column].getType().isText())
+                    if (columnTypes[column].getType().equals(DataType.TEXT))
                     {
                         string = (String)value;
                         

@@ -685,7 +685,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         else
         {
             // Numbers not valid unless we swapped to another numeric type:
-            sameTypeAfterSwap = swappedType.getDataType().isNumber();
+            sameTypeAfterSwap = DataTypeUtility.isNumber(swappedType.getDataType());
             if (sameTypeAfterSwap)
             {
                 expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n)));

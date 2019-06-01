@@ -8,7 +8,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
@@ -16,7 +15,7 @@ import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
-import test.DummyManager;
+import test.TestUtil;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -42,9 +41,9 @@ public class BackwardsNumbers extends BackwardsProvider
     @Override
     public List<ExpressionMaker> deep(int maxLevels, DataType type, @Value Object targetValue) throws InternalException, UserException
     {
-        if (!type.isNumber())
+        if (!DataTypeUtility.isNumber(type))
             return ImmutableList.of();
-        NumberInfo displayInfo = type.getNumberInfo();
+        Unit unit = TestUtil.getUnit(type);
         return ImmutableList.of(
             () -> {
                 // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
@@ -103,8 +102,8 @@ public class BackwardsNumbers extends BackwardsProvider
                         }
 
                         // Either just use numerator, or make up crazy one
-                        Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
-                        Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
+                        Unit numUnit = r.nextBoolean() ? unit : makeUnit();
+                        Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, unit).reciprocal();
                         // TODO test division by zero behaviour (test errors generally)
                         return new DivideExpression(parent.make(DataType.number(new NumberInfo(numUnit)), numerator, maxLevels - 1), parent.make(DataType.number(new NumberInfo(denomUnit)), denominator, maxLevels - 1));
                     }

@@ -13,6 +13,7 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.KnownLengthRecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
@@ -23,7 +24,6 @@ import records.error.UserException;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
@@ -167,7 +167,7 @@ public class PropTypecheckIndividual
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat
     public void propEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
-        boolean same = DataType.checkSame(a, b, s -> {}) != null;
+        boolean same = a.equals(b);
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
@@ -183,11 +183,11 @@ public class PropTypecheckIndividual
     public void propDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
-        if (a.isNumber() && b.isNumber())
+        if (DataTypeUtility.isNumber(a) && DataTypeUtility.isNumber(b))
         {
             // Will actually type-check
-            Unit aOverB = a.getNumberInfo().getUnit().divideBy(b.getNumberInfo().getUnit());
-            Unit bOverA = b.getNumberInfo().getUnit().divideBy(a.getNumberInfo().getUnit());
+            Unit aOverB = TestUtil.getUnit(a).divideBy(TestUtil.getUnit(b));
+            Unit bOverA = TestUtil.getUnit(b).divideBy(TestUtil.getUnit(a));
             assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
             assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
@@ -204,7 +204,7 @@ public class PropTypecheckIndividual
     {
         DataType a = typeMaker.makeType().getDataType();
         DataType b = typeMaker.makeType().getDataType();
-        boolean same = DataType.checkSame(a, b, s -> {}) != null;
+        boolean same = a.equals(b);
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         List<DataType> types = new ArrayList<>();
@@ -229,7 +229,7 @@ public class PropTypecheckIndividual
     @Property
     public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
-        Assume.assumeFalse(a.isNumber());
+        Assume.assumeFalse(DataTypeUtility.isNumber(a));
         assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
         assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
     }
@@ -291,7 +291,7 @@ public class PropTypecheckIndividual
     public void propComparison(@From(GenDataType.class) DataType main, @From(GenDataType.class) DataType other) throws InternalException, UserException
     {        
         // Must be different types:
-        Assume.assumeFalse(DataType.checkSame(main, other, s -> {}) != null);
+        Assume.assumeFalse(main.equals(other));
 
         assertEquals(TypeExp.bool(null), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
         assertEquals(TypeExp.bool(null), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
@@ -313,8 +313,8 @@ public class PropTypecheckIndividual
         DataType otherType = typeMaker.makeType().getDataType();
         
         // Doesn't matter if match is same as result, but other must be different than both to make failures actually fail:
-        Assume.assumeFalse(DataType.checkSame(matchType, otherType, s -> {}) != null);
-        Assume.assumeFalse(DataType.checkSame(resultType, otherType, s -> {}) != null);
+        Assume.assumeFalse(matchType.equals(otherType));
+        Assume.assumeFalse(resultType.equals(otherType));
 
         // Not valid to have zero clauses as can't determine result type:
         assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), ImmutableList.of())));

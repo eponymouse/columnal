@@ -1,7 +1,9 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -52,7 +54,13 @@ public class MemoryTupleColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getType().getMemberType(), defaultValue);
+        MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<ImmutableList<DataType>>() {
+            @Override
+            public ImmutableList<DataType> tuple(ImmutableList<DataType> inner) throws InternalException
+            {
+                return inner;
+            }
+        }), defaultValue);
         shrunk.storage.addAll(storage.getAllCollapsed(0, shrunkLength).stream());
         return shrunk;
     }

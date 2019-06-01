@@ -7,7 +7,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.ConcreteDataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
@@ -70,7 +70,7 @@ public class TestGenDataType
     {
         try
         {
-            return t.apply(new ConcreteDataTypeVisitor<Stream<Pair<@Nullable Container, @Nullable Container>>>()
+            return t.apply(new DataTypeVisitor<Stream<Pair<@Nullable Container, @Nullable Container>>>()
             {
                 @Override
                 public Stream<Pair<@Nullable Container, @Nullable Container>> number(NumberInfo numberInfo) throws InternalException, UserException

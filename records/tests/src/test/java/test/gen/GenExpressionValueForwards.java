@@ -2,41 +2,30 @@ package test.gen;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
-import records.data.datatype.DataType.ConcreteDataTypeVisitor;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TaggedTypeDefinition;
-import records.data.datatype.TypeManager;
-import records.data.datatype.TypeManager.TagInfo;
-import records.jellytype.JellyType;
-import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.TemporalLiteral;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.expression.type.TypePrimitiveLiteral;
-import records.transformations.function.FunctionList;
-import utility.Either;
-import utility.IdentifierUtility;
-import utility.SimulationFunction;
-import utility.TaggedValue;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
+import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
+import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType;
 import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
@@ -51,16 +40,24 @@ import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
+import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TupleExpression;
-import test.DummyManager;
+import records.transformations.expression.TypeLiteralExpression;
+import records.transformations.expression.type.TypePrimitiveLiteral;
+import records.transformations.function.FunctionList;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.ExSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationFunction;
+import utility.TaggedValue;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -137,7 +134,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
 
     private Pair<List<@Value Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new ConcreteDataTypeVisitor<Pair<List<@Value Object>, Expression>>()
+        return type.apply(new DataTypeVisitor<Pair<List<@Value Object>, Expression>>()
         {
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)

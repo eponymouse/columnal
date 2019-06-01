@@ -3,10 +3,18 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.*;
+import records.data.Column;
+import records.data.ColumnId;
+import records.data.MemoryArrayColumn;
+import records.data.MemoryBooleanColumn;
+import records.data.MemoryNumericColumn;
+import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
+import records.data.MemoryTemporalColumn;
+import records.data.MemoryTupleColumn;
+import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.ConcreteDataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
@@ -46,7 +54,7 @@ public class BackwardsColumnRef extends BackwardsProvider
     {
         return ImmutableList.of(() -> {
             ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
-            columns.add(rs -> type.apply(new ConcreteDataTypeVisitor<Column>()
+            columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)

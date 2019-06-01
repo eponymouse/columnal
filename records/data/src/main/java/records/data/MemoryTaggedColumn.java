@@ -53,7 +53,7 @@ public class MemoryTaggedColumn extends EditableColumn
         List<TagType<DataType>> tags = getType().getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
-            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return tags;
             }

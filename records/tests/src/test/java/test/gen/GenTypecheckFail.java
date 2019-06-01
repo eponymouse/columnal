@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -255,7 +256,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             picked = pickType(r);
         }
-        while (picked.isNumber());
+        while (DataTypeUtility.isNumber(picked));
         return picked;
 
     }

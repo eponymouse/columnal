@@ -12,12 +12,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.ConcreteDataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -221,7 +221,7 @@ public class PropTypecheck
         List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
         // Swapped is same as unswapped only if typeA and typeB are same:
-        checkSameRelations(typeMaker.getTypeManager(), type, typeS, DataType.checkSame(typeA, typeB, s -> {}) != null);
+        checkSameRelations(typeMaker.getTypeManager(), type, typeS, typeA.equals(typeB));
     }
 
     @Property
@@ -231,7 +231,7 @@ public class PropTypecheck
         DataType innerB = typeMaker.makeType().getDataType();
         DataType typeA = DataType.array(innerA);
         DataType typeB = DataType.array(innerB);
-        checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, DataType.checkSame(innerA, innerB, s -> {}) != null);
+        checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, innerA.equals(innerB));
     }
 
     @Property
@@ -272,7 +272,7 @@ public class PropTypecheck
      */
     private DataType blankArray(DataType original, Random r) throws UserException, InternalException
     {
-        return original.apply(new ConcreteDataTypeVisitor<DataType>()
+        return original.apply(new DataTypeVisitor<DataType>()
         {
             @Override
             public DataType number(NumberInfo displayInfo) throws InternalException, UserException
@@ -320,7 +320,7 @@ public class PropTypecheck
 
     private DataTypeValue toValue(@NonNull DataType t) throws UserException, InternalException
     {
-        return t.apply(new ConcreteDataTypeVisitor<DataTypeValue>()
+        return t.apply(new DataTypeVisitor<DataTypeValue>()
         {
             @Override
             public DataTypeValue number(NumberInfo displayInfo) throws InternalException, UserException
@@ -384,15 +384,7 @@ public class PropTypecheck
         assertEquals(Either.right(typeA), TypeExp.fromDataType(null, typeA).toConcreteType(typeManager));
         assertEquals(Either.right(typeB), TypeExp.fromDataType(null, typeB).toConcreteType(typeManager));
         
-
-        assertEquals(typeA, DataType.checkSame(typeA, typeA, s -> {}));
-
-        assertEquals(typeB, DataType.checkSame(typeB, typeB, s -> {}));
-
         Object expected = same ? typeA : null;
-        assertEquals(expected, DataType.checkSame(typeA, typeB, s -> {}));
-
-        assertEquals(expected, DataType.checkSame(typeB, typeA, s -> {}));
 
         assertEquals(typeA, unifyList(typeManager, typeA));
         assertEquals(typeB, unifyList(typeManager, typeB));

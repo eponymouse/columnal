@@ -9,7 +9,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
+import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.list.Count;
 import records.transformations.function.FunctionDefinition;
@@ -41,9 +43,6 @@ public class PropListFunctions
     @OnThread(Tag.Simulation)
     public void propMinMax(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
-        if (src.type.isArray() && src.type.getMemberType().isEmpty())
-            return; // Ignore blank array type
-
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
         @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
@@ -73,8 +72,8 @@ public class PropListFunctions
                     expectedMax = x;
             }
 
-            assertEquals(src.type.getMemberType().get(0), minChecked.getSecond());
-            assertEquals(src.type.getMemberType().get(0), maxChecked.getSecond());
+            assertEquals(getInnerType(src.type), minChecked.getSecond());
+            assertEquals(getInnerType(src.type), maxChecked.getSecond());
             @Value Object minActual = minChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             @Value Object maxActual = maxChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             TestUtil.assertValueEqual("", expectedMin, minActual);
@@ -117,13 +116,11 @@ public class PropListFunctions
         }
         if (checked == null)
         {
-            // It's ok to fail on empty array type; that's expected:
-            if (!src.type.isArray() || !src.type.getMemberType().isEmpty())
-                fail("Type check failure");
+            fail("Type check failure");
         }
         else
         {
-            assertEquals(src.type.getMemberType().get(0), checked.getSecond());
+            assertEquals(getInnerType(src.type), checked.getSecond());
             // Try valid values:
             for (int i = 0; i < src.list.size(); i++)
             {
@@ -158,7 +155,18 @@ public class PropListFunctions
         {
             // Check that random element is found:
             @Value Object elem = src.list.get(r.nextInt(src.list.size()));
-            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("@call @function any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = " + DataTypeUtility.valueToString(src.type.getMemberType().get(0), elem, null, true) + "))"), Boolean.class));
+            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("@call @function any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = " + DataTypeUtility.valueToString(getInnerType(src.type), elem, null, true) + "))"), Boolean.class));
         }
+    }
+
+    private DataType getInnerType(DataType listType) throws InternalException
+    {
+        return listType.apply(new SpecificDataTypeVisitor<DataType>() {
+            @Override
+            public DataType array(DataType inner) throws InternalException
+            {
+                return inner;
+            }
+        });
     }
 }

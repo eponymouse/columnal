@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
@@ -32,9 +31,14 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
@@ -526,7 +530,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getFirst(),p.getSecond(), null) + " after choice " + choice, textField);
             return UnitType.UNIT;
         });
-        defocusSTFAndCheck(value.either(s -> true, p -> !p.getFirst().hasNumber()), () -> {
+        defocusSTFAndCheck(value.eitherInt(s -> true, p -> !hasNumber(p.getFirst())), () -> {
             // One to get rid of any code completion:
             push(KeyCode.ESCAPE);
             // Escape to finish editing:
@@ -534,6 +538,46 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
         });
         return textField;
+    }
+
+    @OnThread(Tag.Any)
+    private boolean hasNumber(DataType type) throws InternalException
+    {
+        return type.apply(new FlatDataTypeVisitor<Boolean>(false) {
+            @Override
+            public Boolean number(NumberInfo numberInfo) throws InternalException, InternalException
+            {
+                return true;
+            }
+
+            @Override
+            public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                for (TagType<DataType> tag : tags)
+                {
+                    if (tag.getInner() != null && hasNumber(tag.getInner()))
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public Boolean tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            {
+                for (DataType dataType : inner)
+                {
+                    if (hasNumber(dataType))
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public Boolean array(DataType inner) throws InternalException, InternalException
+            {
+                return hasNumber(inner);
+            }
+        });
     }
 
     @OnThread(Tag.Any)

@@ -123,7 +123,7 @@ public class ImporterUtility
                     ImmutableList.of(Either.<Unit, DataType>right(numberType)), mgr
                 );
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.<Unit, DataType>right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, (String item) -> {
+                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, DataTypeUtility.getTaggedTypeName(typeFinal), ImmutableList.of(Either.<Unit, DataType>right(numberType)), DataTypeUtility.getTagTypes(typeFinal), Utility.mapListEx(slice, (String item) -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return Either.<String, TaggedValue>right(new TaggedValue(0, null));
                     else

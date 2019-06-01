@@ -3,6 +3,7 @@ package records.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -43,7 +44,13 @@ public class MemoryArrayColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getType().getMemberType().get(0), storage.getAllCollapsed(0, shrunkLength), defaultValue);
+        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<DataType>() {
+            @Override
+            public DataType array(DataType inner) throws InternalException
+            {
+                return inner;
+            }
+        }), storage.getAllCollapsed(0, shrunkLength), defaultValue);
         return shrunk;
     }
 

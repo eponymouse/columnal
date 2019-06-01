@@ -72,7 +72,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -99,16 +98,16 @@ import static records.data.datatype.DataType.DateTimeInfo.F.*;
  *  - A composite type:
  *    - A set of 2+ tags.  Each tag may have 0 or 1 arguments (think Haskell's
  *      ADTs, but where you either have a tuple as an arg or nothing).
- *    - A tuple (i.e. list) of 2+ types.
+ *    - A record (named fields) of 2+ types.
  *    - An array (i.e. variable-length list) of items of a single type.
  *
  *  Written in pseudo-Haskell:
  *  data Type = N Number | T String | D Date | B Boolean
  *            | Tags [(TagName, Maybe Type)]
- *            | Tuple [Type]
+ *            | Record [(FieldName, Type)] 
  *            | Array Type
  */
-public final class DataType implements StyledShowable
+public abstract class DataType implements StyledShowable
 {
     @OnThread(Tag.Simulation)
     public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws InternalException
@@ -187,7 +186,7 @@ public final class DataType implements StyledShowable
         });
     }
 
-    public DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws InternalException
+    public final DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws InternalException
     {
         return apply(new DataTypeVisitorEx<DataTypeValue, InternalException>()
         {
@@ -258,11 +257,10 @@ public final class DataType implements StyledShowable
     
     public static DataType function(ImmutableList<DataType> argType, DataType resultType)
     {
-        return new DataType(Kind.FUNCTION, null, null, null, Utility.<DataType>concatI(argType, ImmutableList.<DataType>of(resultType)));
+        return new FunctionDataType(argType, resultType);
     }
-
-    // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, FUNCTION }
+    
+    /*
     final Kind kind;
     // For NUMBER:
     final @Nullable NumberInfo numberInfo;
@@ -277,40 +275,20 @@ public final class DataType implements StyledShowable
     // For TUPLE (2+) and ARRAY (1) and FUNCTION(2).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
     final @Nullable ImmutableList<DataType> memberType;
+*/
 
     // package-visible
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagInfo, @Nullable List<DataType> memberType)
+    DataType()
     {
-        this.kind = kind;
-        this.numberInfo = numberInfo;
-        this.dateTimeInfo = dateTimeInfo;
-        this.taggedTypeName = tagInfo == null ? null : tagInfo.name;
-        this.tagTypeVariableSubstitutions = tagInfo == null ? null : tagInfo.typeVariableSubstitutions;
-        this.tagTypes = tagInfo == null ? null : tagInfo.tagTypes;
-        this.memberType = memberType == null ? null : ImmutableList.copyOf(memberType);
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
-    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
-    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
-
-    protected static class TagTypeDetails
-    {
-        private final TypeId name;
-        private final ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions;
-        private final ImmutableList<TagType<DataType>> tagTypes;
-
-        protected TagTypeDetails(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions, ImmutableList<TagType<DataType>> tagTypes)
-        {
-            this.name = name;
-            this.typeVariableSubstitutions = typeVariableSubstitutions;
-            this.tagTypes = tagTypes;
-        }
-    }
+    public static final DataType BOOLEAN = new BooleanDataType();
+    public static final DataType TEXT = new TextDataType();
 
     public static DataType array(DataType inner)
     {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner));
+        return new ListDataType(inner);
     }
 
     public static DataType tuple(DataType... inner)
@@ -320,12 +298,12 @@ public final class DataType implements StyledShowable
 
     public static DataType tuple(List<DataType> inner)
     {
-        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner));
+        return new TupleDataType(inner);
     }
 
     public static DataType date(DateTimeInfo dateTimeInfo)
     {
-        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null);
+        return new TemporalDataType(dateTimeInfo);
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
@@ -347,29 +325,24 @@ public final class DataType implements StyledShowable
 
     public static interface DataTypeVisitor<R> extends DataTypeVisitorEx<R, UserException>
     {
-        
     }
 
-    public static interface ConcreteDataTypeVisitor<R> extends DataTypeVisitor<R>
-    {
-    }
-
-    public static class SpecificDataTypeVisitor<R> implements DataTypeVisitor<R>
+    public static class SpecificDataTypeVisitor<R> implements DataTypeVisitorEx<R, InternalException>
     {
         @Override
-        public R number(NumberInfo displayInfo) throws InternalException, UserException
+        public R number(NumberInfo displayInfo) throws InternalException
         {
             throw new InternalException("Unexpected number data type");
         }
 
         @Override
-        public R text() throws InternalException, UserException
+        public R text() throws InternalException
         {
             throw new InternalException("Unexpected text data type");
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -381,53 +354,84 @@ public final class DataType implements StyledShowable
         }
 
         @Override
-        public R date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+        public R date(DateTimeInfo dateTimeInfo) throws InternalException
         {
             throw new InternalException("Unexpected date type");
         }
 
         @Override
-        public R tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+        public R tuple(ImmutableList<DataType> inner) throws InternalException
         {
             throw new InternalException("Unexpected tuple type");
         }
 
         @Override
-        public R array(@Nullable DataType inner) throws InternalException, UserException
+        public R array(DataType inner) throws InternalException
         {
             throw new InternalException("Unexpected array type");
         }
     }
-
-    @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
-    public final <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+    
+    public static class FlatDataTypeVisitor<T> implements DataTypeVisitorEx<T, InternalException>
     {
-        switch (kind)
+        private final T def;
+
+        public FlatDataTypeVisitor(T def)
         {
-            case NUMBER:
-                return visitor.number(numberInfo);
-            case TEXT:
-                return visitor.text();
-            case DATETIME:
-                return visitor.date(dateTimeInfo);
-            case BOOLEAN:
-                return visitor.bool();
-            case TAGGED:
-                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, tagTypes);
-            case ARRAY:
-                if (memberType.isEmpty())
-                    return visitor.array(null);
-                else
-                    return visitor.array(memberType.get(0));
-            case TUPLE:
-                return visitor.tuple(memberType);
-            case FUNCTION:
-                return visitor.function(memberType.subList(0, memberType.size() - 1), memberType.get(memberType.size() - 1));
-            default:
-                throw new InternalException("Missing kind case");
+            this.def = def;
+        }
+
+        @Override
+        public T number(NumberInfo numberInfo) throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T text() throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T bool() throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T array(DataType inner) throws InternalException, InternalException
+        {
+            return def;
+        }
+
+        @Override
+        public T function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, InternalException
+        {
+            return def;
         }
     }
+    
+    @OnThread(Tag.Any)
+    public abstract <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E;
 
     public static class TagType<T>
     {
@@ -497,29 +501,8 @@ public final class DataType implements StyledShowable
     }
 
     @OnThread(Tag.Any)
-    @SuppressWarnings("i18n") // Because of the "ERR"
-    public @Localized String getSafeHeaderDisplay()
-    {
-        try
-        {
-            return getHeaderDisplay();
-        }
-        catch (InternalException | UserException e)
-        {
-            Log.log(e);
-            return "ERR";
-        }
-    }
-
-    @OnThread(Tag.Any)
-    public @Localized String getHeaderDisplay() throws UserException, InternalException
-    {
-        return toDisplay(false);
-    }
-
-    @OnThread(Tag.Any)
     @SuppressWarnings("i18n")
-    public @Localized String toDisplay(boolean drillIntoTagged) throws UserException, InternalException
+    public final @Localized String toDisplay(boolean drillIntoTagged) throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<String>()
         {
@@ -623,7 +606,7 @@ public final class DataType implements StyledShowable
     }
 
     @Override
-    public String toString()
+    public final String toString()
     {
         try
         {
@@ -637,7 +620,7 @@ public final class DataType implements StyledShowable
     }
 
     @Override
-    public StyledString toStyledString()
+    public final StyledString toStyledString()
     {
         try
         {
@@ -653,415 +636,21 @@ public final class DataType implements StyledShowable
     // package-visible
     static DataType tagged(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutes, ImmutableList<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, null, new TagTypeDetails(name, typeVariableSubstitutes, tagTypes), null);
+        return new TaggedDataType(name, typeVariableSubstitutes, tagTypes);
     }
 
 
     public static DataType number(NumberInfo numberInfo)
     {
-        return new DataType(Kind.NUMBER, numberInfo, null, null, null);
-    }
-
-    public static <T extends DataType> boolean canFitInOneNumeric(List<? extends TagType<T>> tags) throws InternalException, UserException
-    {
-        // Can fit in one numeric if there is no inner types,
-        // or if the only inner type is a single numeric
-        boolean foundNumeric = false;
-        for (TagType<T> t : tags)
-        {
-            if (t.getInner() != null)
-            {
-                if (t.getInner().kind == Kind.NUMBER)
-                {
-                    if (foundNumeric)
-                        return false; // Can't have two numeric
-                    foundNumeric = true;
-                }
-                else
-                    return false; // Can't have anything non-numeric
-            }
-        }
-        return foundNumeric;
-    }
-
-    /*
-    @OnThread(Tag.Any)
-    public DataTypeValue copy(GetValue<Object> get) throws InternalException
-    {
-        @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
-        if (this.taggedTypeName != null && this.tagTypes != null)
-        {
-            newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
-            for (TagType tagType : this.tagTypes)
-                newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get)));
-        }
-        List<DataType> memberTypes = null;
-        if (this.memberType != null)
-        {
-            memberTypes = new ArrayList<>();
-            for (int tupleMember = 0; tupleMember < this.memberType.size(); tupleMember++)
-            {
-                int tupleMemberFinal = tupleMember;
-                DataType dataType = this.memberType.get(tupleMember);
-                memberTypes.add(dataType.copy((i, prog) -> (List<Object>)((Object[])get.getWithProgress(i, prog))[tupleMemberFinal]));
-            }
-        }
-        return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
-            memberTypes, (i, prog) -> (Number)get.getWithProgress(i, prog),
-            (i, prog) -> (String)get.getWithProgress(i, prog),
-            (i, prog) -> (Temporal) get.getWithProgress(i, prog),
-            (i, prog) -> (Boolean) get.getWithProgress(i, prog),
-            (i, prog) -> (Integer) get.getWithProgress(i, prog), null);
-    }
-    */
-
-    public boolean isTuple()
-    {
-        return kind == Kind.TUPLE;
-    }
-
-    public boolean isArray()
-    {
-        return kind == Kind.ARRAY;
-    }
-
-    // For arrays: single item or empty (if empty array).  For tuples, the set of contained types.
-    // Everything else: an InternalException
-    public List<DataType> getMemberType() throws InternalException
-    {
-        if (memberType == null)
-            throw new InternalException("Fetching member type for non tuple/array: " + kind);
-        return memberType;
-    }
-
-    public boolean isTagged()
-    {
-        return kind == Kind.TAGGED;
-    }
-
-    public TypeId getTaggedTypeName() throws InternalException
-    {
-        if (taggedTypeName != null)
-            return taggedTypeName;
-        throw new InternalException("Trying to get tag type name of non-tag type: " + this);
-    }
-
-    public ImmutableList<TagType<DataType>> getTagTypes() throws InternalException
-    {
-        if (tagTypes != null)
-            return tagTypes;
-        throw new InternalException("Trying to get tag types of non-tag type: " + this);
-    }
-
-
-    // Returns (N, null) if there's no inner type.  Returns (-1, null) if no such constructor.
-    // Throws internal exception if not a tagged type
-    public Pair<Integer, @Nullable DataType> unwrapTag(String constructor) throws InternalException
-    {
-        if (tagTypes == null)
-            throw new InternalException("Type is not a tagged type: " + this);
-        List<Pair<Integer, @Nullable DataType>> tags = new ArrayList<>();
-        for (int i = 0; i < tagTypes.size(); i++)
-        {
-            if (tagTypes.get(i).getName().equals(constructor))
-                tags.add(new Pair<>(i, tagTypes.get(i).getInner()));
-        }
-        if (tags.size() > 1)
-            throw new InternalException("Duplicate tag names in type: " + this);
-        if (tags.size() == 0)
-            return new Pair<>(-1, null); // Not found
-        return tags.get(0);
-    }
-
-    // Note: this is customised from original template
-    @Override
-    public boolean equals(@Nullable Object o)
-    {
-        if (this == o) return true;
-        // Don't check for same class; let us be equal to a DataTypeValue
-        if (o == null || !(o instanceof DataType)) return false;
-
-        DataType dataType = (DataType) o;
-
-        if (kind != dataType.kind) return false;
-        // Don't use equals here, use sameType (weaker, but accurate for type comparison)
-        if (numberInfo != null ? !numberInfo.sameType(dataType.numberInfo) : dataType.numberInfo != null) return false;
-        if (dateTimeInfo != null ? !dateTimeInfo.sameType(dataType.dateTimeInfo) : dateTimeInfo != null) return false;
-        if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
-        if (taggedTypeName != null ? !taggedTypeName.equals(dataType.taggedTypeName) : dataType.taggedTypeName != null) return false;
-        if (!Objects.equals(tagTypeVariableSubstitutions, ((DataType) o).tagTypeVariableSubstitutions)) return false;
-        return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
+        return new NumberDataType(numberInfo);
     }
 
     @Override
-    public int hashCode()
-    {
-        int result = kind.hashCode();
-        // Must use specialised hashCodeForType which matches sameType rather than equals
-        result = 31 * result + (numberInfo != null ? numberInfo.hashCodeForType() : 0);
-        result = 31 * result + (dateTimeInfo != null ? dateTimeInfo.hashCodeForType() : 0);
-        result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
-        result = 31 * result + (memberType != null ? memberType.hashCode() : 0);
-        result = 31 * result + (taggedTypeName != null ? taggedTypeName.hashCode() : 0);
-        return result;
-    }
+    public abstract boolean equals(@Nullable Object o);
 
-    @Pure
-    public boolean isNumber()
-    {
-        return kind == Kind.NUMBER;
-    }
-
-    @Pure
-    public boolean isText()
-    {
-        return kind == Kind.TEXT;
-    }
-
-    @Pure
-    public boolean isFunction()
-    {
-        return kind == Kind.FUNCTION;
-    }
-
-    @Pure
-    public boolean isDateTime()
-    {
-        return kind == Kind.DATETIME;
-    }
-
-    // is number, or has number anywhere inside:
-    @Pure
-    public boolean hasNumber()
-    {
-        return isNumber()
-            || (tagTypes != null && tagTypes.stream().anyMatch(tt -> tt.getInner() != null && tt.getInner().hasNumber()))
-            || (memberType != null && memberType.stream().anyMatch(DataType::hasNumber));
-    }
-
-    @Pure
-    public NumberInfo getNumberInfo() throws InternalException
-    {
-        if (numberInfo != null)
-            return numberInfo;
-        else
-            throw new InternalException("Requesting numeric display info for non-numeric type: " + this);
-    }
-
-    @Pure
-    public DateTimeInfo getDateTimeInfo() throws InternalException
-    {
-        if (dateTimeInfo != null)
-            return dateTimeInfo;
-        else
-            throw new InternalException("Requesting date/time info for non-date/time type: " + this);
-    }
-
-    public static enum TypeRelation
-    {
-        /**
-         * When you have two types which should be the same, but neither is more right
-         * than the other, e.g. if you have "a = b", then a and b should be same type,
-         * but neither is known to be right.
-         */
-        SYMMETRIC,
-        /**
-         * The first type, A, is the expected one, so if they don't match, B is wrong.
-         */
-        EXPECTED_A;
-    }
-
-    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, Consumer<String> onError) throws UserException, InternalException
-    {
-        return checkSame(a, b, TypeRelation.SYMMETRIC, onError);
-    }
-
-    public static @Nullable Either<Unit, DataType> checkSame(@Nullable Either<Unit, DataType> a, @Nullable Either<Unit, DataType> b, Consumer<String> onError) throws UserException, InternalException
-    {
-        if (a == null || b == null)
-            return null;
-        else if (a.isRight() && b.isRight())
-        {
-            DataType t = checkSame(a.getRight("Impossible"), b.getRight("Impossible"), TypeRelation.SYMMETRIC, onError);
-            return t == null ? null : Either.right(t);
-        }
-        else if (a.isLeft() && b.isLeft())
-            return a.getLeft("Impossible").equals(b.getLeft("Impossible")) ? a : null;
-        else
-            return null;
-    }
-
-
-    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, TypeRelation relation, Consumer<String> onError) throws UserException, InternalException
-    {
-        if (a == null || b == null)
-            return null;
-        return DataType.<DataType, @Nullable DataType>zipSame(a, b, new ZipVisitor<DataType, @Nullable DataType>()
-            {
-                @Override
-                public @Nullable DataType number(DataType a, DataType b, NumberInfo displayInfoA, NumberInfo displayInfoB) throws InternalException, UserException
-                {
-                    if (displayInfoA.sameType(displayInfoB))
-                        return a;
-                    else
-                    {
-                        onError.accept("Differing number types: " + displayInfoA + " vs " + displayInfoB);
-                        return null;
-                    }
-                }
-
-                @Override
-                public @Nullable DataType text(DataType a, DataType b) throws InternalException, UserException
-                {
-                    return a;
-                }
-
-                @Override
-                public @Nullable DataType date(DataType a, DataType b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException
-                {
-                    if (dateTimeInfoA.sameType(dateTimeInfoB))
-                        return a;
-                    else
-                    {
-                        switch (relation)
-                        {
-                            case SYMMETRIC:
-                                onError.accept("Types differ: " + dateTimeInfoA + " vs " + dateTimeInfoB);
-                                break;
-                            case EXPECTED_A:
-                                onError.accept("Expected type " + dateTimeInfoA + " but found " + dateTimeInfoB);
-                                break;
-                        }
-                        return null;
-                    }
-                }
-
-                @Override
-                public @Nullable DataType bool(DataType a, DataType b) throws InternalException, UserException
-                {
-                    return a;
-                }
-
-                @Override
-                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, ImmutableList<Either<Unit, DataType>> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<Either<Unit, DataType>> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException
-                {
-                    // Because of the way tagged types work, there's no need to dig any deeper.  The types in a
-                    // tagged type are known a priori because they're declared upfront, so as soon as you know
-                    // what tag it is, you know what the full type is.  Thus the only question is: are these
-                    // two types the same type?  It should be enough to compare type names and type variables:
-                    boolean sameName = typeNameA.equals(typeNameB);
-                    if (sameName)
-                    {
-                        if (varsA.size() != varsB.size())
-                        {
-                            throw new InternalException("Type vars differ in number for same type: " + a);
-                        }
-                        for (int i = 0; i < varsA.size(); i++)
-                        {
-                            Either<Unit, DataType> t = checkSame(varsA.get(i), varsB.get(i), onError);
-                            if (t == null)
-                                return null;
-                        }
-                        return a;
-                    }
-                    else
-                    {
-                        switch (relation)
-                        {
-                            case SYMMETRIC:
-                                onError.accept("Types differ: " + typeNameA + " vs " + typeNameB);
-                                break;
-                            case EXPECTED_A:
-                                onError.accept("Expected type " + typeNameA + " but found " + typeNameB);
-                                break;
-                        }
-                        return null;
-                    }
-                }
-
-                @Override
-                public @Nullable DataType tuple(DataType a, DataType b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException
-                {
-                    if (innerA.size() != innerB.size())
-                    {
-                        switch (relation)
-                        {
-                            case SYMMETRIC:
-                                onError.accept("Tuples differ in size: " + innerA.size() + " vs " + innerB.size());
-                                break;
-                            case EXPECTED_A:
-                                onError.accept("Expected tuple of size " + innerA.size() + " but found " + innerB.size());
-                                break;
-                        }
-                        return null;
-                    }
-                    List<DataType> innerR = new ArrayList<>();
-                    for (int i = 0; i < innerA.size(); i++)
-                    {
-                        DataType t = checkSame(innerA.get(i), innerB.get(i), onError);
-                        if (t == null)
-                            return null;
-                        innerR.add(t);
-                    }
-                    return DataType.tuple(innerR);
-                }
-
-                @Override
-                public @Nullable DataType array(DataType a, DataType b, DataType innerA, DataType innerB) throws InternalException, UserException
-                {
-                    DataType innerR = checkSame(innerA, innerB, onError);
-                        // At this point, if innerR is null, it means error, not empty array, so we must return null:
-                    if (innerR == null)
-                        return null;
-                    return DataType.array(innerR);
-                }
-
-                @Override
-                public @Nullable DataType differentKind(DataType a, DataType b) throws InternalException, UserException
-                {
-                    switch (relation)
-                    {
-                        case SYMMETRIC:
-                            onError.accept("Type mismatch: " + a + " vs " + b);
-                            break;
-                        case EXPECTED_A:
-                            onError.accept("Expected type " + a + " but was " + b);
-                            break;
-                    }
-
-                    return null;
-                }
-            });
-    }
-
-    @SuppressWarnings("nullness")
-    private static <T extends DataType, R> R zipSame(T a, T b, ZipVisitor<T, R> visitor) throws UserException, InternalException
-    {
-        if (a.kind != b.kind)
-            return visitor.differentKind(a, b);
-        else
-        {
-            switch (a.kind)
-            {
-                case NUMBER:
-                    return visitor.number(a, b, a.numberInfo, b.numberInfo);
-                case TEXT:
-                    return visitor.text(a, b);
-                case DATETIME:
-                    return visitor.date(a, b, a.dateTimeInfo, b.dateTimeInfo);
-                case BOOLEAN:
-                    return visitor.bool(a, b);
-                case TAGGED:
-                    return visitor.tagged(a, b, a.taggedTypeName, a.tagTypeVariableSubstitutions, a.tagTypes, b.taggedTypeName, b.tagTypeVariableSubstitutions, b.tagTypes);
-                case TUPLE:
-                    return visitor.tuple(a, b, a.memberType, b.memberType);
-                case ARRAY:
-                    return visitor.array(a, b, a.memberType.isEmpty() ? null : a.memberType.get(0), b.memberType.isEmpty() ? null : b.memberType.get(0));
-            }
-            throw new InternalException("Missing kind case");
-        }
-    }
-
+    @Override
+    public abstract int hashCode();
+    
     public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunctionInt<RecordSet, EditableColumn>
     {
         private final ExBiConsumer<C, Either<String, V>> addToColumn;
@@ -1377,7 +966,7 @@ public final class DataType implements StyledShowable
         });
     }
     
-    public Either<String, @Value Object> loadSingleItem(String content) throws InternalException
+    public final Either<String, @Value Object> loadSingleItem(String content) throws InternalException
     {
         try
         {
@@ -1447,7 +1036,7 @@ public final class DataType implements StyledShowable
 
     // save the declaration of this type
     // If topLevelDeclaration is false, save a reference (matters for tagged types)
-    public OutputBuilder save(OutputBuilder b) throws InternalException
+    public final OutputBuilder save(OutputBuilder b) throws InternalException
     {
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
         {
@@ -1555,17 +1144,6 @@ public final class DataType implements StyledShowable
             }
         });
         return b;
-    }
-
-    public boolean hasTag(String tagName) throws UserException, InternalException
-    {
-        return apply(new SpecificDataTypeVisitor<Boolean>() {
-            @Override
-            public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
-            }
-        });
     }
 
     public static class DateTimeInfo
@@ -2050,18 +1628,234 @@ public final class DataType implements StyledShowable
                 '}';
         }
     }
-
-    public static interface ZipVisitor<T extends DataType, R>
+    
+    private static final class NumberDataType extends DataType
     {
-        R number(T a, T b, NumberInfo displayInfoA, NumberInfo displayInfoB) throws InternalException, UserException;
-        R text(T a, T b) throws InternalException, UserException;
-        R date(T a, T b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException;
-        R bool(T a, T b) throws InternalException, UserException;
+        private final NumberInfo numberInfo;
 
-        R tagged(T a, T b, TypeId typeNameA, ImmutableList<Either<Unit, DataType>> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<Either<Unit, DataType>> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
-        R tuple(T a, T b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException;
-        R array(T a, T b, DataType innerA, DataType innerB) throws InternalException, UserException;
+        public NumberDataType(NumberInfo numberInfo)
+        {
+            this.numberInfo = numberInfo;
+        }
 
-        R differentKind(T a, T b) throws InternalException, UserException;
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NumberDataType that = (NumberDataType) o;
+            return numberInfo.equals(that.numberInfo);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(numberInfo);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.number(numberInfo);
+        }
+    }
+    private static final class TextDataType extends DataType
+    {
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            return o instanceof TextDataType;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 1;
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.text();
+        }
+    }
+    private static final class BooleanDataType extends DataType
+    {
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            return o instanceof BooleanDataType;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 1;
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.bool();
+        }
+    }
+    private static final class TemporalDataType extends DataType
+    {
+        private final DateTimeInfo dateTimeInfo;
+
+        public TemporalDataType(DateTimeInfo dateTimeInfo)
+        {
+            this.dateTimeInfo = dateTimeInfo;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TemporalDataType that = (TemporalDataType) o;
+            return dateTimeInfo.equals(that.dateTimeInfo);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(dateTimeInfo);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.date(dateTimeInfo);
+        }
+    }
+    private static final class TaggedDataType extends DataType
+    {
+        private final TypeId name;
+        private final ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions;
+        private final ImmutableList<TagType<DataType>> tagTypes;
+
+        protected TaggedDataType(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions, ImmutableList<TagType<DataType>> tagTypes)
+        {
+            this.name = name;
+            this.typeVariableSubstitutions = typeVariableSubstitutions;
+            this.tagTypes = tagTypes;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TaggedDataType that = (TaggedDataType) o;
+            return name.equals(that.name) &&
+                typeVariableSubstitutions.equals(that.typeVariableSubstitutions) &&
+                tagTypes.equals(that.tagTypes);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(name, typeVariableSubstitutions, tagTypes);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.tagged(name, typeVariableSubstitutions, tagTypes);
+        }
+    }
+    private static final class TupleDataType extends DataType
+    {
+        private final ImmutableList<DataType> members;
+
+        public TupleDataType(List<DataType> members)
+        {
+            this.members = ImmutableList.copyOf(members);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TupleDataType that = (TupleDataType) o;
+            return members.equals(that.members);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(members);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.tuple(members);
+        }
+    }
+    private static final class ListDataType extends DataType
+    {
+        private final DataType inner;
+
+        private ListDataType(DataType inner)
+        {
+            this.inner = inner;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ListDataType that = (ListDataType) o;
+            return inner.equals(that.inner);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(inner);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.array(inner);
+        }
+    }
+    private static final class FunctionDataType extends DataType
+    {
+        private final ImmutableList<DataType> argType;
+        private final DataType resultType;
+        
+        public FunctionDataType(ImmutableList<DataType> argType, DataType resultType)
+        {
+            this.argType = argType;
+            this.resultType = resultType;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FunctionDataType that = (FunctionDataType) o;
+            return argType.equals(that.argType) &&
+                resultType.equals(that.resultType);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(argType, resultType);
+        }
+
+        @Override
+        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        {
+            return visitor.function(argType, resultType);
+        }
     }
 }

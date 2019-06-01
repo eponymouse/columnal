@@ -20,6 +20,8 @@ import records.data.TupleColumnStorage;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
@@ -406,7 +408,7 @@ public class DataTypeUtility
             {
                 @Value Object[] tuple = (@Value Object[])item;
                 StringBuilder s = new StringBuilder();
-                if (parent == null || !parent.isTagged())
+                if (parent == null || !isTagged(parent))
                     s.append("(");
                 for (int i = 0; i < tuple.length; i++)
                 {
@@ -414,9 +416,20 @@ public class DataTypeUtility
                         s.append(", ");
                     s.append(valueToString(inner.get(i), tuple[i], dataType, asExpression));
                 }
-                if (parent == null || !parent.isTagged())
+                if (parent == null || !isTagged(parent))
                     s.append(")");
                 return s.toString();
+            }
+
+            private boolean isTagged(DataType type) throws InternalException
+            {
+                return type.apply(new FlatDataTypeVisitor<Boolean>(false) {
+                    @Override
+                    public Boolean tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
+                    {
+                        return true;
+                    }
+                });
             }
 
             @Override
@@ -639,6 +652,48 @@ public class DataTypeUtility
                 throw new RuntimeException(e);
             }
         };
+    }
+
+    public static boolean isNumber(DataType type)
+    {
+        try
+        {
+            return type.apply(new FlatDataTypeVisitor<Boolean>(false)
+            {
+                @Override
+                public Boolean number(NumberInfo numberInfo) throws InternalException, InternalException
+                {
+                    return true;
+                }
+            });
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            return false;
+        }
+    }
+    
+    public static TypeId getTaggedTypeName(DataType type) throws InternalException
+    {
+        return type.apply(new SpecificDataTypeVisitor<TypeId>() {
+            @Override
+            public TypeId tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            {
+                return typeName;
+            }
+        });
+    }
+
+    public static ImmutableList<TagType<DataType>> getTagTypes(DataType type) throws InternalException
+    {
+        return type.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
+            @Override
+            public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            {
+                return tags;
+            }
+        });
     }
 
     // Keeps track of a trailing substring of a string.  Saves memory compared to copying

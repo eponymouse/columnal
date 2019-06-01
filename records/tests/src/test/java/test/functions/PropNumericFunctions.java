@@ -131,8 +131,8 @@ public class PropNumericFunctions
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
-            assertTrue(instance.getSecond().isNumber());
-            assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
+            assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
+            assertEquals(mgr.loadUse(expectedUnit), TestUtil.getUnit(instance.getSecond()));
             @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(src)});
             return Utility.cast(num, Number.class);
         }
@@ -157,8 +157,8 @@ public class PropNumericFunctions
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
-            assertTrue(instance.getSecond().isNumber());
-            assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
+            assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
+            assertEquals(mgr.loadUse(expectedUnit), TestUtil.getUnit(instance.getSecond()));
             @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(src)});
             return Utility.cast(num, Number.class);
         }

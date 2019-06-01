@@ -3,16 +3,15 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.NumberInfo;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.CallExpression;
 import records.transformations.expression.DivideExpression;
-import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import utility.Pair;
 
@@ -48,12 +47,20 @@ public class BackwardsTemporal extends BackwardsProvider
     @Override
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
-        if (!targetType.isDateTime())
+        DateTimeInfo dateTimeInfo = targetType.apply(new FlatDataTypeVisitor<@Nullable DateTimeInfo>(null) {
+            @Override
+            public @Nullable DateTimeInfo date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            {
+                return dateTimeInfo;
+            }
+        });
+        
+        if (dateTimeInfo == null)
             return ImmutableList.of();
 
         ImmutableList.Builder<ExpressionMaker> deep = ImmutableList.builder();
         
-        switch (targetType.getDateTimeInfo().getType())
+        switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
             {

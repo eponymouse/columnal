@@ -190,7 +190,7 @@ public class TextImporter implements Importer
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
                     DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(numberType)), typeManager);
                     columns.add(rs -> {
-                        return TextFileColumn.<DataType>taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.<Unit, DataType>right(numberType)), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.<DataType>taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, DataTypeUtility.getTaggedTypeName(numberOrBlank), ImmutableList.of(Either.<Unit, DataType>right(numberType)), DataTypeUtility.getTagTypes(numberOrBlank), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return Either.<String, TaggedValue>right(new TaggedValue(0, null));

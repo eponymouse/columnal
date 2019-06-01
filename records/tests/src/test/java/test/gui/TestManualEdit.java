@@ -628,7 +628,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                         }
                         String content = cell._test_getGraphicalText();
                         // Bit of a hack, but need to deal with truncated numbers, so we get direct content if truncated:
-                        if (column.getType().getType().isNumber() && content.contains("\u2026"))
+                        if (DataTypeUtility.isNumber(column.getType().getType()) && content.contains("\u2026"))
                             return internalContent;
                         return column.getType().getType().loadSingleItem(content);
                     });

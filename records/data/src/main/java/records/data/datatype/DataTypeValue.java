@@ -10,7 +10,6 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataType.TagTypeDetails;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -24,7 +23,6 @@ import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 

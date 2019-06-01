@@ -16,6 +16,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.AutoComplete.CompletionListener;
@@ -373,7 +374,7 @@ public class AggregateSplitByPane extends BorderPane
                 return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(new SelectInfo("agg.recipe.pick.calc", (Column c) -> {
                     try
                     {
-                        return c.getType().getType().isNumber();
+                        return DataTypeUtility.isNumber(c.getType().getType());
                     }
                     catch (InternalException | UserException e)
                     {

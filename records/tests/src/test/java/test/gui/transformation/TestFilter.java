@@ -72,7 +72,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         TestUtil.sleep(200);
         // Then enter filter condition.
         // Find numeric column:
-        Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> c.getType().getType().isNumber())).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
+        Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> DataTypeUtility.isNumber(c.getType().getType()))).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
         // Pick arbitrary value as cut-off:
         @Value Number cutOff;
         if (srcColumn.getLength() == 0)

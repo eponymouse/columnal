@@ -45,6 +45,7 @@ import records.data.*;
 import records.data.Table.FullSaver;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.TableDisplayBase;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.ListExDTV;
 import records.data.datatype.TaggedTypeDefinition;
@@ -1478,6 +1479,17 @@ public class TestUtil
     public static TypeState createTypeState(TypeManager typeManager)
     {
         return new TypeState(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+    }
+
+    public static Unit getUnit(DataType numberType) throws InternalException
+    {
+        return numberType.apply(new SpecificDataTypeVisitor<Unit>() {
+            @Override
+            public Unit number(NumberInfo displayInfo) throws InternalException
+            {
+                return displayInfo.getUnit();
+            }
+        });
     }
 
     public static interface TestRunnable

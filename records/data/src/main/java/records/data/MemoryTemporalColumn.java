@@ -2,7 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -43,7 +43,13 @@ public class MemoryTemporalColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryTemporalColumn(rs, getName(), getType().getType().getDateTimeInfo(), storage.getAllCollapsed(0, shrunkLength), defaultValue);
+        return new MemoryTemporalColumn(rs, getName(), getType().getType().apply(new SpecificDataTypeVisitor<DateTimeInfo>() {
+            @Override
+            public DateTimeInfo date(DateTimeInfo dateTimeInfo) throws InternalException
+            {
+                return dateTimeInfo;
+            }
+        }), storage.getAllCollapsed(0, shrunkLength), defaultValue);
     }
 
     public void add(Either<String, TemporalAccessor> value) throws InternalException

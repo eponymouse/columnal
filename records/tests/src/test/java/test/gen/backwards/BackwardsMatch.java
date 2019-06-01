@@ -11,6 +11,7 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
@@ -25,7 +26,6 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
-import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -97,14 +96,14 @@ public class BackwardsMatch extends BackwardsProvider
             @Override
             public List<ExpressionMaker> number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                @Nullable VarInfo numVar = findVarOfType(DataType::isNumber);
+                @Nullable VarInfo numVar = findVarOfType(DataTypeUtility::isNumber);
                 if (numVar == null)
                     return ImmutableList.of();
                 @NonNull VarInfo numVarFinal = numVar;
                 IdentExpression varRef = new IdentExpression(numVar.name);
                 return ImmutableList.of(() -> {
                     return new AddSubtractExpression(ImmutableList.of(
-                        new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(numVarFinal.type.getNumberInfo().getUnit()))))),
+                        new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(TestUtil.getUnit(numVarFinal.type)))))),
                             new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, Utility.cast(numVarFinal.value, Number.class), false), parent.makeUnitExpression(numberInfo.getUnit()))
                     ), ImmutableList.of(AddSubtractOp.ADD));
                 });
@@ -368,7 +367,7 @@ public class BackwardsMatch extends BackwardsProvider
                         {
                             @Override
                             @OnThread(value = Tag.Simulation, ignoreParent = true)
-                            public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
+                            public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
                             {
                                 TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                                 @Nullable DataType inner = tagType.getInner();

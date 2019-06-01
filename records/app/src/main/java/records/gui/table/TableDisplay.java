@@ -884,7 +884,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 }
             });            
             
-            if (type.isNumber())
+            if (DataTypeUtility.isNumber(type))
             {
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {

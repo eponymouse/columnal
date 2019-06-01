@@ -382,7 +382,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().findFirst().orElse(null)))
                     ));
                 }
-                if (columnDetails.dataType.isNumber())
+                if (DataTypeUtility.isNumber(columnDetails.dataType))
                 {
                     calculations.add(new AggCalculation(name.apply("Sum"),
                         new CallExpression(
@@ -392,7 +392,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                         perGroup.apply(g -> withEithers(g, gr -> gr.stream().reduce((a, b) -> Utility.addSubtractNumbers((Number)a, (Number)b, true)).orElse(null)))
                     ));
                 }
-                if (columnDetails.dataType.isText())
+                if (columnDetails.dataType.equals(DataType.TEXT))
                 {
                     calculations.add(new AggCalculation(name.apply("Concat"),
                             new CallExpression(

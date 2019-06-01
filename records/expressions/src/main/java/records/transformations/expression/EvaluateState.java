@@ -3,12 +3,14 @@ package records.transformations.expression;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -128,11 +130,16 @@ public final class EvaluateState
             return DataType.BOOLEAN;
 
         DataType dataType = typeLookup.getTypeFor(typeManager, expression);
-        if (executionType == ExecutionType.CALL_IMPLICIT && dataType.isFunction())
-        {
-            return dataType.getMemberType().get(dataType.getMemberType().size() - 1);
-        }
-        return dataType;
+        return dataType.apply(new FlatDataTypeVisitor<DataType>(dataType) {
+            @Override
+            public DataType function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, InternalException
+            {
+                if (executionType == ExecutionType.CALL_IMPLICIT)
+                    return resultType;
+                else
+                    return super.function(argTypes, resultType);
+            }
+        });
     }
 
     // Equals and hashCode on EvaluateState are only used by
