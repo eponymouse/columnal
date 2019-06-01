@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UserIndex;
@@ -147,6 +148,23 @@ public class Utility
             r[i] = func.apply(src[i]);
         }
         return r;
+    }
+    
+    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValues(Map<@NonNull K, @NonNull T> original, Function<@NonNull T, @NonNull R> apply)
+    {
+        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        original.forEach((k, v) -> r.put(k, apply.apply(v)));
+        return r.build();
+    }
+
+    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValuesInt(Map<@NonNull K, @NonNull T> original, FunctionInt<@NonNull T, @NonNull R> apply) throws InternalException
+    {
+        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        for (Entry<@NonNull K, @NonNull T> entry : original.entrySet())
+        {
+            r.put(entry.getKey(), apply.apply(entry.getValue()));
+        }
+        return r.build();
     }
 
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
@@ -730,13 +748,11 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Object @Value[] valueTuple(@Value Object value, int size) throws InternalException
+    public static @Value Record valueRecord(@Value Object value) throws InternalException
     {
-        if (!(value instanceof Object[]))
-            throw new InternalException("Unexpected type problem: expected tuple but found " + value.getClass());
-        if (size != ((Object[]) value).length)
-            throw new InternalException("Unexpected tuple size: expected " + size + " but found " + ((Object[]) value).length);
-        return (Object[]) value;
+        if (!(value instanceof Record))
+            throw new InternalException("Unexpected type problem: expected record but found " + value.getClass());
+        return (Record) value;
     }
 
     @OnThread(Tag.Simulation)
@@ -1698,6 +1714,30 @@ public class Utility
             errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
         }
     }
+    
+    public static abstract class Record
+    {
+        public abstract @Value Object getField(@ExpressionIdentifier String name) throws InternalException;
+    }
+    
+    public static final class RecordMap extends Record
+    {
+        private final ImmutableMap<@ExpressionIdentifier String, @Value Object> values;
+
+        public RecordMap(Map<@ExpressionIdentifier String, @Value Object> values)
+        {
+            this.values = ImmutableMap.copyOf(values);
+        }
+
+        @Override
+        public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+        {
+            @Value Object value = values.get(name);
+            if (value == null)
+                throw new InternalException("Record unexpectedly lacking field: \"" + name + "\"");
+            return value;
+        }
+    }
 
     @OnThread(Tag.Simulation)
     public static abstract class ListEx
@@ -1793,7 +1833,7 @@ public class Utility
         }
     }
 
-    public static @Value class ListExList extends ListEx
+    public static final @Value class ListExList extends ListEx
     {
         private final List<? extends @Value Object> items;
 

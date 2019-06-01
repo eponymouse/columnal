@@ -1,7 +1,9 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -21,9 +23,11 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -38,11 +42,11 @@ public final class DataTypeValue
     private final @Nullable GetValue<@Value TemporalAccessor> getDate;
     private final @Nullable GetValue<@Value Boolean> getBoolean;
     private final @Nullable GetValue<@Value TaggedValue> getTag;
-    private final @Nullable GetValue<@Value Object @Value[]> getTuple;
+    private final @Nullable GetValue<@Value Record> getRecord;
     private final @Nullable GetValue<@Value ListEx> getArrayContent;
 
     // package-visible
-    DataTypeValue(DataType dataType, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<@Value TaggedValue> getTag, @Nullable GetValue<@Value Object @Value []> getTuple, @Nullable GetValue<@Value ListEx> getArrayContent)
+    DataTypeValue(DataType dataType, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<@Value TaggedValue> getTag, @Nullable GetValue<@Value Record> getRecord, @Nullable GetValue<@Value ListEx> getArrayContent)
     {
         this.dataType = dataType;
         this.getNumber = getNumber;
@@ -50,7 +54,7 @@ public final class DataTypeValue
         this.getDate = getDate;
         this.getBoolean = getBoolean;
         this.getTag = getTag;
-        this.getTuple = getTuple;
+        this.getRecord = getRecord;
         this.getArrayContent = getArrayContent;
     }
     
@@ -84,9 +88,9 @@ public final class DataTypeValue
         return new DataTypeValue(DataType.array(innerType),null, null, null, null, null, null, getContent);
     }
 
-    public static DataTypeValue tuple(List<DataType> types, GetValue<@Value Object @Value[]> getContent)
+    public static DataTypeValue record(Map<@ExpressionIdentifier String, DataType> fields, GetValue<@Value Record> getContent)
     {
-        return new DataTypeValue(DataType.tuple(types), null, null, null, null, null, getContent, null);
+        return new DataTypeValue(DataType.record(fields), null, null, null, null, null, getContent, null);
     }
 
     public void setCollapsed(int rowIndex, Either<String, @Value Object> value) throws InternalException, UserException
@@ -139,12 +143,12 @@ public final class DataTypeValue
                 set(g, TaggedValue.class);
                 return null;
             }
-
+            
             @Override
             @OnThread(Tag.Simulation)
-            public Void tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
+            public Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
             {
-                g.set(rowIndex, value.<@Value Object @Value []>mapInt(v -> Utility.castTuple(v, types.size())));
+                set(g, Record.class);
                 return null;
             }
 
@@ -231,11 +235,11 @@ public final class DataTypeValue
         {
             return defaultOp("Unexpected date type");
         }
-
+        
         @Override
-        public R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
+        public R record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
         {
-            return defaultOp("Unexpected tuple type");
+            return defaultOp("Unexpected record type");
         }
 
         @Override
@@ -253,7 +257,7 @@ public final class DataTypeValue
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
         R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, E;
-        R tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException, E;
+        R record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, E;
 
         // Each item is an array.  The inner type gives the type
         // of each entry
@@ -301,11 +305,11 @@ public final class DataTypeValue
             {
                 return visitor.tagged(typeName, typeVars, tags, getTag);
             }
-
+            
             @Override
-            public R tuple(ImmutableList<DataType> inner) throws InternalException, E
+            public R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, E
             {
-                return visitor.tuple(inner, getTuple);
+                return visitor.record(fields, getRecord);
             }
 
             @Override
@@ -381,10 +385,10 @@ public final class DataTypeValue
             {
                 return g.get(index);
             }
-
+            
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[] >g) throws InternalException, UserException
+            public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
@@ -431,7 +435,7 @@ public final class DataTypeValue
             DataTypeValue.<@Value TemporalAccessor>several(getOriginalValueAndIndex, dtv -> dtv.getDate),
             DataTypeValue.<@Value Boolean>several(getOriginalValueAndIndex, dtv -> dtv.getBoolean),
             several(getOriginalValueAndIndex, dtv -> dtv.getTag),
-            DataTypeValue.<@Value Object @Value[]>several(getOriginalValueAndIndex, dtv -> dtv.getTuple),
+            DataTypeValue.<@Value Record>several(getOriginalValueAndIndex, dtv -> dtv.getRecord),
             several(getOriginalValueAndIndex, dtv -> dtv.getArrayContent));
 
     }
@@ -518,9 +522,9 @@ public final class DataTypeValue
             }
 
             @Override
-            public DataTypeValue tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> g) throws InternalException
+            public DataTypeValue record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException
             {
-                return DataTypeValue.tuple(types, overrideSet(g));
+                return DataTypeValue.record(types, overrideSet(g));
             }
 
             @Override

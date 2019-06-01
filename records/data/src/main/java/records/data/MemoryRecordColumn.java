@@ -1,7 +1,9 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeValue;
@@ -12,34 +14,35 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationRunnable;
 import utility.Utility;
+import utility.Utility.Record;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
  * Created by neil on 31/10/2016.
  */
-public class MemoryTupleColumn extends EditableColumn
+public class MemoryRecordColumn extends EditableColumn
 {
-    private final TupleColumnStorage storage;
+    private final RecordColumnStorage storage;
     @OnThread(Tag.Any)
-    private final @Value Object @Value[] defaultValue;
+    private final @Value Record defaultValue;
 
-    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, @Value Object @Value[] defaultValue) throws InternalException
+    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<@ExpressionIdentifier String, DataType> dataTypes, @Value Record defaultValue) throws InternalException
     {
         super(recordSet, title);
         this.defaultValue = defaultValue;
-        this.storage = new TupleColumnStorage(dataTypes, true);
+        this.storage = new RecordColumnStorage(dataTypes, true);
     }
 
-    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, List<Either<String, @Value Object @Value[]>> values, @Value Object @Value[] defaultValue) throws InternalException
+    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<@ExpressionIdentifier String, DataType> dataTypes, List<Either<String, @Value Record>> values, @Value Record defaultValue) throws InternalException
     {
         this(recordSet, title, dataTypes, defaultValue);
         addAllValue(storage, values);
     }
 
-    @SuppressWarnings("value") // addAll doesn't require @Value
-    private static void addAllValue(TupleColumnStorage storage, List<Either<String, @Value Object @Value []>> values) throws InternalException
+    private static void addAllValue(RecordColumnStorage storage, List<Either<String, @Value Record>> values) throws InternalException
     {
         storage.addAll(values.stream());
     }
@@ -54,18 +57,18 @@ public class MemoryTupleColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<ImmutableList<DataType>>() {
+        MemoryRecordColumn shrunk = new MemoryRecordColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<ImmutableMap<@ExpressionIdentifier String, DataType>>() {
             @Override
-            public ImmutableList<DataType> tuple(ImmutableList<DataType> inner) throws InternalException
+            public ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return inner;
+                return fields;
             }
         }), defaultValue);
         shrunk.storage.addAll(storage.getAllCollapsed(0, shrunkLength).stream());
         return shrunk;
     }
 
-    public void add(Either<String, Object[]> tuple) throws InternalException
+    public void add(Either<String, @Value Record> tuple) throws InternalException
     {
         storage.addAll(Stream.of(tuple));
     }
@@ -74,7 +77,7 @@ public class MemoryTupleColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, Either.<String, Object[]>right(defaultValue)));
+        return storage.insertRows(index, Utility.replicate(count, Either.<String, @Value Record>right(defaultValue)));
     }
 
     @Override
@@ -85,7 +88,7 @@ public class MemoryTupleColumn extends EditableColumn
 
     @Override
     @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public @Value Record getDefaultValue()
     {
         return defaultValue;
     }

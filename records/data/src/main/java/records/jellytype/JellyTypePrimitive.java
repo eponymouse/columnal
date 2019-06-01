@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
@@ -131,7 +132,7 @@ class JellyTypePrimitive extends JellyType
             }
 
             @Override
-            public R tuple(ImmutableList<DataType> inner) throws InternalException, E
+            public R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, E
             {
                 return _throw();
             }

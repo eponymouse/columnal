@@ -3,6 +3,7 @@ package records.loadsave;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -26,12 +27,15 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -326,18 +330,19 @@ public class OutputBuilder
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public UnitType tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
+                public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
                 {
-                    if (!alreadyRoundBracketed)
+                   if (!alreadyRoundBracketed)
                         raw("(");
                     boolean first = true;
-                    for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
+                    Record record = g.get(index);
+                    for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(types.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                     {
-                        DataType dataType = types.get(tupleIndex);
                         if (!first)
                             raw(",");
                         first = false;
-                        dataValue(dataType, g.get(index)[tupleIndex]);
+                        expId(entry.getKey()).raw(":");
+                        dataValue(entry.getValue(), record.getField(entry.getKey()));
                     }
                     if (!alreadyRoundBracketed)
                         raw(")");

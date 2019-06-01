@@ -155,12 +155,9 @@ public class TypeManager
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
 
-            if (item.type() != null && item.type().size() > 0)
+            if (item.bracketedType() != null)
             {
-                if (item.type().size() == 1)
-                    tags.add(new TagType<JellyType>(tagName, JellyType.load(item.type(0), this)));
-                else
-                    tags.add(new TagType<JellyType>(tagName, JellyType.tuple(Utility.mapListExI(item.type(), t -> JellyType.load(t, this)))));
+                tags.add(new TagType<JellyType>(tagName, JellyType.load(item.bracketedType(), this)));
             }
             else
                 tags.add(new TagType<JellyType>(tagName, null));
@@ -188,9 +185,18 @@ public class TypeManager
 
     private DataType loadTypeUse(BracketedTypeContext type) throws InternalException, UserException
     {
-        if (type.tuple() != null)
+        if (type.record() != null)
         {
-            return DataType.tuple(Utility.mapListEx(type.tuple().type(), t -> loadTypeUse(t)));
+            RecordContext rec = type.record();
+            HashMap<@ExpressionIdentifier String, DataType> fields = new HashMap<>();
+            for (int i = 0; i < rec.columnName().size(); i++)
+            {
+                @ExpressionIdentifier String name = IdentifierUtility.fromParsed(rec.columnName(i));
+                DataType dataType = loadTypeUse(rec.type(i));
+                if (fields.put(name, dataType) != null)
+                    throw new UserException("Duplicated field: \"" + name + "\"");
+            }
+            return DataType.record(fields);
         }
         else if (type.type() != null)
         {

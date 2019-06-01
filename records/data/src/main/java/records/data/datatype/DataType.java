@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -24,13 +25,13 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
-import records.data.MemoryTupleColumn;
+import records.data.MemoryRecordColumn;
 import records.data.NumericColumnStorage;
 import records.data.RecordSet;
 import records.data.StringColumnStorage;
 import records.data.TaggedColumnStorage;
 import records.data.TemporalColumnStorage;
-import records.data.TupleColumnStorage;
+import records.data.RecordColumnStorage;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -48,6 +49,8 @@ import threadchecker.Tag;
 import utility.*;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.Record;
+import utility.Utility.RecordMap;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,12 +68,12 @@ import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -114,7 +117,8 @@ public abstract class DataType implements StyledShowable
     {
         return apply(new DataTypeVisitorEx<Column, InternalException>()
         {
-            private <T> T castTo(Class<T> cls, @Value Object value) throws InternalException
+            @SuppressWarnings("value")
+            private <T> @Value T castTo(Class<T> cls, @Value Object value) throws InternalException
             {
                 if (!cls.isAssignableFrom(value.getClass()))
                     throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass() + " for column: " + name);
@@ -168,10 +172,10 @@ public abstract class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tuple(ImmutableList<DataType> inner) throws InternalException
+            public Column record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException
             {
-                return new CachedCalculatedColumn<Object[], TupleColumnStorage>(rs, name, (BeforeGet<TupleColumnStorage> g) -> new TupleColumnStorage(inner, g, false), i -> {
-                    return castTo(Object[].class, getItem.apply(i));
+                return new CachedCalculatedColumn<@Value Record, RecordColumnStorage>(rs, name, (BeforeGet<RecordColumnStorage> g) -> new RecordColumnStorage(fields, g, false), i -> {
+                    return castTo(Record.class, getItem.apply(i));
                 });
             }
 
@@ -239,10 +243,9 @@ public abstract class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            @SuppressWarnings("value")
-            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException
+            public DataTypeValue record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return DataTypeValue.tuple(inner, (i, prog) -> Utility.castTuple(get.getWithProgress(i, prog), inner.size()));
+                return DataTypeValue.record(fields, (i, prog) -> Utility.cast(get.getWithProgress(i, prog), Record.class));
             }
 
             @Override
@@ -291,14 +294,9 @@ public abstract class DataType implements StyledShowable
         return new ListDataType(inner);
     }
 
-    public static DataType tuple(DataType... inner)
+    public static DataType record(Map<@ExpressionIdentifier String, DataType> fields)
     {
-        return tuple(Arrays.asList(inner));
-    }
-
-    public static DataType tuple(List<DataType> inner)
-    {
-        return new TupleDataType(inner);
+        return new RecordDataType(fields);
     }
 
     public static DataType date(DateTimeInfo dateTimeInfo)
@@ -314,7 +312,7 @@ public abstract class DataType implements StyledShowable
         R bool() throws InternalException, E;
 
         R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
-        R tuple(ImmutableList<DataType> inner) throws InternalException, E;
+        R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, E;
         R array(DataType inner) throws InternalException, E;
         
         default R function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, E
@@ -360,9 +358,9 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public R tuple(ImmutableList<DataType> inner) throws InternalException
+        public R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
         {
-            throw new InternalException("Unexpected tuple type");
+            throw new InternalException("Unexpected record type");
         }
 
         @Override
@@ -412,7 +410,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public T tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+        public T record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
         {
             return def;
         }
@@ -546,16 +544,17 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
                 StringBuilder s = new StringBuilder("(");
                 boolean first = true;
-                for (DataType t : inner)
+                for (Entry<@ExpressionIdentifier String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     if (!first)
                         s.append(", ");
                     first = false;
-                    s.append(t.apply(this));
+                    s.append(field.getKey() + ": ");
+                    s.append(field.getValue().apply(this));
                 }
                 s.append(")");
                 return s.toString();
@@ -727,13 +726,12 @@ public abstract class DataType implements StyledShowable
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, listValue(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
-
-            @SuppressWarnings("value")
+            
             @Override
             @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, this.<@Value Object[]>listValue(value, (@Value Object t) -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
+                return rs -> new MemoryRecordColumn(rs, columnId, fields, this.<@Value Record>listValue(value, (@Value Object t) -> Utility.valueRecord(t)), Utility.valueRecord(defaultValue));
             }
 
             @Override
@@ -798,13 +796,13 @@ public abstract class DataType implements StyledShowable
                     return loadTaggedValue(tags, p);
                 });
             }
-
+            
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public ColumnMaker<?, ?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValue, (Class<@Value Object @Value[]>)Object[].class, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
-                    return loadTuple(inner, p, false);
+                return new ColumnMaker<MemoryRecordColumn, @Value Record>(defaultValue, (Class<@Value Record>)Record.class, (RecordSet rs, @Value Record defaultValue) -> new MemoryRecordColumn(rs, columnId, fields, defaultValue), (MemoryRecordColumn c, Either<String, @Value Record> t) -> c.add(t), p -> {
+                    return loadRecord(fields, p, false);
                 });
             }
 
@@ -882,7 +880,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, @Value Object @Value[]> loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
+    private static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
         @Nullable Either<String, Object> openRound;
         if (consumedRoundBrackets)
@@ -890,24 +888,34 @@ public abstract class DataType implements StyledShowable
         else
             openRound = tryParse(p, DataParser::openRoundOrInvalid, OpenRoundOrInvalidContext::invalidItem, OpenRoundOrInvalidContext::openRound);
         if (openRound == null)
-            throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
-        return openRound.<@Value Object @Value []>mapEx(_o -> {
-            @Value Object @Value [] tuple = DataTypeUtility.value(new Object[inner.size()]);
-            for (int i = 0; i < tuple.length; i++)
+            throw new UserException("Expected record but found: \"" + p.getCurrentToken() + "\"");
+        return openRound.<@Value Record>mapEx(_o -> {
+            Map<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+            for (int i = 0; i < fields.size(); i++)
             {
-                tuple[i] = loadSingleItem(inner.get(i), p, false).getRight("Invalid nested invalid");
-                if (i < tuple.length - 1)
+                LabelContext labelContext = p.label();
+                @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(labelContext);
+                DataType fieldType = fields.get(fieldName);
+                if (fieldType == null)
+                    throw new ParseException("Unrecognised field: \"" + fieldName + "\"", p);
+                if (fieldValues.put(fieldName, loadSingleItem(fieldType, p, false).getRight("Invalid nested invalid")) != null)
+                    throw new ParseException("Duplicate field: \"" + fieldName + "\"", p);
+                if (i < fields.size() - 1)
                 {
                     if (tryParse(() -> p.comma()) == null)
                         throw new ParseException("comma", p);
                 }
             }
+            // Don't actually think this is possible given we check for duplicates and consume the right number, but for sanity:
+            if (!fieldValues.keySet().equals(fields.keySet()))
+                throw new ParseException("Not all fields found or duplicate fields found", p);
+            
             if (!consumedRoundBrackets)
             {
                 if (tryParse(() -> p.closeRound()) == null)
                     throw new UserException("Expected tuple end but found: " + p.getCurrentToken());
             }
-            return tuple;
+            return DataTypeUtility.value(new RecordMap(fieldValues));
         });
     }
 
@@ -1018,9 +1026,9 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            public Either<String, @Value Object> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public Either<String, @Value Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                return loadTuple(inner, p, consumedRoundBrackets).<@Value Object>map(t -> t);
+                return loadRecord(fields, p, consumedRoundBrackets).<@Value Object>map(t -> t);
             }
 
             @Override
@@ -1116,17 +1124,18 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 boolean first = true;
-                for (DataType dataType : inner)
+                for (Entry<@ExpressionIdentifier String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     if (!first)
                         b.raw(",");
                     first = false;
-                    dataType.save(b);
+                    b.expId(field.getKey());
+                    b.raw(":");
+                    field.getValue().save(b);
                 }
                 b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
@@ -1765,13 +1774,13 @@ public abstract class DataType implements StyledShowable
             return visitor.tagged(name, typeVariableSubstitutions, tagTypes);
         }
     }
-    private static final class TupleDataType extends DataType
+    private static final class RecordDataType extends DataType
     {
-        private final ImmutableList<DataType> members;
+        private final ImmutableMap<@ExpressionIdentifier String, DataType> fields;
 
-        public TupleDataType(List<DataType> members)
+        public RecordDataType(Map<@ExpressionIdentifier String, DataType> fields)
         {
-            this.members = ImmutableList.copyOf(members);
+            this.fields = ImmutableMap.copyOf(fields);
         }
 
         @Override
@@ -1779,20 +1788,20 @@ public abstract class DataType implements StyledShowable
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            TupleDataType that = (TupleDataType) o;
-            return members.equals(that.members);
+            RecordDataType that = (RecordDataType) o;
+            return fields.equals(that.fields);
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(members);
+            return Objects.hash(fields);
         }
 
         @Override
         public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
-            return visitor.tuple(members);
+            return visitor.record(fields);
         }
     }
     private static final class ListDataType extends DataType

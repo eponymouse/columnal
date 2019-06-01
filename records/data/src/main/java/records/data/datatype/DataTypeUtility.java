@@ -1,29 +1,29 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
-import records.data.Column.ProgressListener;
 import records.data.ColumnStorage;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.NumericColumnStorage;
 import records.data.StringColumnStorage;
 import records.data.TaggedColumnStorage;
 import records.data.TemporalColumnStorage;
-import records.data.TupleColumnStorage;
+import records.data.RecordColumnStorage;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -37,6 +37,8 @@ import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.Record;
+import utility.Utility.RecordMap;
 import utility.Utility.WrappedCharSequence;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -56,8 +58,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -168,9 +172,9 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> tuple(ImmutableList<DataType> innerTypes) throws InternalException
+            public ColumnStorage<?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return new TupleColumnStorage(innerTypes, beforeGet, isImmediateData);
+                return new RecordColumnStorage(fields, beforeGet, isImmediateData);
             }
 
             @Override
@@ -292,9 +296,9 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Object @Value [] value(@Value Object [] tuple)
+    public static @Value Record value(Record record)
     {
-        return tuple;
+        return record;
     }
 
     @SuppressWarnings("valuetype")
@@ -366,7 +370,7 @@ public class DataTypeUtility
             @Override
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                String s = dateTimeInfo.getStrictFormatter().format((TemporalAccessor) item);
+                String s = dateTimeInfo.getStrictFormatter().format(Utility.cast(item, TemporalAccessor.class));
                 if (asExpression)
                     return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
                 else
@@ -383,7 +387,7 @@ public class DataTypeUtility
             @OnThread(Tag.Simulation)
             public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                TaggedValue tv = (TaggedValue)item;
+                TaggedValue tv = Utility.cast(item, TaggedValue.class);
                 String tagName = (asExpression ? ("@tag " + typeName.getRaw() + ":") : "") + tags.get(tv.getTagIndex()).getName();
                 @Nullable @Value Object tvInner = tv.getInner();
                 if (tvInner != null)
@@ -404,23 +408,25 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                @Value Object[] tuple = (@Value Object[])item;
+                @Value Record record = Utility.cast(item, Record.class);
                 StringBuilder s = new StringBuilder();
                 if (parent == null || !isTagged(parent))
                     s.append("(");
-                for (int i = 0; i < tuple.length; i++)
+                boolean first = true;
+                for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
-                    if (i != 0)
+                    if (!first)
                         s.append(", ");
-                    s.append(valueToString(inner.get(i), tuple[i], dataType, asExpression));
+                    first = false;
+                    s.append(valueToString(entry.getValue(), record.getField(entry.getKey()), dataType, asExpression));
                 }
                 if (parent == null || !isTagged(parent))
                     s.append(")");
                 return s.toString();
             }
-
+            
             private boolean isTagged(DataType type) throws InternalException
             {
                 return type.apply(new FlatDataTypeVisitor<Boolean>(false) {
@@ -437,7 +443,7 @@ public class DataTypeUtility
             public String array(@Nullable DataType inner) throws InternalException, UserException
             {
                 StringBuilder s = new StringBuilder("[");
-                ListEx listEx = (ListEx)item;
+                ListEx listEx = Utility.cast(item, ListEx.class);
                 for (int i = 0; i < listEx.size(); i++)
                 {
                     if (i != 0)
@@ -513,14 +519,15 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                @Value Object @Value[] tuple = DataTypeUtility.value(new Object[inner.size()]);
-                for (int i = 0; i < inner.size(); i++)
+                ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> values = ImmutableMap.builderWithExpectedSize(fields.size());
+                for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                 {
-                    tuple[i] = makeDefaultValue(inner.get(i));
+                    values.put(entry.getKey(), makeDefaultValue(entry.getValue()));
                 }
-                return tuple;
+                
+                return DataTypeUtility.value(new RecordMap(values.build()));
             }
 
             @Override
@@ -850,11 +857,11 @@ public class DataTypeUtility
                     }
 
                     @Override
-                    public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+                    public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
                     {
-                        for (DataType t : inner)
+                        for (Entry<String, DataType> entry : fields.entrySet())
                         {
-                            t.apply(this);
+                            entry.getValue().apply(this);
                         }
                         return UnitType.UNIT;
                     }
@@ -930,11 +937,11 @@ public class DataTypeUtility
                     }
 
                     @Override
-                    public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+                    public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
                     {
-                        for (DataType t : inner)
+                        for (Entry<String, DataType> entry : fields.entrySet())
                         {
-                            t.apply(this);
+                            entry.getValue().apply(this);
                         }
                         return UnitType.UNIT;
                     }

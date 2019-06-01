@@ -1,10 +1,12 @@
 package records.gui.dtf;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -15,7 +17,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.Column.EditableStatus;
-import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
@@ -24,7 +25,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
@@ -37,10 +37,10 @@ import records.gui.dtf.RecogniserDocument.Saver;
 import records.gui.dtf.recognisers.BooleanRecogniser;
 import records.gui.dtf.recognisers.ListRecogniser;
 import records.gui.dtf.recognisers.NumberRecogniser;
+import records.gui.dtf.recognisers.RecordRecogniser;
 import records.gui.dtf.recognisers.StringRecogniser;
 import records.gui.dtf.recognisers.TaggedRecogniser;
 import records.gui.dtf.recognisers.TemporalRecogniser;
-import records.gui.dtf.recognisers.TupleRecogniser;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
@@ -48,16 +48,24 @@ import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.*;
+import utility.Either;
+import utility.FXPlatformBiConsumer;
+import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
+import utility.Pair;
+import utility.SimulationFunctionInt;
+import utility.SimulationSupplierInt;
+import utility.TaggedValue;
+import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
+import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -455,9 +463,9 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ImmutableList<String> tuple(ImmutableList<DataType> inner) throws InternalException
+            public ImmutableList<String> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return ImmutableList.of("stf-cell-tuple");
+                return ImmutableList.of("stf-cell-record");
             }
 
             @Override
@@ -531,11 +539,11 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value[]> tupleGet) throws InternalException
+            public GetValueAndComponent<?> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, InternalException
             {
-                ImmutableList<Recogniser<@Value ?>> recognisers = Utility.<DataType, Recogniser<@Value ?>>mapListInt(types, t -> recogniser(t).recogniser);
+                ImmutableMap<@ExpressionIdentifier String, Recogniser<@Value ?>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<@Value ?>>mapValuesInt(types, t -> recogniser(t).recogniser);
 
-                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue.getType(), (Class<@Value Object[]>)Object[].class, tupleGet, new TupleRecogniser(recognisers));
+                return new GetValueAndComponent<@Value Record>(dataTypeValue.getType(), (Class<@Value Record>)Record.class, g, new RecordRecogniser(recognisers));
             }
 
             @Override
@@ -687,9 +695,9 @@ public class TableDisplayUtility
             }
 
             @Override
-            public RecogniserAndType<@NonNull @Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
+            public RecogniserAndType<@NonNull @Value ?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return r(new TupleRecogniser(Utility.<DataType, Recogniser<@Value ?>>mapListInt(inner, t -> recogniser(t).recogniser)), (Class<@Value Object[]>)Object[].class);
+                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<@Value ?>>mapValuesInt(fields, t -> recogniser(t).recogniser)), (Class<@Value Record>)Record.class);
             }
 
             @Override

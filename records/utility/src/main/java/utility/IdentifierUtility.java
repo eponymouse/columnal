@@ -53,6 +53,12 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String fromParsed(records.grammar.DataParser.LabelContext parsedIdent)
+    {
+        return parsedIdent.UNQUOTED_IDENT().getText();
+    }
+
+    @SuppressWarnings("identifier")
     public static @UnitIdentifier String fromParsed(SingleUnitContext parsedIdent)
     {
         return parsedIdent.IDENT().getText();

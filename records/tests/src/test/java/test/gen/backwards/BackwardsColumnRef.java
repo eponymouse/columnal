@@ -11,7 +11,7 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
-import records.data.MemoryTupleColumn;
+import records.data.MemoryRecordColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -96,7 +96,7 @@ public class BackwardsColumnRef extends BackwardsProvider
                 @OnThread(Tag.Simulation)
                 public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                 {
-                    return new MemoryTupleColumn(rs, name, inner, Collections.singletonList(Either.right((Object[])value)), (Object[])parent.makeValue(type));
+                    return new MemoryRecordColumn(rs, name, inner, Collections.singletonList(Either.right((Object[])value)), (Object[])parent.makeValue(type));
                 }
 
                 @Override

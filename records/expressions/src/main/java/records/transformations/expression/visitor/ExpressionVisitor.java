@@ -19,6 +19,7 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -73,8 +74,6 @@ public interface ExpressionVisitor<T>
 
     T multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions);
 
-    T tuple(TupleExpression self, ImmutableList<@Recorded Expression> members);
-
     T litType(TypeLiteralExpression self, TypeExpression type);
 
     T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression);
@@ -88,4 +87,6 @@ public interface ExpressionVisitor<T>
     T hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
 
     T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body);
+
+    T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
 }

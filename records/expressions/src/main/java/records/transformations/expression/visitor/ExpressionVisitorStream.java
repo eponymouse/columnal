@@ -20,6 +20,7 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
@@ -193,12 +194,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> tuple(TupleExpression self, ImmutableList<@Recorded Expression> members)
-    {
-        return apply(members);
-    }
-
-    @Override
     public Stream<T> litType(TypeLiteralExpression self, TypeExpression type)
     {
         return Stream.of();
@@ -244,6 +239,12 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     public Stream<T> lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
     {
         return Stream.<T>concat(parameters.stream().<T>flatMap(e -> e.visit(this)), body.<Stream<T>>visit(this));
+    }
+
+    @Override
+    public Stream<T> record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
+    {
+        return members.stream().flatMap(p -> p.getSecond().visit(this));
     }
 
     protected Stream<T> visitPattern(Pattern pattern)

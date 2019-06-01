@@ -311,9 +311,9 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
-            public TypeExp tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public TypeExp record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t)), true);
+                return new RecordTypeExp(src, Utility.mapValuesInt(fields, t -> fromDataType(src, t)), true);
             }
 
             @Override

@@ -1,5 +1,6 @@
 package records.gui.dtf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -115,23 +116,23 @@ public abstract class Recogniser<T>
     
     public static class SuccessDetails<T>
     {
-        public final @NonNull T value;
+        public final @NonNull @Value T value;
         public final ImmutableList<StyleSpanInfo> styles;
         public final ParseProgress parseProgress;
 
-        private SuccessDetails(@NonNull T value, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
+        private SuccessDetails(@NonNull @Value T value, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
         {
             this.value = value;
             this.styles = styles;
             this.parseProgress = parseProgress;
         }
 
-        private SuccessDetails(@NonNull T value, ParseProgress parseProgress)
+        private SuccessDetails(@NonNull @Value T value, ParseProgress parseProgress)
         {
             this(value, ImmutableList.of(), parseProgress);
         }
         
-        public SuccessDetails<Object> asObject()
+        public SuccessDetails<@Value Object> asObject()
         {
             return new SuccessDetails<>(value, styles, parseProgress);
         }
@@ -168,12 +169,12 @@ public abstract class Recogniser<T>
         return Either.left(new ErrorDetails(StyledString.s(msg), errorPosition));
     }
 
-    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull T value, ParseProgress parseProgress)
+    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @Value T value, ParseProgress parseProgress)
     {
         return Either.right(new SuccessDetails<T>(value, parseProgress));
     }
 
-    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull T value, ImmutableList<StyleSpanInfo> styleSpanInfos, ParseProgress parseProgress)
+    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @Value T value, ImmutableList<StyleSpanInfo> styleSpanInfos, ParseProgress parseProgress)
     {
         return Either.right(new SuccessDetails<T>(value, styleSpanInfos, parseProgress));
     }

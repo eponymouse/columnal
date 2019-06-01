@@ -5,7 +5,7 @@ options { tokenVocab = FormatLexer; }
 decimalPlaces : DIGITS (DASH DIGITS)? (SPACE_KWD | ZERO_KWD);
 number : NUMBER decimalPlaces? UNIT?;
 date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | DATETIME | DATETIMEZONED;
-tuple : OPEN_BRACKET type (COMMA type)+ (COMMA TUPLE_MORE)? CLOSE_BRACKET;
+record : OPEN_BRACKET columnName COLON type (COMMA columnName COLON type)* (COMMA RECORD_MORE)? CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 functionArgs : OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET;
 functionType : functionArgs ARROW type;
@@ -13,13 +13,13 @@ type : unbracketedType | bracketedType;
 unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident | TYPEVAR ident | functionType; 
 taggedDecl : TAGGED tagDeclParam* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagDeclParam : TYPEVAR ident | UNITVAR ident;
-bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple;
+bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | record;
 tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNIT CLOSE_BRACKET | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
 applyRef : APPLY ident tagRefParam+; // First ident is name, rest are type params
 
 // Type names are not valid as idents
 ident : UNQUOTED_NAME;
-tagItem : ident (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
+tagItem : ident bracketedType?;
 
 defaultValue: DEFAULT VALUE VALUE_END;
 

@@ -24,6 +24,7 @@ import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagRefParamContext;
 import records.grammar.FormatParser.TypeContext;
 import records.grammar.FormatParser.UnbracketedTypeContext;
+import records.jellytype.JellyTypeRecord.Field;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
@@ -32,6 +33,7 @@ import utility.Either;
 import utility.IdentifierUtility;
 import utility.Utility;
 
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 /**
@@ -109,9 +111,9 @@ public abstract class JellyType
         return new JellyTypeIdent(name);
     }
     
-    public static JellyType tuple(ImmutableList<@Recorded JellyType> members)
+    public static JellyType record(ImmutableMap<@ExpressionIdentifier String, Field> members)
     {
-        return new JellyTypeTuple(members, true);
+        return new JellyTypeRecord(members, true);
     }
 
     public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, @Recorded JellyType>> params)
@@ -139,12 +141,23 @@ public abstract class JellyType
     }
 
     @SuppressWarnings("recorded") // Won't actually be used in editor
-    private static JellyType load(BracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
+    public static JellyType load(BracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
     {
         if (ctx.type() != null)
             return load(ctx.type(), mgr);
-        else if (ctx.tuple() != null)
-            return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)), ctx.tuple().TUPLE_MORE() == null);
+        else if (ctx.record() != null)
+        {
+            HashMap<@ExpressionIdentifier String, Field> fields = new HashMap<>();
+            for (int i = 0; i < ctx.record().columnName().size(); i++)
+            {
+                @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(ctx.record().columnName(i));
+                JellyType type = load(ctx.record().type(i), mgr);
+                if (fields.put(fieldName, new Field(type, true)) != null)
+                    throw new UserException("Duplicated field: \"" + fieldName + "\"");
+            }
+            
+            return new JellyTypeRecord(ImmutableMap.copyOf(fields), ctx.record().RECORD_MORE() == null);
+        }
         throw new InternalException("Unrecognised case: " + ctx);
     }
 
@@ -228,7 +241,7 @@ public abstract class JellyType
         R bool() throws InternalException, E;
 
         R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, @Recorded JellyType>> typeParams) throws InternalException, E;
-        R tuple(ImmutableList<@Recorded JellyType> inner) throws InternalException, E;
+        R record(ImmutableMap<@ExpressionIdentifier String, JellyTypeRecord.Field> fields, boolean complete) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Recorded JellyType inner) throws InternalException, E;
 
@@ -286,9 +299,9 @@ public abstract class JellyType
             }
 
             @Override
-            public JellyType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public JellyType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return new JellyTypeTuple(Utility.mapListInt(inner, JellyType::fromConcrete), true);
+                return new JellyTypeRecord(Utility.mapValuesInt(fields, t -> new Field(fromConcrete(t), false)), true);
             }
 
             @Override

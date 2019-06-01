@@ -1,19 +1,19 @@
 package records.data;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
@@ -23,8 +23,6 @@ import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import utility.Either;
-import utility.ExFunction;
-import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationFunctionInt;
 import utility.SimulationRunnable;
@@ -33,11 +31,16 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.Record;
+import utility.Utility.RecordMap;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Created by neil on 08/03/2017.
@@ -137,26 +140,26 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tuple(ImmutableList<DataType> types, GetValue<@Value Object @Value []> g) throws InternalException, UserException
+            public EditableColumn record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
             {
-                List<Either<String, @Value Object @Value []>> r = new ArrayList<>();
+                List<Either<String, @Value Record>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     try
                     {
-                        r.add(Either.right(Utility.castTuple(g.get(index), types.size())));
+                        r.add(Either.<String, @Value Record>right(Utility.<Record>cast(g.get(index), Record.class)));
                     }
                     catch (InvalidImmediateValueException e)
                     {
                         r.add(Either.left(e.getInvalid()));
                     }
                 }
-                @Value Object @Value [] tupleOfDefaults = DataTypeUtility.value(new Object[types.size()]);
-                for (int i = 0; i < tupleOfDefaults.length; i++)
+                Map<@ExpressionIdentifier String, @Value Object> recordOfDefaults = new HashMap<>();
+                for (Entry<@ExpressionIdentifier String, DataType> entry : types.entrySet())
                 {
-                    tupleOfDefaults[i] = DataTypeUtility.makeDefaultValue(types.get(i));
+                    recordOfDefaults.put(entry.getKey(), DataTypeUtility.makeDefaultValue(entry.getValue()));
                 }
-                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, tupleOfDefaults), (Class<@Value Object[]>) Object[].class));
+                return new MemoryRecordColumn(rs, original.getName(), types, r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(new RecordMap(recordOfDefaults))), (Class<@Value Record>) Record.class));
             }
 
             @Override

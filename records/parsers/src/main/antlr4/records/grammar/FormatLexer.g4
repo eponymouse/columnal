@@ -27,7 +27,7 @@ WS : ( ' ' | '\t' )+ -> skip;
 
 COLUMN : '@COLUMN';
 
-TUPLE_MORE : '_';
+RECORD_MORE : '_';
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
@@ -36,6 +36,7 @@ CLOSE_SQUARE : ']';
 DASH: '-';
 ARROW: '->';
 TAGOR: '|';
+COLON: ':';
 
 
 INCOMPLETE : '@INCOMPLETE';

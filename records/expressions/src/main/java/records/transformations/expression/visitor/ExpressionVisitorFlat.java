@@ -19,6 +19,7 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 
@@ -176,8 +177,9 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
         return makeDef(self);
     }
 
+
     @Override
-    public T tuple(TupleExpression self, ImmutableList<@Recorded Expression> members)
+    public T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
     {
         return makeDef(self);
     }
