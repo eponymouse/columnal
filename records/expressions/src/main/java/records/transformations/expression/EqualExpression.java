@@ -45,7 +45,10 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     @Override
     protected String saveOp(int index)
     {
-        return "=";
+        if (lastIsPattern && index == expressions.size() - 2)
+            return "=~";
+        else
+            return "=";
     }
 
     @Override
@@ -87,6 +90,9 @@ public class EqualExpression extends NaryOpShortCircuitExpression
                 {
                     invalid = true;
                 }
+                
+                if (lastIsPattern && i == expressions.size() - 1)
+                    retTypeState = checked.typeState;
             }
             
             if (invalid)
