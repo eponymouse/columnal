@@ -82,6 +82,22 @@ public class DefineExpression extends Expression
                 rhsValue.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler)
             );
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Definition that = (Definition) o;
+            return lhsPattern.equals(that.lhsPattern) &&
+                    rhsValue.equals(that.rhsValue);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(lhsPattern, rhsValue);
+        }
     }
     
     private final ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines;
