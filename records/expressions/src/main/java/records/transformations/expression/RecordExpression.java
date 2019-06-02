@@ -11,6 +11,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,6 +20,7 @@ import utility.Utility;
 import utility.Utility.RecordMap;
 import utility.Utility.TransparentBuilder;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
@@ -40,7 +42,27 @@ public class RecordExpression extends Expression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return null;
+        HashMap<@ExpressionIdentifier String, TypeExp> fieldTypes = new HashMap<>();
+        ExpressionKind kind = ExpressionKind.EXPRESSION;
+        for (Pair<@ExpressionIdentifier String, Expression> member : members)
+        {
+            CheckedExp checkedExp = member.getSecond().check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            if (checkedExp == null)
+                return null;
+            kind = kind.or(checkedExp.expressionKind);
+            if (fieldTypes.put(member.getFirst(), checkedExp.typeExp) != null)
+            {
+                onError.recordError(this, StyledString.s("Duplicated field: \"" + member.getFirst() + "\""));
+                return null;
+            }
+            typeState = checkedExp.typeState;
+        }
+        
+        // Only complete if it's an expression; if it's a pattern then it's ok for fields to exist that we're not matching:
+        CheckedExp checkedExp = new CheckedExp(TypeExp.record(this, fieldTypes, kind == ExpressionKind.EXPRESSION), typeState, kind); 
+        if (kind == ExpressionKind.PATTERN)
+            checkedExp.requireEquatable();
+        return checkedExp;
     }
 
     @Override

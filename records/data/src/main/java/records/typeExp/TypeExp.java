@@ -174,6 +174,11 @@ public abstract class TypeExp implements StyledShowable
     {
         return new TypeCons(src, CONS_UNIT, ImmutableList.of(Either.<UnitExp, TypeExp>left(exp)), ImmutableSet.of());
     }
+    
+    public static TypeExp record(@Nullable ExpressionBase src, Map<@ExpressionIdentifier String, TypeExp> fieldTypes, boolean complete)
+    {
+        return new RecordTypeExp(src, ImmutableMap.copyOf(fieldTypes), complete);
+    }
 
     // package-protected:
     final Either<StyledString, TypeExp> unifyWith(TypeExp b) throws InternalException
