@@ -17,6 +17,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -116,6 +117,7 @@ public class ToString extends FunctionDefinition
                         if (!first)
                             s.append(", ");
                         first = false;
+                        s.append(entry.getKey()).append(": ");
                         s.append(convertToString(entry.getValue(), values.getField(entry.getKey())));
                     }
                     return s.append(")").toString();

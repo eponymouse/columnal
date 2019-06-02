@@ -28,6 +28,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -426,6 +427,7 @@ public class DataTypeUtility
                     if (!first)
                         s.append(", ");
                     first = false;
+                    s.append(entry.getKey()).append(": ");
                     s.append(valueToString(entry.getValue(), record.getField(entry.getKey()), dataType, asExpression));
                 }
                 if (parent == null || !isTagged(parent))
