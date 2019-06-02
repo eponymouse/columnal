@@ -37,14 +37,14 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         assignId(typeState);
         ImmutableList<TypeExp> questTypes = typeState.findVarType(getVarName());
         if (questTypes == null || questTypes.isEmpty())
             throw new UserException("? is not a valid expression by itself");
         // Pick last one in case of nested definitions:
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, questTypes.get(questTypes.size() - 1));
+        return onError.recordType(this, typeState, questTypes.get(questTypes.size() - 1));
     }
 
     protected void assignId(TypeState typeState)

@@ -41,37 +41,21 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp conditionType = condition.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp conditionType = condition.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (conditionType == null)
             return null;
-        if (conditionType.expressionKind == ExpressionKind.PATTERN)
-        {
-            onError.recordError(condition, StyledString.s("Condition cannot be a pattern"));
-            return null;
-        }
         if (onError.recordError(condition, TypeExp.unifyTypes(TypeExp.bool(this), conditionType.typeExp)) == null)
         {
             return null;
         }
-        @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, LocationInfo.UNIT_DEFAULT, onError);
-        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, conditionType.typeState, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (thenType == null || elseType == null)
             return null;
 
-        if (thenType.expressionKind == ExpressionKind.PATTERN)
-        {
-            onError.recordError(thenExpression, StyledString.s("Cannot have a pattern directly inside an if"));
-            return null;
-        }
-        if (elseType.expressionKind == ExpressionKind.PATTERN)
-        {
-            onError.recordError(elseExpression, StyledString.s("Cannot have a pattern directly inside an if"));
-            return null;
-        }
-
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(thenType.typeExp, elseType.typeExp), ExpressionKind.EXPRESSION, state);
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(thenType.typeExp, elseType.typeExp), state);
     }
 
     @Override

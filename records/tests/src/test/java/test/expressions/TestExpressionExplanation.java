@@ -32,6 +32,7 @@ import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.function.FunctionList;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import test.DummyManager;
 import test.TestUtil;
@@ -344,7 +345,7 @@ public class TestExpressionExplanation
         Expression expression = Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
-        CheckedExp typeCheck = expression.check(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), LocationInfo.UNIT_DEFAULT, errorAndTypeRecorderStorer);
+        TypeExp typeCheck = expression.checkExpression(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
         Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer)).makeExplanation(null);
         assertEquals(expectedExplanation, actual);

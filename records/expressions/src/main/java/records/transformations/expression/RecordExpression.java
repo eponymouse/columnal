@@ -40,16 +40,14 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         HashMap<@ExpressionIdentifier String, TypeExp> fieldTypes = new HashMap<>();
-        ExpressionKind kind = ExpressionKind.EXPRESSION;
         for (Pair<@ExpressionIdentifier String, Expression> member : members)
         {
-            CheckedExp checkedExp = member.getSecond().check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp checkedExp = member.getSecond().check(dataLookup, typeState, kind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
-            kind = kind.or(checkedExp.expressionKind);
             if (fieldTypes.put(member.getFirst(), checkedExp.typeExp) != null)
             {
                 onError.recordError(this, StyledString.s("Duplicated field: \"" + member.getFirst() + "\""));
@@ -59,7 +57,7 @@ public class RecordExpression extends Expression
         }
         
         // Only complete if it's an expression; if it's a pattern then it's ok for fields to exist that we're not matching:
-        CheckedExp checkedExp = new CheckedExp(TypeExp.record(this, fieldTypes, kind == ExpressionKind.EXPRESSION), typeState, kind); 
+        CheckedExp checkedExp = new CheckedExp(onError.recordTypeNN(this, TypeExp.record(this, fieldTypes, kind == ExpressionKind.EXPRESSION)), typeState); 
         if (kind == ExpressionKind.PATTERN)
             checkedExp.requireEquatable();
         return checkedExp;

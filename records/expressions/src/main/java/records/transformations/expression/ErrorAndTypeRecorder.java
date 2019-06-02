@@ -68,10 +68,10 @@ public interface ErrorAndTypeRecorder
             return null;
     }
 
-    public default @Nullable CheckedExp recordType(Expression expression, ExpressionKind expressionKind, TypeState typeState, @Nullable TypeExp typeExp)
+    public default @Nullable CheckedExp recordType(Expression expression, TypeState typeState, @Nullable TypeExp typeExp)
     {
         if (typeExp != null)
-            return new CheckedExp(recordTypeNN(expression, typeExp), typeState, expressionKind);
+            return new CheckedExp(recordTypeNN(expression, typeExp), typeState);
         else
             return null;
     }
@@ -97,13 +97,13 @@ public interface ErrorAndTypeRecorder
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable StyledString, TypeExp> typeOrError, ExpressionKind expressionKind, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
     {
         @Nullable @Recorded TypeExp typeExp = recordType(expression, recordError(expression, typeOrError));
         if (typeExp == null)
             return null;
         else
-            return new CheckedExp(typeExp, typeState, expressionKind);
+            return new CheckedExp(typeExp, typeState);
     }
 
     public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp);

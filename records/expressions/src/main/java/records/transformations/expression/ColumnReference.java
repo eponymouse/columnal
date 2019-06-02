@@ -70,7 +70,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Expression.ColumnLookup.@Nullable FoundColumn col = dataLookup.getColumn(tableName, columnName, referenceType);
         if (col == null)
@@ -84,7 +84,7 @@ public class ColumnReference extends NonOperatorExpression
         }
         resolvedTableName = col.tableId;
         column = col.dataTypeValue;
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column.getType()));
+        return onError.recordType(this, typeState, TypeExp.fromDataType(this, column.getType()));
     }
 
     @Override

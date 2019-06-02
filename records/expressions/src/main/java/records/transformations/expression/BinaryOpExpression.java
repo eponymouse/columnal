@@ -139,23 +139,19 @@ public abstract class BinaryOpExpression extends Expression
     public abstract Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState, onError);
         typeState = lambda.getSecond();
-        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, argLocationInfo(), onError);
+        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, getOperandKinds().getFirst(), argLocationInfo(), onError);
         if (lhsChecked == null)
             return null;
-        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, argLocationInfo(), onError);
+        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, getOperandKinds().getSecond(), argLocationInfo(), onError);
         if (rhsChecked == null)
             return null;
-        if (lhsChecked.expressionKind == ExpressionKind.PATTERN)
-            onError.recordError(lhs, StyledString.s("Operand to " + saveOp() + " cannot be a pattern"));
-        if (rhsChecked.expressionKind == ExpressionKind.PATTERN)
-            onError.recordError(rhs, StyledString.s("Operand to " + saveOp() + " cannot be a pattern"));
         lhsType = lhsChecked;
         rhsType = rhsChecked;
-        @Nullable CheckedExp checked = checkBinaryOp(dataLookup, typeState, onError);
+        @Nullable CheckedExp checked = checkBinaryOp(dataLookup, typeState, kind, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
@@ -164,8 +160,10 @@ public abstract class BinaryOpExpression extends Expression
         return LocationInfo.UNIT_DEFAULT;
     }
 
+    protected abstract Pair<ExpressionKind, ExpressionKind> getOperandKinds();
+    
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @SuppressWarnings("recorded")
     @Override

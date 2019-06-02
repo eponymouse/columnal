@@ -36,14 +36,14 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
         try
         {
             JellyUnit saved = unitExpression.asUnit(typeState.getUnitManager());
-            return onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, saved.makeUnitExp(ImmutableMap.of()))), ExpressionKind.EXPRESSION, typeState);
+            return onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, saved.makeUnitExp(ImmutableMap.of()))), typeState);
         }
         catch (UnitLookupException e)
         {

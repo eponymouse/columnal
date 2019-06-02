@@ -59,22 +59,16 @@ public class TimesExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);
-            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, LocationInfo.UNIT_MODIFYING, onError);
+            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_MODIFYING, onError);
             if (inferredType == null)
                 return null;
-            
-            if (inferredType.expressionKind == ExpressionKind.PATTERN)
-            {
-                onError.recordError(this, StyledString.s("Cannot have pattern in multiplication"));
-                return null;
-            }
             
             // This should unify our unitVar appropriately:
             if (onError.recordError(this, TypeExp.unifyTypes(expectedType, inferredType.typeExp)) == null)
@@ -82,7 +76,7 @@ public class TimesExpression extends NaryOpTotalExpression
             
             runningUnit = runningUnit.times(unitVar);
         }
-        return onError.recordType(this, ExpressionKind.EXPRESSION, state, new NumTypeExp(this, runningUnit));
+        return onError.recordType(this, state, new NumTypeExp(this, runningUnit));
     }
 
     @Override

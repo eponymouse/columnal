@@ -37,14 +37,10 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        if (lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN)
-        {
-            // TODO add this as a quick fix
-            onError.recordError(this, StyledString.s("Patterns not allowed in <>  Use not(... =~ ...) instead"));
-            return null;
-        }
+        // TODO add this as a quick fix
+        //onError.recordError(this, StyledString.s("Patterns not allowed in <>  Use not(... =~ ...) instead"));
         lhsType.requireEquatable();
         rhsType.requireEquatable();
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
@@ -54,7 +50,14 @@ public class NotEqualExpression extends BinaryOpExpression
             onError.recordQuickFixes(rhs, ExpressionUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 1)));
             return null;
         }
-        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state);
+    }
+
+    @Override
+    protected Pair<ExpressionKind, ExpressionKind> getOperandKinds()
+    {
+        // We could offer a <>~ operator -- but we don't at the moment:
+        return new Pair<>(ExpressionKind.EXPRESSION, ExpressionKind.EXPRESSION);
     }
 
     @Override

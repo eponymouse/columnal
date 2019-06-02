@@ -39,7 +39,7 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<TypeExp> paramTypes = ImmutableList.builder();
 
@@ -47,18 +47,18 @@ public class LambdaExpression extends Expression
         
         for (Expression parameter : parameters)
         {
-            CheckedExp checkedExp = parameter.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp checkedExp = parameter.check(dataLookup, typeState, ExpressionKind.PATTERN, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
             paramTypes.add(checkedExp.typeExp);
             typeState = checkedExp.typeState;
         }
         
-        CheckedExp returnType = body.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp returnType = body.check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (returnType == null)
             return null;
         
-        return new CheckedExp(onError.recordTypeNN(this, TypeExp.function(this, paramTypes.build(), returnType.typeExp)), original, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.function(this, paramTypes.build(), returnType.typeExp)), original);
     }
 
     @Override

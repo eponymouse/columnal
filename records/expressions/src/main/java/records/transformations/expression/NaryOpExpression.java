@@ -43,15 +43,15 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
         typeState = lambda.getSecond();
-        @Nullable CheckedExp checked = checkNaryOp(dataLookup, typeState, onError);
+        @Nullable CheckedExp checked = checkNaryOp(dataLookup, typeState, kind, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Will be same length as expressions, if null use existing
     public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
@@ -218,7 +218,7 @@ public abstract class NaryOpExpression extends Expression
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
         for (Expression expression : expressions)
         {
-            @Nullable CheckedExp type = expression.check(data, state, locationInfo, onError);
+            @Nullable CheckedExp type = expression.check(data, state, ExpressionKind.EXPRESSION, locationInfo, onError);
             
             // Make sure to execute always (don't use short-circuit and with allValid):
             if (type == null)
@@ -228,12 +228,6 @@ public abstract class NaryOpExpression extends Expression
             }
             else
             {
-                if (type.expressionKind == ExpressionKind.PATTERN)
-                {
-                    onError.recordError(expression, StyledString.s("Pattern not allowed here"));
-                    return null;
-                }
-                
                 Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(target, type.typeExp);
                 // We have to recreate either to add nullable constraint:
                 unificationOutcomes.add(new Pair<>(unified.<@Nullable StyledString>either(err -> err, u -> null), type.typeExp));

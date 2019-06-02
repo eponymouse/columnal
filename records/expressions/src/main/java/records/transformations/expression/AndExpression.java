@@ -38,25 +38,20 @@ public class AndExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // And has a special property: the type state is threaded through to the next item.
         for (Expression expression : expressions)
         {
-            @Nullable CheckedExp checked = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+            @Nullable CheckedExp checked = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (checked == null)
                 return null;
-            if (checked.expressionKind == ExpressionKind.PATTERN)
-            {
-                onError.recordError(this, StyledString.s("Pattern is not allowed in & expression"));
-                return null;
-            }
             
             if (onError.recordError(expression, TypeExp.unifyTypes(TypeExp.bool(this), checked.typeExp)) == null)
                 return null;
             state = checked.typeState;
         }
-        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state);
     }
 
     @Override

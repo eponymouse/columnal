@@ -58,9 +58,9 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, tag.<@Nullable TypeExp>eitherEx(s -> null, t -> makeTagType(t)));
+        return onError.recordType(this, typeState, tag.<@Nullable TypeExp>eitherEx(s -> null, t -> makeTagType(t)));
     }
 
     private TypeExp makeTagType(TagInfo t) throws InternalException

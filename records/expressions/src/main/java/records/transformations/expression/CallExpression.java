@@ -76,41 +76,21 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
         for (Expression argument : arguments)
         {
-            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, function instanceof ConstructorExpression ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
             state = checkedExp.typeState;
             paramTypesBuilder.add(checkedExp);
         }
         ImmutableList<CheckedExp> paramTypes = paramTypesBuilder.build();
-        @Nullable CheckedExp functionType = function.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp functionType = function.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (functionType == null)
             return null;
-        
-        if (functionType.expressionKind == ExpressionKind.PATTERN)
-        {
-            onError.recordError(this, StyledString.s("Call target cannot be a pattern"));
-            return null;
-        }
-        // Param can only be a pattern if the function is a constructor expression:
-        ExpressionKind expressionKind = ExpressionKind.EXPRESSION;
-        for (CheckedExp paramType : paramTypes)
-        {
-            if (paramType.expressionKind == ExpressionKind.PATTERN)
-            {
-                if (!(function instanceof ConstructorExpression))
-                {
-                    onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
-                    return null;
-                }
-                expressionKind = ExpressionKind.PATTERN;
-            }
-        }
         
         TypeExp returnType = new MutVar(this);
 
@@ -212,7 +192,7 @@ public class CallExpression extends Expression
             return null;
         }
         
-        return onError.recordType(this, expressionKind, state, returnType);
+        return onError.recordType(this, state, returnType);
     }
 
     @Override

@@ -90,18 +90,11 @@ public class MatchExpression extends NonOperatorExpression
                 rhsStates[i] = ts.typeState;
             }
             TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
-            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, LocationInfo.UNIT_DEFAULT, onError);
+            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (outcomeType == null)
                 return null;
             else
-            {
-                if (outcomeType.expressionKind == ExpressionKind.PATTERN)
-                {
-                    onError.recordError(this, StyledString.s("Match clause outcome cannot be a pattern"));
-                    return null;
-                }
                 return new Pair<>(Arrays.asList(patternTypes), outcomeType.typeExp);
-            }
         }
 
         //Returns null if no match
@@ -240,7 +233,7 @@ public class MatchExpression extends NonOperatorExpression
          */
         public @Nullable CheckedExp check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            final @Nullable CheckedExp rhsState = pattern.check(data, state, LocationInfo.UNIT_CONSTRAINED, onError);
+            final @Nullable CheckedExp rhsState = pattern.check(data, state, ExpressionKind.PATTERN, LocationInfo.UNIT_CONSTRAINED, onError);
             if (rhsState == null)
                 return null;
             // No need to check expression versus pattern, either is fine, but we will require Equatable either way:
@@ -248,12 +241,12 @@ public class MatchExpression extends NonOperatorExpression
             
             if (guard != null)
             {
-                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, LocationInfo.UNIT_DEFAULT, onError);
+                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
                 if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type.typeExp)) == null)
                 {
                     return null;
                 }
-                return new CheckedExp(rhsState.typeExp, type.typeState, rhsState.expressionKind);
+                return new CheckedExp(rhsState.typeExp, type.typeState);
             }
             return rhsState;
         }
@@ -375,21 +368,16 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable CheckedExp srcType = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp srcType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (srcType == null)
             return null;
-        if (srcType.expressionKind == ExpressionKind.PATTERN)
-        {
-            onError.recordError(this, StyledString.s("Cannot have pattern in the item to be matched"));
-            return null;
-        }
         // The Equatable checks are done on the patterns, not the source item, because e.g. if all patterns match
         // certain tuple item as @anything, we don't need Equatable on that value.
 
@@ -436,7 +424,7 @@ public class MatchExpression extends NonOperatorExpression
             return null;
 
         // TypeState doesn't extend outside the match expression, so we discard and return original:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes), ExpressionKind.EXPRESSION, state);
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes), state);
     }
 
     @Override

@@ -120,19 +120,8 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     }
     
     // PATTERN infects EXPRESSION: any bit of PATTERN in an inner expression
-    // causes the outer expression to either throw an error, or
-    // become a PATTERN itself
-    public static enum ExpressionKind { EXPRESSION, PATTERN;
-
-        // PATTERN if this or argument is PATTERN.  Otherwise EXPRESSION
-        public ExpressionKind or(ExpressionKind kind)
-        {
-            if (this == PATTERN || kind == PATTERN)
-                return PATTERN;
-            else
-                return EXPRESSION;
-        }
-    }
+    // requires the outer expression to either throw an error, or be a PATTERN itself
+    public static enum ExpressionKind { EXPRESSION, PATTERN; }
 
     /**
      * If something is a plain expression, then all we need to know is the TypeExp.
@@ -157,7 +146,6 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     public static class CheckedExp
     {
         public final @Recorded TypeExp typeExp;
-        public final ExpressionKind expressionKind;
         public final TypeState typeState;
         // We could actually apply these immediately, because it's disallowed
         // to have a pattern outside a pattern match.  But then any creation
@@ -167,22 +155,22 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // Always empty if type is EXPRESSION
         private final ImmutableList<TypeExp> equalityRequirements;
 
-        private CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ExpressionKind expressionKind, ImmutableList<TypeExp> equalityRequirements)
+        private CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ImmutableList<TypeExp> equalityRequirements)
         {
             this.typeExp = typeExp;
             this.typeState = typeState;
-            this.expressionKind = expressionKind;
             this.equalityRequirements = equalityRequirements;
         }
 
-        public CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ExpressionKind expressionKind)
+        public CheckedExp(@Recorded TypeExp typeExp, TypeState typeState)
         {
-            this(typeExp, typeState, expressionKind, ImmutableList.of());
+            this(typeExp, typeState, ImmutableList.of());
         }
         
         // Used for things like tuple members, list members.
         // If any of them are patterns, equality constraints are applied to
         // any non-pattern items.  The type state used is the given argument.
+        /*
         public static CheckedExp combineStructural(@Recorded TypeExp typeExp, TypeState typeState, ImmutableList<CheckedExp> items)
         {
             boolean anyArePattern = items.stream().anyMatch(c -> c.expressionKind == ExpressionKind.PATTERN);
@@ -196,12 +184,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 reqs = ImmutableList.of();
             return new CheckedExp(typeExp, typeState, kind, reqs);
         }
+        */
 
         /**
          * Make sure this item is equatable.
          */
         public void requireEquatable()
         {
+            /*TODO!
             TypeClassRequirements equatable = TypeClassRequirements.require("Equatable", "<match>");
             if (expressionKind == ExpressionKind.PATTERN)
             {
@@ -214,6 +204,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             {
                 typeExp.requireTypeClasses(equatable);
             }
+             */
         }
 
         // If the argument is null, just return this.
@@ -222,7 +213,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         {
             if (changeType == null)
                 return this;
-            return new CheckedExp(changeType.apply(typeExp), typeState, expressionKind, equalityRequirements);
+            return new CheckedExp(changeType.apply(typeExp), typeState, equalityRequirements);
         }
     }
     
@@ -236,21 +227,16 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         UNIT_DEFAULT
     }
     
-    // Checks that all used variable names and column references are defined,
-    // and that types check.  Return null if any problems.  Can be either EXPRESSION or PATTERN
-    public abstract @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
-    
-    // Calls check, but makes sure it is an EXPRESSION
+    // Checks that all used variable names (unless this is a pattern) and column references are defined,
+    // and that types check.  Return null if any problems.
+    public abstract @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+
+    // Calls check with EXPRESSION kind, and returns just the type, discarding the state.
     public final @Nullable TypeExp checkExpression(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp check = check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp check = check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)
             return null;
-        if (check.expressionKind != ExpressionKind.EXPRESSION)
-        {
-            onError.recordError(this, StyledString.s("Pattern is not valid here"));
-            return null;
-        }
         return check.typeExp;
     }
 

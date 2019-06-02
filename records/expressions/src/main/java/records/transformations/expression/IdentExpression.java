@@ -47,7 +47,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
         if (!GrammarUtility.validIdentifier(text))
@@ -56,21 +56,27 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
         
-        ExpressionKind kind = ExpressionKind.EXPRESSION;
         isDeclaration = false;
         @Nullable TypeState state = original;
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
         {
-            kind = ExpressionKind.PATTERN;
-            varType = ImmutableList.of(new MutVar(this));
-            state = state.add(text, varType.get(0), s -> onError.recordError(this, s));
-            if (state == null)
+            if (kind == ExpressionKind.PATTERN)
+            {
+                varType = ImmutableList.of(new MutVar(this));
+                state = state.add(text, varType.get(0), s -> onError.recordError(this, s));
+                if (state == null)
+                    return null;
+                isDeclaration = true;
+            }
+            else
+            {
+                onError.recordError(this, StyledString.s("Unknown name: \"" + text + "\""));
                 return null;
-            isDeclaration = true;
+            }
         }
         // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), kind, state);
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
     }
 
     @Override

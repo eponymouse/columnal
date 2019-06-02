@@ -49,27 +49,25 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.list(this, new MutVar(this)));
+            return onError.recordType(this, state, TypeExp.list(this, new MutVar(this)));
         TypeExp[] typeArray = new TypeExp[items.size()];
-        ExpressionKind kind = ExpressionKind.EXPRESSION;
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable CheckedExp c = items.get(i).check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+            @Nullable CheckedExp c = items.get(i).check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
             if (c == null)
                 return null;
             typeArray[i] = c.typeExp;
             state = c.typeState;
-            kind = kind.or(c.expressionKind);
         }
         this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        return onError.recordType(this, kind, state, TypeExp.list(this, elementType));
+        return onError.recordType(this, state, TypeExp.list(this, elementType));
     }
 
     @Override

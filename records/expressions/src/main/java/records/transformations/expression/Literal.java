@@ -22,13 +22,13 @@ import java.util.stream.Stream;
 public abstract class Literal extends NonOperatorExpression
 {
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Recorded TypeExp typeExp = onError.recordType(this, checkType(typeState, locationInfo, onError));
         if (typeExp == null)
             return null;
         else
-            return new CheckedExp(typeExp, typeState, ExpressionKind.EXPRESSION);
+            return new CheckedExp(typeExp, typeState);
     }
 
     protected abstract @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException;

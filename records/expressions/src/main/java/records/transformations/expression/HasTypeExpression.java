@@ -41,7 +41,7 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         TypeState typeState = original.addPreType(varName, type.getType().toJellyType(original.getTypeManager(), new JellyRecorder()
         {
@@ -57,7 +57,7 @@ public class HasTypeExpression extends Expression
             return null;
         
         // Our type shouldn't be directly used, but we don't want to return null, hence void:
-        return new CheckedExp(onError.recordTypeNN(this, TypeExp.fromDataType(this, typeState.getTypeManager().getVoidType().instantiate(ImmutableList.of(), typeState.getTypeManager()))), typeState, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.fromDataType(this, typeState.getTypeManager().getVoidType().instantiate(ImmutableList.of(), typeState.getTypeManager()))), typeState);
     }
 
     @Override

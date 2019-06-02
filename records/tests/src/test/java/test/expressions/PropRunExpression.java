@@ -12,6 +12,7 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
+import records.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -45,7 +46,7 @@ public class PropRunExpression
         {
             DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable CheckedExp checked = src.expression.check(src, TestUtil.createTypeState(dummyManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, errors);
+            @Nullable TypeExp checked = src.expression.checkExpression(src, TestUtil.createTypeState(dummyManager.getTypeManager()), errors);
             assertEquals("Checked iff error", checked == null, errors.getAllErrors().count() != 0);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)

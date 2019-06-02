@@ -67,6 +67,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created by neil on 24/01/2017.
@@ -86,9 +87,9 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.fromDataType(this, type));
+            return onError.recordType(this, state, TypeExp.fromDataType(this, type));
         }
 
         @Override
@@ -231,8 +232,8 @@ public class PropTypecheckIndividual
     public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(DataTypeUtility.isNumber(a));
-        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
-        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(TestUtil.dummyColumnLookup(), TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -381,9 +382,9 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            return onError.recordTypeAndError(this, Either.right(TypeExp.fromDataType(this, expected)), ExpressionKind.PATTERN, state);
+            return onError.recordTypeAndError(this, Either.right(TypeExp.fromDataType(this, expected)), state);
         }
 
         @Override

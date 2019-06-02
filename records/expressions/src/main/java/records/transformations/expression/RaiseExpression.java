@@ -48,7 +48,7 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         final @NonNull @Recorded TypeExp lhsTypeFinal = lhsType.typeExp;
         final @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
@@ -67,7 +67,7 @@ public class RaiseExpression extends BinaryOpExpression
             if (numeratorOne && denominatorOne)
             {
                 // Raising to power 1, just leave type as-is:
-                return new CheckedExp(lhsTypeFinal, typeState, ExpressionKind.EXPRESSION);
+                return new CheckedExp(lhsTypeFinal, typeState);
             }
             else if (numeratorOne || denominatorOne)
             {
@@ -93,7 +93,7 @@ public class RaiseExpression extends BinaryOpExpression
                             return null;
                         ourType = new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getNum().intValueExact()));
                     }
-                    return new CheckedExp(onError.recordTypeNN(this, ourType), typeState, ExpressionKind.EXPRESSION);
+                    return new CheckedExp(onError.recordTypeNN(this, ourType), typeState);
                 }
                 catch (ArithmeticException e)
                 {
@@ -109,7 +109,13 @@ public class RaiseExpression extends BinaryOpExpression
             return null;
         if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), rhsTypeFinal)) == null)
             return null;
-        return new CheckedExp(onError.recordTypeNN(this, TypeExp.plainNumber(this)), typeState, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.plainNumber(this)), typeState);
+    }
+
+    @Override
+    protected Pair<ExpressionKind, ExpressionKind> getOperandKinds()
+    {
+        return new Pair<>(ExpressionKind.EXPRESSION, ExpressionKind.EXPRESSION);
     }
 
     @Override

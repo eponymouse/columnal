@@ -43,20 +43,27 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // The LHS and RHS must be numbers with matching units.  The result is then that same number
-        // LHS needs to be specific number value,
-        // a variable declaration would not be valid (how do you match 5.6 against defvar x +- 0.1 ?  Either match
-        // just against var x, or give value.  That would also allow weird nestings like (1 +- 0.1) +- 0.2), and exact same idea for RHS.
-        
-        if (lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN)
+        if (kind != ExpressionKind.PATTERN)
         {
-            onError.recordError(this, StyledString.s("Patterns are not valid around "));
+            onError.recordError(this, StyledString.s(saveOp() + " is not valid outside a pattern"));
             return null;
         }
         
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType.typeExp, rhsType.typeExp), ExpressionKind.PATTERN, state);
+        // The LHS and RHS must be numbers with matching units.  The result is then that same number
+        // LHS needs to be specific number value.
+        
+        
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType.typeExp, rhsType.typeExp), state);
+    }
+
+    @Override
+    protected Pair<ExpressionKind, ExpressionKind> getOperandKinds()
+    {
+        // A pattern would not be valid on the left (how do you match 5.6 against defvar x +- 0.1 ?  Either match
+        // just against var x, or give value.  That would also allow weird nestings like (1 +- 0.1) +- 0.2), and exact same idea for RHS.
+        return new Pair<>(ExpressionKind.EXPRESSION, ExpressionKind.EXPRESSION);
     }
 
     @Override

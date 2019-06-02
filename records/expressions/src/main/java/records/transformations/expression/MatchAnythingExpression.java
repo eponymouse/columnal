@@ -26,9 +26,15 @@ import java.util.stream.Stream;
 public class MatchAnythingExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return new CheckedExp(onError.recordTypeNN(this, new MutVar(this)), state, ExpressionKind.PATTERN);
+        if (kind != ExpressionKind.PATTERN)
+        {
+            onError.recordError(this, StyledString.s("_ is not valid outside a pattern"));
+            return null;
+        }
+        
+        return new CheckedExp(onError.recordTypeNN(this, new MutVar(this)), state);
     }
 
     @Override

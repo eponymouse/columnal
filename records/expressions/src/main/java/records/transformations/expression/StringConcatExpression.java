@@ -41,7 +41,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, final ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration
@@ -49,7 +49,6 @@ public class StringConcatExpression extends NaryOpTotalExpression
         // With the added restriction that two variables cannot be adjacent.
         // Although it's a bit hacky, we check for variables directly from here using instanceof
         
-        ExpressionKind kind = ExpressionKind.EXPRESSION;
         boolean lastWasVariable = false;
         for (Expression expression : expressions)
         {
@@ -70,7 +69,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                 
                 lastWasVariable = false;
             }
-            @Nullable CheckedExp c = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
+            @Nullable CheckedExp c = expression.check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
             
             if (c == null)
                 return null;
@@ -78,9 +77,8 @@ public class StringConcatExpression extends NaryOpTotalExpression
             if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.text(this), c.typeExp)) == null)
                 return null;
             state = c.typeState;
-            kind = kind.or(c.expressionKind);
         }
-        return onError.recordType(this, kind, state, TypeExp.text(this));
+        return onError.recordType(this, state, TypeExp.text(this));
     }
 
     @Override

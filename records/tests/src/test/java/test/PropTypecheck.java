@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Ctor;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -115,7 +116,7 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.check(src, TestUtil.createTypeState(src.typeManager), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorder()
+            assertNull(src.getDisplay(expression), expression.checkExpression(src, TestUtil.createTypeState(src.typeManager), new ErrorAndTypeRecorder()
             {
                 @Override
                 public <E> void recordError(E src, StyledString error)
@@ -147,7 +148,7 @@ public class PropTypecheck
 
     @Property(trials = 1000)
     // @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(@When(seed=2096694588143526756L) @From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
         @Nullable TypeExp checked = src.expression.checkExpression(src, TestUtil.createTypeState(src.typeManager), storer);

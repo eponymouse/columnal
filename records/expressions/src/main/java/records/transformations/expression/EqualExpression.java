@@ -49,7 +49,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (lastIsPattern && expressions.size() > 2)
         {
@@ -74,7 +74,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         {
             boolean invalid = false;
             Expression expression = expressions.get(i);
-            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, LocationInfo.UNIT_CONSTRAINED, onError);
+            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, (lastIsPattern && i == expressions.size() - 1) ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_CONSTRAINED, onError);
             expressionTypes.add(Optional.ofNullable(checked).map(c -> c.typeExp));
             if (checked == null)
             {
@@ -83,19 +83,6 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             else
             {
                 checked.requireEquatable();
-                if (checked.expressionKind == ExpressionKind.PATTERN)
-                {
-                    if (i == expressions.size() - 1 && lastIsPattern)
-                    {
-                        retTypeState = checked.typeState;
-                    }
-                    else
-                    {
-                        onError.recordError(this, StyledString.s("Only the last item after =~ can be a pattern"));
-                        invalid = true;
-                    }
-                }
-
                 if (!invalid && onError.recordError(this, TypeExp.unifyTypes(type, checked.typeExp)) == null)
                 {
                     invalid = true;
@@ -117,7 +104,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
             return null;
         }
         
-        return onError.recordType(this, ExpressionKind.EXPRESSION, retTypeState, TypeExp.bool(this));
+        return onError.recordType(this, retTypeState, TypeExp.bool(this));
     }
 
     @Override

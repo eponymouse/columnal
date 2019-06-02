@@ -41,15 +41,15 @@ public class DefineExpression extends Expression
 
         public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            CheckedExp rhs = rhsValue.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp rhs = rhsValue.check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (rhs == null)
                 return null;
-            CheckedExp lhs = lhsPattern.check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp lhs = lhsPattern.check(dataLookup, typeState, ExpressionKind.PATTERN, LocationInfo.UNIT_DEFAULT, onError);
             if (lhs == null)
                 return null;
             
             // Need to unify:
-            return onError.recordTypeAndError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp), ExpressionKind.EXPRESSION, lhs.typeState);
+            return onError.recordTypeAndError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp), lhs.typeState);
         }
 
         @OnThread(Tag.Simulation)
@@ -94,7 +94,7 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, final TypeState original, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(ColumnLookup dataLookup, final TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         TypeState typeState = original;
         
@@ -103,14 +103,13 @@ public class DefineExpression extends Expression
         for (Either<@Recorded HasTypeExpression, Definition> define : defines)
         {
             TypeState typeStateThisTime = typeState;
-            ExFunction<@Recorded Expression, @Nullable CheckedExp> typeCheck = e -> e.check(dataLookup, typeStateThisTime, locationInfo, onError);
             @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
                 if (!shouldBeDeclaredInNextDefine.add(hasType.getVarName()))
                 {
                     onError.recordError(hasType, StyledString.s("Duplicate type for variable " + hasType.getVarName()));
                     return null;
                 }
-                return hasType.check(dataLookup, typeStateThisTime, LocationInfo.UNIT_DEFAULT, onError);
+                return hasType.check(dataLookup, typeStateThisTime, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             }, equal -> {
                 // We observe the declared variables by differencing TypeState before and after:
                 CheckedExp checkedExp = equal.check(dataLookup, typeStateThisTime, onError);
@@ -138,11 +137,11 @@ public class DefineExpression extends Expression
             return null;
         }
 
-        CheckedExp checkedBody = body.check(dataLookup, typeState, locationInfo, onError);
+        CheckedExp checkedBody = body.check(dataLookup, typeState, ExpressionKind.EXPRESSION, locationInfo, onError);
         if (checkedBody == null)
             return null;
         else
-            return new CheckedExp(checkedBody.typeExp, original, checkedBody.expressionKind);
+            return new CheckedExp(checkedBody.typeExp, original);
     }
 
     @Override
