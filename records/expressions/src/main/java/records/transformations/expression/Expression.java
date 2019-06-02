@@ -682,7 +682,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
             for (DefinitionContext def : definitionContexts)
             {
-                if (def.expression() != null)
+                if (def.expression() != null && def.expression().size() > 0)
                 {
                     Expression lhs = visitExpression(def.expression(0));
                     Expression rhs = visitExpression(def.expression(1));
