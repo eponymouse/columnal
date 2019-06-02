@@ -138,6 +138,12 @@ public class IdentifierUtility
                 processed.appendCodePoint(c);
                 last = Last.VALID;
             }
+            else if (last == Last.START && Character.isDigit(c))
+            {
+                // Stick an N on the front:
+                processed.append('N').appendCodePoint(c);
+                last = Last.VALID;
+            }
             else if (last != Last.START && (Character.isAlphabetic(c) || Character.getType(c) == Character.OTHER_LETTER || Character.isDigit(c)))
             {
                 processed.appendCodePoint(c);
