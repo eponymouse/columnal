@@ -1557,6 +1557,20 @@ public abstract class DataType implements StyledShowable
             return type.hashCode();
         }
 
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DateTimeInfo that = (DateTimeInfo) o;
+            return type == that.type;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(type);
+        }
 
         /**
          * Gets a comparator for this particular temporal type.
