@@ -95,9 +95,9 @@ public class ConstructorExpression extends NonOperatorExpression
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (structured)
-            return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + t.getTypeName().getRaw() + ":" + t.getTagInfo().getName());
+            return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName());
         else
-            return tag.either(s -> s, t -> t.getTypeName().getRaw() + ":" + t.getTagInfo().getName());
+            return tag.either(s -> s, t -> t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName());
     }
 
     @Override

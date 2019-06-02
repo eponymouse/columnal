@@ -1074,6 +1074,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 return null;
         }
 
+        @OnThread(Tag.FXPlatform)
         public @Recorded Expression opAsExpression(EditorLocationAndErrorRecorder locationRecorder)
         {
             return locationRecorder.record(colon.sourceNode, new InvalidIdentExpression(colon.op.getContent()));

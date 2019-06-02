@@ -56,7 +56,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                                 if (!columnReferences.get(0).getReferenceType().equals(ColumnReferenceType.CORRESPONDING_ROW))
                                     ref += "@entire ";
                                 if (columnReferences.get(0).getTableId() != null)
-                                    ref += columnReferences.get(0).getTableId().getRaw() + ":";
+                                    ref += columnReferences.get(0).getTableId().getRaw() + "\\";
                                 ref += c.getSecond().getRaw();
                                 content.replaceSelection(ref);
                                 FXUtility.runAfterDelay(Duration.millis(50), () -> {

@@ -332,7 +332,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         String columnIdRaw = availableColumn.getColumnId().getRaw();
                         if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
                                 ((tableId == null && columnIdRaw.equals(parsed.getFirst()))
-                                || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(parsed.getFirst()))))
+                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(parsed.getFirst()))))
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.getSecond()));
                             chunks.add(new ContentChunk("@entire " + parsed.getFirst(), StyledString.s("@entire " + parsed.getFirst()).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
@@ -361,7 +361,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
                                 (
                                         (tableId == null && columnIdRaw.equals(text))
-                                                || (tableId != null && (tableId.getRaw() + ":" + columnIdRaw).equals(text))
+                                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(text))
                                 ))
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), location);
@@ -371,7 +371,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
                                 text.startsWith("@entire ") &&
                                 ((tableId == null && ("@entire " + columnIdRaw).equals(text))
-                                        || (tableId != null && ("@entire " + tableId.getRaw() + ":" + columnIdRaw).equals(text))))
+                                        || (tableId != null && ("@entire " + tableId.getRaw() + "\\" + columnIdRaw).equals(text))))
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), location);
                             wasColumn = true;
@@ -399,7 +399,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                             {
                                 for (TagType<JellyType> tag : taggedType.getTags())
                                 {
-                                    if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + ":" + tag.getName()))
+                                    if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + "\\" + tag.getName()))
                                     {
                                         saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), location);
                                         wasTagged = true;
@@ -439,7 +439,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     {
                         if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
                         {
-                            String fullAfterEntire = (columnReference.getTableId() == null ? "" : columnReference.getTableId().getRaw() + ":") + columnReference.getColumnId().getRaw();
+                            String fullAfterEntire = (columnReference.getTableId() == null ? "" : columnReference.getTableId().getRaw() + "\\") + columnReference.getColumnId().getRaw();
                         }
                     }
                     
@@ -775,7 +775,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             
             if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
             {
-                String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + ":") + availableColumn.getColumnId().getRaw();
+                String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + "\\") + availableColumn.getColumnId().getRaw();
                 ArrayList<Pair<CompletionStatus, LexCompletion>> colCompletions = new ArrayList<>();
                 matchWordStart(stem, canonIndex, "@entire " + withoutEntire, WordPosition.FIRST_WORD).values().forEach(c -> colCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
                 
@@ -855,7 +855,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
         {
-            String fullName = (tag.typeName != null ? (tag.typeName + ":") : "") + tag.tagName;
+            String fullName = (tag.typeName != null ? (tag.typeName + "\\") : "") + tag.tagName;
             if (stem == null || Utility.startsWithIgnoreCase(tag.tagName, stem) || (tag.typeName != null && Utility.startsWithIgnoreCase(fullName, stem)))
             {
                 identCompletions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, stem == null ? 0 : stem.length(), fullName + (tag.hasInner ? "()" : "")).withCaretPosAfterCompletion(fullName.length() + (tag.hasInner ? 1 : 0)), CompletionType.CONSTRUCTOR)));

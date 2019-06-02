@@ -75,7 +75,7 @@ public class ColumnReference extends NonOperatorExpression
         Expression.ColumnLookup.@Nullable FoundColumn col = dataLookup.getColumn(tableName, columnName, referenceType);
         if (col == null)
         {
-            onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + ":")) + columnName));
+            onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + "\\")) + columnName));
             return null;
         }
         if (col.information != null)
@@ -109,7 +109,7 @@ public class ColumnReference extends NonOperatorExpression
         final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName, null);
 
         final @Nullable TableId renamedTableId = renamed.getFirst();
-        String tableColonColumn = (renamedTableId != null ? (renamedTableId.getRaw() + ":") : "") + renamed.getSecond().getRaw();
+        String tableColonColumn = (renamedTableId != null ? (renamedTableId.getRaw() + "\\") : "") + renamed.getSecond().getRaw();
         
         if (!structured)
         {

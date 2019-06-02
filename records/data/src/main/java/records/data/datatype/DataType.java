@@ -477,7 +477,7 @@ public abstract class DataType implements StyledShowable
         @Override
         public String toString()
         {
-            return name + (inner == null ? "" : (":" + inner.toString()));
+            return name + (inner == null ? "" : ("\\" + inner.toString()));
         }
 
         /*

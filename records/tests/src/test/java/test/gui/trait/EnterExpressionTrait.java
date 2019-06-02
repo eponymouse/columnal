@@ -191,7 +191,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             boolean multipleTagsOfThatName = typeManager.ambiguousTagName(tagName);
             
             if (multipleTagsOfThatName && tag.getTypeName() != null)
-                tagName = tag.getTypeName().getRaw() + ":" + tagName;
+                tagName = tag.getTypeName().getRaw() + "\\" + tagName;
             write(tagName, DELAY);
             if (r.nextBoolean())
             {

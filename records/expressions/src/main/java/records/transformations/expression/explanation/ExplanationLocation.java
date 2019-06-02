@@ -51,6 +51,6 @@ public class ExplanationLocation
     @Override
     public String toString()
     {
-        return tableId + ":" + columnId + (rowIndex.isPresent() ? ":" + rowIndex.get() : "");
+        return tableId + "\\" + columnId + (rowIndex.isPresent() ? ":" + rowIndex.get() : "");
     }
 }

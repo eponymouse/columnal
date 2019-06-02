@@ -93,12 +93,12 @@ public class IdentifierUtility
         @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceIfEndsAt);
         if (before != null)
         {
-            if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == ':')
+            if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == '\\')
             {
                 @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE, includeTrailingSpaceIfEndsAt);
                 if (after != null)
                 {
-                    return new Pair<>(before.getFirst() + ":" + after.getFirst(), after.getSecond());
+                    return new Pair<>(before.getFirst() + "\\" + after.getFirst(), after.getSecond());
                 }
             }
             return new Pair<>(before.getFirst(), before.getSecond());
