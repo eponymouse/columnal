@@ -219,7 +219,7 @@ public class FromString
                         String name = src.readUntil(':');
                         if (name == null)
                             throw new UserException("Expected field name followed by colon but found: " + src.snippet());
-                        @ExpressionIdentifier String nameId = IdentifierUtility.asExpressionIdentifier(name);
+                        @ExpressionIdentifier String nameId = IdentifierUtility.asExpressionIdentifier(name.trim());
                         if (nameId == null)
                             throw new UserException("Invalid field name: " + name);
                         DataType type = fields.get(nameId);
