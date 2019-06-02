@@ -344,15 +344,22 @@ public class Utility
                 return compareValues(a2, b2, epsilon);
             return 0; // Assume bx null too, if types match.
         }
-        else if (ax instanceof Object[])
+        else if (ax instanceof Record)
         {
-            @Value Object[] ao = (@Value Object[])cast(ax, Object[].class);
-            @Value Object[] bo = (@Value Object[])cast(bx, Object[].class);
-            if (ao.length != bo.length)
-                throw new InternalException("Trying to compare tuples of different size");
-            for (int i = 0; i < ao.length; i++)
+            @Value Record ao = cast(ax, Record.class);
+            @Value Record bo = cast(bx, Record.class);
+            ImmutableList<Entry<@ExpressionIdentifier String, @Value Object>> aoByName = ao.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<@ExpressionIdentifier String, @Value Object>>toImmutableList());
+            ImmutableList<Entry<@ExpressionIdentifier String, @Value Object>> boByName = bo.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<@ExpressionIdentifier String, @Value Object>>toImmutableList());
+            
+            if (aoByName.size() != boByName.size())
+                throw new InternalException("Trying to compare records of different size");
+            for (int i = 0; i < aoByName.size(); i++)
             {
-                cmp = compareValues(ao[i], bo[i], epsilon);
+                Entry<@ExpressionIdentifier String, @Value Object> ae = aoByName.get(i);
+                Entry<@ExpressionIdentifier String, @Value Object> be = boByName.get(i);
+                if (!ae.getKey().equals(be.getKey()))
+                    throw new InternalException("Record field names do not match: " + ae.getKey() + " vs " + be.getKey());
+                cmp = compareValues(ae.getValue(), be.getValue(), epsilon);
                 if (cmp != 0)
                     return cmp;
             }
@@ -1728,6 +1735,8 @@ public class Utility
     public static abstract class Record
     {
         public abstract @Value Object getField(@ExpressionIdentifier String name) throws InternalException;
+        
+        public abstract ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException;
     }
     
     public static final class RecordMap extends Record
@@ -1746,6 +1755,12 @@ public class Utility
             if (value == null)
                 throw new InternalException("Record unexpectedly lacking field: \"" + name + "\"");
             return value;
+        }
+
+        @Override
+        public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+        {
+            return values;
         }
     }
 
