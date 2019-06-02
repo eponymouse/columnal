@@ -438,6 +438,17 @@
                     </execution>
                 </executions>
             </plugin>
+        </plugins>
+    </build>
+    <profiles>
+    <profile>
+        <activation>
+            <os>
+                <family>windows</family>
+            </os>
+        </activation>
+        <build>
+        <plugins>
 
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -552,7 +563,9 @@
             </plugin>
             
         </plugins>
-    </build>
+        </build>
+    </profile>
+    </profiles>
     
     
 </project>
