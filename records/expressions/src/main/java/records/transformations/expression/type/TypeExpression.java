@@ -355,6 +355,23 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                     return new TypeApplyExpression(typeName, args.build());
                 }
 
+                @Override
+                public TypeExpression visitApplyArgumentExpression(ApplyArgumentExpressionContext ctx)
+                {
+                    if (ctx.typeExpression() != null)
+                        return visitTypeExpression(ctx.typeExpression());
+                    else if (ctx.recordTypeExpression() != null)
+                        return visitRecordTypeExpression(ctx.recordTypeExpression());
+                    try
+                    {
+                        throw new InternalException("Neither typeExpression not recordTypeExpression in argument");
+                    }
+                    catch (InternalException e)
+                    {
+                        throw new WrappedInternalException(e);
+                    }
+                }
+
                 public TypeExpression visitChildren(RuleNode node) {
                     @Nullable TypeExpression result = this.defaultResult();
                     int n = node.getChildCount();
