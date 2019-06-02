@@ -235,15 +235,6 @@ public class TypeManager
             NumberContext n = type.number();
             Unit unit = n.UNIT() == null ? Unit.SCALAR : unitManager.loadUse(n.UNIT().getText());
             @Nullable NumberDisplayInfo ndi = null;
-            if (n.decimalPlaces() != null)
-            {
-                DecimalPlacesContext dp = n.decimalPlaces();
-                OptionalInt minDP = Utility.parseIntegerOpt(dp.DIGITS(0).getText());
-                OptionalInt maxDP = dp.DIGITS().size() == 1 ? minDP : Utility.parseIntegerOpt(dp.DIGITS(1).getText());
-                if (!minDP.isPresent() || !maxDP.isPresent())
-                    throw new InternalException("Cannot parse integer from digits: " + dp.getText());
-                ndi = new NumberDisplayInfo(minDP.getAsInt(), maxDP.getAsInt(), dp.ZERO_KWD() != null ? Padding.ZERO : Padding.SPACE);
-            }
             return DataType.number(new NumberInfo(unit));
         }
         else if (type.applyRef() != null)

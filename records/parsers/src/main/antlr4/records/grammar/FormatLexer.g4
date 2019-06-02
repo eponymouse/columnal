@@ -18,8 +18,6 @@ TAGGED : '@tagged';
 TYPE : '@TYPE';
 TYPEVAR : '@typevar';
 UNITVAR : '@unitvar';
-SPACE_KWD : 'SPACE';
-ZERO_KWD : 'ZERO';
 DEFAULT : '@DEFAULT' -> pushMode(VALUE_MODE);
 APPLY: '@apply';
 
@@ -33,7 +31,6 @@ CLOSE_BRACKET : ')';
 COMMA: ',';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
-DASH: '-';
 ARROW: '->';
 TAGOR: '|';
 COLON: ':';
