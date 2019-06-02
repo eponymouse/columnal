@@ -314,7 +314,6 @@
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>syntax.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
-                            <otherDepends>tuple.xml</otherDepends>
                             <otherDepends>types.xml</otherDepends>
                             
                             <otherDepends>../xslt/funcdoc-shared.xsl</otherDepends>
@@ -368,7 +367,6 @@
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>syntax.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
-                            <otherDepends>tuple.xml</otherDepends>
                             <otherDepends>types.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-types-and-mini.xsl</stylesheet>
                             <outputDir>${project.build.directory}/classes</outputDir>
