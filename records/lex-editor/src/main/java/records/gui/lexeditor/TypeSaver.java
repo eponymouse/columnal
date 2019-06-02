@@ -140,7 +140,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 ArrayList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> pairs = new ArrayList<>();
                 for (int i = 0; i < items.typeExpressions.size(); i++)
                 {
-                    TypeExpression expression = items.typeExpressions.get(i);
+                    @Recorded TypeExpression expression = items.typeExpressions.get(i);
                     if (recentIdent == null)
                     {
                         // Looking for ident:
