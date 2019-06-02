@@ -1,5 +1,6 @@
 package test.gen.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -163,9 +164,9 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             }
 
             @Override
-            public Boolean tuple(ImmutableList<DataType> inner) throws InternalException
+            public Boolean record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                for (DataType type : inner)
+                for (DataType type : fields.values())
                 {
                     if (!hasValues(type))
                     {

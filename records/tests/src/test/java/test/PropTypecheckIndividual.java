@@ -1,6 +1,7 @@
 package test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -457,7 +458,7 @@ public class PropTypecheckIndividual
         checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1) * 2{m}");
         checkConcreteType(DataType.NUMBER, "@call @function abs(1)");
         checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1{m})");
-        checkConcreteType(DataType.tuple(DataType.NUMBER, DataType.NUMBER), "(1, 2{1})");
+        checkConcreteType(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)), "(a:1, b:2{1})");
     }
 
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException

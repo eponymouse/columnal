@@ -3,6 +3,7 @@ package test.gen.backwards;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -35,11 +36,15 @@ import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -151,7 +156,7 @@ public class BackwardsMatch extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
                 return ImmutableList.of();
             }
@@ -330,7 +335,6 @@ public class BackwardsMatch extends BackwardsProvider
     {
         try
         {
-            //TODO
             return t.apply(new DataTypeVisitor<PatternInfo>()
             {
                 @Override
@@ -389,23 +393,28 @@ public class BackwardsMatch extends BackwardsProvider
                 }
 
                 @Override
-                public PatternInfo tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                public PatternInfo record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
                     if (r.nextBoolean())
                     {
-                        ImmutableList.Builder<Expression> members = ImmutableList.builderWithExpectedSize(inner.size());
+                        ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
                         ImmutableList.Builder<Expression> guards = ImmutableList.builder();
-                        @Value Object[] values = Utility.castTuple(actual, inner.size());
-                        for (int i = 0; i < inner.size(); i++)
+                        @Value Record values = Utility.cast(actual, Record.class);
+                        for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                         {
-                            DataType dataType = inner.get(i);
-                            PatternInfo p = makePatternMatch(maxLevels - 1, dataType, values[i], canMatchMore);
-                            members.add(p.pattern);
+                            // We don't have to match every item:
+                            if (members.size() >= 1 && r.nextInt(3) == 1)
+                                continue;
+                            
+                            DataType dataType = entry.getValue();
+                            PatternInfo p = makePatternMatch(maxLevels - 1, dataType, values.getField(entry.getKey()), canMatchMore);
+                            members.add(new Pair<>(entry.getKey(), p.pattern));
                             if (p.guard != null)
                                 guards.add(p.guard);
                         }
                         ImmutableList<Expression> g = guards.build();
-                        return new PatternInfo(new TupleExpression(members.build()),
+                        Collections.shuffle(members, new Random(r.nextLong()));
+                        return new PatternInfo(new RecordExpression(ImmutableList.copyOf(members)),
                             g.size() == 0 ? null : (g.size() == 1 ? g.get(0) : new AndExpression(g))    
                         );
                     }

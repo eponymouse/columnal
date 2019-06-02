@@ -1,6 +1,8 @@
 package test;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.internal.GeometricDistribution;
 import com.pholser.junit.quickcheck.internal.generator.SimpleGenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -35,7 +37,7 @@ public class TestGenDataType
 {
     private static enum Container
     {
-        TAGGED, TUPLE, ARRAY;
+        TAGGED, RECORD, ARRAY;
     }
 
     @Test
@@ -103,9 +105,9 @@ public class TestGenDataType
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                public Stream<Pair<@Nullable Container, @Nullable Container>> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
-                    return inner.stream().<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)TestGenDataType::calculateNesting).map(wrap(Container.TUPLE));
+                    return fields.values().stream().<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)TestGenDataType::calculateNesting).map(wrap(Container.RECORD));
                 }
 
                 @Override

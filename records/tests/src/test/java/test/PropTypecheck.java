@@ -1,7 +1,9 @@
 package test;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.Ctor;
@@ -48,6 +50,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -206,22 +209,25 @@ public class PropTypecheck
         checkSameRelations(DummyManager.make().getTypeManager(), dateA, dateB, same);
     }
 
-    // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
     @SuppressWarnings("unchecked")
     @Property
     public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
-        DataType typeA = typeMaker.makeType().getDataType();
-        DataType typeB = typeMaker.makeType().getDataType();
-
-        List<DataType> typeRest = TestUtil.makeList(new SourceOfRandomness(r), 0, 10, () -> typeMaker.makeType().getDataType());
+        List<DataType> types = TestUtil.makeList(new SourceOfRandomness(r), 1, 10, () -> typeMaker.makeType().getDataType());
         
-        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
-        DataType type = DataType.tuple(all);;
-        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
-        DataType typeS = DataType.tuple(allSwapped);
-        // Swapped is same as unswapped only if typeA and typeB are same:
-        checkSameRelations(typeMaker.getTypeManager(), type, typeS, typeA.equals(typeB));
+        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        if (namesA.stream().distinct().count() != namesA.size())
+            return;
+        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        if (namesB.stream().distinct().count() != namesB.size())
+            return;
+        
+        DataType a = DataType.record(IntStream.range(0, types.size()).mapToObj(i -> i).collect(ImmutableMap.toImmutableMap(i -> namesA.get(i), i ->types.get(i))));
+        DataType b = DataType.record(IntStream.range(0, types.size()).mapToObj(i -> i).collect(ImmutableMap.toImmutableMap(i -> namesB.get(i), i ->types.get(i))));
+        
+        // Same only if each name is the same:
+        // (Miniscule chance that names will be permutations of each other in exact same way as types permute each other)
+        checkSameRelations(typeMaker.getTypeManager(), a, b, namesA.equals(namesB));
     }
 
     @Property
@@ -242,130 +248,6 @@ public class PropTypecheck
         // Is equals right here?
         checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, typeA.equals(typeB));
     }
-
-    @Property(trials = 2000)
-    public void checkBlankArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
-    {
-        DataType original = typeMaker.makeType().getDataType();
-        
-        // We make a list with the original type, and N duplicates of that type
-        // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
-        // put them in and feed them to checkAllSameType, you should get back
-        // the original, because we add a single unmodified copy back in.
-
-        ArrayList<TypeExp> types = new ArrayList<>();
-
-        // Add permutations:
-        int amount = r.nextInt(8);
-        for (int i = 0; i < amount; i++)
-        {
-            types.add(TypeExp.fromDataType(null, blankArray(original, r)));
-        }
-
-        // Now add original at random place:
-        types.add(r.nextInt(types.size() + 1), TypeExp.fromDataType(null, original));
-        assertEquals(Either.right(original), TypeExp.unifyTypes(types).eitherEx(err -> Either.left(err), t -> t.toConcreteType(typeMaker.getTypeManager())));
-    }
-
-    /**
-     * Randomly blanks an array type (or not) within a complex type
-     */
-    private DataType blankArray(DataType original, Random r) throws UserException, InternalException
-    {
-        return original.apply(new DataTypeVisitor<DataType>()
-        {
-            @Override
-            public DataType number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return DataType.number(displayInfo);
-            }
-
-            @Override
-            public DataType text() throws InternalException, UserException
-            {
-                return DataType.TEXT;
-            }
-
-            @Override
-            public DataType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return DataType.date(dateTimeInfo);
-            }
-
-            @Override
-            public DataType bool() throws InternalException, UserException
-            {
-                return DataType.BOOLEAN;
-            }
-
-            @Override
-            public DataType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return original;
-            }
-            
-            @Override
-            public DataType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                return DataType.tuple(Utility.mapListEx(inner, t -> blankArray(t, r)));
-            }
-
-            @Override
-            public DataType array(DataType inner) throws InternalException, UserException
-            {
-                return DataType.array(blankArray(inner, r));
-            }
-        });
-    }
-
-    private DataTypeValue toValue(@NonNull DataType t) throws UserException, InternalException
-    {
-        return t.apply(new DataTypeVisitor<DataTypeValue>()
-        {
-            @Override
-            public DataTypeValue number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return DataTypeValue.number(displayInfo, (i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue text() throws InternalException, UserException
-            {
-                return DataTypeValue.text((i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return DataTypeValue.date(dateTimeInfo, (i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue bool() throws InternalException, UserException
-            {
-                return DataTypeValue.bool((i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return DataTypeValue.tagged(typeName, typeVars, tags, (i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                return DataTypeValue.tuple(inner, (i, prog) -> {throw new InternalException("");});
-            }
-
-            @Override
-            public DataTypeValue array(DataType inner) throws InternalException, UserException
-            {
-                return DataTypeValue.array(inner, (i, prog) -> {throw new InternalException("");});
-            }
-        });
-    }
-
 
     /**
      * Checks relations between types are as expected

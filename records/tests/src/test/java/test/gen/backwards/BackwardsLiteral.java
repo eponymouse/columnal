@@ -1,11 +1,14 @@
 package test.gen.backwards;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
@@ -17,12 +20,18 @@ import records.error.UserException;
 import records.transformations.expression.*;
 import test.TestUtil;
 import utility.Either;
+import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Random;
 
 @SuppressWarnings("recorded")
 public class BackwardsLiteral extends BackwardsProvider
@@ -89,19 +98,20 @@ public class BackwardsLiteral extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
+                Record record = Utility.cast(targetValue, Record.class);
                 return ImmutableList.of(() -> {
-                    @Value Object[] items = Utility.castTuple(targetValue, inner.size());
-                    ImmutableList.Builder<Expression> exps = ImmutableList.builder();
-                    for (int i = 0; i < inner.size(); i++)
+                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
+                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                     {
-                        exps.add(r.choose(terminals(inner.get(i), items[i])).make());
+                        List<ExpressionMaker> terminals = terminals(entry.getValue(), record.getField(entry.getKey()));
+                        members.add(new Pair<>(entry.getKey(), terminals.get(r.nextInt(terminals.size())).make()));
                     }
-                    return new TupleExpression(exps.build());
+                    Collections.shuffle(members, new Random(r.nextLong()));
+                    return new RecordExpression(ImmutableList.copyOf(members));
                 });
             }
-
             @Override
             public List<ExpressionMaker> array(DataType inner) throws InternalException, UserException
             {
@@ -169,16 +179,17 @@ public class BackwardsLiteral extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
+                Record record = Utility.cast(targetValue, Record.class);
                 return ImmutableList.of(() -> {
-                    Object[] items = (Object[]) targetValue;
-                    ImmutableList.Builder<Expression> exps = ImmutableList.builder();
-                    for (int i = 0; i < inner.size(); i++)
+                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
+                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                     {
-                        exps.add(parent.make(inner.get(i), items[i], maxLevels - 1));
+                        members.add(new Pair<>(entry.getKey(), parent.make(entry.getValue(), record.getField(entry.getKey()), maxLevels - 1)));
                     }
-                    return new TupleExpression(exps.build());
+                    Collections.shuffle(members, new Random(r.nextLong()));
+                    return new RecordExpression(ImmutableList.copyOf(members));
                 });
             }
 

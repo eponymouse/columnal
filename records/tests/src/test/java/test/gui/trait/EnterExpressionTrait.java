@@ -1,5 +1,6 @@
 package test.gui.trait;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
@@ -17,6 +18,7 @@ import records.transformations.expression.visitor.ExpressionVisitorStream;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Random;
@@ -44,20 +46,21 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r) throws InternalException
     {
         Class<?> c = expression.getClass();
-        if (c == TupleExpression.class)
+        if (c == RecordExpression.class)
         {
-            TupleExpression t = (TupleExpression)expression;
+            RecordExpression t = (RecordExpression)expression;
             if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
             {
                 write("(");
                 push(KeyCode.DELETE);
             }
-            ImmutableList<Expression> members = t.getMembers();
+            ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members = t.getFields();
             for (int i = 0; i < members.size(); i++)
             {
                 if (i > 0)
                     write(",");
-                enterExpression(typeManager, members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+                write(members.get(i).getFirst()  + ": ");
+                enterExpression(typeManager, members.get(i).getSecond(), EntryBracketStatus.SUB_EXPRESSION, r);
 
             }
             if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
@@ -146,7 +149,12 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             write("(");
             // Delete closing bracket:
             push(KeyCode.DELETE);
-            enterExpression(typeManager, new TupleExpression(call.getParams()), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
+            for (int i = 0; i < call.getParams().size(); i++)
+            {
+                if (i > 0)
+                    write(",");
+                enterExpression(typeManager, call.getParams().get(i), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
+            }
             write(")");
             
         }

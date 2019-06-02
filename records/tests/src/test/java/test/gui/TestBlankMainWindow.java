@@ -3,6 +3,7 @@ package test.gui;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -562,9 +563,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
 
             @Override
-            public Boolean tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            public Boolean record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                for (DataType dataType : inner)
+                for (DataType dataType : fields.values())
                 {
                     if (hasNumber(dataType))
                         return true;

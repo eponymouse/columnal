@@ -148,7 +148,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     @Test
     public void testMissingTupleBrackets()
     {
-        testSimpleFix("Number,Text", ",", DataType.tuple(DataType.NUMBER, DataType.TEXT));
+        testSimpleFix("a:Number,b:Text", ",", DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b",DataType.TEXT)));
     }
     
     private void testSimpleFix(String original, String fixFieldContent, DataType dataType)

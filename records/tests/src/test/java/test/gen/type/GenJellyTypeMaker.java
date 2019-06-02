@@ -2,10 +2,12 @@ package test.gen.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import one.util.streamex.StreamEx;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -17,6 +19,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
+import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import test.TestUtil;
 import test.gen.GenUnit;
@@ -124,7 +127,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (maxDepth > 1)
             {
                 options.addAll(Arrays.asList(
-                        () -> JellyType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(typeManager, r, maxDepth - 1, gs))),
+                        () -> JellyType.record(TestUtil.makeList(r, 2, 5, () -> new Pair<>(TestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs))).stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> new Field(p.getSecond(), true), (a, b) -> a))),
                         () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs))
                 ));
             }

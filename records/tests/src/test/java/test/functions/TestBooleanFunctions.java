@@ -69,10 +69,10 @@ public class TestBooleanFunctions
         {
             assertEquals(DataType.BOOLEAN, checked.getSecond());
             // Not too hard to exhaustively test this one:
-            assertEquals(true, (Boolean) checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(true), DataTypeUtility.value(false)})));
-            assertEquals(true, (Boolean) checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(false), DataTypeUtility.value(true)})));
-            assertEquals(false, (Boolean) checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(true), DataTypeUtility.value(true)})));
-            assertEquals(false, (Boolean) checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(false), DataTypeUtility.value(false)})));
+            assertEquals(true, (Boolean) checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(true), DataTypeUtility.value(false)}));
+            assertEquals(true, (Boolean) checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(false), DataTypeUtility.value(true)}));
+            assertEquals(false, (Boolean) checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(true), DataTypeUtility.value(true)}));
+            assertEquals(false, (Boolean) checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(false), DataTypeUtility.value(false)}));
         }
     }
 

@@ -1,8 +1,10 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -40,6 +42,8 @@ import test.TestUtil;
 import utility.Utility;
 import utility.Utility.ListEx;
 import records.transformations.expression.function.ValueFunction;
+import utility.Utility.Record;
+import utility.Utility.RecordMap;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -138,9 +142,9 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                return DataTypeUtility.value(Utility.mapListEx(inner, t -> makeValue(t)).toArray(new @Value Object[0]));
+                return DataTypeUtility.value(new RecordMap(Utility.<@ExpressionIdentifier String, DataType, @Value Object>mapValuesEx(fields, t -> makeValue(t))));
             }
 
             @Override
@@ -212,12 +216,12 @@ public abstract class GenValueBase<T> extends Generator<T>
                         }
 
                         @Override
-                        @SuppressWarnings("value") // Too fiddly to get this right
-                        public ValueFunction tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                        public ValueFunction record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                         {
+                            Entry<@ExpressionIdentifier String, DataType> entry = fields.entrySet().iterator().next();
                             // Choose once outside function invocation:
-                            ValueFunction innerFunc = inner.get(0).apply(this);
-                            return f(Object[].class, o -> Utility.cast(innerFunc.call(new @Value Object[] {o[0]}), Boolean.class));
+                            ValueFunction innerFunc = entry.getValue().apply(this);
+                            return f(Record.class, o -> Utility.cast(innerFunc.call(new @Value Object[] {o.getField(entry.getKey())}), Boolean.class));
                         }
 
                         @Override

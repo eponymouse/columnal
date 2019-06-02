@@ -1,7 +1,9 @@
 package test.gen.backwards;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Column;
 import records.data.ColumnId;
@@ -33,6 +35,7 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.Record;
 
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -94,9 +97,9 @@ public class BackwardsColumnRef extends BackwardsProvider
                 @Override
                 @SuppressWarnings("value")
                 @OnThread(Tag.Simulation)
-                public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                public Column record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
-                    return new MemoryRecordColumn(rs, name, inner, Collections.singletonList(Either.right((Object[])value)), (Object[])parent.makeValue(type));
+                    return new MemoryRecordColumn(rs, name, fields, Collections.singletonList(Either.right((Record)value)), (Record) parent.makeValue(type));
                 }
 
                 @Override

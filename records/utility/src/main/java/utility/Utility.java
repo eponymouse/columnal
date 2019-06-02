@@ -167,6 +167,16 @@ public class Utility
         return r.build();
     }
 
+    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValuesEx(Map<@NonNull K, @NonNull T> original, ExFunction<@NonNull T, @NonNull R> apply) throws InternalException, UserException
+    {
+        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        for (Entry<@NonNull K, @NonNull T> entry : original.entrySet())
+        {
+            r.put(entry.getKey(), apply.apply(entry.getValue()));
+        }
+        return r.build();
+    }
+
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
     public static int countLines(File filename, Charset charset) throws IOException
     {

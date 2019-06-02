@@ -2,8 +2,6 @@ package test.gen;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.KnownLengthRecordSet;
 import records.data.datatype.TypeManager;
@@ -12,7 +10,6 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
-import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -60,7 +57,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
             new BackwardsNumbers(r, this),
             new BackwardsTemporal(r, this),
             new BackwardsText(r, this),
-            new BackwardsTuple(r, this)
+            new BackwardsRecord(r, this)
         );
         try
         {

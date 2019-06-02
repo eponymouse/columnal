@@ -1,7 +1,9 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -24,28 +26,10 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TemporalLiteral;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.TupleExpression;
-import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
@@ -59,6 +43,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.RecordMap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -71,7 +56,10 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Random;
 import java.util.TreeSet;
 
 /**
@@ -563,27 +551,29 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public Pair<List<@Value Object>, Expression> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
-                if (inner.size() < 2)
-                    throw new InternalException("Invalid tuple type of size " + inner.size() + " during generation");
+                if (fields.size() < 1)
+                    throw new InternalException("Invalid record type of size " + fields.size() + " during generation");
 
                 return termDeep(maxLevels, type, l(columnRef(type)), l(fix(maxLevels - 1, type), () ->
                 {
-                    List<@Value Object[]> tuples = GenExpressionValueForwards.this.<@Value Object[]>replicateM(() -> new Object[inner.size()]);
-                    List<Expression> expressions = new ArrayList<>();
-                    for (int i = 0; i < inner.size(); i++)
+                    List<HashMap<@ExpressionIdentifier String, @Value Object>> records = GenExpressionValueForwards.this.<HashMap<@ExpressionIdentifier String, @Value Object>>replicateM(() -> new HashMap<>());
+                    List<Pair<@ExpressionIdentifier String, Expression>> expressions = new ArrayList<>();
+                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                     {
                         // We don't reduce max levels as it may make nested tuples
                         // not feature complex expressions, and the finiteness of the type
                         // prevents infinite expansion:
-                        Pair<List<@Value Object>, Expression> item = make(inner.get(i), maxLevels);
-                        for (int row = 0; row < tuples.size(); row++)
-                            tuples.get(row)[i] = item.getFirst().get(row);
-                        expressions.add(item.getSecond());
+                        Pair<List<@Value Object>, Expression> item = make(entry.getValue(), maxLevels);
+                        for (int row = 0; row < records.size(); row++)
+                            records.get(row).put(entry.getKey(), item.getFirst().get(row));
+                        expressions.add(new Pair<>(entry.getKey(), item.getSecond()));
                     }
-                    return new Pair<>(Utility.<@Value Object[], @Value Object>mapList(tuples, DataTypeUtility::value), new TupleExpression(ImmutableList.copyOf(expressions)));
+                    Collections.shuffle(expressions, new Random(r.nextLong()));
+                    
+                    return new Pair<>(Utility.<HashMap<@ExpressionIdentifier String, @Value Object>, @Value Object>mapList(records, r -> DataTypeUtility.value(new RecordMap(r))), new RecordExpression(ImmutableList.copyOf(expressions)));
                 }));
             }
 

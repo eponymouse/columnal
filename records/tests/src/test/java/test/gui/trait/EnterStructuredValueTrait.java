@@ -1,5 +1,6 @@
 package test.gui.trait;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -33,11 +34,13 @@ import utility.FXPlatformRunnable;
 import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import static org.junit.Assert.*;
@@ -147,21 +150,22 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
                 write("(");
                 haveWritten = true;
-                @Value Object[] tuple = Utility.castTuple(value, inner.size());
-                for (int i = 0; i < tuple.length; i++)
+                @Value Record record = Utility.cast(value, Record.class);
+                boolean first = true;
+                for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                 {
-                    if (i > 0)
+                    if (!first)
                     {
                         write(",");
                         if (r.nextBoolean())
                             write(" ");
                     }
-                    enterStructuredValue(inner.get(i), tuple[i], r, false);
+                    first = false;
+                    enterStructuredValue(entry.getValue(), record.getField(entry.getKey()), r, false);
                 }
 
                 write(")");

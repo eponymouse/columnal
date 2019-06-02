@@ -16,6 +16,7 @@ import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -99,5 +100,10 @@ public class RecordTypeExpression extends TypeExpression
     public String save(boolean structured, TableAndColumnRenames renames)
     {
         return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(structured, renames)).collect(Collectors.joining(", ")) + ")";
+    }
+
+    public ImmutableList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> _test_getItems()
+    {
+        return members;
     }
 }

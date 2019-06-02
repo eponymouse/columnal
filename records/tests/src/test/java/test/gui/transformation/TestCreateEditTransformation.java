@@ -3,6 +3,7 @@ package test.gui.transformation;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -449,7 +450,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             }
 
             @Override
-            public List<AggCalculation> tuple(ImmutableList<DataType> inner) throws InternalException
+            public List<AggCalculation> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
                 return usual();
             }

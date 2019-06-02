@@ -182,7 +182,7 @@ public class TestUnit
                 )
             );
             assertNotNull(instance);
-            Object num = instance.getFirst().call(DataTypeUtility.value(new @Value Object[]{null, d(src)}));
+            Object num = instance.getFirst().call(new @Value Object[]{null, d(src)});
             MatcherAssert.assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)

@@ -5,6 +5,7 @@ import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
@@ -62,6 +63,7 @@ import records.gui.grid.VirtualGrid;
 import records.gui.table.TableDisplay;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
+import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -261,6 +263,12 @@ public class TestUtil
     public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
     {
         return new ColumnId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Column"));
+    }
+
+    @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String generateExpressionIdentifier(SourceOfRandomness sourceOfRandomness)
+    {
+        return IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Exp " + sourceOfRandomness.nextInt(1000000));
     }
 
     private static String generateIdent(SourceOfRandomness sourceOfRandomness)
@@ -568,13 +576,13 @@ public class TestUtil
                 nested,
                 maybeMaybe,
                 eitherUnits,
-                DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
-                DataType.tuple(Arrays.asList(DataType.BOOLEAN, DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), c)),
-                DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER)))),
+                DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)),
+                DataType.record(ImmutableMap.of("bool", DataType.BOOLEAN, "Text", DataType.TEXT, "dtz", DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "c", c)),
+                DataType.record(ImmutableMap.of("z", DataType.NUMBER, "inner", DataType.record(ImmutableMap.of("t 1", DataType.TEXT, "t 2", DataType.NUMBER)))),
                 DataType.array(DataType.TEXT),
                 DataType.array(DataType.NUMBER),
-                DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))),
-                DataType.array(DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))))
+                DataType.array(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "nested", DataType.record(ImmutableMap.of("the text 0 item", DataType.TEXT, "num num", DataType.NUMBER))))),
+                DataType.array(DataType.array(DataType.record(ImmutableMap.of("key", DataType.NUMBER, "value", DataType.record(ImmutableMap.of("a", DataType.TEXT, "c", DataType.NUMBER))))))
             ));
         }
         catch (UserException | InternalException e)
@@ -1288,11 +1296,11 @@ public class TestUtil
                 {
                     return typeParams.stream().anyMatch(p -> p.<Boolean>either(u -> containsTypeVar(u, var), t -> containsTypeVar(t, var)));
                 }
-    
+
                 @Override
-                public Boolean tuple(ImmutableList<JellyType> inner) throws InternalException
+                public Boolean record(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete) throws InternalException, InternalException
                 {
-                    return inner.stream().anyMatch(t -> containsTypeVar(t, var));
+                    return fields.values().stream().anyMatch(t -> containsTypeVar(t.getJellyType(), var));
                 }
     
                 @Override

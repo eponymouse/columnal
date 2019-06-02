@@ -1,5 +1,7 @@
 package test.gui.trait;
 
+import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
@@ -8,13 +10,14 @@ import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
-import records.transformations.expression.type.TupleTypeExpression;
+import records.transformations.expression.type.RecordTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.UnitType;
 
 import java.util.Random;
@@ -62,16 +65,17 @@ public interface EnterTypeTrait extends FxRobotInterface
                 write(")");
             }
         }
-        else if (typeExpression instanceof TupleTypeExpression)
+        else if (typeExpression instanceof RecordTypeExpression)
         {
-            TupleTypeExpression tuple = (TupleTypeExpression) typeExpression;
+            RecordTypeExpression record = (RecordTypeExpression) typeExpression;
             write("(");
             push(KeyCode.DELETE);
-            for (int i = 0; i < tuple._test_getItems().size(); i++)
+            for (int i = 0; i < record._test_getItems().size(); i++)
             {
-                TypeExpression item = tuple._test_getItems().get(i);
-                enterType(item, r);
-                if (i < tuple._test_getItems().size() - 1)
+                Pair<@ExpressionIdentifier String, @Recorded TypeExpression> item = record._test_getItems().get(i);
+                write(item.getFirst() + ": ");
+                enterType(item.getSecond(), r);
+                if (i < record._test_getItems().size() - 1)
                     write(r.nextBoolean() ? "," : " , ", DELAY);
             }
             write(")");

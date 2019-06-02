@@ -10,8 +10,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.explanation.Explanation.ExecutionType;
-import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -113,5 +111,10 @@ public class RecordExpression extends Expression
             return replaceWith;
         else
             return new RecordExpression(Utility.<Pair<@ExpressionIdentifier String, Expression>, Pair<@ExpressionIdentifier String, Expression>>mapListI(members, (Pair<@ExpressionIdentifier String, Expression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
+    }
+
+    public ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> getFields()
+    {
+        return members;
     }
 }
