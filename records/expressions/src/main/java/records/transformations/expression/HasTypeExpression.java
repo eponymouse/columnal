@@ -75,7 +75,7 @@ public class HasTypeExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "_" + varName + " :: " + type.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
+        return varName + " :: " + type.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class HasTypeExpression extends Expression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(StyledString.s("_" + varName), type.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)), this);
+        return expressionStyler.styleExpression(StyledString.concat(StyledString.s(varName), type.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)), this);
     }
 
     @SuppressWarnings("recorded")
