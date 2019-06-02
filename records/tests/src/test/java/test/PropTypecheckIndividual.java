@@ -512,7 +512,13 @@ public class PropTypecheckIndividual
     @Test
     public void checkDefine3() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define b :: type{Boolean} @define (_a, _b) = (true, false) @then a & b @enddefine");
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define b :: type{Boolean} @define [a, b] = [true, false] @then a & b @enddefine");
+    }
+
+    @Test
+    public void checkDefine3b() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define b :: type{Boolean} @define (y:a, x:b) = (x:true, y:false) @then a & b @enddefine");
     }
 
     @Test
@@ -576,12 +582,12 @@ public class PropTypecheckIndividual
     @Test
     public void checkFunction2() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f = @function (_x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
 
     @Test
     public void checkFunction2b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)} @define f = @function (_x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)} @define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
 }
