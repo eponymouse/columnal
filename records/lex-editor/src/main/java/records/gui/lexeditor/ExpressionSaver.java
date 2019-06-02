@@ -294,10 +294,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 if (items.expressions.stream().allMatch(e -> e instanceof KeyValueExpression))
                 {
                     boolean allOk = true;
-                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> pairs = new ArrayList<>();
+                    ArrayList<Pair<@ExpressionIdentifier String, @Recorded Expression>> pairs = new ArrayList<>();
                     for (Expression expression : items.expressions)
                     {
-                        Pair<@ExpressionIdentifier String, Expression> p = ((KeyValueExpression)expression).extractPair();
+                        Pair<@ExpressionIdentifier String, @Recorded Expression> p = ((KeyValueExpression)expression).extractPair();
                         if (p == null)
                         {
                             allOk = false;
@@ -307,26 +307,26 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                             pairs.add(p);
                     }
                     if (allOk)
-                        return new RecordExpression(ImmutableList.copyOf(pairs));
+                        return locationRecorder.record(location, new RecordExpression(ImmutableList.copyOf(pairs)));
                 }
                 
                 if (items.expressions.size() == 1)
                     return items.expressions.get(0);
                 else
                 {
-                    ImmutableList.Builder<Expression> invalidOps = ImmutableList.builder();
+                    ImmutableList.Builder<@Recorded Expression> invalidOps = ImmutableList.builder();
                     for (int i = 0; i < items.expressions.size(); i++)
                     {
                         @Recorded Expression expression = items.expressions.get(i);
                         if (expression instanceof KeyValueExpression)
                         {
                             KeyValueExpression keyValueExpression = (KeyValueExpression) expression;
-                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(), keyValueExpression.rhs));
+                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(locationRecorder), keyValueExpression.rhs));
                         }
                         else
                             invalidOps.add(expression);
                         if (i < items.commas.size())
-                            invalidOps.add(new InvalidIdentExpression(items.commas.get(i).getFirst().getContent()));
+                            invalidOps.add(locationRecorder.record(items.commas.get(i).getSecond(), new InvalidIdentExpression(items.commas.get(i).getFirst().getContent())));
                     }
                     return locationRecorder.record(location, new InvalidOperatorExpression(invalidOps.build()));
                 }
@@ -986,11 +986,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     @OnThread(Tag.Any)
     private static class KeyValueExpression extends Expression
     {
-        private final Expression lhs;
+        private final @Recorded Expression lhs;
         private final OpAndNode colon;
-        private final Expression rhs;
+        private final @Recorded Expression rhs;
 
-        public KeyValueExpression(Expression lhs, OpAndNode opAndNode, Expression rhs)
+        public KeyValueExpression(@Recorded Expression lhs, OpAndNode opAndNode, @Recorded Expression rhs)
         {
             this.lhs = lhs;
             this.colon = opAndNode;
@@ -1056,6 +1056,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             return StyledString.concat(lhs.toStyledString(), StyledString.s(" : "), rhs.toStyledString());
         }
 
+        @SuppressWarnings("recorded")
         @Override
         public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
@@ -1065,7 +1066,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 return new KeyValueExpression(lhs.replaceSubExpression(toReplace, replaceWith), colon, rhs.replaceSubExpression(toReplace, replaceWith));
         }
 
-        public @Nullable Pair<@ExpressionIdentifier String, Expression> extractPair()
+        public @Nullable Pair<@ExpressionIdentifier String, @Recorded Expression> extractPair()
         {
             if (lhs instanceof IdentExpression)
                 return new Pair<>(((IdentExpression) lhs).getText(), rhs);
@@ -1073,9 +1074,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 return null;
         }
 
-        public Expression opAsExpression()
+        public @Recorded Expression opAsExpression(EditorLocationAndErrorRecorder locationRecorder)
         {
-            return new InvalidIdentExpression(",");
+            return locationRecorder.record(colon.sourceNode, new InvalidIdentExpression(colon.op.getContent()));
         }
     }
 }

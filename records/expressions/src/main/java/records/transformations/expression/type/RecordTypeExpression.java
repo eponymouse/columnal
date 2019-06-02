@@ -46,18 +46,18 @@ public class RecordTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public @Recorded JellyType toJellyType(@Recorded RecordTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         HashMap<@ExpressionIdentifier String, Field> types = new HashMap<>();
 
-        for (Pair<@ExpressionIdentifier String, TypeExpression> member : members)
+        for (Pair<@ExpressionIdentifier String, @Recorded TypeExpression> member : members)
         {
             @Recorded JellyType memberType = member.getSecond().toJellyType(typeManager, jellyRecorder);
             if (types.put(member.getFirst(), new Field(memberType, true)) != null)
                 throw new UnJellyableTypeExpression("Duplicate field in record: \"" + member.getFirst() + "\"", this);
         }
         
-        return new JellyTypeRecord(ImmutableMap.copyOf(types), true);
+        return jellyRecorder.record(new JellyTypeRecord(ImmutableMap.copyOf(types), true), this);
     }
 
     @Override
@@ -81,6 +81,7 @@ public class RecordTypeExpression extends TypeExpression
         return Objects.hash(members);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {

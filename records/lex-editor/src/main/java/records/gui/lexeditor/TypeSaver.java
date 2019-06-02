@@ -135,10 +135,10 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 if (items.typeExpressions.stream().allMatch(e -> e instanceof KeyValueTypeExpression))
                 {
                     boolean allOk = true;
-                    ArrayList<Pair<@ExpressionIdentifier String, TypeExpression>> pairs = new ArrayList<>();
+                    ArrayList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> pairs = new ArrayList<>();
                     for (TypeExpression expression : items.typeExpressions)
                     {
-                        Pair<@ExpressionIdentifier String, TypeExpression> p = ((KeyValueTypeExpression)expression).extractPair();
+                        Pair<@ExpressionIdentifier String, @Recorded TypeExpression> p = ((KeyValueTypeExpression)expression).extractPair();
                         if (p == null)
                         {
                             allOk = false;
@@ -148,26 +148,26 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                             pairs.add(p);
                     }
                     if (allOk)
-                        return new RecordTypeExpression(ImmutableList.copyOf(pairs));
+                        return errorDisplayerRecord.recordType(location, new RecordTypeExpression(ImmutableList.copyOf(pairs)));
                 }
                 
                 if (items.typeExpressions.size() == 1)
                     return items.typeExpressions.get(0);
                 else
                 {
-                    ImmutableList.Builder<TypeExpression> invalidOps = ImmutableList.builder();
+                    ImmutableList.Builder<@Recorded TypeExpression> invalidOps = ImmutableList.builder();
                     for (int i = 0; i < items.typeExpressions.size(); i++)
                     {
                         @Recorded TypeExpression expression = items.typeExpressions.get(i);
                         if (expression instanceof KeyValueTypeExpression)
                         {
                             KeyValueTypeExpression keyValueExpression = (KeyValueTypeExpression) expression;
-                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(), keyValueExpression.rhs));
+                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(errorDisplayerRecord), keyValueExpression.rhs));
                         }
                         else
                             invalidOps.add(expression);
                         if (i < items.commas.size())
-                            invalidOps.add(new InvalidIdentTypeExpression(items.commas.get(i).getFirst().getContent()));
+                            invalidOps.add(errorDisplayerRecord.recordType(items.commas.get(i).getSecond(), new InvalidIdentTypeExpression(items.commas.get(i).getFirst().getContent())));
                     }
                     return errorDisplayerRecord.recordType(location, new InvalidOpTypeExpression(invalidOps.build()));
                 }
@@ -401,11 +401,11 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @OnThread(Tag.Any)
     private static class KeyValueTypeExpression extends TypeExpression
     {
-        private final TypeExpression lhs;
+        private final @Recorded TypeExpression lhs;
         private final CanonicalSpan op;
-        private final TypeExpression rhs;
+        private final @Recorded TypeExpression rhs;
 
-        public KeyValueTypeExpression(TypeExpression lhs, CanonicalSpan op, TypeExpression rhs)
+        public KeyValueTypeExpression(@Recorded TypeExpression lhs, CanonicalSpan op, @Recorded TypeExpression rhs)
         {
             this.lhs = lhs;
             this.op = op;
@@ -426,7 +426,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
 
         @Override
-        public @Recorded JellyType toJellyType(TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+        public @Recorded JellyType toJellyType(@Recorded KeyValueTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
         {
             // We shouldn't be called directly anyway:
             throw new UnJellyableTypeExpression("Field value in invalid location", this);
@@ -474,7 +474,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 rhs.toStyledString()));
         }
 
-        public @Nullable Pair<@ExpressionIdentifier String, TypeExpression> extractPair()
+        public @Nullable Pair<@ExpressionIdentifier String, @Recorded TypeExpression> extractPair()
         {
             if (lhs instanceof IdentTypeExpression)
                 return new Pair<>(((IdentTypeExpression) lhs).getIdent(), rhs);
@@ -482,9 +482,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 return null;
         }
 
-        public TypeExpression opAsExpression()
+        public @Recorded TypeExpression opAsExpression(EditorLocationAndErrorRecorder locationRecorder)
         {
-            return new InvalidIdentTypeExpression(":");
+            return locationRecorder.recordType(op, new InvalidIdentTypeExpression(":"));
         }
     }
 }
