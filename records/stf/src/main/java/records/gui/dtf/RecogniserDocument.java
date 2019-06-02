@@ -1,5 +1,6 @@
 package records.gui.dtf;
 
+import annotation.qual.UnknownIfValue;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -14,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.gui.dtf.Recogniser.ErrorDetails;
 import records.gui.dtf.Recogniser.ParseProgress;
@@ -117,12 +119,19 @@ public final class RecogniserDocument<V> extends DisplayDocument
             if (save)
                 saveChange.save(text, null, reset);
         });
-        latestValue.ifRight(x -> {
+        latestValue.ifRight((SuccessDetails<V> x) -> {
             curErrorPosition = OptionalInt.empty();
-            if (save)
-                saveChange.save(text, x.value, reset);
+            save(save, text, reset, x);
         });
         this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, text).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
+    }
+
+    @SuppressWarnings("value")
+    @RequiresNonNull("saveChange")
+    private void save(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save, String text, FXPlatformRunnable reset, SuccessDetails<V> x)
+    {
+        if (save)
+            saveChange.save(text, x.value, reset);
     }
 
     @Override
@@ -162,9 +171,10 @@ public final class RecogniserDocument<V> extends DisplayDocument
         relinquishFocus.consume(defocusCause);
     }
 
+    @SuppressWarnings("value")
     public Either<ErrorDetails, V> getLatestValue()
     {
-        return latestValue.map(x -> x.value);
+        return latestValue.map((SuccessDetails<V> x) -> x.value);
     }
 
     // Note: this is not a list of listeners, there's only one.

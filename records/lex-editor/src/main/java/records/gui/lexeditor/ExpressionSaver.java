@@ -1,15 +1,20 @@
 package records.gui.lexeditor;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.unit.UnitManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
@@ -23,9 +28,12 @@ import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.visitor.ExpressionVisitor;
 import styled.StyledCSS;
 import styled.StyledString;
 import styled.StyledString.Builder;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -33,6 +41,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -43,10 +52,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     public class BracketContent
     {
         private final ImmutableList<@Recorded Expression> expressions;
+        private final ImmutableList<Pair<Op, CanonicalSpan>> commas;
 
-        public BracketContent(ImmutableList<@Recorded Expression> expressions)
+        public BracketContent(ImmutableList<@Recorded Expression> expressions, ImmutableList<Pair<Op, CanonicalSpan>> commas)
         {
             this.expressions = expressions;
+            this.commas = commas;
         }
     }
     
@@ -168,7 +179,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                         @Override
                         public @NonNull @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
                         {
-                            return apply(new BracketContent(ImmutableList.<@Recorded Expression>of(singleItem)));
+                            return apply(new BracketContent(ImmutableList.<@Recorded Expression>of(singleItem), ImmutableList.of()));
                         }
                     };
                     invalidPrefix = () -> {
@@ -280,10 +291,45 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 if (items.expressions.isEmpty())
                     return null;
-                else if (items.expressions.size() == 1)
+                if (items.expressions.stream().allMatch(e -> e instanceof KeyValueExpression))
+                {
+                    boolean allOk = true;
+                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> pairs = new ArrayList<>();
+                    for (Expression expression : items.expressions)
+                    {
+                        Pair<@ExpressionIdentifier String, Expression> p = ((KeyValueExpression)expression).extractPair();
+                        if (p == null)
+                        {
+                            allOk = false;
+                            break;
+                        }
+                        else
+                            pairs.add(p);
+                    }
+                    if (allOk)
+                        return new RecordExpression(ImmutableList.copyOf(pairs));
+                }
+                
+                if (items.expressions.size() == 1)
                     return items.expressions.get(0);
                 else
-                    return locationRecorder.record(location, new TupleExpression(items.expressions));
+                {
+                    ImmutableList.Builder<Expression> invalidOps = ImmutableList.builder();
+                    for (int i = 0; i < items.expressions.size(); i++)
+                    {
+                        @Recorded Expression expression = items.expressions.get(i);
+                        if (expression instanceof KeyValueExpression)
+                        {
+                            KeyValueExpression keyValueExpression = (KeyValueExpression) expression;
+                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(), keyValueExpression.rhs));
+                        }
+                        else
+                            invalidOps.add(expression);
+                        if (i < items.commas.size())
+                            invalidOps.add(new InvalidIdentExpression(items.commas.get(i).getFirst().getContent()));
+                    }
+                    return locationRecorder.record(location, new InvalidOperatorExpression(invalidOps.build()));
+                }
             }
 
             @Override
@@ -299,7 +345,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         if (content.isEmpty())
         {
-            @Nullable @Recorded Expression bracketedEmpty = brackets.applyBrackets.apply(new BracketContent(ImmutableList.of()));
+            @Nullable @Recorded Expression bracketedEmpty = brackets.applyBrackets.apply(new BracketContent(ImmutableList.of(), ImmutableList.of()));
             if (bracketedEmpty != null)
                 return bracketedEmpty;
             else
@@ -320,6 +366,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
 
             ArrayList<@Recorded Expression> beforePrevCommas = new ArrayList<>();
+            ArrayList<OpAndNode> prevCommas = new ArrayList<>();
             ArrayList<@Recorded Expression> sinceLastCommaOperands = new ArrayList<>();
             ArrayList<OpAndNode> sinceLastCommaOperators = new ArrayList<>();
             // Split by commas
@@ -334,6 +381,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                         beforePrevCommas.add(made);
                     else
                         beforePrevCommas.add(makeInvalidOp(unbracketed.location, interleave(ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators))));
+                    prevCommas.add(validOperators.get(i));
                     sinceLastCommaOperands.clear();
                     sinceLastCommaOperators.clear();
                 }
@@ -351,7 +399,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
                 beforePrevCommas.add(makeInvalidOp(unbracketed.location, interleave(ImmutableList.copyOf(sinceLastCommaOperands), ImmutableList.copyOf(sinceLastCommaOperators))));
 
-            BracketContent bracketContent = new BracketContent(ImmutableList.copyOf(beforePrevCommas));
+            BracketContent bracketContent = new BracketContent(ImmutableList.copyOf(beforePrevCommas), Utility.mapListI(prevCommas, c -> new Pair<>(c.op, c.sourceNode)));
             e = brackets.applyBrackets.apply(bracketContent);
             if (e == null)
             {
@@ -820,6 +868,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             new OperatorExpressionInfo(ImmutableList.of(Op.AND), ExpressionSaver::makeAnd),
             new OperatorExpressionInfo(ImmutableList.of(Op.OR), ExpressionSaver::makeOr)
         ),
+        
+        ImmutableList.<OperatorExpressionInfo>of(
+            new OperatorExpressionInfo(Op.COLON, (lhs, opLoc, rhs, _b, _e) -> new KeyValueExpression(lhs, new OpAndNode(Op.COLON, opLoc), rhs))
+        ),
 
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
@@ -829,8 +881,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public OperatorSection makeOperatorSection(EditorLocationAndErrorRecorder locationRecorder, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection(locationRecorder, operators, operatorSetPrecedence, (args, _ops, brackets, edr) -> {
-                        return brackets.applyBrackets.apply(new BracketContent(args));
+                    return new NaryOperatorSection(locationRecorder, operators, operatorSetPrecedence, (args, ops, brackets, edr) -> {
+                        return brackets.applyBrackets.apply(new BracketContent(args, ImmutableList.copyOf(ops)));
                     }, initialIndex, initialOperator);
 
                 }
@@ -931,4 +983,99 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return locationRecorder.getDisplayFor(canonIndex);
     }
 
+    @OnThread(Tag.Any)
+    private static class KeyValueExpression extends Expression
+    {
+        private final Expression lhs;
+        private final OpAndNode colon;
+        private final Expression rhs;
+
+        public KeyValueExpression(Expression lhs, OpAndNode opAndNode, Expression rhs)
+        {
+            this.lhs = lhs;
+            this.colon = opAndNode;
+            this.rhs = rhs;
+        }
+
+        @Override
+        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        {
+            // If we are type-checked directly, we are in the wrong place:
+            onError.recordError(this, StyledString.s("Colon not a valid operator here"));
+            return null;
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+        {
+            // If we are executed directly, we are in the wrong place:
+            throw new InternalException("Executing KeyValueExpression despite failed typecheck");
+        }
+
+        @SuppressWarnings("nullness")
+        @Override
+        public <T> T visit(ExpressionVisitor<T> visitor)
+        {
+            Log.logStackTrace("KeyValueExpression.visit");
+            return null;
+        }
+
+        @Override
+        public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+        {
+            return lhs.save(structured, BracketedStatus.NEED_BRACKETS, renames) + ": " + rhs.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        }
+
+        @Override
+        public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+        {
+            return Stream.of();
+        }
+
+        @Override
+        public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+        {
+            return null;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 0;
+        }
+
+        @Override
+        protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+        {
+            return StyledString.concat(lhs.toStyledString(), StyledString.s(" : "), rhs.toStyledString());
+        }
+
+        @Override
+        public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            if (this == toReplace)
+                return replaceWith;
+            else
+                return new KeyValueExpression(lhs.replaceSubExpression(toReplace, replaceWith), colon, rhs.replaceSubExpression(toReplace, replaceWith));
+        }
+
+        public @Nullable Pair<@ExpressionIdentifier String, Expression> extractPair()
+        {
+            if (lhs instanceof IdentExpression)
+                return new Pair<>(((IdentExpression) lhs).getText(), rhs);
+            else
+                return null;
+        }
+
+        public Expression opAsExpression()
+        {
+            return new InvalidIdentExpression(",");
+        }
+    }
 }

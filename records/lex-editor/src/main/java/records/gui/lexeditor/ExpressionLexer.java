@@ -131,6 +131,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         LESS_THAN("<", "op.lessThan"), LESS_THAN_OR_EQUAL("<=", "op.lessThanOrEqual"), GREATER_THAN(">", "op.greaterThan"), GREATER_THAN_OR_EQUAL(">=", "op.greaterThanOrEqual"),
         AND("&", "op.and"), OR("|", "op.or"),
         PLUS_MINUS("\u00B1", "op.plusminus"), RAISE("^", "op.raise"),
+        COLON(":", "op.colon"),
         COMMA(",", "op.separator");
 
         private final String op;

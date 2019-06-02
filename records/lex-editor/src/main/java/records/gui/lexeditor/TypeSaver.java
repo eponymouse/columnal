@@ -1,27 +1,31 @@
 package records.gui.lexeditor;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
+import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.gui.lexeditor.TypeSaver.BracketContent;
+import records.jellytype.JellyType;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
-import records.transformations.expression.type.TupleTypeExpression;
+import records.transformations.expression.type.RecordTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
@@ -29,7 +33,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -37,6 +40,7 @@ import utility.gui.FXUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
@@ -51,18 +55,21 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             @Override
             public @Recorded TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
             {
-                return bracketedStatus.applyBrackets.apply(new BracketContent(typeExpressions));
+                return bracketedStatus.applyBrackets.apply(new BracketContent(typeExpressions, ImmutableList.copyOf(operators)));
             }
-        })
+        }),
+        new OperatorExpressionInfo(Operator.COLON, (lhs, op, rhs, _bs, _rec) -> new KeyValueTypeExpression(lhs, op, rhs))
     );
 
     public class BracketContent
     {
         private final ImmutableList<@Recorded TypeExpression> typeExpressions;
+        private final ImmutableList<Pair<Operator, CanonicalSpan>> commas;
 
-        public BracketContent(ImmutableList<@Recorded TypeExpression> typeExpressions)
+        public BracketContent(ImmutableList<@Recorded TypeExpression> typeExpressions, ImmutableList<Pair<Operator, CanonicalSpan>> commas)
         {
             this.typeExpressions = typeExpressions;
+            this.commas = commas;
         }
     }
 
@@ -125,10 +132,45 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             @Override
             public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
             {
+                if (items.typeExpressions.stream().allMatch(e -> e instanceof KeyValueTypeExpression))
+                {
+                    boolean allOk = true;
+                    ArrayList<Pair<@ExpressionIdentifier String, TypeExpression>> pairs = new ArrayList<>();
+                    for (TypeExpression expression : items.typeExpressions)
+                    {
+                        Pair<@ExpressionIdentifier String, TypeExpression> p = ((KeyValueTypeExpression)expression).extractPair();
+                        if (p == null)
+                        {
+                            allOk = false;
+                            break;
+                        }
+                        else
+                            pairs.add(p);
+                    }
+                    if (allOk)
+                        return new RecordTypeExpression(ImmutableList.copyOf(pairs));
+                }
+                
                 if (items.typeExpressions.size() == 1)
                     return items.typeExpressions.get(0);
                 else
-                    return errorDisplayerRecord.recordType(location, new TupleTypeExpression(items.typeExpressions));
+                {
+                    ImmutableList.Builder<TypeExpression> invalidOps = ImmutableList.builder();
+                    for (int i = 0; i < items.typeExpressions.size(); i++)
+                    {
+                        @Recorded TypeExpression expression = items.typeExpressions.get(i);
+                        if (expression instanceof KeyValueTypeExpression)
+                        {
+                            KeyValueTypeExpression keyValueExpression = (KeyValueTypeExpression) expression;
+                            invalidOps.addAll(ImmutableList.of(keyValueExpression.lhs, keyValueExpression.opAsExpression(), keyValueExpression.rhs));
+                        }
+                        else
+                            invalidOps.add(expression);
+                        if (i < items.commas.size())
+                            invalidOps.add(new InvalidIdentTypeExpression(items.commas.get(i).getFirst().getContent()));
+                    }
+                    return errorDisplayerRecord.recordType(location, new InvalidOpTypeExpression(invalidOps.build()));
+                }
             }
 
             @Override
@@ -353,6 +395,96 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         public @Recorded TypeExpression fetchContent(BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets)
         {
             return TypeSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
+        }
+    }
+    
+    @OnThread(Tag.Any)
+    private static class KeyValueTypeExpression extends TypeExpression
+    {
+        private final TypeExpression lhs;
+        private final CanonicalSpan op;
+        private final TypeExpression rhs;
+
+        public KeyValueTypeExpression(TypeExpression lhs, CanonicalSpan op, TypeExpression rhs)
+        {
+            this.lhs = lhs;
+            this.op = op;
+            this.rhs = rhs;
+        }
+
+        @Override
+        public String save(boolean structured, TableAndColumnRenames renames)
+        {
+            return lhs.save(structured, renames) + ": " + rhs.save(structured, renames);
+        }
+
+        @Override
+        public @Nullable DataType toDataType(TypeManager typeManager)
+        {
+            // We shouldn't be called directly anyway:
+            return null;
+        }
+
+        @Override
+        public @Recorded JellyType toJellyType(TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+        {
+            // We shouldn't be called directly anyway:
+            throw new UnJellyableTypeExpression("Field value in invalid location", this);
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            KeyValueTypeExpression that = (KeyValueTypeExpression) o;
+            return lhs.equals(that.lhs) &&
+                    op.equals(that.op) &&
+                    rhs.equals(that.rhs);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(lhs, op, rhs);
+        }
+
+        @SuppressWarnings("recorded")
+        @Override
+        public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+        {
+            if (this == toReplace)
+                return replaceWith;
+            else
+                return new KeyValueTypeExpression(lhs.replaceSubExpression(toReplace, replaceWith), op, rhs.replaceSubExpression(toReplace, replaceWith));
+        }
+
+        @Override
+        public StyledString toStyledString()
+        {
+            return StyledString.roundBracket(StyledString.concat(
+        lhs.toStyledString(),
+                StyledString.s(": "),
+                rhs.toStyledString()));
+        }
+
+        public @Nullable Pair<@ExpressionIdentifier String, TypeExpression> extractPair()
+        {
+            if (lhs instanceof IdentTypeExpression)
+                return new Pair<>(((IdentTypeExpression) lhs).getIdent(), rhs);
+            else
+                return null;
+        }
+
+        public TypeExpression opAsExpression()
+        {
+            return new InvalidIdentTypeExpression(":");
         }
     }
 }

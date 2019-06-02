@@ -1,7 +1,9 @@
 package records.transformations.function;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -19,6 +21,7 @@ import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -26,10 +29,12 @@ import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 import records.transformations.expression.function.ValueFunction;
+import utility.Utility.RecordMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
 public class FromString
 {
@@ -196,26 +201,35 @@ public class FromString
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
                     if (!src.tryRead("("))
-                        throw new UserException("Expected tuple, but no opening round bracket, instead found: " + src.snippet());
+                        throw new UserException("Expected record, but no opening round bracket, instead found: " + src.snippet());
 
-                    
-                    @Value Object items @Value [] = DataTypeUtility.value(new @Value Object[inner.size()]);
-                    for (int i = 0; i < inner.size(); i++)
+
+                    HashMap<@ExpressionIdentifier String, @Value Object> items = new HashMap<>();
+                    for (int i = 0; i < fields.size(); i++)
                     {
                         if (i > 0)
                         {
                             // Must be comma if not first item:
                             if (!src.tryRead(","))
-                                throw new UserException("Expected comma after tuple item but found: " + src.snippet());
+                                throw new UserException("Expected comma after record item but found: " + src.snippet());
                         }
-                        items[i] = convertFromString(inner.get(i), src);
+                        String name = src.readUntil(':');
+                        if (name == null)
+                            throw new UserException("Expected field name followed by colon but found: " + src.snippet());
+                        @ExpressionIdentifier String nameId = IdentifierUtility.asExpressionIdentifier(name);
+                        if (nameId == null)
+                            throw new UserException("Invalid field name: " + name);
+                        DataType type = fields.get(nameId);
+                        if (type == null)
+                            throw new UserException("Unknown field name: " + nameId);
+                        items.put(nameId, convertFromString(type, src));
                     }
                     if (!src.tryRead(")"))
-                        throw new UserException("Expected round bracket at end of tuple but found: " + src.snippet());
-                    return items;
+                        throw new UserException("Expected round bracket at end of record but found: " + src.snippet());
+                    return DataTypeUtility.value(new RecordMap(items));
                 }
 
                 @Override

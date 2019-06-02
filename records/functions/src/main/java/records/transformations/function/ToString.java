@@ -1,7 +1,9 @@
 package records.transformations.function;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -23,8 +25,10 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import records.transformations.expression.function.ValueFunction;
+import utility.Utility.Record;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.Map.Entry;
 
 public class ToString extends FunctionDefinition
 {
@@ -102,15 +106,17 @@ public class ToString extends FunctionDefinition
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
-                    @Value Object @Value[] values = Utility.castTuple(param, inner.size());
+                    @Value Record values = Utility.cast(param, Record.class);
                     StringBuilder s = new StringBuilder("(");
-                    for (int i = 0; i < values.length; i++)
+                    boolean first = true;
+                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                     {
-                        if (i > 0)
+                        if (!first)
                             s.append(", ");
-                        s.append(convertToString(inner.get(i), values[i]));
+                        first = false;
+                        s.append(convertToString(entry.getValue(), values.getField(entry.getKey())));
                     }
                     return s.append(")").toString();
                 }

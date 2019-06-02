@@ -78,7 +78,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
 
     public static enum Operator implements ExpressionToken
     {
-        COMMA(",");
+        COMMA(","), COLON(":");
 
         private final String op;
 

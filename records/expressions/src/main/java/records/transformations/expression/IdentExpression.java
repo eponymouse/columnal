@@ -138,7 +138,7 @@ public class IdentExpression extends NonOperatorExpression
         return Objects.hash(text);
     }
 
-    public String getText()
+    public @ExpressionIdentifier String getText()
     {
         return text;
     }

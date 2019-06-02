@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
@@ -46,6 +47,8 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.TranslationUtility;
 
+import java.util.Comparator;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -367,13 +370,14 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                         }
 
                         @Override
-                        public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                        public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                         {
+                            Entry<@ExpressionIdentifier String, DataType> first = fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).findFirst().orElseThrow(() -> new UserException("Empty record type"));
                             // Recurse first:
-                            inner.get(0).apply(this);
+                            first.getValue().apply(this);
                             // Then wrap:
-                            smallItem = "(" + smallItem + ", \u2026)";
-                            largeItem = "(" + largeItem + ", \u2026)";
+                            smallItem = "(" + first.getKey() + ": " + smallItem + ", \u2026)";
+                            largeItem = "(" + first.getKey() + ": " + largeItem + ", \u2026)";
                             return UnitType.UNIT;
                         }
 

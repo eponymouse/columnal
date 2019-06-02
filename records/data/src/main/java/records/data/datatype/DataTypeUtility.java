@@ -211,6 +211,12 @@ public class DataTypeUtility
         return integer;
     }
 
+    //@SuppressWarnings("valuetype")
+    public static <T> @UnknownIfValue T unvalue(@Value T v)
+    {
+        return v;
+    }
+
     @SuppressWarnings("valuetype")
     public static <T extends Number> @Value T value(@UnknownIfValue T number)
     {

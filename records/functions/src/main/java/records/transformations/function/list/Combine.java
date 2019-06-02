@@ -41,7 +41,7 @@ public class Combine extends FunctionDefinition
             ValueFunction function = arg(1, ValueFunction.class);
             for (int i = 1; i < list.size(); i++)
             {
-                acc = function.call(DataTypeUtility.value(new @Value Object[] {acc, list.get(i)}));
+                acc = function.call(new @Value Object[] {acc, list.get(i)});
             }
             return acc;
         }
