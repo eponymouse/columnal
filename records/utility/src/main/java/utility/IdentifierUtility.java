@@ -52,10 +52,9 @@ public class IdentifierUtility
         return parsedIdent.getText();
     }
 
-    @SuppressWarnings("identifier")
-    public static @ExpressionIdentifier String fromParsed(records.grammar.DataParser.LabelContext parsedIdent)
+    public static @Nullable @ExpressionIdentifier String fromParsed(records.grammar.DataParser.LabelContext parsedIdent)
     {
-        return parsedIdent.UNQUOTED_IDENT().getText();
+        return asExpressionIdentifier(parsedIdent.labelName().getText());
     }
 
     @SuppressWarnings("identifier")

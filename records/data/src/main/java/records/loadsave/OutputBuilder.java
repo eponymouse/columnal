@@ -341,7 +341,7 @@ public class OutputBuilder
                         if (!first)
                             raw(",");
                         first = false;
-                        expId(entry.getKey()).raw(":");
+                        id(entry.getKey(), QuoteBehaviour.ALWAYS_QUOTE).raw(":");
                         dataValue(entry.getValue(), record.getField(entry.getKey()));
                     }
                     if (!alreadyRoundBracketed)

@@ -895,6 +895,8 @@ public abstract class DataType implements StyledShowable
             {
                 LabelContext labelContext = p.label();
                 @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(labelContext);
+                if (fieldName == null)
+                    throw new ParseException("Invalid field name: \"" + labelContext.getText() + "\"", p);
                 DataType fieldType = fields.get(fieldName);
                 if (fieldType == null)
                     throw new ParseException("Unrecognised field: \"" + fieldName + "\"", p);

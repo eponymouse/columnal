@@ -326,9 +326,10 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 {
                     ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> members = ImmutableList.builderWithExpectedSize(ctx.typeExpression().size());
 
-                    for (int i = 0; i < ctx.ident().size(); i++)
+                    for (int i = 0; i < ctx.fieldName().size(); i++)
                     {
-                        members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTypeExpression(ctx.typeExpression(i))));
+                        @ExpressionIdentifier String fieldName = IdentifierUtility.asExpressionIdentifier(ctx.fieldName(i).getText());
+                        members.add(new Pair<>(fieldName, visitTypeExpression(ctx.typeExpression(i))));
                     }
                     
                     return new RecordTypeExpression(members.build());

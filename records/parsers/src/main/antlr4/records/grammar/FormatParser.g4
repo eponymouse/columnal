@@ -28,6 +28,9 @@ columnName : ident | NUMBER | BOOLEAN | TEXT | date;
 // The defaultValue contains the NEWLINE if that option is picked:
 column : COLUMN columnName TYPE type (defaultValue | NEWLINE);
 
+// Type names are fine as a field name:
+fieldName : ident | NUMBER | BOOLEAN | TEXT | date | STRING;
+
 typeName : ident;
 typeDecl : TYPE typeName taggedDecl NEWLINE;
 typeDecls : NEWLINE* (typeDecl NEWLINE*)*;
@@ -40,7 +43,7 @@ applyArgumentExpression : OPEN_BRACKET typeExpression CLOSE_BRACKET | recordType
 applyTypeExpression : APPLY ident applyArgumentExpression+;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
 functionTypeExpression : OPEN_BRACKET typeExpression (COMMA typeExpression)* CLOSE_BRACKET ARROW typeExpression; 
-recordTypeExpression : OPEN_BRACKET ident COLON typeExpression (COMMA ident COLON typeExpression)* CLOSE_BRACKET;
+recordTypeExpression : OPEN_BRACKET fieldName COLON typeExpression (COMMA fieldName COLON typeExpression)* CLOSE_BRACKET;
 typeExpression : typeExpressionTerminal | arrayTypeExpression | recordTypeExpression | functionTypeExpression | invalidOpsTypeExpression | applyTypeExpression;
 invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET (STRING | typeExpression)* CLOSE_BRACKET;
 

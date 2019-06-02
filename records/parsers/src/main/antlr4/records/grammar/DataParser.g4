@@ -19,7 +19,8 @@ openRound : OPEN_ROUND WS?;
 closeRound : CLOSE_ROUND WS?;
 openSquare : OPEN_SQUARE WS?;
 closeSquare : CLOSE_SQUARE WS?;
-label: UNQUOTED_IDENT WS? COLON WS?;
+labelName : STRING | UNQUOTED_IDENT;
+label: labelName WS? COLON WS?;
 comma: COMMA WS?;
 // Important that datetime comes before numbers:
 //unbracketedItem : dateOrTime | number | bool | string | tagged | array;
