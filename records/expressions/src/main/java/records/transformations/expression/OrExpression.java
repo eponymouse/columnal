@@ -48,7 +48,7 @@ public class OrExpression extends NaryOpShortCircuitExpression
     {
         return onError.recordType(this, state, checkAllOperandsSameTypeAndNotPatterns(TypeExp.bool(this), dataLookup, state, LocationInfo.UNIT_DEFAULT, onError, (typeAndExpression) -> {
             TypeExp ourType = typeAndExpression.getOurType();
-            if (ourType == null || Objects.equals(ourType, TypeExp.bool(null)))
+            if (ourType == null || Objects.equals(ourType.prune(), TypeExp.bool(null)))
             {
                 // We're fine or we have no idea.
                 return ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of();
