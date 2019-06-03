@@ -65,6 +65,7 @@ public class UnitsDialog extends Dialog<Void>
         this.unitManager = typeManager.getUnitManager();
         initModality(Modality.WINDOW_MODAL);
         initOwner(owner.dimWhileShowing(this));
+        setTitle(TranslationUtility.getString("units.title"));
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
@@ -208,6 +209,7 @@ public class UnitsDialog extends Dialog<Void>
         public EditUnitDialog(TypeManager typeManager, @Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue, FixHelper fixHelper, @Nullable Scene parentScene)
         {
             super(new DialogPaneWithSideButtons());
+            setTitle(TranslationUtility.getString("units.edit.title"));
             this.unitManager = typeManager.getUnitManager();
             if (parentScene != null && parentScene.getWindow() != null)
                 initOwner(parentScene.getWindow());

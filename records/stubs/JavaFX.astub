@@ -128,7 +128,7 @@ class Dialog<R>
     void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
     void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
     void setOnHiding(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
-    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, String s);
+    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, @Localized String s);
     void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     
     ReadOnlyBooleanProperty showingProperty(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
