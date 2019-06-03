@@ -10,6 +10,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -17,6 +18,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.Record;
 import utility.Utility.RecordMap;
 import utility.Utility.TransparentBuilder;
 
@@ -76,6 +78,24 @@ public class RecordExpression extends Expression
         }
         
         return result(DataTypeUtility.value(new RecordMap(fieldValues)), state, valuesBuilder.build());
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        @Value Record record = Utility.cast(value, Record.class);
+        TransparentBuilder<ValueResult> itemValues = new TransparentBuilder<>(members.size());
+        
+        for (Pair<@ExpressionIdentifier String, Expression> member : members)
+        {
+            @Value Object fieldValue = record.getField(member.getFirst());
+            ValueResult result = itemValues.add(member.getSecond().matchAsPattern(fieldValue, state));
+            if (Utility.cast(result.value, Boolean.class) == false)
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
+            state = result.evaluateState;
+        }
+
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false); 
     }
 
     @Override
