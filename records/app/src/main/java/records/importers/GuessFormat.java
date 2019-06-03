@@ -74,6 +74,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -133,7 +134,7 @@ public class GuessFormat
      * @param vals List of rows, where each row is list of values
      * @return
      */
-    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice, Function<Integer, ColumnId> getColumnName) throws GuessException
+    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice, BiFunction<TrimChoice, Integer, ColumnId> getColumnName) throws GuessException
     {
         return guessBodyFormat(mgr, trimChoice, vals, getColumnName);
     }
@@ -734,7 +735,7 @@ public class GuessFormat
     }
 
     // Note that the trim choice should not already have been applied.  But values should be rectangular
-    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed, @Nullable Function<Integer, ColumnId> getColumnName) throws GuessException
+    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed, @Nullable BiFunction<TrimChoice, Integer, ColumnId> getColumnName) throws GuessException
     {
         // true should be the first item in each sub-list:
         final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.<ImmutableList<String>>of(ImmutableList.<String>of("t", "f"), ImmutableList.<String>of("true", "false"), ImmutableList.<String>of("y", "n"), ImmutableList.<String>of("yes", "no"));
@@ -950,7 +951,7 @@ public class GuessFormat
             ColumnId columnName;
             if (getColumnName != null)
             {
-                columnName = getColumnName.apply(columnIndex);
+                columnName = getColumnName.apply(trimChoice, columnIndex);
             }
             else
             {

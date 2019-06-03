@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.stage.Window;
@@ -21,12 +22,14 @@ import records.data.ImmediateDataSource;
 import records.data.TableManager;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.UnitType;
@@ -103,6 +106,15 @@ public class ExcelImporter implements Importer
                 public ColumnId srcColumnName(int index)
                 {
                     return excelColumnName(index);
+                }
+
+                @Override
+                public ColumnId destColumnName(TrimChoice trimChoice, int index)
+                {
+                    if (trimChoice.trimFromTop > 0)
+                        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(vals.get(trimChoice.trimFromTop - 1).get(index), excelColumnName(index).getRaw()));
+                    else
+                        return excelColumnName(index);
                 }
             };
             

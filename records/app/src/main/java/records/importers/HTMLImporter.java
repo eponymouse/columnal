@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.base.CharMatcher;
@@ -36,6 +37,7 @@ import records.data.*;
 import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
@@ -279,6 +281,20 @@ public class HTMLImporter implements Importer
                     ColumnId columnId = new ColumnId(IdentifierUtility.identNum("C", (index + 1)));
                     return columnId;
                 }
+            }
+
+            @Override
+            public ColumnId destColumnName(TrimChoice trimChoice, int index)
+            {
+                if (index < columnNames.size())
+                    return columnNames.get(index);
+                else if (trimChoice.trimFromTop > 0)
+                {
+                    String valAbove = vals.get(trimChoice.trimFromTop - 1).get(index);
+                    return new ColumnId(IdentifierUtility.fixExpressionIdentifier(valAbove, IdentifierUtility.identNum("C", (index + 1))));
+                }
+                
+                return srcColumnName(index);
             }
 
             @Override

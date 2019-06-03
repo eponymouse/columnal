@@ -48,21 +48,27 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     @Override
     public Pair<TrimChoice, RecordSet> loadSource(UnitType u) throws UserException, InternalException
     {
+        TrimChoice trimChoice = GuessFormat.guessTrim(vals);
         ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
         for (int i = 0; i < numSrcColumns; i++)
         {
             columns.add(new ColumnInfo(new TextColumnType(), srcColumnName(i)));
         }
         EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
-        return new Pair<>(GuessFormat.guessTrim(vals), recordSet);
+        return new Pair<>(trimChoice, recordSet);
     }
 
     public abstract ColumnId srcColumnName(int index);
 
+    public ColumnId destColumnName(TrimChoice trimChoice, int index)
+    {
+        return srcColumnName(index);
+    }
+
     @Override
     public Pair<PlainImportInfo, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
     {
-        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice, this::srcColumnName);
+        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice, (trim, i) -> destColumnName(trim, i));
         return new Pair<>(new PlainImportInfo(columns, trimChoice), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), processTrimmed(trimChoice.trim(vals)), columns));
     }
 
