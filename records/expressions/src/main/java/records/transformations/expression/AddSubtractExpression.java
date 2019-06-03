@@ -85,7 +85,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return ImmutableMap.of();
-            if (ourType instanceof NumTypeExp)
+            if (ourType.prune() instanceof NumTypeExp)
             {
                 ImmutableList<QuickFix<Expression>> fixes = ExpressionUtil.getFixesForMatchingNumericUnits(state, p);
                 if (fixes.isEmpty())
