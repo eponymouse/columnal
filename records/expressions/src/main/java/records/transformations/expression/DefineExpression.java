@@ -135,7 +135,12 @@ public class DefineExpression extends Expression
                     Set<String> typedButNotDeclared = Sets.difference(shouldBeDeclaredInNextDefine, declared);
                     if (!typedButNotDeclared.isEmpty())
                     {
-                        onError.recordError(equal, StyledString.s("Type was given above for " + typedButNotDeclared.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+                        onError.recordError(equal.lhsPattern, StyledString.s("Type was given above for " + typedButNotDeclared.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+                        return null;
+                    }
+                    if (declared.isEmpty())
+                    {
+                        onError.recordError(equal.lhsPattern, StyledString.s("No new variables were declared"));
                         return null;
                     }
                 }
