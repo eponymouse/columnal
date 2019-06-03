@@ -89,4 +89,6 @@ public interface ExpressionVisitor<T>
     T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body);
 
     T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
+
+    T field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName);
 }

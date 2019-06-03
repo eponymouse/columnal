@@ -247,6 +247,12 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
         return members.stream().flatMap(p -> p.getSecond().visit(this));
     }
 
+    @Override
+    public Stream<T> field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    {
+        return lhsRecord.visit(this);
+    }
+
     protected Stream<T> visitPattern(Pattern pattern)
     {
         Stream<T> patStream = pattern.getPattern().visit(this);

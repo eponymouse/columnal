@@ -591,4 +591,42 @@ public class PropTypecheckIndividual
     {
         checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)} @define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
+    
+    @Test
+    public void checkRecord1() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.TEXT)), "(a : 3, b : \"Hi\")");
+    }
+
+    @Test
+    public void checkRecord2() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.array(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.TEXT))), "[(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))]");
+    }
+
+    @Test
+    public void checkRecord3() throws UserException, InternalException
+    {
+        checkConcreteType((DataType)null, "[(a : 3, b : \"Hi\"), (b : \"\")]");
+    }
+
+    @Test
+    public void checkRecord3b() throws UserException, InternalException
+    {
+        checkConcreteType((DataType)null, "[(a : 3, b : \"Hi\"), (a: true, b : \"\")]");
+    }
+
+    @Test
+    public void checkField() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.TEXT, "(a : 3, b : \"Hi\")#b");
+    }
+
+    @Test
+    public void checkField2() throws UserException, InternalException
+    {
+        checkConcreteType(DataType.TEXT, "@define abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call @function element(abs, 1)#b @enddefine");
+    }
+    
+
 }

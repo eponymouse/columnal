@@ -225,4 +225,10 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     {
         return makeDef(self);
     }
+
+    @Override
+    public T field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    {
+        return makeDef(self);
+    }
 }

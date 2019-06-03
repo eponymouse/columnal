@@ -849,6 +849,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
+        public Expression visitFieldAccessExpression(FieldAccessExpressionContext ctx)
+        {
+            return new FieldAccessExpression(visitExpression(ctx.expression()), IdentifierUtility.fromParsed(ctx.ident()));
+        }
+
+        @Override
         public Expression visitBracketedExpression(BracketedExpressionContext ctx)
         {
             return visitTopLevelExpression(ctx.topLevelExpression());

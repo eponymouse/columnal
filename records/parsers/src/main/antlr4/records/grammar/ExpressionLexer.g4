@@ -51,6 +51,7 @@ IMPLICIT_LAMBDA_PARAM : '?';
 DEFINE: '@define';
 ENDDEFINE: '@enddefine';
 HAS_TYPE: '::';
+FIELD_ACCESS : '#';
 
 NUMBER : [0-9]+ ('.' [0-9]+)?;
 

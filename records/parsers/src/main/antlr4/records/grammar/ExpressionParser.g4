@@ -45,7 +45,8 @@ ifThenElseExpression : IF topLevelExpression THEN topLevelExpression ELSE topLev
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | PLUS_MINUS | COMMA;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
-compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | stringConcatExpression;
+fieldAccessExpression : expression FIELD_ACCESS ident;
+compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | stringConcatExpression | fieldAccessExpression;
 
 invalidOpItem : expression;
 invalidOpExpression : INVALIDOPS OPEN_BRACKET (invalidOpItem (COMMA invalidOpItem)*)? CLOSE_BRACKET;
