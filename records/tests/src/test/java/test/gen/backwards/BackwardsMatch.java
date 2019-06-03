@@ -230,7 +230,7 @@ public class BackwardsMatch extends BackwardsProvider
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    private DefineExpression makeMatchDefine(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    private Expression makeMatchDefine(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
@@ -255,11 +255,14 @@ public class BackwardsMatch extends BackwardsProvider
         {
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
             defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
+            defines.add(Either.right(new Definition(match.pattern, toMatch)));
+            return new DefineExpression(defines.build(), new IfThenElseExpression(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }
-        defines.add(Either.right(new Definition(match.pattern, toMatch)));
-        defines.add(Either.right(new Definition(guard, new BooleanLiteral(true))));
-        
-        return new DefineExpression(defines.build(), correctOutcome);
+        else
+        {
+            // If no vars, it's fine to just return the outcome: 
+            return correctOutcome;
+        }        
     }
 
 
