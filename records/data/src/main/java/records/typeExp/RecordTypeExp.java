@@ -68,11 +68,18 @@ public class RecordTypeExp extends TypeExp
                 // Check type classes:
                 @Nullable StyledString typeClassErr = null;
                 if (p.getFirst() != null)
+                {
                     typeClassErr = p.getFirst().requireTypeClasses(bt.requiredTypeClasses);
+                    unified.put(entry.getKey(), p.getFirst());
+                }
                 else if (p.getSecond() != null)
+                {
                     typeClassErr = p.getSecond().requireTypeClasses(requiredTypeClasses);
+                    unified.put(entry.getKey(), p.getSecond());
+                }
                 if (typeClassErr != null)
                     return Either.left(typeClassErr);
+                
             }
             else
             {
