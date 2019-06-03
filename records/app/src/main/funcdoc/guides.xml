@@ -46,7 +46,7 @@
         <section id="match">
             <title>Match Expressions</title>
             <p>Sometimes you may want to compare a value against multiple possible alternatives.  For example, <code>@match Level @case "High" @then 2 @case "Medium" @then 1 @case "Low" @then 0 @endmatch</code> matches Level against High/Medium/Low and gives back the number 2/1/0 respectively.</p>
-            <p>It is also possible to attach extra conditions to each case using @given, for example <code>@match Amount @case _n @given n &lt; 0 @then "Negative" @case 0 @then "Zero" @case _n @given n &gt; 0 @then "Positive" @endmatch</code> works out whether the number is negative, zero or positive.</p>
+            <p>It is also possible to attach extra conditions to each case using @given, for example <code>@match Amount @case n @given n &lt; 0 @then "Negative" @case 0 @then "Zero" @case n @given n &gt; 0 @then "Positive" @endmatch</code> works out whether the number is negative, zero or positive.</p>
             <p>Cases inside a match are checked in order, so often the last item can be @case _ meaning match anything, given that that the earlier matches failed.  If no cases match then an error will occur.</p>
         </section>
     </guide>

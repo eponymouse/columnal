@@ -55,7 +55,7 @@
             <output>"Arriving"</output>
         </example>
         <example>
-            <input>@match 32 @case 0 @then "Zero" @case _n @given n &gt; 0 @then "Positive" @endmatch</input>
+            <input>@match 32 @case 0 @then "Zero" @case n @given n &gt; 0 @then "Positive" @endmatch</input>
             <output>"Positive"</output>
         </example>
     </syntax>

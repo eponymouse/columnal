@@ -32,12 +32,12 @@
             <output>[1, 2, 5]</output>
         </example>
         <example>
-            <inputArg>[(true, 6)]</inputArg>
-            <output>type{[(Boolean, Number)]}</output>
+            <inputArg>[(a:true, b:6)]</inputArg>
+            <output>type{[(a:Boolean, b:Number)]}</output>
         </example>
         <example>
-            <inputArg>((time{00:00}, 21{s}))</inputArg>
-            <output>type{(Time, Number{s})}</output>
+            <inputArg>((t: time{00:00}, s: 21{s}))</inputArg>
+            <output>type{(t: Time, s: Number{s})}</output>
         </example>
     </function>
     

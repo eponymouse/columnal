@@ -39,7 +39,7 @@
             <output>"abc"</output>
         </example>
         <example>
-            <input>@match "T-2000" @case "T-" ; _y @then @call @function from text(y) @endmatch</input>
+            <input>@match "T-2000" @case "T-" ; y @then @call @function from text(y) @endmatch</input>
             <output>2000</output>
         </example>
     </naryOperatorGroup>
@@ -54,7 +54,7 @@
         </description>
         <example>
             <description>Deal with inexact fractions by using a tolerance</description>
-            <input>(1 / 3) = (0.333 &#x00B1; 0.001)</input>
+            <input>(1 / 3) =~ (0.333 &#x00B1; 0.001)</input>
             <output>true</output>
         </example>
     </binaryOperator>
@@ -80,6 +80,7 @@
     </binaryOperator>
     <naryOperatorGroup title="Equal">
         <operator>=</operator>
+        <operator>=~</operator>
         <typeArg>t</typeArg>
         <typeConstraint>Equatable t</typeConstraint>
         <argType>t</argType>
@@ -113,27 +114,27 @@
         </example>
         <example>
             <description>Check if text starts with a dollar sign</description>
-            <input>"$50" = ("$" ; _)</input>
+            <input>"$50" =~ ("$" ; _)</input>
             <output>true</output>
         </example>
         <example>
             <description>Check if number is close to another</description>
-            <input>50.0006 = (50 &#x00B1; 0.01)</input>
+            <input>50.0006 =~ (50 &#x00B1; 0.01)</input>
             <output>true</output>
         </example>
         <example>
             <description>Check if a list has two items, and the first is an empty text value</description>
-            <input>["Hi", "there"] = ["", _]</input>
+            <input>["Hi", "there"] =~ ["", _]</input>
             <output>false</output>
         </example>
         <example>
             <description>Check if a pair has two numbers, with the second being one higher than the first</description>
-            <input>(2, 4) = (_x, (x + 1))</input>
-            <output>false</output>
+            <input>(low:2, high:4) =~ (low:x, high:(x + 2))</input>
+            <output>true</output>
         </example>
         <example>
             <description>Check if a list has two values, and they are the same</description>
-            <input>["Bye", "Bye"] = [_s, s]</input>
+            <input>["Bye", "Bye"] =~ [s, s]</input>
             <output>true</output>
         </example>
         
@@ -225,11 +226,11 @@
             <output>true</output>
         </example>
         <example>
-            <input>@tag Optional:None &lt; @call @tag Optional:Is(0)</input>
+            <input>@tag Optional\None &lt; @call @tag Optional\Is(0)</input>
             <output>true</output>
         </example>
         <example>
-            <input>(0, 5) &lt; (1, 3)</input>
+            <input>(a:0, b:5) &lt; (a:1, b:3)</input>
             <output>true</output>
         </example>
     </naryOperatorGroup>

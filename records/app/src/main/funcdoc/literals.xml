@@ -119,7 +119,7 @@
         </example>
         <example>
             <input>@call @function from text to(type{@apply Optional(Date)}, "None")</input>
-            <output>@tag Optional:None</output>
+            <output>@tag Optional\None</output>
         </example>
     </literal>
 </functionDocumentation>

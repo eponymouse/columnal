@@ -20,7 +20,7 @@
                 <xsl:when test="$literalName"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</xsl:when>
                 <xsl:otherwise> @call @function <xsl:value-of select="$functionName"/><xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:otherwise>
             </xsl:choose>
-            <xsl:if test="not(output='error')"><xsl:choose><xsl:when test="output"> = (<xsl:value-of select="output"/>)</xsl:when><xsl:otherwise> = (<xsl:value-of select="outputPattern"/>)</xsl:otherwise></xsl:choose></xsl:if>
+            <xsl:if test="not(output='error')"><xsl:choose><xsl:when test="output"> = (<xsl:value-of select="output"/>)</xsl:when><xsl:otherwise> =~ (<xsl:value-of select="outputPattern"/>)</xsl:otherwise></xsl:choose></xsl:if>
             <xsl:text>&#xa;</xsl:text>
         </xsl:for-each>
     </xsl:template>
