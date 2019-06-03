@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -403,7 +404,10 @@ public class BackwardsMatch extends BackwardsProvider
                         ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
                         ImmutableList.Builder<Expression> guards = ImmutableList.builder();
                         @Value Record values = Utility.cast(actual, Record.class);
-                        for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                        // Note -- important to shuffle here not later, because we may capture a variable then use it later@
+                        ArrayList<Entry<@ExpressionIdentifier String, DataType>> entries = new ArrayList<>(fields.entrySet());
+                        Collections.shuffle(entries, new Random(r.nextLong()));
+                        for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
                         {
                             // We don't have to match every item:
                             if (members.size() >= 1 && r.nextInt(3) == 1)
@@ -416,7 +420,6 @@ public class BackwardsMatch extends BackwardsProvider
                                 guards.add(p.guard);
                         }
                         ImmutableList<Expression> g = guards.build();
-                        Collections.shuffle(members, new Random(r.nextLong()));
                         return new PatternInfo(new RecordExpression(ImmutableList.copyOf(members)),
                             g.size() == 0 ? null : (g.size() == 1 ? g.get(0) : new AndExpression(g))    
                         );
