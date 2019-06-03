@@ -10,11 +10,14 @@ import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -43,6 +46,15 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(condition, thenExpression, elseExpression), state, onError);
+        state = lambda.getSecond();
+        @Nullable CheckedExp checked = checkIfThenElse(dataLookup, state, onError);
+        return checked == null ? null : checked.applyToType(lambda.getFirst());
+    }
+
+    @Nullable
+    private CheckedExp checkIfThenElse(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
         @Nullable CheckedExp conditionType = condition.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (conditionType == null)
             return null;
@@ -60,6 +72,20 @@ public class IfThenElseExpression extends NonOperatorExpression
 
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    {
+        ImmutableList<@Recorded Expression> expressions = ImmutableList.of(condition, thenExpression, elseExpression);
+        if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
+        {
+            return ImplicitLambdaArg.makeImplicitFunction(this, expressions, state, s -> getIfThenElseValue(s));
+        }
+        else
+        {
+            return getIfThenElseValue(state);
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    private ValueResult getIfThenElseValue(EvaluateState state) throws UserException, InternalException
     {
         ValueResult condValState = condition.calculateValue(state);
         Boolean b = Utility.cast(condValState.value, Boolean.class);
