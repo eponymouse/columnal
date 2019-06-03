@@ -40,6 +40,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.Random;
 
@@ -156,7 +158,9 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 haveWritten = true;
                 @Value Record record = Utility.cast(value, Record.class);
                 boolean first = true;
-                for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                ArrayList<Entry<@ExpressionIdentifier String, DataType>> entries = new ArrayList<>(fields.entrySet());
+                Collections.shuffle(entries, r);
+                for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
                 {
                     if (!first)
                     {
@@ -165,6 +169,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                             write(" ");
                     }
                     first = false;
+                    write(entry.getKey() + ": ");
                     enterStructuredValue(entry.getValue(), record.getField(entry.getKey()), r, false);
                 }
 
