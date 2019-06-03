@@ -64,14 +64,14 @@ public final class EvaluateState
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException
     {
-        ImmutableMap.Builder<String, @Value Object> copy = ImmutableMap.builder();
+        HashMap<String, @Value Object> copy = new HashMap<>();
         if (!varName.startsWith("?") && variables.containsKey(varName))
         {
             throw new InternalException("Duplicate variable name: " + varName);
         }
         copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(copy.build(), typeManager, rowIndex, recordExplanation, typeLookup);
+        return new EvaluateState(ImmutableMap.copyOf(copy), typeManager, rowIndex, recordExplanation, typeLookup);
     }
 
     /**

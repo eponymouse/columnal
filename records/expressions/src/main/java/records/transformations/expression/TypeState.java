@@ -109,10 +109,10 @@ public final class TypeState
     public TypeState addAllowShadow(String varName, TypeExp type)
     {
         // We allow name shadowing without complaint:
-        ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
+        HashMap<String, ImmutableList<TypeExp>> copy = new HashMap<>();
         copy.putAll(variables);
         copy.put(varName, ImmutableList.of(type));
-        return new TypeState(variablePreTypes, copy.build(), typeManager, unitManager, functionLookup);
+        return new TypeState(variablePreTypes, ImmutableMap.copyOf(copy), typeManager, unitManager, functionLookup);
     }
 
     /**
