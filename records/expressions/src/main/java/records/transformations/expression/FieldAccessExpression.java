@@ -42,7 +42,7 @@ public class FieldAccessExpression extends Expression
         if (lhsChecked == null)
             return null;
         
-        TypeExp fieldType = new MutVar(this);
+        TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
         TypeExp recordType = TypeExp.record(this, ImmutableMap.of(fieldName, fieldType), false);
         
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
