@@ -18,12 +18,14 @@ public class UnitDeclaration
     private final SingleUnit definedUnit;
     private final @Nullable Pair<Rational, Unit> equivalentTo;
     private final Unit cachedSingleUnit;
+    private final String category;
 
-    public UnitDeclaration(SingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo)
+    public UnitDeclaration(SingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo, String category)
     {
         this.definedUnit = definedUnit;
         this.equivalentTo = equivalentTo;
         cachedSingleUnit = new Unit(definedUnit);
+        this.category = category;
     }
 
     public SingleUnit getDefined()
@@ -67,5 +69,10 @@ public class UnitDeclaration
                 "definedUnit=" + definedUnit +
                 ", equivalentTo=" + equivalentTo +
                 '}';
+    }
+
+    public String getCategory()
+    {
+        return category;
     }
 }

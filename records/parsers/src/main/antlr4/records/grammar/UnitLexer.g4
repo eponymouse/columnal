@@ -12,12 +12,13 @@ POWER : '^';
 TIMES: '*';
 DIVIDE: '/';
 EQUALS : '=';
-UNIT : 'UNIT';
+UNIT : '@UNIT';
 OPEN_BRACKET: '(';
 CLOSE_BRACKET: ')';
 PREFIX : 'PREFIX';
 SUFFIX : 'SUFFIX';
-ALIAS : 'ALIAS';
+ALIAS : '@ALIAS';
+CATEGORY: '@CATEGORY';
 
 UNITVAR : '@unitvar';
 

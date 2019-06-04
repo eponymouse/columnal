@@ -62,23 +62,28 @@ public class UnitManager
                 throw new InternalException("Could not find data file");
             String builtInUnits = IOUtils.toString(stream, StandardCharsets.UTF_8);
             stream.close();
-            List<DeclarationContext> decls = Utility.parseAsOne(builtInUnits, UnitLexer::new, UnitParser::new, p -> p.file().declaration());
-            for (DeclarationContext decl : decls)
+            List<FileItemContext> decls = Utility.parseAsOne(builtInUnits, UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
+            String curCategory = "";
+            for (FileItemContext item : decls)
             {
-                if (decl.unitDeclaration() != null)
+                if (item.declaration() != null && item.declaration().unitDeclaration() != null)
                 {
-                    UnitDeclaration unit = loadDeclaration(decl.unitDeclaration());
+                    UnitDeclaration unit = loadDeclaration(item.declaration().unitDeclaration(), curCategory);
                     @UnitIdentifier String name = unit.getDefined().getName();
                     knownUnits.put(name, Either.right(unit));
                     this.builtInUnits.put(name, Either.right(unit));
                 }
-                else if (decl.aliasDeclaration() != null)
+                else if (item.declaration() != null && item.declaration().aliasDeclaration() != null)
                 {
-                    AliasDeclarationContext aliasDeclaration = decl.aliasDeclaration();
+                    AliasDeclarationContext aliasDeclaration = item.declaration().aliasDeclaration();
                     @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
                     @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                     knownUnits.put(newName, Either.left(origName));
                     this.builtInUnits.put(newName, Either.left(origName));
+                }
+                else if (item.category() != null)
+                {
+                    curCategory = item.category().STRING().getText();
                 }
             }
         }
@@ -97,7 +102,7 @@ public class UnitManager
             return target.<@Nullable UnitDeclaration>either(this::getKnownUnit, d -> d);
     }
 
-    private UnitDeclaration loadDeclaration(UnitDeclarationContext decl) throws UserException
+    private UnitDeclaration loadDeclaration(UnitDeclarationContext decl, String category) throws UserException
     {
         @UnitIdentifier String defined = IdentifierUtility.fromParsed(decl.singleUnit());
         String description = decl.STRING() != null ? decl.STRING().getText() : "";
@@ -117,7 +122,7 @@ public class UnitManager
             Rational scale = loadScale(scaleContext);
             equiv = new Pair<>(scale, loadUnbracketedUnit(decl.unbracketedUnit()));
         }
-        return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
+        return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv, category);
     }
 
     public static Rational loadScale(ScaleContext scaleContext)
@@ -302,22 +307,22 @@ public class UnitManager
 
     public void loadUserUnits(UnitsContext units) throws UserException, InternalException
     {
-        List<DeclarationContext> unitDecls = Utility.parseAsOne(units.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().declaration());
+        List<FileItemContext> unitDecls = Utility.parseAsOne(units.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
 
-        for (DeclarationContext decl : unitDecls)
+        for (FileItemContext decl : unitDecls)
         {
-            if (decl.unitDeclaration() != null)
+            if (decl.declaration().unitDeclaration() != null)
             {
-                UnitDeclaration unit = loadDeclaration(decl.unitDeclaration());
+                UnitDeclaration unit = loadDeclaration(decl.declaration().unitDeclaration(), "");
                 @UnitIdentifier String name = unit.getDefined().getName();
                 userUnits.putIfAbsent(name, Either.right(unit));
                 // Don't overwrite existing binding:
                 knownUnits.putIfAbsent(name, Either.right(unit));
                 
             }
-            else if (decl.aliasDeclaration() != null)
+            else if (decl.declaration().aliasDeclaration() != null)
             {
-                AliasDeclarationContext aliasDeclaration = decl.aliasDeclaration();
+                AliasDeclarationContext aliasDeclaration = decl.declaration().aliasDeclaration();
                 @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
                 @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                 knownUnits.putIfAbsent(newName, Either.left(origName));

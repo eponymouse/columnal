@@ -26,5 +26,7 @@ unitDeclaration : UNIT WS singleUnit WS STRING WS? display* (EQUALS WS? (scale W
 
 declaration : aliasDeclaration | unitDeclaration;
 
+category : CATEGORY WS STRING NEWLINE;
 blankLine : WS? NEWLINE;
-file : blankLine* (declaration blankLine*)*;
+fileItem : declaration | category;
+file : blankLine* (fileItem blankLine*)*;

@@ -72,7 +72,7 @@ public class UnitsDialog extends Dialog<Void>
             FXUtility.getStylesheet("dialogs.css")
         );
 
-        userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared());
+        userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared(), false);
         userDeclaredUnitList.getStyleClass().add("user-unit-list");
         Button addButton = GUI.button("units.userDeclared.add", () -> {
             FXUtility.mouse(this).addUnit(null, getDialogPane().getScene(), typeManager, owner.getFixHelper(), userDeclaredUnitList);
@@ -110,7 +110,7 @@ public class UnitsDialog extends Dialog<Void>
         BorderPane userDeclaredUnitPane = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), userDeclaredUnitList, buttons, "units-dialog-user-defined");
         
         
-        UnitList builtInUnitList = new UnitList(unitManager.getAllBuiltIn());
+        UnitList builtInUnitList = new UnitList(unitManager.getAllBuiltIn(), true);
         builtInUnitList.setEditable(false);
         Label builtInLabel = GUI.label("units.builtIn");
         BorderPane builtInUnitPane = GUI.borderTopCenter(builtInLabel, builtInUnitList, "units-dialog-built-in");
@@ -136,7 +136,7 @@ public class UnitsDialog extends Dialog<Void>
 
     private static void addUnit(@Nullable @UnitIdentifier String initialName, @Nullable Scene parentScene, TypeManager typeManager, FixHelper fixHelper, @Nullable UnitList userDeclaredUnitList)
     {
-        Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null))), fixHelper, parentScene).showAndWait().orElse(null);
+        Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), fixHelper, parentScene).showAndWait().orElse(null);
         if (newUnit != null)
         {
             typeManager.getUnitManager().addUserUnit(newUnit);
@@ -153,7 +153,7 @@ public class UnitsDialog extends Dialog<Void>
     private class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
     {
 
-        public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units)
+        public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units, boolean showCategory)
         {
             TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> nameColumn = new TableColumn<>("Name");
             nameColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getFirst()));
@@ -167,12 +167,23 @@ public class UnitsDialog extends Dialog<Void>
             })));
             TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> descriptionColumn = new TableColumn<>("Description");
             descriptionColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getSecond().either(u -> "", d -> d.getDefined().getDescription())));
+            if (showCategory)
+            {
+                TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> categoryColumn = new TableColumn<>("Category");
+                categoryColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(getCategory(cdf.getValue())));
+                getColumns().add(categoryColumn);
+            }
             getColumns().add(nameColumn);
             getColumns().add(definitionColumn);
             getColumns().add(descriptionColumn);
             
             // Safe at end of constructor:
             Utility.later(this).setUnits(units);
+        }
+
+        private String getCategory(@UnknownInitialization(Object.class) UnitList this, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> pair)
+        {
+            return pair.getSecond().either(alias -> "", decl -> decl.getCategory());
         }
 
         public void setUnits(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units)
@@ -182,11 +193,11 @@ public class UnitsDialog extends Dialog<Void>
                     .sorted(Comparator.<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String>comparing((Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> p) -> {
                         @Nullable ImmutableSet<String> canonicalBaseUnit = unitManager.getCanonicalBaseUnit(p.getFirst());
                         if (canonicalBaseUnit == null)
-                            return "";
+                            return getCategory(p);
                         // Make canonical units be without suffix so they get sorted ahead of their derivatives:
                         if (canonicalBaseUnit.contains(p.getFirst()) && canonicalBaseUnit.size() == 1)
-                            return p.getFirst();
-                        return canonicalBaseUnit.stream().sorted().collect(Collectors.joining(":")) + ";";
+                            return getCategory(p) + ":" + p.getFirst();
+                        return getCategory(p) + ":" + canonicalBaseUnit.stream().sorted().collect(Collectors.joining(":")) + ";";
                     }))
                     .collect(Collectors.<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>toList()));
         }
@@ -299,7 +310,7 @@ public class UnitsDialog extends Dialog<Void>
 
                 if (this.equivalentTickBox.isSelected() == false)
                 {
-                    return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.right(new UnitDeclaration(singleUnit, null))));
+                    return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.right(new UnitDeclaration(singleUnit, null, ""))));
                 }
                 
                 ScaleContext scaleContext;
@@ -337,7 +348,7 @@ public class UnitsDialog extends Dialog<Void>
                 
                 @Nullable Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
 
-                return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>right(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv))));
+                return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>right(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv, ""))));
             }
         }
     }

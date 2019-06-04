@@ -50,7 +50,7 @@ public class GenUnitDefinition extends Generator<UnitDetails>
             UnitDeclaration unitDeclaration = new UnitDeclaration(
                     new SingleUnit(id, new GenString().generate(random, status), "", ""),
                 random.nextInt(3) == 1 ? null :
-                    new Pair<>(genRational(random), new GenUnit().generate(random, status))
+                    new Pair<>(genRational(random), new GenUnit().generate(random, status)), ""
             );
             return new UnitDetails(id, Either.right(unitDeclaration));
         }
