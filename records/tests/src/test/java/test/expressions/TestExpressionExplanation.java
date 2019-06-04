@@ -136,20 +136,20 @@ public class TestExpressionExplanation
                 // Once for function, once for function call:
                 e("? < 3", null, null, null),
                 explanation("? < 3", ExecutionType.CALL_IMPLICIT, q(3), false, null, e("?", q(3), 3, null), lit(3))));
-        testExplanation("@call @function all(@entire T2\\asc, (? = (1.8 \u00B1 1.2)))",
-                e("@call @function all(@entire T2\\asc, (? = (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
+        testExplanation("@call @function all(@entire T2\\asc, (? =~ (1.8 \u00B1 1.2)))",
+                e("@call @function all(@entire T2\\asc, (? =~ (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
                     // Once for function, once for call:
-                    e("? = (1.8 \u00B1 1.2)", null, null, null),
-                    explanation("? = (1.8 \u00B1 1.2)", ExecutionType.CALL_IMPLICIT, q(4), false, null, 
+                    e("? =~ (1.8 \u00B1 1.2)", null, null, null),
+                    explanation("? =~ (1.8 \u00B1 1.2)", ExecutionType.CALL_IMPLICIT, q(4), false, null, 
                         e("?", q(4), 4, null),
                         m("1.8 \u00B1 1.2", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
         )));
-        testExplanation("@call @function none(@entire T2\\asc, (? <> (1.8 \u00B1 0.9)))",
-                e("@call @function none(@entire T2\\asc, (? <> (1.8 \u00B1 0.9)))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+        testExplanation("@call @function none(@entire T2\\asc, @function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
+                e("@call @function none(@entire T2\\asc, @function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                     // Once for function, once for call:
-                    e("? <> (1.8 \u00B1 0.9)", null, null, null),
-                    explanation("? <> (1.8 \u00B1 0.9)", ExecutionType.CALL_IMPLICIT, q(3), true, null, 
-                        e("?", q(3), 3, null),
+                    e("@function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
+                    explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, q(3), true, null, 
+                        e("x", q(3), 3, null),
                         m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
         )));
         
