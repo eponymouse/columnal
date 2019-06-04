@@ -126,21 +126,21 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     @Test
     public void testExplanationMatch() throws UserException, InternalException
     {
-        addCheck("T2", CheckType.NO_ROWS, "@match (@column asc, @column alphabet animals) @case (_n, _) @given n > 5 @then false @case (_, _animal) @then (_n = @call @function text length(animal)) & (n > 5) @endmatch");
+        addCheck("T2", CheckType.NO_ROWS, "@match (num: @column asc, animal: @column alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call @function text length(animal) =~ n) & (n > 5) @endmatch");
         testFailureExplanation(
-                "(\u2192asc, \u2192alphabet animals) was (1, \"Aardvark\"), using asc (row 1), alphabet animals (row 1)",
-                "(_n, _) matched",
+                "(num: \u2192asc, animal: \u2192alphabet animals) was (num: 1, animal: \"Aardvark\"), using asc (row 1), alphabet animals (row 1)",
+                "(num: n) matched",
                 "n was 1",
                 "n > 5 was false",
-                "(_, _animal) matched",
+                "(num:_, animal: animal) matched",
                 "animal was \"Aardvark\"",
                 "text length(animal) was 8",
-                "_n matched",
-                "_n = text length(animal) was true",
+                "n matched",
+                "n = text length(animal) was true",
                 "n was 8",
                 "n > 5 was true",
-                "(_n = text length(animal)) & (n > 5) was true",
-                "match (\u2192asc, \u2192alphabet animals) case (_n, _) given n > 5 then false case (_, _animal) then (_n = text length(animal)) & (n > 5) endmatch was true");
+                "(text length(animal) =~ n) & (n > 5) was true",
+                "match (\u2192asc, \u2192alphabet animals) case (num:n) given n > 5 then false case (num:_, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
     }
 
     @Test
