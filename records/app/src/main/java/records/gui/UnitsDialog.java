@@ -124,7 +124,7 @@ public class UnitsDialog extends Dialog<Void>
                 builtInUnitPane,
                 "units-dialog-content");
         
-        content.setPrefWidth(400.0);
+        content.setPrefWidth(550.0);
         content.setPrefHeight(700.0);
         
         getDialogPane().setContent(content);
