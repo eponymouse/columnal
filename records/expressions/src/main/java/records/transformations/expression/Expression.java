@@ -655,9 +655,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     b.add(new InvalidIdentExpression("@define"));
                     b.add(expression);
                 }
-                b.add(new InvalidIdentExpression("@in"));
+                b.add(new InvalidIdentExpression("@then"));
                 b.add(visitTopLevelExpression(ctx.topLevelExpression()));
-                b.add(new InvalidIdentExpression("@endin"));
+                b.add(new InvalidIdentExpression("@enddefine"));
                 return new InvalidOperatorExpression(b.build());
             }, mixed -> new DefineExpression(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
         }
@@ -851,7 +851,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitFieldAccessExpression(FieldAccessExpressionContext ctx)
         {
-            return new FieldAccessExpression(visitExpression(ctx.expression()), IdentifierUtility.fromParsed(ctx.ident()));
+            return new FieldAccessExpression(visitExpression(ctx.expression()), new IdentExpression(IdentifierUtility.fromParsed(ctx.ident())));
         }
 
         @Override

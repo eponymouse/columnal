@@ -627,6 +627,12 @@ public class PropTypecheckIndividual
     {
         checkConcreteType(DataType.TEXT, "@define abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call @function element(abs, 1)#b @enddefine");
     }
+
+    @Test
+    public void checkField3() throws UserException, InternalException
+    {
+        checkConcreteType(m -> DataType.number(new NumberInfo(m.getUnitManager().loadUse("m").times(m.getUnitManager().loadUse("inch")))), "@define record = (x: 36{m}, y : 37{inch}) @define getX = (?#x) @define getY = (?#y) @then @call getX(record) * getY(record) @enddefine");
+    }
     
 
 }

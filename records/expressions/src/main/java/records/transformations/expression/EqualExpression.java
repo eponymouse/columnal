@@ -149,7 +149,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     @Override
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
-        return visitor.equal(this, expressions);
+        return visitor.equal(this, expressions, lastIsPattern);
     }
     
     public ImmutableList<@Recorded Expression> getOperands()

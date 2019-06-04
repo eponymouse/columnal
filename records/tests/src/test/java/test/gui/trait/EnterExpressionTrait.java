@@ -1,26 +1,39 @@
 package test.gui.trait;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import records.data.ColumnId;
+import records.data.TableId;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
+import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.*;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.transformations.expression.visitor.ExpressionVisitorStream;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.UnitType;
 import utility.Utility;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -43,314 +56,442 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     }
     
     @OnThread(Tag.Any)
-    public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r) throws InternalException
+    public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r)
     {
-        Class<?> c = expression.getClass();
-        if (c == RecordExpression.class)
+        expression.visit(new ExpressionVisitorFlat<UnitType>()
         {
-            RecordExpression t = (RecordExpression)expression;
-            if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
+            @Override
+            protected UnitType makeDef(Expression expression)
             {
-                write("(");
-                push(KeyCode.DELETE);
+                throw new RuntimeException("Unsupported expression: " + expression.getClass());
+                //return UnitType.UNIT;
             }
-            ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members = t.getFields();
-            for (int i = 0; i < members.size(); i++)
-            {
-                if (i > 0)
-                    write(",");
-                write(members.get(i).getFirst()  + ": ");
-                enterExpression(typeManager, members.get(i).getSecond(), EntryBracketStatus.SUB_EXPRESSION, r);
 
-            }
-            if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
-                write(")");
-        }
-        else if (c == ArrayExpression.class)
-        {
-            ArrayExpression t = (ArrayExpression)expression;
-            write("[");
-            push(KeyCode.DELETE);
-            ImmutableList<Expression> members = t.getElements();
-            for (int i = 0; i < members.size(); i++)
+            @Override
+            public UnitType record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
             {
-                if (i > 0)
-                    write(",");
-                enterExpression(typeManager, members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
-
-            }
-            write("]");
-        }
-        else if (c == StringLiteral.class)
-        {
-            write('"');
-            write(((StringLiteral)expression).editString().replaceAll("\"", "^q"));
-            /*
-            int extraChars = 0;
-            for (char singleChar : ((StringLiteral) expression).getRawString().toCharArray())
-            {
-                if (singleChar != '"')
+                if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
                 {
-                    write(singleChar);
+                    write("(");
+                    push(KeyCode.DELETE);
+                }
+                for (int i = 0; i < members.size(); i++)
+                {
+                    if (i > 0)
+                        write(",");
+                    write(members.get(i).getFirst()  + ": ");
+                    enterExpression(typeManager, members.get(i).getSecond(), EntryBracketStatus.SUB_EXPRESSION, r);
+
+                }
+                if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
+                    write(")");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType list(ArrayExpression self, ImmutableList<@Recorded Expression> members)
+            {
+                write("[");
+                push(KeyCode.DELETE);
+                for (int i = 0; i < members.size(); i++)
+                {
+                    if (i > 0)
+                        write(",");
+                    enterExpression(typeManager, members.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+
+                }
+                write("]");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litText(StringLiteral self, @Value String value)
+            {
+                write('"');
+                write(((StringLiteral)expression).editString().replaceAll("\"", "^q"));
+                write('"');
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litNumber(NumericLiteral self, @Value Number value, @Nullable UnitExpression unit)
+            {
+                write(self.editString());
+                if (unit != null)
+                {
+                    write("{");
+                    push(KeyCode.DELETE);
+                    try
+                    {
+                        enterUnit(unit, r);
+                    }
+                    catch (InternalException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    write("}");
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litTemporal(TemporalLiteral self, DateTimeType literalType, String content, Either<StyledString, TemporalAccessor> value)
+            {
+                write(self.toString(), DELAY);
+                // Delete trailing curly and other:
+                int opened = (int)expression.toString().codePoints().filter(ch -> ch == '{' || ch == '[' || ch == '(').count();
+                for (int i = 0; i < opened; i++)
+                {
+                    push(KeyCode.DELETE);
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litBoolean(BooleanLiteral self, @Value Boolean value)
+            {
+                write(self.toString(), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litType(TypeLiteralExpression self, TypeExpression type)
+            {
+                write("type{", DELAY);
+                push(KeyCode.DELETE);
+                TypeLiteralExpression f = (TypeLiteralExpression)expression;
+                try
+                {
+                    enterType(f.getType(), r);
+                }
+                catch (InternalException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                write("}");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
+            {
+                write(self.toString(), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+            {
+                write((referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnName.getRaw(), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
+            {
+                enterExpression(typeManager, callTarget, EntryBracketStatus.SUB_EXPRESSION, r);
+                write("(");
+                // Delete closing bracket:
+                push(KeyCode.DELETE);
+                for (int i = 0; i < arguments.size(); i++)
+                {
+                    if (i > 0)
+                        write(",");
+                    enterExpression(typeManager, arguments.get(i), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
+                }
+                write(")");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
+            {
+                String name = functionDefinition.getName();
+                if (r.nextBoolean())
+                {
+                    write(name, DELAY);
+                    if (r.nextBoolean())
+                    {
+                        scrollLexAutoCompleteToOption(name + "()");
+                        push(KeyCode.ENTER);
+                        // Get rid of brackets; if in a call expression, we will add them again:
+                        push(KeyCode.BACK_SPACE);
+                        push(KeyCode.DELETE);
+                    }
                 }
                 else
                 {
-                    write('a');
-                    push(KeyCode.LEFT);
-                    write('"');
-                    extraChars += 1;
-                }
-            }
-            for (int i = 0; i < extraChars; i++)
-            {
-                push(KeyCode.DELETE);
-            }
-            */
-            write('"');
-        }
-        else if (NumericLiteral.class.isAssignableFrom(c))
-        {
-            NumericLiteral num = (NumericLiteral)expression;
-            write(num.editString());
-            @Recorded UnitExpression unitExpression = num.getUnitExpression();
-            if (unitExpression != null)
-            {
-                write("{");
-                push(KeyCode.DELETE);
-                enterUnit(unitExpression, r);
-                write("}");
-            }
-        }
-        else if (TemporalLiteral.class.isAssignableFrom(c))
-        {
-            write(((Literal)expression).toString(), DELAY);
-            // Delete trailing curly and other:
-            int opened = (int)expression.toString().codePoints().filter(ch -> ch == '{' || ch == '[' || ch == '(').count();
-            for (int i = 0; i < opened; i++)
-            {
-                push(KeyCode.DELETE);
-            }
-            
-        }
-        else if (Literal.class.isAssignableFrom(c))
-        {
-            write(((Literal)expression).toString(), DELAY);
-        }
-        else if (c == ColumnReference.class)
-        {
-            ColumnReference columnReference = (ColumnReference) expression;
-            write((columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnReference.getColumnId().getRaw(), DELAY);
-            //push(KeyCode.ENTER);
-        }
-        else if (c == CallExpression.class)
-        {
-            CallExpression call = (CallExpression) expression;
-            enterExpression(typeManager, call.getFunction(), EntryBracketStatus.SUB_EXPRESSION, r);
-            write("(");
-            // Delete closing bracket:
-            push(KeyCode.DELETE);
-            for (int i = 0; i < call.getParams().size(); i++)
-            {
-                if (i > 0)
-                    write(",");
-                enterExpression(typeManager, call.getParams().get(i), EntryBracketStatus.DIRECTLY_ROUND_BRACKETED, r);
-            }
-            write(")");
-            
-        }
-        else if (c == StandardFunction.class)
-        {
-            StandardFunction function = (StandardFunction) expression;
-            String name = function.getName();
-            if (r.nextBoolean())
-            {
-                write(name, DELAY);
-                if (r.nextBoolean())
-                {
+                    write(name.substring(0, 1 + r.nextInt(name.length() - 1)));
                     scrollLexAutoCompleteToOption(name + "()");
                     push(KeyCode.ENTER);
                     // Get rid of brackets; if in a call expression, we will add them again:
                     push(KeyCode.BACK_SPACE);
                     push(KeyCode.DELETE);
                 }
+                return UnitType.UNIT;
             }
-            else
+
+            @Override
+            public UnitType constructor(ConstructorExpression tag, Either<String, TagInfo> tagInfo)
             {
-                write(name.substring(0, 1 + r.nextInt(name.length() - 1)));
-                scrollLexAutoCompleteToOption(name + "()");
-                push(KeyCode.ENTER);
-                // Get rid of brackets; if in a call expression, we will add them again:
-                push(KeyCode.BACK_SPACE);
-                push(KeyCode.DELETE);
-            }
-        }
-        else if (c == ConstructorExpression.class)
-        {
-            ConstructorExpression tag = (ConstructorExpression) expression;
-            String tagName = tag.getName();
-            boolean multipleTagsOfThatName = typeManager.ambiguousTagName(tagName);
-            
-            if (multipleTagsOfThatName && tag.getTypeName() != null)
-                tagName = tag.getTypeName().getRaw() + "\\" + tagName;
-            write(tagName, DELAY);
-            if (r.nextBoolean())
-            {
-                scrollLexAutoCompleteToOption(tagName + (tag._test_hasInner() ? "()" : ""));
-                push(KeyCode.ENTER);
-                if (tag._test_hasInner())
+                String tagName = tag.getName();
+                boolean multipleTagsOfThatName = typeManager.ambiguousTagName(tagName);
+
+                if (multipleTagsOfThatName && tag.getTypeName() != null)
+                    tagName = tag.getTypeName().getRaw() + "\\" + tagName;
+                write(tagName, DELAY);
+                if (r.nextBoolean())
                 {
-                    // Get rid of brackets; if in a call expression, we will add them again:
-                    push(KeyCode.BACK_SPACE);
+                    scrollLexAutoCompleteToOption(tagName + (tag._test_hasInner() ? "()" : ""));
+                    push(KeyCode.ENTER);
+                    if (tag._test_hasInner())
+                    {
+                        // Get rid of brackets; if in a call expression, we will add them again:
+                        push(KeyCode.BACK_SPACE);
+                        push(KeyCode.DELETE);
+                    }
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
+            {
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH), DELAY);
+                enterExpression(typeManager, expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                for (MatchClause matchClause : clauses)
+                {
+                    write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), DELAY);
+                    for (int i = 0; i < matchClause.getPatterns().size(); i++)
+                    {
+                        if (i > 0)
+                            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), DELAY);
+                        Pattern pattern = matchClause.getPatterns().get(i);
+                        enterExpression(typeManager, pattern.getPattern(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                        @Nullable Expression guard = pattern.getGuard();
+                        if (guard != null)
+                        {
+                            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), DELAY);
+                            enterExpression(typeManager, guard, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                        }
+                    }
+                    write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
+                    enterExpression(typeManager, matchClause.getOutcome(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                }
+                // To finish whole match expression:
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDMATCH), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+            {
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF), DELAY);
+                enterExpression(typeManager, condition, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
+                enterExpression(typeManager, thenExpression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), DELAY);
+                enterExpression(typeManager, elseExpression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDIF), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType matchAnything(MatchAnythingExpression self)
+            {
+                write("_");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType implicitLambdaArg(ImplicitLambdaArg self)
+            {
+                write("?");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType ident(IdentExpression self, @ExpressionIdentifier String text)
+            {
+                write(text, DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType invalidIdent(InvalidIdentExpression self, String text)
+            {
+                write(text, DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items)
+            {
+                for (Expression e : items)
+                {
+                    enterExpression(typeManager, e, EntryBracketStatus.SUB_EXPRESSION, r);
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+            {
+                for (Either<@Recorded HasTypeExpression, Definition> define : defines)
+                {
+                    write("@define");
+                    define.either_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
+                            x -> {
+                                enterExpression(typeManager, x.lhsPattern, EntryBracketStatus.SUB_EXPRESSION, r);
+                                write("=");
+                                enterExpression(typeManager, x.rhsValue, EntryBracketStatus.SUB_EXPRESSION, r);
+                            });
+                }
+                write("@then");
+                enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write("@enddefine");
+                return UnitType.UNIT;
+            }
+            
+            private UnitType enterNary(NaryOpExpression n)
+            {
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                {
+                    write("(");
                     push(KeyCode.DELETE);
                 }
+                for (int i = 0; i < n.getChildren().size(); i++)
+                {
+                    enterExpression(typeManager, n.getChildren().get(i), EntryBracketStatus.SUB_EXPRESSION, r);
+                    if (i < n.getChildren().size() - 1)
+                    {
+                        write(n._test_getOperatorEntry(i));
+                        if (n._test_getOperatorEntry(i).equals("-") || n._test_getOperatorEntry(i).equals("+") || r.nextBoolean())
+                            write(" ");
+                    }
+                }
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                    write(")");
+                return UnitType.UNIT;
             }
-        }
-        else if (c == MatchExpression.class)
-        {
-            MatchExpression match = (MatchExpression)expression;
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH), DELAY);
-            enterExpression(typeManager, match.getExpression(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-            for (MatchClause matchClause : match.getClauses())
+
+            @Override
+            public UnitType addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
             {
-                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), DELAY);
-                for (int i = 0; i < matchClause.getPatterns().size(); i++)
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
+            {
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+            {
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+            {
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
+            {
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+            {
+                return enterNary(self);
+            }
+            
+            private UnitType enterBinary(BinaryOpExpression b)
+            {
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                {
+                    write("(");
+                    push(KeyCode.DELETE);
+                }
+                enterExpression(typeManager, b.getLHS(), EntryBracketStatus.SUB_EXPRESSION, r);
+                write(b._test_getOperatorEntry());
+                if (b._test_getOperatorEntry().equals("-") || b._test_getOperatorEntry().equals("+") || r.nextBoolean())
+                    write(" ");
+                enterExpression(typeManager, b.getRHS(), EntryBracketStatus.SUB_EXPRESSION, r);
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                    write(")");
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            {
+                return enterBinary(self);
+            }
+
+            @Override
+            public UnitType divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            {
+                return enterBinary(self);
+            }
+
+            @Override
+            public UnitType plusMinus(PlusMinusPatternExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            {
+                return enterBinary(self);
+            }
+
+            @Override
+            public UnitType raise(RaiseExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            {
+                return enterBinary(self);
+            }
+
+            @Override
+            public UnitType hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+            {
+                write(varName);
+                write("::");
+                enterExpression(typeManager, type, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName)
+            {
+                enterExpression(typeManager, lhsRecord, EntryBracketStatus.SUB_EXPRESSION, r);
+                enterExpression(typeManager, fieldName, EntryBracketStatus.SUB_EXPRESSION, r);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            {
+                return enterNary(self);
+            }
+
+            @Override
+            public UnitType lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
+            {
+                write("@function (");
+                for (int i = 0; i < parameters.size(); i++)
                 {
                     if (i > 0)
-                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), DELAY);
-                    Pattern pattern = matchClause.getPatterns().get(i);
-                    enterExpression(typeManager, pattern.getPattern(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-                    @Nullable Expression guard = pattern.getGuard();
-                    if (guard != null)
-                    {
-                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), DELAY);
-                        enterExpression(typeManager, guard, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-                    }
+                        write(", ");
+                    enterExpression(typeManager, parameters.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
                 }
-                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
-                enterExpression(typeManager, matchClause.getOutcome(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write (") @then");
+                enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+                write("@endfunction");
+                return UnitType.UNIT;
             }
-            // To finish whole match expression:
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDMATCH), DELAY);
-        }
-        else if (c == IfThenElseExpression.class)
-        {
-            IfThenElseExpression ite = (IfThenElseExpression) expression;
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF), DELAY);
-            enterExpression(typeManager, ite._test_getCondition(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
-            enterExpression(typeManager, ite._test_getThen(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), DELAY);
-            enterExpression(typeManager, ite._test_getElse(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDIF), DELAY);
-            
-        }
-        else if (NaryOpExpression.class.isAssignableFrom(c))
-        {
-            NaryOpExpression n = (NaryOpExpression)expression;
-            if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
-            {
-                write("(");
-                push(KeyCode.DELETE);
-            }
-            for (int i = 0; i < n.getChildren().size(); i++)
-            {
-                enterExpression(typeManager, n.getChildren().get(i), EntryBracketStatus.SUB_EXPRESSION, r);
-                if (i < n.getChildren().size() - 1)
-                {
-                    write(n._test_getOperatorEntry(i));
-                    if (n._test_getOperatorEntry(i).equals("-") || n._test_getOperatorEntry(i).equals("+") || r.nextBoolean())
-                        write(" ");
-                }
-            }
-            if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
-                write(")");
-        }
-        else if (BinaryOpExpression.class.isAssignableFrom(c))
-        {
-            BinaryOpExpression b = (BinaryOpExpression)expression;
-            if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
-            {
-                write("(");
-                push(KeyCode.DELETE);
-            }
-            enterExpression(typeManager, b.getLHS(), EntryBracketStatus.SUB_EXPRESSION, r);
-            write(b._test_getOperatorEntry());
-            if (b._test_getOperatorEntry().equals("-") || b._test_getOperatorEntry().equals("+") || r.nextBoolean())
-                write(" ");
-            enterExpression(typeManager, b.getRHS(), EntryBracketStatus.SUB_EXPRESSION, r);
-            if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
-                write(")");
-        }
-        else if (c == IdentExpression.class)
-        {
-            String ident = ((IdentExpression) expression).getText();
-            write(ident, DELAY);
-        }
-        else if (c == TypeLiteralExpression.class)
-        {
-            write("type{", DELAY);
-            push(KeyCode.DELETE);
-            TypeLiteralExpression f = (TypeLiteralExpression)expression; 
-            enterType(f.getType(), r);
-            write("}");
-        }
-        else if (c == MatchAnythingExpression.class)
-        {
-            write("_", DELAY);
-        }
-        else if (c == InvalidOperatorExpression.class)
-        {
-            InvalidOperatorExpression invalid = (InvalidOperatorExpression) expression;
-            for (Expression e : invalid._test_getItems())
-            {
-                enterExpression(typeManager, e, EntryBracketStatus.SUB_EXPRESSION, r);
-            }
-        }
-        else if (c == InvalidIdentExpression.class)
-        {
-            InvalidIdentExpression invalid = (InvalidIdentExpression) expression;
-            write(invalid.getText(), DELAY);
-        }
-        else if (c == ImplicitLambdaArg.class)
-        {
-            write("?");
-        }
-        else if (c == DefineExpression.class)
-        {
-            expression.visit(new ExpressionVisitorStream<Void>() {
-                @Override
-                public Stream<Void> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression,@Recorded Definition>> defines, @Recorded Expression body)
-                {
-                    try
-                    {
-                        for (Either<@Recorded HasTypeExpression, Definition> define : defines)
-                        {
-                            write("@define");
-                            define.eitherInt_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
-                                x -> {
-                                    enterExpression(typeManager, x.lhsPattern, EntryBracketStatus.SUB_EXPRESSION, r);
-                                    write("=");
-                                    enterExpression(typeManager, x.rhsValue, EntryBracketStatus.SUB_EXPRESSION, r);
-                                });
-                        }
-                        write("@in");
-                        enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-                        write("@endin");
-                    }
-                    catch (InternalException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                    
-                    return super.define(self, defines, body);
-                }
-            });
-        }
-        else
-        {
-            fail("Not yet supported: " + c);
-        }
+        });
+        
         // TODO add randomness to entry methods (e.g. selection from auto-complete
-        // TODO check position of auto-complete
     }
 }

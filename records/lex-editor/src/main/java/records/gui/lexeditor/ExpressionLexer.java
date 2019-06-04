@@ -87,7 +87,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         GIVEN(records.grammar.ExpressionLexer.CASEGUARD),
         ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH),
         DEFINE(records.grammar.ExpressionLexer.DEFINE),
-        ENDDEFINE(records.grammar.ExpressionLexer.ENDDEFINE);
+        ENDDEFINE(records.grammar.ExpressionLexer.ENDDEFINE),
+        FUNCTION(records.grammar.ExpressionLexer.FUNCTION),
+        ENDFUNCTION(records.grammar.ExpressionLexer.ENDFUNCTION);
 
         private final String keyword;
 
@@ -132,6 +134,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         AND("&", "op.and"), OR("|", "op.or"),
         PLUS_MINUS("\u00B1", "op.plusminus"), RAISE("^", "op.raise"),
         COLON(":", "op.colon"),
+        FIELD_ACCESS("#", "op.fieldAccess"),
         COMMA(",", "op.separator");
 
         private final String op;

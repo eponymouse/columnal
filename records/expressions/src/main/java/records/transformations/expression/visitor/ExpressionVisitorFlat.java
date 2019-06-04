@@ -88,7 +88,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions)
+    public T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
     {
         return makeDef(self);
     }
@@ -227,7 +227,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    public T field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName)
     {
         return makeDef(self);
     }

@@ -44,7 +44,7 @@ public interface ExpressionVisitor<T>
 
     T comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators);
     // Singular name to avoid clash with Object.equals
-    T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions);
+    T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern);
 
     T ident(IdentExpression self, @ExpressionIdentifier String text);
 
@@ -90,5 +90,5 @@ public interface ExpressionVisitor<T>
 
     T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
 
-    T field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName);
+    T field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName);
 }

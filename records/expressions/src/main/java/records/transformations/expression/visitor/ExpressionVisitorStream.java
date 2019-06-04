@@ -104,7 +104,7 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions)
+    public Stream<T> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
     {
         return apply(expressions);
     }
@@ -248,9 +248,9 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> field(FieldAccessExpression self, Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    public Stream<T> field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName)
     {
-        return lhsRecord.visit(this);
+        return Stream.<T>concat(lhsRecord.<Stream<T>>visit(this), fieldName.<Stream<T>>visit(this));
     }
 
     protected Stream<T> visitPattern(Pattern pattern)

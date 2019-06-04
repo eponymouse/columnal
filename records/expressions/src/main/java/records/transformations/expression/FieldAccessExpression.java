@@ -28,9 +28,9 @@ import java.util.stream.Stream;
 public class FieldAccessExpression extends Expression
 {
     private final Expression lhsRecord;
-    private final @ExpressionIdentifier String fieldName;
+    private final Expression fieldName;
 
-    public FieldAccessExpression(Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    public FieldAccessExpression(Expression lhsRecord, Expression fieldName)
     {
         this.lhsRecord = lhsRecord;
         this.fieldName = fieldName;
@@ -43,8 +43,14 @@ public class FieldAccessExpression extends Expression
         if (lhsChecked == null)
             return null;
         
+        if (!(fieldName instanceof IdentExpression))
+        {
+            onError.recordError(fieldName, StyledString.s("Field name must be a valid name (and not an expression)"));
+            return null;
+        }
+        
         @Recorded TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
-        TypeExp recordType = TypeExp.record(this, ImmutableMap.of(fieldName, fieldType), false);
+        TypeExp recordType = TypeExp.record(this, ImmutableMap.of(((IdentExpression)fieldName).getText(), fieldType), false);
         
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
             return null;
@@ -58,7 +64,7 @@ public class FieldAccessExpression extends Expression
         ValueResult lhsResult = lhsRecord.calculateValue(state);
         @Value Record record = Utility.cast(lhsResult.value, Record.class);
         
-        return result(record.getField(fieldName), state, ImmutableList.of(lhsResult));
+        return result(record.getField(((IdentExpression)fieldName).getText()), state, ImmutableList.of(lhsResult));
     }
 
     @Override
@@ -70,7 +76,7 @@ public class FieldAccessExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return lhsRecord.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName;
+        return lhsRecord.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(structured, BracketedStatus.NEED_BRACKETS, renames);
     }
 
     @Override
@@ -114,6 +120,6 @@ public class FieldAccessExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new FieldAccessExpression(lhsRecord.replaceSubExpression(toReplace, replaceWith), fieldName);
+            return new FieldAccessExpression(lhsRecord.replaceSubExpression(toReplace, replaceWith), fieldName.replaceSubExpression(toReplace, replaceWith));
     }
 }

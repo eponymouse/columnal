@@ -713,7 +713,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         @Override
         public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, CanonicalSpan start, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
         {
-            return Either.<@Recorded Expression, Terminator>right(expect(ImmutableList.of(Keyword.ENDDEFINE), miscBracketsFrom(start), (e, s) -> Either.<@Recorded Expression, Terminator>left(defineOrInvalid(Utility.<Pair<CanonicalSpan, @Recorded Expression>>appendToList(defines, new Pair<>(lastDefine, expressionBefore)), start, e, new CanonicalSpan(defines.get(0).getFirst().start, start.end))), () -> {
+            return Either.<@Recorded Expression, Terminator>right(expect(ImmutableList.of(Keyword.ENDDEFINE), miscBracketsFrom(start), (e, s) -> Either.<@Recorded Expression, Terminator>left(defineOrInvalid(Utility.<Pair<CanonicalSpan, @Recorded Expression>>appendToList(defines, new Pair<>(lastDefine, expressionBefore)), start, e, new CanonicalSpan(defines.isEmpty() ? start.start : defines.get(0).getFirst().start, start.end))), () -> {
                 return Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, p.getFirst()), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, start), expressionBefore)).collect(ImmutableList.<@Recorded Expression>toImmutableList());
             }, null, false));
         }
@@ -828,6 +828,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // with equal bracketing likelihood/precedence.
     @SuppressWarnings("recorded")
     final ImmutableList<ImmutableList<OperatorExpressionInfo>> OPERATORS = ImmutableList.<ImmutableList<OperatorExpressionInfo>>of(
+        ImmutableList.<OperatorExpressionInfo>of(
+            new OperatorExpressionInfo(Op.FIELD_ACCESS, (lhs, _n, rhs, _b, _e) -> new FieldAccessExpression(lhs, rhs))
+        ),
+            
+            
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(Op.RAISE, (lhs, _n, rhs, _b, _e) -> new RaiseExpression(lhs, rhs))

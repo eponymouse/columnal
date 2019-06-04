@@ -152,9 +152,4 @@ public class RecordExpression extends Expression
         else
             return new RecordExpression(Utility.<Pair<@ExpressionIdentifier String, Expression>, Pair<@ExpressionIdentifier String, Expression>>mapListI(members, (Pair<@ExpressionIdentifier String, Expression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
     }
-
-    public ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> getFields()
-    {
-        return members;
-    }
 }

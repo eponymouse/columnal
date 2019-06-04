@@ -161,21 +161,6 @@ public class IfThenElseExpression extends NonOperatorExpression
         return result;
     }
 
-    public Expression _test_getCondition()
-    {
-        return condition;
-    }
-
-    public Expression _test_getThen()
-    {
-        return thenExpression;
-    }
-
-    public Expression _test_getElse()
-    {
-        return elseExpression;
-    }
-
     @Override
     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)

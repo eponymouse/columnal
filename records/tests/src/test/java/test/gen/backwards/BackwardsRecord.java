@@ -13,6 +13,7 @@ import records.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FieldAccessExpression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.RecordExpression;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
@@ -64,7 +65,7 @@ public class BackwardsRecord extends BackwardsProvider
                     valueMap.put(f.getKey(), parent.makeValue(f.getValue()));
             }
             
-            return new FieldAccessExpression(parent.make(recordType, new RecordMap(valueMap), maxLevels - 1), ourField);
+            return new FieldAccessExpression(parent.make(recordType, new RecordMap(valueMap), maxLevels - 1), new IdentExpression(ourField));
         });
     }
 }
