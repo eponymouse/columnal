@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.visitor.ExpressionVisitor;
@@ -71,6 +72,8 @@ public class BackwardsFunction extends BackwardsProvider
         });
     }
     
+    // Gives back list of expressions, and a function that takes replacements for those expressions and reassembles the original.
+    // The idea being that you swap the originals for function parameters.
     @OnThread(Tag.Any)
     private class Functioniser extends ExpressionVisitorFlat<Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>>>
     {
@@ -81,6 +84,8 @@ public class BackwardsFunction extends BackwardsProvider
             this.random = random;
         }
         
+        // Given a list of expressions, picks N of them (1 <= N <= list size) and returns those expressions, plus a function that given replacements for those expressions,
+        // calls make with the right ones in the list replaced.
         private Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> pick(ImmutableList<Expression> expressions, Function<ImmutableList<Expression>, Expression> make)
         {
             int numPicked = 1 + r.nextInt(expressions.size() - 1);
@@ -112,21 +117,54 @@ public class BackwardsFunction extends BackwardsProvider
         @Override
         protected Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> makeDef(Expression expression)
         {
-            return new IfThenElseExpression(new BooleanLiteral(true), expression, expression).visit(this);
+            return new Pair<>(ImmutableList.of(new BooleanLiteral(true)), ps -> new IfThenElseExpression(ps.get(0), expression, expression));
         }
 
+        // Note: can't do if-then-else because its condition may define variables that are used in the body.
+        /*
         @Override
         public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
         {
             return new Pair<>(ImmutableList.of(condition), ps -> new IfThenElseExpression(ps.get(0), thenExpression, elseExpression));
         }
+        */
 
         @Override
         public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
         {
             return pick(expressions, es -> new AddSubtractExpression(es, ops));
         }
-        
+
+        @Override
+        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        {
+            return pick(ImmutableList.of(lhs, rhs), es -> new NotEqualExpression(es.get(0), es.get(1)));
+        }
+
+        @Override
+        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        {
+            return pick(ImmutableList.of(lhs, rhs), es -> new DivideExpression(es.get(0), es.get(1)));
+        }
+
+        @Override
+        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+        {
+            return pick(expressions, es -> new OrExpression(es));
+        }
+
+        @Override
+        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+        {
+            return pick(expressions, es -> new ComparisonExpression(es, operators));
+        }
+
+        @Override
+        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+        {
+            return pick(expressions, es -> new TimesExpression(es));
+        }
+
         // TODO lots more, call pick
     }
 }
