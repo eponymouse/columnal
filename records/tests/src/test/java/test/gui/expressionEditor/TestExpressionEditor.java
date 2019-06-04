@@ -468,7 +468,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testNestedTupleType() throws Exception
     {
-        testSimple("@call @function as type(type{((Number, Boolean), Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
+        testSimple("@call @function as type(type{(a 0: (a 0: Number, b 1: Boolean), b 1: Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
     }
 
     @Test
@@ -572,5 +572,29 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testDefine() throws Exception
     {
         testSimple("@define x = 3 @define y = x @then x / y @enddefine");
+    }
+
+    @Test
+    public void testFieldAccess() throws Exception
+    {
+        testSimple("@define x 1 = (a 0: 5, b 3: 6) @then (x 1#a 0) + ( x 1 # b 3 ) @enddefine");
+    }
+
+    @Test
+    public void testLambda() throws Exception
+    {
+        testSimple("@function (x) @then x + 3 @endfunction");
+    }
+
+    @Test
+    public void testLambda2() throws Exception
+    {
+        testSimple("@function (x, _, 3 \u00B1 4) @then x + 3 @endfunction");
+    }
+
+    @Test
+    public void testLambda3() throws Exception
+    {
+        testSimple("@define f = @function (x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2) @enddefine");
     }
 }
