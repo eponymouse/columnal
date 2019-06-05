@@ -14,26 +14,31 @@ import java.util.List;
 public class UnitRaiseExpression extends UnitExpression
 {
     private final @Recorded UnitExpression unit;
-    private final int power;
+    private final @Recorded UnitExpression power;
 
-    public UnitRaiseExpression(@Recorded UnitExpression unit, int power)
+    public UnitRaiseExpression(@Recorded UnitExpression unit, @Recorded UnitExpression power)
     {
         this.unit = unit;
         this.power = power;
     }
 
     @Override
-    public JellyUnit asUnit(UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(@Recorded UnitRaiseExpression this, UnitManager unitManager) throws UnitLookupException
     {
+        if (!(power instanceof UnitExpressionIntLiteral))
+        {
+            throw new UnitLookupException(StyledString.s("Units can only be raised to integer powers"), this, ImmutableList.of());
+        }
+        
         JellyUnit lhs = unit.asUnit(unitManager);
 
-        return lhs.raiseBy(power);
+        return lhs.raiseBy(((UnitExpressionIntLiteral)power).getNumber());
     }
 
     @Override
     public String save(boolean structured, boolean topLevel)
     {
-        return unit.save(structured, false) + "^" + power;
+        return unit.save(structured, false) + "^" + power.save(structured, false);
     }
 
     @Override
@@ -44,7 +49,7 @@ public class UnitRaiseExpression extends UnitExpression
 
         UnitRaiseExpression that = (UnitRaiseExpression) o;
 
-        if (power != that.power) return false;
+        if (!power.equals(that.power)) return false;
         return unit.equals(that.unit);
     }
 
@@ -64,7 +69,7 @@ public class UnitRaiseExpression extends UnitExpression
     public int hashCode()
     {
         int result = unit.hashCode();
-        result = 31 * result + power;
+        result = 31 * result + power.hashCode();
         return result;
     }
 
@@ -75,6 +80,6 @@ public class UnitRaiseExpression extends UnitExpression
         if (this == toReplace)
             return replaceWith;
         else
-            return new UnitRaiseExpression(unit.replaceSubExpression(toReplace, replaceWith), power);
+            return new UnitRaiseExpression(unit.replaceSubExpression(toReplace, replaceWith), power.replaceSubExpression(toReplace, replaceWith));
     }
 }

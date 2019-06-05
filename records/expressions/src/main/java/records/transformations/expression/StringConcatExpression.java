@@ -50,7 +50,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
         // Although it's a bit hacky, we check for variables directly from here using instanceof
         
         boolean lastWasVariable = false;
-        for (Expression expression : expressions)
+        for (@Recorded Expression expression : expressions)
         {
             if (isPattern(expression))
             {

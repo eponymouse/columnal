@@ -41,7 +41,7 @@ public class AndExpression extends NaryOpShortCircuitExpression
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // And has a special property: the type state is threaded through to the next item.
-        for (Expression expression : expressions)
+        for (@Recorded Expression expression : expressions)
         {
             @Nullable CheckedExp checked = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (checked == null)

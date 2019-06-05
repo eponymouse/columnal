@@ -148,6 +148,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         try
         {
             ErrorAndTypeRecorderStorer errorAndTypeRecorder = new ErrorAndTypeRecorderStorer();
+            @SuppressWarnings("recorded")
             @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));

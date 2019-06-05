@@ -45,7 +45,7 @@ public class RecordExpression extends Expression
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         HashMap<@ExpressionIdentifier String, TypeExp> fieldTypes = new HashMap<>();
-        for (Pair<@ExpressionIdentifier String, Expression> member : members)
+        for (Pair<@ExpressionIdentifier String, @Recorded Expression> member : members)
         {
             CheckedExp checkedExp = member.getSecond().check(dataLookup, typeState, kind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)

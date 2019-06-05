@@ -106,11 +106,11 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(@Recorded ComparisonExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> p.getOurType() instanceof NumTypeExp ? ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(this, new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.copyOf(
+        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> p.getOurType() instanceof NumTypeExp ? ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(this, new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.copyOf(
                 ExpressionUtil.getFixesForMatchingNumericUnits(state, p)
-        ))) : ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of());
+        ))) : ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of());
         if (type == null)
             return null;
         return onError.recordType(this, state, TypeExp.bool(this));

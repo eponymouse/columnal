@@ -45,7 +45,7 @@ public class LambdaExpression extends Expression
 
         TypeState typeState = original;
         
-        for (Expression parameter : parameters)
+        for (@Recorded Expression parameter : parameters)
         {
             CheckedExp checkedExp = parameter.check(dataLookup, typeState, ExpressionKind.PATTERN, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)

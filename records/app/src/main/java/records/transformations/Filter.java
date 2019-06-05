@@ -140,6 +140,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
                 ErrorAndTypeRecorderStorer typeRecorder = new ErrorAndTypeRecorderStorer();
                 // Must set it before, in case it throws:
                 typeChecked = true;
+                @SuppressWarnings("recorded")
                 @Nullable TypeExp checked = filterExpression.checkExpression(data, makeTypeState(getManager().getTypeManager()), typeRecorder);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)

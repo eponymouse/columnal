@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 
 public class FieldAccessExpression extends Expression
 {
-    private final Expression lhsRecord;
-    private final Expression fieldName;
+    private final @Recorded Expression lhsRecord;
+    private final @Recorded Expression fieldName;
 
-    public FieldAccessExpression(Expression lhsRecord, Expression fieldName)
+    public FieldAccessExpression(@Recorded Expression lhsRecord, @Recorded Expression fieldName)
     {
         this.lhsRecord = lhsRecord;
         this.fieldName = fieldName;

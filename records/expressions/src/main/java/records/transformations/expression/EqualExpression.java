@@ -76,7 +76,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         for (int i = 0; i < expressions.size(); i++)
         {
             boolean invalid = false;
-            Expression expression = expressions.get(i);
+            @Recorded Expression expression = expressions.get(i);
             @Nullable CheckedExp checked = expression.check(dataLookup, typeState, (lastIsPattern && i == expressions.size() - 1) ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_CONSTRAINED, onError);
             expressionTypes.add(Optional.ofNullable(checked).map(c -> c.typeExp));
             if (checked == null)

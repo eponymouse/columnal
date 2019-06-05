@@ -2,14 +2,18 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.EvaluateState.TypeLookup;
+import records.transformations.expression.function.FunctionLookup;
+import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.Either;
 import utility.ExConsumer;
 
 import java.util.ArrayList;
@@ -62,6 +66,14 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     {
         types.put(expression, typeExp);
         return typeExp;
+    }
+
+    // Don't require @Recorded on src
+    @SuppressWarnings("recorded")
+    @Override
+    public <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    {
+        return ErrorAndTypeRecorder.super.recordLeftError(typeManager, functionLookup, src, errorOrVal);
     }
 
     @Override

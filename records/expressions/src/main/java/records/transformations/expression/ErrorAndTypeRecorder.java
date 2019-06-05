@@ -47,7 +47,7 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message
      */
-    public default <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    public default <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, @Recorded Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return errorOrVal.<@Nullable T>either(err -> {
             @Nullable DataType fix = err.getSuggestedTypeFix();
@@ -95,7 +95,7 @@ public interface ErrorAndTypeRecorder
      */
     public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton);
     
-    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
     public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
     {

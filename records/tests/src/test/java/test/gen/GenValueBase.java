@@ -272,7 +272,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         else
         {
             if (r.nextBoolean())
-                u = new UnitRaiseExpression(new SingleUnitExpression(singleUnits.get(0).getFirst().getName()), -1);
+                u = new UnitRaiseExpression(new SingleUnitExpression(singleUnits.get(0).getFirst().getName()), new UnitExpressionIntLiteral(-1));
             else
                 u = new UnitDivideExpression(new UnitExpressionIntLiteral(1), new SingleUnitExpression(singleUnits.get(0).getFirst().getName()));
         }

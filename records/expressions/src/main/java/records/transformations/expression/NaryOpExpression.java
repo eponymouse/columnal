@@ -43,7 +43,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(@Recorded NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
         typeState = lambda.getSecond();
@@ -51,7 +51,7 @@ public abstract class NaryOpExpression extends Expression
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    public abstract @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp checkNaryOp(@Recorded NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Will be same length as expressions, if null use existing
     public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
@@ -209,14 +209,14 @@ public abstract class NaryOpExpression extends Expression
     
     protected interface CustomError
     {
-        ImmutableMap<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
+        ImmutableMap<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
     }
     
     public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
-        for (Expression expression : expressions)
+        for (@Recorded Expression expression : expressions)
         {
             @Nullable CheckedExp type = expression.check(data, state, ExpressionKind.EXPRESSION, locationInfo, onError);
             
@@ -243,10 +243,10 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                ImmutableMap<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
+                ImmutableMap<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
                 @Nullable StyledString unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
                 boolean recordedCustomError = false;
-                for (Entry<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
+                for (Entry<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
                 {
                     if (entry.getValue().getFirst() != null)
                     {

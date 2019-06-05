@@ -79,7 +79,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(@Recorded AddSubtractExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = onError.recordType(this, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
@@ -129,7 +129,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionUtil.getFixesForMatchingNumericUnits(state, p));
             ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
-            return err == null && builtFixes.isEmpty() ? ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
+            return err == null && builtFixes.isEmpty() ? ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
         }));
         return type;
     }

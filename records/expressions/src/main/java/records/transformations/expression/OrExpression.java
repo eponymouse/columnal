@@ -51,11 +51,11 @@ public class OrExpression extends NaryOpShortCircuitExpression
             if (ourType == null || Objects.equals(ourType.prune(), TypeExp.bool(null)))
             {
                 // We're fine or we have no idea.
-                return ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of();
+                return ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of();
             }
             else
             {
-                return ImmutableMap.<Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), ImmutableList.of()));
+                return ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), ImmutableList.of()));
             }
         }));
     }

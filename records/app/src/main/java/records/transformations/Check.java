@@ -99,6 +99,7 @@ public class Check extends Transformation implements SingleSourceTransformation
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
             ColumnLookup lookup = getColumnLookup();
+            @SuppressWarnings("recorded")
             @Nullable TypeExp checked = checkExpression.checkExpression(lookup, makeTypeState(getManager().getTypeManager(), checkType), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)

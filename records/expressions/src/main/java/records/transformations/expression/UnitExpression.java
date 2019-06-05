@@ -36,7 +36,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
             .filter((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> p.getValue() > 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
-                return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
+                return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
         
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
@@ -45,7 +45,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
             .filter((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> p.getValue() < 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
-                return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
+                return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(0 - p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
         
         if (bottom.isEmpty())
@@ -63,7 +63,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
             .filter((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() > 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
-                return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
+                return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
 
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
@@ -72,7 +72,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
             .filter((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() < 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
-                return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
+                return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(0 - p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
 
         if (bottom.isEmpty())
@@ -121,12 +121,11 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
                 {
                     try
                     {
-                        return new UnitRaiseExpression(singleUnit, Integer.parseInt(ctx.single().NUMBER().getText()));
+                        return new UnitRaiseExpression(singleUnit, new UnitExpressionIntLiteral(Integer.parseInt(ctx.single().NUMBER().getText())));
                     }
                     catch (NumberFormatException e)
                     {
-                        // Zero is guaranteed to be an error, so best default:
-                        return new UnitRaiseExpression(singleUnit, 0);
+                        return new UnitRaiseExpression(singleUnit, new InvalidSingleUnitExpression(ctx.single().NUMBER().getText()));
                     }
                 }
                 else

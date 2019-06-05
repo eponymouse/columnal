@@ -62,7 +62,7 @@ public class TimesExpression extends NaryOpTotalExpression
     public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
-        for (Expression expression : expressions)
+        for (@Recorded Expression expression : expressions)
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);

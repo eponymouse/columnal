@@ -229,10 +229,10 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     
     // Checks that all used variable names (unless this is a pattern) and column references are defined,
     // and that types check.  Return null if any problems.
-    public abstract @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp check(@Recorded Expression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Calls check with EXPRESSION kind, and returns just the type, discarding the state.
-    public final @Nullable TypeExp checkExpression(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable TypeExp checkExpression(@Recorded Expression this, ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable CheckedExp check = check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)

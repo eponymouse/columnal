@@ -76,10 +76,10 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded CallExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
-        for (Expression argument : arguments)
+        for (@Recorded Expression argument : arguments)
         {
             @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, function instanceof ConstructorExpression ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)

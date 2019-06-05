@@ -43,14 +43,8 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfo(ImmutableList.of(UnitOp.MULTIPLY), UnitSaver::makeTimes),
         new OperatorExpressionInfo(UnitOp.DIVIDE, UnitSaver::makeDivide),
-        new OperatorExpressionInfo(UnitOp.RAISE, new MakeBinary<UnitExpression,UnitSaver>() {
-
-            @Override
-            public <R extends StyledShowable> R makeBinary(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
-            {
-                return makeRaise(lhs, opNode, rhs, bracketedStatus, locationRecorder);
-            }
-        }));
+        new OperatorExpressionInfo(UnitOp.RAISE, UnitSaver::makeRaise)
+    );
     
     private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
     {
@@ -62,19 +56,10 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static <R> R makeRaise(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver, ?, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
+    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs)
     {
-        if (rhs instanceof UnitExpressionIntLiteral)
-            return bracketedStatus.applyBrackets.applySingle(new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber()));
-        else
-        {
-            UnitExpression unitExpression = new InvalidOperatorUnitExpression(ImmutableList.<@Recorded UnitExpression>of(
-                    lhs, locationRecorder.<InvalidSingleUnitExpression>record(opNode, new InvalidSingleUnitExpression("^")), rhs
-            ));
-            locationRecorder.addErrorAndFixes(bracketedStatus.location, StyledString.s("Units can only be raised to integer powers"), ImmutableList.of());
-            return bracketedStatus.applyBrackets.applySingle(unitExpression);
-        }
-    };
+        return new UnitRaiseExpression(lhs, rhs);
+    }
 
     @Override
     public BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression> expectSingle(@UnknownInitialization(Object.class)UnitSaver this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location)
@@ -130,7 +115,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         validOperators.remove(i);
                         @Recorded UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
                         CanonicalSpan recorder = locationRecorder.recorderFor(validOperands.get(i));
-                        validOperands.set(i, record(CanonicalSpan.fromTo(recorder, locationRecorder.recorderFor(power)), new UnitRaiseExpression(validOperands.get(i), power.getNumber())));
+                        validOperands.set(i, record(CanonicalSpan.fromTo(recorder, locationRecorder.recorderFor(power)), new UnitRaiseExpression(validOperands.get(i), power)));
                     }
                 }
             }

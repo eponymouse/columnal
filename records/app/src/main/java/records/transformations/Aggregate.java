@@ -241,6 +241,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                 SimulationFunctionInt<RecordSet, Column> column;
                 try
                 {
+                    @SuppressWarnings("recorded")
                     @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
                     @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
                     if (type == null || concrete == null)

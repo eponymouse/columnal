@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Scene;
@@ -30,28 +31,28 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
 {
     private final StyledString title;
     // Identified by reference, not by contents/hashCode.
-    private final EXPRESSION replacementTarget;
+    private final @Recorded EXPRESSION replacementTarget;
     private final Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> actionOrMakeReplacement;
     private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
 
-    public QuickFix(@LocalizableKey String titleKey, EXPRESSION replacementTarget, QuickFixReplace<@NonNull @UnknownIfRecorded EXPRESSION> makeReplacement)
+    public QuickFix(@LocalizableKey String titleKey, @Recorded EXPRESSION replacementTarget, QuickFixReplace<@NonNull @UnknownIfRecorded EXPRESSION> makeReplacement)
     {
         this(StyledString.s(TranslationUtility.getString(titleKey)),
             ImmutableList.of(),
             replacementTarget, makeReplacement);
     }
 
-    public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, QuickFixReplace<@UnknownIfRecorded EXPRESSION> makeReplacement)
+    public QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, QuickFixReplace<@UnknownIfRecorded EXPRESSION> makeReplacement)
     {
         this(title, cssClasses, replacementTarget, Either.right(makeReplacement));
     }
 
-    public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, QuickFixAction action)
+    public QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, QuickFixAction action)
     {
         this(title, Utility.prependToList("quick-fix-action", cssClasses), replacementTarget, Either.left(action));
     }
 
-    private QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> actionOrMakeReplacement)
+    private QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> actionOrMakeReplacement)
     {
         this.title = title;
         this.cssClasses = new FXPlatformSupplier<ImmutableList<String>>()
@@ -88,7 +89,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
         return actionOrMakeReplacement;
     }
 
-    public EXPRESSION getReplacementTarget()
+    public @Recorded EXPRESSION getReplacementTarget()
     {
         return replacementTarget;
     }
