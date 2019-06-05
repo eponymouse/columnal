@@ -41,9 +41,9 @@ public class SingleUnitExpression extends UnitExpression
         }
         catch (InternalException | UserException e)
         {
-            Stream<QuickFix<@Recorded UnitExpression>> similarNames = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription()))
-                .<QuickFix<@Recorded UnitExpression>>map(su -> new QuickFix<@Recorded UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName())));
-            QuickFix<@Recorded UnitExpression> makeNew = new QuickFix<@Recorded UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
+            Stream<QuickFix<UnitExpression>> similarNames = Utility.findAlternatives(name, unitManager.getAllDeclared().stream(), su -> Stream.of(su.getName(), su.getDescription()))
+                .<QuickFix<UnitExpression>>map(su -> new QuickFix<UnitExpression>(StyledString.s("Correct"), ImmutableList.of(), this, () -> new SingleUnitExpression(su.getName())));
+            QuickFix<UnitExpression> makeNew = new QuickFix<UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
             {
                 @Override
                 public @OnThread(Tag.FXPlatform) void doAction(FixHelper fixHelper, Scene editorScene)
@@ -51,7 +51,7 @@ public class SingleUnitExpression extends UnitExpression
                     fixHelper.createNewUnit(name, editorScene);
                 }
             });
-            ImmutableList<QuickFix<@Recorded UnitExpression>> fixes = Stream.<QuickFix<@Recorded UnitExpression>>concat(similarNames, Stream.<QuickFix<@Recorded UnitExpression>>of(makeNew)).collect(ImmutableList.<QuickFix<@Recorded UnitExpression>>toImmutableList());
+            ImmutableList<QuickFix<UnitExpression>> fixes = Stream.<QuickFix<UnitExpression>>concat(similarNames, Stream.<QuickFix<UnitExpression>>of(makeNew)).collect(ImmutableList.<QuickFix<UnitExpression>>toImmutableList());
             throw new UnitLookupException(StyledString.s(e.getLocalizedMessage()), this, fixes);
         }
     }

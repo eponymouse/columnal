@@ -199,7 +199,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
     public static class UnJellyableTypeExpression extends UserException
     {
         private final Either<@Recorded UnitExpression, @Recorded TypeExpression> source; // For error location
-        private final ImmutableList<QuickFix<@Recorded UnitExpression>> fixes;
+        private final ImmutableList<QuickFix<UnitExpression>> fixes;
 
         public UnJellyableTypeExpression(String message, @Recorded TypeExpression source)
         {
@@ -208,7 +208,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             this.fixes = ImmutableList.of();
         }
 
-        public UnJellyableTypeExpression(StyledString message, @Recorded UnitExpression source, ImmutableList<QuickFix<@Recorded UnitExpression>> fixes)
+        public UnJellyableTypeExpression(StyledString message, @Recorded UnitExpression source, ImmutableList<QuickFix<UnitExpression>> fixes)
         {
             super(message);
             this.source = Either.left(source);
@@ -220,7 +220,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             return source;
         }
 
-        public ImmutableList<QuickFix<@Recorded UnitExpression>> getFixes()
+        public ImmutableList<QuickFix<UnitExpression>> getFixes()
         {
             return fixes;
         }

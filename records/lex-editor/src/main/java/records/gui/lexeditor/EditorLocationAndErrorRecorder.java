@@ -171,9 +171,7 @@ public class EditorLocationAndErrorRecorder
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<Expression, CanonicalSpan> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, CanonicalSpan> unitDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<TypeExpression, CanonicalSpan> typeDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<@Recorded Object, CanonicalSpan> positions = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
     private final ArrayList<Pair<CanonicalSpan, StyledString>> entryPrompts = new ArrayList<>();
     private final IdentityHashMap<Expression, StyledString> information = new IdentityHashMap<>();
@@ -227,47 +225,22 @@ public class EditorLocationAndErrorRecorder
     {
     }
 
-    // Non-generic version that avoids type checker arguments.
-    public @NonNull @Recorded Expression record(CanonicalSpan location,  @NonNull Expression e)
+    @SuppressWarnings("recorded")
+    public <EXPRESSION> @NonNull @Recorded EXPRESSION record(CanonicalSpan location,  @NonNull EXPRESSION e)
     {
-        return this.<Expression>recordG(location, e);
-    }
-    
-    // Generic version that lets you return a particular expression
-    @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION recordG(CanonicalSpan location,  @NonNull EXPRESSION e)
-    {
-        if (expressionDisplayers.containsKey(e))
+        if (positions.containsKey(e))
             Log.logStackTrace("Double position record for: " + e);
-        expressionDisplayers.put(e, location);
-        return e;
-    }
-
-    @SuppressWarnings({"initialization", "recorded"})
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(CanonicalSpan location, @NonNull UNIT_EXPRESSION e)
-    {
-        if (unitDisplayers.containsKey(e))
-            Log.logStackTrace("Double position record for: " + e);
-        unitDisplayers.put(e, location);
-        return e;
-    }
-
-    @SuppressWarnings({"initialization", "recorded"})
-    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(CanonicalSpan location, @NonNull TYPE_EXPRESSION e)
-    {
-        if (typeDisplayers.containsKey(e))
-            Log.logStackTrace("Double position record for: " + e);
-        typeDisplayers.put(e, location);
+        positions.put(e, location);
         return e;
     }
 
     private void showUnresolvedError(Expression e, @Nullable StyledString error, ImmutableList<QuickFix<Expression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = expressionDisplayers.get(e);
+            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(expressionDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {
@@ -279,10 +252,10 @@ public class EditorLocationAndErrorRecorder
     private void showUnresolvedError(TypeExpression e, @Nullable StyledString error, ImmutableList<QuickFix<TypeExpression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = typeDisplayers.get(e);
+            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(typeDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {
@@ -294,10 +267,10 @@ public class EditorLocationAndErrorRecorder
     private void showUnresolvedError(UnitExpression e, @Nullable StyledString error, ImmutableList<QuickFix<UnitExpression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = unitDisplayers.get(e);
+            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(unitDisplayers.get(q.getReplacementTarget()), exp -> exp.save(false, false), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, false), q)));
             }
             else
             {
@@ -404,21 +377,9 @@ public class EditorLocationAndErrorRecorder
     }
 
     @SuppressWarnings("nullness")
-    public CanonicalSpan recorderFor(@Recorded Expression expression)
+    public CanonicalSpan recorderFor(@Recorded Object expression)
     {
-        return expressionDisplayers.get(expression);
-    }
-
-    @SuppressWarnings("nullness")
-    public CanonicalSpan recorderFor(@Recorded TypeExpression expression)
-    {
-        return typeDisplayers.get(expression);
-    }
-
-    @SuppressWarnings("nullness")
-    public CanonicalSpan recorderFor(@Recorded UnitExpression expression)
-    {
-        return unitDisplayers.get(expression);
+        return positions.get(expression);
     }
 
     public void addNestedError(ErrorDetails nestedError, @CanonicalLocation int caretPosOffset, @DisplayLocation int displayCaretPosOffset)
@@ -428,9 +389,7 @@ public class EditorLocationAndErrorRecorder
     
     public void addNestedLocations(EditorLocationAndErrorRecorder nested, @CanonicalLocation int caretPosOffset)
     {
-        nested.expressionDisplayers.forEach((e, s) -> expressionDisplayers.put(e, s.offsetBy(caretPosOffset)));
-        nested.typeDisplayers.forEach((e, s) -> typeDisplayers.put(e, s.offsetBy(caretPosOffset)));
-        nested.unitDisplayers.forEach((e, s) -> unitDisplayers.put(e, s.offsetBy(caretPosOffset)));
+        nested.positions.forEach((e, s) -> positions.put(e, s.offsetBy(caretPosOffset)));
     }
     
     public ImmutableList<ErrorDetails> getErrors()
@@ -457,7 +416,7 @@ public class EditorLocationAndErrorRecorder
     {
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantInformation = new ArrayList<>();
-        for (Entry<Expression, CanonicalSpan> expLocation : expressionDisplayers.entrySet())
+        for (Entry<Object, CanonicalSpan> expLocation : positions.entrySet())
         {
             if (expLocation.getValue().touches(canonIndex))
             {
@@ -496,7 +455,7 @@ public class EditorLocationAndErrorRecorder
 
     public void recordEntryPrompt(@Recorded Expression expression, StyledString prompt)
     {
-        CanonicalSpan canonicalSpan = expressionDisplayers.get(expression);
+        CanonicalSpan canonicalSpan = positions.get(expression);
         if (canonicalSpan != null)
             entryPrompts.add(new Pair<>(canonicalSpan, prompt));
     }

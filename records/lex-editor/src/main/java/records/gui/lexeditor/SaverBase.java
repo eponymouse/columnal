@@ -18,6 +18,8 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -53,9 +55,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     //    return ImmutableList.of();
     //}
 
-    protected ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> interleave(ImmutableList<@Recorded EXPRESSION> expressions, ImmutableList<OpAndNode> ops)
+    @OnThread(Tag.Any)
+    protected <OP> ImmutableList<Either<OP, @Recorded EXPRESSION>> interleave(ImmutableList<@Recorded EXPRESSION> expressions, ImmutableList<OP> ops)
     {
-        ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> r = ImmutableList.builder();
+        ImmutableList.Builder<Either<OP, @Recorded EXPRESSION>> r = ImmutableList.builder();
 
         for (int i = 0; i < expressions.size(); i++)
         {
@@ -94,7 +97,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP, BRACKET_CONTENT>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved
-        public @Nullable @Recorded EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
+        public <R extends StyledShowable> @Nullable @Recorded R makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
     }
 
     public static interface MakeNarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
@@ -105,7 +108,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
     {
-        public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, ?> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
+        public <R extends StyledShowable> R makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, ?, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
+    }
+
+    public static interface MakeBinarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
+    {
+        public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs);
     }
 
     // One set of operators that can be used to make a particular expression
@@ -123,18 +131,36 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         public OperatorExpressionInfo(ImmutableList<OP> operators, MakeNarySimple<EXPRESSION, SAVER, OP> makeExpression)
         {
             this.operators = operators;
-            this.makeExpression = Either.left((ImmutableList<@Recorded EXPRESSION> es, List<Pair<OP, CanonicalSpan>> ops, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketAndNodes, EditorLocationAndErrorRecorder _err) -> {
-                @Nullable EXPRESSION expression = makeExpression.makeNary(es, ops);
-                if (expression == null)
-                    return null;
-                else
-                    return bracketAndNodes.applyBrackets.applySingle(record(bracketAndNodes.location, expression));
+            this.makeExpression = Either.left(new MakeNary<EXPRESSION, SAVER, OP, BRACKET_CONTENT>()
+            {
+                @Override
+                public <R extends StyledShowable> @Nullable @Recorded R makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketAndNodes, EditorLocationAndErrorRecorder locationRecorder)
+                {
+                    @Nullable EXPRESSION expression = makeExpression.makeNary(expressions, operators);
+                    if (expression == null)
+                        return null;
+                    else
+                        return bracketAndNodes.applyBrackets.applySingle(record(bracketAndNodes.location, expression));
+                }
             });
         }
 
         // I know it's a bit odd, but we distinguish the N-ary constructor from the binary constructor by 
         // making the operators a non-list here.  The only expression with multiple operators
         // is add-subtract, which is N-ary.  And you can't have a binary expression with multiple different operators...
+        protected OperatorExpressionInfo(OP operator, MakeBinarySimple<EXPRESSION, SAVER> makeExpression)
+        {
+            this.operators = ImmutableList.of(operator);
+            this.makeExpression = Either.right(new MakeBinary<EXPRESSION, SAVER>()
+            {
+                @Override
+                public <R extends StyledShowable> R makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, ?, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder)
+                {
+                    return bracketedStatus.applyBrackets.applySingle(makeExpression.makeBinary(lhs, opNode, rhs));
+                }
+            });
+        }
+
         protected OperatorExpressionInfo(OP operator, MakeBinary<EXPRESSION, SAVER> makeExpression)
         {
             this.operators = ImmutableList.of(operator);
@@ -179,14 +205,14 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
          * Given the operators already added, makes an expression.  Will only use the indexes that pertain
          * to the operators that got added, you should pass the entire list of the expression args.
          */
-        abstract @Nullable @Recorded EXPRESSION makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
+        abstract <R extends StyledShowable> @Nullable @Recorded R makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets);
 
         abstract int getFirstOperandIndex();
 
         abstract int getLastOperandIndex();
         
-        abstract @Nullable @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
-        abstract @Nullable @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets);
+        abstract <R extends StyledShowable> @Nullable @Recorded R makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets);
+        abstract <R extends StyledShowable> @Nullable @Recorded R makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets);
     }
 
     protected final class BinaryOperatorSection extends OperatorSection
@@ -211,14 +237,14 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Recorded EXPRESSION makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        @Recorded <R extends StyledShowable> R makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             return makeBinary(expressions.get(operatorIndex), operator.sourceNode, expressions.get(operatorIndex + 1), brackets, locationRecorder);
         }
 
-        protected @Recorded EXPRESSION makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, EditorLocationAndErrorRecorder locationRecorder)
+        protected <R extends StyledShowable> @Recorded R makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets, EditorLocationAndErrorRecorder locationRecorder)
         {
-            return record(brackets.location, makeExpression.makeBinary(lhs, opNode, rhs, brackets, locationRecorder));
+            return SaverBase.this.<R>record(brackets.location, makeExpression.<R>makeBinary(lhs, opNode, rhs, brackets, locationRecorder));
         }
 
         @Override
@@ -234,13 +260,13 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        <R extends StyledShowable> @Recorded R makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             return makeBinary(lhs, operator.sourceNode, expressions.get(operatorIndex + 1), brackets, locationRecorder);
         }
 
         @Override
-        @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        <R extends StyledShowable> @Recorded R makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             return makeBinary(expressions.get(operatorIndex), operator.sourceNode, rhs, brackets, locationRecorder);
         }
@@ -278,7 +304,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Nullable @Recorded EXPRESSION makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        <R extends StyledShowable> @Nullable @Recorded R makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             // Given a + b + c, if end operator is 1, we want to include operand index 2, hence we pass excl index 3,
             // so it's last operator-inclusive, plus 2.
@@ -299,7 +325,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Nullable @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        <R extends StyledShowable> @Nullable @Recorded R makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(0, lhs);
@@ -307,7 +333,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Nullable @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        <R extends StyledShowable> @Nullable @Recorded R makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(args.size() - 1, rhs);
@@ -319,7 +345,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
          * to join two NaryOpExpressions while bracketing an item in the middle.
          */
 
-        public @Nullable @Recorded EXPRESSION makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        public <R extends StyledShowable> @Nullable @Recorded R makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             List<@Recorded EXPRESSION> args = new ArrayList<>();
             // Add our args, minus the end one:
@@ -328,11 +354,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             args.add(middle);
             // Add RHS, minus the start one:
             args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
-            @Nullable @Recorded EXPRESSION expression = makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
+            @Nullable @Recorded R expression = makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
             return expression;
         }
 
-        protected @Nullable @Recorded EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketedStatus)
+        protected <R extends StyledShowable> @Nullable @Recorded R makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketedStatus)
         {
             return makeExpression.makeNary(expressions, operators, bracketedStatus, locationRecorder);
         }
@@ -341,14 +367,14 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     /**
      * A function to give back the content of a scope being ended.
      */
-    public static interface FetchContent<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, BRACKET_CONTENT>
+    public static interface FetchContent<EXPRESSION, SAVER extends ClipboardSaver, BRACKET_CONTENT>
     {
         /**
          * 
          * @param bracketInfo The bracket context for the scope being ended.
          * @return The expression for the scope being ended.
          */
-        @Recorded EXPRESSION fetchContent(BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> bracketInfo);
+        <R extends StyledShowable> @Recorded R fetchContent(BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketInfo);
     }
 
     /**
@@ -410,34 +436,34 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      * @param <EXPRESSION>
      * @param <SAVER>
      */
-    public static class BracketAndNodes<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, BRACKET_CONTENT>
+    public static class BracketAndNodes<EXPRESSION, SAVER extends ClipboardSaver, BRACKET_CONTENT, RESULT>
     {
-        public final ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets;
+        public final ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT> applyBrackets;
         public final CanonicalSpan location;
-        private final ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION>> alternateBrackets;
+        private final ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT>> alternateBrackets;
 
 
-        public BracketAndNodes(ApplyBrackets<BRACKET_CONTENT, EXPRESSION> applyBrackets, CanonicalSpan location, ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION>> alternateBrackets)
+        public BracketAndNodes(ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT> applyBrackets, CanonicalSpan location, ImmutableList<ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT>> alternateBrackets)
         {
             this.applyBrackets = applyBrackets;
             this.location = location;
             this.alternateBrackets = alternateBrackets;
         }
 
-        public ImmutableList<BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> alternateBrackets()
+        public ImmutableList<BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, RESULT>> alternateBrackets()
         {
             return Utility.mapListI(alternateBrackets, apply -> new BracketAndNodes<>(apply, location, ImmutableList.of()));
         }
     }
     
-    protected abstract BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> expectSingle(@UnknownInitialization(Object.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT>this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location);
+    protected abstract BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, EXPRESSION> expectSingle(@UnknownInitialization(Object.class)SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT>this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location);
     
-    public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> miscBrackets(CanonicalSpan location)
+    public BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, EXPRESSION> miscBrackets(CanonicalSpan location)
     {
         return expectSingle(locationRecorder, location);
     }
     
-    public Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> miscBracketsFrom(CanonicalSpan start)
+    public Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, EXPRESSION>> miscBracketsFrom(CanonicalSpan start)
     {
         return end -> miscBrackets(CanonicalSpan.fromTo(start, end));
     }
@@ -472,14 +498,17 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 CanonicalSpan end = keywordErrorDisplayer;
                 locationRecorder.addErrorAndFixes(end, StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
-                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
+                currentScopesFinal.peek().items.add(Either.<EXPRESSION, OpAndNode>left(makeContent.<EXPRESSION>fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
                 if (terminator != null)
-                    currentScopesFinal.peek().items.add(Either.left(thisSaver.record(keywordErrorDisplayer, thisSaver.keywordToInvalid(terminator))));
+                    currentScopesFinal.peek().items.add(Either.<EXPRESSION, OpAndNode>left(thisSaver.<EXPRESSION>record(keywordErrorDisplayer, thisSaver.keywordToInvalid(terminator))));
             }
         }));
     }
 
-    protected abstract @Recorded EXPRESSION record(CanonicalSpan location, EXPRESSION expression);
+    protected final <R extends StyledShowable> @Recorded @NonNull R record(CanonicalSpan location, @NonNull R expression)
+    {
+        return locationRecorder.record(location, expression);
+    }
     
     protected abstract CanonicalSpan recorderFor(@Recorded EXPRESSION expression);
 
@@ -494,7 +523,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     //innerContentLocation is after opening bracket, used for
     //errors about empty content items
-    protected abstract @Recorded EXPRESSION makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription);
+    protected abstract <R extends StyledShowable> @Recorded R makeExpression(List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription);
     
     public final @Recorded EXPRESSION finish(CanonicalSpan errorDisplayer)
     {
@@ -502,11 +531,18 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             // The error should be given by terminate when terminator is null
             Scope closed = currentScopes.pop();
-            closed.terminator.terminate(brackets -> makeExpression(closed.items, brackets, errorDisplayer.start, null), null, errorDisplayer);
+            closed.terminator.terminate(new FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT>()
+            {
+                @Override
+                public <R extends StyledShowable> R fetchContent(BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
+                {
+                    return makeExpression(closed.items, brackets, errorDisplayer.start, null);
+                }
+            }, null, errorDisplayer);
         }
 
         Scope closed = currentScopes.pop();
-        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(closed.openingNode, errorDisplayer));
+        BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, EXPRESSION> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(closed.openingNode, errorDisplayer));
         return makeExpression(closed.items, brackets, errorDisplayer.start, closed.terminator.terminatorDescription);
     }
 
@@ -522,7 +558,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     // Note: if we are copying to clipboard, callback will not be called
     public void saveOperand(EXPRESSION singleItem, CanonicalSpan location)
     {
-        currentScopes.peek().items.add(Either.left(record(location, singleItem)));
+        currentScopes.peek().items.add(Either.<@Recorded EXPRESSION, OpAndNode>left(this.<EXPRESSION>record(location, singleItem)));
     }
 
     protected CollectedItems processItems(List<Either<@Recorded EXPRESSION, OpAndNode>> content)
@@ -662,12 +698,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      */
     protected abstract @Nullable Supplier<@Recorded EXPRESSION> canBeUnary(OpAndNode operator, @Recorded EXPRESSION followingOperand);
 
-    public interface ApplyBrackets<BRACKET_CONTENT, EXPRESSION>
+    public interface ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT>
     {
         // Return null if that content with these brackets is invalid
-        public @Nullable @Recorded EXPRESSION apply(@NonNull BRACKET_CONTENT items);
+        public @Nullable @Recorded RESULT apply(@NonNull BRACKET_CONTENT items);
         
-        public @NonNull @Recorded EXPRESSION applySingle(@NonNull @Recorded EXPRESSION singleItem);
+        public @NonNull @Recorded RESULT applySingle(@NonNull @Recorded EXPRESSION singleItem);
     }
     
     /**
@@ -680,10 +716,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      *                   plus will come earlier in the list than equals, because given "a + b = c", we're more likely
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
-    public @Nullable @Recorded EXPRESSION makeExpressionWithOperators(
+    public <R extends StyledShowable> @Nullable @Recorded R makeExpressionWithOperators(
         ImmutableList<ImmutableList<OperatorExpressionInfo>> candidates, EditorLocationAndErrorRecorder locationRecorder,
-        Function<ImmutableList<Either<@NonNull OpAndNode, @Recorded EXPRESSION>>, @Recorded EXPRESSION> makeInvalidOpExpression,
-        ImmutableList<@Recorded EXPRESSION> expressionExps, ImmutableList<@NonNull OpAndNode> ops, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> brackets)
+        Function<ImmutableList<Either<@NonNull OpAndNode, @Recorded EXPRESSION>>, @Recorded R> makeInvalidOpExpression,
+        ImmutableList<@Recorded EXPRESSION> expressionExps, ImmutableList<@NonNull OpAndNode> ops, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
     {
         if (ops.size() != expressionExps.size() - 1)
         {
@@ -723,28 +759,28 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         if (operatorSections.size() == 1)
         {
             // All operators are coherent with each other, can just return single expression:
-            @Nullable @Recorded EXPRESSION single = operatorSections.get(0).makeExpression(expressionExps, brackets);
+            @Nullable @Recorded R single = operatorSections.get(0).makeExpression(expressionExps, brackets);
             if (single != null)
                 return single;
 
             // Maybe with the possibility of different brackets?
-            List<@Recorded EXPRESSION> possibles = new ArrayList<>();
-            for (BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT> alternateBracket : brackets.alternateBrackets())
+            List<@Recorded R> possibles = new ArrayList<>();
+            for (BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> alternateBracket : brackets.alternateBrackets())
             {
-                @Nullable @Recorded EXPRESSION possible = operatorSections.get(0).makeExpression(expressionExps, alternateBracket);
+                @Nullable @Recorded R possible = operatorSections.get(0).makeExpression(expressionExps, alternateBracket);
                 if (possible != null)
                     possibles.add(possible);
             }
             if (!possibles.isEmpty())
             {
-                @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
+                @Recorded R invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                 locationRecorder.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                locationRecorder.getRecorder().<@Recorded EXPRESSION>recordQuickFixes(invalidOpExpression, Utility.<@Recorded EXPRESSION, QuickFix<@Recorded EXPRESSION>>mapList(possibles, fixed -> new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> fixed)));
+                locationRecorder.getRecorder().<R>recordQuickFixes(invalidOpExpression, Utility.<R, QuickFix<R>>mapList(possibles, fixed -> new QuickFix<R>("fix.bracketAs", invalidOpExpression, () -> fixed)));
                 return invalidOpExpression;
             }
         }
 
-        @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
+        @Recorded R invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
         locationRecorder.getRecorder().recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
 
         if (operatorSections.size() == 3
@@ -762,7 +798,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, expectSingle(locationRecorder, CanonicalSpan.fromTo(middleStart, middleEnd)));
             if (middle != null)
             {
-                @Nullable @Recorded EXPRESSION replacement = ((NaryOperatorSection) operatorSections.get(0)).makeExpressionMiddleMerge(
+                @Nullable @Recorded R replacement = ((NaryOperatorSection) operatorSections.get(0)).makeExpressionMiddleMerge(
                     middle,
                     (NaryOperatorSection) operatorSections.get(2),
                     expressionExps, brackets
@@ -771,9 +807,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 if (replacement != null)
                 {
                     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                    @NonNull @Recorded EXPRESSION replacementFinal = replacement;
-                    locationRecorder.getRecorder().<@Recorded EXPRESSION>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION>>singletonList(
-                        new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
+                    @NonNull @Recorded R replacementFinal = replacement;
+                    locationRecorder.getRecorder().<R>recordQuickFixes(invalidOpExpression, Collections.<QuickFix<R>>singletonList(
+                        new QuickFix<R>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
                 }
             }
@@ -799,7 +835,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     continue;
 
                 // The replacement if we just bracketed this section:
-                @UnknownIfRecorded EXPRESSION replacement;
+                @UnknownIfRecorded R replacement;
                 // There's three possibilities.  One is that if there is one other section, or two that match each other,
                 // we could make a valid expression.  Otherwise we're going to be invalid even with a bracket.
                 if (operatorSections.size() == 2)
@@ -833,24 +869,24 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     newExps.add(operatorSection.getFirstOperandIndex(), sectionExpression);
                     newOps.subList(operatorSection.getFirstOperandIndex(), operatorSection.getLastOperandIndex()).clear();
 
-                    replacement = makeInvalidOpExpression.apply(interleave(ImmutableList.copyOf(newExps), ImmutableList.copyOf(newOps)));
+                    replacement = makeInvalidOpExpression.apply(SaverBase.this.<OpAndNode>interleave(ImmutableList.<EXPRESSION>copyOf(newExps), ImmutableList.<OpAndNode>copyOf(newOps)));
                 }
 
                 if (replacement != null)
                 {
-                    locationRecorder.getRecorder().recordQuickFixes(invalidOpExpression, Collections.<QuickFix<@Recorded EXPRESSION>>singletonList(
-                        new QuickFix<@Recorded EXPRESSION>("fix.bracketAs", invalidOpExpression, () -> replacement)
+                    locationRecorder.getRecorder().recordQuickFixes(invalidOpExpression, Collections.<QuickFix<R>>singletonList(
+                        new QuickFix<R>("fix.bracketAs", invalidOpExpression, () -> replacement)
                     ));
                 }
             }
         }
 
-        return brackets.applyBrackets.applySingle(invalidOpExpression);
+        return invalidOpExpression;
     }
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT>> makeBrackets, BiFunction<@Recorded EXPRESSION, CanonicalSpan, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, @Nullable StyledString promptIfUnfinished, boolean isBracket)
+    public Terminator expect(ImmutableList<@NonNull KEYWORD> expected, Function<CanonicalSpan, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, EXPRESSION>> makeBrackets, BiFunction<@Recorded EXPRESSION, CanonicalSpan, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<@Recorded EXPRESSION>> prefixItemsOnFailedClose, @Nullable StyledString promptIfUnfinished, boolean isBracket)
     {
         return new Terminator(expected.get(0).getContent()) {
             @Override
@@ -883,7 +919,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         locationRecorder.recordEntryPromptG(content, promptIfUnfinished);
                     items.add(Either.right(content));
                     if (terminator != null)
-                        items.add(Either.right(record(keywordErrorDisplayer, keywordToInvalid(terminator))));
+                        items.add(Either.<OpAndNode, EXPRESSION>right(SaverBase.this.<EXPRESSION>record(keywordErrorDisplayer, keywordToInvalid(terminator))));
                     ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> built = items.build();
                     @Recorded EXPRESSION invalid = makeInvalidOp(CanonicalSpan.fromTo(built.get(0).either(opAndNode -> opAndNode.sourceNode, e -> recorderFor(e)), keywordErrorDisplayer), built);
                     currentScopes.peek().items.add(Either.left(invalid));
@@ -891,7 +927,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             }};
     }
 
-    protected abstract BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT> unclosedBrackets(BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT> closed);
+    protected abstract BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT, EXPRESSION> unclosedBrackets(BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT, EXPRESSION> closed);
 
     public final @Nullable Map<DataFormat, Object> finishClipboard()
     {

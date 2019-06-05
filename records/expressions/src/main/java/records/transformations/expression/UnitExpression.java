@@ -158,9 +158,9 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     {
         public final @Nullable StyledString errorMessage;
         public final @Recorded UnitExpression errorItem;
-        public final ImmutableList<QuickFix<@Recorded UnitExpression>> quickFixes;
+        public final ImmutableList<QuickFix<UnitExpression>> quickFixes;
 
-        public UnitLookupException(@Nullable StyledString errorMessage, @Recorded UnitExpression errorItem, ImmutableList<QuickFix<@Recorded UnitExpression>> quickFixes)
+        public UnitLookupException(@Nullable StyledString errorMessage, @Recorded UnitExpression errorItem, ImmutableList<QuickFix<UnitExpression>> quickFixes)
         {
             this.errorMessage = errorMessage;
             this.errorItem = errorItem;

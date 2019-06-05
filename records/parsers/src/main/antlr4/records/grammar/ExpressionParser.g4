@@ -77,7 +77,7 @@ lambdaExpression : FUNCTION OPEN_BRACKET topLevelExpression (COMMA topLevelExpre
 
 hasTypeExpression : varRef HAS_TYPE customLiteralExpression;
 definition : (expression EQUALITY expression) | hasTypeExpression;
-defineExpression: (DEFINE definition)+ THEN topLevelExpression ENDDEFINE;
+defineExpression: DEFINE definition (COMMA definition)* THEN topLevelExpression ENDDEFINE;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor

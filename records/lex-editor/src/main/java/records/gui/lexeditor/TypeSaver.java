@@ -29,6 +29,7 @@ import records.transformations.expression.type.RecordTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -53,7 +54,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         {
             @Nullable
             @Override
-            public @Recorded TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
+            public <R extends StyledShowable> @Recorded R makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent, R> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
             {
                 return bracketedStatus.applyBrackets.apply(new BracketContent(typeExpressions, ImmutableList.copyOf(operators)));
             }
@@ -74,11 +75,11 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
     public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer)
     {
-        Supplier<ImmutableList<@Recorded TypeExpression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, new InvalidIdentTypeExpression(keyword.getContent())));
+        Supplier<ImmutableList<@Recorded TypeExpression>> prefixKeyword = () -> ImmutableList.of(this.<TypeExpression>record(errorDisplayer, new InvalidIdentTypeExpression(keyword.getContent())));
         
         if (keyword == Keyword.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<TypeExpression, TypeSaver, BracketContent>(tupleOrSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, close)), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()),
+            currentScopes.push(new Scope(errorDisplayer, expect(ImmutableList.of(Keyword.CLOSE_ROUND), close -> new BracketAndNodes<TypeExpression, TypeSaver, BracketContent, TypeExpression>(tupleOrSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, close)), CanonicalSpan.fromTo(errorDisplayer, close), ImmutableList.of()),
                     (bracketed, bracketEnd) -> {
                         ArrayList<Either<@Recorded TypeExpression, OpAndNode>> precedingItems = currentScopes.peek().items;
                         // Type applications are a special case:
@@ -102,7 +103,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
                                     typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>of(newArg));
                                 }
-                                return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>recordType(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
+                                return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>record(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }
                         }
                         return Either.<@Recorded TypeExpression, Terminator>left(bracketed);
@@ -124,9 +125,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
 
-    private ApplyBrackets<BracketContent, TypeExpression> tupleOrSingle(@UnknownInitialization(Object.class) TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
+    private ApplyBrackets<BracketContent, TypeExpression, TypeExpression> tupleOrSingle(@UnknownInitialization(Object.class) TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
     {
-        return new ApplyBrackets<BracketContent, TypeExpression>()
+        return new ApplyBrackets<BracketContent, TypeExpression, TypeExpression>()
         {
             @Override
             public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
@@ -170,7 +171,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     }
                 }
                 if (allOk)
-                    return errorDisplayerRecord.recordType(location, new RecordTypeExpression(ImmutableList.copyOf(pairs)));
+                    return errorDisplayerRecord.record(location, new RecordTypeExpression(ImmutableList.copyOf(pairs)));
                 
                 ImmutableList.Builder<@Recorded TypeExpression> invalidOps = ImmutableList.builder();
                 for (int i = 0; i < items.typeExpressions.size(); i++)
@@ -178,9 +179,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     @Recorded TypeExpression expression = items.typeExpressions.get(i);
                     invalidOps.add(expression);
                     if (i < items.operators.size())
-                        invalidOps.add(errorDisplayerRecord.recordType(items.operators.get(i).getSecond(), new InvalidIdentTypeExpression(items.operators.get(i).getFirst().getContent())));
+                        invalidOps.add(errorDisplayerRecord.record(items.operators.get(i).getSecond(), new InvalidIdentTypeExpression(items.operators.get(i).getFirst().getContent())));
                 }
-                return errorDisplayerRecord.recordType(location, new InvalidOpTypeExpression(invalidOps.build()));
+                return errorDisplayerRecord.record(location, new InvalidOpTypeExpression(invalidOps.build()));
             }
 
             @Override
@@ -191,35 +192,35 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         };
     }
 
-    private ApplyBrackets<BracketContent, TypeExpression> makeList(EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan locationInclBrackets, CanonicalSpan locationInsideBrackets)
+    private ApplyBrackets<BracketContent, TypeExpression, TypeExpression> makeList(EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan locationInclBrackets, CanonicalSpan locationInsideBrackets)
     {
-        return new ApplyBrackets<BracketContent, TypeExpression>()
+        return new ApplyBrackets<BracketContent, TypeExpression, TypeExpression>()
         {
             @Override
             public @Recorded @Nullable TypeExpression apply(@NonNull BracketContent items)
             {
                 if (items.typeExpressions.size() == 1)
-                    return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(items.typeExpressions.get(0)));
+                    return errorDisplayerRecord.record(locationInclBrackets, new ListTypeExpression(items.typeExpressions.get(0)));
                 else
                 {
-                    @Recorded InvalidOpTypeExpression content = errorDisplayerRecord.recordType(locationInsideBrackets, new InvalidOpTypeExpression(items.typeExpressions));
+                    @Recorded InvalidOpTypeExpression content = errorDisplayerRecord.record(locationInsideBrackets, new InvalidOpTypeExpression(items.typeExpressions));
                     errorDisplayerRecord.addErrorAndFixes(locationInsideBrackets, StyledString.s("Invalid expression"), ImmutableList.of());
-                    return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(content));
+                    return errorDisplayerRecord.record(locationInclBrackets, new ListTypeExpression(content));
                 }
             }
 
             @Override
             public @Recorded @NonNull TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {
-                return errorDisplayerRecord.recordType(locationInclBrackets, new ListTypeExpression(singleItem));
+                return errorDisplayerRecord.record(locationInclBrackets, new ListTypeExpression(singleItem));
             }
         };
     }
 
     @Override
-    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent> expectSingle(@UnknownInitialization(Object.class)TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
+    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent, TypeExpression> expectSingle(@UnknownInitialization(Object.class)TypeSaver this, EditorLocationAndErrorRecorder errorDisplayerRecord, CanonicalSpan location)
     {
-        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression>()
+        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression, TypeExpression>()
         {
             @Override
             public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
@@ -274,7 +275,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected @Recorded TypeExpression makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
-        return locationRecorder.recordType(location, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.<@Recorded TypeExpression>either(u -> record(u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
+        return locationRecorder.record(location, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.<@Recorded TypeExpression>either(u -> record(u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
     }
 
     @Override
@@ -284,26 +285,20 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Recorded TypeExpression record(CanonicalSpan location, TypeExpression typeExpression)
-    {
-        return locationRecorder.recordType(location, typeExpression);
-    }
-
-    @Override
     protected TypeExpression keywordToInvalid(Keyword keyword)
     {
         return new InvalidIdentTypeExpression(keyword.getContent());
     }
 
     @Override
-    protected @Recorded TypeExpression makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
+    protected <R extends StyledShowable> @Recorded R makeExpression(List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver, BracketContent, R> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
     {
         if (content.isEmpty())
         {
             // If terminator is null, error will be elsewhere
             if (terminatorDescription != null)
                 locationRecorder.addErrorAndFixes(new CanonicalSpan(innerContentLocation, innerContentLocation), StyledString.s("Empty brackets"), ImmutableList.of());
-            return record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of()));
+            return brackets.applyBrackets.applySingle(record(brackets.location, new InvalidOpTypeExpression(ImmutableList.of())));
         }
 
         CanonicalSpan location = CanonicalSpan.fromTo(getLocationForEither(content.get(0)), getLocationForEither(content.get(content.size() - 1)));
@@ -320,7 +315,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 if (unitLiteral != null)
                 {
                     content.set(i, Either.left(
-                        record(CanonicalSpan.fromTo(locationRecorder.recorderFor(numberType),
+                        this.<TypeExpression>record(CanonicalSpan.fromTo(locationRecorder.recorderFor(numberType),
                             locationRecorder.recorderFor(unitLiteral)),
                             new NumberTypeExpression(unitLiteral.getUnitExpression()))));
                     i -= 1;
@@ -338,13 +333,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                @Recorded TypeExpression bracketedValid = brackets.applyBrackets.applySingle(validOperands.get(0));
+                @Recorded R bracketedValid = brackets.applyBrackets.applySingle(validOperands.get(0));
                 return bracketedValid;
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable @Recorded TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
-                    makeInvalidOp(brackets.location, arg)
+            @Nullable @Recorded R e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
+                    brackets.applyBrackets.applySingle(makeInvalidOp(brackets.location, arg))
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
             {
@@ -353,7 +348,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
         }
 
-        return collectedItems.makeInvalid(location, InvalidOpTypeExpression::new);
+        return brackets.applyBrackets.applySingle(collectedItems.makeInvalid(location, InvalidOpTypeExpression::new));
     }
 
     @Override
@@ -372,9 +367,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent> unclosedBrackets(BracketAndNodes<TypeExpression, TypeSaver, BracketContent> closed)
+    protected BracketAndNodes<TypeExpression, TypeSaver, BracketContent, TypeExpression> unclosedBrackets(BracketAndNodes<TypeExpression, TypeSaver, BracketContent, TypeExpression> closed)
     {
-        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression>()
+        return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression, TypeExpression>()
         {
             @Nullable
             @Override
@@ -402,7 +397,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
 
         @Override
-        public @Recorded TypeExpression fetchContent(BracketAndNodes<TypeExpression, TypeSaver, BracketContent> brackets)
+        public <R extends StyledShowable> @Recorded R fetchContent(BracketAndNodes<TypeExpression, TypeSaver, BracketContent, R> brackets)
         {
             return TypeSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
         }

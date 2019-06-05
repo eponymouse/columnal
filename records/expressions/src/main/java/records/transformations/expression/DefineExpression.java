@@ -189,7 +189,7 @@ public class DefineExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return defines.stream().map(e -> "@define " + e.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(" ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
+        return "@define " + defines.stream().map(e -> e.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
     }
 
     @Override
@@ -225,7 +225,7 @@ public class DefineExpression extends Expression
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@define "),
-            defines.stream().map(e -> e.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(" @define ")),
+            defines.stream().map(e -> e.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(", ")),
             StyledString.s(" @then "),
             body.toStyledString(),
             StyledString.s(" @enddefine")
