@@ -110,7 +110,7 @@ public class MainWindow
                     v.modified();
                 }),
                 GUI.menuItem("menu.view.units", () -> {
-                    new UnitsDialog(v, v.getManager().getTypeManager()).showAndWait();
+                    new UnitsDialog(v, v.getManager().getTypeManager()).showAndWaitNested();
                     v.modified();
                 }),
                 GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())

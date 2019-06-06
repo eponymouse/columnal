@@ -30,7 +30,6 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.ScaleContext;
 import records.gui.lexeditor.UnitEditor;
 import records.jellytype.JellyUnit;
-import records.transformations.expression.FixHelper;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import threadchecker.OnThread;
@@ -41,6 +40,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.DialogPaneWithSideButtons;
+import utility.gui.DimmableParent;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -50,10 +50,11 @@ import utility.TranslationUtility;
 
 import java.util.Comparator;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
-public class UnitsDialog extends Dialog<Void>
+public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
 {
     private final UnitManager unitManager;
     private final TypeManager typeManager;
@@ -73,14 +74,17 @@ public class UnitsDialog extends Dialog<Void>
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")
         );
+        setResultConverter(bt -> Optional.<FXPlatformRunnable>empty());
 
         userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared(), false, () -> FXUtility.mouse(this).editSingleSelectedItem(owner, typeManager));
         userDeclaredUnitList.getStyleClass().add("user-unit-list");
         Button addButton = GUI.button("units.userDeclared.add", () -> {
-            FXUtility.mouse(this).addUnit(null, getDialogPane().getScene(), typeManager, owner.getFixHelper(), userDeclaredUnitList);
+            setResult(Optional.of(() -> FXUtility.mouse(this).addUnit(null, owner, typeManager, userDeclaredUnitList)));
+            close();
         });
         Button editButton = GUI.button("units.userDeclared.edit", () -> {
-            FXUtility.mouse(this).editSingleSelectedItem(owner, typeManager);
+            setResult(Optional.of(() -> FXUtility.mouse(this).editSingleSelectedItem(owner, typeManager)));
+            close();
         });
         Button removeButton = GUI.button("units.userDeclared.remove", () -> {
             for (Pair<String, Either<String, UnitDeclaration>> unit : userDeclaredUnitList.getSelectionModel().getSelectedItems())
@@ -128,9 +132,7 @@ public class UnitsDialog extends Dialog<Void>
         if (userDeclaredUnitList.getSelectionModel().getSelectedItems().size() == 1)
         {
             Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
-            @SuppressWarnings("nullness")
-            @NonNull Scene scene = UnitsDialog.this.getDialogPane().getScene();
-            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner.getFixHelper(), scene).showAndWait().orElse(null);
+            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner).showAndWait().orElse(null);
             if (edited != null)
             {
                 unitManager.removeUserUnit(prevValue.getFirst());
@@ -141,9 +143,9 @@ public class UnitsDialog extends Dialog<Void>
         }
     }
 
-    private static void addUnit(@Nullable @UnitIdentifier String initialName, @Nullable Scene parentScene, TypeManager typeManager, FixHelper fixHelper, @Nullable UnitList userDeclaredUnitList)
+    private static void addUnit(@Nullable @UnitIdentifier String initialName, DimmableParent parent, TypeManager typeManager, @Nullable UnitList userDeclaredUnitList)
     {
-        Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), fixHelper, parentScene).showAndWait().orElse(null);
+        Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), parent).showAndWait().orElse(null);
         if (newUnit != null)
         {
             typeManager.getUnitManager().addUserUnit(newUnit);
@@ -152,9 +154,12 @@ public class UnitsDialog extends Dialog<Void>
         }
     }
 
-    public static void addUnit(@UnitIdentifier String initialName, @Nullable Scene parentScene, TypeManager typeManager, FixHelper fixHelper)
+    public void showAndWaitNested()
     {
-        addUnit(initialName, parentScene, typeManager, fixHelper, null);
+        showAndWait().flatMap(x -> x).ifPresent(nested -> {
+            nested.run();
+            showAndWaitNested();
+        });
     }
 
     private final class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
@@ -231,13 +236,12 @@ public class UnitsDialog extends Dialog<Void>
         private final TextField scale;
         private final CheckBox equivalentTickBox;
 
-        public EditUnitDialog(TypeManager typeManager, @Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue, FixHelper fixHelper, @Nullable Scene parentScene)
+        public EditUnitDialog(TypeManager typeManager, @Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue, DimmableParent parent)
         {
             super(new DialogPaneWithSideButtons());
             setTitle(TranslationUtility.getString("units.edit.title"));
             this.unitManager = typeManager.getUnitManager();
-            if (parentScene != null && parentScene.getWindow() != null)
-                initOwner(parentScene.getWindow());
+            initOwner(parent.dimWhileShowing(this));
             initModality(Modality.WINDOW_MODAL);
             getDialogPane().getStylesheets().addAll(
                     FXUtility.getStylesheet("general.css"),
@@ -256,7 +260,7 @@ public class UnitsDialog extends Dialog<Void>
             @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
             scale = new TextField(equiv == null ? "" : equiv.getFirst().toString());
             scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
-            definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), fixHelper, u -> {});
+            definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
             //definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
             Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
             this.equivalentTickBox = fullDefinition.getFirst();
