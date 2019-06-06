@@ -140,7 +140,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     public void testUnknownUnit2()
     {
         // Check basic:
-        testError("(Number{zzz}, Text)", e(8, 11, "unknown"));
+        testError("(a:Number{zzz}, b:Text)", e(10, 13, "unknown"));
     }
 
     @Test
@@ -176,9 +176,9 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     }
 
     @Test
-    public void testTuple()
+    public void testRecord()
     {
-        testError("(Text, Number)");
+        testError("(a: Text, b: Number)");
     }
     
     @Test
