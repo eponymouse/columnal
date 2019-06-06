@@ -81,7 +81,11 @@ public class FieldAccessExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return lhsRecord.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        String content = lhsRecord.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        if (surround == BracketedStatus.NEED_BRACKETS)
+            return "(" + content + ")";
+        else
+            return content;
     }
 
     @Override
