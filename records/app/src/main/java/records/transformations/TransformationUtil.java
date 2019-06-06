@@ -15,6 +15,7 @@ class TransformationUtil
         return tablesFromExpressions(Stream.of(expression));
     }
 
+    @SuppressWarnings("recorded")
     static Stream<TableId> tablesFromExpressions(Stream<Expression> expressions)
     {
         return Utility.filterOutNulls(expressions.flatMap(e -> e.allColumnReferences()).<@Nullable TableId>map(r -> r.getTableId()));

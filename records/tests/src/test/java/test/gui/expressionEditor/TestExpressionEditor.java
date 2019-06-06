@@ -571,7 +571,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testDefine() throws Exception
     {
-        testSimple("@define x = 3 @define y = x @then x / y @enddefine");
+        testSimple("@define x = 3, y = x @then x / y @enddefine");
     }
 
     @Test

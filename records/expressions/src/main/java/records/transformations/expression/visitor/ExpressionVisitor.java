@@ -84,11 +84,11 @@ public interface ExpressionVisitor<T>
     
     T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body);
 
-    T hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
+    T hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
 
     T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body);
 
     T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
 
-    T field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName);
+    T field(FieldAccessExpression self, @Recorded Expression lhsRecord, @Recorded Expression fieldName);
 }

@@ -58,7 +58,7 @@ public class MatchExpression extends NonOperatorExpression
             return patterns;
         }
 
-        public Expression getOutcome()
+        public @Recorded Expression getOutcome()
         {
             return outcome;
         }
@@ -302,7 +302,7 @@ public class MatchExpression extends NonOperatorExpression
             return result;
         }
 
-        public @Nullable Expression getGuard()
+        public @Nullable @Recorded Expression getGuard()
         {
             return guard;
         }

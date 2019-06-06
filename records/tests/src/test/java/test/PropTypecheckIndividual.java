@@ -507,25 +507,25 @@ public class PropTypecheckIndividual
     @Test
     public void checkDefine2b() throws UserException, InternalException
     {
-        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist :: type{Number{m}} @define dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist :: type{Number{m}}, dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
     public void checkDefine3() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define b :: type{Boolean} @define [a, b] = [true, false] @then a & b @enddefine");
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, b :: type{Boolean}, [a, b] = [true, false] @then a & b @enddefine");
     }
 
     @Test
     public void checkDefine3b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define b :: type{Boolean} @define (y:a, x:b) = (x:true, y:false) @then a & b @enddefine");
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, b :: type{Boolean}, (y:a, x:b) = (x:true, y:false) @then a & b @enddefine");
     }
 
     @Test
     public void checkDefine4() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean} @define a = @call @function from text(\"\") @define b = a @then b @enddefine");
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, a = @call @function from text(\"\"), b = a @then b @enddefine");
     }
 
     @Test
@@ -544,28 +544,28 @@ public class PropTypecheckIndividual
     public void checkDefineErr3() throws UserException, InternalException
     {
         // Typing variable we don't define
-        checkConcreteType((DataType)null, "@define dist2 :: type{@apply Optional(Number{m})} @define dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType((DataType)null, "@define dist2 :: type{@apply Optional(Number{m})}, dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
     public void checkDefineErr3b() throws UserException, InternalException
     {
         // Type after definition
-        checkConcreteType((DataType)null, "@define dist = (1 * 32{m/s} * 10{s}) @define dist :: type{@apply Optional(Number{m})} @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType((DataType)null, "@define dist = (1 * 32{m/s} * 10{s}), dist :: type{@apply Optional(Number{m})} @then @call @tag Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
     public void checkDefineErr4() throws UserException, InternalException
     {
         // Duplicate definition:
-        checkConcreteType((DataType)null, "@define x = 1 @define x = 1 @then x @enddefine");
+        checkConcreteType((DataType)null, "@define x = 1, x = 1 @then x @enddefine");
     }
 
     @Test
     public void checkDefineErr5() throws UserException, InternalException
     {
         // Duplicate definition incl type:
-        checkConcreteType((DataType)null, "@define x :: type{Number} @define x = 1 @define x = 1 @then x @enddefine");
+        checkConcreteType((DataType)null, "@define x :: type{Number}, x = 1, x = 1 @then x @enddefine");
     }
     
     @Test
@@ -577,7 +577,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkFunction1b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)} @define f = (? + 1) @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = (? + 1) @then @call f(3) @enddefine");
     }
 
     @Test
@@ -589,7 +589,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkFunction2b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)} @define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
     
     @Test
@@ -631,7 +631,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkField3() throws UserException, InternalException
     {
-        checkConcreteType(m -> DataType.number(new NumberInfo(m.getUnitManager().loadUse("m").times(m.getUnitManager().loadUse("inch")))), "@define record = (x: 36{m}, y : 37{inch}) @define getX = (?#x) @define getY = (?#y) @then @call getX(record) * getY(record) @enddefine");
+        checkConcreteType(m -> DataType.number(new NumberInfo(m.getUnitManager().loadUse("m").times(m.getUnitManager().loadUse("inch")))), "@define record = (x: 36{m}, y : 37{inch}), getX = (?#x) , getY = (?#y) @then @call getX(record) * @call getY(record) @enddefine");
     }
     
 

@@ -337,9 +337,13 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
             {
+                write("@define");
+                boolean first = true;
                 for (Either<@Recorded HasTypeExpression, Definition> define : defines)
                 {
-                    write("@define");
+                    if (!first)
+                        write(",");
+                    first = false;
                     define.either_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
                             x -> {
                                 enterExpression(typeManager, x.lhsPattern, EntryBracketStatus.SUB_EXPRESSION, r);

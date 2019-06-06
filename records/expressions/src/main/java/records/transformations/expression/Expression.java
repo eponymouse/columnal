@@ -404,7 +404,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     public abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
-    public final Stream<ColumnReference> allColumnReferences()
+    public final Stream<ColumnReference> allColumnReferences(@Recorded Expression this)
     {
         return visit(new ExpressionVisitorStream<ColumnReference>() {
             @Override
@@ -417,6 +417,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
     // Note that there will be duplicates if referred to multiple times
     @Override
+    @SuppressWarnings("recorded")
     public final Stream<String> allVariableReferences()
     {
         return visit(new ExpressionVisitorStream<String>() {
@@ -434,7 +435,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         });
     }
     
-    public abstract <T> T visit(ExpressionVisitor<T> visitor);
+    public abstract <T> T visit(@Recorded Expression this, ExpressionVisitor<T> visitor);
 
     /**
      * 

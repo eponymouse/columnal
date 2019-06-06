@@ -67,7 +67,7 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public <T> T visit(ExpressionVisitor<T> visitor)
+    public <T> T visit(@Recorded HasTypeExpression this, ExpressionVisitor<T> visitor)
     {
         return visitor.hasType(this, varName, type);
     }

@@ -29,6 +29,7 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -37,6 +38,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.UnitType;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -229,7 +231,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else if (keyword == Keyword.DEFINE)
         {
-            currentScopes.push(new Scope(errorDisplayer, new DefineThen()));
+            currentScopes.push(new Scope(errorDisplayer, new DefineThen(errorDisplayer)));
         }
         else
         {
@@ -1031,40 +1033,97 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
     private class DefineThen extends Terminator
     {
-        public DefineThen()
+        private final CanonicalSpan initialDefine;
+
+        public DefineThen(CanonicalSpan initialDefine)
         {
             super("@then");
+            this.initialDefine = initialDefine;
         }
 
         @Override
         public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
-            /*TODO
-            if (terminator == Keyword.THEN)
+            final ArrayList<@Recorded Expression> itemsIfInvalid = new ArrayList<>();
+            @SuppressWarnings("recorded") // We can't actually record BracketContent
+            BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
             {
-                BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
+                @Nullable
+                @Override
+                public @Recorded BracketContent apply(@NonNull BracketContent items)
                 {
-                    @Nullable
-                    @Override
-                    public BracketContent apply(@NonNull BracketContent items)
-                    {
-                        return items;
-                    }
+                    return items;
+                }
 
-                    @NonNull
-                    @Override
-                    public BracketContent applySingle(@NonNull @Recorded Expression singleItem)
-                    {
-                        return new BracketContent(ImmutableList.of(singleItem), ImmutableList.of());
-                    }
-                }, keywordErrorDisplayer, ImmutableList.of()));
-                currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(null, s), null, null, null, false)));
+                @NonNull
+                @Override
+                public @Recorded BracketContent applySingle(@NonNull @Recorded Expression singleItem)
+                {
+                    return new BracketContent(ImmutableList.of(singleItem), ImmutableList.of());
+                }
+            }, keywordErrorDisplayer, ImmutableList.of()));
+            
+            boolean foundThen = (terminator == Keyword.THEN);
+            
+            @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions = foundThen ? new ArrayList<>() : null;
+            for (int i = 0; i < bracketContent.expressions.size(); i++)
+            {
+                @Recorded Expression e = bracketContent.expressions.get(i);
+                itemsIfInvalid.add(e);
+                if (i < bracketContent.commas.size())
+                    itemsIfInvalid.add(locationRecorder.record(bracketContent.commas.get(i).getSecond(), new InvalidIdentExpression(bracketContent.commas.get(i).getFirst().getContent())));
+                if (definitions != null)
+                    definitions = e.visit(new VisitDefinitions(definitions));
+            }
+
+            if (definitions != null)
+            {
+                ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defs = ImmutableList.<Either<@Recorded HasTypeExpression, Definition>>copyOf(definitions);
+                currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(locationRecorder, s), (e, s) -> Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, s.end), new DefineExpression(defs, e))), () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
             }
             else
             {
                 // Invalid
+                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
             }
-            */
+            
+        }
+
+        // Returns null or the original array reference passed to constructor
+        @OnThread(Tag.Any)
+        private class VisitDefinitions extends ExpressionVisitorFlat<@Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>>>
+        {
+            private final ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions;
+
+            public VisitDefinitions(ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions)
+            {
+                this.definitions = definitions;
+            }
+
+            @Override
+            protected @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> makeDef(Expression expression)
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+            {
+                definitions.add(Either.left(self));
+                return definitions;
+            }
+
+            @Override
+            public @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            {
+                if (expressions.size() == 2 && !lastIsPattern)
+                {
+                    definitions.add(Either.right(new Definition(expressions.get(0), expressions.get(1))));
+                    return definitions;
+                }
+                else
+                    return null;
+            }
         }
     }
 }
