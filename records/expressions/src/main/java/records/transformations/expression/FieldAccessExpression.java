@@ -23,8 +23,10 @@ import utility.Utility.Record;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+// Not a BinaryOpExpression because the field name by itself does not have a valid type.
 public class FieldAccessExpression extends Expression
 {
     private final @Recorded Expression lhsRecord;
@@ -39,6 +41,9 @@ public class FieldAccessExpression extends Expression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhsRecord), typeState, onError);
+        typeState = lambda.getSecond();
+        
         CheckedExp lhsChecked = lhsRecord.check(dataLookup, typeState, ExpressionKind.EXPRESSION, locationInfo, onError);
         if (lhsChecked == null)
             return null;
@@ -55,7 +60,7 @@ public class FieldAccessExpression extends Expression
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
             return null;
         
-        return new CheckedExp(fieldType, typeState);
+        return new CheckedExp(fieldType, typeState).applyToType(lambda.getFirst());
     }
 
     @Override
