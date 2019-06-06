@@ -38,6 +38,8 @@ class HelpBox extends StackPane
     private final BooleanProperty showingFull = new SimpleBooleanProperty(false);
     private final BooleanProperty keyboardFocused = new SimpleBooleanProperty(false);
     private @Nullable FXPlatformRunnable cancelHover;
+    // To prevent GC issues:
+    private @Nullable BooleanExpression keyboardFocusedBoundTo;
 
     public HelpBox(@HelpKey String helpId)
     {
@@ -186,5 +188,6 @@ class HelpBox extends StackPane
     {
         if (keyboardFocused != null)
             this.keyboardFocused.bind(keyboardFocused);
+        this.keyboardFocusedBoundTo = keyboardFocused;
     }
 }
