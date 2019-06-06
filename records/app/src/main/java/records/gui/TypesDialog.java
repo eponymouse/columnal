@@ -378,7 +378,7 @@ public class TypesDialog extends Dialog<Void>
                 }
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
-                this.innerType = new TypeEditor(typeManager, startingExpression, false, true, owner.getFixHelper(), latest -> {
+                this.innerType = new TypeEditor(typeManager, startingExpression, false, true, latest -> {
                     updateCurrentValue(latest);
                 });
                 //innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));

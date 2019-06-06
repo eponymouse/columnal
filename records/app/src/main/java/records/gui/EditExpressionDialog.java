@@ -41,7 +41,7 @@ public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
         setResizable(true);
         initModality(Modality.NONE);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
         curValue = expressionEditor.save();
 
         BorderPane borderPane = new BorderPane(expressionEditor.getContainer(), topMessageKey == null ? null : GUI.label(topMessageKey), null, null, null);

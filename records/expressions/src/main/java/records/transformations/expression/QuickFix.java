@@ -8,6 +8,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -104,7 +105,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
     {
         // Will only be called once.
         @OnThread(Tag.FXPlatform)
-        public void doAction(FixHelper fixHelper, Scene editorScene);
+        public void doAction(TypeManager typeManager);
     }
     
     public static interface QuickFixReplace<EXPRESSION>

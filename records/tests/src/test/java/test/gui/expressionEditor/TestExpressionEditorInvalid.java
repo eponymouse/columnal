@@ -80,6 +80,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             {
                 return Stream.of();
             }
-        }), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), TestUtil.blankFixHelper(), e -> {}));
+        }), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

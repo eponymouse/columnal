@@ -27,12 +27,12 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.transformations.expression.FixHelper;
 import records.transformations.expression.QuickFix.QuickFixAction;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -68,13 +68,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     protected final EditorDisplay display;
     private final ScrollPaneFill scrollPane;
     private final InformationPopup informationPopup;
-    private final FixHelper fixHelper;
+    private final TypeManager typeManager;
     private boolean hiding;
 
     // package-visible
-    TopLevelEditor(@Nullable String originalContent, LEXER lexer, FixHelper fixHelper, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
+    TopLevelEditor(@Nullable String originalContent, LEXER lexer, TypeManager typeManager, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
     {
-        this.fixHelper = fixHelper;
+        this.typeManager = typeManager;
         informationPopup = new InformationPopup();
         content = new EditorContent<>(originalContent == null ? "" : originalContent, lexer);
         display = Utility.later(new EditorDisplay(content, n -> FXUtility.keyboard(this).informationPopup.triggerFix(n), this));
@@ -194,9 +194,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
                 actionOrReplacement.eitherInt_(a -> {
-                    @SuppressWarnings("nullness")
-                    @NonNull Scene scene = getContainer().getScene();
-                    a.doAction(fixHelper, scene);
+                    a.doAction(typeManager);
+                    // Reprocess:
+                    content.replaceText(0, content.getText().length(), content.getText());
                 }, replacement -> {
                     content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
                 });

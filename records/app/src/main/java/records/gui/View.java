@@ -64,7 +64,6 @@ import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
-import records.transformations.expression.FixHelper;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -916,18 +915,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 }
             });
         }
-    }
-
-    public FixHelper getFixHelper()
-    {
-        return new FixHelper()
-        {
-            @Override
-            public void createNewUnit(@UnitIdentifier String newUnitName, Scene editorScene)
-            {
-                UnitsDialog.addUnit(newUnitName, editorScene, tableManager.getTypeManager(), getFixHelper());
-            }
-        };
     }
 
     @OnThread(Tag.FXPlatform)

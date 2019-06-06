@@ -5,6 +5,9 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Scene;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
+import records.data.unit.SingleUnit;
+import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -46,9 +49,10 @@ public class SingleUnitExpression extends UnitExpression
             QuickFix<UnitExpression> makeNew = new QuickFix<UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) void doAction(FixHelper fixHelper, Scene editorScene)
+                @OnThread(Tag.FXPlatform)
+                public void doAction(TypeManager typeManager)
                 {
-                    fixHelper.createNewUnit(name, editorScene);
+                    typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
                 }
             });
             ImmutableList<QuickFix<UnitExpression>> fixes = Stream.<QuickFix<UnitExpression>>concat(similarNames, Stream.<QuickFix<UnitExpression>>of(makeNew)).collect(ImmutableList.<QuickFix<UnitExpression>>toImmutableList());

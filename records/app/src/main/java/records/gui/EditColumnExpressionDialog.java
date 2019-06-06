@@ -240,7 +240,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 parent.disablePickingMode();
             }
         };
-        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), parent.getFixHelper(), e -> {
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
             @Nullable RecipeBar recipeBar = Utility.later(this).recipeBar;
             if (recipeBar != null)

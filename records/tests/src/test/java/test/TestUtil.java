@@ -1457,17 +1457,6 @@ public class TestUtil
         Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
     }
 
-    public static FixHelper blankFixHelper()
-    {
-        return new FixHelper()
-        {
-            @Override
-            public void createNewUnit(@UnitIdentifier String newUnitName, Scene editorScene)
-            {
-            }
-        };
-    }
-
     @OnThread(Tag.Simulation)
     public static void collapseAllTableHats(TableManager tableManager, VirtualGrid virtualGrid)
     {

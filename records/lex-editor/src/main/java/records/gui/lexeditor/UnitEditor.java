@@ -4,14 +4,13 @@ import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.TypeManager;
-import records.transformations.expression.FixHelper;
 import records.transformations.expression.UnitExpression;
 import utility.FXPlatformConsumer;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitLexer, CodeCompletionContext>
 {
-    public UnitEditor(TypeManager typeManager, @Nullable UnitExpression originalContent, FixHelper fixHelper, FXPlatformConsumer<@NonNull @Recorded UnitExpression> onChange)
+    public UnitEditor(TypeManager typeManager, @Nullable UnitExpression originalContent, FXPlatformConsumer<@NonNull @Recorded UnitExpression> onChange)
     {
-        super(originalContent == null ? null : originalContent.save(false, true), new UnitLexer(typeManager.getUnitManager(), false), fixHelper, onChange, "unit-editor");
+        super(originalContent == null ? null : originalContent.save(false, true), new UnitLexer(typeManager.getUnitManager(), false), typeManager, onChange, "unit-editor");
     }
 }
