@@ -100,9 +100,9 @@ public class UnitsDialog extends Dialog<Void>
             }
             userDeclaredUnitList.setUnits(unitManager.getAllUserDeclared());
         });
-        FXUtility.listen(userDeclaredUnitList.getSelectionModel().getSelectedItems(), c -> {
-            editButton.setDisable(c.getList().size() != 1);
-            removeButton.setDisable(c.getList().isEmpty());
+        FXUtility.addChangeListenerPlatformAndCallNow(userDeclaredUnitList.getSelectionModel().selectedItemProperty(), c -> {
+            editButton.setDisable(c == null);
+            removeButton.setDisable(c == null);
         });
 
 
@@ -150,7 +150,7 @@ public class UnitsDialog extends Dialog<Void>
         addUnit(initialName, parentScene, typeManager, fixHelper, null);
     }
 
-    private class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
+    private final class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
     {
 
         public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units, boolean showCategory)
@@ -178,7 +178,7 @@ public class UnitsDialog extends Dialog<Void>
             getColumns().add(descriptionColumn);
             
             // Safe at end of constructor:
-            Utility.later(this).setUnits(units);
+            setUnits(units);
         }
 
         private String getCategory(@UnknownInitialization(Object.class) UnitList this, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> pair)
