@@ -17,6 +17,8 @@ import records.grammar.UnitLexer;
 import records.grammar.UnitParser;
 import records.grammar.UnitParser.*;
 import records.loadsave.OutputBuilder;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -43,10 +45,12 @@ public class UnitManager
 {
     // Left means it's an alias, Right means full-unit
     private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> builtInUnits = new HashMap<>();
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> userUnits = new HashMap<>();
     
     // This map is the merger of builtInUnits and userUnits.
     // In case of clashes, builtInUnits is preferred.
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> knownUnits = new HashMap<>();
 
     @SuppressWarnings("initialization")
@@ -93,7 +97,7 @@ public class UnitManager
         }
     }
     
-    private @Nullable UnitDeclaration getKnownUnit(@UnitIdentifier String name)
+    private synchronized @Nullable UnitDeclaration getKnownUnit(@UnitIdentifier String name)
     {
         Either<@UnitIdentifier String, UnitDeclaration> target = knownUnits.get(name);
         if (target == null)
@@ -295,17 +299,12 @@ public class UnitManager
         return unitDeclaration.getDefined();
     }
 
-    public List<SingleUnit> getAllDeclared()
+    public synchronized List<SingleUnit> getAllDeclared()
     {
         return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.<SingleUnit>empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<@NonNull SingleUnit>toList());
     }
 
-    public boolean isUnit(String unitName)
-    {
-        return knownUnits.containsKey(unitName);
-    }
-
-    public void loadUserUnits(UnitsContext units) throws UserException, InternalException
+    public synchronized void loadUserUnits(UnitsContext units) throws UserException, InternalException
     {
         List<FileItemContext> unitDecls = Utility.parseAsOne(units.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
 
@@ -368,7 +367,7 @@ public class UnitManager
         return ImmutableSet.of(unitName);
     }
 
-    public void removeUserUnit(String name)
+    public synchronized void removeUserUnit(String name)
     {
         // We only remove from knownUnits if it's the same;
         // it's possible that we did not successfully override the built-in unit:
@@ -380,7 +379,7 @@ public class UnitManager
         }
     }
     
-    public void addUserUnit(Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> unit)
+    public synchronized void addUserUnit(Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> unit)
     {
         userUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
         knownUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
@@ -391,12 +390,12 @@ public class UnitManager
         return save(u -> true);
     }
 
-    public String save(Predicate<@UnitIdentifier String> saveUnit)
+    public synchronized String save(Predicate<@UnitIdentifier String> saveUnit)
     {
         return save(knownUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
     }
 
-    public String save(Stream<@UnitIdentifier String> unitsToSaveStream)
+    public synchronized String save(Stream<@UnitIdentifier String> unitsToSaveStream)
     {
         List<@UnitIdentifier String> toProcess = new ArrayList<>(unitsToSaveStream.collect(Collectors.<@UnitIdentifier String>toList()));
         HashSet<@UnitIdentifier String> unitsToSave = new HashSet<>();
@@ -457,7 +456,7 @@ public class UnitManager
         })).collect(Collectors.joining("\n"));
     }
 
-    public void clearAllUser()
+    public synchronized void clearAllUser()
     {
         userUnits.clear();
         knownUnits.clear();
