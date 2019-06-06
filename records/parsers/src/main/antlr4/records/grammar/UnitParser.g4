@@ -29,4 +29,4 @@ declaration : aliasDeclaration | unitDeclaration;
 category : CATEGORY WS STRING NEWLINE;
 blankLine : WS? NEWLINE;
 fileItem : declaration | category;
-file : blankLine* (fileItem blankLine*)*;
+file : blankLine* (fileItem blankLine*)* EOF;

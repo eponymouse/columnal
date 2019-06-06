@@ -42,7 +42,7 @@
 @UNIT GBP "Great British Pounds" PREFIX "£"
 // ALIAS £ = GBP
 @UNIT EUR "Euros" PREFIX "€"
-ALIAS € = EUR
+@ALIAS € = EUR
 
 @CATEGORY "Angle"
 @UNIT deg "Degrees"
