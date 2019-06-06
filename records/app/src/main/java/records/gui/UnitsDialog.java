@@ -8,6 +8,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
@@ -35,6 +36,7 @@ import records.transformations.expression.UnitExpression.UnitLookupException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
@@ -72,26 +74,13 @@ public class UnitsDialog extends Dialog<Void>
             FXUtility.getStylesheet("dialogs.css")
         );
 
-        userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared(), false);
+        userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared(), false, () -> FXUtility.mouse(this).editSingleSelectedItem(owner, typeManager));
         userDeclaredUnitList.getStyleClass().add("user-unit-list");
         Button addButton = GUI.button("units.userDeclared.add", () -> {
             FXUtility.mouse(this).addUnit(null, getDialogPane().getScene(), typeManager, owner.getFixHelper(), userDeclaredUnitList);
         });
         Button editButton = GUI.button("units.userDeclared.edit", () -> {
-            if (userDeclaredUnitList.getSelectionModel().getSelectedItems().size() == 1)
-            {
-                Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
-                @SuppressWarnings("nullness")
-                @NonNull Scene scene = UnitsDialog.this.getDialogPane().getScene();
-                Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner.getFixHelper(), scene).showAndWait().orElse(null);
-                if (edited != null)
-                {
-                    unitManager.removeUserUnit(prevValue.getFirst());
-                    unitManager.addUserUnit(edited);
-
-                    userDeclaredUnitList.setUnits(unitManager.getAllUserDeclared());
-                }
-            }
+            FXUtility.mouse(this).editSingleSelectedItem(owner, typeManager);
         });
         Button removeButton = GUI.button("units.userDeclared.remove", () -> {
             for (Pair<String, Either<String, UnitDeclaration>> unit : userDeclaredUnitList.getSelectionModel().getSelectedItems())
@@ -110,7 +99,7 @@ public class UnitsDialog extends Dialog<Void>
         BorderPane userDeclaredUnitPane = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), userDeclaredUnitList, buttons, "units-dialog-user-defined");
         
         
-        UnitList builtInUnitList = new UnitList(unitManager.getAllBuiltIn(), true);
+        UnitList builtInUnitList = new UnitList(unitManager.getAllBuiltIn(), true, null);
         builtInUnitList.setEditable(false);
         Label builtInLabel = GUI.label("units.builtIn");
         BorderPane builtInUnitPane = GUI.borderTopCenter(builtInLabel, builtInUnitList, "units-dialog-built-in");
@@ -134,6 +123,24 @@ public class UnitsDialog extends Dialog<Void>
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
     }
 
+    private void editSingleSelectedItem(View owner, TypeManager typeManager)
+    {
+        if (userDeclaredUnitList.getSelectionModel().getSelectedItems().size() == 1)
+        {
+            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
+            @SuppressWarnings("nullness")
+            @NonNull Scene scene = UnitsDialog.this.getDialogPane().getScene();
+            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner.getFixHelper(), scene).showAndWait().orElse(null);
+            if (edited != null)
+            {
+                unitManager.removeUserUnit(prevValue.getFirst());
+                unitManager.addUserUnit(edited);
+
+                userDeclaredUnitList.setUnits(unitManager.getAllUserDeclared());
+            }
+        }
+    }
+
     private static void addUnit(@Nullable @UnitIdentifier String initialName, @Nullable Scene parentScene, TypeManager typeManager, FixHelper fixHelper, @Nullable UnitList userDeclaredUnitList)
     {
         Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), fixHelper, parentScene).showAndWait().orElse(null);
@@ -153,7 +160,7 @@ public class UnitsDialog extends Dialog<Void>
     private final class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
     {
 
-        public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units, boolean showCategory)
+        public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units, boolean showCategory, @Nullable FXPlatformRunnable editSingleSelectedItem)
         {
             TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> nameColumn = new TableColumn<>("Name");
             nameColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getFirst()));
@@ -176,6 +183,13 @@ public class UnitsDialog extends Dialog<Void>
             getColumns().add(nameColumn);
             getColumns().add(definitionColumn);
             getColumns().add(descriptionColumn);
+            
+            setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() >= 2 && editSingleSelectedItem != null)
+                {
+                    editSingleSelectedItem.run();
+                }
+            });
             
             // Safe at end of constructor:
             setUnits(units);
