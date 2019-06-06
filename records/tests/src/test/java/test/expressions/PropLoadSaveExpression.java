@@ -63,7 +63,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
             try
             {
                 testNoOpEdit("@invalidops(2, @unfinished \"+\")");
-                testNoOpEdit("@invalidops(2, @unfinished \"#\", 3)");
+                testNoOpEdit("@invalidops(2, @unfinished \"%\", 3)");
                 testNoOpEdit("@invalidops(1, @unfinished \"+\", 2, @unfinished \"*\", 3)");
                 testNoOpEdit("@invalidops(1, @unfinished \"+\", -2, @unfinished \"*\", 3)");
                 testNoOpEdit("@invalidops(-1, @unfinished \"+\", -2, @unfinished \"*\", 3)");
