@@ -91,7 +91,12 @@ public class LambdaExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@function (" + parameters.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ") @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + "@endfunction";
+        String params = parameters.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
+        String body = this.body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
+        if (structured)
+            return "@function (" + params + ") @then " + body + "@endfunction";
+        else
+            return "@function " + params + " @then " + body + "@endfunction";
     }
 
     @Override

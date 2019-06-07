@@ -468,8 +468,16 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName)
             {
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                {
+                    write("(");
+                    push(KeyCode.DELETE);
+                }
                 enterExpression(typeManager, lhsRecord, EntryBracketStatus.SUB_EXPRESSION, r);
+                write("#");
                 enterExpression(typeManager, fieldName, EntryBracketStatus.SUB_EXPRESSION, r);
+                if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
+                    write(")");
                 return UnitType.UNIT;
             }
 
@@ -482,14 +490,14 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
             {
-                write("@function (");
+                write("@function ");
                 for (int i = 0; i < parameters.size(); i++)
                 {
                     if (i > 0)
                         write(", ");
                     enterExpression(typeManager, parameters.get(i), EntryBracketStatus.SUB_EXPRESSION, r);
                 }
-                write (") @then");
+                write (" @then ");
                 enterExpression(typeManager, body, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                 write("@endfunction");
                 return UnitType.UNIT;

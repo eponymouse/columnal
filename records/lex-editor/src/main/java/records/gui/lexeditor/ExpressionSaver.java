@@ -233,6 +233,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             currentScopes.push(new Scope(errorDisplayer, new DefineThen(errorDisplayer)));
         }
+        else if (keyword == Keyword.FUNCTION)
+        {
+            currentScopes.push(new Scope(errorDisplayer, new FunctionParamThen(errorDisplayer)));
+        }
         else
         {
             // Should be a terminator:
@@ -1028,6 +1032,64 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         public @Recorded Expression opAsExpression(EditorLocationAndErrorRecorder locationRecorder)
         {
             return locationRecorder.record(colon.sourceNode, new InvalidIdentExpression(colon.op.getContent()));
+        }
+    }
+    
+    private class FunctionParamThen extends Terminator
+    {
+        private final CanonicalSpan initialFunction;
+
+        public FunctionParamThen(CanonicalSpan initialFunction)
+        {
+            super("@then");
+            this.initialFunction = initialFunction;
+        }
+
+        @Override
+        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
+        {
+            final ArrayList<@Recorded Expression> itemsIfInvalid = new ArrayList<>();
+            @SuppressWarnings("recorded") // We can't actually record BracketContent
+            BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
+            {
+                @Nullable
+                @Override
+                public @Recorded BracketContent apply(@NonNull BracketContent items)
+                {
+                    return items;
+                }
+
+                @NonNull
+                @Override
+                public @Recorded BracketContent applySingle(@NonNull @Recorded Expression singleItem)
+                {
+                    return new BracketContent(ImmutableList.of(singleItem), ImmutableList.of());
+                }
+            }, keywordErrorDisplayer, ImmutableList.of()));
+
+            boolean foundThen = (terminator == Keyword.THEN);
+
+            @Nullable ArrayList<Expression> params = foundThen ? new ArrayList<>() : null;
+            for (int i = 0; i < bracketContent.expressions.size(); i++)
+            {
+                @Recorded Expression e = bracketContent.expressions.get(i);
+                itemsIfInvalid.add(e);
+                if (i < bracketContent.commas.size())
+                    itemsIfInvalid.add(locationRecorder.record(bracketContent.commas.get(i).getSecond(), new InvalidIdentExpression(bracketContent.commas.get(i).getFirst().getContent())));
+                if (params != null)
+                    params.add(e);
+            }
+
+            if (params != null)
+            {
+                ImmutableList<Expression> args = ImmutableList.<Expression>copyOf(params);
+                currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDFUNCTION), s -> expectSingle(locationRecorder, s), (e, s) -> Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, s.end), new LambdaExpression(args, e))), () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
+            }
+            else
+            {
+                // Invalid
+                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, itemsIfInvalid.isEmpty() ? initialFunction.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
+            }
         }
     }
 

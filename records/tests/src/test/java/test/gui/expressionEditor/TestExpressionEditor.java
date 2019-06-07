@@ -456,7 +456,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testOverlappingTagNames() throws Exception
     {
-        testSimple("@call @function first(@match (@if (@tag A\\Single = @tag A\\Single) @then @call @function from text to(type{B}, \"Single\") @else @tag B\\Single @endif) @case @tag B\\Single @given @call @function from text to(type{Boolean}, \"true\") @then @call @function from text to(type{(Nested, Number {cm})}, \"(A(Single),-2147483648)\") @endmatch)");
+        testSimple("@match (@if (@tag A\\Single = @tag A\\Single) @then @call @function from text to(type{B}, \"Single\") @else @tag B\\Single @endif) @case @tag B\\Single @given @call @function from text to(type{Boolean}, \"true\") @then @call @function from text to(type{(a: Nested, b: Number {cm})}, \"(a: A(Single), b:-2147483648)\") @endmatch");
     }
     
     @Test
@@ -547,7 +547,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testMatch() throws Exception
     {
-        testSimple("@match @call @function from text to(type{DateTime}, \"2047-12-23 10:50:09.094335028\") @case @call @function from text to(type{DateTime}, \"2024-06-09 13:26:01.165156525\") @given true @orcase @call @function datetime from dt(date{8848-10-02}, time{14:57:00}) @given (true = @call @function from text to(type{Boolean}, \"true\") = true = @call @function from text to(type{Boolean}, \"true\")) @then @call @function from text to(type{(Number, Number)}, \"(7,242784)\") @case _ @given true @orcase @call @function from text to(type{DateTime}, @call @function from text to(type{Text}, \"^q2914-03-04 09:00:00.753695607^q\")) @orcase @call @function from text to(type{DateTime}, \"\") @given true @orcase var11 @given (var11 = @call @function second(@call @function second(@call @function from text to(type{(Number {(USD*m)/s^2}, (DateTime, DateTime), [Text], Number)}, \"(-2147483649,(2047-09-04 22:11:00,2047-12-23 10:50:09.094335028),[^qUNITS^q,^qknr90rr9rra^q,^qX^q],1609257947333)\")))) @then (3, 4) @endmatch");
+        testSimple("@match @call @function from text to(type{DateTime}, \"2047-12-23 10:50:09.094335028\") @case @call @function from text to(type{DateTime}, \"2024-06-09 13:26:01.165156525\") @given true @orcase @call @function datetime from dt(date{8848-10-02}, time{14:57:00}) @given (true = @call @function from text to(type{Boolean}, \"true\") = true = @call @function from text to(type{Boolean}, \"true\")) @then @call @function from text to(type{(a: Number, b: Number)}, \"(a: 7, b: 242784)\") @case _ @given true @orcase @call @function from text to(type{DateTime}, @call @function from text to(type{Text}, \"^q2914-03-04 09:00:00.753695607^q\")) @orcase @call @function from text to(type{DateTime}, \"\") @given true @orcase var11 @given var11 = ((@call @function from text to(type{(a: Number {(USD*m)/s^2}, b:(c: DateTime, d: DateTime), e:[Text], f:Number)}, \"(-2147483649,(2047-09-04 22:11:00,2047-12-23 10:50:09.094335028),[^qUNITS^q,^qknr90rr9rra^q,^qX^q],1609257947333)\")#b)#d) @then (a:3, b:4) @endmatch");
     }
 
     @Test
@@ -583,18 +583,21 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testLambda() throws Exception
     {
-        testSimple("@function (x) @then x + 3 @endfunction");
+        // Can't have function return type because it can't be stored in a column:
+        testSimple("@define f = @function (x) @then x + 3 @endfunction @then @call f(1) @enddefine");
     }
 
     @Test
     public void testLambda2() throws Exception
     {
-        testSimple("@function (x, _, 3 \u00B1 4) @then x + 3 @endfunction");
+        // Can't have function return type because it can't be stored in a column:
+        testSimple("@define f = @function (x, _, 3 \u00B1 4) @then x + 3 @endfunction @then true @enddefine");
     }
 
     @Test
     public void testLambda3() throws Exception
     {
-        testSimple("@define f = @function (x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2) @enddefine");
+        // Can't have function return type because it can't be stored in a column:
+        testSimple("@define f = @function (x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2, [3], 5) @enddefine");
     }
 }
