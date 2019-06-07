@@ -2,12 +2,10 @@ package records.gui;
 
 import annotation.help.qual.HelpKey;
 import annotation.qual.Value;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -36,14 +34,13 @@ import utility.Either;
 import utility.ExBiFunction;
 import utility.FXPlatformRunnable;
 import utility.Utility;
+import utility.gui.AlignedLabels;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 import utility.TranslationUtility;
-
-import java.util.ArrayList;
 
 /**
  * Edits an immediate column, which has a name, type, and default value
@@ -273,42 +270,4 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         return new LabelledGrid.Row(alignedLabels.addLabel(labelKey), GUI.helpBox(helpId, node), node);
     }
 
-    // This is a real hack.  We want to line up the labels, so we make each label a stack pane
-    // containing all the labels, but only the one we want to show there is visible.  That way
-    // they all have the same widths.
-    @OnThread(Tag.FXPlatform)
-    private class AlignedLabels
-    {
-        private final ArrayList<StackPane> stackPanes = new ArrayList<>();
-        private final ArrayList<@Localized String> labelTexts = new ArrayList<>();
-        
-        StackPane addLabel(@LocalizableKey String labelKey)
-        {
-            // Add this text to existing panes:
-            @Localized String labelText = TranslationUtility.getString(labelKey);
-            for (StackPane existingPane : stackPanes)
-            {
-                Label l = new Label(labelText);
-                StackPane.setAlignment(l, Pos.CENTER_RIGHT);
-                l.setVisible(false);
-                existingPane.getChildren().add(0, l);
-            }
-            // Now make a new pane with the existing and new:
-            StackPane stackPane = new StackPane();
-            for (String existingText : labelTexts)
-            {
-                Label l = new Label(existingText);
-                StackPane.setAlignment(l, Pos.CENTER_RIGHT);
-                l.setVisible(false);
-                stackPane.getChildren().add(l);
-            }
-            Label l = new Label(labelText);
-            StackPane.setAlignment(l, Pos.CENTER_RIGHT);
-            stackPane.getChildren().add(l);
-            
-            labelTexts.add(labelText);
-            stackPanes.add(stackPane);
-            return stackPane;
-        }
-    }
 }
