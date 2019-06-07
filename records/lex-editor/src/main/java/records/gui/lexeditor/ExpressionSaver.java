@@ -1069,7 +1069,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
             boolean foundThen = (terminator == Keyword.THEN);
 
-            @Nullable ArrayList<Expression> params = foundThen ? new ArrayList<>() : null;
+            @Nullable ArrayList<@Recorded Expression> params = foundThen ? new ArrayList<>() : null;
             for (int i = 0; i < bracketContent.expressions.size(); i++)
             {
                 @Recorded Expression e = bracketContent.expressions.get(i);
@@ -1082,7 +1082,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
             if (params != null)
             {
-                ImmutableList<Expression> args = ImmutableList.<Expression>copyOf(params);
+                ImmutableList<@Recorded Expression> args = ImmutableList.<Expression>copyOf(params);
                 currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDFUNCTION), s -> expectSingle(locationRecorder, s), (e, s) -> Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, s.end), new LambdaExpression(args, e))), () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
             }
             else
