@@ -110,7 +110,8 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     @Test
     public void test3A()
     {
-        testError("@if#@then#@else0@endif", e(3,4, 4,5, "#"), e(9,10, 12,13, "#"));
+        // Display part will be (backslash for newline: "@if %\    @then %\    @else 0\@endif"
+        testError("@if%@then%@else0@endif", e(3,4, 4,5, "%"), e(9,10, 16,17, "%"));
     }
 
     @Test

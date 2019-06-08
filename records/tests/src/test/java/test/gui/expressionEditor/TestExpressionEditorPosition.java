@@ -90,7 +90,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPos3()
     {
-        testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true @then sum(3 + \"az\") @else false @endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
+        testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true\n    @then sum(3 + \"az\")\n    @else false\n@endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
         p(0, 3, 7, 12, 15,16,17,18,19,21,22,23,28,33,39)
         );
     }
@@ -174,7 +174,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPosIncomplete5()
     {
-        testCaretPositionsAndDisplay("@if@then@else@endif", "@if   @then   @else   @endif ", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay("@if@then@else@endif", "@if \n    @then \n    @else \n@endif ", p(0, 3, 8, 13, 19));
     }
 
     @Test
