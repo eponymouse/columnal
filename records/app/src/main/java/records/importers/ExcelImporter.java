@@ -1,6 +1,5 @@
 package records.importers;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.stage.Window;
@@ -11,6 +10,8 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -42,8 +43,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class ExcelImporter implements Importer
 {
@@ -68,35 +71,52 @@ public class ExcelImporter implements Importer
             Workbook workbook = new XSSFWorkbook(src);
             // TODO offer sheet list as import choice
             Sheet datatypeSheet = workbook.getSheetAt(0);
-            Iterator<Row> iterator = datatypeSheet.iterator();
-
+            
             List<ArrayList<String>> vals = new ArrayList<>();
             List<ColumnInfo> columnInfos = new ArrayList<>();
 
+            Map<CellAddress, CellRangeAddress> mergedRegions = new HashMap<>();
+            for (CellRangeAddress mergedRegion : datatypeSheet.getMergedRegions())
+            {
+                for (int row = mergedRegion.getFirstRow(); row <= mergedRegion.getLastRow(); row++)
+                {
+                    for (int col = mergedRegion.getFirstColumn(); col <= mergedRegion.getLastColumn(); col++)
+                    {
+                        mergedRegions.put(new CellAddress(row, col), mergedRegion);
+                    }
+                }
+            }
+            
+
+            Iterator<Row> iterator = datatypeSheet.iterator();
             while (iterator.hasNext())
             {
-                ArrayList<String> row = new ArrayList<>();
                 Row currentRow = iterator.next();
                 Iterator<Cell> cellIterator = currentRow.iterator();
 
                 while (cellIterator.hasNext())
                 {
                     Cell currentCell = cellIterator.next();
-                    while (vals.size() < currentCell.getRowIndex())
-                    {
-                        // Can't use Collections.emptyList because this may be later
-                        // modified by rectangulariseAndRemoveBlankRows
-                        vals.add(new ArrayList<>());
-                    }
-                    while (row.size() < currentCell.getColumnIndex())
-                    {
-                        row.add("");
-                    }
                     String val = getCellValueAsString(currentCell, currentCell.getCellTypeEnum());
-                    row.add(val);
+                    // No need to set if empty, that's the default:
+                    if (!val.isEmpty())
+                    {
+                        CellRangeAddress merged = mergedRegions.get(currentCell.getAddress());
+                        if (merged != null)
+                        {
+                            for (int row = merged.getFirstRow(); row <= merged.getLastRow(); row++)
+                            {
+                                for (int col = merged.getFirstColumn(); col <= merged.getLastColumn(); col++)
+                                {
+                                    setValue(vals, row, col, val);
+                                }
+                            }
+                        } else
+                        {
+                            setValue(vals, currentCell.getRowIndex(), currentCell.getColumnIndex(), val);
+                        }
+                    }
                 }
-
-                vals.add(row);
             }
             ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
             int numSrcColumns = vals.isEmpty() ? 0 : vals.get(0).size();
@@ -134,6 +154,22 @@ public class ExcelImporter implements Importer
         {
 
         }
+    }
+
+    protected void setValue(List<ArrayList<String>> vals, int rowIndex, int columnIndex, String val)
+    {
+        while (vals.size() <= rowIndex)
+        {
+            // Can't use Collections.emptyList because this may be later
+            // modified by rectangulariseAndRemoveBlankRows
+            vals.add(new ArrayList<>());
+        }
+        ArrayList<String> row = vals.get(rowIndex);
+        while (row.size() <= columnIndex)
+        {
+            row.add("");
+        }
+        row.set(columnIndex, val);
     }
 
     @SuppressWarnings("identifier")
