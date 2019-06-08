@@ -899,6 +899,8 @@ public class GuessFormat
                     {
                         // Found a blank:
                         allNumeric = false;
+                        if (allNumericOrBlank && numericBlank == null)
+                            numericBlank = "";
                         possibleBooleanSets.clear();
                         possibleDateFormats.clear();
                     }
