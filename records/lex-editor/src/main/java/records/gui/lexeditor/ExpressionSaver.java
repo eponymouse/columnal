@@ -1082,7 +1082,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
             if (params != null)
             {
-                ImmutableList<@Recorded Expression> args = ImmutableList.<Expression>copyOf(params);
+                ImmutableList<@Recorded Expression> args = ImmutableList.<@Recorded Expression>copyOf(params);
                 currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDFUNCTION), s -> expectSingle(locationRecorder, s), (e, s) -> Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, s.end), new LambdaExpression(args, e))), () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
             }
             else
