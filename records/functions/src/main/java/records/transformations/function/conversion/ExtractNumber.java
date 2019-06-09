@@ -23,7 +23,7 @@ public class ExtractNumber extends FunctionDefinition
 {
     public ExtractNumber() throws InternalException
     {
-        super("conversion:extract number");
+        super("conversion:number from text");
     }
 
     @Override
@@ -43,19 +43,19 @@ public class ExtractNumber extends FunctionDefinition
                         if (i > 0 && s.charAt(i - 1) == '-')
                             start -= 1;
                         // Chomp all digits:
-                        while ('0' <= s.charAt(i) && s.charAt(i) <= '9')
+                        while (i < s.length() && (('0' <= s.charAt(i) && s.charAt(i) <= '9') || s.charAt(i) == ','))
                             i += 1;
                         // Chomp dot and more digits:
-                        if (s.charAt(i) == '.')
+                        if (i < s.length() && s.charAt(i) == '.')
                         {
                             i += 1;
-                            while ('0' <= s.charAt(i) && s.charAt(i) <= '9')
+                            while (i < s.length() && ('0' <= s.charAt(i) && s.charAt(i) <= '9'))
                                 i += 1;
                         }
                         @Value Number parsed = null;
                         try
                         {
-                            parsed = Utility.parseNumber(s.substring(start, i));
+                            parsed = Utility.parseNumber(s.substring(start, i).replaceAll(",", ""));
                         }
                         catch (UserException e)
                         {
