@@ -26,9 +26,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -56,6 +61,7 @@ import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.importers.GuessFormat.Import;
+import records.importers.GuessFormat.Import.SrcDetails;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import threadchecker.OnThread;
@@ -155,17 +161,17 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
-                        Pair<TrimChoice, RecordSet> loadedSrc = this.importer.loadSource(formatNonNull);
+                        SrcDetails loadedSrc = this.importer.loadSource(formatNonNull);
                     
                         Platform.runLater(() -> {
                             int oldColumns = srcRecordSet.get() == null ? 0 : srcRecordSet.get().getColumns().size();
-                            curGuessTrim = loadedSrc.getFirst();
+                            curGuessTrim = loadedSrc.trimChoice;
                             resetSelectionButton.setDisable(false);
-                            srcRecordSet.set(loadedSrc.getSecond());
+                            srcRecordSet.set(loadedSrc.recordSet);
                             // We use trim guess if size has changed from before:
-                            if (oldColumns != loadedSrc.getSecond().getColumns().size())
+                            if (oldColumns != loadedSrc.recordSet.getColumns().size())
                             {
-                                srcDataDisplay.setTrim(loadedSrc.getFirst(), true);
+                                srcDataDisplay.setTrim(loadedSrc.trimChoice, true);
                             }
                             else
                             {
@@ -173,7 +179,20 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             }
                             // Because we are in a runLater, constructor will have finished by then:
                             Utility.later(this).updateDestPreview();
-                            srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(loadedSrc.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null), null, null);
+                            ImmutableList<ColumnDetails> columnDetailsOrigLabels = TableDisplayUtility.makeStableViewColumns(loadedSrc.recordSet, new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null);
+                            ImmutableList.Builder<ColumnDetails> columnsWithDisplayNames = ImmutableList.builderWithExpectedSize(columnDetailsOrigLabels.size());
+                            ImmutableList<@Localized String> columnNameOverrides = loadedSrc.columnNameOverrides;
+                            if (columnNameOverrides != null && columnNameOverrides.size() == columnDetailsOrigLabels.size())
+                            {
+                                for (int i = 0; i < columnDetailsOrigLabels.size(); i++)
+                                {
+
+                                    columnsWithDisplayNames.add(columnDetailsOrigLabels.get(i).withDisplayHeaderLabel(columnNameOverrides.get(i)));
+                                }
+                            }
+                            else
+                                columnsWithDisplayNames.addAll(columnDetailsOrigLabels);
+                            srcDataDisplay.setColumns(columnsWithDisplayNames.build(), null, null);
                         });
                     }
                     catch (InternalException | UserException e)
@@ -195,7 +214,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         
         srcGrid.addMousePane(srcDataDisplay.getMousePane());
         SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode()), new StackPane(destGrid.getNode()));
-        BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftRight(GUI.label("import.src.grid.label"), GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
+        Shape arrowShape = new Path(new MoveTo(0, 8), new LineTo(40, 8), new LineTo(32, 0), new MoveTo(32, 16), new LineTo(40, 8));
+        arrowShape.getStyleClass().add("import-arrow");
+        BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftCenterRight(GUI.label("import.src.grid.label"), arrowShape, GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
         this.curSelectionDescription = new Label();
         Button undoChangeSelectionButton = GUI.button("undo.import.selection.change", FXUtility.mouse(this)::undoSelectionChange);
         HBox undoResetButtons = GUI.hbox("import-undo-reset-panel", undoChangeSelectionButton, resetSelectionButton, curSelectionDescription);
