@@ -14,7 +14,7 @@
         <short>The type (e.g. number, text, date) of the values in the column.</short>
         <full>
             <p>All the values in a column must have the same type, such as number, text or date.</p>
-            <p>Having all the values be of the same type avoids many errors in transformations, such as trying to multiple two text items together.</p>
+            <p>Having all the values be of the same type avoids many errors in transformations, such as trying to multiply two text items together.</p>
             <p>If you need a column to have multiple types, use a tagged type.</p>
         </full>
     </help>
