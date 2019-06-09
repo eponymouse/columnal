@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -101,6 +102,20 @@ public class RectangularTableCellSelection implements CellSelection
             // Move from top-left:
             return Either.right(new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits));
         }
+    }
+
+    @Override
+    public @Nullable CellSelection extendTo(CellPosition pos)
+    {
+        CellPosition topLeft = tableSelectionLimits.getTopLeftIncl();
+        CellPosition bottomRight = tableSelectionLimits.getBottomRightIncl();
+        if (new RectangleBounds(topLeft, bottomRight).contains(pos))
+        {
+            // It's possible
+            return new RectangularTableCellSelection(startAnchor, pos, tableSelectionLimits);
+        }
+        else
+            return null;
     }
 
     @Override

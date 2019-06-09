@@ -57,8 +57,8 @@ public abstract class VirtualGridSupplier<T extends Node>
 
     /**
      * EDITING means it has focus and should receive all mouse events.
-     * DIRECTLY_CLICKABLE means if you click it should be activated
-     * NOT_CLICKABLE means there is something there, but clicking does nothing.
+     * DIRECTLY_CLICKABLE means if you click it should be activated (e.g. button)
+     * NOT_CLICKABLE means there is something there, but clicking does nothing to the cell itself -- although it may trigger a selection of a non-focused cell.
      * (nothing there is indicated by null)
      */
     public static enum ItemState { EDITING, DIRECTLY_CLICKABLE, NOT_CLICKABLE }

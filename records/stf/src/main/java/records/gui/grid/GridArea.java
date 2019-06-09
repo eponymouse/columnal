@@ -123,7 +123,7 @@ public abstract class GridArea
         return bottomRight;
     }
     
-    // Select a cell by moving to it using the keyboard.  Return null if not possible
+    // Select a cell by moving to it using the keyboard/mouse.  Return null if not possible
     public abstract @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition);
 
     // When sorting grid areas, ones with a lower sort key will be put to the left.

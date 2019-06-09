@@ -1215,16 +1215,21 @@ public final class VirtualGrid implements ScrollBindable
                         // Become a single cell selection:
                         for (GridArea gridArea : gridAreas)
                         {
-                            @Nullable CellSelection singleCellSelection = gridArea.getSelectionForSingleCell(cellPositionFinal);
-                            if (singleCellSelection != null)
+                            @Nullable CellSelection curSelection = selection.get();
+                            @Nullable CellSelection newSelection;
+                            if (curSelection != null && mouseEvent.isShiftDown())
+                                newSelection = curSelection.extendTo(cellPositionFinal);
+                            else
+                                newSelection = gridArea.getSelectionForSingleCell(cellPositionFinal);
+                            if (newSelection != null)
                             {
-                                select(singleCellSelection);
+                                select(newSelection);
                                 foundInGrid = true;
                                 break;
                             }
                         }
 
-                        if (!foundInGrid && cellPositionFinal.columnIndex > 0 && cellPositionFinal.rowIndex > 0)
+                        if (!foundInGrid && cellPositionFinal.columnIndex > 0 && cellPositionFinal.rowIndex > 0 && !mouseEvent.isShiftDown())
                         {
                             // Belongs to no-one; we must handle it:
                             select(new EmptyCellSelection(cellPositionFinal));
@@ -2016,6 +2021,13 @@ public final class VirtualGrid implements ScrollBindable
         public CellPosition getActivateTarget()
         {
             return position;
+        }
+
+        @Override
+        public @Nullable CellSelection extendTo(CellPosition cellPosition)
+        {
+            // Can't do multi-select on empty cells:
+            return null;
         }
 
         @Override

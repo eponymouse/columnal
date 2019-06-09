@@ -423,8 +423,10 @@ public abstract class DataDisplay extends HeadedDisplay
         }
     }
 
-    
 
+    /**
+     * Selection for single non-data cell like column header or expand column arrow
+     */
     private class SingleCellSelection implements CellSelection
     {
         private final CellPosition pos;
@@ -452,6 +454,12 @@ public abstract class DataDisplay extends HeadedDisplay
             if (!extendSelection)
                 return Either.left(pos.offsetByRowCols(byRows, byColumns));
             return Either.right(this);
+        }
+
+        @Override
+        public @Nullable CellSelection extendTo(CellPosition cellPosition)
+        {
+            return null;
         }
 
         @Override

@@ -370,6 +370,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
+            public @Nullable CellSelection extendTo(CellPosition cellPosition)
+            {
+                return null;
+            }
+
+            @Override
             public CellPosition positionToEnsureInView()
             {
                 return cellPosition;

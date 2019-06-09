@@ -3,6 +3,7 @@ package records.gui;
 import annotation.units.AbsColIndex;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -115,5 +116,11 @@ public class EntireTableSelection implements CellSelection
     @Override
     public void notifySelected(boolean selected)
     {
+    }
+
+    @Override
+    public @Nullable CellSelection extendTo(CellPosition cellPosition)
+    {
+        return null;
     }
 }

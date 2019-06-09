@@ -30,9 +30,8 @@ public interface CellSelection
     // Which position should we target if they try to activate?
     CellPosition getActivateTarget();
 
-    // Primary selection means the single cell/row/column being moved around,
-    // secondary selection means cells that are also selected but not primary.
-    public static enum SelectionStatus { UNSELECTED, SECONDARY_SELECTION, PRIMARY_SELECTION}
+    // Extend the current selection to the given cell, return null if not possible
+    @Nullable CellSelection extendTo(CellPosition cellPosition);
 
     /**
      * Gets a new selection that is the result of pressing home on this one.
