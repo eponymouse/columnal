@@ -27,7 +27,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Window;
-import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -659,7 +658,7 @@ public abstract class DataDisplay extends HeadedDisplay
         @OnThread(Tag.FXPlatform)
         public Label makeCell(VisibleBounds visibleBounds)
         {
-            Label columnName = new Label(column.getColumnId().getRaw());
+            Label columnName = new Label(column.getDisplayHeaderLabel());
             columnName.getStyleClass().add("column-title");
             GUI.showTooltipWhenAbbrev(columnName);
             if (columnActions != null && columnActions.getPrimaryEditOperation() != null)

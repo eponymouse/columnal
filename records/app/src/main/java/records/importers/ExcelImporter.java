@@ -123,9 +123,10 @@ public class ExcelImporter implements Importer
 
             Import<UnitType, PlainImportInfo> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
                 @Override
-                public ColumnId srcColumnName(int index)
+                public Pair<ColumnId, @Localized String> srcColumnName(int index)
                 {
-                    return excelColumnName(index);
+                    ColumnId columnId = excelColumnName(index);
+                    return new Pair<>(columnId, columnId.getRaw());
                 }
 
                 @Override

@@ -93,6 +93,20 @@ public class GuessFormat
     // DEST_FORMAT is what you calculate post-trim for the column formats for the final item. 
     public static interface Import<SRC_FORMAT, DEST_FORMAT>
     {
+        public static class SrcDetails
+        {
+            public final TrimChoice trimChoice;
+            public final RecordSet recordSet;
+            public final @Nullable ImmutableList<@Localized String> columnNameOverrides; // Same length and order as recordSet.getColumns()
+
+            public SrcDetails(TrimChoice trimChoice, RecordSet recordSet, @Nullable ImmutableList<@Localized String> columnNameOverrides)
+            {
+                this.trimChoice = trimChoice;
+                this.recordSet = recordSet;
+                this.columnNameOverrides = columnNameOverrides;
+            }
+        }
+        
         @OnThread(Tag.FXPlatform)
         public default @Nullable Node getGUI()
         {
@@ -106,7 +120,7 @@ public class GuessFormat
         // For text files, this will be CSV split into columns, but untrimmed and all columns text
         // For XLS it is original sheet, untrimmed
         @OnThread(Tag.Simulation)
-        Pair<TrimChoice, RecordSet> loadSource(SRC_FORMAT srcFormat) throws InternalException, UserException;
+        SrcDetails loadSource(SRC_FORMAT srcFormat) throws InternalException, UserException;
         
         // Get the function which would load the final record set (import RHS) for the given format and trim.
         // After trimming, the types of the columns are guessed at.
@@ -123,8 +137,8 @@ public class GuessFormat
                     future.complete(srcFormat);
             });
             SRC_FORMAT srcFormat = future.get(1, TimeUnit.SECONDS);
-            Pair<TrimChoice, RecordSet> p = loadSource(srcFormat);
-            return loadDest(srcFormat, p.getFirst()).getFirst();
+            SrcDetails srcDetails = loadSource(srcFormat);
+            return loadDest(srcFormat, srcDetails.trimChoice).getFirst();
         }
     }
     
@@ -400,7 +414,7 @@ public class GuessFormat
             }
 
             @OnThread(Tag.Simulation)
-            public Pair<TrimChoice, RecordSet> loadSource(InitialTextFormat initialTextFormat) throws InternalException, UserException
+            public SrcDetails loadSource(InitialTextFormat initialTextFormat) throws InternalException, UserException
             {
                 List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
                 if (initialCheck == null)
@@ -423,7 +437,7 @@ public class GuessFormat
                         columnInfos.add(new ColumnInfo(new TextColumnType(), columnId));
                     }
                 }
-                return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos.build()));
+                return new SrcDetails(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos.build()), null);
                 
 
 /*

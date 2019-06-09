@@ -130,7 +130,7 @@ public class HTMLImporter implements Importer
         @SuppressWarnings("units")
         final @GridAreaColIndex int COL = 1;
         
-        ArrayList<ColumnId> columnNames = new ArrayList<>();
+        ArrayList<Pair<ColumnId, @Localized String>> columnNames = new ArrayList<>();
         
         
         TableState tableState = null;
@@ -238,7 +238,7 @@ public class HTMLImporter implements Importer
                 else
                 {
                     columnNames.clear();
-                    columnNames.addAll(Utility.mapList_Index(rowVals, (n, s) -> new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n)))));
+                    columnNames.addAll(Utility.mapList_Index(rowVals, (n, s) -> new Pair<>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n))), s)));
                 }
             }
         }
@@ -272,14 +272,14 @@ public class HTMLImporter implements Importer
             }
 
             @Override
-            public ColumnId srcColumnName(int index)
+            public Pair<ColumnId, @Localized String> srcColumnName(int index)
             {
                 if (index < columnNames.size())
                     return columnNames.get(index);
                 else
                 {
                     ColumnId columnId = new ColumnId(IdentifierUtility.identNum("C", (index + 1)));
-                    return columnId;
+                    return new Pair<>(columnId, columnId.getRaw());
                 }
             }
 
@@ -287,14 +287,14 @@ public class HTMLImporter implements Importer
             public ColumnId destColumnName(TrimChoice trimChoice, int index)
             {
                 if (index < columnNames.size())
-                    return columnNames.get(index);
+                    return columnNames.get(index).getFirst();
                 else if (trimChoice.trimFromTop > 0)
                 {
                     String valAbove = vals.get(trimChoice.trimFromTop - 1).get(index);
                     return new ColumnId(IdentifierUtility.fixExpressionIdentifier(valAbove, IdentifierUtility.identNum("C", (index + 1))));
                 }
                 
-                return srcColumnName(index);
+                return srcColumnName(index).getFirst();
             }
 
             @Override

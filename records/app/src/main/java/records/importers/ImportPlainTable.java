@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
@@ -46,23 +47,27 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     }
 
     @Override
-    public Pair<TrimChoice, RecordSet> loadSource(UnitType u) throws UserException, InternalException
+    public SrcDetails loadSource(UnitType u) throws UserException, InternalException
     {
         TrimChoice trimChoice = GuessFormat.guessTrim(vals);
         ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
+        ImmutableList.Builder<@Localized String> columnDisplayNames = ImmutableList.builder();
         for (int i = 0; i < numSrcColumns; i++)
         {
-            columns.add(new ColumnInfo(new TextColumnType(), srcColumnName(i)));
+            Pair<ColumnId, @Localized String> name = srcColumnName(i);
+            columns.add(new ColumnInfo(new TextColumnType(), name.getFirst()));
+            columnDisplayNames.add(name.getSecond());
         }
         EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
-        return new Pair<>(trimChoice, recordSet);
+        return new SrcDetails(trimChoice, recordSet, columnDisplayNames.build());
     }
 
-    public abstract ColumnId srcColumnName(int index);
+    // Gets internal column name, and name to display in GUI for src table
+    public abstract Pair<ColumnId, @Localized String> srcColumnName(int index);
 
     public ColumnId destColumnName(TrimChoice trimChoice, int index)
     {
-        return srcColumnName(index);
+        return srcColumnName(index).getFirst();
     }
 
     @Override
