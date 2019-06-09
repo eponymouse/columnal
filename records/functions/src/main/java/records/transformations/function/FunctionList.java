@@ -27,6 +27,8 @@ import records.transformations.function.number.RoundDP;
 import records.transformations.function.number.RoundSF;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
+import records.transformations.function.text.StringReplace;
+import records.transformations.function.text.StringReplaceMany;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -77,7 +79,8 @@ public class FunctionList
             //new StringLeft(),
             new StringLength(),
             //new StringMid(),
-            new StringReplaceAll(),
+            new StringReplace(),
+            new StringReplaceMany(),
             //new StringRight(),
             new StringTrim(),
             //new StringWithin(),

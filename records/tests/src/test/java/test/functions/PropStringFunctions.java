@@ -221,7 +221,7 @@ public class PropStringFunctions
         }
         StringWithin function = new StringWithin();
         StringWithinIndex functionIndex = new StringWithinIndex();
-        FunctionDefinition replaceFunction = new StringReplaceAll();
+        FunctionDefinition replaceFunction = new StringReplace();
         @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
         @Nullable Pair<ValueFunction, DataType> checkedIndex = TestUtil.typeCheckFunction(functionIndex, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
         @Nullable Pair<ValueFunction, DataType> checkedReplace = TestUtil.typeCheckFunction(replaceFunction, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));

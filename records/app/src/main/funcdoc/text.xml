@@ -23,15 +23,20 @@
         </example>
     </function>
     
-    <function name="replace all">
-        <argType name="source">Text</argType>
+    <function name="replace">
         <argType name="to replace">Text</argType>
         <argType name="replacement">Text</argType>
+        <argType name="source">Text</argType>
         <returnType name="with replaced">Text</returnType>
         <description>
             <p>Replaces all occurrences of the first text with the second text, within the third text</p>
             <p>If the first text is empty, no replacement is performed.  If any occurrences overlap, the earlier part is replaced first.</p>
         </description>
+        <equivalence display="false">
+            <forany name="x">Text</forany>
+            <lhs>@call @function replace("", "foo", x)</lhs>
+            <rhs>x</rhs>
+        </equivalence>
         <example>
             <inputArg>("at", "og", "The cat in the hat")</inputArg>
             <output>"The cog in the hog"</output>
@@ -43,6 +48,32 @@
         <example>
             <inputArg>("", "x", "Orange")</inputArg>
             <output>"Orange"</output>
+        </example>
+    </function>
+
+    <function name="replace many">
+        <argType name="replacements">[(find: Text, replace: Text)]</argType>
+        <argType name="source">Text</argType>
+        <returnType name="with replaced">Text</returnType>
+        <description>
+            <p>Given a list of find/replace items, does all the find and replacements in the second parameter.</p>
+            <p>If the find text is empty, no replacement is performed.  If any find occurrences overlap, the earliest matching item in the find/replace is used.</p>
+        </description>
+        <example>
+            <inputArg>([(find: "at", replace: "og"), (find: "the", replace: "a")], "the cat in the hat")</inputArg>
+            <output>"a cog in a hog"</output>
+        </example>
+        <example>
+            <inputArg>([(find: "ooo", replace: "eow"), (find: "oo", replace: "eh")], "Mooo moo mooo!")</inputArg>
+            <output>"Meow meh meow!"</output>
+        </example>
+        <example>
+            <inputArg>([(find: "apple", replace: "pear")], "orange")</inputArg>
+            <output>"orange"</output>
+        </example>
+        <example>
+            <inputArg>([], "original")</inputArg>
+            <output>"original"</output>
         </example>
     </function>
     

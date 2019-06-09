@@ -1,4 +1,4 @@
-package records.transformations.function;
+package records.transformations.function.text;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
@@ -7,15 +7,16 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.FunctionDefinition;
 import utility.Either;
 import utility.SimulationFunction;
 import records.transformations.expression.function.ValueFunction;
 
-public class StringReplaceAll extends FunctionDefinition
+public class StringReplace extends FunctionDefinition
 {
-    public StringReplaceAll() throws InternalException
+    public StringReplace() throws InternalException
     {
-        super("text:replace all");
+        super("text:replace");
     }
 
     @Override
