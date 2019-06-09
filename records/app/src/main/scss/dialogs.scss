@@ -50,12 +50,20 @@
 }
 .pick-html-table-dialog-pane {
     .pick-html-table-instruction {
-        -fx-font-size: 150%;
-        -fx-font-weight: bold;
-        -fx-fill: pink;
-        -fx-stroke: darkred;
-        -fx-stroke-width: 0.5;
-        -fx-text-alignment: center;
+        & > * {
+            -fx-font-size: 150%;
+            -fx-font-weight: bold;
+            -fx-fill: pink;
+            -fx-stroke: darkred;
+            -fx-stroke-width: 0.5;
+            -fx-text-alignment: center;
+            -fx-underline: true;
+        }
+    }
+    .pick-html-webview-wrapper {
+        -fx-border-style: solid outside;
+        -fx-border-color: grey(50%);
+        -fx-border-width: 1;
     }
 }
 .table-list-dialog .table-list, .sort-list-dialog .sort-list {

@@ -412,6 +412,7 @@ public class HTMLImporter implements Importer
         {
             initOwner(parent);
             initModality(Modality.WINDOW_MODAL);
+            setTitle(TranslationUtility.getString("import.html.picktable.title"));
             getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
             setResizable(true);
             getDialogPane().getStylesheets().addAll(
@@ -423,13 +424,15 @@ public class HTMLImporter implements Importer
             setResultConverter(bt -> null);
             
             WebView webView = new WebView();
-            Node instruction = new Text("Click any red-bordered table to import it.");
-            instruction.getStyleClass().add("pick-html-table-instruction");
+            Node instruction = new Text(TranslationUtility.getString("import.html.picktable.instruction"));
             TextFlow textFlow = new TextFlow(instruction);
+            textFlow.getStyleClass().add("pick-html-table-instruction");
             textFlow.setTextAlignment(TextAlignment.CENTER);
+            BorderPane webViewWrapper = new BorderPane(webView);
+            webViewWrapper.getStyleClass().add("pick-html-webview-wrapper");
             BorderPane.setAlignment(textFlow, Pos.CENTER);
-            BorderPane borderPane = new BorderPane(webView, textFlow, null, null, null);
-            BorderPane.setMargin(webView, new Insets(10, 0, 0, 0));
+            BorderPane borderPane = new BorderPane(webViewWrapper, textFlow, null, null, null);
+            BorderPane.setMargin(webViewWrapper, new Insets(10, 0, 0, 0));
             getDialogPane().setContent(borderPane);
             FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableGUIImportLinks(webViewDoc, n -> setResult(n)));
             webView.getEngine().loadContent(doc.html());
