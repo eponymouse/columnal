@@ -238,7 +238,8 @@ public class HTMLImporter implements Importer
                 else
                 {
                     columnNames.clear();
-                    columnNames.addAll(Utility.mapList_Index(rowVals, (n, s) -> new Pair<>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n))), s)));
+                    @SuppressWarnings("i18n")
+                    boolean _added = columnNames.addAll(Utility.<String, Pair<ColumnId, @Localized String>>mapList_Index(rowVals, (n, s) -> new Pair<ColumnId, @Localized String>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n))), s)));
                 }
             }
         }
