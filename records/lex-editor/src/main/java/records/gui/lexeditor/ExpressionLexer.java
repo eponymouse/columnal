@@ -118,6 +118,20 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
 
+        public boolean isClosing()
+        {
+            switch (this)
+            {
+                case CLOSE_ROUND:
+                case CLOSE_SQUARE:
+                case ENDIF:
+                case ENDDEFINE:
+                case ENDMATCH:
+                case ENDFUNCTION:
+                    return true;
+            }
+            return false;
+        }
     }
 
     /**
@@ -132,7 +146,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         EQUALS("=", "op.equal"), EQUALS_PATTERN("=~", "op.equalPattern"), NOT_EQUAL("<>", "op.notEqual"),
         LESS_THAN("<", "op.lessThan"), LESS_THAN_OR_EQUAL("<=", "op.lessThanOrEqual"), GREATER_THAN(">", "op.greaterThan"), GREATER_THAN_OR_EQUAL(">=", "op.greaterThanOrEqual"),
         AND("&", "op.and"), OR("|", "op.or"),
-        PLUS_MINUS("\u00B1", "op.plusminus"), RAISE("^", "op.raise"),
+        PLUS_MINUS("\u00B1", "op.plusminus") {
+            @Override
+            public String getASCIIContent()
+            {
+                return "+-";
+            }
+        }, RAISE("^", "op.raise"),
         COLON(":", "op.colon"),
         FIELD_ACCESS("#", "op.fieldAccess"),
         COMMA(",", "op.separator");
@@ -149,6 +169,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         @Override
         @OnThread(Tag.Any)
         public String getContent()
+        {
+            return op;
+        }
+        
+        public String getASCIIContent()
         {
             return op;
         }
@@ -217,10 +242,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     if (keyword.getContent().startsWith("@"))
                     {
                         boolean addLeadingSpace = chunks.stream().mapToInt(c -> c.internalContent.length()).sum() > 0;
-                        chunks.add(new ContentChunk(addLeadingSpace, keyword, ChunkType.NON_IDENT, true));
+                        chunks.add(new ContentChunk(addLeadingSpace, keyword, keyword.isClosing() ? ChunkType.CLOSING : ChunkType.OPENING, true));
                     }
                     else
-                        chunks.add(new ContentChunk(keyword.getContent(), ChunkType.NON_IDENT));
+                        chunks.add(new ContentChunk(keyword.getContent(), keyword.isClosing() ? ChunkType.CLOSING : ChunkType.OPENING));
                     curIndex += rawLength(keyword.getContent());
                     continue nextToken;
                 }
@@ -232,7 +257,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     saver.saveOperator(op, removedChars.map(curIndex, op.getContent()));
                     boolean addLeadingSpace = !op.getContent().equals(",");
-                    chunks.add(new ContentChunk(addLeadingSpace, op, ChunkType.NON_IDENT, true));
+                    chunks.add(new ContentChunk(addLeadingSpace, op, ChunkType.OPENING, true));
                     curIndex += rawLength(op.getContent());
                     continue nextToken;
                 }
@@ -251,7 +276,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
                     @SuppressWarnings("units")
                     ImmutableList<@CanonicalLocation Integer> wordCaretPos = Stream.<Integer>of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().collect(ImmutableList.<@CanonicalLocation Integer>toImmutableList());
-                    chunks.add(new ContentChunk(stringLit, StyledString.s(stringLit).withStyle(new StyledCSS("expression-string-literal")), caretPositions, wordCaretPos, ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(stringLit, StyledString.s(stringLit).withStyle(new StyledCSS("expression-string-literal")), caretPositions, wordCaretPos, ChunkType.CLOSING));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + RawInputLocation.ONE;
                     continue nextToken;
@@ -261,7 +286,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     // Unterminated string:
                     saver.locationRecorder.addErrorAndFixes(removedChars.map(curIndex, content), StyledString.s("Missing closing quote around text"), ImmutableList.of());
                     saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, content.length()), false)), removedChars.map(curIndex, content));
-                    chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NESTED_START));
                     suppressBracketMatching.set(curIndex + 1, content.length() + 1);
                     curIndex = rawLength(content);
                     continue nextToken;
@@ -452,7 +477,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
                 saver.saveOperand(new InvalidIdentExpression(attemptedKeyword), removedChars.map(curIndex, nonLetter));
                 saver.locationRecorder.addErrorAndFixes(removedChars.map(curIndex, nonLetter), StyledString.s("Unknown keyword: " + attemptedKeyword), ImmutableList.of());
-                chunks.add(new ContentChunk(attemptedKeyword, ChunkType.PARTIAL_KEYWORD));
+                chunks.add(new ContentChunk(attemptedKeyword, ChunkType.OPENING));
                 curIndex = nonLetter;
                 preserveNextSpace = true;
                 continue nextToken;
@@ -520,14 +545,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new MakeCompletions<ExpressionCompletionContext>()
         {
-            // Must be anon inner class to avoid lambda annotation bug in checker framework
+            // Must be anon inner class (rather than lambda) to avoid lambda annotation bug in checker framework
             // https://github.com/typetools/checker-framework/issues/2173
             // Can be swapped back in Java 9
 
             @Override
-            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, @Nullable String precedingChunk)
+            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk)
             {
-                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, precedingChunk, saver);
+                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, saver);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
@@ -600,7 +625,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String precedingChunk, ExpressionSaver expressionSaver)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, ExpressionSaver expressionSaver)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -614,7 +639,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         addKeywordCompletions(completions, stem, canonIndex);
 
-        ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> directAndRelated = completions.build();
+        ImmutableList<Pair<CompletionStatus, ExpressionCompletion>> directAndRelated = precedingChunk == ChunkType.IDENT ? Utility.mapListI(completions.build(), c -> excludeFirstPos(c)) : completions.build();
         ArrayList<LexCompletion> guides = new ArrayList<>();
         matchWordStart(stem, canonIndex, "conversion", WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
             guides.add(guideCompletion("Conversion", "conversion", v.startPos, v.lastShowPosIncl).withSideText("\u2248 conversion"));
@@ -637,24 +662,75 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
         
-        ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem, precedingChunk);
+        ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem, curChunk, precedingChunk);
         
         return new ExpressionCompletionContext(sort(directAndRelated, operators, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
     }
 
-    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, String stem, @Nullable String precedingChunk)
-    {// Does the preceding chunk match any operators?  If so, only show those in first position:
-        ImmutableList<Op> opsToShowAtStart = Arrays.stream(Op.values()).filter(op -> precedingChunk != null && op.getContent().startsWith(precedingChunk) && !op.getContent().equals(precedingChunk)).collect(ImmutableList.<Op>toImmutableList());
+    private Pair<CompletionStatus, ExpressionCompletion> excludeFirstPos(Pair<CompletionStatus, ExpressionCompletion> original)
+    {
+        return original.mapSecond(c -> new ExpressionCompletion(c.completion.copyNoShowAtFirstPos(), c.completionType));
+    }
+
+    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, String stem, ChunkType curChunk, ChunkType precedingChunkType)
+    {
+        // We need to get the operator completions.  Consider an expression like:
+        // ab<cd
+        // There are three chunks there: "ab", "<", "cd", and 6 positions (0-5 inclusive)
+        // In terms of operator completions, we want to see all operators at 5 because the user may want
+        // to add any operator after the ident.  Ditto for 4 because they may want an operator between c and d
+        // But at position 3 we only want to show those which can complete the "<" operator (so "<", "<=", "<>")
+        // and not the rest.  At 1 and 2 we show all, but at 0 we show none because it makes no sense to have an operator at the very beginning.
+        // So, the rules are:
+        //  - In a non-operator chunk we show operators in the first position if not preceded by an operator, and always in all later positions
+        //  - In an operator chunk (only the first and last position will be caret-visitable anyway) we show further operators in the last position
+
+        boolean showOpsAtStart = precedingChunkType == ChunkType.CLOSING || precedingChunkType == ChunkType.NESTED;
+        boolean anyIsOp = Arrays.stream(Op.values()).anyMatch(op -> getOpCommon(stem, op) > 0);
         return Arrays.stream(Op.values()).<LexCompletion>flatMap(op -> {
-            return IntStream.range(opsToShowAtStart.contains(op) ? 0 : 1, stem.length() + 1).<LexCompletion>mapToObj(offset -> {
-                // If offset is 0, we are showing at the first position, partway through the operator.  Assuming
-                // there are only two chars in an operator, we must adjust backwards by 1 for the start position and 
-                // thus extend the length-to-show to 1, so it shows on us
-                return new LexCompletion(canonIndex + ((offset == 0 ? -1 : offset) * CanonicalLocation.ONE), offset == 0 ? 1 : 0, op.getContent())
-                    .withSideText(TranslationUtility.getString(op.localNameKey))
-                    .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html");
-            });
+            int common = getOpCommon(stem, op);
+            Log.debug("Showing " + op.getContent() + " at " + canonIndex + "+" + common + " stem: {" + stem + "} " + " prev: " + precedingChunkType);
+            if (anyIsOp)
+            {
+                return Stream.of(new LexCompletion(canonIndex, common, op.getContent())
+                {
+                    @Override
+                    public boolean showFor(@CanonicalLocation int caretPos)
+                    {
+                        if (caretPos == canonIndex)
+                            return showOpsAtStart;
+                        else
+                            return super.showFor(caretPos);
+                    }
+                }.withSideText(TranslationUtility.getString(op.localNameKey))
+                    .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html"));
+            }
+            else
+            {
+                int maxLength = curChunk == ChunkType.IDENT ? stem.length() : 0;
+                return IntStream.range(0, maxLength + 1).mapToObj(offset -> {
+                    return new LexCompletion(canonIndex + offset * CanonicalLocation.ONE, 0, op.getContent())
+                    {
+                        @Override
+                        public boolean showFor(@CanonicalLocation int caretPos)
+                        {
+                            if (caretPos == canonIndex && offset == 0)
+                                return showOpsAtStart;
+                            else
+                                return super.showFor(caretPos);
+                        }
+                    }.withSideText(TranslationUtility.getString(op.localNameKey))
+                        .withFurtherDetailsURL("operator-" + op.getContent().codePoints().mapToObj(n -> Integer.toString(n)).collect(Collectors.joining("-")) + ".html"); 
+                });
+            }
         }).collect(ImmutableList.<LexCompletion>toImmutableList());
+    }
+
+    private int getOpCommon(String stem, Op op)
+    {
+        return Math.max(
+            Utility.longestCommonStart(stem, 0, op.getContent(), 0),
+            Utility.longestCommonStart(stem, 0, op.getASCIIContent(), 0));
     }
 
     private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)

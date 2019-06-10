@@ -80,18 +80,44 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     
     protected static interface MakeCompletions<CCC extends CodeCompletionContext>
     {
-        public CCC makeCompletions(String chunk, @CanonicalLocation int canonIndex, @Nullable String precedingChunk);
+        public CCC makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk);
     }
     
     protected static <CCC extends CodeCompletionContext> ImmutableList<AutoCompleteDetails<CCC>> makeCompletions(List<ContentChunk> chunks, MakeCompletions<CCC> makeCompletions)
     {
         ImmutableList.Builder<AutoCompleteDetails<CCC>> acd = ImmutableList.builderWithExpectedSize(chunks.size());
 
+        // An expression can be viewed as a list of chunks of different types:
+        //   - Ident
+        //   - Keyword (i.e. something beginning with @, or a bracket)
+        //   - Operator 
+        //   - Nested literal
+        // There can never be two adjacent ident chunks, because they would be treated as one ident chunk.
+        // There can be issues with overlapping or missing completions.  For example, if you have:
+        //   abs((1+2)/3)
+        // We don't want to suddenly show the completion "sqrt" between abs and the first opening bracket, because it's not
+        // a match for the stem abs.  However, we do want to show the sqrt completion between the two opening brackets.
+        // Another issue is that we don't want to display operators immediately at the beginning, nor just after
+        // an opening bracket.  We do want to show them after the 'a', 'b' and 's' in abs.  But after the +,
+        // we only want to show the +- completion, because it's the only one prefixed by the earlier operator.
+        // So here's the plan:
+        //   - When calculating completions, we need to know if we were preceded by an ident.
+        //     - If yes, do not show any completions at all in first spot (ident will handle that).
+        //     - If false, do we follow an opening bracket/keyword, operator or closing bracket/keyword?
+        //       - If opening or operator, do not show any operators in first spot (we either follow a bracket, or we follow an operator which will sort itself out)
+        //       - If closing, do show operators in first spot
+        // So, we need to categorise previous chunk into:
+        //   - Ident
+        //   - Opening keyword/bracket (including partial keywords and operators)
+        //   - Closing keyword/bracket
+        //   - Nested
         @CanonicalLocation int curPos = CanonicalLocation.ZERO;
-        ChunkType prevChunkType = ChunkType.NON_IDENT;
+        ChunkType prevChunkType = ChunkType.OPENING;
         @Nullable String prevChunk = null;
         for (ContentChunk chunk : chunks)
         {
+            //Log.debug("Chunk: {" + chunk.internalContent + "} type: " + chunk.chunkType);
+            
             @SuppressWarnings("units")
             @CanonicalLocation int nextPos = curPos + chunk.internalContent.length();
             if (chunk.chunkType != ChunkType.NESTED)
@@ -99,31 +125,23 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
                 @SuppressWarnings("units")
                 @CanonicalLocation int start = curPos;
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
-                if (showCompletions(chunk.chunkType) || !showCompletions(prevChunkType))
-                {
-                    CCC context = makeCompletions.makeCompletions(chunk.internalContent, curPos, prevChunk);
-                    acd.add(new AutoCompleteDetails<>(location, context));
-                }
+                CCC context = makeCompletions.makeCompletions(chunk.internalContent, curPos, chunk.chunkType, prevChunkType);
+                acd.add(new AutoCompleteDetails<>(location, context));
             }
             
             curPos = nextPos;
             prevChunkType = chunk.chunkType;
             prevChunk = chunk.internalContent;
         }
-        if (!showCompletions(prevChunkType))
+        if (prevChunkType != ChunkType.IDENT)
         {
             // Add completions beyond last item:
             CanonicalSpan location = new CanonicalSpan(curPos, curPos);
-            CCC context = makeCompletions.makeCompletions("", curPos, prevChunk);
+            CCC context = makeCompletions.makeCompletions("", curPos, ChunkType.IDENT, prevChunkType);
             acd.add(new AutoCompleteDetails<>(location, context));
         }
         
         return acd.build();
-    }
-
-    private static boolean showCompletions(ChunkType chunkType)
-    {
-        return chunkType == ChunkType.IDENT || chunkType == ChunkType.PARTIAL_KEYWORD;
     }
 
     static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
@@ -335,7 +353,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     
     protected static enum ChunkType
     {
-        IDENT, NON_IDENT, PARTIAL_KEYWORD, NESTED, NESTED_START;
+        IDENT, OPENING, CLOSING, NESTED, NESTED_START;
     }
 
     protected static class ContentChunk

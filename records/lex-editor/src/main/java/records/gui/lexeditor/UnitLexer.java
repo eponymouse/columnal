@@ -71,6 +71,11 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         {
             return bracket;
         }
+
+        public boolean isClosing()
+        {
+            return this == CLOSE_ROUND;
+        }
     }
 
     private final UnitManager unitManager;
@@ -96,7 +101,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 if (content.startsWith(bracket.getContent(), curIndex))
                 {
                     saver.saveBracket(bracket, removedCharacters.map(curIndex, bracket.getContent()));
-                    chunks.add(new ContentChunk(bracket.getContent(), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(bracket.getContent(), bracket.isClosing() ? ChunkType.CLOSING : ChunkType.OPENING));
                     curIndex += rawLength(bracket.getContent());
                     continue nextToken;
                 }
@@ -106,7 +111,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 if (content.startsWith(op.getContent(), curIndex))
                 {
                     saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()));
-                    chunks.add(new ContentChunk(op.getContent(), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(op.getContent(), ChunkType.OPENING));
                     curIndex += rawLength(op.getContent());
                     continue nextToken;
                 }
@@ -141,7 +146,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
             String badChar = content.substring(curIndex, curIndex + 1);
             saver.saveOperand(new InvalidSingleUnitExpression(badChar), invalidCharLocation);
-            chunks.add(new ContentChunk(badChar, ChunkType.NON_IDENT));
+            chunks.add(new ContentChunk(badChar, ChunkType.OPENING));
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
             
             curIndex += RawInputLocation.ONE;
@@ -168,7 +173,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String preceding)
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)
     {
         return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(Utility.mapListI(unitManager.getAllDeclared(), u -> {
             int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);

@@ -74,6 +74,11 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         {
             return keyword;
         }
+
+        public boolean isClosing()
+        {
+            return this == CLOSE_ROUND || this == CLOSE_SQUARE;
+        }
     }
 
     public static enum Operator implements ExpressionToken
@@ -143,7 +148,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.saveKeyword(bracket, removedCharacters.map(curIndex, bracket.getContent()));
                     curIndex += rawLength(bracket.getContent());
-                    chunks.add(new ContentChunk(bracket.getContent(), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(bracket.getContent(), bracket.isClosing() ? ChunkType.CLOSING : ChunkType.OPENING));
                     continue nextToken;
                 }
             }
@@ -153,7 +158,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.saveOperator(op, removedCharacters.map(curIndex, op.getContent()));
                     curIndex += rawLength(op.getContent());
-                    chunks.add(new ContentChunk(op.getContent(), StyledString.s(op.getContent() + " "), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(op.getContent(), StyledString.s(op.getContent() + " "), ChunkType.OPENING));
                     continue nextToken;
                 }
             }
@@ -188,7 +193,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content));
-                    chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NON_IDENT));
+                    chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NESTED));
                     curIndex = rawLength(content);
                 }
                 continue nextToken;
@@ -217,7 +222,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             CanonicalSpan invalidCharLocation = removedCharacters.map(curIndex, curIndex + RawInputLocation.ONE);
             saver.saveOperand(new InvalidIdentTypeExpression(content.substring(curIndex, curIndex + 1)), invalidCharLocation);
             saver.locationRecorder.addErrorAndFixes(invalidCharLocation, StyledString.concat(TranslationUtility.getStyledString("error.illegalCharacter", Utility.codePointToString(content.charAt(curIndex))), StyledString.s("\n  "), StyledString.s("Character code: \\u" + Integer.toHexString(content.charAt(curIndex))).withStyle(new StyledCSS("errorable-sub-explanation"))), ImmutableList.of(new TextQuickFix("error.illegalCharacter.remove", invalidCharLocation, () -> new Pair<>("", StyledString.s("<remove>")))));
-            chunks.add(new ContentChunk("" + content.charAt(curIndex), ChunkType.NON_IDENT));
+            chunks.add(new ContentChunk("" + content.charAt(curIndex), ChunkType.OPENING));
             
             curIndex += RawInputLocation.ONE;
         }
@@ -308,9 +313,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, @Nullable String preceding)
+    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)
     {
-        return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(
+        return new CodeCompletionContext(curType != ChunkType.IDENT ? ImmutableList.of() : ImmutableList.of(new LexCompletionGroup(
             Stream.<LexCompletion>concat(
                 streamDataTypes().<LexCompletion>map(t -> {
                     int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);

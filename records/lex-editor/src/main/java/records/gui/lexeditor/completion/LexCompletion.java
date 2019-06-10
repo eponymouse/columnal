@@ -160,4 +160,15 @@ public class LexCompletion
     {
         return startPos <= caretPos && caretPos <= lastShowPosIncl;
     }
+    
+    public LexCompletion copyNoShowAtFirstPos()
+    {
+        return new LexCompletion(startPos, lastShowPosIncl, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText) {
+            @Override
+            public boolean showFor(@CanonicalLocation int caretPos)
+            {
+                return caretPos == startPos ? false : super.showFor(caretPos);
+            }
+        };
+    }
 }

@@ -458,7 +458,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("1+");
         checkCompletions(
             c("My Number", 0,0, 2,2),
-            c("+", 1, 1),
+            c("+", 1, 2),
             c("*", 1, 1),
             // Plus-minus shows as multi-char completion of plus:
             c("\u00B1", 1, 2)
@@ -472,7 +472,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("(12/34)+");
         checkCompletions(
             c("My Number", 0,1, 4,4, 7,8),
-            c("+", 2,3, 5,7),
+            c("+", 2,3, 5,8),
             c("*", 2,3, 5,7),
             // Plus-minus shows as multi-char completion of plus:
             c("\u00B1", 2,3, 5,8)
@@ -487,7 +487,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkCompletions(
             c("My Number", 0,0, 3,3),
             c("+", 1, 2),
-            c("<", 1, 2),
+            c("<", 1, 3),
             c("<=", 1, 3),
             c("<>", 1, 3)
         );
@@ -501,7 +501,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkCompletions(
             c("My Number", 0,1, 4,4, 7,8),
             c("+", 2,3, 5,7),
-            c("<", 2,3, 5,7),
+            c("<", 2,3, 5,8),
             c("<=", 2,3, 5,8),
             c("<>", 2,3, 5,8)
         );
@@ -514,7 +514,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("1+2");
         checkCompletions(
             c("My Number", 0,0, 2,2),
-            c("+", 1,1, 3,3),
+            c("+", 1,3),
             c("*", 1,1, 3,3)
         );
     }
