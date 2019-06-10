@@ -689,7 +689,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         boolean anyIsOp = Arrays.stream(Op.values()).anyMatch(op -> getOpCommon(stem, op) > 0);
         return Arrays.stream(Op.values()).<LexCompletion>flatMap(op -> {
             int common = getOpCommon(stem, op);
-            Log.debug("Showing " + op.getContent() + " at " + canonIndex + "+" + common + " stem: {" + stem + "} " + " prev: " + precedingChunkType);
+            //Log.debug("Showing " + op.getContent() + " at " + canonIndex + "+" + common + " stem: {" + stem + "} " + " prev: " + precedingChunkType);
             if (anyIsOp)
             {
                 return Stream.of(new LexCompletion(canonIndex, common, op.getContent())
