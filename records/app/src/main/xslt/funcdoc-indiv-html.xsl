@@ -139,7 +139,7 @@
                     <span class="examples-header">Examples</span>
                     <xsl:for-each select="example">
                         <div class="example"><span class="example-call"><xsl:call-template
-                                name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template> <span class="example-arrow"/> <xsl:call-template
+                                name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
                                 name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                     </xsl:for-each>
                 </div>

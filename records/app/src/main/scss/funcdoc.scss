@@ -106,8 +106,7 @@ body.indiv {
     content: "\2192";
     font-family: 'Noto Sans Symbols';
 }
-.example-arrow::before {
-    content: "\2192";
+.example-arrow {
     font-family: 'Noto Sans Symbols';
 } 
 .type {
@@ -135,11 +134,21 @@ body.indiv .examples .examples-header {
         font-size: 14pt;
         font-weight: bold;
     }
-    .example .example-call {
-        padding-left: 20pt;
+    & .example {
+        margin-top: 10pt;
+        margin-bottom: 10pt;
+        .example-call {
+            padding-left: 20pt;
+        }
     }
     & .example-arrow {
-        padding-left: 4pt;
+        vertical-align: middle;
+        position: relative;
+        top: -0.1em;
+        font-size: 200%;
+        line-height: 0;
+        color: grey(60%);
+        padding-left: 8pt;
         padding-right: 8pt;
     }
 }
