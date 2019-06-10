@@ -41,6 +41,7 @@ import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -530,5 +531,21 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("1");
         StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")));
         assertEquals(new CallExpression(fromTextTo, ImmutableList.of(new NumericLiteral(1, null))), finish());
+    }
+
+    @Test
+    public void testRelatedFunction2b() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("tex");
+        checkPosition();
+        push(KeyCode.LEFT);
+        scrollLexAutoCompleteToOption("from text to()");
+        push(KeyCode.ENTER);
+        write("1");
+        FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
+        StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(functionLookup.lookup("from text to")));
+        // Should still have trailing x:
+        assertEquals(Expression.parse(null, "@invalidops(@call @function from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }

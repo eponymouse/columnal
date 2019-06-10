@@ -1269,7 +1269,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         boolean laterWord = Arrays.asList(possiblePositions).contains(WordPosition.LATER_WORD);
         int prevCompletionLength = 0;
         int curCompletionStart = 0;
-        ImmutableMap.Builder<WordPosition, LexCompletion> r = ImmutableMap.builder();
+        // Need HashMap not builder because we may overwrite if multiple later words match:
+        HashMap<WordPosition, LexCompletion> r = new HashMap<>();
+        // We loop, looking at the start of each word in the completionText ident for a match against src
+        // If we find a match and it's valid given the WordPosition items, we store it.  Because of 
         do
         {
             int len = Utility.longestCommonStartIgnoringCase(completionText, curCompletionStart, src.getFirst(), src.getSecond());
@@ -1277,16 +1280,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 @SuppressWarnings("units")
                 @CanonicalLocation int adjStartPos = startPos + prevCompletionLength;
-                r.put(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(adjStartPos, len - (adjStartPos - startPos), completionText) {
+                r.put(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, new LexCompletion(startPos, len, completionText) {
                     @Override
                     public boolean showFor(@CanonicalLocation int caretPos)
                     {
                         if (firstWordNonEmpty)
-                        {
-                            return startPos < caretPos && caretPos <= lastShowPosIncl;
-                        }
+                            return adjStartPos < caretPos && caretPos <= adjStartPos + (len * CanonicalLocation.ONE);
                         else
-                            return super.showFor(caretPos);
+                            return adjStartPos <= caretPos && caretPos <= adjStartPos + (len * CanonicalLocation.ONE);
                     }
                 });
                 // No need to add related word again later:
@@ -1302,7 +1303,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
         while (laterWord && curCompletionStart >= 0);
 
-        return r.build();
+        return ImmutableMap.copyOf(r);
     }
 
     // Helper for above that uses zero as the src start position
