@@ -623,7 +623,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         sleep(500);
         clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
         push(KeyCode.ENTER);
-        enterStructuredValue(swappedType.getDataType(), swappedValue, r, true);
+        enterStructuredValue(swappedType.getDataType(), swappedValue, r, true, true);
         push(KeyCode.ENTER);
         
         

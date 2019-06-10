@@ -188,7 +188,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
             push(KeyCode.TAB);
-            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), true);
+            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), true, true);
             defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
@@ -365,7 +365,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         if (value != null)
         {
             clickOn(".default-value");
-            enterStructuredValue(dataType, value, new Random(1), true);
+            enterStructuredValue(dataType, value, new Random(1), true, true);
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
@@ -527,7 +527,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             assertFocusOwner("Writing complete invalid", textField);
             return UnitType.UNIT;
         }, p -> {
-            enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll);
+            enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll, true);
             assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getFirst(),p.getSecond(), null) + " after choice " + choice, textField);
             return UnitType.UNIT;
         });

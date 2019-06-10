@@ -42,6 +42,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.Random;
 
@@ -50,7 +51,7 @@ import static org.junit.Assert.*;
 public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
-    default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst) throws InternalException, UserException
+    default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
     {
         final int DELAY = 1;
         
@@ -159,7 +160,10 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 @Value Record record = Utility.cast(value, Record.class);
                 boolean first = true;
                 ArrayList<Entry<@ExpressionIdentifier String, DataType>> entries = new ArrayList<>(fields.entrySet());
-                Collections.shuffle(entries, r);
+                if (allowFieldShuffle)
+                    Collections.shuffle(entries, r);
+                else
+                    Collections.sort(entries, Comparator.comparing(e -> e.getKey()));
                 for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
                 {
                     if (!first)
@@ -170,7 +174,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                     }
                     first = false;
                     write(entry.getKey() + ": ");
-                    enterStructuredValue(entry.getValue(), record.getField(entry.getKey()), r, false);
+                    enterStructuredValue(entry.getValue(), record.getField(entry.getKey()), r, false, allowFieldShuffle);
                 }
 
                 write(")");
@@ -194,7 +198,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                             if (r.nextBoolean())
                                 write(" ");
                         }
-                        enterStructuredValue(inner, listEx.get(i), r, false);
+                        enterStructuredValue(inner, listEx.get(i), r, false, allowFieldShuffle);
                     }
                     write("]");
                 }

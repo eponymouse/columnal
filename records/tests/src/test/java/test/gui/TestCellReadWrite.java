@@ -188,7 +188,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
                 push(KeyCode.SHORTCUT, KeyCode.A);
                 write(str);
             }, val -> {
-                enterStructuredValue(columnDTV.getType(), val, r, true);
+                enterStructuredValue(columnDTV.getType(), val, r, true, false);
             });
             push(KeyCode.ESCAPE);
 

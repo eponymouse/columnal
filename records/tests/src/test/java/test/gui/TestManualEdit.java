@@ -238,7 +238,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                                 
                 push(KeyCode.ENTER);
 
-                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true);
+                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true, false);
                 push(KeyCode.ENTER);
 
                 assertTrue("Alert should be showing asking whether to create manual edit", lookup(".alert").tryQuery().isPresent());
@@ -354,7 +354,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                     push(KeyCode.DELETE);
                     push(KeyCode.HOME);
                     write(s);
-                }, v -> enterStructuredValue(columnTypes.get(col).getDataType(), v.getValue(), r, true));
+                }, v -> enterStructuredValue(columnTypes.get(col).getDataType(), v.getValue(), r, true, false));
                 push(KeyCode.ENTER);
                 //TestUtil.fx_(() -> dumpScreenshot());
             }
@@ -399,7 +399,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 sleep(500);
                 assertFalse("Alert should not be showing", lookup(".alert").tryQuery().isPresent());
                 push(KeyCode.ENTER);
-                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true);
+                enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true, false);
                 push(KeyCode.ENTER);
             }
             sleep(1000);

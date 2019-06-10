@@ -88,7 +88,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
                 push(KeyCode.ENTER);
-                enterStructuredValue(colType.getType(), newVal, r, true);
+                enterStructuredValue(colType.getType(), newVal, r, true, false);
                 push(KeyCode.ENTER);
                 TestUtil.sleep(2000);
 
@@ -103,9 +103,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propDelete(
-        @When(seed=1L) @From(GenTypeAndValueGen.class) TypeAndValueGen colA,
-        @When(seed=1L) @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
-        @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+        @From(GenTypeAndValueGen.class) TypeAndValueGen colA,
+        @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
+        @From(GenRandom.class) Random r) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
             @Initialized final int tableLength = 1 + r.nextInt(20);
@@ -172,7 +172,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
                 push(KeyCode.ENTER);
-                enterStructuredValue(colType.getType(), newVal, r, true);
+                enterStructuredValue(colType.getType(), newVal, r, true, false);
                 push(KeyCode.ENTER);
                 TestUtil.sleep(2000);
 
