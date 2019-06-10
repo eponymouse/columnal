@@ -31,6 +31,7 @@ import records.gui.lexeditor.completion.LexCompletion;
 import records.transformations.Calculate;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
@@ -39,6 +40,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.StandardFunction;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -515,5 +517,18 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
             c("+", 1,1, 3,3),
             c("*", 1,1, 3,3)
         );
+    }
+
+    @Test
+    public void testRelatedFunction2() throws Exception
+    {
+        loadExpression("@unfinished \"\"");
+        write("tex");
+        checkPosition();
+        scrollLexAutoCompleteToOption("from text to()");
+        push(KeyCode.ENTER);
+        write("1");
+        StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")));
+        assertEquals(new CallExpression(fromTextTo, ImmutableList.of(new NumericLiteral(1, null))), finish());
     }
 }
