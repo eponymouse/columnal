@@ -4,11 +4,8 @@ import annotation.help.qual.HelpKey;
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import log.Log;
@@ -34,7 +31,6 @@ import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
-import utility.gui.GUI;
 import utility.gui.Instruction;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
@@ -82,9 +78,9 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
             
             final Row row;
             if (selectInfo.helpKey != null)
-                row = GUI.labelledGridRow(selectInfo.labelKey, selectInfo.helpKey, columnField);
+                row = LabelledGrid.labelledGridRow(selectInfo.labelKey, selectInfo.helpKey, columnField);
             else
-                row = new Row(GUI.label(selectInfo.labelKey), null, columnField);            
+                row = LabelledGrid.unhelpfulGridRow(selectInfo.labelKey, columnField);            
             return new Pair<>(row, columnField);
         });
         columnFields = Utility.mapListI(items, p -> p.getSecond());

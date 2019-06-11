@@ -24,6 +24,7 @@ import utility.FXPlatformFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 import utility.TranslationUtility;
 
@@ -106,7 +107,7 @@ public class ImporterGUI
                 FXUtility.addChangeListenerPlatform(fieldValue, f -> currentChoice.set(extract.apply(selectedItemProperty.get())));
             }
         }
-        return GUI.labelledGridRow(choiceDetails.getLabelKey(), choiceDetails.getHelpId(), choiceNode);
+        return LabelledGrid.labelledGridRow(choiceDetails.getLabelKey(), choiceDetails.getHelpId(), choiceNode);
     }
 
     // Either a value of type C, or an "Other" item

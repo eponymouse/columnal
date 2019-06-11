@@ -1,14 +1,10 @@
 package records.importers;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -35,7 +31,6 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import records.data.*;
 import records.gui.grid.GridAreaCellPosition;
-import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
@@ -57,7 +52,6 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.TranslationUtility;
-import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 
 import java.io.File;
@@ -267,7 +261,7 @@ public class HTMLImporter implements Importer
                         format.set(null);
                         format.set(UnitType.UNIT);
                     });
-                    labelledGrid = new LabelledGrid(GUI.labelledGridRow("import.trimWhitespace", "guess-format/trimWhitespace", checkBox));
+                    labelledGrid = new LabelledGrid(LabelledGrid.labelledGridRow("import.trimWhitespace", "guess-format/trimWhitespace", checkBox));
                 }
                 return labelledGrid;
             }

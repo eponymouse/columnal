@@ -50,7 +50,6 @@ import utility.Utility;
 import utility.gui.DoubleOKLightDialog.Validity;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
-import utility.gui.GUI;
 import utility.gui.Instruction;
 import utility.gui.LabelledGrid;
 import utility.gui.TimedFocusable;
@@ -59,7 +58,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
@@ -76,14 +74,14 @@ public class AggregateSplitByPane extends BorderPane
         Label label = new Label(header);
         setTop(label);
         ToggleGroup toggleGroup = new ToggleGroup();
-        LabelledGrid.Row wholeTableRow = GUI.radioGridRow("agg.split.whole.table", "split-by/whole-table", toggleGroup);
-        LabelledGrid.Row splitByRow = GUI.radioGridRow("agg.split.columns", "split-by/by-columns", toggleGroup);
+        LabelledGrid.Row wholeTableRow = LabelledGrid.radioGridRow("agg.split.whole.table", "split-by/whole-table", toggleGroup);
+        LabelledGrid.Row splitByRow = LabelledGrid.radioGridRow("agg.split.columns", "split-by/by-columns", toggleGroup);
         this.splitList = new SplitList(originalSplitBy);
         splitList.getNode().setMinHeight(130.0);
         LabelledGrid grid = new LabelledGrid(
             wholeTableRow,
             splitByRow,
-            new LabelledGrid.Row(splitList.getNode())
+            LabelledGrid.labelOnlyRow(splitList.getNode())
         );
         setCenter(grid);
         /*

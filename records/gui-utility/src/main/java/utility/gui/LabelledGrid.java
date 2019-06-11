@@ -1,58 +1,113 @@
 package utility.gui;
 
+import annotation.help.qual.HelpKey;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.Labeled;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-
-import java.util.ArrayList;
-import java.util.List;
+import utility.Pair;
+import utility.TranslationUtility;
 
 /**
- * Created by neil on 01/05/2017.
+ * A GridPane with three columns (label, help box, and content) and
+ * a variable number of rows.  
  */
-@OnThread(Tag.FX)
-public class LabelledGrid extends GridPane
+@OnThread(Tag.FXPlatform)
+public final class LabelledGrid extends GridPane
 {
+    // Count of the number of rows that have been added.
     private int rows = 0;
+
+    public static Row radioGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, ToggleGroup toggleGroup, String... radioStyleClasses)
+    {
+        RadioButton radioButton = GUI.addIdClass(new RadioButton(TranslationUtility.getString(labelKey)), labelKey);
+        radioButton.setToggleGroup(toggleGroup);
+        setHalignment(radioButton, HPos.LEFT);
+        radioButton.getStyleClass().addAll(radioStyleClasses);
+        return new Row(radioButton, GUI.helpBox(helpId, radioButton), null);
+    }
+
+    public static Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... labelStyleClasses)
+    {
+        return classicRow(GUI.label(labelKey, labelStyleClasses), GUI.helpBox(helpId, node), node);
+    }
+
+    // A grid row with no help button
+    public static Row unhelpfulGridRow(@LocalizableKey String labelKey, Node node)
+    {
+        Node label = GUI.label(labelKey);
+        setHalignment(label, HPos.RIGHT);
+        GridPane.setHgrow(node, Priority.ALWAYS);
+        return new Row(label, null, node);
+    }
+
+    public static Pair<CheckBox, Row> tickGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... tickBoxStyleClasses)
+    {
+        CheckBox checkBox = new CheckBox(TranslationUtility.getString(labelKey));
+        checkBox.getStyleClass().addAll(tickBoxStyleClasses);
+        return new Pair<>(checkBox, classicRow(checkBox, GUI.helpBox(helpId, node), node));
+    }
+
+    public static Row labelledGridRow(AlignedLabels alignedLabels, @LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... labelStyleClasses)
+    {
+        return classicRow(alignedLabels.addLabel(labelKey, labelStyleClasses), GUI.helpBox(helpId, node), node);
+    }
+
+    private static Row classicRow(Node label, HelpBox helpBox, Node content)
+    {
+        setHalignment(label, HPos.RIGHT);
+        GridPane.setHgrow(content, Priority.ALWAYS);
+        return new Row(label, helpBox, content);
+    }
+
+    public static Row labelOnlyRow(Node label)
+    {
+        return new Row(label, null, null);
+    }
+
+    public static Row contentOnlyRow(Node content)
+    {
+        return new Row(null, null, content);
+    }
+
+    public static Row fullWidthRow(Node fullWidthItem)
+    {
+        setColumnSpan(fullWidthItem, 3);
+        return new Row(fullWidthItem, null, null);
+    }
 
     public static final class Row
     {
-        private final Node lhs;
+        private final @Nullable Node lhs;
         private final @Nullable HelpBox helpBox;
-        private final @Nullable Node item;
+        private final @Nullable Node rhs;
 
-        public Row(Node label, @Nullable HelpBox helpBox, Node item)
+        private Row(@Nullable Node lhs, @Nullable HelpBox helpBox, @Nullable Node rhs)
         {
-            setHalignment(label, HPos.RIGHT);
-            this.lhs = label;
+            this.lhs = lhs;
             this.helpBox = helpBox;
-            this.item = item;
-            GridPane.setHgrow(item, Priority.ALWAYS);
+            this.rhs = rhs;
         }
         
-        public Row(RadioButton radio, @Nullable HelpBox helpBox)
+        public void setLabelHAlignment(HPos hAlignment)
         {
-            setHalignment(radio, HPos.LEFT);
-            this.lhs = radio;
-            this.helpBox = helpBox;
-            this.item = null;
-        }
-        
-        public Row(Node fullWidthNode)
-        {
-            this.lhs = fullWidthNode;
-            this.helpBox = null;
-            this.item = null;
+            if (lhs != null)
+                GridPane.setHalignment(lhs, hAlignment);
         }
     }
+    
+    // A row with only content, but that still only occupies column 2:
+    // TODO
+    
 
     public LabelledGrid(Row... rows)
     {
@@ -63,34 +118,14 @@ public class LabelledGrid extends GridPane
         }
     }
 
-    public int addRow(@UnknownInitialization(GridPane.class) LabelledGrid this, Row row)
+    public void addRow(Row row)
     {
-        int col = 0;
-        add(row.lhs, col, rows);
-        col += 1;
+        if (row.lhs != null)
+            add(row.lhs, 0, this.rows);
         if (row.helpBox != null)
-            add(row.helpBox, col, rows);
-        col += 1;
-        if (row.item != null)
-            add(row.item, col, rows);
-        return rows++;
+            add(row.helpBox, 1, this.rows);
+        if (row.rhs != null)
+            add(row.rhs, 2, this.rows);
+        this.rows += 1;
     }
-    
-    // The return from the last addRow call
-    public int getLastRow()
-    {
-        return rows - 1;
-    }
-
-    public void clearRowsAfter(int rowNumber)
-    {
-        List<Node> childrenCopy = new ArrayList<>(getChildren());
-        for (Node node : childrenCopy)
-        {
-            if (getRowIndex(node) > rowNumber)
-                getChildren().remove(node);
-        }
-        rows = rowNumber + 1;
-    }
-
 }

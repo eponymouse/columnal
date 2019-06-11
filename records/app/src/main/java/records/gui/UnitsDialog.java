@@ -250,30 +250,30 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());
             unitNameField.setPromptText(TranslationUtility.getString("unit.name.prompt"));
-            Row nameRow = GUI.labelledGridRow("unit.name", "edit-unit/name", unitNameField);
+            Row nameRow = LabelledGrid.labelledGridRow("unit.name", "edit-unit/name", unitNameField);
             toggleGroup = new ToggleGroup();
             
-            Row fullRadio = GUI.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
+            Row fullRadio = LabelledGrid.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
             descriptionField.setPromptText(TranslationUtility.getString("unit.full.description.prompt"));
-            Row fullDescription = GUI.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
+            Row fullDescription = LabelledGrid.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
             @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
             scale = new TextField(equiv == null ? "" : equiv.getFirst().toString());
             scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
             definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
             //definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
-            Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
+            Pair<CheckBox, Row> fullDefinition = LabelledGrid.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
             this.equivalentTickBox = fullDefinition.getFirst();
             equivalentTickBox.setSelected(equiv != null);
 
-            Row aliasRadio = GUI.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
+            Row aliasRadio = LabelledGrid.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
             aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));
             aliasTargetField.setPromptText(TranslationUtility.getString("unit.alias.target.prompt"));
-            Row aliasTarget = GUI.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
+            Row aliasTarget = LabelledGrid.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
             
             toggleGroup.selectToggle(toggleGroup.getToggles().get(initialValue == null || initialValue.getSecond().isRight() ? 0 : 1));
             
-            getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, new Row(getErrorLabel())));
+            getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, LabelledGrid.fullWidthRow(getErrorLabel())));
             getDialogPane().getStyleClass().add("edit-unit-dialog");
 
             FXUtility.addChangeListenerPlatformNN(toggleGroup.selectedToggleProperty(), t -> {

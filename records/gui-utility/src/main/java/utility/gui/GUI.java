@@ -266,24 +266,6 @@ public class GUI
         return borderPane;
     }
 
-    public static LabelledGrid.Row radioGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, ToggleGroup toggleGroup)
-    {
-        RadioButton radioButton = addIdClass(new RadioButton(TranslationUtility.getString(labelKey)), labelKey);
-        radioButton.setToggleGroup(toggleGroup);
-        return new LabelledGrid.Row(radioButton, helpBox(helpId, radioButton));
-    }
-
-    public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node)
-    {
-        return new LabelledGrid.Row(label(labelKey), helpBox(helpId, node), node);
-    }
-
-    public static Pair<CheckBox, LabelledGrid.Row> tickGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node)
-    {
-        CheckBox checkBox = new CheckBox(TranslationUtility.getString(labelKey));
-        return new Pair<>(checkBox, new LabelledGrid.Row(checkBox, helpBox(helpId, node), node));
-    }
-
     public static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)
     {
         List<Node> nodes = new ArrayList<>();

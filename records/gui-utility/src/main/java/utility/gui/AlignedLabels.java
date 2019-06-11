@@ -32,19 +32,32 @@ public class AlignedLabels
     // The text items, same length as stackPanes.
     private final ArrayList<@Localized String> labelTexts = new ArrayList<>();
 
+    private final Pos alignment;
+
+    public AlignedLabels(Pos alignment)
+    {
+        this.alignment = alignment;
+    }
+    
+    public AlignedLabels()
+    {
+        this(Pos.CENTER_RIGHT);
+    }
+
     /**
      * Add a new label with the given key, returns a StackPane that
      * may be modified to have more invisible labels by future addLabel
      * calls.
      */
-    public StackPane addLabel(@LocalizableKey String labelKey)
+    public StackPane addLabel(@LocalizableKey String labelKey, String... styleClasses)
     {
         // Add this text to existing panes:
         @Localized String labelText = TranslationUtility.getString(labelKey);
         for (StackPane existingPane : stackPanes)
         {
             Label l = new Label(labelText);
-            StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+            l.getStyleClass().addAll(styleClasses);
+            StackPane.setAlignment(l, alignment);
             l.setVisible(false);
             existingPane.getChildren().add(0, l);
         }
@@ -53,12 +66,13 @@ public class AlignedLabels
         for (String existingText : labelTexts)
         {
             Label l = new Label(existingText);
-            StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+            StackPane.setAlignment(l, alignment);
             l.setVisible(false);
             stackPane.getChildren().add(l);
         }
         Label l = new Label(labelText);
-        StackPane.setAlignment(l, Pos.CENTER_RIGHT);
+        l.getStyleClass().addAll(styleClasses);
+        StackPane.setAlignment(l, alignment);
         stackPane.getChildren().add(l);
         
         labelTexts.add(labelText);

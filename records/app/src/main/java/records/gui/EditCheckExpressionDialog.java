@@ -25,9 +25,7 @@ import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;
-import utility.gui.GUI;
 import utility.gui.LabelledGrid;
-import utility.gui.LightDialog;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)
@@ -74,9 +72,9 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
         LabelledGrid content = new LabelledGrid();
         content.getStyleClass().add("edit-check-expression-content");
 
-        content.addRow(GUI.labelledGridRow("edit.check.type", "edit-check/check-type", combo));
+        content.addRow(LabelledGrid.labelledGridRow("edit.check.type", "edit-check/check-type", combo));
         
-        content.addRow(GUI.labelledGridRow("edit.check.expression",
+        content.addRow(LabelledGrid.labelledGridRow("edit.check.expression",
                 "edit-check/check-expression", expressionEditor.getContainer()));
         
         getDialogPane().setContent(content);

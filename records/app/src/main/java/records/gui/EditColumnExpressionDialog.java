@@ -10,19 +10,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -278,17 +274,17 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         LabelledGrid content = new LabelledGrid();
         content.getStyleClass().add("edit-column-expression-content");
 
-        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", nameField.getNode()));
+        content.addRow(LabelledGrid.labelledGridRow("edit.column.name", "edit-column/column-name", nameField.getNode()));
         
         if (!recipes.isEmpty())
         {
             recipeBar = new RecipeBar(recipes);
-            content.addRow(new LabelledGrid.Row(new Label(" "), null, recipeBar));
+            content.addRow(LabelledGrid.contentOnlyRow(recipeBar));
         }
         else
             recipeBar = null;
         
-        content.addRow(GUI.labelledGridRow("edit.column.expression",
+        content.addRow(LabelledGrid.labelledGridRow("edit.column.expression",
                 "edit-column/column-expression", expressionEditor.getContainer()));
 
         Node sidePaneNode = sidePane.getSidePane();

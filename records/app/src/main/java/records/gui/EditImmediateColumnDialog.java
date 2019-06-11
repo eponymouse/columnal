@@ -1,14 +1,11 @@
 package records.gui;
 
-import annotation.help.qual.HelpKey;
 import annotation.qual.Value;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import log.Log;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -84,7 +81,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         content.getStyleClass().add("edit-column-details");
 
         columnNameTextField = new ColumnNameTextField(initial);
-        content.addRow(labelledGridRow(alignedLabels, "edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
+        content.addRow(LabelledGrid.labelledGridRow(alignedLabels, "edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         clearErrorLabelOnChange(columnNameTextField);
         
         DocumentTextField defaultValueField = new DocumentTextField(null) {
@@ -124,8 +121,8 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 defaultValueField.requestFocus();
             }
         };
-        content.addRow(labelledGridRow(alignedLabels, "edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
-        content.addRow(labelledGridRow(alignedLabels, "edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
+        content.addRow(LabelledGrid.labelledGridRow(alignedLabels, "edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
+        content.addRow(LabelledGrid.labelledGridRow(alignedLabels, "edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
         
         Label explanation = new Label(
             (creatingNewTable ? (TranslationUtility.getString("newcolumn.newTableExplanation") + "  ") : Utility.universal(""))
@@ -146,7 +143,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             tableNameTextField.setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
             LabelledGrid topGrid = new LabelledGrid();
             topGrid.getStyleClass().add("edit-column-details");
-            topGrid.addRow(labelledGridRow(alignedLabels, "edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
+            topGrid.addRow(LabelledGrid.labelledGridRow(alignedLabels, "edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
             vbox.getChildren().add(0, topGrid);
             clearErrorLabelOnChange(tableNameTextField);
         }
@@ -258,16 +255,6 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, null, (String s, @Value T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
-    }
-/*
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
-    {
-        return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
-    }
-*/
-    public static LabelledGrid.Row labelledGridRow(AlignedLabels alignedLabels, @LocalizableKey String labelKey, @HelpKey String helpId, Node node)
-    {
-        return new LabelledGrid.Row(alignedLabels.addLabel(labelKey), GUI.helpBox(helpId, node), node);
     }
 
 }
