@@ -495,6 +495,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             srcColumnHeaderSupplier.addItem(this.selectionRectangle);
             mousePane.setOnMouseMoved(e -> {
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
+                withParent_(g -> g.handlePossibleNudgeEvent(e));
                 e.consume();
             });
             @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
@@ -515,6 +516,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             mousePane.setOnMousePressed(e -> {
                 pendingTrim[0] = null;
+                withParent_(g -> g.setNudgeScroll(e.isPrimaryButtonDown()));
                 withParent(p -> p.getVisibleBounds())
                     .flatMap(v -> v.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP))
                     .map(pos -> {
@@ -524,7 +526,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
-                withParent_(g -> g.setNudgeScroll(e.isPrimaryButtonDown()));
+                withParent_(g -> g.handlePossibleNudgeEvent(e));
                 
                 //Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {

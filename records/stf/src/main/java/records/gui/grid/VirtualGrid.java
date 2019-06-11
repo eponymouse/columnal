@@ -1133,6 +1133,11 @@ public final class VirtualGrid implements ScrollBindable
     {
         container.setNudgeScroll(enabled);
     }
+    
+    public void handlePossibleNudgeEvent(MouseEvent e)
+    {
+        container.handlePossibleNudgeEvent(e);
+    }
 
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
@@ -1279,26 +1284,8 @@ public final class VirtualGrid implements ScrollBindable
             }));
             nudgeScrollAnimation.setCycleCount(Animation.INDEFINITE);
             
-            
             addEventFilter(MouseEvent.ANY, e -> {
-                // Do nudge scroll if enabled:
-                if (nudgeEnabled && (e.getEventType() == MouseEvent.MOUSE_MOVED || e.getEventType() == MouseEvent.MOUSE_DRAGGED))
-                {
-                    nudgeScrollLeft = NudgeScrollSpeed.calculateNudge(e.getSceneX() - localToScene(0, 0).getX());
-                    nudgeScrollRight = NudgeScrollSpeed.calculateNudge(localToScene(getWidth() - vBar.getWidth(), 0).getX() - e.getSceneX());
-
-                    nudgeScrollTop = NudgeScrollSpeed.calculateNudge(e.getSceneY() - localToScene(0, 0).getY());
-                    nudgeScrollBottom = NudgeScrollSpeed.calculateNudge(localToScene(0, getHeight() - hBar.getHeight()).getY() - e.getSceneY());
-                    
-                    if (nudgeScrollLeft != NudgeScrollSpeed.NONE
-                        || nudgeScrollRight != NudgeScrollSpeed.NONE
-                        || nudgeScrollTop != NudgeScrollSpeed.NONE
-                        || nudgeScrollBottom != NudgeScrollSpeed.NONE)
-                    {
-                        // Does nothing if already playing:
-                        nudgeScrollAnimation.play();
-                    }
-                }
+                FXUtility.mouse(this).handlePossibleNudgeEvent(e);
             });
             
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
@@ -1367,6 +1354,28 @@ public final class VirtualGrid implements ScrollBindable
             ));
         }
 
+        private void handlePossibleNudgeEvent(MouseEvent e)
+        {
+            // Do nudge scroll if enabled:
+            if (nudgeEnabled && (e.getEventType() == MouseEvent.MOUSE_MOVED || e.getEventType() == MouseEvent.MOUSE_DRAGGED))
+            {
+                nudgeScrollLeft = NudgeScrollSpeed.calculateNudge(e.getSceneX() - localToScene(0, 0).getX());
+                nudgeScrollRight = NudgeScrollSpeed.calculateNudge(localToScene(getWidth() - vBar.getWidth(), 0).getX() - e.getSceneX());
+
+                nudgeScrollTop = NudgeScrollSpeed.calculateNudge(e.getSceneY() - localToScene(0, 0).getY());
+                nudgeScrollBottom = NudgeScrollSpeed.calculateNudge(localToScene(0, getHeight() - hBar.getHeight()).getY() - e.getSceneY());
+                
+                if (nudgeScrollLeft != NudgeScrollSpeed.NONE
+                    || nudgeScrollRight != NudgeScrollSpeed.NONE
+                    || nudgeScrollTop != NudgeScrollSpeed.NONE
+                    || nudgeScrollBottom != NudgeScrollSpeed.NONE)
+                {
+                    // Does nothing if already playing:
+                    nudgeScrollAnimation.play();
+                }
+            }
+        }
+
         private void ctrlHome()
         {
             CellPosition topLeft = CellPosition.ORIGIN.offsetByRowCols(1, 1);
@@ -1381,7 +1390,6 @@ public final class VirtualGrid implements ScrollBindable
 
         private void setNudgeScroll(boolean enabled)
         {
-            Log.debug("Setting nudge scroll enable: " + enabled);
             nudgeEnabled = enabled;
             if (!nudgeEnabled)
             {
