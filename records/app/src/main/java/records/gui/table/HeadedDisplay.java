@@ -255,6 +255,12 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 e.consume();
             });
             borderPane.setOnContextMenuRequested(e -> {
+                withParent_(g -> {
+                    Point2D gridRelPos = g.getNode().screenToLocal(new Point2D(e.getScreenX(), e.getScreenY()));
+                    @Nullable Pair<CellPosition, Point2D> cellPositionAt = g.getCellPositionAt(gridRelPos.getX(), gridRelPos.getY());
+                    @AbsColIndex int colIndex = cellPositionAt == null ? getPosition().columnIndex : cellPositionAt.getFirst().columnIndex;
+                    g.select(new EntireTableSelection(HeadedDisplay.this, colIndex));
+                });
                 @Nullable ContextMenu contextMenu = FXUtility.mouse(HeadedDisplay.this).getTableHeaderContextMenu();
                 if (contextMenu != null)
                     contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());

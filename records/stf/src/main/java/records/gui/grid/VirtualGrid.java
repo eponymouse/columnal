@@ -516,7 +516,7 @@ public final class VirtualGrid implements ScrollBindable
     }
 
     // Returns the cell position, and the relative X Y position within the cell
-    private @Nullable Pair<CellPosition, Point2D> getCellPositionAt(double x, double y)
+    public @Nullable Pair<CellPosition, Point2D> getCellPositionAt(double x, double y)
     {
         @AbsColIndex int colIndex;
         x -= logicalScrollColumnOffset;

@@ -20,6 +20,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
@@ -701,6 +702,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Workers.onWorkerThread("Deleting " + table.getId(), Workers.Priority.SAVE, () ->
                     parent.getManager().remove(table.getId())
                 );
+            }),
+            new SeparatorMenuItem(),
+            GUI.menuItemPos("tableDisplay.menu.transform", pos -> {
+                parent.createTransform(table, pos);
             })
         ));
 

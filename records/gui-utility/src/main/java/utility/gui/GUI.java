@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
@@ -25,6 +26,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Screen;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -37,6 +39,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
@@ -143,9 +146,20 @@ public class GUI
 
     public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction, String... styleClasses)
     {
+        return menuItemPos(menuItemKey, pos -> onAction.run(), styleClasses);
+    }
+
+    public static MenuItem menuItemPos(@LocalizableKey String menuItemKey, FXPlatformConsumer<Point2D> onActionWithItemCentre, String... styleClasses)
+    {
         @OnThread(Tag.FXPlatform) Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
         MenuItem item = new MenuItem(stringAndShortcut.getFirst());
-        item.setOnAction(e -> onAction.run());
+        item.setOnAction(e -> {
+            ContextMenu parentPopup = item.getParentPopup();
+            if (parentPopup != null)
+                onActionWithItemCentre.consume(FXUtility.getCentre(FXUtility.getWindowBounds(parentPopup)));
+            else
+                onActionWithItemCentre.consume(FXUtility.getCentre(Screen.getPrimary().getBounds()));
+        });
         if (stringAndShortcut.getSecond() != null)
             item.setAccelerator(stringAndShortcut.getSecond());
         item.setId(makeId(menuItemKey));

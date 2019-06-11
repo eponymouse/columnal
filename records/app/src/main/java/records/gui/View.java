@@ -893,6 +893,31 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
         virtualGrid.setEffectOnNonOverlays(null);
     }
+    
+    public void createTransform(Table srcTable, Point2D mouseScreenPos)
+    {
+        new PickTransformationDialog(this).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
+            @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(this, getManager(), tableManager.getNextInsertPosition(srcTable.getId()), () -> Optional.of(srcTable));
+            if (makeTrans != null)
+            {
+                @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
+                Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
+                    FXUtility.alertOnError_("Error creating transformation", () -> {
+                        Transformation transformation = makeTransFinal.get();
+                        tableManager.record(transformation);
+                        Platform.runLater(() -> {
+                            if (transformation.getDisplay() instanceof TableDisplay)
+                            {
+                                TableDisplay display = (TableDisplay) transformation.getDisplay();
+                                if (display != null)
+                                    display.editAfterCreation();
+                            }
+                        });
+                    });
+                });
+            }
+        });
+    }
 
     public void enableWriting()
     {
