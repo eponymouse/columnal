@@ -58,7 +58,7 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
         splitList.setMinHeight(150.0);
         splitList.setPrefWidth(300.0);
         
-        getDialogPane().setContent(splitList);
+        getDialogPane().setContent(new BorderPane(splitList, null, null, getErrorLabel(), null));
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")

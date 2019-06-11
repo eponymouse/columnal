@@ -46,7 +46,8 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
         getDialogPane().setContent(new VBox(
             new Label("Pick column to use to identify the edited rows if the source data changes:"),
                 byRowRadio,
-            new HBox(byColumnRadio, byColumnName)
+            new HBox(byColumnRadio, byColumnName),
+            getErrorLabel()
         ));
     }
 

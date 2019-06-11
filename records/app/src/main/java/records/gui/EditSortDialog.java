@@ -81,7 +81,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         sortList.getNode().setMinHeight(150.0);
         sortList.getNode().setPrefWidth(300.0);
         sortList.getNode().setPrefHeight(250.0);
-        getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, null, null));
+        getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, getErrorLabel(), null));
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")

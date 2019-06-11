@@ -9,6 +9,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 import records.gui.ErrorableTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -33,6 +34,18 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
+            if (errorLabel.getParent() == null)
+            {
+                try
+                {
+                    throw new InternalException("In dialog " + getClass() + " error label is not in scene while button pressed");
+                }
+                catch (InternalException ex)
+                {
+                    Log.log(ex);
+                }
+            }
+            
             FXUtility.mouse(this).calculateResult().either_(err -> {
                 result = null;
                 errorLabel.setText(TranslationUtility.getString("error.colon", err));

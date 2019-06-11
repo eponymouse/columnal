@@ -46,7 +46,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
         tableListNode.setMinHeight(150.0);
         tableListNode.setPrefWidth(250.0);
         tableListNode.setPrefHeight(200.0);
-        getDialogPane().setContent(new BorderPane(tableListNode, new Label("Choose the tables to concatenate"), null, null, null));
+        getDialogPane().setContent(new BorderPane(tableListNode, new Label("Choose the tables to concatenate"), null, getErrorLabel(), null));
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")
