@@ -14,9 +14,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -42,6 +46,7 @@ import records.data.TableOperations;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
+import records.gui.ErrorableTextField.ConversionResult;
 import records.gui.dtf.ReadOnlyDocument;
 import records.gui.dtf.RecogniserDocument;
 import records.gui.grid.CellSelection;
@@ -62,6 +67,7 @@ import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import records.gui.table.HeadedDisplay;
 import records.gui.table.TableDisplay;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -70,6 +76,7 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -874,34 +881,51 @@ public abstract class DataDisplay extends HeadedDisplay
     }
 
     @OnThread(Tag.FXPlatform)
-    private class GotoRowDialog extends ErrorableDialog<@TableDataRowIndex Integer>
+    private class GotoRowDialog extends Dialog<@TableDataRowIndex Integer>
     {
-        private final TextField textField = new TextField();
+        private final ErrorableTextField<@TableDataRowIndex Integer> textField;
 
         public GotoRowDialog(Window parent)
         {
             initOwner(parent);
             initModality(Modality.WINDOW_MODAL);
-            getDialogPane().setContent(textField);
+            this.textField = new ErrorableTextField<@TableDataRowIndex Integer>(this::parseRowNumber);
+            setResultConverter(bt -> {
+                if (bt == ButtonType.OK)
+                    return textField.valueProperty().get();
+                else
+                    return null;
+            });
+            getDialogPane().setPadding(new Insets(10));
+            getDialogPane().setContent(textField.getNode());
+            getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+            getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
+                if (textField.valueProperty().getValue() == null)
+                {
+                    e.consume();
+                }
+            });
+            getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
 
             setOnShown(e -> {
-                FXUtility.runAfter(() -> textField.requestFocus());
+                FXUtility.runAfter(() -> textField.requestFocusWhenInScene());
             });
         }
 
-        @Override
-        protected @OnThread(Tag.FXPlatform) Either<@Localized String, @TableDataRowIndex Integer> calculateResult()
+        @OnThread(Tag.FXPlatform)
+        private ErrorableTextField.ConversionResult<@TableDataRowIndex Integer> parseRowNumber(@UnknownInitialization(Object.class) GotoRowDialog this, String text)
         {
             try
             {
-                int row = Integer.parseInt(textField.getText());
-                if (row >= 0 && row < currentKnownRows)
-                    return Either.right(DataItemPosition.row(row));
-                return Either.<@Localized String, @TableDataRowIndex Integer>left(TranslationUtility.getString("row.number.invalid"));
+                // User enters one-based, we use zero-based:
+                int row = Integer.parseInt(text);
+                if (row >= 1 && row <= currentKnownRows)
+                    return ConversionResult.success(DataItemPosition.row(row - 1));
+                return ConversionResult.error(StyledString.s(TranslationUtility.getString("row.number.invalid") + " (1-" + currentKnownRows + ")"));
             }
             catch (NumberFormatException e)
             {
-                return Either.<@Localized String, @TableDataRowIndex Integer>left(Utility.concatLocal(TranslationUtility.getString("row.not.a.number"), e.getLocalizedMessage()));
+                return ConversionResult.error(StyledString.s(Utility.concatLocal(TranslationUtility.getString("row.not.a.number"), e.getLocalizedMessage())));
             }
         }
     }
