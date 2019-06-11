@@ -103,9 +103,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         this.autoComplete = Utility.later(new LexAutoComplete(this, new LexCompletionListener()
         {
             @Override
-            public void insert(String text)
+            public void insert(@CanonicalLocation int start, String text)
             {
-                theContent.replaceSelection(text);
+                @CanonicalLocation int caretPosition = Utility.later(EditorDisplay.this).getCaretPosition();
+                if (start <= caretPosition)
+                    theContent.replaceText(start, caretPosition, text);
             }
 
             @Override
@@ -166,7 +168,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             
             @CanonicalLocation int[] caretPositions = content.getValidCaretPositions();
             int caretPosIndex = content.getCaretPosAsValidIndex();
-            int caretPosition = content.getCaretPosition();
+            @CanonicalLocation int caretPosition = content.getCaretPosition();
             switch (keyEvent.getCode())
             {
                 case LEFT:
@@ -221,13 +223,13 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     if (caretPosition != content.getAnchorPosition())
                         content.replaceSelection("");
                     else if (caretPosition > 0)
-                        content.replaceText(caretPosition - 1, caretPosition, "");
+                        content.replaceText(caretPosition - CanonicalLocation.ONE, caretPosition, "");
                     break;
                 case DELETE:
                     if (caretPosition != content.getAnchorPosition())
                         content.replaceSelection("");
                     else if (caretPosition < content.getText().length())
-                        content.replaceText(caretPosition, caretPosition + 1, "");
+                        content.replaceText(caretPosition, caretPosition + CanonicalLocation.ONE, "");
                     break;
                 case A:
                     if (keyEvent.isShortcutDown())

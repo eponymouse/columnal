@@ -79,13 +79,19 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curCaretPosition;
     }
     
+    @SuppressWarnings("units") // Because of min and max
     public void replaceSelection(String content)
     {
         replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content);
         curAnchorPosition = curCaretPosition;
     }
     
-    public void replaceText(int startIncl, int endExcl, String content)
+    public void replaceWholeText(String content)
+    {
+        replaceText(CanonicalLocation.ZERO, getText().length() * CanonicalLocation.ONE, content);
+    }
+    
+    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content)
     {
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
         @SuppressWarnings("units")

@@ -126,7 +126,11 @@ public final class LexAutoCompleteWindow extends PopupControl
                     element.setAttribute("title", "Click to insert into editor");
                     ((EventTarget) span).addEventListener("click", e ->
                     {
-                        triggerCompletion.insert(insert);
+                        LexCompletion lexCompletion = listView.getSelectedItem();
+                        if (lexCompletion != null)
+                        {
+                            triggerCompletion.insert(lexCompletion.startPos, insert);
+                        }
                         e.stopPropagation();
                     }, true);
                 }

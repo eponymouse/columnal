@@ -196,7 +196,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 actionOrReplacement.eitherInt_(a -> {
                     a.doAction(typeManager);
                     // Reprocess:
-                    content.replaceText(0, content.getText().length(), content.getText());
+                    content.replaceWholeText(content.getText());
                 }, replacement -> {
                     content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
                 });
@@ -210,7 +210,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     
     public void setContent(String text)
     {
-        this.content.replaceText(0, this.content.getText().length(), text);
+        this.content.replaceWholeText(text);
     }
 
     // Interface to access a singleton-per-editor error-displayer.
