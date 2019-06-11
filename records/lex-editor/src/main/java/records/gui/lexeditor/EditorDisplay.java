@@ -31,6 +31,7 @@ import records.gui.lexeditor.completion.LexAutoComplete;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.gui.lexeditor.completion.LexCompletionGroup;
+import records.gui.lexeditor.completion.LexCompletionListener;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -99,7 +100,20 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
     {
         super(ImmutableList.of());
-        this.autoComplete = Utility.later(new LexAutoComplete(this, c -> Utility.later(this).triggerSelection(c)));
+        this.autoComplete = Utility.later(new LexAutoComplete(this, new LexCompletionListener()
+        {
+            @Override
+            public void insert(String text)
+            {
+                theContent.replaceSelection(text);
+            }
+
+            @Override
+            public void complete(LexCompletion c)
+            {
+                FXUtility.mouse(EditorDisplay.this).triggerSelection(c);
+            }
+        }));
         this.content = theContent;
         this.editor = Utility.later(editor);
         getStyleClass().add("editor-display");

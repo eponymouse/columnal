@@ -23,7 +23,7 @@ public class LexAutoComplete
     private final EditorDisplay editor;
     private final Timeline updatePosition;
 
-    public LexAutoComplete(@UnknownInitialization EditorDisplay editor, FXPlatformConsumer<LexCompletion> triggerCompletion)
+    public LexAutoComplete(@UnknownInitialization EditorDisplay editor, LexCompletionListener triggerCompletion)
     {
         this.window = new LexAutoCompleteWindow(triggerCompletion);
         this.editor = Utility.later(editor);

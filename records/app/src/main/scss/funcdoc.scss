@@ -140,6 +140,12 @@ body.indiv .examples .examples-header {
         .example-call {
             padding-left: 20pt;
         }
+        html.autocomplete & .insertable-expression {
+            cursor: pointer;
+            &:hover {
+                background: grey(80%);
+            }
+        }
     }
     & .example-arrow {
         vertical-align: middle;

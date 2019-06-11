@@ -12,6 +12,10 @@ import javafx.scene.web.WebView;
 import javafx.stage.Screen;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventTarget;
 import records.gui.lexeditor.completion.LexCompletionList;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import threadchecker.OnThread;
@@ -28,12 +32,12 @@ import java.util.function.Consumer;
 
 // public for testing purposes
 @OnThread(Tag.FXPlatform)
-public class LexAutoCompleteWindow extends PopupControl
+public final class LexAutoCompleteWindow extends PopupControl
 {
     private final HBox pane;
     final LexCompletionList listView;
     
-    public LexAutoCompleteWindow(FXPlatformConsumer<LexCompletion> triggerCompletion)
+    public LexAutoCompleteWindow(LexCompletionListener triggerCompletion)
     {
         this.listView = new LexCompletionList(triggerCompletion);
         WebView webView = new WebView();
@@ -96,6 +100,38 @@ public class LexAutoCompleteWindow extends PopupControl
             else
                 webView.setVisible(false);
         });
+        FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableInsertLinks(webViewDoc, triggerCompletion));
+    }
+    
+    private void enableInsertLinks(@Nullable Document doc, LexCompletionListener triggerCompletion)
+    {
+        if (doc != null)
+        {
+            if (doc.getDocumentElement() != null)
+                doc.getDocumentElement().setAttribute("class", "autocomplete");
+            
+            // First find the anchors.
+            NodeList spans = doc.getElementsByTagName("span");
+            for (int i = 0; i < spans.getLength(); i++)
+            {
+                org.w3c.dom.Node span = spans.item(i);
+                if (span == null || span.getAttributes() == null || !(span instanceof Element))
+                    continue;
+
+                Element element = (Element) span;
+                String spanClass = element.getAttribute("class");
+                String insert = element.getAttribute("data-insert");
+                if (spanClass != null && spanClass.contains("insertable-expression"))
+                {
+                    element.setAttribute("title", "Click to insert into editor");
+                    ((EventTarget) span).addEventListener("click", e ->
+                    {
+                        triggerCompletion.insert(insert);
+                        e.stopPropagation();
+                    }, true);
+                }
+            }
+        }
     }
 
     public void setCompletions(ImmutableList<LexCompletionGroup> groups)

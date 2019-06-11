@@ -41,11 +41,23 @@
     </xsl:template>
     
     <xsl:template name="processExpression">
-        <xsl:param name="expression" select="."/>
-        <xsl:analyze-string select="replace($expression,'@call\s+|@function\s+|@tagged\s+', '')" regex="[\(\)\[\]{}]+">
-            <xsl:matching-substring><span class="expression-bracket"><xsl:copy-of select="."/></span></xsl:matching-substring>
-            <xsl:non-matching-substring><xsl:copy-of select="."/></xsl:non-matching-substring>
-        </xsl:analyze-string>
+        <xsl:param name="expression" required="yes"/>
+        <xsl:param name="insertable" required="no"/>
+        <xsl:variable name="munged" select="replace($expression,'@call\s+|@function\s+|@tagged\s+', '')"/>
+        <xsl:variable name="processed">
+            <xsl:analyze-string select="$munged" regex="[\(\)\[\]{}]+">
+                <xsl:matching-substring><span class="expression-bracket"><xsl:copy-of select="."/></span></xsl:matching-substring>
+                <xsl:non-matching-substring><xsl:copy-of select="."/></xsl:non-matching-substring>
+            </xsl:analyze-string>
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$insertable">
+                <span class="insertable-expression" data-insert="{$munged}"><xsl:copy-of select="$processed"/></span>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:copy-of select="$processed"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template name="bracketed">
@@ -82,8 +94,10 @@
                 <span class="examples-header">Examples</span>
                 <xsl:for-each select="example">
                 <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
-                        name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$functionName"/><xsl:call-template
-                        name="processExpression"><xsl:with-param name="expression"><xsl:call-template
+                        name="processExpression"><xsl:with-param name="expression" select="input"/><xsl:with-param
+                        name="insertable" select="true()"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
+                        name="processExpression"><xsl:with-param
+                        name="insertable" select="true()"/><xsl:with-param name="expression"><xsl:value-of select="$functionName"/><xsl:call-template
                             name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>

@@ -56,7 +56,7 @@ import java.util.stream.Stream;
 final class LexCompletionList extends Region
 {
     private static final double PIXELS_PER_SECOND = 500.0;
-    private final FXPlatformConsumer<LexCompletion> triggerCompletion;
+    private final LexCompletionListener triggerCompletion;
     
     // The completions change all at once, so a mutable ImmutableList reference:
     private ImmutableList<LexCompletionGroup> curCompletionGroups = ImmutableList.of();
@@ -89,7 +89,7 @@ final class LexCompletionList extends Region
     
     private final int ITEM_HEIGHT = 24;
     
-    public LexCompletionList(FXPlatformConsumer<LexCompletion> triggerCompletion)
+    public LexCompletionList(LexCompletionListener triggerCompletion)
     {
         this.triggerCompletion = triggerCompletion;
         getStyleClass().add("lex-completion-list");
@@ -160,7 +160,7 @@ final class LexCompletionList extends Region
         // Clicking twice slowly also works this way:
         LexCompletion sel = selectedItem.get();
         if ((clickCount == 2 || wasAlreadySelected) && sel != null)
-            triggerCompletion.consume(sel);
+            triggerCompletion.complete(sel);
     }
 
     protected int calcDisplayRows()
