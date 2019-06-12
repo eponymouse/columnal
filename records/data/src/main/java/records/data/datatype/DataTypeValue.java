@@ -93,6 +93,7 @@ public final class DataTypeValue
         return new DataTypeValue(DataType.record(fields), null, null, null, null, null, getContent, null);
     }
 
+    @OnThread(Tag.Simulation)
     public void setCollapsed(int rowIndex, Either<String, @Value Object> value) throws InternalException, UserException
     {
         applyGet(new DataTypeVisitorGet<Void>()

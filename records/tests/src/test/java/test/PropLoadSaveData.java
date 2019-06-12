@@ -107,6 +107,7 @@ public class PropLoadSaveData extends FXApplicationTest
         });
     }
 
+    @OnThread(Tag.Simulation)
     private void setInvalid(Column column, int row, Random r) throws UserException, InternalException
     {
         column.getType().setCollapsed(row, Either.left(r.nextInt(10) == 1 ? "@END" : ("@" + r.nextInt())));
