@@ -16,6 +16,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
+import records.data.Column;
 import records.data.DataItemPosition;
 import records.data.Table;
 import records.data.TableId;
@@ -88,7 +89,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             if (tableLen == 0)
                 continue;
             @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
-            keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
+            CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
@@ -97,7 +98,47 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), columnDTV.getCollapsed(row), null);
-            assertEquals(valueFromData, copiedFromTable);
+            assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
+        }
+    }
+
+    @Property(trials = 3)
+    @OnThread(Tag.Simulation)
+    public void propCheckDataDelete(
+            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
+            @From(GenRandom.class) Random r) throws Exception
+    {
+
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        TestUtil.sleep(1000);
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
+        List<Table> allTables = tableManager.getAllTables();
+
+        // Pick some random locations in random tables, scroll there, press delete and check value:
+        for (int i = 0; i < 5; i++)
+        {
+            // Random table:
+            Table table = pickRandomTable(r, allTables);
+            // Random location in table:
+            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int tableLen = table.getData().getLength();
+            if (tableLen == 0)
+                continue;
+            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
+            // Clear clipboard to prevent tests interfering:
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            push(r.nextBoolean() ? KeyCode.BACK_SPACE : KeyCode.DELETE);
+            sleep(200);
+            pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(2000);
+            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            Column col = table.getData().getColumns().get(column);
+            DataTypeValue columnDTV = col.getType();
+            String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), TestUtil.checkNonNull(col.getDefaultValue()), null);
+            assertEquals("Location " + pos + " row : " + row + " col: " + column,valueFromData, copiedFromTable);
         }
     }
 

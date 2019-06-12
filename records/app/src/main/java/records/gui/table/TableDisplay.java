@@ -2,6 +2,7 @@ package records.gui.table;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -1248,6 +1249,47 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         // At least makes it consistent when ordering jumbled up tables during tests:
         return curTableId.getRaw();
+    }
+
+    @Override
+    protected void deleteValue(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    {
+        if (recordSet == null)
+            return;
+        
+        try
+        {
+            Column column = recordSet.getColumn(columnId);
+            @TableDataColIndex int colIndex = Utility.findFirstIndex(displayColumns, d -> d.getColumnId().equals(columnId)).orElse(-1) * TableDataColIndex.ONE;
+            if (column != null && colIndex != -1)
+            {
+                @Value Object defaultValue = column.getDefaultValue();
+                Workers.onWorkerThread("Getting default value", Priority.FETCH, () -> {
+                    try
+                    {
+                        if (defaultValue != null)
+                        {
+                            @OnThread(Tag.Simulation) String string = DataTypeUtility.valueToString(column.getType().getType(), defaultValue, null);
+                            Platform.runLater(() -> {
+                                DataCellSupplier.@Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
+                                if (cell != null)
+                                {
+                                    cell.replaceAll(string, true);
+                                }
+                            });
+                        }
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        Log.log(e);
+                    }
+                });
+            }
+        }
+        catch (UserException e)
+        {
+            Log.log(e);
+        }
     }
 
     @OnThread(Tag.FXPlatform)

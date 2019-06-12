@@ -187,7 +187,12 @@ public class TestDocumentTextField extends FXApplicationTest
             windowToUse.setScene(new Scene(field));
             windowToUse.show();
             windowToUse.sizeToScene();
-            field.setDocument(new DisplayDocument(initialText));
+            field.setDocument(new DisplayDocument(initialText) {
+                @Override
+                public void setAndSave(String content)
+                {
+                }
+            });
         });
         assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
         assertThat(TestUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
@@ -311,7 +316,12 @@ public class TestDocumentTextField extends FXApplicationTest
             windowToUse.setScene(new Scene(new StackPane(field)));
             windowToUse.show();
             windowToUse.sizeToScene();
-            field.setDocument(new DisplayDocument(sFinal));
+            field.setDocument(new DisplayDocument(sFinal) {
+                @Override
+                public void setAndSave(String content)
+                {
+                }
+            });
         });
         
         MatcherAssert.assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.lessThanOrEqualTo(110.0));

@@ -216,7 +216,7 @@ public class MainWindow
             @OnThread(Tag.FXPlatform)
             public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position)
             {
-                return v._test_getDataCellSupplier()._test_getCellAt(position);
+                return v.getDataCellSupplier()._test_getCellAt(position);
             }
 
             @Override

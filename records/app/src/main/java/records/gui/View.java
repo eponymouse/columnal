@@ -800,7 +800,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
     }
     
-    public DataCellSupplier _test_getDataCellSupplier()
+    public DataCellSupplier getDataCellSupplier()
     {
         return dataCellSupplier;
     }

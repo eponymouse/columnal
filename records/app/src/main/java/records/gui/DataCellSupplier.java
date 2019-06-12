@@ -118,7 +118,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             // while unfocused:
             if (startTyping != null)
             {
-                stf.replaceAll(startTyping);
+                stf.replaceAll(startTyping, false);
             }
         }
     }

@@ -142,6 +142,19 @@ public abstract class DataDisplay extends HeadedDisplay
             }
 
             @Override
+            public void doDelete(CellPosition topLeftIncl, CellPosition bottomRightIncl)
+            {
+                for (@AbsColIndex int colIndex = topLeftIncl.columnIndex; colIndex <= bottomRightIncl.columnIndex; colIndex++)
+                {
+                    ColumnId columnId = displayColumns.get(colIndex - getPosition().columnIndex).getColumnId();
+                    for (@AbsRowIndex int row = topLeftIncl.rowIndex; row <= bottomRightIncl.rowIndex; row++)
+                    {
+                        Utility.later(DataDisplay.this).deleteValue(columnId, Utility.later(DataDisplay.this).getTableRowIndexFromAbsRow(row));
+                    }
+                }
+            }
+
+            @Override
             public void gotoRow(Window parent, @AbsColIndex int column)
             {
                 DataDisplay.this.gotoRow(parent, column);
@@ -514,9 +527,9 @@ public abstract class DataDisplay extends HeadedDisplay
         @Override
         public void doDelete()
         {
+            int relCol = pos.columnIndex - getPosition().columnIndex;
             if (pos.rowIndex == getPosition().rowIndex || pos.rowIndex == getPosition().rowIndex + 1)
             {
-                int relCol = pos.columnIndex - getPosition().columnIndex;
                 if (relCol >= 0 && relCol < getDisplayColumns().size())
                 {
                     ColumnId columnId = getDisplayColumns().get(relCol).getColumnId();
@@ -556,6 +569,11 @@ public abstract class DataDisplay extends HeadedDisplay
                 "pos=" + pos +
                 '}';
         }
+    }
+
+    protected void deleteValue(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    {
+        // Do nothing by default
     }
 
     

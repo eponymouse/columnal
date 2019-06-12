@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  * When focused, behaves like plain text, but also uses a Recogniser
  * to potentially show errors.
  */
-public class DisplayDocument extends Document
+public abstract class DisplayDocument extends Document
 {
     private String content;
     private final List<WeakReference<TrackedPosition>> trackedPositions = new ArrayList<>();

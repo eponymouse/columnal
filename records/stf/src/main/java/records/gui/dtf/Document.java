@@ -112,4 +112,6 @@ public abstract class Document
             listener.documentChanged(this);
         }
     }
+    
+    public abstract void setAndSave(String content);
 }

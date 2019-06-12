@@ -57,7 +57,7 @@ public class RectangularTableCellSelection implements CellSelection
     @Override
     public void doDelete()
     {
-        // Not supported
+        tableSelectionLimits.doDelete(calcTopLeftIncl(), calcBottomRightIncl());
     }
 
     @Override
@@ -189,6 +189,8 @@ public class RectangularTableCellSelection implements CellSelection
         public CellPosition getBottomRightIncl();
         
         public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl);
+        
+        public void doDelete(CellPosition topLeftIncl, CellPosition bottomRightIncl);
 
         public void gotoRow(Window parent, @AbsColIndex int column);
     }

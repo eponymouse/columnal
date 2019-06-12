@@ -406,7 +406,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     @OnThread(Tag.FX)
     protected abstract void adjustStyle(T item, S style, boolean on);
     
-    protected final @Nullable T getItemAt(CellPosition cellPosition)
+    public final @Nullable T getItemAt(CellPosition cellPosition)
     {
         return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.node).orElse(null);
     }

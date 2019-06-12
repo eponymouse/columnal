@@ -79,4 +79,10 @@ public class ReadOnlyDocument extends Document
     void focusChanged(boolean focused)
     {
     }
+
+    @Override
+    public void setAndSave(String content)
+    {
+        // Not applicable
+    }
 }

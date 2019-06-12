@@ -475,9 +475,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         caretPosition.moveTo(document.getLength());
     }
     
-    public void replaceAll(String newContent)
+    public void replaceAll(String newContent, boolean save)
     {
-        document.replaceText(0, document.getLength(), newContent);
+        if (save)
+            document.setAndSave(newContent);
+        else
+            document.replaceText(0, document.getLength(), newContent);
     }
 
     @Override

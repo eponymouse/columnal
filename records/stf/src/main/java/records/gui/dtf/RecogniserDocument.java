@@ -201,7 +201,16 @@ public final class RecogniserDocument<V> extends DisplayDocument
         else
             return pos;
     }
-    
+
+    @Override
+    public void setAndSave(String content)
+    {
+        replaceText(0, getText().length(), content);
+        recognise(true);
+        // Must notify listeners again after recognition to update display correctly:
+        notifyListeners();
+    }
+
     public static interface Saver<V>
     {
         @OnThread(Tag.FXPlatform)
