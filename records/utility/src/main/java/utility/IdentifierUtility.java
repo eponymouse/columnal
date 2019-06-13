@@ -64,7 +64,7 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
-    public static @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceIfEndsAt)
+    public static @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         Lexer lexer = new ExpressionLexer(inputStream);
@@ -78,8 +78,19 @@ public class IdentifierUtility
         {
             @SuppressWarnings("units")
             @RawInputLocation int end = startFrom + token.getStopIndex() + 1;
-            if (end + 1 == includeTrailingSpaceIfEndsAt && end < content.length() && content.charAt(end) == ' ')
+            if (end + 1 == includeTrailingSpaceOrDoubleSpaceIfEndsAt && end < content.length() && content.charAt(end) == ' ')
+            {
+                // Look for double space followed by further ident (if it was single space then ident, lexer would have found it):
+                if (end + 1 < content.length() && content.charAt(end + 1) == ' ')
+                {
+                    @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> p = consumeExpressionIdentifier(content, end + 2 * RawInputLocation.ONE, -1 * RawInputLocation.ONE);
+                    if (p != null)
+                    {
+                        return new Pair<>(token.getText() + "  " + p.getFirst(), p.getSecond());
+                    }
+                }
                 return new Pair<>(token.getText() + " ", end + RawInputLocation.ONE);
+            }
             else
                 return new Pair<>(token.getText(), end);
         }
@@ -87,14 +98,14 @@ public class IdentifierUtility
             return null;
     }
 
-    public static @Nullable Pair<String, @RawInputLocation Integer> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceIfEndsAt)
+    public static @Nullable Pair<String, @RawInputLocation Integer> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
     {
-        @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceIfEndsAt);
+        @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
         if (before != null)
         {
             if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == '\\')
             {
-                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE, includeTrailingSpaceIfEndsAt);
+                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
                 if (after != null)
                 {
                     return new Pair<>(before.getFirst() + "\\" + after.getFirst(), after.getSecond());

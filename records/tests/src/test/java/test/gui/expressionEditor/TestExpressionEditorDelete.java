@@ -155,6 +155,14 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     {
         testBackspaceRetype("@call @function sum([])", 6, 2, "[]", r);
     }
+
+    @Property(trials = 2)
+    public void testRetypeWordInIdent(@From(GenRandom.class) Random r) throws Exception
+    {
+        testBackspaceRetype("the quick brown fox", 9, 5, "quick", r);
+    }
+    
+    
     
     // TODO more retype tests
 
