@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 744.09448819 1052.3622047"
+   id="svg4143"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="columnal-grey-indigo.svg"
+   inkscape:export-filename="/Users/neil/intellij/records/records/app/src/main/resources/columnal.png"
+   inkscape:export-xdpi="239.96001"
+   inkscape:export-ydpi="239.96001">
+  <defs
+     id="defs4145">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4811"
+       x="-0.0070579002"
+       width="1.0141158"
+       y="-0.040029677"
+       height="1.0800594">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="2.1465914"
+         id="feGaussianBlur4813" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="411.73676"
+     inkscape:cy="900.39167"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1384"
+     inkscape:window-height="855"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata4148">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:500;font-size:40px;line-height:125%;font-family:'Hind Medium';letter-spacing:0px;word-spacing:0px;fill:#dcdcdc;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter4811);-inkscape-font-specification:'Hind Medium,  Medium';font-stretch:normal;font-variant:normal;"
+       x="15.14286"
+       y="270.07648"
+       id="text4691"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4693"
+         x="15.14286"
+         y="270.07648"
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:180px;font-family:'Hind Medium';-inkscape-font-specification:'Hind Medium,  Medium';fill:#dcdcdc;fill-opacity:1;">Columnal</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text4735"
+       y="263.50504"
+       x="9.7142887"
+       style="font-style:normal;font-weight:500;font-size:40px;line-height:125%;font-family:'Hind Medium';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Hind Medium,  Medium';font-stretch:normal;font-variant:normal;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:180px;font-family:'Hind Medium';-inkscape-font-specification:'Hind Medium,  Medium';fill:#515151;fill-opacity:1;"
+         y="263.50504"
+         x="9.7142887"
+         id="tspan4737"
+         sodipodi:role="line">Col<tspan
+   style="fill:#511bba;fill-opacity:1;-inkscape-font-specification:'Hind Medium,  Medium';font-family:'Hind Medium';font-weight:500;font-style:normal;font-stretch:normal;font-variant:normal;"
+   id="tspan4784">u</tspan>mnal</tspan></text>
+  </g>
+</svg>
