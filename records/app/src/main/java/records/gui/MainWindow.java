@@ -102,7 +102,8 @@ public class MainWindow
                 GUI.menuItem("menu.edit.undo", () -> {v.undo();})
             ),
             GUI.menu("menu.view",
-                GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
+                // TODO finish the find dialog
+                //GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
                 GUI.menuItem("menu.view.goto.row", () -> v.gotoRowDialog()),
                 new SeparatorMenuItem(),
                 GUI.menuItem("menu.view.types", () -> {
@@ -114,6 +115,9 @@ public class MainWindow
                     v.modified();
                 }),
                 GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
+            ),
+            GUI.menu("menu.help",
+                GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
             )
         );
 

@@ -50,6 +50,9 @@ public class InitialWindow
                     MainWindow.closeAll();
                     stage.hide();
                 })
+            ),
+            GUI.menu("menu.help",
+                GUI.menuItem("menu.help.about", () -> new AboutDialog(d -> stage).showAndWait())
             )
         );
         menuBar.setUseSystemMenuBar(true);

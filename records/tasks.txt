@@ -255,3 +255,4 @@ Done after Phil B & Jon A:
 - Caret is off by a pixel or two while editing data cell (Phil B3_2 03:40)
 - Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
 - Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
+- About Dialog
