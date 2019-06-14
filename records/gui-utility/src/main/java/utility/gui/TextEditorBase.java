@@ -112,6 +112,16 @@ public abstract class TextEditorBase extends Region
                     new KeyFrame(Duration.seconds(1.2), new KeyValue(caretShape.visibleProperty(), true))
             );
             caretBlink.setCycleCount(Animation.INDEFINITE);
+            
+            FXUtility.addChangeListenerPlatformNNAndCallNow(textFlow.insetsProperty(), insets -> {
+                for (Pane pane : ImmutableList.<@NonNull Pane>of(selectionPane, inverterPane, errorUnderlinePane, backgroundsPane))
+                {
+                    pane.setTranslateX(insets.getLeft());
+                    pane.setTranslateY(insets.getTop());
+                }
+                caretShape.setTranslateX(insets.getLeft());
+                caretShape.setTranslateY(insets.getTop());
+            });
         }
         
         private Path makeErrorUnderline(boolean containsCaret, PathElement[] pathElements)
@@ -205,7 +215,6 @@ public abstract class TextEditorBase extends Region
     
     public TextEditorBase(List<Text> textNodes)
     {
-        this.caretAndSelectionNodes = new CaretAndSelectionNodes();
         getStyleClass().add("text-editor");
         ResizableRectangle clip = new ResizableRectangle();
         clip.widthProperty().bind(widthProperty());
@@ -215,6 +224,8 @@ public abstract class TextEditorBase extends Region
         textFlow.getStyleClass().add("document-text-flow");
         textFlow.setMouseTransparent(true);
         textFlow.getChildren().setAll(textNodes);
+        // Must construct this after textFlow:
+        this.caretAndSelectionNodes = new CaretAndSelectionNodes();
         
         getChildren().setAll(caretAndSelectionNodes.backgroundsPane, caretAndSelectionNodes.errorUnderlinePane, textFlow);
 

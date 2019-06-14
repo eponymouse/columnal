@@ -4,7 +4,6 @@ Express Priority (needed for task C)
   - Column titles should be highlighted differently
 - Autocomplete list doesn't make it clear that you can scroll it.
   - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
-- Caret is off by a pixel or two while editing data cell (Phil B3_2 03:40)
 - Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
 - Layout of new unit dialog is horrible, box the two options better and indent beneath.
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
@@ -255,3 +254,4 @@ Done after Phil B & Jon A:
 - No error message is shown in manual edit primary key dialog
 - Maximum recipe dialog doesn't show error
 - Delete expected to clear cell while unfocused, but doesn't
+- Caret is off by a pixel or two while editing data cell (Phil B3_2 03:40)
