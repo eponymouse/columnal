@@ -202,6 +202,10 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                         return false;
                     }
                 }, tc -> {
+                    // If they recently clicked a completion, ignore this click:
+                    if (expressionEditor != null && expressionEditor.isMouseClickImmune())
+                        return;
+                    
                     @Nullable TimedFocusable item = getRecentlyFocused();
                     
                     if (subPicker != null)

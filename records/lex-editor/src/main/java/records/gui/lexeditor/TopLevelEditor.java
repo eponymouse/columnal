@@ -213,6 +213,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         this.content.replaceWholeText(text);
     }
 
+    public boolean isMouseClickImmune()
+    {
+        return display.isMouseClickImmune();
+    }
+    
     // Interface to access a singleton-per-editor error-displayer.
     // Lets us hide the other functionality from people using the class
     /*

@@ -132,7 +132,8 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         
         addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
             FXUtility.mouse(this).requestFocus();
-            positionCaret(event.getX(), event.getY(), true);
+            if (!isMouseClickImmune())
+                positionCaret(event.getX(), event.getY(), true);
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
@@ -141,19 +142,22 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         });
         addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
             FXUtility.mouse(this).requestFocus();
-            positionCaret(event.getX(), event.getY(), false);
+            if (!isMouseClickImmune())
+                positionCaret(event.getX(), event.getY(), false);
             event.consume();
         });
         addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             if (event.isStillSincePress() && event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY)
             {
                 FXUtility.mouse(this).requestFocus();
-                selectWordAt(event.getX(), event.getY());
+                if (!isMouseClickImmune())
+                    selectWordAt(event.getX(), event.getY());
             }
             else if (event.isStillSincePress() && event.getClickCount() >= 3 && event.getButton() == MouseButton.PRIMARY)
             {
                 FXUtility.mouse(this).requestFocus();
-                selectAll();
+                if (!isMouseClickImmune())
+                    selectAll();
             }
             event.consume();
         });
@@ -310,7 +314,12 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         content.addCaretPositionListener(c -> render(false));
         render(true);
     }
-    
+
+    public boolean isMouseClickImmune()
+    {
+        return autoComplete.isMouseClickImmune();
+    }
+
     public void _test_doubleClickOn(Point2D screenPoint)
     {
         Point2D local = screenToLocal(screenPoint);
@@ -407,7 +416,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             });
         }
         // Hide for now, will redisplay if user moves caret or types:
-        autoComplete.hide();
+        autoComplete.hide(true);
     }
 
     private void render(boolean contentChanged)
@@ -423,7 +432,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         if (completions != null)
             autoComplete.show(completions);
         else
-            autoComplete.hide();
+            autoComplete.hide(false);
     }
 
     // How many right presses (positive) or left (negative) to

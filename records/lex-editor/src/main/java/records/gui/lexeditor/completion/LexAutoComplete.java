@@ -23,6 +23,13 @@ public class LexAutoComplete
     private final EditorDisplay editor;
     private final Timeline updatePosition;
 
+    // When the user clicks on the code completion, they can sometimes click more than is needed, especially using
+    // double-click to select an item, when actually single-click on an already-selected item is enough.  This can cause
+    // issues with the click falling through to the item beneath, which they didn't intend.  So we add "click immunity";
+    // for a short period of time after the click that dismisses code completion, further clicks won't register on the
+    // item beneath.  This value is for comparing to System.currentTimeMillis()
+    private long clickImmuneUntil = -1L;
+
     public LexAutoComplete(@UnknownInitialization EditorDisplay editor, LexCompletionListener triggerCompletion)
     {
         this.window = new LexAutoCompleteWindow(triggerCompletion);
@@ -47,14 +54,18 @@ public class LexAutoComplete
         if (caretBottom != null && !completions.isEmpty())
             window.show(editor, caretBottom.getX() - labelPad, caretBottom.getY());
         else
-            hide();
+            hide(false);
     }
 
-    public void hide()
+    public void hide(boolean becauseOfMouseClick)
     {
         window.hide();
         window.setCompletions(ImmutableList.of());
         updatePosition.stop();
+        if (becauseOfMouseClick)
+        {
+            clickImmuneUntil = System.currentTimeMillis() + 400;
+        }
     }
 
     public boolean isShowing()
@@ -85,6 +96,11 @@ public class LexAutoComplete
     public Optional<LexCompletion> getSelectedCompletion()
     {
         return Optional.ofNullable(window.listView.getSelectedItem());
+    }
+
+    public boolean isMouseClickImmune()
+    {
+        return System.currentTimeMillis() < clickImmuneUntil;
     }
 
     public enum LexSelectionBehaviour

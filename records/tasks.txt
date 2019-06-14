@@ -4,7 +4,6 @@ Express Priority (needed for task C)
   - Column titles should be highlighted differently
 - Autocomplete list doesn't make it clear that you can scroll it.
   - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
-- Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
 - Layout of new unit dialog is horrible, box the two options better and indent beneath.
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
 - Add update-available notifications (requires website!)
@@ -75,7 +74,6 @@ Low Priority (good to have, but will not be hugely missed)
 - Choice of express install (saying what will happen) and custom install
 - Collapse table could be more obvious; button in top right of table header?
 - Add quick fix when trying to compare Date to DateYM?
-- Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
 - Quick fix proposing as type(type{Number{1}}) -- why add the {1}?  Just leave it out
 - If mutvar/mutunitvar appears once in type error, replace with just underscore
  - Add quick fix for numeric literal with no units to set units to match expected type.
@@ -255,3 +253,5 @@ Done after Phil B & Jon A:
 - Maximum recipe dialog doesn't show error
 - Delete expected to clear cell while unfocused, but doesn't
 - Caret is off by a pixel or two while editing data cell (Phil B3_2 03:40)
+- Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
+- Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
