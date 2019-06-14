@@ -1,0 +1,257 @@
+Express Priority (needed for task C)
+===
+- Autocomplete list not very apparent what the kind of each item is.
+  - Column titles should be highlighted differently
+- Autocomplete list doesn't make it clear that you can scroll it.
+  - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
+- Caret is off by a pixel or two while editing data cell (Phil B3_2 03:40)
+- Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
+- Layout of new unit dialog is horrible, box the two options better and indent beneath.
+  - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
+- Add update-available notifications (requires website!)
+- Why does Jon get error in Round cells the first time?  (A3A4 5:30)
+- Should we allow spaces even if they are later trimmed?
+- When editing @entire P and A to @entire J and N, deleting the P and retyping J removes the space.  Whitespace trimming problematic, at least around cursor?  Or just trim nothing, but it will be gone on reload?
+
+Probably fixed by recent changes but not definite
+---
+- Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
+- Why doesn't Pete Antony completion show?  (Jon A3A4, 4:40, and 6:00ish)  Code completion blank but shouldn't be.
+
+
+High Priority (major bugs/deficiencies, cannot do beta without fixing)
+===
+- Desktop shortcut
+- Mac build
+- Undo area in import dialog does not redisplay RHS
+- Video Phil B2, ~2:40, column resize on empty first column goes weird.  Already fixed bug?
+- Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
+
+- Manual edit pick primary key is too confusing
+  - Row number should not be default
+- No autocomplete on picking column in manual edit
+- Manual edit dialog pick column is modal and doesn't allow column picking
+- Manual edit summary dialog very weird when no edits to show
+
+- Not obvious enough to type to see more auto complete?  (Esp when scroll not obvious)
+- Lots of confusion between date literals and date functions.
+- No undo while editing a cell value
+- Code completion for unit editor is sorted really weirdly
+- Investigate improving layout for long expressions
+  - Also do better fix for retaining spaces
+- Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
+  - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
+
+
+Medium Priority (significant quality of life, but not essential especially for beta)
+===
+- Could improve table name on HTML import; number doesn't need so many digits!
+- Text entry box for row and column limits in the import dialog?
+- Undo area/Reset area, rename to selection?
+- No mouse-over highlight in table autocomplete
+- Bit weird in type dialog specifically to have the autocomplete insert at cursor rather than replacing altogether. But maybe we just have to live with that?
+- Conversion from Text to Date highlighted all rows as wrong; but surely the valid dates should have converted?
+- Looked for text to date by typing date, but function is from text
+- Pin button for function documentation to allow seeing it while entering?
+- Calculate: not clear how to abandon but save.  Change OK/Cancel to Save/Remove?
+- Number column formatting doesn't re-run when dragging column divider, which is confusing.  Run more frequently during drag?
+- Have to click too many times on completion in Aggregate dialog (Phil B7_1 3:10); should only be two at most?
+- Add quick fix for case of comparing temporal type to number literal or text literal.
+- Errors don't show in the unit editor itself
+- Alias target should be unit editor, but just complain if it's not a single unit
+- Errors are shown with Number{ } even when the cursor hasn't left the units
+- Add collapse recipe, expand (flat map) transform
+- When user tries to edit cell result of calculation, offer to edit expression as well as offer manual edit.
+- Need an Aggregate guide
+- Didn't realise you can click on table header to edit it
+- Calculate adding column does not put it at the end, which is odd.
+- Allow re-ordering calculate columns?  And IDS columns
+- Is it worth working out what type should be in each hole?  Would involve type-checking with that item forced to MutVar then displaying that MutVar result.
+ - Add "Transform type" recipe?
+
+
+Low Priority (good to have, but will not be hugely missed)
+===
+- Store import source, display in table hat?
+- Choice of express install (saying what will happen) and custom install
+- Collapse table could be more obvious; button in top right of table header?
+- Add quick fix when trying to compare Date to DateYM?
+- Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
+- Quick fix proposing as type(type{Number{1}}) -- why add the {1}?  Just leave it out
+- If mutvar/mutunitvar appears once in type error, replace with just underscore
+ - Add quick fix for numeric literal with no units to set units to match expected type.
+- Pressing down on cells should move out.  Right as well?  Check what Excel does and copy if possible
+- When you create e.g. calculate, there's no explanation for why you are picking a table.  J&P figured it out, but should add an explicit label about picking source table
+- When Jon (A3A4, 3:30ish) clicks expression, it shows error immediately but it shouldn't
+- Expressions guide too long/intimidating.  Collapsed sections?
+- Error on empty type if you defocus is "Empty brackets" which is confusing
+- Being able to click on non-source table is potentially confusing.  Could add hint while hovering that this will use entire column?
+- Add matching bracket/keyword highlight when editing
+- Dragging table didn't move other tables out of the way -- Phil A9 1:45
+- Dragging table can also cause table header to move and not be reset -- Phil A9 2:15
+- Errors show after clicking to add column name, but this shouldn't count as a defocusing event.
+- Add multiple columns in initial dialog?
+- Auto-generated table name is confusing.
+
+Skipping
+===
+ - Click to change is very generic tooltip
+ - In calculate show hint to turn element(@entire C, row number) into just C?
+ - Should we preview result while editing expression when possible?  Either in dialog or in actual type
+
+Done
+===
+
+
+Done:
+- Code complete is case sensitive?  Should be insensitive
+- @case by itself didn't allow a cursor position?
+- Mouse release on cell selects that, even if was part of a drag on another element.  isStillSincePress?
+  - DUPE: Drag to select clicked adjacent column?
+- No window title on initial window
+- Confused by multiple arrows to add a new column
+- Also, why are arrows blue?
+- Column name and type should be formatted differently somehow
+- No help text for @match keyword
+- No help shown for group count
+- Type editor too high/tall
+- Allow column resizing
+- Delete table via keyboard delete when table selected
+- Joint arrow mouse-over highlight when one arrow is keyboard selected.
+- Allow pixel space to drag re-order items in the concatenate table list
+- Mouse-over hover indication in completion window.   Should single-click complete?
+- Show auto-complete for empty expression editor?
+  - Don't hide expression editor once showing if current token is deleted to zero length?
+ - lex code complete isn't scrolling to keep item in view
+ - Lex editor doesn't allow drag select while popup showing.  Focus issue?  Not related to popup at all?
+ - Missing nested literal completions
+ - Missing boolean constant completions
+ - Extra space at end of lex auto complete window below listview
+ - Hint to remove redundant brackets in @if/@match constructs?
+ - Autosave should not be disabled, should allow placebo save.
+ - Disable column show mode which is already in place, or show it as tick on menu
+ - Confused by having to enter editing mode before typing.  Switch to Excel style of typing entering edit mode?
+ - Truncated column names should appear in tooltip
+ - Fix highlight for @entire references
+ - Tip above table name field gets wrong location
+ - Type signature confused with hint display (type labels versus part labels, Boolean vs Condition)
+ - Highlight code more clearly in autocomplete examples.  Colour background?
+ - Should description and examples be first in code complete, above the type?  Maybe type pinned at bottom as overlay?
+ - Add countif/sumif functions?
+ - "Confirmation" title on make manual edit dialog is weird.
+ - Cancel on identifier choice should remove manual edit
+ - Confusion between clicking on source or destination table for Calculate.
+   - I think only allow reference to source table.
+ - Auto complete wrongly positioned on second line, and does not correct?
+ - When typing before item, completion didn't show.  e.g. P and A| row number should be showing P and A completion, but it did not.  Need to make completion calculation dependent on caret pos.
+ - Add @entire references when blank (and related to non-@entire), and fix their display
+ - Why in a[b]-c[d] does missing operator show after c but not after a?
+ - Square brackets for array indexing -- show quick fix to element function
+ - Need general guide for expressions, as well as guide for things like conversion
+ - Add recipe for prev/next rows, which show up when typing those keywords?
+ - Add pinned scrolling to lex completion
+ - Autocomplete details for column items in webview
+ - Error background not showing for invalid cells and showing when it shouldn't
+ - Calculate allows use of self column when editing existing column (add a test for this)
+ - Make @entire appear far down the list.
+ - Related function synonyms not showing
+
+ Done after Jon A sent:
+ - Table highlight living after table deleted or resized or undone
+ - Aliasing on Columnal logo in initial window
+ - Double click doesn't do word selection in editor
+ - Ctrl/Alt to move by word
+ - Cache column LHS in a double[] and use that in sumColumnWidths (RHS - LHS)
+ - Row label confusing when table is up against edge.
+ - Fix VirtGridIndiv layout to not be O(X*Y*N); must be a better way of finding which table has cell there.  Request rectangles then adjust in and out of list as X and Y change?
+ - Could we even rollback the loading fix with this?  (Though not the runlater known rows fix)
+ - Fix resizing of column header item after double-clicking name.
+ - Show conversion guide when you type convert
+ - Fix alignment of unfocused numbers
+ - Also, number left-aligned -- should be right-aligned once complete
+ - Fix pref column width of number columns when they have ellipsis
+ - Launch when done
+ - Run launch4j automatically
+ - Save the column widths
+ - Stop showing column name auto complete on column edit until typing begins
+ - Offer Number{<i>unit</i>} completion
+ - Some cells are randomly right-aligned; not being reset to left-alignment upon reuse?
+ - Add auto-trim strings option on import, ticked by default.
+ - Import says "Columns 2-8 of 7"
+ - Add divider above recipes.
+- Need a way to show help text for function while filling in its parameters
+- Add fix or hint when referencing source column in calculate that is redefined in this table.
+- Description above filter in edit dialog
+- Description above expression in aggregate dialog
+- Stop showing zero height auto completions with grey border
+- Fix overall aggregate edit, overlapping label
+ - Fixed text wrapping of unfocused Text DTF cells
+ - Aggregate two stage is too confusing?  Show all in one dialog, Left-Right panes?
+ - Recipes in aggregate.
+- Fix styling (including pick-column dialog)
+- If you try to name an aggregate column after an existing column, you get a nasty internal error
+ - Not helped by aggregate offering to complete a column name via click
+ - Close completion when item triggered.
+- Don't fill in "true" for the filter expression, more confusing than helpful. -- Fill in still but select all for easy replacement.
+- Type error message: say Date, not YEARMONTHDAY
+- When you type "text" into expression editor, it is not showing the related completion "from text"
+ - Function param prompt doesn't show if round brackets totally empty, e.g. date().
+ - Filter expression dialog allows OK click while in invisible error, without then showing the error.
+ - Show temporal literal options before functions
+ - Aggregate shows error "Cannot find source column Sales" !?
+ - Rename the date, time, etc functions to avoid direct clash with literal.
+ - Have some way in aggregate to show lowest/highest plus other info columns
+ - Rubbish error message for date{2016}.
+ - Stop function param blinking on and off as you move caret across
+ - Stop showing param 0 wrongly after trailing comma (e.g. try date(1,2,3) -- put cursor directly before 2 and the prompt for first param and second param both show)
+ - When you enter expression from text to(type{},Initial release date), the error background shows way off -- on the t in initial release date, rather than the empty type literal.  On Mac.
+ - Filter warns that Initial release date is recalculated in this table.... but it isn't!  At least the per-row isn't -- should only warn for @entire.  Change type of isAltered?
+ - Table column header is not used in URL import, but is used in file import of same content!?
+ - Type error shows for whole function call, not just parameter which is wrong
+ - Improve error message when problem is mismatched number of parameters.
+ - Quick Fix for adding/subtracting dates
+ - Add test and fix for RSVP dependency refresh issue.
+   - When you delete the source table, all other tables still show, including its direct calculate
+
+Done after Phil B & Jon A:
+ - Set file associations in installer and software (.clml)
+ - Column resize bar sometimes doesn't update correctly after a double-click.
+ - Made empty columns resize to default when double-clicked
+ - Add operators to the code completion and animated them.
+ - Column resize bar initially shows no markings -- sometimes?
+ - Related completions sometimes have gap above if very few direct completions (type "text" to see the issue)
+ - Rounded corners at edges of focused expand cell show grey square background
+ - Offer hovering prompt for keyword items (@if @then @else @endif) when filling in, like we do for function calls
+ - Add @let to expressions
+ - Add @function for lambdas
+- Record system
+- New unit dialog lacks title, as does edit-units dialog.
+- Edit units dialog has bizarre sort order for built-in units.
+- Edit/Remove unit are enabled even when no units selected
+- Fix issue with help box hover in edit-unit dialog
+- Creating unit in quick fix doesn't remove the error, and quick fix can be triggered twice.
+- Make Excel file import offer number-or-blank for columns
+- Make Excel import handle rowspan/colspan
+
+- Typo in column type hint: "such as trying to multiple two text items together"
+- extract number is Text -> Number{u}, but I think should just be Text -> Number.
+- extract number should be called number from ?
+- replace many function added
+- Import HTML table window has no title
+  - Instruction formatting could be better; not separate from the webpage below
+- NOFIX: Import HTML table covers table wrongly if table wider than import pane
+  - The div is right, it's the original HTML which is wrongly overflowing.
+- "Imported preview" label is right-aligned but that makes it easy to miss.  Left-align it above the dest side
+  - Added arrow instead
+  - Original data already has munged table titles; should it?
+- Selecting multiple cells not possible with mouse shift-click.
+  - Does it work with keyboard?
+- After Jon Neil column clicked, no completions showing; should already be fixed by today's changes so that it shows operators?
+- More spacing/better formatting to separate function documentation examples
+- Had "nu" in completion, selected "extract number()" related completion, got "nextract number()".  Surely should replace whole stem up to cursor?
+- Add a button/link to insert function example into editor?
+- Nudge scrolling is not working in import dialog while selecting
+- Add context menu option to source table to transform from that table
+- No error message is shown in manual edit primary key dialog
+- Maximum recipe dialog doesn't show error
+- Delete expected to clear cell while unfocused, but doesn't
