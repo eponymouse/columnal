@@ -480,9 +480,8 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <property name="wix_bin" value="C:/Program Files (x86)/WiX Toolset v3.10/bin"/>
-                                <property name="launch4j_bin" value="C:/Program Files (x86)/Launch4j"/>
-                                <property name="imagemagick_bin" value="S:/imagemagick"/>
+                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/package.properties"/>
                                 
                                 <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
                                     <arg line="convert"/>
@@ -523,13 +522,23 @@
                                     <arg line="installer-background.bmp"/>
                                 </exec>
                                 
+                                <!-- Set version numbers: -->
+                                <copy file="../installers/windows_msi/launch4j.xml" tofile="../installers/windows_msi/launch4j_versioned.xml"/>
+                                <copy file="../installers/windows_msi/main.wxs" tofile="../installers/windows_msi/main_versioned.wxs"/>
+                                
+                                <replace dir="../installers/windows_msi" propertyFile="../installers/package.properties">
+                                    <include name="*_versioned*"/>
+                                    <replacefilter token="@COLUMNALVERSION@" property="columnal.version"/>
+                                    <replacefilter token="@COLUMNALGUID@" property="columnal.guid"/>
+                                </replace>
+                                
                                 <exec dir="../installers/windows_msi" executable="${launch4j_bin}/launch4jc.exe" failonerror="true">
-                                    <arg line="launch4j.xml"/>
+                                    <arg line="launch4j_versioned.xml"/>
                                 </exec>
                                 
                                 <exec dir="../installers/windows_msi" executable="${wix_bin}/candle.exe" failonerror="true">
                                     <arg line="-arch x64"/>
-                                    <arg line="main.wxs"/>
+                                    <arg line="main_versioned.wxs"/>
                                 </exec>
 
                                 <copy todir="../installers/windows_msi/SourceDir/jre">
@@ -547,7 +556,7 @@
                                 </exec>
 
                                 <exec dir="../installers/windows_msi" executable="${wix_bin}/light.exe">
-                                    <arg line="-ext WixUIExtension -ext WixUtilExtension main.wixobj jre-files.wixobj -o columnal.msi"/>
+                                    <arg line="-ext WixUIExtension -ext WixUtilExtension main.wixobj jre-files.wixobj -o columnal-${columnal.version}.msi"/>
                                 </exec>
                                 
 

@@ -26,5 +26,6 @@
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
     <runtimeBits>64</runtimeBits>
+    <opt>-Dcolumnal.version=@COLUMNALVERSION@ -Dcolumnal.production=true</opt>
   </jre>
 </launch4jConfig>

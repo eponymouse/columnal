@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
-    <Product Version='19.5.24' Id='fc6eb5b3-d5fb-43af-ab61-d0c891b6f72c'
+    <Product Version='@COLUMNALVERSION@' Id='@COLUMNALGUID@'
              Name='Columnal' UpgradeCode='365af26c-7f60-4f62-a734-607da8d2e637'
              Language='1033' Codepage='1252' Manufacturer='Eponymouse'>
 
@@ -20,7 +20,7 @@
         <Property Id="ALLUSERS" Secure="no" />
 
         <Property Id="SOFTWARE" Value="Columnal"/>
-        <Property Id="SOFTWAREVERSION" Value="2019.5.24"/>
+        <Property Id="SOFTWAREVERSION" Value="@COLUMNALVERSION@"/>
         <Property Id="WixAppFolder" Value="WixPerUserFolder"/>
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
         <WixVariable Id="WixUISupportPerUser" Value="1" />
