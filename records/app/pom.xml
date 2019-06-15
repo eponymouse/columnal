@@ -566,6 +566,39 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <!-- Must be run manually using mvn antrun:run@publish-msi -->
+                        <id>publish-msi</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/package.properties"/>
+                                
+                                <exec dir="../installers/windows_msi" executable="${putty_bin}/pscp.exe" failonerror="true">
+                                    <arg line="columnal-${columnal.version}.msi"/>
+                                    <arg line="neil@columnal.xyz:/home/neil/columnal-live/download/columnal-${columnal.version}.msi"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Must be run manually using mvn antrun:run@publish-version -->
+                        <id>publish-version</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/package.properties"/>
+                                
+                                <echo file="../installers/columnal.version" append="false" message="${columnal.version}${line.separator}${columnal.description}"/>
+                                <exec dir="../installers" executable="${putty_bin}/pscp.exe" failonerror="true">
+                                    <arg line="columnal.version"/>
+                                    <arg line="neil@columnal.xyz:/home/neil/columnal-live/columnal.version"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             
