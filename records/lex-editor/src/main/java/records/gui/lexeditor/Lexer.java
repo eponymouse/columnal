@@ -15,6 +15,7 @@ import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.IdentifierUtility.Consumed;
 import utility.Pair;
 import utility.Utility;
 
@@ -301,6 +302,11 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             {
                 removedChars.set(srcBit + shiftBy);
             }
+        }
+
+        public void setAll(Consumed<?> consumed)
+        {
+            consumed.removedCharacters.forEach(this::set);
         }
     }
 

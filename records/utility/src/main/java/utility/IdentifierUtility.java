@@ -3,6 +3,8 @@ package utility;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.units.RawInputLocation;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.Lexer;
@@ -13,6 +15,11 @@ import records.grammar.ExpressionParser.IdentContext;
 import records.grammar.UnitLexer;
 import records.grammar.UnitParser.SingleUnitContext;
 import utility.Utility.DescriptiveErrorListener;
+
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 public class IdentifierUtility
 {
@@ -62,9 +69,23 @@ public class IdentifierUtility
     {
         return parsedIdent.IDENT().getText();
     }
+    
+    public static class Consumed<T>
+    {
+        public final T item;
+        public final @RawInputLocation int positionAfter;
+        public final ImmutableSet<@RawInputLocation Integer> removedCharacters;
 
-    @SuppressWarnings("identifier")
-    public static @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
+        public Consumed(T item, @RawInputLocation int positionAfter, ImmutableSet<@RawInputLocation Integer> removedCharacters)
+        {
+            this.item = item;
+            this.positionAfter = positionAfter;
+            this.removedCharacters = removedCharacters;
+        }
+    }
+    
+    
+    public static @Nullable Consumed<@ExpressionIdentifier String> consumeExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int caretPos)
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         Lexer lexer = new ExpressionLexer(inputStream);
@@ -78,40 +99,97 @@ public class IdentifierUtility
         {
             @SuppressWarnings("units")
             @RawInputLocation int end = startFrom + token.getStopIndex() + 1;
-            if (end + 1 == includeTrailingSpaceOrDoubleSpaceIfEndsAt && end < content.length() && content.charAt(end) == ' ')
+
+            // Find all the consecutive spaces:
+            @RawInputLocation int posAfterLastSpace = end;
+            while (posAfterLastSpace < content.length() && content.charAt(posAfterLastSpace) == ' ')
             {
-                // Look for double space followed by further ident (if it was single space then ident, lexer would have found it):
-                if (end + 1 < content.length() && content.charAt(end + 1) == ' ')
+                posAfterLastSpace += RawInputLocation.ONE;
+            }
+            
+            // Is it followed by at least one space?
+            if (posAfterLastSpace > end)
+            {
+                // Here's the options:
+                // 1: there are one or more spaces, the caret is somewhere in them, preserve one before (if present), and one after (if present), delete rest.
+                //    If followed by identifier, glue together
+                // 2: there are one or more spaces, the caret doesn't touch any of them, and
+                //   (a) there is an identifier following: delete down to one space and glue
+                //   (b) there is not an identifier following: delete all
+                
+                @Nullable Consumed<@ExpressionIdentifier String> identAfter = consumeExpressionIdentifier(content, posAfterLastSpace, caretPos);
+                
+                // Is the caret in there?
+                if (end <= caretPos && caretPos <= posAfterLastSpace)
                 {
-                    @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> p = consumeExpressionIdentifier(content, end + 2 * RawInputLocation.ONE, -1 * RawInputLocation.ONE);
-                    if (p != null)
+                    // It is -- preserve at most one space before and one after:
+                    Set<@RawInputLocation Integer> removed = new HashSet<>();
+                    for (@RawInputLocation int i = end + RawInputLocation.ONE; i < caretPos; i++)
                     {
-                        return new Pair<>(token.getText() + "  " + p.getFirst(), p.getSecond());
+                        removed.add(i);
+                    }
+                    for (@RawInputLocation int i = caretPos + RawInputLocation.ONE; i < posAfterLastSpace; i++)
+                    {
+                        removed.add(i);
+                    }
+                    String spaces = (end < caretPos ? " " : "") + (caretPos < posAfterLastSpace ? " " : "");
+                    if (identAfter != null)
+                    {
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String withSpaces = token.getText() + spaces + identAfter.item;
+                        return new Consumed<@ExpressionIdentifier String>(withSpaces, identAfter.positionAfter, ImmutableSet.<@RawInputLocation Integer>copyOf(Sets.<@RawInputLocation Integer>union(removed, identAfter.removedCharacters)));
+                    }
+                    else
+                    {
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String withSpaces = token.getText() + spaces;
+                        return new Consumed<@ExpressionIdentifier String>(withSpaces, posAfterLastSpace, ImmutableSet.copyOf(removed));
                     }
                 }
-                return new Pair<>(token.getText() + " ", end + RawInputLocation.ONE);
+                else
+                {
+                    // Caret not in there:
+                    Set<@RawInputLocation Integer> removed = new HashSet<>();
+                    for (@RawInputLocation int i = end + (identAfter != null ? RawInputLocation.ONE : RawInputLocation.ZERO); i < posAfterLastSpace; i++)
+                    {
+                        removed.add(i);
+                    }
+                    if (identAfter != null)
+                    {
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String glued = token.getText() + " " + identAfter.item;
+                        return new Consumed<@ExpressionIdentifier String>(glued, identAfter.positionAfter, ImmutableSet.<@RawInputLocation Integer>copyOf(Sets.<@RawInputLocation Integer>union(removed, identAfter.removedCharacters)));
+                    }
+                    else
+                    {
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String ident = token.getText();
+                        return new Consumed<>(ident, posAfterLastSpace, ImmutableSet.copyOf(removed));
+                    }
+                }
             }
-            else
-                return new Pair<>(token.getText(), end);
+            @SuppressWarnings("identifier")
+            @ExpressionIdentifier String tokenIdent = token.getText();
+            return new Consumed<>(tokenIdent, end, ImmutableSet.of());
         }
         else
             return null;
     }
 
-    public static @Nullable Pair<String, @RawInputLocation Integer> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
+    public static @Nullable Consumed<String> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
     {
-        @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
+        @Nullable Consumed<@ExpressionIdentifier String> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
         if (before != null)
         {
-            if (before.getSecond() < content.length() && content.charAt(before.getSecond()) == '\\')
+            if (before.positionAfter < content.length() && content.charAt(before.positionAfter) == '\\')
             {
-                @Nullable Pair<@ExpressionIdentifier String, @RawInputLocation Integer> after = consumeExpressionIdentifier(content, before.getSecond() + RawInputLocation.ONE, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
+                @Nullable Consumed<@ExpressionIdentifier String> after = consumeExpressionIdentifier(content, before.positionAfter + RawInputLocation.ONE, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
                 if (after != null)
                 {
-                    return new Pair<>(before.getFirst() + "\\" + after.getFirst(), after.getSecond());
+                    return new Consumed<>(before.item + "\\" + after.item, after.positionAfter, ImmutableSet.<@RawInputLocation Integer>copyOf(Sets.<@RawInputLocation Integer>union(before.removedCharacters, after.removedCharacters)));
                 }
             }
-            return new Pair<>(before.getFirst(), before.getSecond());
+            return new Consumed<>(before.item, before.positionAfter, before.removedCharacters);
         }
         return null;
     }

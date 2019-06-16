@@ -7,8 +7,6 @@ Express Priority (needed for task C)
 - Layout of new unit dialog is horrible, box the two options better and indent beneath.
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
 - Why does Jon get error in Round cells the first time?  (A3A4 5:30)
-- Should we allow spaces even if they are later trimmed?
-- When editing @entire P and A to @entire J and N, deleting the P and retyping J removes the space.  Whitespace trimming problematic, at least around cursor?  Or just trim nothing, but it will be gone on reload?
 
 Probably fixed by recent changes but not definite
 ---
@@ -35,7 +33,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - No undo while editing a cell value
 - Code completion for unit editor is sorted really weirdly
 - Investigate improving layout for long expressions
-  - Also do better fix for retaining spaces
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 
@@ -257,3 +254,6 @@ Done after Phil B & Jon A:
 - About Dialog
 - Add update-available notifications (requires website!)
 - Desktop shortcut
+- When editing @entire P and A to @entire J and N, deleting the P and retyping J removes the space.  Whitespace trimming problematic, at least around cursor?  Or just trim nothing, but it will be gone on reload?
+  - Also do better fix for retaining spaces
+  - Should we allow spaces even if they are later trimmed?

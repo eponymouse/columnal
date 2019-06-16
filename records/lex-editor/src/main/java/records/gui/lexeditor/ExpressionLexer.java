@@ -46,6 +46,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplierInt;
 import utility.IdentifierUtility;
+import utility.IdentifierUtility.Consumed;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -351,7 +352,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             
             if (content.startsWith("@entire", curIndex))
             {
-                @Nullable Pair<String, @RawInputLocation Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos);
+                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos);
                 if (parsed != null)
                 {
                     for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
@@ -359,12 +360,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         TableId tableId = availableColumn.getTableId();
                         String columnIdRaw = availableColumn.getColumnId().getRaw();
                         if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
-                                ((tableId == null && columnIdRaw.equals(parsed.getFirst()))
-                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(parsed.getFirst()))))
+                                ((tableId == null && columnIdRaw.equals(parsed.item))
+                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(parsed.item))))
                         {
-                            saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.getSecond()));
-                            chunks.add(new ContentChunk("@entire " + parsed.getFirst(), StyledString.s("@entire " + parsed.getFirst()).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
-                            curIndex = parsed.getSecond();
+                            removedChars.setAll(parsed);
+                            saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.positionAfter));
+                            chunks.add(new ContentChunk("@entire " + parsed.item, StyledString.s("@entire " + parsed.item).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
+                            curIndex = parsed.positionAfter;
                             continue nextToken;
                         }
                     }
@@ -372,13 +374,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 }
             }
 
-            @Nullable Pair<String, @RawInputLocation Integer> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos);
+            @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos);
             final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
-            if (parsed != null && parsed.getSecond() > curIndex)
+            if (parsed != null && parsed.positionAfter > curIndex)
             {
                 prevWasIdent = true;
-                String text = parsed.getFirst();
-                CanonicalSpan location = removedChars.map(curIndex, ((parsed.getSecond() < content.length() && content.charAt(parsed.getSecond()) == ' ') ? parsed.getSecond() + RawInputLocation.ONE : parsed.getSecond()));
+                String text = parsed.item;
+                removedChars.setAll(parsed);
+                CanonicalSpan location = removedChars.map(curIndex, ((parsed.positionAfter < content.length() && content.charAt(parsed.positionAfter) == ' ') ? parsed.positionAfter + RawInputLocation.ONE : parsed.positionAfter));
 
                 boolean wasColumn = false;
                 {
@@ -449,7 +452,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 {
                     chunks.add(new ContentChunk(text, ChunkType.IDENT));
                 }
-                curIndex = parsed.getSecond();
+                curIndex = parsed.positionAfter;
                 continue nextToken;
             }
             
