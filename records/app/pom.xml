@@ -556,7 +556,7 @@
                                 </exec>
 
                                 <exec dir="../installers/windows_msi" executable="${wix_bin}/light.exe">
-                                    <arg line="-ext WixUIExtension -ext WixUtilExtension main.wixobj jre-files.wixobj -o columnal-${columnal.version}.msi"/>
+                                    <arg line="-ext WixUIExtension -ext WixUtilExtension main_versioned.wixobj jre-files.wixobj -o columnal-${columnal.version}.msi"/>
                                 </exec>
                                 
 
