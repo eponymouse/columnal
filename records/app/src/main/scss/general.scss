@@ -303,3 +303,11 @@
         -fx-stroke: white;
     }
 }
+.upgrade-banner {
+    -fx-background-color: grey(40%), pink;
+    -fx-background-insets: 0, 0 0 1 0;
+    .download-link {
+        -fx-underline: true;
+        -fx-fill: blue;
+    }
+}

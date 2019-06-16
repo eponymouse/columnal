@@ -100,7 +100,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         super.start(stage);
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
-        mainWindowActions = MainWindow.show(stage, dest, null);
+        mainWindowActions = MainWindow.show(stage, dest, null, null);
     }
 
     @After

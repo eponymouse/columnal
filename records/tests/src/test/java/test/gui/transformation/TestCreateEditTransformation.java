@@ -133,7 +133,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
             File dest = File.createTempFile("blank", "rec");
             dest.deleteOnExit();
-            MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null));
+            MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null, null));
 
             List<ColumnDetails> columns = new ArrayList<>();
             // First add split variable:

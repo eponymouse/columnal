@@ -28,7 +28,7 @@ public class TestInitialWindow extends FXApplicationTest
     public void start(Stage stage) throws Exception
     {
         super.start(stage);
-        InitialWindow.show(stage);
+        InitialWindow.show(stage, null);
         initialWindow = stage;
     }
 

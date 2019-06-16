@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -18,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.Main.UpgradeInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -27,6 +29,10 @@ import utility.gui.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
  * Created by neil on 17/04/2017.
@@ -34,16 +40,16 @@ import java.io.IOException;
 @OnThread(Tag.FXPlatform)
 public class InitialWindow
 {
-    public static void show(Stage stage)
+    public static void show(Stage stage, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> {
-                    newProject(stage);
+                    newProject(stage, upgradeInfo);
                     stage.hide();
                 }),
                 GUI.menuItem("menu.project.open", () -> {
-                    if (chooseAndOpenProject(stage))
+                    if (chooseAndOpenProject(stage, upgradeInfo))
                         stage.hide();
                 }),
                 GUI.menuItem("menu.exit", () -> {
@@ -57,11 +63,11 @@ public class InitialWindow
         );
         menuBar.setUseSystemMenuBar(true);
         Button newButton = GUI.button("initial.new", () -> {
-            newProject(stage);
+            newProject(stage, upgradeInfo);
             stage.hide();
         });
         Button openButton = GUI.button("initial.open", () -> {
-            if (chooseAndOpenProject(stage))
+            if (chooseAndOpenProject(stage, upgradeInfo))
                 stage.hide();
         });
         ListView<File> mruListView = new ListView<>();
@@ -73,7 +79,7 @@ public class InitialWindow
                 @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
                 if (selected != null)
                 {
-                    openProject(stage, selected);
+                    openProject(stage, selected, upgradeInfo);
                 }
             }
         });
@@ -83,7 +89,7 @@ public class InitialWindow
                 @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
                 if (selected != null)
                 {
-                    openProject(stage, selected);
+                    openProject(stage, selected, upgradeInfo);
                 }
             }
         });
@@ -102,6 +108,18 @@ public class InitialWindow
                     headed("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.vbox("initial-recent", GUI.label("initial.open.recent", "initial-subheading"), mruListView))
                 )
         );
+        if (upgradeInfo != null)
+        {
+            upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
+            {
+                @Override
+                @OnThread(value = Tag.Unique, ignoreParent = true)
+                public void accept(Optional<UpgradeInfo> opt)
+                {
+                    opt.ifPresent(u -> Platform.runLater(() -> u.showAtTopOf(content)));
+                }
+            });
+        }
         Scene scene = new Scene(new BorderPane(content, menuBar, null, null, null));
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
         stage.setScene(scene);
@@ -124,22 +142,22 @@ public class InitialWindow
     }
 
     // Returns true if successfully opened a project
-    public static boolean chooseAndOpenProject(Stage parent)
+    public static boolean chooseAndOpenProject(Stage parent, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
         if (src != null)
         {
-            return openProject(parent, src);
+            return openProject(parent, src, upgradeInfo);
         }
         return false;
     }
 
     // Returns true if successfully opened a project
-    private static boolean openProject(Stage parent, File src)
+    private static boolean openProject(Stage parent, File src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         try
         {
-            MainWindow.show(new Stage(), src, new Pair<>(src, FileUtils.readFileToString(src, "UTF-8")));
+            MainWindow.show(new Stage(), src, new Pair<>(src, FileUtils.readFileToString(src, "UTF-8")), upgradeInfo);
             Utility.usedFile(src);
             // Only hide us if the load and show completed successfully:
             parent.hide();
@@ -153,7 +171,7 @@ public class InitialWindow
     }
 
     @OnThread(Tag.FXPlatform)
-    public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent)
+    public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX("Error creating new file", () ->
         {
@@ -168,7 +186,7 @@ public class InitialWindow
                 dest = new FileChooser().showSaveDialog(parent);
             }
             if (dest != null)
-                return MainWindow.show(new Stage(), dest, null);
+                return MainWindow.show(new Stage(), dest, null, upgradeInfo);
             else
                 return null;
         });

@@ -966,7 +966,7 @@ public class TestUtil
         System.out.println("Saving: {{{" + saved + "}}}");
         AtomicReference<MainWindowActions> tableManagerAtomicReference = new AtomicReference<>();
         FXUtility.runFX(() -> checkedToRuntime_(() -> {
-            MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved));
+            MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved), null);
             tableManagerAtomicReference.set(mainWindowActions);
         }));
         // Wait until individual tables are actually loaded:

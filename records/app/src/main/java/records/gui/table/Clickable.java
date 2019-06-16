@@ -5,14 +5,15 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.TranslationUtility;
 
-abstract class Clickable extends Style<Clickable>
+public abstract class Clickable extends Style<Clickable>
 {
-    private final @LocalizableKey String tooltipKey;
+    private final @Nullable @LocalizableKey String tooltipKey;
     private final String[] extraStyleClasses;
 
     public Clickable()
@@ -20,7 +21,7 @@ abstract class Clickable extends Style<Clickable>
         this("click.to.change");
     }
     
-    public Clickable(@LocalizableKey String tooltipKey, String... styleClasses)
+    public Clickable(@Nullable @LocalizableKey String tooltipKey, String... styleClasses)
     {
         super(Clickable.class);
         this.tooltipKey = tooltipKey;
@@ -39,8 +40,11 @@ abstract class Clickable extends Style<Clickable>
         t.setOnMouseClicked(e -> {
             onClick(e.getButton(), new Point2D(e.getScreenX(), e.getScreenY()));
         });
-        Tooltip tooltip = new Tooltip(TranslationUtility.getString(tooltipKey));
-        Tooltip.install(t, tooltip);
+        if (tooltipKey != null)
+        {
+            Tooltip tooltip = new Tooltip(TranslationUtility.getString(tooltipKey));
+            Tooltip.install(t, tooltip);
+        }
     }
 
     @Override

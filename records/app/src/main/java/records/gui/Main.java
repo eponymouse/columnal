@@ -2,25 +2,54 @@ package records.gui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import log.ErrorHandler;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.table.Clickable;
 import records.importers.ExcelImporter;
 import records.importers.HTMLImporter;
 import records.importers.TextImporter;
 import records.importers.manager.ImporterManager;
+import styled.StyledCSS;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.SmallDeleteButton;
 
+import javax.swing.SwingUtilities;
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 /**
@@ -28,8 +57,64 @@ import java.util.function.Function;
  */
 public class Main extends Application
 {
+    public static final String DOMAIN = "www.columnal.xyz";
     public static final String EXTENSION_INCL_DOT = ".clml";
 
+    @OnThread(Tag.Any)
+    public static class UpgradeInfo
+    {
+        private final String version;
+        private final String description;
+        private final URI downloadLink;
+
+        public UpgradeInfo(String version, String description, URI downloadLink)
+        {
+            this.version = version;
+            this.description = description;
+            this.downloadLink = downloadLink;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public void showAtTopOf(Pane pane)
+        {
+            BorderPane borderPane = new BorderPane();
+            StyledString s = StyledString.concat(StyledString.s("Version " + version + " available.  "),
+                StyledString.s("Download now").withStyle(new Clickable(null) {
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        pane.getChildren().remove(borderPane);
+                        SwingUtilities.invokeLater(() -> {
+                            try
+                            {
+                                Desktop.getDesktop().browse(downloadLink);
+                            }
+                            catch (IOException e)
+                            {
+                                Log.log(e);
+                                Platform.runLater(() -> new Alert(AlertType.ERROR, "Could not open browser.  Go to " + DOMAIN + " to download the latest version."));
+                            }
+                        });
+                    }
+                }).withStyle(new StyledCSS("download-link")),
+                StyledString.s("  (" + description + ")"));
+            TextFlow textFlow = new TextFlow();
+            textFlow.getChildren().setAll(s.toGUI());
+            borderPane.setManaged(false);
+            borderPane.resizeRelocate(0, 0, pane.getWidth(), 30);
+            borderPane.setLeft(textFlow);
+            BorderPane.setAlignment(textFlow, Pos.CENTER_LEFT);
+            BorderPane.setMargin(textFlow, new Insets(4));
+            SmallDeleteButton button = new SmallDeleteButton();
+            button.setOnAction(() -> pane.getChildren().remove(borderPane));
+            borderPane.setRight(button);
+            BorderPane.setAlignment(button, Pos.CENTER_RIGHT);
+            BorderPane.setMargin(button, new Insets(4, 8, 4, 4));
+            borderPane.getStyleClass().add("upgrade-banner");
+            pane.getChildren().add(borderPane);
+        }
+    }
+    
     @Override
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
@@ -62,11 +147,23 @@ public class Main extends Application
         ImporterManager.getInstance().registerImporter(new ExcelImporter());
         Log.normal("Registered importers");
 
+        CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
+        Thread thread = new Thread()
+        {
+            @OnThread(Tag.Unique)
+            public void run()
+            {
+                upgradeInfo.complete(fetchUpgradeInfo(System.getProperty("columnal.version")));
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
+
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())
         {
             Log.normal("Showing initial window (no params)");
-            InitialWindow.show(primaryStage);
+            InitialWindow.show(primaryStage, upgradeInfo);
         }
         else
         {
@@ -76,12 +173,12 @@ public class Main extends Application
                 if (param.endsWith(EXTENSION_INCL_DOT))
                 {
                     Log.normal("Showing main window, to load file: \"" + paramFile.getAbsolutePath() + "\"");
-                    MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, StandardCharsets.UTF_8)));
+                    MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, StandardCharsets.UTF_8)), upgradeInfo);
                 }
                 else
                 {
                     Log.normal("Showing main window, to import file: \"" + paramFile.getAbsolutePath() + "\"");
-                    @Nullable MainWindowActions mainWindowActions = InitialWindow.newProject(null);
+                    @Nullable MainWindowActions mainWindowActions = InitialWindow.newProject(null, upgradeInfo);
                     if (mainWindowActions != null)
                     {
                         mainWindowActions.importFile(paramFile);
@@ -92,6 +189,54 @@ public class Main extends Application
                     }
                 }
             }
+        }
+    }
+
+    @OnThread(Tag.Unique)
+    private Optional<UpgradeInfo> fetchUpgradeInfo(@Nullable String currentVersion)
+    {
+        if (currentVersion == null)
+            return Optional.empty();
+        
+        // TODO support Mac here
+        String os = "windows";
+        try
+        {
+            String[] lines = IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check"), StandardCharsets.UTF_8)
+                .split("\\r?\\n");
+            if (lines.length == 2 || lines.length == 3 && lines[2].trim().isEmpty())
+            {
+                String latestVersion = lines[0].trim();
+                if (!sameVersion(currentVersion, latestVersion))
+                    return Optional.of(new UpgradeInfo(latestVersion, lines[1].trim(), new URL("https", DOMAIN, "/version/" + os + "/" + latestVersion + "/download").toURI()));
+            }
+        }
+        catch (IOException | URISyntaxException e)
+        {
+            Log.log(e);
+        }
+        return Optional.empty();
+    }
+
+    @OnThread(Tag.Any)
+    private boolean sameVersion(String currentVersion, String latestVersion)
+    {
+        // We allow for things like leading zeroes
+        int[] cur = extractVersion(currentVersion);
+        int[] latest = extractVersion(latestVersion);
+        return cur != null && latest != null && Arrays.equals(cur, latest);
+    }
+
+    @OnThread(Tag.Any)
+    private int @Nullable[] extractVersion(String currentVersion)
+    {
+        try
+        {
+            return Arrays.stream(currentVersion.split("\\.")).mapToInt(n -> Integer.parseInt(n)).toArray();
+        }
+        catch (NumberFormatException e)
+        {
+            return null;
         }
     }
 

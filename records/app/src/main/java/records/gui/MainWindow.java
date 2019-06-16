@@ -18,6 +18,7 @@ import records.data.DataSource;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.Main.UpgradeInfo;
 import records.gui.grid.VirtualGrid;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
@@ -34,6 +35,9 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
 
 /**
  * Created by neil on 17/04/2017.
@@ -65,7 +69,7 @@ public class MainWindow
     }
 
     // If src is null, make new
-    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src) throws UserException, InternalException
+    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
     {
         View v = new View(destinationFile);
         stage.titleProperty().bind(v.titleProperty());
@@ -76,8 +80,8 @@ public class MainWindow
 
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
-                GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage)),
-                GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage)),
+                GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage, null)),
+                GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage, null)),
                 new SaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {
                     FileChooser fc = new FileChooser();
@@ -156,7 +160,21 @@ public class MainWindow
         banner.setVisible(false);
         updateBanner(v, banner, true);
 
-        BorderPane root = new BorderPane(new StackPane(v, banner), menuBar, null, null, null);
+        StackPane stackPane = new StackPane(v, banner);
+        if (upgradeInfo != null)
+        {
+            upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
+            {
+                @Override
+                @OnThread(value = Tag.Unique, ignoreParent = true)
+                public void accept(Optional<UpgradeInfo> opt)
+                {
+                    opt.ifPresent(u -> Platform.runLater(() -> u.showAtTopOf(stackPane)));
+                }
+            });
+        }
+            
+        BorderPane root = new BorderPane(stackPane, menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);

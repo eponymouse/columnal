@@ -6,7 +6,6 @@ Express Priority (needed for task C)
   - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
 - Layout of new unit dialog is horrible, box the two options better and indent beneath.
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
-- Add update-available notifications (requires website!)
 - Why does Jon get error in Round cells the first time?  (A3A4 5:30)
 - Should we allow spaces even if they are later trimmed?
 - When editing @entire P and A to @entire J and N, deleting the P and retyping J removes the space.  Whitespace trimming problematic, at least around cursor?  Or just trim nothing, but it will be gone on reload?
@@ -256,3 +255,4 @@ Done after Phil B & Jon A:
 - Double-clicking on function completion, the cursor seems to *later* move beyond the brackets, see Phil B5 02:45 (happened multiple times)
 - Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
 - About Dialog
+- Add update-available notifications (requires website!)
