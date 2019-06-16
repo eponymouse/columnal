@@ -127,6 +127,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
     public void setDisable(boolean disabled)
     {
+        scrollPane.setDisable(disabled);
         display.setDisable(disabled);
     }
 

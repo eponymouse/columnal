@@ -26,6 +26,10 @@ $string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
     & .viewport {
         -fx-background-color: white;
     }
+    &:disabled {
+        /* Matches what JavaFX itself does: */
+        -fx-opacity: 0.4;
+    }
 }
 .top-level-editor-scroll-pane {
     -fx-min-height: 200px;

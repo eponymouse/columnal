@@ -262,3 +262,15 @@
 .loading-error-detail {
     -fx-font-family: "Noto Mono";
 }
+
+.edit-unit-dialog {
+    .name-label {
+        -fx-text-alignment: left;
+    }
+    .full-detail-grid, .alias-detail-grid {
+        visibility: hidden;
+        &:selected {
+            visibility:visible;
+        }
+    }
+}

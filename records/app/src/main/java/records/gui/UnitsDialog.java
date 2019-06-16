@@ -4,18 +4,19 @@ import annotation.identifier.qual.UnitIdentifier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.TypeManager;
@@ -39,6 +40,7 @@ import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.AlignedLabels;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DimmableParent;
 import utility.gui.ErrorableDialog;
@@ -248,32 +250,50 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                     FXUtility.getStylesheet("dialogs.css")
             );
             
+            AlignedLabels alignedLabels = new AlignedLabels(Pos.CENTER_LEFT);
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());
-            unitNameField.setPromptText(TranslationUtility.getString("unit.name.prompt"));
-            Row nameRow = LabelledGrid.labelledGridRow("unit.name", "edit-unit/name", unitNameField);
+            Row nameRow = LabelledGrid.labelledGridRow(alignedLabels, "unit.name", "edit-unit/name", unitNameField, "name-label");
+            nameRow.setLabelHAlignment(HPos.LEFT);
+            Label explanation = GUI.label("unit.edit.explanation");
+            
+            
             toggleGroup = new ToggleGroup();
             
             Row fullRadio = LabelledGrid.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
-            descriptionField.setPromptText(TranslationUtility.getString("unit.full.description.prompt"));
-            Row fullDescription = LabelledGrid.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
+            Row fullDescription = LabelledGrid.labelledGridRow(alignedLabels, "unit.full.description", "edit-unit/description", descriptionField);
             @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
-            scale = new TextField(equiv == null ? "" : equiv.getFirst().toString());
-            scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
+            scale = new TextField(equiv == null ? "1" : equiv.getFirst().toString());
             definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
-            //definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
             Pair<CheckBox, Row> fullDefinition = LabelledGrid.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
             this.equivalentTickBox = fullDefinition.getFirst();
             equivalentTickBox.setSelected(equiv != null);
+            LabelledGrid fullDetailGrid = new LabelledGrid(fullDescription, fullDefinition.getSecond());
+            fullDetailGrid.getStyleClass().add("full-detail-grid");
+            GridPane.setMargin(fullDetailGrid, new Insets(0, 0, 0, 40));
+            LabelledGrid topRadio = new LabelledGrid(fullRadio, LabelledGrid.fullWidthRow(fullDetailGrid));
+            GridPane.setMargin(topRadio, new Insets(0, 0, 0, 40));
 
             Row aliasRadio = LabelledGrid.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
             aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));
-            aliasTargetField.setPromptText(TranslationUtility.getString("unit.alias.target.prompt"));
-            Row aliasTarget = LabelledGrid.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
+            Row aliasTarget = LabelledGrid.labelledGridRow(alignedLabels, "unit.alias.target", "edit-unit/alias-target", aliasTargetField);
             
-            toggleGroup.selectToggle(toggleGroup.getToggles().get(initialValue == null || initialValue.getSecond().isRight() ? 0 : 1));
+            if (initialValue != null)
+                toggleGroup.selectToggle(toggleGroup.getToggles().get(initialValue.getSecond().isRight() ? 0 : 1));
+            // Otherwise, if new unit, leave it unselected.
             
-            getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, LabelledGrid.fullWidthRow(getErrorLabel())));
+            LabelledGrid aliasDetailGrid = new LabelledGrid(aliasTarget);
+            aliasDetailGrid.getStyleClass().add("alias-detail-grid");
+            GridPane.setMargin(aliasDetailGrid, new Insets(0, 0, 0, 40));
+            LabelledGrid bottomRadio = new LabelledGrid(aliasRadio, LabelledGrid.fullWidthRow(aliasDetailGrid));
+            GridPane.setMargin(bottomRadio, new Insets(0, 0, 0, 40));
+
+            FXUtility.addChangeListenerPlatformNNAndCallNow(toggleGroup.selectedToggleProperty(), toggle -> {
+                FXUtility.setPseudoclass(fullDetailGrid, "selected", toggle == toggleGroup.getToggles().get(0));
+                FXUtility.setPseudoclass(aliasDetailGrid, "selected", toggle == toggleGroup.getToggles().get(1));
+            });
+            
+            getDialogPane().setContent(new LabelledGrid(nameRow, LabelledGrid.fullWidthRow(explanation), LabelledGrid.fullWidthRow(topRadio), LabelledGrid.fullWidthRow(bottomRadio), LabelledGrid.fullWidthRow(getErrorLabel())));
             getDialogPane().getStyleClass().add("edit-unit-dialog");
 
             FXUtility.addChangeListenerPlatformNN(toggleGroup.selectedToggleProperty(), t -> {
@@ -314,7 +334,11 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             if (name == null)
                 return Either.left(TranslationUtility.getString("invalid.name"));
             
-            if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(1))
+            if (toggleGroup.getSelectedToggle() == null)
+            {
+                return Either.left(TranslationUtility.getString("invalid.unit.select.toggle"));
+            }
+            else if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(1))
             {
                 @UnitIdentifier String aliasTarget = IdentifierUtility.asUnitIdentifier(aliasTargetField.getText().trim());
                 if (aliasTarget == null)

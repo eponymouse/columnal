@@ -25,7 +25,7 @@
         <short>You can define a unit as a multiple of an existing unit or combination of existing units.</short>
         <full>
             <p>A simple example is that you might want to define cL (short for centilitre) as 1/100th of a litre.  Often useful is to define a new name for a combination of units, for example you might want acc (short for acceleration) as a short name for m/s^2.</p>
-            <p>Generally, you should not use this to define relationships which may change.  For example, you could define a Euro to be 1.1 US dollars, but that number is likely to change so it is not a good idea to fix it in the software.</p>
+            <p>You should only use this to define relationships which are fixed (e.g. 1cm = 0.01m).  For example, you could define a Euro to be 1.1 US dollars, but the exchange rate changes so it is not a good idea to fix it in the unit definition.</p>
         </full>
     </help>
     <help id="alias" title="Alias">
