@@ -18,8 +18,8 @@ Probably fixed by recent changes but not definite
 
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
 ===
-- Desktop shortcut
 - Mac build
+- Server internal exception logging (and stats logging?)
 - Undo area in import dialog does not redisplay RHS
 - Video Phil B2, ~2:40, column resize on empty first column goes weird.  Already fixed bug?
 - Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
@@ -256,3 +256,4 @@ Done after Phil B & Jon A:
 - Clicking one too many times on autocomplete accidentally clicked column beneath.  Add invulnerability period which prevents selecting column soon after autocomplete click?
 - About Dialog
 - Add update-available notifications (requires website!)
+- Desktop shortcut

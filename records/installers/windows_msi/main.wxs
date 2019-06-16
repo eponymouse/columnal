@@ -45,6 +45,27 @@
                     </Component>
                 </Directory>
             </Directory>
+
+            <Directory Id="DesktopFolder" Name="Desktop" />
+
+            <Component Id="DesktopShortcut" Guid="145ca7a4-5f67-4c9b-818d-4e797bce489b">
+                <CreateFolder/>
+                <Shortcut Id="DesktopShortcut"
+                          Directory="DesktopFolder"
+                          Name="Columnal"
+                          Description="Launches Columnal"
+                          Target="[#Launcher]"
+                          Icon="Icon.ico"
+                          WorkingDirectory="INSTALLDIR"/>
+                <RemoveFolder Id="RemoveDesktopFolder" Directory="DesktopFolder" On="uninstall"/>
+                <RegistryValue
+                        Root="HKCU"
+                        Key="Software\Columnal\Columnal"
+                        Name="DesktopShortcut"
+                        Type="integer"
+                        Value="1"
+                        KeyPath="yes"/>
+            </Component>
         </Directory>
 
         <!-- From http://wixtoolset.org/documentation/manual/v3/howtos/ui_and_localization/run_program_after_install.html -->
@@ -75,6 +96,7 @@
             <ComponentGroupRef Id='JREFiles' />
             <ComponentRef Id='CompLauncher' />
             <ComponentRef Id='ProgramMenuShortcut' />
+            <ComponentRef Id='DesktopShortcut' />
         </Feature>
 
         <Icon Id="Icon.ico" SourceFile="logo.ico" />
