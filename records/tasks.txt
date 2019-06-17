@@ -17,7 +17,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Mac build
 - Server internal exception logging (and stats logging?)
 - Undo area in import dialog does not redisplay RHS
-- Video Phil B2, ~2:40, column resize on empty first column goes weird.  Already fixed bug?
 - Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
 
 - Manual edit pick primary key is too confusing
@@ -29,7 +28,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Not obvious enough to type to see more auto complete?  (Esp when scroll not obvious)
 - Lots of confusion between date literals and date functions.
 - No undo while editing a cell value
-- Code completion for unit editor is sorted really weirdly
 - Investigate improving layout for long expressions
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
@@ -257,4 +255,6 @@ Done after Phil B & Jon A:
   - Should we allow spaces even if they are later trimmed?
 - Layout of new unit dialog is horrible, box the two options better and indent beneath.
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
+- Video Phil B2, ~2:40, column resize on empty first column goes weird.  Already fixed bug?
+- Code completion for unit editor is sorted really weirdly
   
