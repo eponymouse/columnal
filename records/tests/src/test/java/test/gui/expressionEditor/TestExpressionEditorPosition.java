@@ -142,6 +142,18 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Test
+    public void testPosDoubleSpace()
+    {
+        testCaretPositionsAndDisplay("The quick  brown fox>Str", "The quick brown fox > Str", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23), p(0,19, 20,23));
+    }
+
+    @Test
+    public void testPosDoubleSpace2()
+    {
+        testCaretPositionsAndDisplay("The quick  brown  fox>The quick brown fox", "The quick brown fox > The quick brown fox", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39), p(0,19, 20, 39));
+    }
+
+    @Test
     public void testPosIncomplete1()
     {
         testCaretPositionsAndDisplay("1+", "1 +  ", p(0, 1, 2));
@@ -206,6 +218,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
             columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("Str"), Collections.emptyList(), ""));
+            columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("The quick brown fox"), Collections.emptyList(), ""));
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
