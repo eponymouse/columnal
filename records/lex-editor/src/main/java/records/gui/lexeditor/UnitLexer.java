@@ -181,10 +181,24 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     {
         ArrayList<SingleUnit> allDeclared = new ArrayList<>(unitManager.getAllDeclared());
         Collections.<SingleUnit>sort(allDeclared, (u, v) -> u.getName().compareToIgnoreCase(v.getName()));
-        return new CodeCompletionContext(ImmutableList.of(new LexCompletionGroup(Utility.mapListI(allDeclared, u -> {
-            int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);
-            return new LexCompletion(canonIndex, len, u.getName()).withSideText(limit(u.getDescription()));
-        }), null, 2)));
+        return new CodeCompletionContext(ImmutableList.of(
+            new LexCompletionGroup(Utility.mapListI(allDeclared, u -> {
+                int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);
+                return new LexCompletion(canonIndex, len, u.getName()).withSideText(limit(u.getDescription()));
+            }), null, 2),
+            
+            new LexCompletionGroup(Utility.mapListI(allDeclared, u -> {
+                int len = Utility.longestCommonStartIgnoringCase(u.getDescription(), 0, stem, 0);
+                return new LexCompletion(canonIndex, len, u.getName()) {
+                    @Override
+                    public boolean showFor(@CanonicalLocation int caretPos)
+                    {
+                        return caretPos > canonIndex + Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0) && super.showFor(caretPos);
+                    }
+                }.withSideText(limit(u.getDescription()));
+            }), StyledString.s("Related"), 2)
+        
+        ));
     }
 
     private String limit(String description)
