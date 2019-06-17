@@ -17,7 +17,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Mac build
 - Server internal exception logging (and stats logging?)
 - Undo area in import dialog does not redisplay RHS
-- Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
 
 - Manual edit pick primary key is too confusing
   - Row number should not be default
@@ -257,4 +256,5 @@ Done after Phil B & Jon A:
   - Add prompt for existing unit in equal to (rename to "define as"?) and remove for Short Description
 - Video Phil B2, ~2:40, column resize on empty first column goes weird.  Already fixed bug?
 - Code completion for unit editor is sorted really weirdly
+- Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
   
