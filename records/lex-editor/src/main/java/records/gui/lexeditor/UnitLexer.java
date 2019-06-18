@@ -92,7 +92,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, int curCaretPos)
+    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos)
     {
         UnitSaver saver = new UnitSaver();
         RemovedCharacters removedCharacters = new RemovedCharacters();

@@ -57,7 +57,7 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
                     button.requestFocus();
             }
         };
-        curValue = expressionEditor.save();
+        curValue = expressionEditor.save(true);
         // Tab doesn't seem to work right by itself:
         /*
         field.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
@@ -105,6 +105,7 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
     @Override
     protected Validity checkValidity()
     {
+        expressionEditor.save(true);
         if (combo.getSelectionModel().getSelectedItem() == null)
             return Validity.IMPOSSIBLE_TO_SAVE;
         else if (expressionEditor.hasErrors())

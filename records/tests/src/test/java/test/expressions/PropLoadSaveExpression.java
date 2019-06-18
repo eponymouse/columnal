@@ -112,7 +112,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         
         
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TestUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
-        }).save();
+        }).save(false);
         assertEquals(expression, edited);
         assertEquals(expression.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
         assertEquals(expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));

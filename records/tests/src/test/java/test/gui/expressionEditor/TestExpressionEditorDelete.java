@@ -184,7 +184,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         });
         push(KeyCode.SHORTCUT, KeyCode.V);
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
@@ -213,7 +213,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
             push(KeyCode.SHORTCUT, KeyCode.V);
         }
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(originalExp, after);
 
@@ -247,7 +247,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
         
-        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save()));
+        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save(false)));
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
 
@@ -258,7 +258,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         
         TestUtil.sleep(1000);
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
         
@@ -279,7 +279,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
             push(KeyCode.DELETE);
         }
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
 
@@ -316,7 +316,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         }
         
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save());
+        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
 

@@ -369,7 +369,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                 JellyUnit jellyUnit;
                 try
                 {
-                    jellyUnit = definition.save().asUnit(unitManager);
+                    jellyUnit = definition.save(false).asUnit(unitManager);
                 }
                 catch (UnitLookupException e)
                 {

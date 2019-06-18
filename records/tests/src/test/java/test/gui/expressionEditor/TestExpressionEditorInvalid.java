@@ -53,7 +53,7 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             if ("({[".contains("" + c))
                 push(KeyCode.DELETE);
         }
-        @Recorded @NonNull Expression savedInvalid = TestUtil.fx(() -> expressionEditorA.save());
+        @Recorded @NonNull Expression savedInvalid = TestUtil.fx(() -> expressionEditorA.save(false));
         ExpressionEditor expressionEditorB = makeExpressionEditor(dummyManager, savedInvalid);
         assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TestUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));
     }

@@ -199,7 +199,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     }
 
     @Override
-    public LexerResult<Expression, ExpressionCompletionContext> process(String content, @RawInputLocation int curCaretPos)
+    public LexerResult<Expression, ExpressionCompletionContext> process(String content, @Nullable @RawInputLocation Integer curCaretPos)
     {
         ExpressionSaver saver = new ExpressionSaver(functionLookup);
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
@@ -217,7 +217,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if (content.startsWith(" ", curIndex))
             {
                 // Keep single space after ident as it may continue ident:
-                boolean spaceThenCaret = prevWasIdent && curIndex + 1 == curCaretPos;
+                boolean spaceThenCaret = prevWasIdent && curCaretPos != null && curIndex + 1 == curCaretPos;
                 if (spaceThenCaret || preserveNextSpace)
                 {
                     chunks.add(new ContentChunk(" ", ChunkType.IDENT));
@@ -352,7 +352,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             
             if (content.startsWith("@entire", curIndex))
             {
-                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos);
+                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos == null ? -1 * RawInputLocation.ONE : curCaretPos);
                 if (parsed != null)
                 {
                     for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
@@ -374,7 +374,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 }
             }
 
-            @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos);
+            @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
             final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
             if (parsed != null && parsed.positionAfter > curIndex)
             {

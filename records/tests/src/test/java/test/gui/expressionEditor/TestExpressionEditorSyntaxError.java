@@ -2,6 +2,7 @@ package test.gui.expressionEditor;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -38,6 +39,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -231,5 +233,14 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     {
         testError("ACC1[1]+ACC1[2]",
                 e(4,4, 4,5, "missing operator"), e(12,12, 15,16, "missing operator"));
+    }
+    
+    @Test
+    public void testSpaceAfterIdent1()
+    {
+        // Should disappear when OK pressed, and not leave a runtime error:
+        testError("ACC1 ");
+        TestUtil.fx_(() -> dumpScreenshot());
+        assertEquals(ImmutableSet.of(), lookup(".table-data-cell").match(c -> TestUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll());
     }
 }

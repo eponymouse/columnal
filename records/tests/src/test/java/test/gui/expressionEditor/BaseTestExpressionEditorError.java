@@ -38,6 +38,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -68,10 +69,10 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             for (int i = 1; i <= 3; i++)
             {
                 int iFinal = i;
-                columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
-                columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
+                columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), ImmutableList.of(Either.right("Hi " + iFinal)), ""));
+                columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), ImmutableList.of(Either.right(iFinal)), 0));
             }
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 1));
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));

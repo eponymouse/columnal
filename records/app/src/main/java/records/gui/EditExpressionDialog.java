@@ -42,7 +42,7 @@ public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
         initModality(Modality.NONE);
 
         expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
-        curValue = expressionEditor.save();
+        curValue = expressionEditor.save(true);
 
         BorderPane borderPane = new BorderPane(expressionEditor.getContainer(), topMessageKey == null ? null : GUI.label(topMessageKey), null, null, null);
         getDialogPane().setContent(borderPane);
@@ -78,6 +78,7 @@ public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
     @Override
     protected Validity checkValidity()
     {
+        expressionEditor.save(true);
         if (expressionEditor.hasErrors())
             return Validity.ERROR_BUT_CAN_SAVE;
         else

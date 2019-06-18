@@ -265,7 +265,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     return new Dimension2D(300.0, 130.0);
             }
         };
-        curValue = expressionEditor.save();
+        curValue = expressionEditor.save(true);
         // Tab doesn't seem to work right by itself:
         nameField.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.TAB)
@@ -379,6 +379,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     @Override
     protected Validity checkValidity()
     {
+        expressionEditor.save(true);
         if (nameField.valueProperty().getValue() == null)
             return Validity.IMPOSSIBLE_TO_SAVE;
         else if (expressionEditor.hasErrors())

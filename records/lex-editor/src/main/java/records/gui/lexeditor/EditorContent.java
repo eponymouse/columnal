@@ -106,6 +106,20 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         }
         notifyCaretPositionListeners();
     }
+    
+    public void forceSaveAsIfUnfocused()
+    {
+        this.curContent = lexer.process(getText(), null);
+        @SuppressWarnings("units")
+        @RawInputLocation int oldPos = getCaretPosition();
+        this.curCaretPosition = curContent.removedChars.map(oldPos);
+        this.curAnchorPosition = curCaretPosition;
+        for (FXPlatformRunnable contentListener : contentListeners)
+        {
+            contentListener.run();
+        }
+        notifyCaretPositionListeners();
+    }
 
     public String getText()
     {

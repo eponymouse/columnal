@@ -114,7 +114,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, int curCaretPos)
+    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos)
     {
         TypeSaver saver = new TypeSaver();
         boolean prevWasIdent = false;

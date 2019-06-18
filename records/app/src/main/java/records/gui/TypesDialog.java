@@ -404,7 +404,7 @@ public class TypesDialog extends Dialog<Void>
                     return;
                 
                 if (latest == null)
-                    latest = innerType.save();
+                    latest = innerType.save(false);
                 try
                 {
                     @SuppressWarnings("recorded")

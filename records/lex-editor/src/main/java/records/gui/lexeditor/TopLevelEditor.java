@@ -104,13 +104,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             FXUtility.setPseudoclass(scrollPane, "focus-within", focused);
         });
         content.addChangeListener(() -> {
-            onChange.consume(Utility.later(this).save());
+            onChange.consume(Utility.later(this).save(false));
         });
         content.addCaretPositionListener(informationPopup::caretMoved);
         content.addCaretPositionListener((@CanonicalLocation Integer n) -> {
             display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
-        onChange.consume(save());
+        onChange.consume(save(true));
         FXUtility.onceNotNull(display.sceneProperty(), s -> showAllErrors());
     }
 
@@ -149,8 +149,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return display.isFocused();
     }
 
-    public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
+    public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this, boolean forceSaveAsIfUnfocused)
     {
+        if (forceSaveAsIfUnfocused)
+            content.forceSaveAsIfUnfocused();
+        Log.debug("Saved: " + content.getLexerResult().result);
         return content.getLexerResult().result;
     }
 

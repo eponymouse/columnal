@@ -317,7 +317,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     }
     
     // Takes latest content, lexes it, returns result
-    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, @RawInputLocation int caretPos);
+    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, @Nullable @RawInputLocation Integer caretPos);
 
     protected static StyledString padZeroWidthErrors(StyledString display, ArrayList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
     {
