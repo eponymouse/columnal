@@ -447,7 +447,6 @@
         </activation>
         <build>
         <plugins>
-
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
@@ -480,7 +479,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/tools_${os.name}.properties"/>
                                 <property file="../installers/package.properties"/>
                                 
                                 <exec dir="../installers/windows_msi" executable="${imagemagick_bin}/magick.exe" failonerror="true">
@@ -542,7 +541,7 @@
                                 </exec>
 
                                 <copy todir="../installers/windows_msi/SourceDir/jre">
-                                    <fileset dir="S:/java/x64/jre1.8.0_191"/>
+                                    <fileset dir="${jre_location}"/>
                                 </copy>
 
                                 <!-- The heat tool scans all the files in the JRE and generates
