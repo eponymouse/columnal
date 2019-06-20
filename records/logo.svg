@@ -10,16 +10,16 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 744.09448819 1052.3622047"
+   width="64mm"
+   height="64mm"
+   viewBox="0 0 226.77165 226.77165"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="logo.svg"
    inkscape:export-filename="C:\Users\neil\intellij\records\records\app\src\main\resources\logo.png"
-   inkscape:export-xdpi="239.95557"
-   inkscape:export-ydpi="239.95557">
+   inkscape:export-xdpi="406.39999"
+   inkscape:export-ydpi="406.39999">
   <defs
      id="defs4">
     <linearGradient
@@ -35,7 +35,7 @@
          id="stop832" />
     </linearGradient>
     <filter
-       style="color-interpolation-filters:sRGB;"
+       style="color-interpolation-filters:sRGB"
        inkscape:label="Drop Shadow"
        id="filter949">
       <feFlood
@@ -84,19 +84,25 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.5907326"
-     inkscape:cx="203.28438"
-     inkscape:cy="851.81362"
+     inkscape:cx="46.761026"
+     inkscape:cy="121.85565"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
-     inkscape:window-width="1920"
-     inkscape:window-height="1116"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1">
+     inkscape:window-width="1384"
+     inkscape:window-height="855"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1"
+     fit-margin-top="1.3"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="1.3">
     <inkscape:grid
        type="xygrid"
-       id="grid3336" />
+       id="grid3336"
+       originx="-89.746877"
+       originy="-729.95793" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -106,17 +112,18 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Background">
+     inkscape:label="Background"
+     transform="translate(-89.746876,-95.632594)">
     <path
        sodipodi:type="star"
-       style="filter:url(#filter949);fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:20;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:20;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter949)"
        id="path848"
        sodipodi:sides="7"
        sodipodi:cx="200"
@@ -135,7 +142,8 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-89.746876,-95.632594)">
     <g
        id="g4144"
        style="filter:url(#filter949)">
@@ -161,7 +169,7 @@
          inkscape:connector-curvature="0"
          id="path4142"
          d="M 110.50508,234.38251 267.52538,160.34189 157.42386,294.43327 Z"
-         style="fill:url(#linearGradient836);fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1" />
+         style="fill:url(#linearGradient836);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
       <path
          inkscape:transform-center-y="-4.4688517"
          inkscape:transform-center-x="0.1872209"
