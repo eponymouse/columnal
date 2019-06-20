@@ -244,6 +244,7 @@ package javafx.scene.shape;
 class Shape
 {
     void setStroke(@Nullable Paint value);
+    void setFill(@Nullable Paint value);
 }
 
 package javafx.scene.effect;

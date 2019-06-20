@@ -1,5 +1,7 @@
 package records.gui.lexeditor.completion;
 
+import annotation.units.DisplayPixels;
+import annotation.units.VirtualPixels;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -18,18 +20,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Table.Display;
 import records.error.InternalException;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -39,6 +46,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.HelpfulTextFlow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,9 +63,11 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 final class LexCompletionList extends Region
 {
-    private static final double PIXELS_PER_SECOND = 500.0;
+    private static final double PIXELS_PER_SECOND = 350.0;
+    public static final double MAX_PENDING_SCROLL = 100.0;
     private final LexCompletionListener triggerCompletion;
-    
+    private final ScrollBar scrollBar;
+
     // The completions change all at once, so a mutable ImmutableList reference:
     private ImmutableList<LexCompletionGroup> curCompletionGroups = ImmutableList.of();
     // Ditto:
@@ -71,11 +81,14 @@ final class LexCompletionList extends Region
     // are relative to the pane.  Due to the pinning, it is possible
     // that the next group begins before the previous one ends.
     // These will change as scrolling happens
-    private double[] groupTopY = new double[0];
-    // The height of each group on the screen in pixels:
-    private double[] groupInternalHeight = new double[0];
-    // Scroll from top of selected group (or top group if none selected).  Always zero or positive
-    private double scrollOffsetWithinSelectedGroup;
+    private @DisplayPixels double[] groupTopY = new double[0];
+    
+    // This is the canonical scroll position.  Scroll ranges from 0 up to max(0, sum(group heights) - list display height),
+    // where each group height is (number of items + (has header ? 1 : 0)) * ITEM_HEIGHT.
+    // This scroll can be affected by keyboard movement, scroll events, or scroll bar use.  We guard
+    // against recursive update using the flag.
+    private @VirtualPixels double canonicalScrollPosition;
+    private boolean inScrollUpdate;
     
     // This map's values are always inserted into the children of this region.
     // The keys are either completions or headers
@@ -91,6 +104,8 @@ final class LexCompletionList extends Region
     
     public LexCompletionList(LexCompletionListener triggerCompletion)
     {
+        this.scrollBar = new ScrollBar();
+        scrollBar.setOrientation(Orientation.VERTICAL);
         this.triggerCompletion = triggerCompletion;
         getStyleClass().add("lex-completion-list");
         setFocusTraversable(false);
@@ -105,16 +120,42 @@ final class LexCompletionList extends Region
         setPrefWidth(300.0);
         setMaxHeight(USE_PREF_SIZE);
         addEventFilter(ScrollEvent.ANY, e -> {
-            int groupIndex = selectionIndex == null ? 0 : selectionIndex.getFirst();
-            double groupMaxScrollY = (curCompletionGroups.get(groupIndex).completions.size() * ITEM_HEIGHT) - groupInternalHeight[groupIndex]; 
-            scrollOffsetWithinSelectedGroup = Math.max(0, Math.min(scrollOffsetWithinSelectedGroup - e.getDeltaY(), groupMaxScrollY));
-            FXUtility.mouse(this).recalculateChildren(true);
+            updateScroll(canonicalScrollPosition - e.getDeltaY() * VirtualPixels.ONE, true);
             e.consume();
         });
+        FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {
+            recalculateChildren(false);
+        });
+        FXUtility.addChangeListenerPlatformNN(scrollBar.valueProperty(), d -> updateScroll(d.doubleValue() * VirtualPixels.ONE, false));
         Rectangle clip = new Rectangle();
         clip.widthProperty().bind(widthProperty());
         clip.heightProperty().bind(heightProperty());
         setClip(clip);
+        // This is lazy, but saves messing with nested pane and clip; redraw border on top of everything:
+        Rectangle borderRect = new Rectangle();
+        borderRect.setStroke(Color.GREY);
+        borderRect.widthProperty().bind(widthProperty());
+        borderRect.heightProperty().bind(heightProperty());
+        borderRect.setStrokeWidth(1.0);
+        borderRect.setStrokeType(StrokeType.INSIDE);
+        borderRect.setFill(null);
+        getChildren().addAll(scrollBar, borderRect);
+    }
+
+    public void updateScroll(@VirtualPixels double toY, boolean animate)
+    {
+        if (!inScrollUpdate)
+        {
+            inScrollUpdate = true;
+            @VirtualPixels double maxScroll = (curCompletionGroups.stream().mapToDouble(g -> ITEM_HEIGHT * (g.completions.size() + (g.header != null ? 1 : 0))).sum() - getHeightMinusInsets()) * VirtualPixels.ONE;
+            @SuppressWarnings("units")
+            @VirtualPixels double clamped = Math.max(0, Math.min(toY, maxScroll));
+            canonicalScrollPosition = clamped;
+            FXUtility.mouse(this).recalculateChildren(animate);
+            scrollBar.setMax(maxScroll);
+            scrollBar.setValue(canonicalScrollPosition);
+            inScrollUpdate = false;
+        }
     }
 
     private void sortChildren()
@@ -138,11 +179,11 @@ final class LexCompletionList extends Region
         ArrayList<Node> dupe = new ArrayList<>(getChildren());
         
         Collections.sort(dupe, Comparator.<Node, Integer>comparing((Node n) -> {
-            // Should all be CompletionRow:
+            // Should all be CompletionRow, except the scroll bar which goes last:
             if (n instanceof CompletionRow)
                 return ((CompletionRow) n).cachedPosition;
             else
-                return -1;
+                return Integer.MAX_VALUE;
         }));
         
         // And copy back in:
@@ -174,35 +215,26 @@ final class LexCompletionList extends Region
         }
         return total;
     }
-
-    private @Nullable Pair<Integer, Integer> getItemAt(double y)
+    
+    private @VirtualPixels double calcGroupHeight(int groupIndex)
     {
-        for (int g = 0; g < groupTopY.length; g++)
-        {
-            if (y < groupTopY[g])
-                return null;
-            LexCompletionGroup group = curCompletionGroups.get(g);
-            int header = 0;
-            if (group.header != null)
-            {
-                if (y < groupTopY[g] + ITEM_HEIGHT)
-                    return null;
-                header = 1;
-            }
-            for (int i = 0; i < group.completions.size(); i++)
-            {
-                if (y < groupTopY[g] + ITEM_HEIGHT * (i + header) + ITEM_HEIGHT)
-                    return new Pair<>(g, i);
-            }
-        }
-        return null;
+        LexCompletionGroup group = curCompletionGroups.get(groupIndex);
+        int rows = group.completions.size() + (group.header != null ? 1 : 0);
+        return rows * ITEM_HEIGHT * VirtualPixels.ONE;
+    }
+
+    private @DisplayPixels double calcMinGroupHeight(int groupIndex)
+    {
+        LexCompletionGroup group = curCompletionGroups.get(groupIndex);
+        int rows = group.completions.isEmpty() ? 0 : (Math.min(group.minCollapsed, group.completions.size()) + (group.header != null ? 1 : 0));
+        return rows * ITEM_HEIGHT * DisplayPixels.ONE;
     }
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
-        return Math.min(calcDisplayRows(), 16) * ITEM_HEIGHT + 2 /* border */;
+        return Math.min(calcDisplayRows() * ITEM_HEIGHT + 2 /* border */, 400.0);
     }
 
     @Override
@@ -210,14 +242,15 @@ final class LexCompletionList extends Region
     protected void layoutChildren()
     {
         Insets insets = getInsets();
-        double width = getWidth() - insets.getRight() - insets.getLeft();
+        double scrollWidth = scrollBar.prefWidth(-1);
+        double width = getWidth() - insets.getRight() - insets.getLeft() - scrollWidth;
         // The bottom Y of the lowest item laid out so far:
         double prevBottom = insets.getTop();
 
         for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
             LexCompletionGroup group = curCompletionGroups.get(groupIndex);
-            double y = groupTopY[groupIndex];
+            @DisplayPixels double y = groupTopY[groupIndex];
             if (group.header != null)
             {
                 // Special case for header:
@@ -230,16 +263,16 @@ final class LexCompletionList extends Region
                     flow.clip.setY(0);
                     flow.clip.setHeight(ITEM_HEIGHT);
                 }
-                y += ITEM_HEIGHT;
+                y += ITEM_HEIGHT * DisplayPixels.ONE;
                 prevBottom = Math.max(prevBottom, y);
             }
             
+            
             boolean selected = selectionIndex == null ? groupIndex == 0 : selectionIndex.getFirst() == groupIndex;
-            y -= (selected ? scrollOffsetWithinSelectedGroup : 0);
-            double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeight() - insets.getTop() - insets.getBottom();
-            for (int i = 0; i < group.completions.size() && y < maxY + getHeight(); i++)
+            @DisplayPixels double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
+            for (int i = 0; i < group.completions.size() && y < maxY + ITEM_HEIGHT + MAX_PENDING_SCROLL; i++)
             {
-                if (y >= groupTopY[groupIndex] - ITEM_HEIGHT)
+                if (y >= groupTopY[groupIndex] - ITEM_HEIGHT - MAX_PENDING_SCROLL)
                 {
                     CompletionRow flow = visible.get(Either.left(group.completions.get(i)));
                     // Should always be non-null, but need to guard
@@ -247,23 +280,27 @@ final class LexCompletionList extends Region
                     {
                         flow.resizeRelocate(insets.getLeft(), y, width, ITEM_HEIGHT);
                         flow.clip.setWidth(width);
-                        flow.clip.setY(Math.max(prevBottom - y, 0));
-                        flow.clip.setHeight(ITEM_HEIGHT - flow.clip.getY());
-                        //flow.clip.setHeight(Math.min(ITEM_HEIGHT + y, maxY) - y);
+                        flow.clip.setY(0);
+                        flow.clip.setHeight(ITEM_HEIGHT);
                     }
                 }
-                y += ITEM_HEIGHT;
+                y += ITEM_HEIGHT * DisplayPixels.ONE;
             }
             prevBottom = Math.max(prevBottom, maxY);
         }
+        scrollBar.resizeRelocate(getWidth() - insets.getRight() - scrollWidth, insets.getTop(), scrollWidth, getHeightMinusInsets());
     }
-    
+
+    private double getHeightMinusInsets()
+    {
+        return getHeight() - getInsets().getTop() - getInsets().getBottom();
+    }
+
     private void recalculateChildren(boolean attemptAnimate)
     {
         Set<Either<LexCompletion, LexCompletionGroup>> toKeep = Sets.newHashSet();
         double[] oldTopY = groupTopY;
         groupTopY = new double[curCompletionGroups.size()];
-        groupInternalHeight = new double[curCompletionGroups.size()];
         LexCompletion sel = selectedItem.get();
         // We go up from bottom, presuming that the top group takes left-over space:
         
@@ -281,73 +318,18 @@ final class LexCompletionList extends Region
         // Negative if too much content to show
         double extraSpaceAvailable = computePrefHeight(-1) - getInsets().getTop() - getInsets().getBottom() - Arrays.stream(groupIdealHeight).sum();
         double minExtraSpace = computePrefHeight(-1) - getInsets().getTop() - getInsets().getBottom() - Arrays.stream(groupMinHeight).sum();
-        // Start everything at its min height:
-        double[] groupActualHeight = Arrays.copyOf(groupMinHeight, groupMinHeight.length);
         
-        // We do a loop to assign the extra space, assigning it equally among whoever wants it,
-        // with a special case for the first group which takes as much space as it wants 
-        // if it is selected or there is no selected:
-        if (extraSpaceAvailable < 0 && minExtraSpace > 0)
-        {
-            double spaceToAssign = minExtraSpace;
-            // First, we give all the space that the selected group wants (or top group if none selected):
-            int effectiveSel = selectionIndex == null ? 0 : selectionIndex.getFirst();
-            if (effectiveSel < curCompletionGroups.size())
-            {
-                double extraDesired = groupIdealHeight[effectiveSel] - groupMinHeight[effectiveSel];
-                double actualExtra = Math.min(extraDesired, spaceToAssign);
-                groupActualHeight[effectiveSel] += actualExtra;
-                spaceToAssign -= actualExtra;
-            }
-            
-            // Must use groupActualHeight not groupMinHeight because groupActualHeight[effectiveSel] may have just changed:
-            // Annoying, there's no utility method to sort int[] or IntStream by a custom comparatator, hence this contortion:
-            int[] groupIndexesSortedByWantedExtraSpaceAsc = IntStream.range(0, curCompletionGroups.size()).
-                mapToObj(i -> i).sorted(Comparator.comparing(i -> groupIdealHeight[i] - groupActualHeight[i])).mapToInt(i -> i).toArray();
-            
-            // Find the first index that actually needs extra space:
-            for (int i = 0; i < groupIndexesSortedByWantedExtraSpaceAsc.length; i++)
-            {
-                int groupIndex = groupIndexesSortedByWantedExtraSpaceAsc[i];
-                double wanted = groupIdealHeight[groupIndex] - groupActualHeight[groupIndex];
-                if (wanted > 0)
-                {
-                    // Try and give us and all future items the same space:
-                    int remainingGroupsInclUs = groupIndexesSortedByWantedExtraSpaceAsc.length - i;
-                    double desiredAcrossAll = remainingGroupsInclUs * wanted;
-                    
-                    if (desiredAcrossAll < spaceToAssign)
-                    {
-                        // Everyone can have it:
-                        for (int j = i; j < groupIndexesSortedByWantedExtraSpaceAsc.length; j++)
-                        {
-                            groupActualHeight[groupIndexesSortedByWantedExtraSpaceAsc[j]] += wanted;
-                        }
-                        spaceToAssign -= desiredAcrossAll;
-                    }
-                    else
-                    {
-                        // We'll have to split what remains:
-                        for (int j = i; j < groupIndexesSortedByWantedExtraSpaceAsc.length; j++)
-                        {
-                            groupActualHeight[groupIndexesSortedByWantedExtraSpaceAsc[j]] += spaceToAssign / remainingGroupsInclUs;
-                        }
-                        spaceToAssign = 0;
-                        // No point continuing now space is gone:
-                        break;
-                    }
-                }
-            }
-        }
-
-        double y = getInsets().getTop();
+        @VirtualPixels double internalY = VirtualPixels.ZERO;
         for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
             LexCompletionGroup group = curCompletionGroups.get(groupIndex);
-            double height = groupActualHeight[groupIndex];            
-            groupTopY[groupIndex] = y;
-            groupInternalHeight[groupIndex] = height - (group.header != null ? ITEM_HEIGHT : 0);
-            double maxY = y + height;
+            @VirtualPixels double internalGroupEnd = internalY + calcGroupHeight(groupIndex);
+            double height = Math.max(groupMinHeight[groupIndex], internalGroupEnd - internalY);
+            double minHeightInclLater = IntStream.range(groupIndex, curCompletionGroups.size()).mapToDouble(i -> groupMinHeight[i]).sum();
+            groupTopY[groupIndex] = Math.min(getInsets().getTop() + internalY - canonicalScrollPosition, getHeight() - getInsets().getBottom() - minHeightInclLater) * DisplayPixels.ONE;
+
+            @DisplayPixels double y = groupTopY[groupIndex];
+            @DisplayPixels double maxY = y + height * DisplayPixels.ONE;
             
             if (group.header != null)
             {
@@ -355,16 +337,14 @@ final class LexCompletionList extends Region
                 headerRow.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                 FXUtility.setPseudoclass(headerRow, "selected", false);
                 toKeep.add(Either.right(group));
-                y += ITEM_HEIGHT;
+                y += ITEM_HEIGHT * DisplayPixels.ONE;
             }
 
-            if (groupIndex == (selectionIndex == null ? 0 : selectionIndex.getFirst()))
-                y -= scrollOffsetWithinSelectedGroup;
-            for (int i = 0; i < group.completions.size() && y < maxY + getHeight(); i++, y += ITEM_HEIGHT)
+            for (int i = 0; i < group.completions.size() && y < maxY + ITEM_HEIGHT + MAX_PENDING_SCROLL; i++, y += ITEM_HEIGHT * DisplayPixels.ONE)
             {
-                if (y >= -ITEM_HEIGHT)
+                if (y >= groupTopY[groupIndex] - ITEM_HEIGHT - MAX_PENDING_SCROLL && y <= getHeightMinusInsets() + ITEM_HEIGHT + MAX_PENDING_SCROLL)
                 {
-                    Either<LexCompletion, LexCompletionGroup> row = i == -1 ? Either.right(group) : Either.left(group.completions.get(i));
+                    Either<LexCompletion, LexCompletionGroup> row = Either.left(group.completions.get(i));
                     CompletionRow item = visible.computeIfAbsent(row, this::makeFlow);
                     item.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                     FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(row.<@Nullable LexCompletion>either(c -> c, g -> null)));
@@ -372,7 +352,7 @@ final class LexCompletionList extends Region
                 }
             }
             
-            y = maxY;
+            internalY = internalGroupEnd;
         }
         
         visible.entrySet().removeIf(e -> !toKeep.contains(e.getKey()));
@@ -380,7 +360,9 @@ final class LexCompletionList extends Region
 
         // Stop all current animations:
         groupAnimation.stop();
-        if (attemptAnimate && oldTopY.length == groupTopY.length)
+        if (attemptAnimate && oldTopY.length == groupTopY.length
+            // Stop animating if the distance is so far it's going to take too long:    
+            && IntStream.range(0, oldTopY.length).allMatch(i -> Math.abs(groupAnimatedTranslate.get(i).doubleValue() + oldTopY[i] - groupTopY[i]) < MAX_PENDING_SCROLL))
         {
             // Animate the group's transitions
             for (int i = 0; i < groupAnimatedTranslate.size(); i++)
@@ -472,6 +454,8 @@ final class LexCompletionList extends Region
         @Nullable LexCompletion sel = selectedItem.get();
         @Nullable Pair<Integer, Integer> target = sel == null ? null : completionIndexes.get(sel);
         select(target);
+        // TODO should we try to maintain scroll position -- but how to calculate this? 
+        updateScroll(VirtualPixels.ZERO, false);
     }
 
     @Override
@@ -486,30 +470,39 @@ final class LexCompletionList extends Region
         selectionIndex = target;
         selectedItem.setValue(target == null ? null : curCompletionGroups.get(target.getFirst()).completions.get(target.getSecond()));
 
-        // Need to recalculate children as size of group may change as different groups get selected:
-        recalculateChildren(true);
-        
-        // Then fix our scroll offsets:
-        if (target == null)
+        // Scroll to show item if one is selected:
+        if (target != null)
         {
-            scrollOffsetWithinSelectedGroup = 0;
+            // This is in terms of internal virtual height:
+            @VirtualPixels double selectedTopY = (IntStream.range(0, target.getFirst()).mapToDouble(this::calcGroupHeight).sum()
+                + (ITEM_HEIGHT * (target.getSecond() + (curCompletionGroups.get(target.getFirst()).header != null ? 1 : 0)))) * VirtualPixels.ONE;
+            @VirtualPixels double selectedBottomY = selectedTopY + ITEM_HEIGHT * VirtualPixels.ONE;
+            // This is in terms of display pixels:
+            @DisplayPixels double nextY = target.getFirst() + 1 < groupTopY.length ? groupTopY[target.getFirst() + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
+            
+            // Need to calculate the last visible pixel (in internal virtual height) before
+            // the min height of the groups below it.  The last pixel if no groups are below is
+            // canonicalScrollPosition + getHeightMinusInsets().
+            double viewableToBottomOfGroup = (getHeightMinusInsets() - IntStream.range(target.getFirst() + 1, curCompletionGroups.size()).mapToDouble(this::calcMinGroupHeight).sum());
+            @VirtualPixels double lastVisibleYInGroup = canonicalScrollPosition + viewableToBottomOfGroup * VirtualPixels.ONE;
+            
+            if (selectedBottomY > lastVisibleYInGroup)
+            { 
+                updateScroll(selectedBottomY - viewableToBottomOfGroup * VirtualPixels.ONE, false);
+            }
+            else if (selectedTopY < canonicalScrollPosition)
+            {
+                updateScroll(selectedTopY, false);
+            }
+            else
+            {
+                recalculateChildren(false);
+            }
         }
         else
         {
-            // Ensure selection is visible.
-            
-            // All calculations are within group, excl header:
-            double selectedTopY =  target.getSecond() * ITEM_HEIGHT;
-            double selectedBottomY = selectedTopY + ITEM_HEIGHT;
-            double totalGroupHeight = curCompletionGroups.get(target.getFirst()).completions.size() * ITEM_HEIGHT;
-            
-            if (selectedTopY < scrollOffsetWithinSelectedGroup)
-                scrollOffsetWithinSelectedGroup = Math.min(totalGroupHeight - groupInternalHeight[target.getFirst()], selectedTopY);
-            else if (selectedBottomY > scrollOffsetWithinSelectedGroup + groupInternalHeight[target.getFirst()])
-                scrollOffsetWithinSelectedGroup = Math.min(totalGroupHeight - groupInternalHeight[target.getFirst()], selectedBottomY - groupInternalHeight[target.getFirst()]);
+            recalculateChildren(false);
         }
-        // Update graphics after scroll change:
-        recalculateChildren(true);
     }
     
     public @Nullable LexCompletion getSelectedItem()
@@ -610,7 +603,7 @@ final class LexCompletionList extends Region
     @OnThread(Tag.FXPlatform)
     private class CompletionRow extends Region
     {
-        private final TextFlow mainText;
+        private final HelpfulTextFlow mainText;
         private final Label sideText;
         private final Rectangle clip = new Rectangle();
         
@@ -619,7 +612,7 @@ final class LexCompletionList extends Region
         public CompletionRow(Collection<Text> content, String sideText)
         {
             setFocusTraversable(false);
-            mainText = new TextFlow();
+            mainText = new HelpfulTextFlow();
             mainText.getStyleClass().add("lex-completion-text-flow");
             mainText.getChildren().setAll(content);
             mainText.setFocusTraversable(false);
@@ -628,7 +621,8 @@ final class LexCompletionList extends Region
             this.sideText.getStyleClass().add("side-text");
             this.sideText.setMouseTransparent(true);
             setClip(clip);
-            getChildren().setAll(mainText, this.sideText);
+            // mainText goes in front of side text as it is more important:
+            getChildren().setAll(this.sideText, mainText);
             getStyleClass().add("lex-completion");
         }
 
@@ -637,6 +631,14 @@ final class LexCompletionList extends Region
         protected void layoutChildren()
         {
             mainText.resizeRelocate(getInsets().getLeft(), 0, getWidth() - getInsets().getLeft() - getInsets().getRight(), getHeight());
+            try
+            {
+                mainText.getInternalTextLayout().setWrapWidth(0);
+            }
+            catch (Exception e)
+            {
+                Log.log(e);
+            }
             double sideWidth = sideText.prefWidth(-1);
             double sideHeight = sideText.prefHeight(sideWidth);
             sideText.resizeRelocate(getWidth() - sideWidth - getInsets().getRight(), (getHeight() - sideHeight) / 2.0, sideWidth, sideHeight);

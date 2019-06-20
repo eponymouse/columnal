@@ -1,8 +1,5 @@
 Express Priority (needed for task C)
 ===
-- Autocomplete list doesn't make it clear that you can scroll it.
-  - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
-
 Probably fixed by recent changes but not definite
 ---
 - Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
@@ -257,4 +254,6 @@ Done after Phil B & Jon A:
 - Picked Edit transformation to replace a value; overlooked Calculate because it said "new value"
 - Autocomplete list not very apparent what the kind of each item is.
 - Why does Jon get error in Round cells the first time?  (A3A4 5:30).  Answer: because trailing space preserved due to caret being there.  Now fixed.
+- Autocomplete list doesn't make it clear that you can scroll it.
+  - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
 
