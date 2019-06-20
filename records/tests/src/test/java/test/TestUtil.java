@@ -1617,6 +1617,7 @@ public class TestUtil
     {
         robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
         robot.clickOn(".ok-button");
+        sleep(300);
         if (robot.lookup(".ok-button").tryQuery().isPresent())
             robot.clickOn(".ok-button");
     }

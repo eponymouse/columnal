@@ -59,7 +59,12 @@ public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
 
     private void checkOK(ActionEvent e)
     {
-        switch (checkValidity())
+        // Ignore modifications during checkValidity:
+        boolean prevModified = modifiedSinceLastOK;
+        Validity validity = checkValidity();
+        modifiedSinceLastOK = prevModified;
+        
+        switch (validity)
         {
             case IMPOSSIBLE_TO_SAVE:
                 showAllErrors();
