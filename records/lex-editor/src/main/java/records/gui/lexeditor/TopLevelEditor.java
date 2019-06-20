@@ -102,6 +102,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         scrollPane.getStyleClass().addAll(styleClasses);
         FXUtility.addChangeListenerPlatformNN(display.focusedProperty(), focused -> {
             FXUtility.setPseudoclass(scrollPane, "focus-within", focused);
+            display.showCompletions(content.getLexerResult().getCompletionsFor(content.getCaretPosition()));
         });
         content.addChangeListener(() -> {
             onChange.consume(Utility.later(this).save(false));

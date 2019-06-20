@@ -429,7 +429,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     
     void showCompletions(@Nullable ImmutableList<LexCompletionGroup> completions)
     {
-        if (completions != null)
+        if (completions != null && isFocused())
             autoComplete.show(completions);
         else
             autoComplete.hide(false);
