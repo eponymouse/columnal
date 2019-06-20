@@ -13,6 +13,7 @@ import nu.xom.Nodes;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.GrammarUtility;
+import utility.ResourceUtility;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -51,7 +52,7 @@ class Help
             Builder builder = new Builder();
             // We can't pass a URL through to the XML library because it doesn't understand files in JARs.
             // So it's important we pass an InputStream instead
-            @Nullable InputStream resource = Help.class.getResourceAsStream("/" + fileStem + ".help");
+            @Nullable InputStream resource = ResourceUtility.getResourceAsStream("/" + fileStem + ".help");
             if (resource == null)
                 throw new FileNotFoundException(fileStem + ".help");
             

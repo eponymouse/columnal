@@ -44,6 +44,7 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.ResourceUtility;
 import utility.TranslationUtility;
 import utility.Utility;
 
@@ -387,16 +388,12 @@ public class GUI
 
         if (rightClickImage == null)
         {
-            ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-            if (systemClassLoader != null)
+            URL imageURL = ResourceUtility.getResource("right-click.png");
+            if (imageURL != null)
             {
-                URL imageURL = systemClassLoader.getResource("right-click.png");
-                if (imageURL != null)
-                {
-                    // Oddly enough, one of the tests fails when run from IntelliJ due to a deadlock around loading the image
-                    // So we load in background to avoid this:
-                    rightClickImage = new Image(imageURL.toExternalForm(), true);
-                }
+                // Oddly enough, one of the tests fails when run from IntelliJ due to a deadlock around loading the image
+                // So we load in background to avoid this:
+                rightClickImage = new Image(imageURL.toExternalForm(), true);
             }
         }
 

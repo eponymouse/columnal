@@ -22,6 +22,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.ResourceUtility;
 import utility.Utility;
 
 import java.io.IOException;
@@ -58,10 +59,7 @@ public class UnitManager
     {
         try
         {
-            @Nullable ClassLoader classLoader = getClass().getClassLoader();
-            if (classLoader == null)
-                throw new InternalException("Could not find class loader");
-            @Nullable InputStream stream = classLoader.getResourceAsStream("builtin_units.txt");
+            @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
             if (stream == null)
                 throw new InternalException("Could not find data file");
             String builtInUnits = IOUtils.toString(stream, StandardCharsets.UTF_8);

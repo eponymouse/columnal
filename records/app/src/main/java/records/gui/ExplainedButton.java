@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.ResourceUtility;
 import utility.Utility;
 import utility.gui.GUI;
 import utility.TranslationUtility;
@@ -88,20 +89,16 @@ class ExplainedButton extends Button
         setAlignment(Pos.TOP_CENTER);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
         explanation.setMaxWidth(buttonWidth * 0.85);
-        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
         @Nullable ImageView imageView = null;
-        if (systemClassLoader != null)
+        URL imageURL = ResourceUtility.getResource(imageFileName);
+        if (imageURL != null)
         {
-            URL imageURL = systemClassLoader.getResource(imageFileName);
-            if (imageURL != null)
-            {
-                imageView = new ImageView(imageURL.toExternalForm());
-                // Original image size for the previews is 100 pixels:
-                imageView.setFitWidth(100.0);
-                imageView.setPreserveRatio(true);
-                imageView.setSmooth(true);
-                BorderPane.setMargin(imageView, new Insets(0, 0, 15, 0));
-            }
+            imageView = new ImageView(imageURL.toExternalForm());
+            // Original image size for the previews is 100 pixels:
+            imageView.setFitWidth(100.0);
+            imageView.setPreserveRatio(true);
+            imageView.setSmooth(true);
+            BorderPane.setMargin(imageView, new Insets(0, 0, 15, 0));
         }
         
         setGraphic(new BorderPane(imageView, null, null, explanation, null));

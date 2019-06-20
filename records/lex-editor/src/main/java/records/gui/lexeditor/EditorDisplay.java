@@ -38,6 +38,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.ResourceUtility;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TextEditorBase;
@@ -403,7 +404,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     SwingUtilities.invokeLater(() -> {
                         try
                         {
-                            URL resource = EditorDisplay.this.getClass().getResource("/" + furtherDetailsURL.getFirst());
+                            URL resource = ResourceUtility.getResource("/" + furtherDetailsURL.getFirst());
                             if (resource != null)
                                 Desktop.getDesktop().browse(resource.toURI());
                         }

@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.formula.functions.T;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.table.Clickable;
@@ -34,6 +35,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.ResourceUtility;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.SmallDeleteButton;
@@ -129,6 +131,9 @@ public class Main extends Application
                 Platform.runLater(() -> FXUtility.showError(title, errWrap, e));
             }
         });
+        ClassLoader classLoader = getClass().getClassLoader();
+        if (classLoader != null)
+            ResourceUtility.setClassLoader(classLoader);
 
         FXUtility.ensureFontLoaded("Kalam-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");

@@ -22,6 +22,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.ResourceUtility;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -83,7 +84,7 @@ public final class LexAutoCompleteWindow extends PopupControl
                     @Override
                     public void accept(Pair<String, @Nullable String> fileNameAndAnchor)
                     {
-                        URL url = LexAutoCompleteWindow.this.getClass().getResource("/" + fileNameAndAnchor.getFirst());
+                        URL url = ResourceUtility.getResource("/" + fileNameAndAnchor.getFirst());
                         if (url != null)
                         {
                             webView.getEngine().load(url.toExternalForm() + (fileNameAndAnchor.getSecond() != null ? "#" + fileNameAndAnchor.getSecond() : ""));

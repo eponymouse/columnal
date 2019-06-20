@@ -266,12 +266,12 @@ public class FXUtility
     {
         try
         {
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            if (classLoader == null)
-                return "";
-            URL resource = classLoader.getResource(stylesheetName);
+            URL resource = ResourceUtility.getResource(stylesheetName);
             if (resource == null)
+            {
+                Log.error("Problem loading stylesheet: " + stylesheetName);
                 return "";
+            }
             return resource.toString();
         }
         catch (NullPointerException e)
@@ -286,7 +286,7 @@ public class FXUtility
     {
         if (!loadedFonts.contains(fontFileName))
         {
-            try (@Nullable InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
+            try (@Nullable InputStream fis = ResourceUtility.getResourceAsStream(fontFileName))
             {
                 if (fis == null)
                 {
@@ -855,54 +855,50 @@ public class FXUtility
 
     public static @Nullable ImageView makeImageView(String filename, @Nullable Integer maxWidth, @Nullable Integer maxHeight)
     {
-        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        if (systemClassLoader != null)
+        URL imageURL = ResourceUtility.getResource(filename);
+        if (imageURL != null)
         {
-            URL imageURL = systemClassLoader.getResource(filename);
-            if (imageURL != null)
+            ImageView imageView;
+            try
             {
-                ImageView imageView;
-                try
-                {
-                    File destFile = File.createTempFile("img", ".png");
-                    destFile.deleteOnExit();
-                    Thumbnails.of(imageURL)
-                        .scalingMode(ScalingMode.BICUBIC)
-                        .rendering(Rendering.QUALITY)
-                        .antialiasing(Antialiasing.ON)
-                        .outputQuality(1.0)
-                        .size(maxWidth == null ? 1000 : maxWidth.intValue(), maxHeight == null ? 1000 : maxHeight.intValue())
-                        .keepAspectRatio(true)
-                        .allowOverwrite(true)
-                        .toFile(destFile);
-                    File destFile2x = new File(destFile.getAbsolutePath().replace(".png", "@2x.png"));
-                    destFile2x.deleteOnExit();
-                    Thumbnails.of(imageURL)
-                        .scalingMode(ScalingMode.BICUBIC)
-                        .rendering(Rendering.QUALITY)
-                        .antialiasing(Antialiasing.ON)
-                        .outputQuality(1.0)
-                        .size(maxWidth == null ? 2000 : maxWidth.intValue() * 2, maxHeight == null ? 2000 : maxHeight.intValue() * 2)
-                        .keepAspectRatio(true)
-                        .allowOverwrite(true)
-                        .toFile(destFile);
+                File destFile = File.createTempFile("img", ".png");
+                destFile.deleteOnExit();
+                Thumbnails.of(imageURL)
+                    .scalingMode(ScalingMode.BICUBIC)
+                    .rendering(Rendering.QUALITY)
+                    .antialiasing(Antialiasing.ON)
+                    .outputQuality(1.0)
+                    .size(maxWidth == null ? 1000 : maxWidth.intValue(), maxHeight == null ? 1000 : maxHeight.intValue())
+                    .keepAspectRatio(true)
+                    .allowOverwrite(true)
+                    .toFile(destFile);
+                File destFile2x = new File(destFile.getAbsolutePath().replace(".png", "@2x.png"));
+                destFile2x.deleteOnExit();
+                Thumbnails.of(imageURL)
+                    .scalingMode(ScalingMode.BICUBIC)
+                    .rendering(Rendering.QUALITY)
+                    .antialiasing(Antialiasing.ON)
+                    .outputQuality(1.0)
+                    .size(maxWidth == null ? 2000 : maxWidth.intValue() * 2, maxHeight == null ? 2000 : maxHeight.intValue() * 2)
+                    .keepAspectRatio(true)
+                    .allowOverwrite(true)
+                    .toFile(destFile);
 
-                    imageView = new ImageView(destFile.toURI().toURL().toExternalForm());
-                }
-                catch (Exception e)
-                {
-                    Log.log(e);
-                    // Give up resizing:
-                    imageView = new ImageView(imageURL.toExternalForm());
-                }
-                if (maxHeight != null)
-                    imageView.setFitHeight(maxHeight);
-                if (maxWidth != null)
-                    imageView.setFitWidth(maxWidth);
-                imageView.setSmooth(true);
-                imageView.setPreserveRatio(true);
-                return imageView;
+                imageView = new ImageView(destFile.toURI().toURL().toExternalForm());
             }
+            catch (Exception e)
+            {
+                Log.log(e);
+                // Give up resizing:
+                imageView = new ImageView(imageURL.toExternalForm());
+            }
+            if (maxHeight != null)
+                imageView.setFitHeight(maxHeight);
+            if (maxWidth != null)
+                imageView.setFitWidth(maxWidth);
+            imageView.setSmooth(true);
+            imageView.setPreserveRatio(true);
+            return imageView;
         }
         return null;
     }
@@ -1334,25 +1330,19 @@ public class FXUtility
     
     public static void setIcon(Stage stage)
     {
-        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        if (systemClassLoader != null)
+        for (int size : new int[]{16, 24, 32, 48, 64, 256})
         {
-            for (int size : new int[]{16, 24, 32, 48, 64, 256})
-            {
 
-                InputStream icon = systemClassLoader.getResourceAsStream("logo-" + size + ".png");
-                if (icon != null)
-                {
-                    stage.getIcons().add(new Image(icon));
-                }
-                else
-                {
-                    Log.error("Could not find file: logo-" + size + ".png");
-                }
+            InputStream icon = ResourceUtility.getResourceAsStream("logo-" + size + ".png");
+            if (icon != null)
+            {
+                stage.getIcons().add(new Image(icon));
+            }
+            else
+            {
+                Log.error("Could not find file: logo-" + size + ".png");
             }
         }
-        else
-            Log.error("No system classloader!");
     }
 
     public static interface GenOrError<T>
