@@ -14,6 +14,16 @@
     <artifactId>app</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <repositories>
+        <repository>
+            <id>snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>groupId</groupId>
@@ -164,6 +174,13 @@
             <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
         </dependency>
 
+        
+        <dependency>
+            <groupId>com.badlogicgames.packr</groupId>
+            <artifactId>packr</artifactId>
+            <version>2.1-SNAPSHOT</version>
+        </dependency>
+
         <!--
         <dependency>
             <groupId>org.bluej</groupId>
@@ -180,6 +197,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
+        <packrJar>${com.badlogicgames.packr:packr:jar}</packrJar>
     </properties>
 
     <build>
@@ -436,17 +454,7 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
-    <profiles>
-    <profile>
-        <activation>
-            <os>
-                <family>windows</family>
-            </os>
-        </activation>
-        <build>
-        <plugins>
+
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
@@ -456,8 +464,8 @@
                         <phase>compile</phase>
                         <configuration>
                             <target>
-                                <property name="imagemagick_bin" value="S:/imagemagick"/>
-                                <exec dir="target/classes" executable="${imagemagick_bin}/magick.exe" failonerror="true">
+                                <property file="../installers/tools_${os.name}.properties"/>
+                                <exec dir="target/classes" executable="${imagemagick_bin}/magick" failonerror="true">
                                     <arg line="convert"/>
                                     <arg line="../../src/main/resources/logo.png"/>
                                     <!-- Sizes from https://docs.microsoft.com/en-us/windows/desktop/uxguide/vis-icons -->
@@ -474,6 +482,87 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>package_mac</id>
+        <activation>
+            <os>
+                <family>mac</family>
+            </os>
+        </activation>
+        <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>build-mac-app</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools_${os.name}.properties"/>
+                                <property name="compile_classpath" refid="maven.compile.classpath"/>
+
+                                <mkdir dir="../installers/Columnal.iconset"/>
+
+                                <exec dir="../installers/Columnal.iconset" executable="${imagemagick_bin}/magick" failonerror="true">
+                                    <arg line="convert"/>
+                                    <arg line="../../app/src/main/resources/logo.png"/>
+                                    <!-- Sizes for Mac from https://stackoverflow.com/a/20703594 -->
+                                    <arg line="( +clone -resize 1024x1024 -write icon_512x512@2x.png +delete )"/>
+                                    <arg line="( +clone -resize 512x512 -write icon_512x512.png +delete )"/>
+                                    <arg line="( +clone -resize 512x512 -write icon_256x256@2x.png +delete )"/>
+                                    <arg line="( +clone -resize 256x256 -write icon_256x256.png +delete )"/>
+                                    <arg line="( +clone -resize 256x256 -write icon_128x128@2x.png +delete )"/>
+                                    <arg line="( +clone -resize 128x128 -write icon_128x128.png +delete )"/>
+                                    <arg line="( +clone -resize 128x128 -write icon_64x64@2x.png +delete )"/>
+                                    <arg line="( +clone -resize 64x64 -write icon_64x64.png +delete )"/>
+                                    <arg line="( +clone -resize 64x64 -write icon_32x32@2x.png +delete )"/>
+                                    <arg line="( +clone -resize 32x32 -write icon_32x32.png +delete )"/>
+                                    <arg line="( +clone -resize 32x32 -write icon_16x16@2x.png +delete )"/>
+                                    <arg line="-resize 16x16 icon_16x16.png"/>
+                                </exec>
+                                <exec command="iconutil -c icns Columnal.iconset" dir="../installers"/>
+
+                                <java fork="true" classname="com.badlogicgames.packr.Packr" dir="../" failonerror="true">
+                                    <classpath refid="maven.compile.classpath"/>
+                                    <arg value="--platform"/><arg value="mac"/>
+                                    <arg value="--jdk"/><arg value="${jdk_location}"/>
+                                    <arg value="--executable"/><arg value="columnal"/>
+                                    <arg value="--classpath"/><arg value="app/target/app-1.0-SNAPSHOT-jar-with-dependencies.jar"/>
+                                    <arg value="--mainclass"/><arg value="records.gui.Main"/>
+                                    <arg value="--icon"/><arg value="installers/Columnal.icns"/>
+                                    <arg value="--output"/><arg value="installers/Columnal.app"/>
+                                </java>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        </build>
+    </profile>
+    <profile>
+        <id>package_windows</id>
+        <activation>
+            <os>
+                <family>windows</family>
+            </os>
+        </activation>
+        <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
                     <execution>
                         <id>build-msi</id>
                         <phase>package</phase>
