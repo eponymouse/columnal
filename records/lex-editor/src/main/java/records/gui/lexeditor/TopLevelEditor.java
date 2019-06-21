@@ -70,6 +70,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private final InformationPopup informationPopup;
     private final TypeManager typeManager;
     private boolean hiding;
+    private boolean forceSaving;
 
     // package-visible
     TopLevelEditor(@Nullable String originalContent, LEXER lexer, TypeManager typeManager, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
@@ -109,7 +110,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         });
         content.addCaretPositionListener(informationPopup::caretMoved);
         content.addCaretPositionListener((@CanonicalLocation Integer n) -> {
-            display.showCompletions(content.getLexerResult().getCompletionsFor(n));
+            if (!forceSaving)
+                display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
         onChange.consume(save(true));
         FXUtility.onceNotNull(display.sceneProperty(), s -> showAllErrors());
@@ -153,7 +155,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this, boolean forceSaveAsIfUnfocused)
     {
         if (forceSaveAsIfUnfocused)
+        {
+            forceSaving = true;
             content.forceSaveAsIfUnfocused();
+            forceSaving = false;
+        }
         Log.debug("Saved: " + content.getLexerResult().result);
         return content.getLexerResult().result;
     }
