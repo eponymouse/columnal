@@ -506,13 +506,14 @@
                         <configuration>
                             <target>
                                 <property file="../installers/tools_${os.name}.properties"/>
+                                <property file="../installers/package.properties"/>
                                 <property name="compile_classpath" refid="maven.compile.classpath"/>
 
-                                <mkdir dir="../installers/Columnal.iconset"/>
+                                <mkdir dir="../installers/mac_dmg/Columnal.iconset"/>
 
-                                <exec dir="../installers/Columnal.iconset" executable="${imagemagick_bin}/magick" failonerror="true">
+                                <exec dir="../installers/mac_dmg/Columnal.iconset" executable="${imagemagick_bin}/magick" failonerror="true">
                                     <arg line="convert"/>
-                                    <arg line="../../app/src/main/resources/logo.png"/>
+                                    <arg line="../../../app/src/main/resources/logo.png"/>
                                     <!-- Sizes for Mac from https://stackoverflow.com/a/20703594 -->
                                     <arg line="( +clone -resize 1024x1024 -write icon_512x512@2x.png +delete )"/>
                                     <arg line="( +clone -resize 512x512 -write icon_512x512.png +delete )"/>
@@ -527,7 +528,7 @@
                                     <arg line="( +clone -resize 32x32 -write icon_16x16@2x.png +delete )"/>
                                     <arg line="-resize 16x16 icon_16x16.png"/>
                                 </exec>
-                                <exec command="iconutil -c icns Columnal.iconset" dir="../installers"/>
+                                <exec command="iconutil -c icns Columnal.iconset" dir="../installers/mac_dmg" failonerror="true"/>
 
                                 <java fork="true" classname="com.badlogicgames.packr.Packr" dir="../" failonerror="true">
                                     <classpath refid="maven.compile.classpath"/>
@@ -536,9 +537,17 @@
                                     <arg value="--executable"/><arg value="columnal"/>
                                     <arg value="--classpath"/><arg value="app/target/app-1.0-SNAPSHOT-jar-with-dependencies.jar"/>
                                     <arg value="--mainclass"/><arg value="records.gui.Main"/>
-                                    <arg value="--icon"/><arg value="installers/Columnal.icns"/>
-                                    <arg value="--output"/><arg value="installers/Columnal.app"/>
+                                    <arg value="--icon"/><arg value="installers/mac_dmg/Columnal.icns"/>
+                                    <arg value="--output"/><arg value="installers/mac_dmg/Columnal.app"/>
                                 </java>
+                                
+                                <delete file="../installers/mac_dmg/Columnal-${columnal.version}.dmg"/>
+                                <!-- This needs appdmg, see https://github.com/LinusU/node-appdmg -->
+                                <!-- brew install npm && npm install -g appdmg -->
+                                <exec executable="appdmg" dir="../installers/mac_dmg" failonerror="true">
+                                    <arg value="appdmg.json"/>
+                                    <arg value="Columnal-${columnal.version}.dmg"/>
+                                </exec>
                             </target>
                         </configuration>
                         <goals>

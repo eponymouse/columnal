@@ -1,0 +1,20 @@
+{
+  "title": "Columnal",
+  "icon": "Columnal.icns",
+  "background": "installer_background.png",
+  "window" : {
+    "position": {
+      "x": 250,
+      "y": 150
+    },
+    "size" : {
+      "width": 600,
+      "height": 450
+    }
+  },
+  "icon-size": 100,
+  "contents": [
+    { "x": 470, "y": 300, "type": "link", "path": "/Applications" },
+    { "x": 130, "y": 300, "type": "file", "path": "Columnal.app" }
+  ]
+}
