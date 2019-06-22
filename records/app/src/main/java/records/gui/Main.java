@@ -20,6 +20,7 @@ import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.poi.ss.formula.functions.T;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -50,6 +51,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -203,17 +205,24 @@ public class Main extends Application
         if (currentVersion == null)
             return Optional.empty();
         
-        // TODO support Mac here
-        String os = "windows";
+        final String os;
+        if (SystemUtils.IS_OS_WINDOWS)
+            os = "windows";
+        else if (SystemUtils.IS_OS_MAC)
+            os = "macx86";
+        else
+            return Optional.empty();
         try
         {
             String[] lines = IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check"), StandardCharsets.UTF_8)
                 .split("\\r?\\n");
-            if (lines.length == 2 || lines.length == 3 && lines[2].trim().isEmpty())
+            HashMap<String, String> props = toLowerCaseTrimmedProperties(lines);
+            String latestVersion = props.get("version");
+            String description = props.get("description");
+            if (latestVersion != null && description != null)
             {
-                String latestVersion = lines[0].trim();
                 if (!sameVersion(currentVersion, latestVersion))
-                    return Optional.of(new UpgradeInfo(latestVersion, lines[1].trim(), new URL("https", DOMAIN, "/version/" + os + "/" + latestVersion + "/download").toURI()));
+                    return Optional.of(new UpgradeInfo(latestVersion, description, new URL("https", DOMAIN, "/version/" + os + "/" + latestVersion + "/download").toURI()));
             }
         }
         catch (IOException | URISyntaxException e)
@@ -221,6 +230,24 @@ public class Main extends Application
             Log.log(e);
         }
         return Optional.empty();
+    }
+
+    private HashMap<String, String> toLowerCaseTrimmedProperties(String[] lines)
+    {
+        HashMap<String, String> r = new HashMap<>();
+        for (String line : lines)
+        {
+            int colon = line.indexOf(':');
+            if (colon > 0)
+            {
+                // Lower-case the key for ease of use:
+                String key = line.substring(0, colon).toLowerCase().trim();
+                // Don't lowercase the value
+                String value = line.substring(colon + 1).trim();
+                r.put(key, value);
+            }
+        }
+        return r;
     }
 
     @OnThread(Tag.Any)
