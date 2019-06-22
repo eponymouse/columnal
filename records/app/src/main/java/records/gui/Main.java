@@ -232,6 +232,7 @@ public class Main extends Application
         return Optional.empty();
     }
 
+    @OnThread(Tag.Any)
     private HashMap<String, String> toLowerCaseTrimmedProperties(String[] lines)
     {
         HashMap<String, String> r = new HashMap<>();
