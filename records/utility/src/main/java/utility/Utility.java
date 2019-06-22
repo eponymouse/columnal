@@ -2081,4 +2081,20 @@ public class Utility
     {
         return longer.regionMatches(true, offsetInLonger, shorter, 0, shorter.length());
     }
+
+    /**
+     * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
+     */
+    public static <K, V> @Nullable V get(Map<K, V> map, K key)
+    {
+        return map.get(key);
+    }
+
+    /**
+     * Type-safe contains method for Set.  Note important that it's Map[K,V] and not Map[? super K, V]
+     */
+    public static <K> boolean contains(Set<K> set, K key)
+    {
+        return set.contains(key);
+    }
 }

@@ -49,9 +49,9 @@
             -fx-fill: black;
         }
         &.lex-completion-header {
-            -fx-background-color: white, grey(90%);
-            -fx-background-radius: 0, 7;
-            -fx-background-insets: 0, 1 2 1 2;
+            -fx-background-color: white, hsb(217, 8%, 95%);
+            -fx-background-radius: 0, 0;
+            -fx-background-insets: 0, 0 0 1 0;
             & .lex-completion-text-flow {
                 -fx-padding: 0 5 0 5;
             }
@@ -82,5 +82,8 @@
             -fx-font-smoothing-type: gray;
             -fx-content-menu-enabled: false;
         }
+    }
+    .fade-overlay {
+        -fx-fill: linear-gradient(to bottom, fade-out(grey(60%), 1) 0%, fade-out(grey(60%), 1) 60%, fade-out(grey(60%), 0.5) 90%, fade-out(grey(60%), 0.2) 100%);
     }
 }

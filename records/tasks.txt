@@ -5,7 +5,6 @@ Express Priority (needed for task C)
 - If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
 - Change C instructinos to ask user to fix en dash insanity
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
-- Try adding white or black fade to show there is more to show in each section
 - Add link to green info prompt for functions that lets you show function documentation
 - Expression editor is not saving brackets around records in:
   from text(replace many([(find:"nw",replace:"0"),(find:"-",replace:"-")],Wind m s))
@@ -268,3 +267,4 @@ Done after Phil B & Jon A:
 - Autocomplete list doesn't make it clear that you can scroll it.
   - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
 - Mac build
+- Try adding white or black fade to show there is more to show in each lex auto complete section
