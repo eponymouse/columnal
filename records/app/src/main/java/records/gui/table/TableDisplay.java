@@ -2,7 +2,6 @@ package records.gui.table;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
-import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -94,6 +93,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Workers.Priority;
+import utility.gui.Clickable;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 

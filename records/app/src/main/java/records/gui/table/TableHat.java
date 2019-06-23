@@ -71,6 +71,7 @@ import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.Clickable;
 import utility.gui.FXUtility;
 
 import java.util.List;

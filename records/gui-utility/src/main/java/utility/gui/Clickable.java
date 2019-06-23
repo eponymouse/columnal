@@ -1,4 +1,4 @@
-package records.gui.table;
+package utility.gui;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Tooltip;
@@ -11,6 +11,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.TranslationUtility;
 
+@OnThread(Tag.FXPlatform)
 public abstract class Clickable extends Style<Clickable>
 {
     private final @Nullable @LocalizableKey String tooltipKey;
@@ -48,6 +49,7 @@ public abstract class Clickable extends Style<Clickable>
     }
 
     @Override
+    @OnThread(Tag.FXPlatform)
     protected Clickable combine(Clickable with)
     {
         // Cannot combine, so make arbitrary choice:
@@ -55,6 +57,7 @@ public abstract class Clickable extends Style<Clickable>
     }
 
     @Override
+    @OnThread(Tag.FXPlatform)
     protected boolean equalsStyle(Clickable item)
     {
         return false;
