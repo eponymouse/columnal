@@ -907,9 +907,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
             for (Pair<CompletionStatus, LexCompletion> c : lexCompletions)
             {
-                identCompletions.add(new Pair<>(c.getFirst(), new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL("function-" + function.getDocKey().replace(":", "-") + ".html").withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION)));
+                identCompletions.add(new Pair<>(c.getFirst(), new ExpressionCompletion(c.getSecond().withReplacement(function.getName() + "()", StyledString.s(function.getName() + "(\u2026)")).withFurtherDetailsURL(makeFuncDocURL(function)).withCaretPosAfterCompletion(function.getName().length() + 1), CompletionType.FUNCTION)));
             }
         }
+    }
+
+    public static String makeFuncDocURL(StandardFunctionDefinition function)
+    {
+        return "function-" + function.getDocKey().replace(":", "-") + ".html";
     }
 
     /**

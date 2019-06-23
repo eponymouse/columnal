@@ -5,6 +5,7 @@ import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import javafx.scene.Node;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,6 +27,7 @@ import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -173,7 +175,8 @@ public class EditorLocationAndErrorRecorder
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
     private final IdentityHashMap<@Recorded Object, CanonicalSpan> positions = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
-    private final ArrayList<Pair<CanonicalSpan, StyledString>> entryPrompts = new ArrayList<>();
+    // Function takes node that documentation should appear to the right of
+    private final ArrayList<Pair<CanonicalSpan, FXPlatformFunction<Node, StyledString>>> entryPrompts = new ArrayList<>();
     private final IdentityHashMap<Expression, StyledString> information = new IdentityHashMap<>();
 
     private static interface UnresolvedErrorDetails
@@ -412,7 +415,7 @@ public class EditorLocationAndErrorRecorder
     }
 
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
     {
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantInformation = new ArrayList<>();
@@ -425,10 +428,10 @@ public class EditorLocationAndErrorRecorder
                     relevantInformation.add(new Pair<>(info, expLocation.getValue()));
             }
         }
-        for (Pair<CanonicalSpan, StyledString> entryPrompt : entryPrompts)
+        for (Pair<CanonicalSpan, FXPlatformFunction<Node, StyledString>> entryPrompt : entryPrompts)
         {
             if (entryPrompt.getFirst().touches(canonIndex))
-                relevantPrompts.add(new Pair<>(entryPrompt.getSecond(), entryPrompt.getFirst()));
+                relevantPrompts.add(new Pair<>(entryPrompt.getSecond().apply(toRightOf), entryPrompt.getFirst()));
         }
 
         Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantPrompts, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
@@ -447,20 +450,20 @@ public class EditorLocationAndErrorRecorder
         return ImmutableMap.copyOf(combined);
     }
 
-    public <EXPRESSION> void recordEntryPromptG(@Recorded EXPRESSION expression, StyledString prompt)
+    public <EXPRESSION> void recordEntryPromptG(@Recorded EXPRESSION expression, FXPlatformFunction<Node, StyledString> prompt)
     {
         if (expression instanceof Expression)
             recordEntryPrompt((Expression)expression, prompt);
     }
 
-    public void recordEntryPrompt(@Recorded Expression expression, StyledString prompt)
+    public void recordEntryPrompt(@Recorded Expression expression, FXPlatformFunction<Node, StyledString> prompt)
     {
         CanonicalSpan canonicalSpan = positions.get(expression);
         if (canonicalSpan != null)
             entryPrompts.add(new Pair<>(canonicalSpan, prompt));
     }
 
-    public void recordEntryPrompt(CanonicalSpan canonicalSpan, StyledString prompt)
+    public void recordEntryPrompt(CanonicalSpan canonicalSpan, FXPlatformFunction<Node, StyledString> prompt)
     {
         entryPrompts.add(new Pair<>(canonicalSpan, prompt));
     }

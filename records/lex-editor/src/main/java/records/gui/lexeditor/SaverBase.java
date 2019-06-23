@@ -912,7 +912,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     items.addAll(Utility.<@Recorded EXPRESSION, Either<OpAndNode, @Recorded EXPRESSION>>mapListI(prefixItemsOnFailedClose.get(), (@Recorded EXPRESSION e) -> Either.<OpAndNode, @Recorded EXPRESSION>right(e)));
                     @Recorded EXPRESSION content = makeContent.fetchContent(unclosedBrackets(makeBrackets.apply(keywordErrorDisplayer)));
                     if (promptIfUnfinished != null)
-                        locationRecorder.recordEntryPromptG(content, promptIfUnfinished);
+                        locationRecorder.recordEntryPromptG(content, n -> promptIfUnfinished);
                     items.add(Either.right(content));
                     if (terminator != null)
                         items.add(Either.<OpAndNode, @Recorded EXPRESSION>right(SaverBase.this.<EXPRESSION>record(keywordErrorDisplayer, keywordToInvalid(terminator))));

@@ -6,7 +6,10 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.input.DataFormat;
+import javafx.scene.input.MouseButton;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -39,9 +42,11 @@ import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
+import utility.gui.Clickable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -146,28 +151,31 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                         @Override
                         public @NonNull @Recorded Expression apply(@NonNull BracketContent args)
                         {
+                            CanonicalSpan span = CanonicalSpan.fromTo(locationRecorder.recorderFor(callTarget), c);
+                            
                             if (callTarget instanceof StandardFunction)
                             {
                                 StandardFunction function = (StandardFunction) callTarget;
                                 ImmutableList<String> paramNames = function.getFunction().getParamNames();
+                                String funcDocURL = ExpressionLexer.makeFuncDocURL(function.getFunction());
                                 if (args.expressions.isEmpty())
                                 {
                                     // No params yet, need to add in the empty bit between brackets
-                                    locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0));
+                                    locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0, funcDocURL, span));
                                 }
                                 else
                                 {
                                     for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
                                     {
-                                        locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i));
+                                        locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i, funcDocURL, span));
                                     }
                                 }
                             }
-                            
-                            return locationRecorder.record(CanonicalSpan.fromTo(locationRecorder.recorderFor(callTarget), c), new CallExpression(callTarget, args.expressions));
+
+                            return locationRecorder.record(span, new CallExpression(callTarget, args.expressions));
                         }
 
-                        private StyledString makeParamPrompt(String functionName, ImmutableList<String> paramNames, int paramIndex)
+                        private FXPlatformFunction<Node, StyledString> makeParamPrompt(String functionName, ImmutableList<String> paramNames, int paramIndex, String docURL, CanonicalSpan span)
                         {
                             StyledString.Builder r = new Builder();
                             r.append(functionName).append("(");
@@ -185,7 +193,21 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                                 }
                             }
                             r.append(")");
-                            return r.build().withStyle(new StyledCSS("entry-prompt"));
+                            return toRightOf -> StyledString.concat(r.build().withStyle(new StyledCSS("entry-prompt")), StyledString.s("  "), StyledString.s("show doc").withStyle(new Clickable(null, "show-doc-link")
+                            {
+                                @Override
+                                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                                {
+                                    try
+                                    {
+                                        new DocWindow(functionName + " function", docURL, toRightOf).show();
+                                    }
+                                    catch (InternalException e)
+                                    {
+                                        Log.log(e);
+                                    }
+                                }
+                            }));
                         }
 
                         @Override
@@ -934,9 +956,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return super.fixesForAdjacentOperands(first, second);
     }
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
     {
-        return locationRecorder.getDisplayFor(canonIndex);
+        return locationRecorder.getDisplayFor(canonIndex, toRightOf);
     }
 
     @OnThread(Tag.Any)

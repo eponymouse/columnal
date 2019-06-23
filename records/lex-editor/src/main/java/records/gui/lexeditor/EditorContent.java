@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
+import javafx.scene.Node;
 import javafx.scene.text.Text;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -244,10 +245,10 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.display;
     }
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int newCaretPos)
+    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int newCaretPos, Node toRightOf)
     {
         EnumMap<DisplayType, StyledString> accum = new EnumMap<DisplayType, StyledString>(DisplayType.class);
-        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos)).distinct().forEach(m -> {
+        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos, toRightOf)).distinct().forEach(m -> {
             m.forEach((k, v) -> accum.merge(k, v, (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b))));
         });
         return ImmutableMap.copyOf(accum);

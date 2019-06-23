@@ -101,3 +101,8 @@ $string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
 .entry-prompt-bold {
     -fx-font-weight: bold;
 }
+.show-doc-link {
+    -fx-font-size: 80%;
+    -fx-fill: grey(50%);
+    -fx-underline: true;
+}

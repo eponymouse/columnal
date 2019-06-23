@@ -4,6 +4,7 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.LexCompletion;
@@ -32,7 +33,7 @@ public class CodeCompletionContext
         return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
     }
 
-    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt(@CanonicalLocation int position)
+    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt(@CanonicalLocation int position, Node toRightOf)
     {
         return Maps.<DisplayType, StyledString>immutableEnumMap(ImmutableMap.<DisplayType, StyledString>of());
     }

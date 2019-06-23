@@ -511,7 +511,11 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             else
                 displays.put(DisplayType.ERROR, new Pair<>(errors.stream().collect(StyledString.joining("\n")), fixes.build()));
 
-            ImmutableMap<DisplayType, StyledString> infoAndPrompt = content.getDisplayFor(newCaretPos);
+            Node node = display;
+            if (node.getScene() != null)
+                node = node.getScene().getRoot();
+            
+            ImmutableMap<DisplayType, StyledString> infoAndPrompt = content.getDisplayFor(newCaretPos, node);
             displays.remove(DisplayType.PROMPT);
             displays.remove(DisplayType.INFORMATION);
             for (Entry<DisplayType, StyledString> entry : infoAndPrompt.entrySet())
