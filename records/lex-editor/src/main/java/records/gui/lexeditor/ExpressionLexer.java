@@ -562,22 +562,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
     private StyledString addIndents(StyledString display, ArrayList<CaretPos> caretPos, @Recorded Expression expression, EditorLocationAndErrorRecorder locations) throws InternalException
     {
-        ImmutableList<AddedSpace> addedSpaces = expression.visit(new ExpressionVisitorStream<AddedSpace>() {
-            @Override
-            public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
-            {
-                return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
-                    new AddedSpace(locations.recorderFor(condition).end, "\n    "),
-                    new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
-                    new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
-                ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
-            }
-
-            private Stream<AddedSpace> increaseIndent(Stream<AddedSpace> indents)
-            {
-                return indents.map(a -> new AddedSpace(a.addedAtInternalPos, a.added + "    "));
-            }
-        }).sorted(Comparator.<AddedSpace, Integer>comparing(a -> a.addedAtInternalPos)).collect(ImmutableList.<AddedSpace>toImmutableList());
+        ImmutableList<AddedSpace> addedSpaces = expression.visit(new AddedSpaceCalculator(locations)).sorted(Comparator.<AddedSpace, Integer>comparing(a -> a.addedAtInternalPos)).collect(ImmutableList.<AddedSpace>toImmutableList());
 
         for (AddedSpace addedSpace : addedSpaces)
         {
@@ -1321,5 +1306,31 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText, @Nullable String sideText, WordPosition... possiblePositions)
     {
         return matchWordStart(src == null ? null : new Pair<>(src, 0), startPos, completionText, sideText, possiblePositions);
+    }
+
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    class AddedSpaceCalculator extends ExpressionVisitorStream<AddedSpace>
+    {
+        private final EditorLocationAndErrorRecorder locations;
+
+        public AddedSpaceCalculator(EditorLocationAndErrorRecorder locations)
+        {
+            this.locations = locations;
+        }
+
+        @Override
+        public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+        {
+            return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
+                new AddedSpace(locations.recorderFor(condition).end, "\n    "),
+                new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
+                new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
+            ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
+        }
+
+        private Stream<AddedSpace> increaseIndent(Stream<AddedSpace> indents)
+        {
+            return indents.map(a -> new AddedSpace(a.addedAtInternalPos, a.added + "    "));
+        }
     }
 }

@@ -16,6 +16,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.gui.lexeditor.ExpressionLexer.AddedSpaceCalculator;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
 import records.gui.lexeditor.ExpressionSaver.BracketContent;
@@ -966,10 +967,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             throw new InternalException("Executing KeyValueExpression despite failed typecheck");
         }
 
-        @SuppressWarnings("nullness")
+        @SuppressWarnings({"nullness", "unchecked"})
         @Override
         public <T> T visit(ExpressionVisitor<T> visitor)
         {
+            // Bit of a hack all round:
+            if (visitor instanceof AddedSpaceCalculator)
+                return (T)Stream.<Object>of();
+            
             Log.logStackTrace("KeyValueExpression.visit");
             return null;
         }

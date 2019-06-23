@@ -6,11 +6,9 @@ Express Priority (needed for task C)
 - Change C instructinos to ask user to fix en dash insanity
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - Add link to green info prompt for functions that lets you show function documentation
+- The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
 - Expression editor is not saving brackets around records in:
   from text(replace many([(find:"nw",replace:"0"),(find:"-",replace:"-")],Wind m s))
-- The error for that wrongly-saved expression is also awful.  Unknown error with table; why not error from the expression itself?
-- KeyValueExpression.visit is being called during this, which is wrong.
-  Should we either make this expression first class or dump it?
 
 Probably fixed by recent changes but not definite
 ---
@@ -268,3 +266,5 @@ Done after Phil B & Jon A:
   - Scroll in code completion only scrolls to end of selected/current selection, it will not expand the other regions and scroll into them -- but it should
 - Mac build
 - Try adding white or black fade to show there is more to show in each lex auto complete section
+- KeyValueExpression.visit is being called during this, which is wrong.
+  Should we either make this expression first class or dump it?
