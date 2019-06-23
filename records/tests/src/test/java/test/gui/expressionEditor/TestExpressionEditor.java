@@ -579,6 +579,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("@define x 1 = (a 0: 5, b 3: 6) @then (x 1#a 0) + ( x 1 # b 3 ) @enddefine");
     }
+    
+    @Test
+    public void testRecordList() throws Exception
+    {
+        testSimple("@call @function from text(@call @function replace many([(find:\"nw\",replace:\"0\"),(find:\"~\",replace:\"-\")],Wind m s))");
+    }
 
     @Test
     public void testLambda() throws Exception
