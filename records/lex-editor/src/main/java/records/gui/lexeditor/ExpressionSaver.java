@@ -29,6 +29,7 @@ import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import styled.StyledCSS;
@@ -1027,8 +1028,29 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         public @Nullable Pair<@ExpressionIdentifier String, @Recorded Expression> extractPair()
         {
-            if (lhs instanceof IdentExpression)
-                return new Pair<>(((IdentExpression) lhs).getText(), rhs);
+            @ExpressionIdentifier String lhsIdent = lhs.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
+            {
+                @Override
+                protected @Nullable @ExpressionIdentifier String makeDef(Expression expression)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @ExpressionIdentifier String text)
+                {
+                    return text;
+                }
+
+                @Override
+                public @Nullable @ExpressionIdentifier String standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
+                {
+                    return functionDefinition.getName();
+                }
+            });
+            
+            if (lhsIdent != null)
+                return new Pair<>(lhsIdent, rhs);
             else
                 return null;
         }
