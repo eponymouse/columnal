@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -76,7 +77,7 @@ final class LexCompletionList extends Region
     private ParallelTransition groupAnimation = new ParallelTransition();
     
     // Changed when completions change
-    private ImmutableMap<LexCompletion, Pair<Integer, Integer>> completionIndexes = ImmutableMap.of();
+    private final IdentityHashMap<LexCompletion, Pair<Integer, Integer>> completionIndexes = new IdentityHashMap<>();
     
     // The top Y coordinate of the header (if present, first item if not) of each group in curCompletions.  These coordinates
     // are relative to the pane.  Due to the pinning, it is possible
@@ -442,30 +443,25 @@ final class LexCompletionList extends Region
         }
         
         this.curCompletionGroups = completions;
-        ImmutableMap.Builder<LexCompletion, Pair<Integer, Integer>> indexes = ImmutableMap.builder();
-        for (int i = 0; i < curCompletionGroups.size(); i++)
-        {
-            for (int j = 0; j < curCompletionGroups.get(i).completions.size(); j++)
-            {
-                indexes.put(curCompletionGroups.get(i).completions.get(j), new Pair<>(i, j));
-            }
-        }
+        
+        this.completionIndexes.clear();
         try
         {
-            this.completionIndexes = indexes.build();
+            for (int i = 0; i < curCompletionGroups.size(); i++)
+            {
+                for (int j = 0; j < curCompletionGroups.get(i).completions.size(); j++)
+                {
+                    if (completionIndexes.put(curCompletionGroups.get(i).completions.get(j), new Pair<>(i, j)) != null)
+                    {
+                        throw new InternalException("Duplicate entry: " + curCompletionGroups.get(i));
+                    }
+                }
+            }
         }
-        catch (Exception e)
+        catch (InternalException e)
         {
             // We shouldn't have duplicate completions, but don't let such an exception propagate:
-            this.completionIndexes = ImmutableMap.of();
-            try
-            {
-                throw new InternalException("Duplicate completions", e);
-            }
-            catch (InternalException internal)
-            {
-                Log.log(internal);
-            }
+            Log.log(e);
         }
         
         if (!headersMatch)
