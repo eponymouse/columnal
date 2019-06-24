@@ -79,11 +79,16 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         return curCaretPosition;
     }
-    
-    @SuppressWarnings("units") // Because of min and max
+
     public void replaceSelection(String content)
     {
-        replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content);
+        replaceSelection(content, false);
+    }
+    
+    @SuppressWarnings("units") // Because of min and max
+    public void replaceSelection(String content, boolean putCaretAtLeadingEdge)
+    {
+        replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content, putCaretAtLeadingEdge);
         curAnchorPosition = curCaretPosition;
     }
     
@@ -91,12 +96,26 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         replaceText(CanonicalLocation.ZERO, getText().length() * CanonicalLocation.ONE, content);
     }
-    
+
     public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content)
     {
+        replaceText(startIncl, endExcl, content, false);
+    }
+
+    @SuppressWarnings("units")
+    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content, boolean putCaretAtLeadingEdge)
+    {
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
-        @SuppressWarnings("units")
-        @RawInputLocation int newCaretPos = curCaretPosition < startIncl ? curCaretPosition : (curCaretPosition <= endExcl ? startIncl + content.length() : (curCaretPosition - (endExcl - startIncl) + content.length()));  
+        
+        final @RawInputLocation int newCaretPos;
+        if (curCaretPosition < startIncl)
+            newCaretPos = curCaretPosition;
+        else if (curCaretPosition <= endExcl && putCaretAtLeadingEdge)
+            newCaretPos = startIncl;
+        else if (curCaretPosition <= endExcl)
+            newCaretPos = startIncl + content.length();
+        else
+            newCaretPos = curCaretPosition - (endExcl - startIncl) + content.length();
         this.curContent = lexer.process(newText, newCaretPos);
         this.curCaretPosition = curContent.removedChars.map(newCaretPos);
         this.curAnchorPosition = curCaretPosition;

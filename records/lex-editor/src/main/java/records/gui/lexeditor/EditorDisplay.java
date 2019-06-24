@@ -287,15 +287,13 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 String character = keyEvent.getCharacter();
                 if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
                 {
+                    this.content.replaceSelection(character);
                     if (character.equals("("))
-                        this.content.replaceSelection("()");
+                        this.content.replaceSelection(")", true);
                     else if (character.equals("["))
-                        this.content.replaceSelection("[]");
+                        this.content.replaceSelection("]", true);
                     else
-                        this.content.replaceSelection("{}");
-                    @SuppressWarnings("units")
-                    @CanonicalLocation int one = 1;
-                    content.positionCaret(this.getCaretPosition() - one, true);
+                        this.content.replaceSelection("}", true);
                 }
                 else if (")}]".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
                 {
