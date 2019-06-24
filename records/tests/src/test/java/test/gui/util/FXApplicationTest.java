@@ -27,6 +27,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+import records.error.InternalException;
 import test.TestUtil;
 import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
@@ -41,11 +42,16 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertNull;
+
 public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait
 {
     @Rule
     public TestWatcher screenshotOnFail = new TestWatcher()
     {
+        @OnThread(value = Tag.Any, requireSynchronized = true)
+        private @Nullable InternalException seenInternalException;
+        
         @Override
         protected void failed(Throwable e, Description description)
         {
@@ -56,6 +62,21 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
             System.err.println("Current windows: " + getWindowList());
+        }
+
+        @Override
+        protected void starting(Description description)
+        {
+            super.starting(description);
+            seenInternalException = null;
+            Log.setInternalExceptionHandler(e -> {seenInternalException = e;});
+        }
+
+        @Override
+        protected void finished(Description description)
+        {
+            super.finished(description);
+            assertNull("Internal exception monitor", seenInternalException);
         }
     };
 
