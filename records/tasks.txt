@@ -1,7 +1,6 @@
 Express Priority (needed for task C)
 ===
 - If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
-- Change C instructions to ask user to fix en dash insanity
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
 
@@ -40,7 +39,6 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Bit weird in type dialog specifically to have the autocomplete insert at cursor rather than replacing altogether. But maybe we just have to live with that?
 - Conversion from Text to Date highlighted all rows as wrong; but surely the valid dates should have converted?
 - Looked for text to date by typing date, but function is from text
-- Pin button for function documentation to allow seeing it while entering?
 - Calculate: not clear how to abandon but save.  Change OK/Cancel to Save/Remove?
 - Number column formatting doesn't re-run when dragging column divider, which is confusing.  Run more frequently during drag?
 - Have to click too many times on completion in Aggregate dialog (Phil B7_1 3:10); should only be two at most?
@@ -269,3 +267,4 @@ Done after Phil B & Jon A:
 - Add link to green info prompt for functions that lets you show function documentation
 - Errors are shown with Number{ } even when the cursor hasn't left the units
 - Duplicate completion exception in empty Number{ }
+- Change C instructions to ask user to fix en dash insanity
