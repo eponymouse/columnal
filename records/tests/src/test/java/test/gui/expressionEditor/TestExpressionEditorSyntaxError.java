@@ -243,4 +243,16 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
         TestUtil.fx_(() -> dumpScreenshot());
         assertEquals(ImmutableSet.of(), lookup(".table-data-cell").match(c -> TestUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll());
     }
+    
+    @Test
+    public void testEmptyTypeLiteral()
+    {
+        testError("\u0000type{", e(5,5, 5, 6, "empty"));
+    }
+
+    @Test
+    public void testEmptyUnitLiteral()
+    {
+        testError("\u0000type{Number{", e(12,12, 12, 13, ""));
+    }
 }

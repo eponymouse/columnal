@@ -58,6 +58,9 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
 {
     // Checks that errors don't show up while still in the span,
     // but do show up when you move out or when you click ok.
+    // If expression has \u0000 as first character, bracket auto-matching is relied upon.
+    // If no such character is there, auto-inserted brackets are deleted
+    // as they are entered, then typed manually later on.
     @SuppressWarnings({"units", "identifier"})
     void testError(String expression, Error... errors)
     {        
@@ -90,9 +93,10 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             push(KeyCode.TAB);
             for (char c : expression.toCharArray())
             {
-                write(c);
+                if (c != 0)
+                    write(c);
                 // Delete auto-matched brackets:
-                if ("({[".contains("" + c))
+                if (!expression.startsWith("\u0000") && "({[".contains("" + c))
                     push(KeyCode.DELETE);
             }
             sleep(200);
@@ -119,14 +123,18 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).location, actualErrors.get(i).location);
                     MatcherAssert.assertThat(actualErrors.get(i).error.toPlain().toLowerCase(), new MultiSubstringMatcher(expectedErrors.get(i).expectedMessageParts));
                 }
+                
+                // Not necessarily caret pos of the end, if they
+                // entered auto-matched brackets.
+                @CanonicalLocation int endingCaretPos = TestUtil.fx(() -> editorDisplay.getCaretPosition());
 
-                boolean hasSpanNotContainingEnd = Arrays.stream(errors).anyMatch(s -> !s.location.touches(expression.length()));
-                assertErrorShowing(hasSpanNotContainingEnd, false);
+                boolean hasSpanNotContainingEndingPos = Arrays.stream(errors).anyMatch(s -> !s.location.touches(endingCaretPos));
+                assertErrorShowing(hasSpanNotContainingEndingPos, false);
 
 
                 // Can either provoke error by moving caret into a span or by
                 // clicking ok first time
-                if (hasSpanNotContainingEnd && expression.hashCode() % 2 == 0)
+                if (hasSpanNotContainingEndingPos && expression.hashCode() % 2 == 0)
                 {
                     // Move into span:
                     boolean seenPopup = false;
