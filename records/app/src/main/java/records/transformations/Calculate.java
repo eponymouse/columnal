@@ -153,7 +153,10 @@ public class Calculate extends Transformation implements SingleSourceTransformat
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
-                throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), error == null ? StyledString.s("") : error)); // A bit redundant, but control flow will pan out right
+            {
+                StyledString checkErrors = errorAndTypeRecorder.getAllErrors().collect(StyledString.joining(", "));
+                throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), checkErrors.toPlain().isEmpty() ? StyledString.s("Invalid expression") : checkErrors)); // A bit redundant to throw and catch again below, but control flow will pan out right
+            }
             @NonNull DataType typeFinal = concrete;
             return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index), errorAndTypeRecorder)).value);
         }

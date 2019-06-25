@@ -1,7 +1,6 @@
 Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
-- The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
 
 
 Probably fixed by recent changes but not definite
@@ -53,7 +52,8 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Is it worth working out what type should be in each hole?  Would involve type-checking with that item forced to MutVar then displaying that MutVar result.
  - Add "Transform type" recipe?
 - Column titles should be highlighted differently in code completion
-
+- Add explanation system for errors, to give a sort of stack trace of error cause
+- Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 
 Low Priority (good to have, but will not be hugely missed)
 ===
@@ -268,3 +268,4 @@ Done after Phil B & Jon A:
 - Duplicate completion exception in empty Number{ }
 - Change C instructions to ask user to fix en dash insanity
 - If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
+- The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
