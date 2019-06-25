@@ -370,7 +370,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
         private void showPopup(boolean contentHasChanged)
         {
-            if (!hiding && (!isShowing() || contentHasChanged))
+            if (!hiding && (!isShowing() || contentHasChanged) && scrollPane.localToScreen(0, 0) != null)
             {
                 // Need to call show even if already showing in order
                 // to fix the position if our contents have changed:
