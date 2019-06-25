@@ -2,6 +2,7 @@ package test.gui.transformation;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -33,6 +34,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.VirtualGrid;
 import records.gui.lexeditor.EditorDisplay;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
@@ -52,6 +54,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -63,7 +66,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
 {
     private static enum Col
     {
-        BOO, YM, BOOT_SIZE 
+        BOO, YM, BOOT_SIZE, YM_LOWER;
     }
     
     private @ExpressionIdentifier String getName(Col col)
@@ -72,6 +75,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         {
             case BOO: return "Boo";
             case YM: return "YM";
+            case YM_LOWER: return "ym";
             case BOOT_SIZE: return "Boot Size";
         }
         throw new AssertionError("Unknown case: " + col);
@@ -86,6 +90,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
             case BOO:
                 return new MemoryBooleanColumn(rs, columnId, ImmutableList.of(), false);
             case YM:
+            case YM_LOWER:
                 return new MemoryTemporalColumn(rs, columnId, new DateTimeInfo(DateTimeType.YEARMONTH), ImmutableList.of(), TestUtil.checkNonNull(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTH), DateTimeInfo.DEFAULT_VALUE)));
             case BOOT_SIZE:
                 return new MemoryNumericColumn(rs, columnId, new NumberInfo(Unit.SCALAR), Stream.empty());
@@ -95,14 +100,17 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
     
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
-    public void testCalculate(@From(GenRandom.class) Random r) throws Exception
+    public void testCalculate(@When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         RecordSet orig = new EditableRecordSet(Utility.<Col, SimulationFunction<RecordSet, EditableColumn>>mapListI(ImmutableList.copyOf(Col.values()), (Col c) -> (RecordSet rs) -> makeColumn(c, rs)), () -> 0);
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, orig);
 
-        CellPosition calcPos = CellPosition.ORIGIN.offsetByRowCols(1, 5);
-        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), calcPos);
+        CellPosition calcPos = CellPosition.ORIGIN.offsetByRowCols(1, 6);
+        VirtualGrid grid = mainWindowActions._test_getVirtualGrid();
+        keyboardMoveTo(grid, calcPos);
         
+        // We shuffle this list, then use item at indexes 0 and 1 as name of new calculated columns.
+        // We delete columns at index 0 and 2
         List<Col> colList = new ArrayList<>(ImmutableList.copyOf(Col.values()));
         Collections.shuffle(colList, r);
         
@@ -116,30 +124,48 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         if (r.nextBoolean())
         {
             // Add by adding new column with right name:
-            showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(1))), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)), (n, p) -> {
+            showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(1))), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)), (n, p) -> {
             }), null);
             clickOn(r.nextBoolean() ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter");
         }
         else
         {
             // Add by clicking column name:
-            clickOnItemInBounds(findColumnTitle(getName(colList.get(1))), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)));
+            clickOnItemInBounds(findColumnTitle(getName(colList.get(1))), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)));
         }
         enterInfo(mainWindowActions, r, getName(colList.get(1)));
 
         // Now try deleting a column:
-        showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(0))), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)), (n, p) -> {
+        showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(0))), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(3, 3)), (n, p) -> {
         }), null);
         clickOn(".id-virtGrid-column-delete");
         sleep(300);
         assertFalse(getCalculate(mainWindowActions).getCalculatedColumns().containsKey(new ColumnId(getName(colList.get(0)))));
 
         // Delete on from original:
-        showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(2))), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(CellPosition.ORIGIN, CellPosition.ORIGIN.offsetByRowCols(3, 3)), (n, p) -> {
+        showContextMenu(withItemInBounds(findColumnTitle(getName(colList.get(2))), grid, new RectangleBounds(CellPosition.ORIGIN, CellPosition.ORIGIN.offsetByRowCols(2, 4)), (n, p) -> {
         }), null);
         clickOn(".id-virtGrid-column-delete");
         sleep(300);
         assertFalse(getCalculate(mainWindowActions).getData().getColumnIds().contains(new ColumnId(getName(colList.get(2)))));
+        
+        // Now we rename column to either overlap another column, or be totally new, then we swap it back:
+        clickOnItemInBounds(findColumnTitle(getName(colList.get(1))), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(1, 4)));
+        @ExpressionIdentifier String newColName = r.nextBoolean() ? getName(colList.get(3)) : "Arbitrary New Name";
+        write(newColName);
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn(".ok-button");
+        // Now check columns are right:
+        ImmutableSet<ColumnId> expectedColumns = Stream.of(new ColumnId(getName(colList.get(0))), new ColumnId(getName(colList.get(1))), new ColumnId(getName(colList.get(3))), new ColumnId(newColName)).distinct().collect(ImmutableSet.toImmutableSet());
+        assertEquals(expectedColumns, ImmutableSet.copyOf(getCalculate(mainWindowActions).getData().getColumnIds()));
+        // Change it back to colList.get(1) and check again:
+        clickOnItemInBounds(findColumnTitle(newColName), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(1, 4)));
+        write(getName(colList.get(1)));
+        moveAndDismissPopupsAtPos(point(".ok-button"));
+        clickOn(".ok-button");
+        // Now check columns are right:
+        expectedColumns = Stream.of(new ColumnId(getName(colList.get(0))), new ColumnId(getName(colList.get(1))), new ColumnId(getName(colList.get(3)))).distinct().collect(ImmutableSet.toImmutableSet());
+        assertEquals(expectedColumns, ImmutableSet.copyOf(getCalculate(mainWindowActions).getData().getColumnIds()));
     }
     
     private void enterInfo(MainWindowActions mainWindowActions, Random r, @ExpressionIdentifier String columnNameToReplace)
