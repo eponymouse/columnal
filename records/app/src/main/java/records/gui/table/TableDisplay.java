@@ -1010,7 +1010,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
-                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression)), null);
+                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression, null)), null);
                 })
             );
         });

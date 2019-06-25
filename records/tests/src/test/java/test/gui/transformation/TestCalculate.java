@@ -100,7 +100,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
     
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
-    public void testCalculate(@When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testCalculate(@From(GenRandom.class) Random r) throws Exception
     {
         RecordSet orig = new EditableRecordSet(Utility.<Col, SimulationFunction<RecordSet, EditableColumn>>mapListI(ImmutableList.copyOf(Col.values()), (Col c) -> (RecordSet rs) -> makeColumn(c, rs)), () -> 0);
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, orig);
@@ -197,7 +197,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         boolean clickedExistingForExpression = r.nextBoolean();
         if (clickedExistingForExpression)
         {
-            clickOnItemInBounds(findColumnTitle(columnNameToReplace), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(CellPosition.ORIGIN, CellPosition.ORIGIN.offsetByRowCols(2, 3)));
+            clickOnItemInBounds(findColumnTitle(columnNameToReplace), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(CellPosition.ORIGIN, CellPosition.ORIGIN.offsetByRowCols(2, 4)));
         }
         else
         {

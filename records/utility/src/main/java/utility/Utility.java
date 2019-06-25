@@ -496,13 +496,14 @@ public class Utility
      * Creates a new map containing the given map, plus the new entry.
      * The insertion order of the original map will be respected, and the new item will be placed at the end.
      * If the key was already in the map, it will be replaced, and the new value will still appear at the end.
+     * Additionally, removeKey will be removed if it is present.
      */
-    public static <K, V> ImmutableMap<K, V> appendToMap(Map<K, V> data, K key, V value)
+    public static <K, V> ImmutableMap<K, V> appendToMap(Map<K, V> data, K key, V value, @Nullable K removeKey)
     {
         ImmutableMap.Builder<K, V> builder = ImmutableMap.builderWithExpectedSize(data.size() + 1);
         for (Entry<K, V> entry : data.entrySet())
         {
-            if (!Objects.equals(entry.getKey(), key))
+            if (!Objects.equals(entry.getKey(), key) && !Objects.equals(entry.getKey(), removeKey))
                 builder.put(entry);
         }
         builder.put(key, value);

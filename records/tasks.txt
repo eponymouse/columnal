@@ -1,6 +1,5 @@
 Express Priority (needed for task C)
 ===
-- If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
 
@@ -268,3 +267,4 @@ Done after Phil B & Jon A:
 - Errors are shown with Number{ } even when the cursor hasn't left the units
 - Duplicate completion exception in empty Number{ }
 - Change C instructions to ask user to fix en dash insanity
+- If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
