@@ -8,6 +8,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.geometry.Dimension2D;
@@ -114,7 +115,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                 display.showCompletions(content.getLexerResult().getCompletionsFor(n));
         });
         onChange.consume(save(true));
-        FXUtility.onceNotNull(display.sceneProperty(), s -> showAllErrors());
+        FXUtility.onceNotNull(display.sceneProperty(), s -> FXUtility.runAfter(() -> showAllErrors()));
     }
 
     // The width is preferred, the height is minimum
@@ -159,8 +160,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             forceSaving = true;
             content.forceSaveAsIfUnfocused();
             forceSaving = false;
+            showAllErrors();
         }
-        Log.debug("Saved: " + content.getLexerResult().result);
+        Log.debug("Saved: " + content.getLexerResult().result + " //" + forceSaveAsIfUnfocused);
         return content.getLexerResult().result;
     }
 
@@ -399,7 +401,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             // so this will get errors ahead of warnings ahead of information ahead of prompt, as we want:
             @Nullable Entry<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> curDisplay = displays.entrySet().stream().findFirst().orElse(null);
 
-            if (curDisplay != null)
+            if (curDisplay != null && TopLevelEditor.this.isFocused())
             {
                 // Make sure to cancel any hide animation:
                 cancelHideAnimation();
@@ -488,7 +490,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             ImmutableList<ErrorDetails> allErrors = content.getErrors();
             ArrayList<StyledString> errors = new ArrayList<>();
             ImmutableList.Builder<TextQuickFix> fixes = ImmutableList.builder();
-            //Log.debug("Caret: " + newCaretPos + " errors: " + allErrors.size());
+            Log.debug("Caret: " + newCaretPos + " errors: " + allErrors.size());
             for (ErrorDetails error : allErrors)
             {
                 Log.debug("  " + error.location + " " + error.error.toPlain());

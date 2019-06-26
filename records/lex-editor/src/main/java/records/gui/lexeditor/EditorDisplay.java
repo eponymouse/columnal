@@ -551,6 +551,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         {
             error.caretHasLeftSinceEdit = true;
         }
+        content.notifyCaretPositionListeners();
         render(false);
     }
 

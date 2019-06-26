@@ -160,6 +160,9 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
                 }
 
+                actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
+                Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
+
                 for (int i = 0; i < expectedErrors.size(); i++)
                 {
                     assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).displayLocation, actualErrors.get(i).displayLocation);
