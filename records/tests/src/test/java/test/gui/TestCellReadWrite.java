@@ -267,6 +267,66 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         });
     }
 
+    @Property(trials = 3)
+    @OnThread(Tag.Simulation)
+    public void propCheckDataUndo(
+            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
+            @From(GenRandom.class) Random r) throws Exception
+    {
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        TestUtil.sleep(1000);
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
+        List<Table> allTables = tableManager.getAllTables();
+
+        // Pick some random locations in random tables, scroll there, write text, then escape or undo:
+        for (int i = 0; i < 5; i++)
+        {
+            // Random table:
+            Table table = pickRandomTable(r, allTables);
+            // Random location in table:
+            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int tableLen = table.getData().getLength();
+            if (tableLen == 0)
+                continue;
+            Column col = table.getData().getColumns().get(column);
+            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
+            String valueFromData = DataTypeUtility.valueToString(col.getType().getType(), col.getType().getCollapsed(row), null);
+            // Clear clipboard to prevent tests interfering:
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            // Check original has the right string:
+            pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(2000);
+            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
+            // Now start editing:
+            write("" + r.nextLong());
+            
+            boolean escape = r.nextBoolean();
+            if (escape)
+            {
+                // Press escape:
+                push(KeyCode.ESCAPE);
+            }
+            else
+            {
+                push(KeyCode.SHORTCUT, KeyCode.Z);
+                push(KeyCode.ENTER);
+                push(KeyCode.UP);
+            }
+            sleep(200);
+            pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(2000);
+            copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            
+            valueFromData = DataTypeUtility.valueToString(col.getType().getType(), col.getType().getCollapsed(row), null);
+            assertEquals("Location " + pos + " row : " + row + " col: " + column + " escape: " + escape, valueFromData, copiedFromTable);
+        }
+    }
+
     @OnThread(Tag.Any)
     private void assertErrorShowing(CellPosition cellPos, boolean expectError)
     {
