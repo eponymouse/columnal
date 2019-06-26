@@ -211,6 +211,12 @@ public final class RecogniserDocument<V> extends DisplayDocument
         notifyListeners();
     }
 
+    @Override
+    public @Nullable String getUndo()
+    {
+        return valueOnFocusGain;
+    }
+
     public static interface Saver<V>
     {
         @OnThread(Tag.FXPlatform)

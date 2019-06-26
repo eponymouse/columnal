@@ -217,7 +217,19 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
                 if (clip != null && !clip.isEmpty())
                     replaceSelection(clip);
             }
-            
+
+            // Note escape triggers this, but then also a later block too.  Important not to add an else!
+            if ((keyEvent.getCode() == KeyCode.Z && keyEvent.isShortcutDown()) || keyEvent.getCode() == KeyCode.ESCAPE)
+            {
+                String undo = document.getUndo();
+                if (undo != null)
+                {
+                    selectAll();
+                    replaceSelection(undo);
+                }
+            }
+
+
             if ((keyEvent.getCode() == KeyCode.BACK_SPACE || keyEvent.getCode() == KeyCode.DELETE) && caretPosition.getPosition() != anchorPosition.getPosition())
             {
                 replaceSelection("");

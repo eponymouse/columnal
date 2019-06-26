@@ -22,7 +22,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 
 - Not obvious enough to type to see more auto complete?  (Esp when scroll not obvious)
 - Lots of confusion between date literals and date functions.
-- No undo while editing a cell value
 - Investigate improving layout for long expressions
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
@@ -269,3 +268,4 @@ Done after Phil B & Jon A:
 - Change C instructions to ask user to fix en dash insanity
 - If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
 - The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
+- No undo while editing a cell value

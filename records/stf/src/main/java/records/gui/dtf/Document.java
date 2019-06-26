@@ -114,4 +114,10 @@ public abstract class Document
     }
     
     public abstract void setAndSave(String content);
+    
+    // Value to undo to, if applicable.  null if n/a
+    public @Nullable String getUndo()
+    {
+        return null;
+    }
 }
