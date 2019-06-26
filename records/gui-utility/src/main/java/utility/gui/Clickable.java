@@ -49,15 +49,15 @@ public abstract class Clickable extends Style<Clickable>
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     protected Clickable combine(Clickable with)
     {
         // Cannot combine, so make arbitrary choice:
         return this;
     }
-
+    
     @Override
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     protected boolean equalsStyle(Clickable item)
     {
         return false;
