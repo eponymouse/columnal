@@ -157,24 +157,7 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify)) {
-            @Override
-            protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
-            {
-                Label typeLabel = null;
-                try
-                {
-                    typeLabel = GUI.labelRaw(column.getType().getType().toDisplay(false), "stable-view-column-type");
-                }
-                catch (UserException | InternalException e)
-                {
-                    Log.log(e);
-                    typeLabel = GUI.label("column.type.unknown", "stable-view-column-type-unknown");
-                }
-                // Wrap typeLabel in a BorderPane so that it can centre-align:
-                return Utility.concatI(super.makeHeaderContent(), ImmutableList.<BorderPane>of(new BorderPane(typeLabel)));
-            }
-        };
+        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify));
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override

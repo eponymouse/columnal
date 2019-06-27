@@ -38,15 +38,7 @@ public class ColumnDetails
     {
         return new ColumnDetails(columnId, displayHeaderLabel, columnType, renameColumn, columnHandler);
     }
-
-    @OnThread(Tag.FXPlatform)
-    protected ImmutableList<Node> makeHeaderContent()
-    {
-        return ImmutableList.of(
-            GUI.labelRaw(columnId.getRaw(), "stable-view-column-title")
-        );
-    }
-
+    
     public final ColumnId getColumnId()
     {
         return columnId;
