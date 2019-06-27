@@ -1,7 +1,22 @@
 Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
-
+- When you autocomplete Number, it shows error immediately 
+- Make it more apparent that you can click to insert examples.
+- No right-click context menu (at least with cut/copy/paste) when editing cell value
+- No right-click context menu (at least with cut/copy/paste) when editing expression
+- Ctrl-C for copy doesn't work when editing cell data values
+- Bold the calculate columns which are actually new/overwritten
+- Make up and down work sensibly in expression editor when autocomplete isn't showing.
+- If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
+- Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
+- Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
+- The error for dividing by Optional still has the minus operator in the type "Optional-(Number)" but it shouldn't
+- Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other) 
+- If you have e.g. @if true @then 100{m} @else 0 @endif then you get an error on the whole if for the mismatch in type units, but it should only show on the else branch to be clearer (assume then-branch is correct)
+- If unit completion only has related items then the layout can be screwed up
+- Unit completion after "m" only shows related items, but isn't "m" a direct completion?
+- "as unit" should show as related to "convert" 
 
 Probably fixed by recent changes but not definite
 ---
@@ -25,7 +40,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Investigate improving layout for long expressions
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
-
+- Allow unicode specifier in strings (^uXXXX)
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
@@ -52,7 +67,7 @@ Medium Priority (significant quality of life, but not essential especially for b
  - Add "Transform type" recipe?
 - Column titles should be highlighted differently in code completion
 - Add explanation system for errors, to give a sort of stack trace of error cause
-- Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
+
 
 Low Priority (good to have, but will not be hugely missed)
 ===
