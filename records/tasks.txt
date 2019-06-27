@@ -11,12 +11,12 @@ Express Priority (needed for task C)
 - If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 - Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
-- The error for dividing by Optional still has the minus operator in the type "Optional-(Number)" but it shouldn't
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other) 
 - If you have e.g. @if true @then 100{m} @else 0 @endif then you get an error on the whole if for the mismatch in type units, but it should only show on the else branch to be clearer (assume then-branch is correct)
 - If unit completion only has related items then the layout can be screwed up
 - Unit completion after "m" only shows related items, but isn't "m" a direct completion?
 - "as unit" should show as related to "convert" 
+- If you try to type "Number" after an opening bracket you end up with "N u m b e r" which is super-weird
 
 Probably fixed by recent changes but not definite
 ---
@@ -284,3 +284,4 @@ Done after Phil B & Jon A:
 - If you calculate based on table Src with column A, and calculate a column X, then edit X's name to A (to overwrite column), X is still there when you click OK.
 - The error for an invalid syntax expression in calculate is also awful.  Unknown error with table; why not error from the expression itself?
 - No undo while editing a cell value
+- The error for dividing by Optional still has the minus operator in the type "Optional-(Number)" but it shouldn't

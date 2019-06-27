@@ -196,7 +196,7 @@ public class TypeCons extends TypeExp
     @Override
     public StyledString toStyledString(int maxDepth)
     {
-        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.either(UnitExp::toStyledString, ty -> ty.toStyledString(maxDepth)), StyledString.s(")"))).toArray(StyledString[]::new)));
+        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("("), t.either(UnitExp::toStyledString, ty -> ty.toStyledString(maxDepth)), StyledString.s(")"))).toArray(StyledString[]::new)));
     }
 
     @Override
