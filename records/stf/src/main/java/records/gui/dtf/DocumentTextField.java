@@ -3,6 +3,7 @@ package records.gui.dtf;
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import javafx.event.Event;
@@ -13,6 +14,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -216,6 +218,16 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
                 String clip = Clipboard.getSystemClipboard().getString();
                 if (clip != null && !clip.isEmpty())
                     replaceSelection(clip);
+            }
+            
+            if (keyEvent.isShortcutDown() && (keyEvent.getCode() == KeyCode.X || keyEvent.getCode() == KeyCode.C))
+            {
+                if (getAnchorPosition() != getCaretPosition())
+                {
+                    Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, document.getText().substring(Math.min(getCaretPosition(), getAnchorPosition()), Math.max(getCaretPosition(), getAnchorPosition()))));
+                    if (keyEvent.getCode() == KeyCode.X)
+                        replaceSelection("");
+                }
             }
 
             // Note escape triggers this, but then also a later block too.  Important not to add an else!
