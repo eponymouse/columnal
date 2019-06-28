@@ -118,7 +118,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 if (!Objects.equals(prev, n))
                 {
-                    Log.logStackTrace("Showing completions");
                     display.showCompletions(content.getLexerResult().getCompletionsFor(n));
                 }
                 prev = n;
