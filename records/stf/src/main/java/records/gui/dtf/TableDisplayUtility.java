@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Column;
+import records.data.Column.AlteredState;
 import records.data.Column.EditableStatus;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -89,7 +90,7 @@ public class TableDisplayUtility
                 ColumnDetails item;
                 try
                 {
-                    item = getDisplay(displayColumnIndex, col, renameColumn.apply(col.getName()), getTablePos, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                    item = getDisplay(displayColumnIndex, col, renameColumn.apply(col.getName()), getTablePos, col.getAlteredState() == AlteredState.OVERWRITTEN ? ImmutableList.of("column-title-overwritten") : ImmutableList.of(), onModify != null ? onModify : FXPlatformRunnable.EMPTY);
                 }
                 catch (InternalException | UserException e)
                 {
@@ -145,7 +146,7 @@ public class TableDisplayUtility
                         public void styleTogether(Collection<? extends DocumentTextField> cellsInColumn, double columnSize)
                         {
                         }
-                    });
+                    }, ImmutableList.of());
                 }
                 r.add(item);
                 displayColumnIndex += displayCol(1);
@@ -155,9 +156,9 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, ImmutableList<String> extraColumnStyles, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify));
+        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify), extraColumnStyles);
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override

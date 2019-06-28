@@ -5,7 +5,6 @@ Express Priority (needed for task C)
 - Make it more apparent that you can click to insert examples.
 - No right-click context menu (at least with cut/copy/paste) when editing cell value
 - No right-click context menu (at least with cut/copy/paste) when editing expression
-- Bold the calculate columns which are actually new/overwritten
 - Make up and down work sensibly in expression editor when autocomplete isn't showing.
 - If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
@@ -285,3 +284,4 @@ Done after Phil B & Jon A:
 - No undo while editing a cell value
 - The error for dividing by Optional still has the minus operator in the type "Optional-(Number)" but it shouldn't
 - Ctrl-C for copy doesn't work when editing cell data values
+- Bold the calculate columns which are actually new/overwritten

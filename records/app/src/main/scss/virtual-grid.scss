@@ -64,6 +64,10 @@
     }
     -fx-label-padding: 0 1 0 2;
     
+    &.column-title-overwritten {
+        -fx-font-weight: bold;
+    }
+    
     &.column-title-edit {
         -fx-cursor: hand;
         &:hover {

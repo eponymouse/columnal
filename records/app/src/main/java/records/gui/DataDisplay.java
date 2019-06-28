@@ -708,6 +708,7 @@ public abstract class DataDisplay extends HeadedDisplay
             }
             
             columnName.getStyleClass().add("table-display-column-title");
+            columnName.getStyleClass().addAll(column.getDisplayHeaderClasses());
             //BorderPane.setAlignment(columnName, Pos.CENTER_LEFT);
             //BorderPane.setMargin(columnName, new Insets(0, 0, 0, 2));
             FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
