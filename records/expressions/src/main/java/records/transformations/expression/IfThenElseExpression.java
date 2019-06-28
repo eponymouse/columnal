@@ -67,7 +67,8 @@ public class IfThenElseExpression extends NonOperatorExpression
         if (thenType == null || elseType == null)
             return null;
 
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(thenType.typeExp, elseType.typeExp), state);
+        // We show a type mismatch between then and else as an error in the else clause, effectively assuming that the then is correct: 
+        return onError.recordTypeAndError(elseExpression, TypeExp.unifyTypes(thenType.typeExp, elseType.typeExp), state);
     }
 
     @Override
