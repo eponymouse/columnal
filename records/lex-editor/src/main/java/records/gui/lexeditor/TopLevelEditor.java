@@ -50,6 +50,7 @@ import utility.gui.TimedFocusable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -71,7 +72,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private final InformationPopup informationPopup;
     private final TypeManager typeManager;
     private boolean hiding;
-    private boolean forceSaving;
 
     // package-visible
     TopLevelEditor(@Nullable String originalContent, LEXER lexer, TypeManager typeManager, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
@@ -110,9 +110,19 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             onChange.consume(Utility.later(this).save(false));
         });
         content.addCaretPositionListener(informationPopup::caretMoved);
-        content.addCaretPositionListener((@CanonicalLocation Integer n) -> {
-            if (!forceSaving)
-                display.showCompletions(content.getLexerResult().getCompletionsFor(n));
+        content.addCaretPositionListener(new FXPlatformConsumer<@CanonicalLocation Integer>()
+        {
+            @MonotonicNonNull @CanonicalLocation Integer prev = null;
+            @Override
+            public @OnThread(Tag.FXPlatform) void consume(@CanonicalLocation Integer n)
+            {
+                if (!Objects.equals(prev, n))
+                {
+                    Log.logStackTrace("Showing completions");
+                    display.showCompletions(content.getLexerResult().getCompletionsFor(n));
+                }
+                prev = n;
+            }
         });
         onChange.consume(save(true));
         FXUtility.onceNotNull(display.sceneProperty(), s -> FXUtility.runAfter(() -> showAllErrors()));
@@ -157,9 +167,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     {
         if (forceSaveAsIfUnfocused)
         {
-            forceSaving = true;
             content.forceSaveAsIfUnfocused();
-            forceSaving = false;
             showAllErrors();
         }
         Log.debug("Saved: " + content.getLexerResult().result + " //" + forceSaveAsIfUnfocused);
