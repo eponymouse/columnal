@@ -57,8 +57,9 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class TestNumberColumnDisplay extends FXApplicationTest
 {
+    // The inside items are the centre-side of the ellipsis
     @OnThread(Tag.Any)
-    private static enum Target { FAR_LEFT, INSIDE_LEFT, MIDDLE, INSIDE_RIGHT, FAR_RIGHT }
+    private static enum Target { FAR_LEFT, FAR_LEFT_AFTER_MINUS, INSIDE_LEFT, MIDDLE, INSIDE_RIGHT, FAR_RIGHT }
     
     /**
      * Given a list of numbers (as strings), displays them in GUI and checks that:
@@ -151,7 +152,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     clickOn(cell);
                     TestUtil.sleep(400);
                     String gui = expectedGUI.get(i);
-                    String guiMinusEllipsis = gui.replaceAll("\u2026", "").replaceAll("\\. ", "").trim();
+                    String guiMinusEllipsis = gui.replaceAll("\u2026", "").replaceAll("-", "").replaceAll("\\. ", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
                         Bounds b;
@@ -177,15 +178,21 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     final int afterIndex;
                     int nonEllipsisPos = actual.indexOf(guiMinusEllipsis);
                     assertNotEquals("Should be able to find minus ellipsis string: \"" + guiMinusEllipsis + "\" in \"" + actual + "\"", -1, nonEllipsisPos);
+                    boolean startsWithMinus = actual.startsWith("-");
+                    boolean ellipsisAtStart = gui.startsWith("\u2026") || gui.startsWith("-\u2026");
                     switch (target)
                     {
                         case FAR_LEFT:
                             clickOnScreenPos = posOfCaret.apply(0);
                             afterIndex = 0; //nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
                             break;
+                        case FAR_LEFT_AFTER_MINUS:
+                            clickOnScreenPos = posOfCaret.apply(startsWithMinus ? 1 : 0);
+                            afterIndex = startsWithMinus ? 1 : 0; //nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
+                            break;
                         case INSIDE_LEFT:
-                            clickOnScreenPos = posOfCaret.apply(1);
-                            afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? 0 : 1);
+                            clickOnScreenPos = posOfCaret.apply(startsWithMinus ? 2 : 1);
+                            afterIndex = nonEllipsisPos + (ellipsisAtStart ? 0 : 1);
                             break;
                         case INSIDE_RIGHT:
                             clickOnScreenPos = posOfCaret.apply(gui.trim().length() - (gui.trim().endsWith(".") ? 2 : 1));
@@ -203,7 +210,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                         default: // MIDDLE
                             int targetPos = gui.trim().length() / 2;
                             clickOnScreenPos = posOfCaret.apply(targetPos);
-                            afterIndex = targetPos + nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
+                            afterIndex = targetPos + nonEllipsisPos + (ellipsisAtStart ? -1 : 0) + (startsWithMinus ? -1 : 0);
                             break;
                     }
                     clickOn(clickOnScreenPos);
@@ -241,6 +248,12 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         testNumbers(of("0.1", "1.1", "2.1"), of("0.1", "1.1", "2.1"));
     }
 
+    @Test
+    public void testNegative() throws Exception
+    {
+        testNumbers(of("0.1", "-0.1", "2"), of("0.1", "-0.1", "2. "));
+    }
+
     // Note: need to have stylesheets in place or this will fail.
     @Test
     public void testAllTruncated() throws Exception
@@ -249,9 +262,21 @@ public class TestNumberColumnDisplay extends FXApplicationTest
     }
 
     @Test
+    public void testAllTruncatedNeg() throws Exception
+    {
+        testNumbers(of("-0.112233445566778899", "1.112233445566778899", "-2.112233445566778899"), of("-0.1122334\u2026", "1.1122334\u2026", "-2.1122334\u2026"));
+    }
+
+    @Test
     public void testSomeTruncated() throws Exception
     {
         testNumbers(of("0.112233445566778899", "1.112233445", "2.11223344", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
+    }
+
+    @Test
+    public void testSomeTruncatedNeg() throws Exception
+    {
+        testNumbers(of("-0.112233445566778899", "1.112233445", "-2.11223344", "3.112233"), of("-0.1122334\u2026", "1.1122334\u2026", "-2.11223344", "3.112233  "));
     }
     
     @Test
@@ -261,9 +286,21 @@ public class TestNumberColumnDisplay extends FXApplicationTest
     }
 
     @Test
+    public void testAllAbbreviatedNeg() throws Exception
+    {
+        testNumbers(of("1234567890", "-2234567890", "3234567890"), of("\u202634567890", "-\u20264567890", "\u202634567890"));
+    }
+
+    @Test
     public void testSomeAbbreviated() throws Exception
     {
         testNumbers(of("1234567890", "234567890", "34567890"), of("\u202634567890", "234567890", "34567890"));
+    }
+
+    @Test
+    public void testSomeAbbreviatedNeg() throws Exception
+    {
+        testNumbers(of("-1234567890", "234567890", "34567890"), of("-\u20264567890", "234567890", "34567890"));
     }
 
     @Test
@@ -276,6 +313,12 @@ public class TestNumberColumnDisplay extends FXApplicationTest
     public void testBothEnds() throws Exception
     {
         testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890.  "));
+    }
+
+    @Test
+    public void testBothEndsNeg() throws Exception
+    {
+        testNumbers(of("-1234567890.112233445566778899", "2.3", "3.45", "-4.567", "1234567890"), of("-\u202667890.1\u2026", "2.3 ", "3.45", "-4.5\u2026", "\u2026567890.  "));
     }
     
     @Property(trials = 1)

@@ -9,6 +9,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataTypeUtility;
 import records.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -17,6 +18,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -44,7 +46,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                 @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
                 if (value != null)
                 {
-                    visibleItems.add(new NumberDetails(visibleCell, value));
+                    visibleItems.add(new NumberDetails(visibleCell, DataTypeUtility.value(value)));
                 }
             }
         }
@@ -91,7 +93,10 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                 }
                 if (display.displayIntegerPart.length() > maxLeftLength)
                 {
-                    display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
+                    if (display.displayIntegerPart.startsWith("-"))
+                        display.displayIntegerPart = "-" + ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 2);
+                    else
+                        display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
                 }
 
                 if (maxRightLength == 0)
@@ -120,10 +125,18 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private String displayIntegerPart;
         private DotStatus displayDotState;
 
-        public NumberDetails(DocumentTextField textField, Number n)
+        public NumberDetails(DocumentTextField textField, @Value Number n)
         {
             this.textField = textField;
-            fullIntegerPart = Utility.getIntegerPart(n).toString();
+            Number intPart = Utility.getIntegerPart(n);
+            // Numbers like -0.5 will have positive zero as their integer part,
+            // so we must guard against it and turn it into negative zero:
+            if (new BigInteger(intPart.toString()).equals(BigInteger.ZERO) && Utility.toBigDecimal(n).signum() < 0)
+            {
+                fullIntegerPart = "-0";
+            }
+            else
+                fullIntegerPart = intPart.toString();
             fullFracPart = Utility.getFracPartAsString(n, 0, -1);
             // TODO should these be taken from NumberEntry?
             displayIntegerPart = fullIntegerPart;
@@ -145,8 +158,8 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                         new Pair<>(ImmutableSet.of("stf-number-frac"), displayFracPart)
                 ), n -> {
                     // Clicking the left always stays left most:
-                    if (n == 0)
-                        return 0;
+                    if (n == 0 || (n == 1 && displayIntegerPart.startsWith("-")))
+                        return n;
                     else
                     {
                         int prevInt = displayIntegerPart.length();
