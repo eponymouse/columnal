@@ -122,18 +122,9 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         getStyleClass().add("editor-display");
         setFocusTraversable(true);
         
-        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (!focused)
-            {
-                showCompletions(null);
-                lastFocusLeft = System.currentTimeMillis();
-            }
-            focusChanged(focused);
-        });
-        
         addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
             FXUtility.mouse(this).requestFocus();
-            if (!isMouseClickImmune())
+            if (!isMouseClickImmune() && event.getButton() == MouseButton.PRIMARY)
                 positionCaret(event.getX(), event.getY(), true);
             event.consume();
         });
@@ -143,7 +134,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         });
         addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
             FXUtility.mouse(this).requestFocus();
-            if (!isMouseClickImmune())
+            if (!isMouseClickImmune() && event.getButton() == MouseButton.PRIMARY)
                 positionCaret(event.getX(), event.getY(), false);
             event.consume();
         });
@@ -243,24 +234,16 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     }
                     break;
                 case X:
+                    if (keyEvent.isShortcutDown())
+                        cut();
+                    break;
                 case C:
                     if (keyEvent.isShortcutDown())
-                    {
-                        if (content.getAnchorPosition() != content.getCaretPosition())
-                        {
-                            Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content.getText().substring(Math.min(content.getCaretPosition(), content.getAnchorPosition()), Math.max(content.getCaretPosition(), content.getAnchorPosition()))));
-                            if (keyEvent.getCode() == KeyCode.X)
-                                content.replaceSelection("");
-                        }
-                    }
+                        copy();
                     break;
                 case V:
                     if (keyEvent.isShortcutDown())
-                    {
-                        String clip = Clipboard.getSystemClipboard().getString();
-                        if (clip != null && !clip.isEmpty())
-                            content.replaceSelection(clip);
-                    }
+                        paste();
                     break;
                 case ESCAPE:
                     showCompletions(null);
@@ -367,6 +350,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     @Override
     public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
     {
+        if (!focused)
+        {
+            showCompletions(null);
+            lastFocusLeft = System.currentTimeMillis();
+        }
         super.focusChanged(focused);
         if (focused)
         {
@@ -622,5 +610,17 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     protected double computePrefHeight(double width)
     {
         return textFlow.prefHeight(width);
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) void replaceSelection(String replacement)
+    {
+        content.replaceSelection(replacement);
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) String getSelectedText()
+    {
+        return content.getText().substring(Math.min(content.getCaretPosition(), content.getAnchorPosition()), Math.max(content.getCaretPosition(), content.getAnchorPosition()));
     }
 }

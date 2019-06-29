@@ -17,6 +17,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
@@ -63,10 +64,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     protected boolean scrollable;
     protected TextAlignment unfocusedAlignment = TextAlignment.LEFT;
     private @Nullable Double idealWidth = null;
+    private final @Nullable FXPlatformRunnable onExpand;
 
     public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
     {
         super(makeTextNodes(new ReadOnlyDocument("").getStyledSpans(false)));
+        this.onExpand = onExpand;
         this.scrollable = true;
         getStyleClass().add("document-text-field");
         setFocusTraversable(true);
@@ -78,28 +81,23 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             InputMap.<MouseEvent>consume(MouseEvent.ANY, FXUtility.mouse(this)::mouseEvent),
             InputMap.<KeyEvent>consume(KeyEvent.ANY, FXUtility.keyboard(this)::keyboardEvent)
         ));
-        
-        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            document.focusChanged(focused);
-            if (!focused)
-            {
-                caretPosition.moveTo(0);
-                anchorPosition.moveTo(0);
-            }
-            FXUtility.mouse(this).refreshDocument(focused);
-            if (onExpand != null)
-            {
-                Utility.later(this).setExpanded(focused);
-                onExpand.run();
-            }
-            
-            Utility.later(this).focusChanged(focused);
-        });
     }
 
     @Override
     public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
     {
+        document.focusChanged(focused);
+        if (!focused)
+        {
+            caretPosition.moveTo(0);
+            anchorPosition.moveTo(0);
+        }
+        FXUtility.mouse(this).refreshDocument(focused);
+        if (onExpand != null)
+        {
+            Utility.later(this).setExpanded(focused);
+            onExpand.run();
+        }
         super.focusChanged(focused);
         if (!focused)
         {
@@ -113,9 +111,10 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
         //    Log.debug("Got mouse event: " + mouseEvent);
         
-        if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED
+        if ((mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED
             //|| (mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
             || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED)
+                && mouseEvent.getButton() == MouseButton.PRIMARY)
         {
             //Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
             // Position the caret at the clicked position:
@@ -213,21 +212,17 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
                 caretPosition.moveTo(document.getLength());
             }
 
+            if (keyEvent.getCode() == KeyCode.X && keyEvent.isShortcutDown())
+            {
+                cut();
+            }
+            if (keyEvent.getCode() == KeyCode.C && keyEvent.isShortcutDown())
+            {
+                copy();
+            }
             if (keyEvent.getCode() == KeyCode.V && keyEvent.isShortcutDown())
             {
-                String clip = Clipboard.getSystemClipboard().getString();
-                if (clip != null && !clip.isEmpty())
-                    replaceSelection(clip);
-            }
-            
-            if (keyEvent.isShortcutDown() && (keyEvent.getCode() == KeyCode.X || keyEvent.getCode() == KeyCode.C))
-            {
-                if (getAnchorPosition() != getCaretPosition())
-                {
-                    Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, document.getText().substring(Math.min(getCaretPosition(), getAnchorPosition()), Math.max(getCaretPosition(), getAnchorPosition()))));
-                    if (keyEvent.getCode() == KeyCode.X)
-                        replaceSelection("");
-                }
+                paste();
             }
 
             // Note escape triggers this, but then also a later block too.  Important not to add an else!
@@ -262,9 +257,17 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         }
     }
 
-    private void replaceSelection(String character)
+    @Override
+    @OnThread(Tag.FXPlatform)
+    protected void replaceSelection(String character)
     {
         document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), character);
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) String getSelectedText()
+    {
+        return document.getText().substring(Math.min(getCaretPosition(), getAnchorPosition()), Math.max(getCaretPosition(), getAnchorPosition()));
     }
 
     private void moveAnchorToCaret()
@@ -297,7 +300,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     @OnThread(Tag.FXPlatform)
     public void documentChanged(Document document)
     {
-        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isFocused())));
+        textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isEffectivelyFocused())));
         FXUtility.setPseudoclass(this, "has-error", document.hasError());
         requestLayout();
     }
@@ -388,7 +391,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         {
             TextLayout textLayout = textFlow.getInternalTextLayout();
             int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
-            caretPosition.moveTo(isFocused() ? index : document.mapCaretPos(index));
+            caretPosition.moveTo(isEffectivelyFocused() ? index : document.mapCaretPos(index));
             moveAnchorToCaret();
         }
         catch (Exception e)
@@ -421,12 +424,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
 
     public List<Pair<Set<String>, String>> _test_getStyleSpans()
     {
-        return document.getStyledSpans(isFocused()).collect(Collectors.<Pair<Set<String>, String>>toList());
+        return document.getStyledSpans(isEffectivelyFocused()).collect(Collectors.<Pair<Set<String>, String>>toList());
     }
 
     public List<Pair<Set<String>, String>> _test_getStyleSpans(int from, int to)
     {
-        List<Pair<Set<String>, String>> styledSpans = new ArrayList<>(document.getStyledSpans(isFocused()).collect(Collectors.<Pair<Set<String>, String>>toList()));
+        List<Pair<Set<String>, String>> styledSpans = new ArrayList<>(document.getStyledSpans(isEffectivelyFocused()).collect(Collectors.<Pair<Set<String>, String>>toList()));
         int leftToSkip = from;
         int leftToRetain = to - from;
         int index = 0;
@@ -539,7 +542,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             Bounds caretBounds = caretShape.localToParent(caretLocalBounds);
 
             //Log.debug("Bounds: " + caretBounds + " in " + getWidth() + "x" + getHeight() + " trans " + horizTranslation + "x" + vertTranslation + " whole " + wholeTextWidth + "x" + wholeTextHeight);
-            boolean focused = isFocused();
+            boolean focused = isEffectivelyFocused();
             if (scrollable)
             {
                 if (focused && caretBounds.getMinX() - 5 < 0)
@@ -617,7 +620,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     public void setUnfocusedAlignment(TextAlignment textAlignment)
     {
         this.unfocusedAlignment = textAlignment;
-        if (!isFocused())
+        if (!isEffectivelyFocused())
         {
             textFlow.setTextAlignment(textAlignment);
         }

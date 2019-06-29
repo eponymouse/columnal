@@ -52,6 +52,7 @@ class Node
     void setOnMouseEntered(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
     void setOnMouseExited(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
     void setOnScroll(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super ScrollEvent> value);
+    void setOnContextMenuRequested(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super ContextMenuEvent> value);
     
     void setMouseTransparent(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
 

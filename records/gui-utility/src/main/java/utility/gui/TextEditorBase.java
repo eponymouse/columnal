@@ -2,6 +2,7 @@ package utility.gui;
 
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import javafx.animation.Animation;
@@ -12,7 +13,11 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.effect.BlendMode;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -24,6 +29,7 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -44,6 +50,10 @@ import java.util.stream.Collectors;
 public abstract class TextEditorBase extends Region
 {
     protected final HelpfulTextFlow textFlow;
+    private final ContextMenu contextMenu = new ContextMenu();
+    // Can't use contextMenu.isShowing() because it may return false at the point
+    // we lose focus to the menu:
+    private boolean showingContextMenu;
 
     // We only need these when we are focused, and only one field
     // can ever be focused at once.  So these are null while
@@ -229,6 +239,43 @@ public abstract class TextEditorBase extends Region
         
         getChildren().setAll(caretAndSelectionNodes.backgroundsPane, caretAndSelectionNodes.errorUnderlinePane, textFlow);
 
+        MenuItem cutItem = GUI.menuItem("cut", FXUtility.mouse(this)::cut);
+        MenuItem copyItem = GUI.menuItem("copy", FXUtility.mouse(this)::copy);
+        MenuItem pasteItem = GUI.menuItem("paste", FXUtility.mouse(this)::paste);
+        contextMenu.getItems().setAll(
+                cutItem,
+                copyItem,
+                pasteItem
+        );
+        setOnContextMenuRequested(e -> {
+            if (!contextMenu.isShowing())
+            {
+                showingContextMenu = true;
+                FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
+                contextMenu.show(textFlow, e.getScreenX(), e.getScreenY());
+            }
+        });
+        contextMenu.setOnShowing(e -> {
+            boolean hasSelection = !FXUtility.mouse(this).getSelectedText().isEmpty();
+            String clipContent = Clipboard.getSystemClipboard().getString();
+            boolean hasPaste = clipContent != null && !clipContent.isEmpty();
+            cutItem.setDisable(!hasSelection);
+            copyItem.setDisable(!hasSelection);
+            pasteItem.setDisable(!hasPaste);
+        });
+        contextMenu.setOnHidden(e -> {
+            showingContextMenu = false;
+            FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
+        });
+        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    protected boolean isEffectivelyFocused(@UnknownInitialization(Region.class) TextEditorBase this)
+    {
+        return isFocused() || showingContextMenu;
     }
 
     @Override
@@ -312,5 +359,38 @@ public abstract class TextEditorBase extends Region
     public double calcWidthToFitContent()
     {
         return textFlow.prefWidth(-1);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    protected abstract String getSelectedText();
+    
+    @OnThread(Tag.FXPlatform)
+    protected abstract void replaceSelection(String replacement);
+
+    @OnThread(Tag.FXPlatform)
+    protected void cut()
+    {
+        copy();
+        replaceSelection("");
+    }
+
+    @OnThread(Tag.FXPlatform)
+    protected void copy()
+    {
+        String selection = getSelectedText();
+        if (!selection.isEmpty())
+        {
+            Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, selection));
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    protected void paste()
+    {
+        String content = Clipboard.getSystemClipboard().getString();
+        if (content != null && !content.isEmpty())
+        {
+            replaceSelection(content);
+        }
     }
 }

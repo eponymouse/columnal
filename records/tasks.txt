@@ -2,8 +2,6 @@ Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - When you autocomplete Number, it shows error immediately 
-- No right-click context menu (at least with cut/copy/paste) when editing cell value
-- No right-click context menu (at least with cut/copy/paste) when editing expression
 - Make up and down work sensibly in expression editor when autocomplete isn't showing.
 - If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
@@ -14,6 +12,7 @@ Express Priority (needed for task C)
 - "as unit" should show as related to "convert" 
 - Give a useful error when you try to use a column defined in this same calculate (and offer quick fix to add new calculate to help out)
 - Clicking header row of a check doesn't (visually?) select the table
+- There is no undo in the expression editor
 
 Probably fixed by recent changes but not definite
 ---
@@ -289,3 +288,5 @@ Done after Phil B & Jon A:
 - Loading this expression in editor inserts a "unit" before the unit: @ifN100m Time=~Optional\Is(m)@then100{m}/m@else@ifN100yd time=~Optional\Is(y)@thenas unit({m/s},100{yard}/y)@else0{m/s}@endif@endif
 - Make it more apparent that you can click to insert examples.
 - Minus sign is missing from formatted number display of columns, -0.1 shows as 0.1
+- No right-click context menu (at least with cut/copy/paste) when editing cell value
+- No right-click context menu (at least with cut/copy/paste) when editing expression
