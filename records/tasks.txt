@@ -2,7 +2,6 @@ Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - When you autocomplete Number, it shows error immediately 
-- Make it more apparent that you can click to insert examples.
 - No right-click context menu (at least with cut/copy/paste) when editing cell value
 - No right-click context menu (at least with cut/copy/paste) when editing expression
 - Make up and down work sensibly in expression editor when autocomplete isn't showing.
@@ -289,3 +288,4 @@ Done after Phil B & Jon A:
 - If you have e.g. @if true @then 100{m} @else 0 @endif then you get an error on the whole if for the mismatch in type units, but it should only show on the else branch to be clearer (assume then-branch is correct)
 - If you try to type "Number" after an opening bracket you end up with "N u m b e r" which is super-weird
 - Loading this expression in editor inserts a "unit" before the unit: @ifN100m Time=~Optional\Is(m)@then100{m}/m@else@ifN100yd time=~Optional\Is(y)@thenas unit({m/s},100{yard}/y)@else0{m/s}@endif@endif
+- Make it more apparent that you can click to insert examples.

@@ -3,6 +3,8 @@
                 xmlns:ext="http://exslt.org/common" exclude-result-prefixes="#all"
                 version="2.0">
     <xsl:variable name="example-arrow"><span class="example-arrow">&#x2192;</span></xsl:variable>
+    <!-- Use as: <xsl:copy-of select="$example-arrow"/> -->
+    <xsl:variable name="examples-header"><span class="examples-header">Examples</span><span class="examples-header-hint">Click an example to insert it</span></xsl:variable>
     
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
@@ -91,7 +93,7 @@
             </span>
             <div class="description"><xsl:apply-templates select="$function/description"/></div>
             <div class="examples">
-                <span class="examples-header">Examples</span>
+                <xsl:copy-of select="$examples-header"/>
                 <xsl:for-each select="example">
                 <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                         name="processExpression"><xsl:with-param name="expression" select="input"/><xsl:with-param
@@ -137,7 +139,7 @@
                 <xsl:apply-templates select="$operator/description"/>
             </div>
             <div class="examples">
-                <span class="examples-header">Examples</span>
+                <xsl:copy-of select="$examples-header"/>
                 <xsl:for-each select="$operator/example">
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
@@ -187,7 +189,7 @@
             <span class="literal-name-header" id="literal-@name"><xsl:value-of select="@name"/>{...}</span>
             <div class="description"><xsl:apply-templates select="description"/></div>
             <div class="examples">
-                <span class="examples-header">Examples</span>
+                <xsl:copy-of select="$examples-header"/>
                 <xsl:for-each select="example">
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
@@ -236,7 +238,7 @@
             </span>
             <div class="description"><xsl:apply-templates select="description"/></div>
             <div class="examples">
-                <span class="examples-header">Examples</span>
+                <xsl:copy-of select="$examples-header"/>
                 <xsl:for-each select="example">
                     <div class="example"><span class="example-call"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template> <xsl:copy-of select="$example-arrow"/> <xsl:call-template

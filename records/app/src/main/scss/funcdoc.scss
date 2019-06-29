@@ -126,13 +126,22 @@ body.indiv {
 }
 
 body.indiv .examples .examples-header {
-    font-size: 11pt;
+    font-size: 13pt;
 }
 
 .examples {
     .examples-header {
         font-size: 14pt;
         font-weight: bold;
+    }
+    .examples-header-hint {
+        visibility: hidden;
+    }
+    html.autocomplete & .examples-header-hint {
+        visibility: visible;
+        display: block;
+        font-size: 80%;
+        color: grey(70%);
     }
     & .example {
         margin-top: 10pt;
