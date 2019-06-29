@@ -2,7 +2,6 @@ Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - When you autocomplete Number, it shows error immediately 
-- Make up and down work sensibly in expression editor when autocomplete isn't showing.
 - If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 - Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
@@ -291,3 +290,4 @@ Done after Phil B & Jon A:
 - No right-click context menu (at least with cut/copy/paste) when editing cell value
 - No right-click context menu (at least with cut/copy/paste) when editing expression
 - There is no undo in the expression editor
+- Make up and down work sensibly in expression editor when autocomplete isn't showing.

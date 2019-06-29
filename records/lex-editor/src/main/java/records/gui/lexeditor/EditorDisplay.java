@@ -202,10 +202,28 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 case DOWN:
                     if (autoComplete.isShowing())
                         autoComplete.down();
+                    else
+                    {
+                        Point2D caretBottomOnScreen = getCaretBottomOnScreen();
+                        if (caretBottomOnScreen != null)
+                        {
+                            Point2D p = screenToLocal(caretBottomOnScreen.add(0, 8));
+                            positionCaret(p.getX(), p.getY(), !keyEvent.isShiftDown());
+                        }
+                    }
                     break;
                 case UP:
                     if (autoComplete.isShowing())
                         autoComplete.up();
+                    else
+                    {
+                        Point2D caretBottomOnScreen = getCaretTopOnScreen();
+                        if (caretBottomOnScreen != null)
+                        {
+                            Point2D p = screenToLocal(caretBottomOnScreen.subtract(0, 8));
+                            positionCaret(p.getX(), p.getY(), !keyEvent.isShiftDown());
+                        }
+                    }
                     break;
                 case PAGE_DOWN:
                     if (autoComplete.isShowing())
@@ -458,6 +476,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     {
         // localToScreen can return null if not in window, hence the @Nullable return
         return localToScreen(textFlow.getClickPosFor(content.mapContentToDisplay(caretPos), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
+    }
+
+    public @Nullable Point2D getCaretTopOnScreen()
+    {
+        return localToScreen(textFlow.getClickPosFor(content.mapContentToDisplay(content.getCaretPosition()), VPos.TOP, new Dimension2D(0, 0)).getFirst());
     }
     
     @OnThread(Tag.FXPlatform)
