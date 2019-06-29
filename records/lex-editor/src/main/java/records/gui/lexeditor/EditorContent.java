@@ -21,6 +21,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
     private final ArrayList<FXPlatformConsumer<@CanonicalLocation Integer>> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
+    private final UndoManager undoManager;
     
     @SuppressWarnings("units")
     public EditorContent(String originalContent, Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer)
@@ -44,6 +46,8 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         this.curContent = this.lexer.process(originalContent, 0);
         this.curCaretPosition = curContent.caretPositions.size() > 0 ? curContent.caretPositions.get(0).positionInternal : 0;
         this.curAnchorPosition = curCaretPosition;
+        this.undoManager = new UndoManager(originalContent);
+        contentListeners.add(() -> undoManager.contentChanged(getText(), getCaretPosition()));
     }
 
     public void positionCaret(Focus side)
@@ -271,5 +275,25 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             m.forEach((k, v) -> accum.merge(k, v, (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b))));
         });
         return ImmutableMap.copyOf(accum);
+    }
+
+    public void undo()
+    {
+        @Nullable Pair<String, @CanonicalLocation Integer> possible = undoManager.undo();
+        if (possible != null)
+        {
+            replaceWholeText(possible.getFirst());
+            positionCaret(possible.getSecond(), true);
+        }
+    }
+
+    public void redo()
+    {
+        @Nullable Pair<String, @CanonicalLocation Integer> possible = undoManager.redo();
+        if (possible != null)
+        {
+            replaceWholeText(possible.getFirst());
+            positionCaret(possible.getSecond(), true);
+        }
     }
 }

@@ -245,6 +245,19 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     if (keyEvent.isShortcutDown())
                         paste();
                     break;
+                case Z:
+                    if (keyEvent.isShortcutDown())
+                    {
+                        if (keyEvent.isShiftDown())
+                            content.redo();
+                        else
+                            content.undo();
+                    }
+                    break;
+                case Y:
+                    if (keyEvent.isShortcutDown())
+                        content.redo();
+                    break;
                 case ESCAPE:
                     showCompletions(null);
                     break;
