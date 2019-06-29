@@ -414,16 +414,16 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
-    {
-        return new Pair<>(ListenerOutcome.KEEP, null);
-    }
-
-    @Override
     public void setPosition(@UnknownInitialization(GridArea.class) CheckDisplay this, CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
             mostRecentBounds.set(getPosition());
+    }
+
+    @Override
+    protected ImmutableList<String> getExtraTitleStyleClasses()
+    {
+        return ImmutableList.of("check-table-title");
     }
 }

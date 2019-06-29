@@ -16,7 +16,7 @@
 
 .table-display-table-title {
     -fx-background-color: $table-header-background-color;
-    &.transformation-table-title {
+    &.transformation-table-title, &.check-table-title {
         -fx-background-color: $table-header-transformation-background-color;
         &:table-selected {
             -fx-background-color: $table-header-background-color-selected;
@@ -28,7 +28,7 @@
             }
         }
     }
-    &.transformation-table-title .text-field {
+    &.transformation-table-title .text-field, &.check-table-title .text-field {
         -fx-background-color: $table-header-transformation-background-color, $table-header-transformation-background-color;
         &:focused, &:hover {
             -fx-background-color: grey(85%), $table-header-transformation-background-color;

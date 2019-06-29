@@ -34,10 +34,12 @@ import records.data.TableManager;
 import records.gui.EntireTableSelection;
 import records.gui.ErrorableTextField;
 import records.gui.TableNameTextField;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -560,4 +562,12 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
 
     protected abstract boolean isShowingRowLabels();
 
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    {
+        if (tableHeaderItem != null)
+            tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
+        return new Pair<>(ListenerOutcome.KEEP, null);
+    }
 }

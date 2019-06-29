@@ -576,16 +576,6 @@ public abstract class DataDisplay extends HeadedDisplay
         // Do nothing by default
     }
 
-    
-    @Override
-    @OnThread(Tag.FXPlatform)
-    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
-    {
-        if (tableHeaderItem != null)
-            tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
-        return new Pair<>(ListenerOutcome.KEEP, null);
-    }
-
     /**
      * The list of columns currently being displayed, in order
      * of their display (first in list is leftmost column).
