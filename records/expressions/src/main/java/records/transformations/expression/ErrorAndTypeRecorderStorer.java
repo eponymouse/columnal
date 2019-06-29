@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -81,7 +82,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     {
         TypeExp typeExp = types.get(expression);
         if (typeExp == null)
-            throw new InternalException("Could not find type for expression: " + expression);
+            throw new InternalException("Could not find type for expression: " + expression + "\nFound: " + types.keySet().stream().map(e -> "\n  " + e.toString()).collect(Collectors.joining()));
         return typeExp.toConcreteType(typeManager, true)
             .eitherInt(e -> {throw new InternalException("Could not deduce concrete type for " + expression);}, t -> t);
     }

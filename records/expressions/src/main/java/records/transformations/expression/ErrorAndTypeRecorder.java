@@ -97,9 +97,14 @@ public interface ErrorAndTypeRecorder
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(Expression expression,  Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
     {
-        @Nullable @Recorded TypeExp typeExp = recordType(expression, recordError(expression, typeOrError));
+        return recordTypeAndError(expression, expression, typeOrError, typeState);
+    }
+    
+    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, Expression errorExpression,Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
+    {
+        @Nullable @Recorded TypeExp typeExp = recordType(typeExpression, recordError(errorExpression, typeOrError));
         if (typeExp == null)
             return null;
         else
