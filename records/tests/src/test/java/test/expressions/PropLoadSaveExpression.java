@@ -57,6 +57,13 @@ public class PropLoadSaveExpression extends FXApplicationTest
     }
     
     @Test
+    @OnThread(Tag.FXPlatform)
+    public void testUnit() throws InternalException, UserException
+    {
+        testNoOpEdit("@ifN100m Time=~@call @tag Optional\\Is(m)@then100{m}/m@else@ifN100yd time=~@call @tag Optional\\Is(y)@then@call @function as unit(unit{m/s},100{yard}/y)@else0{m/s}@endif@endif");
+    }
+    
+    @Test
     public void testInvalids()
     {
         TestUtil.fxTest_(() -> {

@@ -13,8 +13,6 @@ Express Priority (needed for task C)
 - If unit completion only has related items then the layout can be screwed up
 - Unit completion after "m" only shows related items, but isn't "m" a direct completion?
 - "as unit" should show as related to "convert" 
-- If you try to type "Number" after an opening bracket you end up with "N u m b e r" which is super-weird
-- Loading this expression in editor inserts a "unit" before the unit: @ifN100m Time=~Optional\Is(m)@then100{m}/m@else@ifN100yd time=~Optional\Is(y)@thenas unit({m/s},100{yard}/y)@else0{m/s}@endif@endif
 - Give a useful error when you try to use a column defined in this same calculate (and offer quick fix to add new calculate to help out)
 - Minus sign is missing from formatted number display of columns, -0.1 shows as 0.1
 - Clicking header row of a check doesn't (visually?) select the table
@@ -289,3 +287,5 @@ Done after Phil B & Jon A:
 - Ctrl-C for copy doesn't work when editing cell data values
 - Bold the calculate columns which are actually new/overwritten
 - If you have e.g. @if true @then 100{m} @else 0 @endif then you get an error on the whole if for the mismatch in type units, but it should only show on the else branch to be clearer (assume then-branch is correct)
+- If you try to type "Number" after an opening bracket you end up with "N u m b e r" which is super-weird
+- Loading this expression in editor inserts a "unit" before the unit: @ifN100m Time=~Optional\Is(m)@then100{m}/m@else@ifN100yd time=~Optional\Is(y)@thenas unit({m/s},100{yard}/y)@else0{m/s}@endif@endif

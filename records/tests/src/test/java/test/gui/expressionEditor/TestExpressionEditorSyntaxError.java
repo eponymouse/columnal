@@ -255,4 +255,14 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     {
         testError("\u0000type{Number{", e(12,12, 12, 13, ""));
     }
+    
+    @Test
+    public void testInvalidUnitLiteral()
+    {
+        testError("as unit({m/s},100{yard}/2{s})",
+            e(8, 9, "{"),
+            e(12, 13, 15, 17,  "{"),
+            e(9, 9, 9, 10, "op"),
+            e(12, 12, 15, 16, "op"));
+    }
 }

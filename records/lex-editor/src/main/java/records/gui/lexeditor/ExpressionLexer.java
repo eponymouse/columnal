@@ -321,7 +321,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 }
             }
 
-            for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals())
+            for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(saver.lastWasNumber()))
             {
                 @Nullable NestedLiteralSource nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, removedChars, saver.locationRecorder);
                 if (nestedOutcome != null)
@@ -768,7 +768,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      */
     private void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
-        for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals())
+        for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(false))
         {
             map(matchWordStart(stem, canonIndex, nestedLiteral.getFirst(), "Value", WordPosition.FIRST_WORD), c -> c.withReplacement(nestedLiteral.getFirst() + "}", StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
                     .withCaretPosAfterCompletion(nestedLiteral.getFirst().length())
@@ -1101,9 +1101,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
 
-    private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals()
+    private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals(boolean lastWasNumber)
     {
-        return ImmutableList.of(
+        Function<NestedLiteralSource, LiteralOutcome> unitLit = c -> {
+            UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
+            LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
+            return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
+        };
+        ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> anywhere = ImmutableList.of(
             new Pair<>("date{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTHDAY, c.innerContent))),
             new Pair<>("datetime{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIME, c.innerContent))),
             new Pair<>("datetimezoned{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIMEZONED, c.innerContent))),
@@ -1114,12 +1119,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             }),
-            new Pair<>("{", c -> {
-                UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
-                LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
-                return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
-            })
+            new Pair<>("unit{", unitLit)
         );
+        if (lastWasNumber)
+            return Utility.appendToList(anywhere, new Pair<>("{", unitLit));
+        else
+            return anywhere;
     }
     
     private static class NestedLiteralSource

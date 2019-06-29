@@ -159,10 +159,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 write("type{", DELAY);
                 push(KeyCode.DELETE);
-                TypeLiteralExpression f = (TypeLiteralExpression)expression;
                 try
                 {
-                    enterType(f.getType(), r);
+                    enterType(self.getType(), r);
                 }
                 catch (InternalException e)
                 {
@@ -175,7 +174,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
             {
-                write(self.toString(), DELAY);
+                write("unit{", DELAY);
+                push(KeyCode.DELETE);
+                write(self.getUnit().save(false, true));
+                write("}");
                 return UnitType.UNIT;
             }
 

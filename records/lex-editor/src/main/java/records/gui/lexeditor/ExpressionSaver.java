@@ -748,6 +748,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }};
     }
 
+    public boolean lastWasNumber()
+    {
+        ArrayList<Either<@Recorded Expression, OpAndNode>> curItems = currentScopes.peek().items;
+        return curItems.size() >= 1 && curItems.get(curItems.size() - 1).either(e -> e instanceof NumericLiteral, op -> false);
+    }
 
     @Override
     public void saveOperand(@UnknownIfRecorded Expression singleItem, CanonicalSpan location)
