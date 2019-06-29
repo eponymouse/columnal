@@ -290,6 +290,13 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             if (getNode() != null)
                 FXUtility.setPseudoclass(getNode(), "table-selected", selected);
         }
+
+        @OnThread(Tag.FXPlatform)
+        public void setPseudoclass(String pseudoClass, boolean on)
+        {
+            if (getNode() != null)
+                FXUtility.setPseudoclass(getNode(), pseudoClass, on);
+        }
     }
 
     public abstract void gotoRow(Window parent, @AbsColIndex int column);

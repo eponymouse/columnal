@@ -10,7 +10,8 @@ Express Priority (needed for task C)
 - Unit completion after "m" only shows related items, but isn't "m" a direct completion?
 - "as unit" should show as related to "convert" 
 - Give a useful error when you try to use a column defined in this same calculate (and offer quick fix to add new calculate to help out)
-- Format check display to be red title when failing, green when passing.
+- Check display has no context menu when right-clicking header
+- Check does not show any/all rows edit, only expression, when edit link clicked
 
 Probably fixed by recent changes but not definite
 ---
@@ -291,3 +292,4 @@ Done after Phil B & Jon A:
 - There is no undo in the expression editor
 - Make up and down work sensibly in expression editor when autocomplete isn't showing.
 - Clicking header row of a check doesn't (visually?) select the table
+- Format check display to be red title when failing, green when passing.

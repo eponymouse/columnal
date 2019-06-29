@@ -18,7 +18,16 @@
     -fx-background-color: $table-header-background-color;
     &.transformation-table-title, &.check-table-title {
         -fx-background-color: $table-header-transformation-background-color;
-        &:table-selected {
+        &:check-failing {
+            -fx-background-color: $table-header-background-color-check-failing;
+            & .text-field {
+                -fx-background-color: $table-header-background-color-check-failing;
+            }
+            & .text-field:hover, & .text-field:focused {
+                -fx-background-color: grey(85%), $table-header-background-color-check-failing;
+            }
+        }
+        &:table-selected, &:check-failing:table-selected {
             -fx-background-color: $table-header-background-color-selected;
             & .text-field {
                 -fx-background-color: $table-header-background-color-selected;

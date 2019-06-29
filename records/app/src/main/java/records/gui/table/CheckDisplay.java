@@ -179,6 +179,8 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 Platform.runLater(() -> {
                     resultContent.set(pass ? "OK" : "Fail");
                     failExplanationProperty.set(failExplanation);
+                    if (CheckDisplay.this.tableHeaderItem != null)
+                        CheckDisplay.this.tableHeaderItem.setPseudoclass("check-failing", !pass);
                 });
             }
             catch (UserException | InternalException e)
