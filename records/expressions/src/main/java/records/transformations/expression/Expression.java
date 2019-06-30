@@ -1122,7 +1122,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                         return null;
                     RecordSet rs = ourTable.getData();
                     Column c = rs.getColumnOrNull(columnId);
-                    if (c != null && 
+                    if (c != null && !Objects.equals(columnId, editing) &&
                         ((columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW && c.getAlteredState() == AlteredState.OVERWRITTEN)
                             || (columnReferenceType == ColumnReferenceType.WHOLE_COLUMN && c.getAlteredState() != AlteredState.UNALTERED))
                         )
