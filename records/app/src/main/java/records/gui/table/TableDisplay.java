@@ -669,6 +669,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         mostRecentBounds.set(getPosition());
     }
 
+    @Override
     protected ContextMenu getTableHeaderContextMenu()
     {
         List<MenuItem> items = new ArrayList<>();

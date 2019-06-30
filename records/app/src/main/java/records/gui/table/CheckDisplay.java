@@ -13,6 +13,7 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
@@ -55,6 +56,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -69,6 +71,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final Check check;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
+    private final View parent;
     private final TableHat tableHat;
     private final TableBorderOverlay tableBorderOverlay;
     private final FloatingItem<Label> resultFloatingItem;
@@ -80,6 +83,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     {
         super(new TableHeaderItemParams(parent.getManager(), check.getId(), check, floatingSupplier), floatingSupplier);
         this.check = check;
+        this.parent = parent;
         mostRecentBounds = new AtomicReference<>(getPosition());
         
         this.resultFloatingItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS) {
@@ -427,5 +431,17 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     protected ImmutableList<String> getExtraTitleStyleClasses()
     {
         return ImmutableList.of("check-table-title");
+    }
+
+    @Override
+    protected @Nullable ContextMenu getTableHeaderContextMenu()
+    {
+        return new ContextMenu(
+            GUI.menuItem("tableDisplay.menu.delete", () -> {
+                Workers.onWorkerThread("Deleting " + check.getId(), Workers.Priority.SAVE, () ->
+                    parent.getManager().remove(check.getId())
+                );
+            })
+        );
     }
 }
