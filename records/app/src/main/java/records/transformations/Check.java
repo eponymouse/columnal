@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -172,26 +173,26 @@ public class Check extends Transformation implements SingleSourceTransformation
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
             {
                 try
                 {
                     Pair<TableId, Column> column = null;
                     Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
-                    if (tableId == null)
+                    if (columnReference.getTableId() == null)
                     {
                         if (srcTable != null)
                         {
-                            Column col = srcTable.getData().getColumnOrNull(columnId);
+                            Column col = srcTable.getData().getColumnOrNull(columnReference.getColumnId());
                             column = col == null ? null : new Pair<>(srcTable.getId(), col);
                         }
                     }
                     else
                     {
-                        Table table = tableManager.getSingleTableOrNull(tableId);
+                        Table table = tableManager.getSingleTableOrNull(columnReference.getTableId());
                         if (table != null)
                         {
-                            Column col = table.getData().getColumnOrNull(columnId);
+                            Column col = table.getData().getColumnOrNull(columnReference.getColumnId());
                             column = col == null ? null : new Pair<>(table.getId(), col);
                         }
                     }
@@ -201,7 +202,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                     }
                     else
                     {
-                        switch (columnReferenceType)
+                        switch (columnReference.getReferenceType())
                         {
                             case CORRESPONDING_ROW:
                                 if (checkType == CheckType.STANDALONE)
@@ -212,7 +213,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                                 Column columnFinal = column.getSecond();
                                 return new FoundColumn(column.getFirst(), DataTypeValue.array(columnFinal.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
                             default:
-                                throw new InternalException("Unknown reference type: " + columnReferenceType);
+                                throw new InternalException("Unknown reference type: " + columnReference.getReferenceType());
                         }
                     }
                 }

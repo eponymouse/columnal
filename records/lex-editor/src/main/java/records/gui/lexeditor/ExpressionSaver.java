@@ -961,7 +961,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return super.fixesForAdjacentOperands(first, second);
     }
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
     {
         return locationRecorder.getDisplayFor(canonIndex, toRightOf);
     }

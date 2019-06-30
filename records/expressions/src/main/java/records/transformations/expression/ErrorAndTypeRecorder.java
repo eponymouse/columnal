@@ -14,6 +14,7 @@ import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -93,7 +94,7 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an source and information message.
      */
-    public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton);
+    public <EXPRESSION extends StyledShowable> void recordInformation(@Recorded EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> informaton);
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 

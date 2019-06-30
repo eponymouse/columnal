@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -70,9 +71,9 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded ColumnReference this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Expression.ColumnLookup.@Nullable FoundColumn col = dataLookup.getColumn(tableName, columnName, referenceType);
+        Expression.ColumnLookup.@Nullable FoundColumn col = dataLookup.getColumn(this);
         if (col == null)
         {
             onError.recordError(this, StyledString.s("Could not find source column " + (tableName == null ? "" : (tableName.getRaw() + "\\")) + columnName));

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -47,7 +48,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded IdentExpression this, ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
         if (!GrammarUtility.validIdentifier(text))
@@ -72,6 +73,11 @@ public class IdentExpression extends NonOperatorExpression
             else
             {
                 onError.recordError(this, StyledString.s("Unknown name: \"" + text + "\""));
+                @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(text, this);
+                if (fix != null)
+                {
+                    onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
+                }
                 return null;
             }
         }

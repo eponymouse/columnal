@@ -268,11 +268,11 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.display;
     }
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int newCaretPos, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int newCaretPos, Node toRightOf)
     {
-        EnumMap<DisplayType, StyledString> accum = new EnumMap<DisplayType, StyledString>(DisplayType.class);
-        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, StyledString>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos, toRightOf)).distinct().forEach(m -> {
-            m.forEach((k, v) -> accum.merge(k, v, (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b))));
+        EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> accum = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
+        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos, toRightOf)).distinct().forEach(m -> {
+            m.forEach((k, v) -> accum.merge(k, v, (a, b) -> new Pair<>(StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a.getFirst(), b.getFirst())), Utility.concatI(a.getSecond(), b.getSecond()))));
         });
         return ImmutableMap.copyOf(accum);
     }

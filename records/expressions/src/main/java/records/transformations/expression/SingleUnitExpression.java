@@ -19,6 +19,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.Collections;
@@ -50,9 +51,10 @@ public class SingleUnitExpression extends UnitExpression
             {
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public void doAction(TypeManager typeManager)
+                public @Nullable SimulationRunnable doAction(TypeManager typeManager)
                 {
                     typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
+                    return null;
                 }
             });
             ImmutableList<QuickFix<UnitExpression>> fixes = Stream.<QuickFix<UnitExpression>>concat(similarNames, Stream.<QuickFix<UnitExpression>>of(makeNew)).collect(ImmutableList.<QuickFix<UnitExpression>>toImmutableList());

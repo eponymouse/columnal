@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
@@ -22,6 +23,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.MultipleTableLookup.CalculationEditor;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -30,6 +32,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -83,7 +86,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         try
         {
             RecordSet srcRecordSet = this.src.getData();
-            Function<ColumnId, ColumnLookup> columnLookup = ed -> new MultipleTableLookup(getId(), mgr, srcTableId, ed);
+            Function<ColumnId, ColumnLookup> columnLookup = ed -> new MultipleTableLookup(getId(), mgr, srcTableId, makeEditor(ed));
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
             HashMap<ColumnId, Expression> stillToAdd = new HashMap<>(newColumns);
             for (Column c : srcRecordSet.getColumns())
@@ -140,6 +143,41 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         }
 
         recordSet = theResult;
+    }
+
+    @RequiresNonNull({"newColumns", "srcTableId"})
+    @OnThread(Tag.Any)
+    public CalculationEditor makeEditor(@UnknownInitialization(Transformation.class) Calculate this, ColumnId columnId)
+    {
+        return new CalculationEditor()
+        {
+            @Override
+            public ColumnId getCurrentlyEditingColumn()
+            {
+                return columnId;
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) SimulationRunnable moveExpressionToNewCalculation()
+            {
+                CellPosition targetPos = getManager().getNextInsertPosition(getId());
+                return () -> {
+                    TableManager mgr = getManager();
+                    ImmutableMap.Builder<ColumnId, Expression> calcColumns = ImmutableMap.builder();
+                    Expression expression = newColumns.get(columnId);
+                    for (Entry<ColumnId, Expression> entry : newColumns.entrySet())
+                    {
+                        if (!columnId.equals(entry.getKey()))
+                            calcColumns.put(entry.getKey(), entry.getValue());
+                    }
+                    if (expression != null)
+                    {
+                        mgr.edit(getId(), () -> new Calculate(mgr, getDetailsForCopy(), srcTableId, calcColumns.build()), null);
+                        mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(columnId, expression)), null);
+                    }
+                };
+            }
+        };
     }
 
     private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Object.class) Calculate this,

@@ -41,6 +41,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.QuickFix.QuickFixAction;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -63,8 +64,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
+import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -91,9 +95,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         {
             public final TableId tableId;
             public final DataTypeValue dataTypeValue;
-            public final @Nullable StyledString information;
+            public final @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information;
 
-            public FoundColumn(TableId tableId, DataTypeValue dataTypeValue, @Nullable StyledString information)
+            public FoundColumn(TableId tableId, DataTypeValue dataTypeValue, @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information)
             {
                 this.tableId = tableId;
                 this.dataTypeValue = dataTypeValue;
@@ -106,7 +110,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // If columnReferenceType is CORRESPONDING_ROW, called getCollapsed
         // with row number should get corresponding value.  If it is
         // WHOLE_COLUMN then passing 0 to getValue should get whole column as ListEx.
-        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType);
+        public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference);
 
         // This is really for the editor, but it doesn't rely on any GUI
         // functionality so can be here:
@@ -117,6 +121,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
          * which column reference to insert into the editor.  If the column is not clickable, will return empty stream.
          */
         public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId);
+
+
+        public default @Nullable QuickFix<Expression> getFixForIdent(@ExpressionIdentifier String ident, @Recorded Expression target)
+        {
+            return null;
+        }
     }
     
     // PATTERN infects EXPRESSION: any bit of PATTERN in an inner expression
@@ -989,14 +999,39 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         private final @Nullable TableId us;
         private final TableManager tableManager;
         private final @Nullable Table srcTable;
-        private final @Nullable ColumnId editing;
+        private final @Nullable CalculationEditor editing;
+        
+        public static interface CalculationEditor
+        {
+            public ColumnId getCurrentlyEditingColumn();
+            
+            // Gives back an action which will make a new Calculate depending on the current Calculate,
+            // with the currently editing expression moved there.
+            @OnThread(Tag.FXPlatform)
+            public SimulationRunnable moveExpressionToNewCalculation();
+        }
 
-        public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId, @Nullable ColumnId editing)
+        public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId, @Nullable CalculationEditor editing)
         {
             this.us = us;
             this.tableManager = tableManager;
             this.srcTable = srcTableId == null ? null : tableManager.getSingleTableOrNull(srcTableId);
             this.editing = editing;
+        }
+
+        @Override
+        public @Nullable QuickFix<Expression> getFixForIdent(@ExpressionIdentifier String ident, @Recorded Expression target)
+        {
+            if (editing == null)
+                return null;
+            return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) @Nullable SimulationRunnable doAction(TypeManager typeManager)
+                {
+                    return editing.moveExpressionToNewCalculation();
+                }
+            });
         }
 
         @Override
@@ -1006,7 +1041,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             if (us != null && tableId.equals(us))
             {
                 // Can't refer to an edited column
-                if (columnId.equals(editing))
+                if (editing != null && columnId.equals(editing.getCurrentlyEditingColumn()))
                     return Stream.empty();
                 
                 Table usTable = tableManager.getSingleTableOrNull(us);
@@ -1070,35 +1105,35 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
         {
             try
             {
                 @Nullable Pair<TableId, RecordSet> rs = null;
-                if (tableId == null)
+                if (columnReference.getTableId() == null)
                 {
                     if (srcTable != null)
                         rs = new Pair<>(srcTable.getId(), srcTable.getData());
                 }
                 else
                 {
-                    Table table = tableManager.getSingleTableOrNull(tableId);
+                    Table table = tableManager.getSingleTableOrNull(columnReference.getTableId());
                     if (table != null)
                         rs = new Pair<>(table.getId(), table.getData());
                 }
                 
                 if (rs != null)
                 {
-                    Column column = rs.getSecond().getColumn(columnId);
+                    Column column = rs.getSecond().getColumn(columnReference.getColumnId());
                     DataTypeValue columnType = column.getType();
-                    switch (columnReferenceType)
+                    switch (columnReference.getReferenceType())
                     {
                         case CORRESPONDING_ROW:
-                            return new FoundColumn(rs.getFirst(), columnType, checkRedefined(tableId, columnId, ColumnReferenceType.CORRESPONDING_ROW));
+                            return new FoundColumn(rs.getFirst(), columnType, checkRedefined(columnReference));
                         case WHOLE_COLUMN:
-                            return new FoundColumn(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), checkRedefined(tableId, columnId, ColumnReferenceType.WHOLE_COLUMN));
+                            return new FoundColumn(rs.getFirst(), DataTypeValue.array(columnType.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), checkRedefined(columnReference));
                         default:
-                            throw new InternalException("Unknown reference type: " + columnReferenceType);
+                            throw new InternalException("Unknown reference type: " + columnReference.getReferenceType());
                     }
                     
                 }
@@ -1111,9 +1146,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         // If column is redefined in this table, issue a warning
-        private @Nullable StyledString checkRedefined(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        private @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> checkRedefined(@Recorded ColumnReference columnReference)
         {
-            if (tableId == null && us != null)
+            if (columnReference.getTableId() == null && us != null)
             {
                 try
                 {
@@ -1121,14 +1156,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     if (ourTable == null)
                         return null;
                     RecordSet rs = ourTable.getData();
-                    Column c = rs.getColumnOrNull(columnId);
-                    if (c != null && !Objects.equals(columnId, editing) &&
-                        ((columnReferenceType == ColumnReferenceType.CORRESPONDING_ROW && c.getAlteredState() == AlteredState.OVERWRITTEN)
-                            || (columnReferenceType == ColumnReferenceType.WHOLE_COLUMN && c.getAlteredState() != AlteredState.UNALTERED))
+                    Column c = rs.getColumnOrNull(columnReference.getColumnId());
+                    if (c != null && editing != null && !Objects.equals(columnReference.getColumnId(), editing.getCurrentlyEditingColumn()) &&
+                        ((columnReference.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && c.getAlteredState() == AlteredState.OVERWRITTEN)
+                            || (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN && c.getAlteredState() != AlteredState.UNALTERED))
                         )
                     {
-                        return StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table."));
-                        // TODO could add quick fix here to split into separate calculate.
+                        return new Pair<>(StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table.")), getFixForIdent(columnReference.getColumnId().getRaw(), columnReference));
                     }
                 }
                 catch (InternalException | UserException e)
@@ -1139,7 +1173,6 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
             return null;
         }
-
     }
     
     // Styles the string to look like a user-typed part of the expression

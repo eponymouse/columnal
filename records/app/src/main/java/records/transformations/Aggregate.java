@@ -867,8 +867,11 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
         }
         
         @Override
-        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(ColumnReference columnReference)
         {
+            TableId tableId = columnReference.getTableId();
+            ColumnId columnId = columnReference.getColumnId();
+            ColumnReferenceType columnReferenceType = columnReference.getReferenceType();
             boolean grouped = false;
             if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
             {

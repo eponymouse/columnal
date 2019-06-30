@@ -177,7 +177,7 @@ public class EditorLocationAndErrorRecorder
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
     // Function takes node that documentation should appear to the right of
     private final ArrayList<Pair<CanonicalSpan, FXPlatformFunction<Node, StyledString>>> entryPrompts = new ArrayList<>();
-    private final IdentityHashMap<Expression, StyledString> information = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, Pair<StyledString, ImmutableList<TextQuickFix>>> information = new IdentityHashMap<>();
 
     private static interface UnresolvedErrorDetails
     {
@@ -345,10 +345,10 @@ public class EditorLocationAndErrorRecorder
             }
 
             @Override
-            public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString info)
+            public <EXPRESSION extends StyledShowable> void recordInformation(@Recorded EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> info)
             {
                 if (src instanceof Expression)
-                    information.put((Expression)src, info);
+                    information.put((Expression)src, info.mapSecond(qf -> qf == null ? ImmutableList.<TextQuickFix>of() : ImmutableList.<TextQuickFix>of(new <EXPRESSION>TextQuickFix(recorderFor(src), e -> e.toStyledString().toPlain(), qf))));
             }
 
             @SuppressWarnings("unchecked")
@@ -415,15 +415,15 @@ public class EditorLocationAndErrorRecorder
     }
 
 
-    public ImmutableMap<DisplayType, StyledString> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
     {
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
-        ArrayList<Pair<StyledString, CanonicalSpan>> relevantInformation = new ArrayList<>();
+        ArrayList<Pair<Pair<StyledString, ImmutableList<TextQuickFix>>, CanonicalSpan>> relevantInformation = new ArrayList<>();
         for (Entry<Object, CanonicalSpan> expLocation : positions.entrySet())
         {
             if (expLocation.getValue().touches(canonIndex))
             {
-                StyledString info = information.get(expLocation.getKey());
+                Pair<StyledString, ImmutableList<TextQuickFix>> info = information.get(expLocation.getKey());
                 if (info != null)
                     relevantInformation.add(new Pair<>(info, expLocation.getValue()));
             }
@@ -435,16 +435,16 @@ public class EditorLocationAndErrorRecorder
         }
 
         Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantPrompts, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
-        Collections.<Pair<StyledString, CanonicalSpan>>sort(relevantInformation, Comparator.<Pair<StyledString, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
+        Collections.<Pair<Pair<StyledString, ImmutableList<TextQuickFix>>, CanonicalSpan>>sort(relevantInformation, Comparator.<Pair<Pair<StyledString, ImmutableList<TextQuickFix>>, CanonicalSpan>, Integer>comparing(p -> p.getSecond().start));
 
-        EnumMap<DisplayType, StyledString> combined = new EnumMap<DisplayType, StyledString>(DisplayType.class);
+        EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> combined = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
         for (Pair<StyledString, CanonicalSpan> prompt : relevantPrompts)
         {
-            combined.merge(DisplayType.PROMPT, prompt.getFirst(), (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b)));
+            combined.merge(DisplayType.PROMPT, new Pair<>(prompt.getFirst(), ImmutableList.of()), (a, b) -> new Pair<>(StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a.getFirst(), b.getFirst())), Utility.concatI(a.getSecond(), b.getSecond())));
         }
-        for (Pair<StyledString, CanonicalSpan> info : relevantInformation)
+        for (Pair<Pair<StyledString, ImmutableList<TextQuickFix>>, CanonicalSpan> info : relevantInformation)
         {
-            combined.merge(DisplayType.INFORMATION, info.getFirst(), (a, b) -> StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a, b)));
+            combined.merge(DisplayType.INFORMATION, info.getFirst(), (a, b) -> new Pair<>(StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a.getFirst(), b.getFirst())), Utility.concatI(a.getSecond(), b.getSecond())));
         }
         
         return ImmutableMap.copyOf(combined);

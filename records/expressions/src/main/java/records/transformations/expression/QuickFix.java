@@ -8,6 +8,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import styled.StyledShowable;
@@ -19,6 +20,7 @@ import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 import utility.TranslationUtility;
 
@@ -103,9 +105,10 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
     
     public static interface QuickFixAction
     {
-        // Will only be called once.
+        // Will only be called once.  If non-null return, force-close expression editor
+        // and then run the item on the simulation thread.
         @OnThread(Tag.FXPlatform)
-        public void doAction(TypeManager typeManager);
+        public @Nullable SimulationRunnable doAction(TypeManager typeManager);
     }
     
     public static interface QuickFixReplace<EXPRESSION>

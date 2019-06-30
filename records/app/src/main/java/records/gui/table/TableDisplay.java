@@ -1001,7 +1001,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed), () -> Calculate.makeTypeState(parent.getManager()), null);
+        EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed == null ? null : calc.makeEditor(ed)), () -> Calculate.makeTypeState(parent.getManager()), null);
         
         if (topMessageKey != null)
             dialog.addTopMessage(topMessageKey);

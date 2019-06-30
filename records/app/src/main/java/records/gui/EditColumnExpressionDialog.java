@@ -264,6 +264,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 else
                     return new Dimension2D(300.0, 130.0);
             }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void forceCloseDialog()
+            {
+                setResult(null);
+                close();
+            }
         };
         curValue = expressionEditor.save(true);
         // Tab doesn't seem to work right by itself:
@@ -389,6 +397,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     }
 
     @Override
+    @OnThread(Tag.FXPlatform)
     protected @Nullable Result calculateResult()
     {
         @Nullable ColumnId name = nameField.valueProperty().getValue();

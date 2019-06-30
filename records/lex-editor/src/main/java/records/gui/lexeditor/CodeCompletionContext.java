@@ -10,6 +10,7 @@ import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledString;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.EnumMap;
@@ -33,8 +34,8 @@ public class CodeCompletionContext
         return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
     }
 
-    public ImmutableMap<DisplayType, StyledString> getInfoAndPrompt(@CanonicalLocation int position, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getInfoAndPrompt(@CanonicalLocation int position, Node toRightOf)
     {
-        return Maps.<DisplayType, StyledString>immutableEnumMap(ImmutableMap.<DisplayType, StyledString>of());
+        return Maps.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>immutableEnumMap(ImmutableMap.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>of());
     }
 }

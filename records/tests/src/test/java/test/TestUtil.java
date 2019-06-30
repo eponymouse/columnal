@@ -1087,7 +1087,7 @@ public class TestUtil
             }
 
             @Override
-            public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton)
+            public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> informaton)
             {
             }
 
@@ -1203,7 +1203,7 @@ public class TestUtil
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
             {
                 return null;
             }
@@ -1574,23 +1574,23 @@ public class TestUtil
         }
 
         @Override
-        public @Nullable FoundColumn getColumn(@Nullable TableId tableId, ColumnId columnId, ColumnReferenceType columnReferenceType)
+        public @Nullable FoundColumn getColumn(ColumnReference columnReference)
         {
             try
             {
                 if (srcTable == null)
                     return null;
-                else if (tableId == null) // || tableName.equals(srcTable.getId()))
+                else if (columnReference.getTableId() == null) // || tableName.equals(srcTable.getId()))
                 {
-                    Column column = srcTable.getColumn(columnId);
-                    switch (columnReferenceType)
+                    Column column = srcTable.getColumn(columnReference.getColumnId());
+                    switch (columnReference.getReferenceType())
                     {
                         case CORRESPONDING_ROW:
                             return new FoundColumn(new TableId("SingleTableLookup"), column.getType(), null);
                         case WHOLE_COLUMN:
                             return new FoundColumn(new TableId("SingleTableLookup"), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
                         default:
-                            throw new InternalException("Unknown reference type: " + columnReferenceType);
+                            throw new InternalException("Unknown reference type: " + columnReference.getReferenceType());
                     }
                 }
             }

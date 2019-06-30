@@ -43,6 +43,7 @@ import test.gen.GenTypecheckFail;
 import test.gen.GenUnit;
 import test.gen.type.GenDataTypeMaker;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -125,7 +126,7 @@ public class PropTypecheck
                 }
 
                 @Override
-                public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString informaton)
+                public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> information)
                 {
                 }
 

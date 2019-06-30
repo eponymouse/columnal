@@ -15,6 +15,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.ExConsumer;
+import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -39,7 +40,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     }
 
     @Override
-    public <EXPRESSION> void recordInformation(EXPRESSION src, StyledString error)
+    public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> error)
     {
     }
 

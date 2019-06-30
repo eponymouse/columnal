@@ -42,7 +42,10 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
 import utility.gui.TimedFocusable;
@@ -214,9 +217,17 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
                 actionOrReplacement.eitherInt_(a -> {
-                    a.doAction(typeManager);
-                    // Reprocess:
-                    content.replaceWholeText(content.getText());
+                    @Nullable SimulationRunnable toRun = a.doAction(typeManager);
+                    if (toRun != null)
+                    {
+                        forceCloseDialog();
+                        Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_("Moving Calculate", () -> toRun.run()));
+                    }
+                    else
+                    {
+                        // Reprocess:
+                        content.replaceWholeText(content.getText());
+                    }
                 }, replacement -> {
                     content.replaceText(replacement.getFirst().start, replacement.getFirst().end, replacement.getSecond());
                 });
@@ -227,7 +238,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             }
         });
     }
-    
+
+    @OnThread(Tag.FXPlatform)
+    protected void forceCloseDialog()
+    {
+        // Currently only implemented by EditColumnExpressionDialog
+    }
+
     public void setContent(String text)
     {
         this.content.replaceWholeText(text);
@@ -524,12 +541,12 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             if (node.getScene() != null)
                 node = node.getScene().getRoot();
             
-            ImmutableMap<DisplayType, StyledString> infoAndPrompt = content.getDisplayFor(newCaretPos, node);
+            ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> infoAndPrompt = content.getDisplayFor(newCaretPos, node);
             displays.remove(DisplayType.PROMPT);
             displays.remove(DisplayType.INFORMATION);
-            for (Entry<DisplayType, StyledString> entry : infoAndPrompt.entrySet())
+            for (Entry<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> entry : infoAndPrompt.entrySet())
             {
-                displays.put(entry.getKey(), new Pair<>(entry.getValue(), ImmutableList.of()));
+                displays.put(entry.getKey(), entry.getValue());
             }
             
             updateShowHide(true);

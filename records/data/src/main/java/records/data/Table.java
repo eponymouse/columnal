@@ -353,7 +353,7 @@ public abstract class Table
         return prevPosition;
     }
 
-    public synchronized InitialLoadDetails getDetailsForCopy()
+    public synchronized InitialLoadDetails getDetailsForCopy(@UnknownInitialization(Table.class) Table this)
     {
         return new InitialLoadDetails(id, prevPosition, showColumns);
     }
