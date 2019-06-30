@@ -37,7 +37,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         else if (typeExpression instanceof IdentTypeExpression)
         {
             IdentTypeExpression un = (IdentTypeExpression) typeExpression;
-            write(un.getIdent(), DELAY);
+            write(un.asIdent(), DELAY);
         }
         else if (typeExpression instanceof InvalidIdentTypeExpression)
         {

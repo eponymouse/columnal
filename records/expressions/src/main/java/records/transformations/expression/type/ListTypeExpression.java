@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -84,5 +85,11 @@ public class ListTypeExpression extends TypeExpression
             return replaceWith;
         else
             return new ListTypeExpression(innerType.replaceSubExpression(toReplace, replaceWith));
+    }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return null;
     }
 }

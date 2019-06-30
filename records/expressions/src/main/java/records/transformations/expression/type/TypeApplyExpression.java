@@ -190,4 +190,10 @@ public class TypeApplyExpression extends TypeExpression
     {
         return new TypeApplyExpression(typeName, Utility.mapListI(arguments, x -> x.map(t -> t.replaceSubExpression(toReplace, replaceWith))));
     }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return null;
+    }
 }

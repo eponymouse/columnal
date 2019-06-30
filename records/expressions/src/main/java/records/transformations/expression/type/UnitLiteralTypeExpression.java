@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -77,5 +78,11 @@ public class UnitLiteralTypeExpression extends TypeExpression
     public @Recorded UnitExpression getUnitExpression()
     {
         return unitExpression;
+    }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return null;
     }
 }

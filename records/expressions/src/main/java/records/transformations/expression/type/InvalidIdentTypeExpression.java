@@ -95,4 +95,10 @@ public class InvalidIdentTypeExpression extends TypeExpression
         else
             return new InvalidIdentTypeExpression(src);
     }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return null;
+    }
 }

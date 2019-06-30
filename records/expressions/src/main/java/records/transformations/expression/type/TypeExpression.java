@@ -410,6 +410,9 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
     @Override
     public abstract int hashCode();
 
+    // If this can be an ident key in a record type, return the ident:
+    public abstract @Nullable @ExpressionIdentifier String asIdent();
+
     // Useful for debugging:
     @Override
     public String toString()

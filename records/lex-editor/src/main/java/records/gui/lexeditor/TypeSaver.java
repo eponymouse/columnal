@@ -11,14 +11,10 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
-import records.error.InternalException;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.gui.lexeditor.TypeSaver.BracketContent;
-import records.jellytype.JellyType;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -41,7 +37,6 @@ import utility.gui.FXUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
@@ -101,7 +96,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                 else
                                 {
                                     IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
-                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>of(newArg));
+                                    typeExpression = new TypeApplyExpression(identTypeExpression.asIdent(), ImmutableList.<Either<@Recorded UnitExpression, @Recorded TypeExpression>>of(newArg));
                                 }
                                 return Either.<@Recorded TypeExpression, Terminator>left(locationRecorder.<TypeExpression>record(CanonicalSpan.fromTo(recorderFor(callTarget), bracketEnd), typeExpression));
                             }
@@ -145,7 +140,8 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     if (recentIdent == null)
                     {
                         // Looking for ident:
-                        if (expression instanceof IdentTypeExpression)
+                        @ExpressionIdentifier String ident = expression.asIdent();
+                        if (ident != null)
                         {
                             if (i != 0 && items.operators.get(i - 1).getFirst() != Operator.COMMA)
                             {
@@ -153,7 +149,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                                 break;
                             }
 
-                            recentIdent = ((IdentTypeExpression) expression).getIdent();
+                            recentIdent = ident;
                             continue;
                         }
                         allOk = false;

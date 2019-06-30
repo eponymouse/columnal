@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -123,5 +124,15 @@ public class NumberTypeExpression extends TypeExpression
     public boolean hasUnit()
     {
         return unitExpression != null;
+    }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        if (unitExpression == null)
+            return "Number";
+        else
+            return null;
+        
     }
 }

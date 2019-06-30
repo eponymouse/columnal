@@ -180,6 +180,13 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     {
         testError("(a: Text, b: Number)");
     }
+
+    @Test
+    public void testRecord2()
+    {
+        // It should be fine to use type names as labels
+        testError("(Number: Text, Text: Number, Boolean: [Date], DateYM : Boolean)");
+    }
     
     @Test
     public void testBadTuple1()

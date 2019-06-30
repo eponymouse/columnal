@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,5 +101,12 @@ public class TypePrimitiveLiteral extends TypeExpression
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    @SuppressWarnings("identifier")
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return dataType.toString();
     }
 }

@@ -107,4 +107,10 @@ public class RecordTypeExpression extends TypeExpression
     {
         return members;
     }
+
+    @Override
+    public @Nullable @ExpressionIdentifier String asIdent()
+    {
+        return null;
+    }
 }

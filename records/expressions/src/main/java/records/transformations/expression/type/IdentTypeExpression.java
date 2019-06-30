@@ -70,7 +70,8 @@ public class IdentTypeExpression extends TypeExpression
         return value.isEmpty();
     }
 
-    public @ExpressionIdentifier String getIdent()
+    @Override
+    public @ExpressionIdentifier String asIdent()
     {
         return value;
     }
