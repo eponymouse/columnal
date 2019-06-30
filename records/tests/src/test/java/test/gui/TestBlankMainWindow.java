@@ -359,6 +359,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         String newColName = "Column " + Math.abs(new Random().nextInt());
         write(newColName);
         push(KeyCode.TAB);
+        Log.debug("Entering type: " + dataType);
         enterType(TypeExpression.fromDataType(dataType), new Random(1));
         // Dismiss popups:
         push(KeyCode.ESCAPE);
@@ -533,10 +534,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         });
         defocusSTFAndCheck(value.eitherInt(s -> true, p -> !hasNumber(p.getFirst())), () -> {
             // One to get rid of any code completion:
-            push(KeyCode.ESCAPE);
-            // Escape to finish editing:
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
+            //push(KeyCode.ESCAPE);
+            // Enter to finish editing:
+            push(KeyCode.ENTER);
         });
         return textField;
     }
