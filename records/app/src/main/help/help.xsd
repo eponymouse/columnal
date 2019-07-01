@@ -9,9 +9,10 @@
                             <xs:element name="short" type="xs:string"/>
                             <xs:element name="full">
                                 <xs:complexType>
-                                    <xs:sequence maxOccurs="unbounded">
+                                    <xs:choice maxOccurs="unbounded">
                                         <xs:element name="p" type="xs:string"/>
-                                    </xs:sequence>
+                                        <xs:element name="ul" type="xs:string"/>
+                                    </xs:choice>
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>

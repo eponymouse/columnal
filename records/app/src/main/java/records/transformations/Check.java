@@ -41,6 +41,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.TranslationUtility;
 import utility.Utility;
 
 import java.io.File;
@@ -57,7 +58,25 @@ public class Check extends Transformation implements SingleSourceTransformation
 
     public static enum CheckType
     {
-        STANDALONE, ALL_ROWS, ANY_ROW, NO_ROWS;
+        ALL_ROWS, ANY_ROW, NO_ROWS, STANDALONE;
+        
+        // For display:
+        @Override
+        public String toString()
+        {
+            switch (this)
+            {
+                case STANDALONE:
+                    return TranslationUtility.getString("edit.check.standalone");
+                case ALL_ROWS:
+                    return TranslationUtility.getString("edit.check.allrows");
+                case ANY_ROW:
+                    return TranslationUtility.getString("edit.check.anyrow");
+                case NO_ROWS:
+                    return TranslationUtility.getString("edit.check.norows");
+            }
+            return "";
+        }
     }
 
     private final TableId srcTableId;

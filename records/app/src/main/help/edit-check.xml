@@ -2,16 +2,20 @@
 <dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="help.xsd"
         id="edit-check" title="Edit Check Details" >
-    <help id="check-type" title="Check Type">
-        <short></short>
+    <help id="check-type" title="Check">
+        <short>Where to apply the test</short>
         <full>
-            <p></p>
+            <p>The test can be applied in four ways:</p>
+            <ul>All rows -- check that the expression is true for every row in the source table.</ul>
+            <ul>At least one row -- check that the expression is true for at least one row in the source table.</ul>
+            <ul>No rows -- check that the expression is false for every row in the source table.</ul>
+            <ul>Once -- check that the expression is true, regardless of the number of rows in the source table.</ul>
         </full>
     </help>
-    <help id="check-expression" title="Check Expression">
-        <short></short>
+    <help id="check-expression" title="Test">
+        <short>The expression to check is true</short>
         <full>
-            <p></p>
+            <p>The Check evaluates this expression to ensure that it is true.</p>
         </full>
     </help>
 </dialog>
