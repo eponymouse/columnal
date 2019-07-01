@@ -138,6 +138,9 @@ public class Check extends Transformation implements SingleSourceTransformation
 
             type = new Pair<>(errors, typeFinal);
         }
+        
+        ensureBoolean(type.getSecond());
+        
         if (checkType == CheckType.STANDALONE)
         {
             ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true, type.getFirst()));

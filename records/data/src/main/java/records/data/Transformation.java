@@ -130,6 +130,14 @@ public abstract class Transformation extends Table
         return new TableOperations(getManager().getRenameTableOperation(this), c -> null, null, null, null);
     }
     
+    protected final void ensureBoolean(DataType dataType) throws UserException
+    {
+        if (!dataType.equals(DataType.BOOLEAN))
+        {
+            throw new UserException("Required Boolean type, but found: " + dataType);
+        }
+    }
+    
     @OnThread(Tag.Any)
     protected final DataTypeValue addManualEditSet(@UnknownInitialization(Transformation.class) Transformation this, ColumnId columnId, DataTypeValue original) throws InternalException
     {

@@ -162,6 +162,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
             if (type == null)
                 return;
         }
+        ensureBoolean(type.getSecond());
 
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
