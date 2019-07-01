@@ -97,7 +97,7 @@ final class LexCompletionList extends Region
     // This map's values are always inserted into the children of this region.
     // The keys are either completions or headers
     // which are proxied by the group
-    private final ObservableMap<Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>, Node> visible = FXCollections.observableHashMap();
+    private final ObservableMap<Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>, Node> visible = FXCollections.observableHashMap();
     
     // Group index, index within that group
     private @Nullable Pair<Integer, Integer> selectionIndex;
@@ -113,7 +113,7 @@ final class LexCompletionList extends Region
         this.triggerCompletion = triggerCompletion;
         getStyleClass().add("lex-completion-list");
         setFocusTraversable(false);
-        visible.addListener((MapChangeListener<Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>, Node>) (MapChangeListener.Change<? extends Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>, ? extends Node> c) -> {
+        visible.addListener((MapChangeListener<Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>, Node>) (MapChangeListener.Change<? extends Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>, ? extends Node> c) -> {
             if (c.wasRemoved())
                 getChildren().remove(c.getValueRemoved());
             if (c.wasAdded())
@@ -168,12 +168,12 @@ final class LexCompletionList extends Region
         int pos = 0;
         for (LexCompletionGroup g : curCompletionGroups)
         {
-            Node node = Utility.get(visible, Either.<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(g, GroupNodeType.HEADER)));
+            Node node = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(g, GroupNodeType.HEADER)));
             if (node != null && node instanceof CompletionRow)
                 ((CompletionRow)node).cachedPosition = pos++;
             for (LexCompletion completion : g.completions)
             {
-                node = Utility.get(visible, Either.<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>left(completion));
+                node = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>left(new Pair<>(g, completion)));
                 if (node != null && node instanceof CompletionRow)
                     ((CompletionRow)node).cachedPosition = pos++;
             }
@@ -258,7 +258,7 @@ final class LexCompletionList extends Region
             if (group.header != null)
             {
                 // Special case for header:
-                Node flow = Utility.get(visible, Either.<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(group, GroupNodeType.HEADER)));
+                Node flow = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(group, GroupNodeType.HEADER)));
                 // Should always be non-null, but need to guard
                 if (flow != null)
                 {
@@ -274,7 +274,7 @@ final class LexCompletionList extends Region
             {
                 if (y >= groupTopY[groupIndex] - ITEM_HEIGHT - MAX_PENDING_SCROLL)
                 {
-                    Node flow = Utility.get(visible, Either.<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>left(group.completions.get(i)));
+                    Node flow = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>left(new Pair<>(group, group.completions.get(i))));
                     // Should always be non-null, but need to guard
                     if (flow != null)
                     {
@@ -285,7 +285,7 @@ final class LexCompletionList extends Region
             }
 
             {
-                Node fade = Utility.get(visible, Either.<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(group, GroupNodeType.FADE)));
+                Node fade = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(group, GroupNodeType.FADE)));
                 // Should always be non-null, but need to guard
                 if (fade != null)
                 {
@@ -312,7 +312,7 @@ final class LexCompletionList extends Region
 
     private void recalculateChildren(boolean attemptAnimate)
     {
-        Set<Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>>> toKeep = Sets.newHashSet();
+        Set<Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>> toKeep = Sets.newHashSet();
         double[] oldTopY = groupTopY;
         groupTopY = new double[curCompletionGroups.size()];
         LexCompletion sel = selectedItem.get();
@@ -347,7 +347,7 @@ final class LexCompletionList extends Region
             
             if (group.header != null)
             {
-                Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>> key = Either.right(new Pair<>(group, GroupNodeType.HEADER));
+                Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> key = Either.right(new Pair<>(group, GroupNodeType.HEADER));
                 Node headerRow = visible.computeIfAbsent(key, this::makeFlow);
                 headerRow.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                 FXUtility.setPseudoclass(headerRow, "selected", false);
@@ -356,7 +356,7 @@ final class LexCompletionList extends Region
             }
 
             {
-                Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>> key = Either.right(new Pair<>(group, GroupNodeType.FADE));
+                Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> key = Either.right(new Pair<>(group, GroupNodeType.FADE));
                 Node fade = visible.computeIfAbsent(key, k -> {
                     Rectangle r = new ResizableRectangle();
                     r.setMouseTransparent(true);
@@ -372,10 +372,10 @@ final class LexCompletionList extends Region
             {
                 if (y >= groupTopY[groupIndex] - ITEM_HEIGHT - MAX_PENDING_SCROLL && y <= getHeightMinusInsets() + ITEM_HEIGHT + MAX_PENDING_SCROLL)
                 {
-                    Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>> key = Either.left(group.completions.get(i));
+                    Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> key = Either.left(new Pair<>(group, group.completions.get(i)));
                     Node item = visible.computeIfAbsent(key, this::makeFlow);
                     item.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
-                    FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(key.<@Nullable LexCompletion>either(c -> c, g -> null)));
+                    FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(key.<@Nullable LexCompletion>either(c -> c.getSecond(), g -> null)));
                     toKeep.add(key);
                 }
             }
@@ -414,16 +414,16 @@ final class LexCompletionList extends Region
         }
     }
 
-    private Node makeFlow(Either<LexCompletion, Pair<LexCompletionGroup, GroupNodeType>> lexCompletion)
+    private Node makeFlow(Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> lexCompletion)
     {
-        CompletionRow row = new CompletionRow(lexCompletion.either(c -> c.display.toGUI(), g -> (g.getFirst().header == null ? StyledString.s("") : g.getFirst().header).toGUI()), lexCompletion.either(c -> c.sideText, g -> ""));
+        CompletionRow row = new CompletionRow(lexCompletion.either(c -> c.getSecond().display.toGUI(), g -> (g.getFirst().header == null ? StyledString.s("") : g.getFirst().header).toGUI()), lexCompletion.either(c -> c.getSecond().sideText, g -> ""));
         if (lexCompletion.isRight())
             row.getStyleClass().add("lex-completion-header");
         row.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY)
             {
                 lexCompletion.ifLeft(item -> {
-                    Pair<Integer, Integer> index = completionIndexes.get(item);
+                    Pair<Integer, Integer> index = Utility.get(completionIndexes, item.getSecond());
                     // Shouldn't be null, but have to guard:
                     if (index != null)
                         clickOnItem(e.getClickCount(), index);

@@ -1,12 +1,11 @@
 Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
-- When you autocomplete Number, it shows error immediately 
+- When you autocomplete Number, it shows error immediately
+- If you type '{' after Number, you don't get the completions for units immediately, you have to move caret in and out 
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 - Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other) 
-- If unit completion only has related items then the layout can be screwed up
-- Unit completion after "m" only shows related items, but isn't "m" a direct completion?
 - "as unit" should show as related to "convert" 
 - Check does not show any/all rows edit, only expression, when edit link clicked
 
@@ -293,3 +292,5 @@ Done after Phil B & Jon A:
 - If you position cursor at start of Wind m s item, you get info message twice.  Also: don't show this if that's the exact column name we are calculating; pretty obvious it can't self reference!
 - Give a useful error when you try to use a column defined in this same calculate (and offer quick fix to add new calculate to help out)
 - Check display has no context menu when right-clicking header
+- If unit completion only has related items then the layout can be screwed up
+- Unit completion after "m" only shows related items, but isn't "m" a direct completion?
