@@ -6,7 +6,6 @@ Express Priority (needed for task C)
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 - Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other)
-- Check and Filter lets you click OK even if the expression isn't boolean 
 
 
 Probably fixed by recent changes but not definite
@@ -295,3 +294,4 @@ Done after Phil B & Jon A:
 - If unit completion only has related items then the layout can be screwed up
 - Unit completion after "m" only shows related items, but isn't "m" a direct completion?
 - Check does not show any/all rows edit, only expression, when edit link clicked
+- Check and Filter lets you click OK even if the expression isn't boolean 

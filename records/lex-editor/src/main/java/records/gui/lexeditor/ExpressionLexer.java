@@ -511,7 +511,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 // Must be concrete:
                 if (expectedType != null)
-                    TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType));
+                    TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType)).ifLeft(err -> saver.locationRecorder.addErrorAndFixes(saver.recorderFor(saved), err, ImmutableList.of()));
                 @RawInputLocation int lastIndex = curIndex;
                 saver.locationRecorder.getRecorder().recordLeftError(typeManager, functionLookup, saved, typeExp.toConcreteType(typeManager, false));
             }
