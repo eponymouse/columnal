@@ -31,16 +31,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.EditExpressionDialog;
-import records.gui.EditSortDialog;
-import records.gui.EntireTableSelection;
-import records.gui.HideColumnsDialog;
-import records.gui.ManualEditEntriesDialog;
+import records.gui.*;
 import records.gui.ManualEditEntriesDialog.Entry;
-import records.gui.PickManualEditIdentifierDialog;
-import records.gui.PickTableDialog;
-import records.gui.TableListDialog;
-import records.gui.View;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -49,6 +41,7 @@ import records.gui.table.TableHat.TableHatDisplay;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.Check;
+import records.transformations.Check.CheckType;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
@@ -230,9 +223,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 editSourceLink(parent, check),
                 StyledString.s(" that "),
                 StyledString.s(type),
-                editExpressionLink(parent, check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSrcTableId()), check.getColumnLookup(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), check.getCheckType()), DataType.BOOLEAN, "check.header", e -> 
-                    parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSrcTableId(), check.getCheckType(), e), null)
-                )
+                editCheckLink(parent, check, parent.getManager().getSingleTableOrNull(check.getSrcTableId()))
             );
         }
         else if (table instanceof Calculate)
@@ -642,6 +633,24 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }).withStyle(new StyledCSS("edit-expression-link"));
     }
 
+    private static StyledString editCheckLink(View parent, Check check, @Nullable Table srcTable)
+    {
+        return check.getCheckExpression().toStyledString().limit(60).withStyle(new Clickable() {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new EditCheckExpressionDialog(parent, srcTable, check.getCheckType(), check.getCheckExpression(), ct -> Check.getColumnLookup(parent.getManager(), check.getSrcTableId(), ct)).showAndWait().ifPresent(p -> {
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> {
+                            parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), check.getDetailsForCopy(), check.getSrcTableId(), p.getFirst(), p.getSecond()), null);
+                        }));
+                    });
+                }
+            }
+        }).withStyle(new StyledCSS("edit-expression-link"));
+    }
 
     @OnThread(Tag.FXPlatform)
     class TableHatDisplay extends Region
