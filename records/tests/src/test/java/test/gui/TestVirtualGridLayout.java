@@ -34,6 +34,7 @@ import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import styled.StyledString;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.util.FXApplicationTest;
@@ -41,6 +42,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -437,7 +439,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition)
+        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
         {
             return null;
         }
@@ -476,9 +478,9 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        protected ItemState getItemState(Label item, Point2D screenPos)
+        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(Label item, Point2D screenPos)
         {
-            return ItemState.NOT_CLICKABLE;
+            return new Pair<>(ItemState.NOT_CLICKABLE, null);
         }
 
         @Override

@@ -71,22 +71,22 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
-    protected ItemState getItemState(VersionedSTF stf, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(VersionedSTF stf, Point2D screenPos)
     {
         if (stf.isFocused())
-            return ItemState.EDITING;
+            return new Pair<>(ItemState.EDITING, stf.getHoverText());
         else
-            return ItemState.NOT_CLICKABLE;
+            return new Pair<>(ItemState.NOT_CLICKABLE, stf.getHoverText());
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         // Override here to check for expanded cell
         Optional<VersionedSTF> expanded = findItems(node -> node.isExpanded()).findFirst();
         if (expanded.isPresent() && expanded.get().localToScreen(expanded.get().getBoundsInLocal()).contains(screenPos))
         {
-            return ItemState.EDITING;
+            return new Pair<>(ItemState.EDITING, null);
         }
         return super.getItemState(cellPosition, screenPos);
     }

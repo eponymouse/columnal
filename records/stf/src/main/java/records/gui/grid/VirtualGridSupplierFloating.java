@@ -1,8 +1,6 @@
 package records.gui.grid;
 
 import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
-import com.google.common.collect.Sets;
 import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
@@ -12,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -23,7 +22,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.Set;
 import java.util.stream.DoubleStream;
 
 /**
@@ -78,25 +76,33 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         r.item.adjustForContainerTranslation(r.node, containerChildren.remove(r.node), false);
     }
 
-    public final <T extends FloatingItem<?>> T addItem(T item)
+    // Returns true if newly added, false if already present
+    public final <T extends FloatingItem<?>> boolean addItem(T item)
     {
-        items.add(item);
-        return item;
+        if (!items.contains(item))
+        {
+            items.add(item);
+            return true;
+        }
+        else
+            return false;
     }
     
-    public final <T extends Node> void removeItem(FloatingItem<T> item)
+    // Returns true if removed, false if wasn't present
+    public final <T extends Node> boolean removeItem(FloatingItem<T> item)
     {
         @Nullable T removed = items.remove(item) ? item.node : null;
         // We don't have access to containerChildren right now to remove, so
         // just queue for removal next time we get laid out:
         if (removed != null)
             toRemove.add(new FloatingItemToRemove<>(item, removed));
+        return removed != null;
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
-        return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition, screenPos))).min(Comparator.comparing(s -> s.ordinal())).orElse(null);
+        return Utility.filterOutNulls(items.stream().<@Nullable Pair<ItemState, @Nullable StyledString>>map(f -> f.getItemState(cellPosition, screenPos))).min(Comparator.<Pair<ItemState, @Nullable StyledString>, Integer>comparing(s -> s.getFirst().ordinal())).orElse(null);
     }
 
     @Override
@@ -163,7 +169,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
          * Is there an item at the given position and if so what it is its state?
          * If none, return null;
          */
-        public abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos);
+        public abstract @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos);
         
         protected final @Pure @Nullable T getNode(@UnknownInitialization(FloatingItem.class) FloatingItem<T> this)
         {

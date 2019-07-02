@@ -53,6 +53,7 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
@@ -72,15 +73,18 @@ import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stable.ScrollGroup.Token;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -1113,7 +1117,11 @@ public final class VirtualGrid implements ScrollBindable
     public <T> @Nullable T highlightGridAreaAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
     {
         if (highlightedGridArea == null)
-            highlightedGridArea = supplierFloating.addItem(new GridAreaHighlight());
+        {
+            GridAreaHighlight g = new GridAreaHighlight();
+            supplierFloating.addItem(g);
+            this.highlightedGridArea = g;
+        }
         return highlightedGridArea.highlightAtScreenPos(screenPos, picker, setCursor);
     }
 
@@ -1157,9 +1165,13 @@ public final class VirtualGrid implements ScrollBindable
         private NudgeScrollSpeed nudgeScrollBottom = NudgeScrollSpeed.NONE;
         private boolean nudgeEnabled = false;
         private final Animation nudgeScrollAnimation;
+        private HoverTip hoverTip;
+        private @Nullable FXPlatformRunnable hoverCancel;
 
         public Container()
         {
+            hoverTip = new HoverTip();
+            supplierFloating.addItem(hoverTip);
             getStyleClass().add("virt-grid");
             // Need this for when JavaFX looks for a default focus target:
             setFocusTraversable(true);
@@ -1197,8 +1209,8 @@ public final class VirtualGrid implements ScrollBindable
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
-                        return itemState != null && itemState != ItemState.NOT_CLICKABLE;
+                        @Nullable Pair<ItemState, @Nullable StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
+                        return itemState != null && itemState.getFirst() != ItemState.NOT_CLICKABLE;
                     });
                     if (clickable)
                         return; // Don't capture the events
@@ -1258,8 +1270,8 @@ public final class VirtualGrid implements ScrollBindable
                     @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
                     Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
-                        return itemState != null && itemState != ItemState.NOT_CLICKABLE;
+                        @Nullable Pair<ItemState, @Nullable StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
+                        return itemState != null && itemState.getFirst() != ItemState.NOT_CLICKABLE;
                     });
                     // If it's the end of a drag, don't steal the event because we
                     // are looking at drag end location, not drag start, so our calculations
@@ -1272,6 +1284,9 @@ public final class VirtualGrid implements ScrollBindable
             addEventFilter(MouseEvent.MOUSE_RELEASED, capture);
             //addEventFilter(MouseEvent.MOUSE_DRAGGED, capture);
             addEventFilter(MouseEvent.DRAG_DETECTED, capture);
+            addEventFilter(MouseEvent.MOUSE_MOVED, e -> FXUtility.mouse(this).movedTo(e));
+            addEventFilter(MouseEvent.MOUSE_ENTERED, e -> FXUtility.mouse(this).movedTo(e));
+            addEventFilter(MouseEvent.MOUSE_EXITED, e -> FXUtility.mouse(this).movedTo(null));
             
             this.nudgeScrollAnimation = new Timeline(new KeyFrame(Duration.millis(100), e -> {
                 double horizPerSecond = nudgeScrollLeft.pixelSpeed - nudgeScrollRight.pixelSpeed;
@@ -1352,6 +1367,42 @@ public final class VirtualGrid implements ScrollBindable
                         }
                     })
             ));
+        }
+
+        private void movedTo(@Nullable MouseEvent mouseEvent)
+        {
+            @Nullable Pair<CellPosition, Point2D> cellPosition = mouseEvent == null ? null : getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+            if (cellPosition == null || mouseEvent == null)
+            {
+                if (hoverCancel != null)
+                    hoverCancel.run();
+                hoverCancel = null;
+                hoverTip.setContent(null, null);
+            }
+            else
+            {
+                @NonNull Pair<CellPosition, Point2D> cellPositionFinal = cellPosition;
+                Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
+                Pair<ItemState, @Nullable StyledString> item = Utility.filterOutNulls(nodeSuppliers.stream().<@Nullable Pair<ItemState, @Nullable StyledString>>map(g -> g.getItemState(cellPositionFinal.getFirst(), screenPos))).sorted(Pair.comparatorFirst()).findFirst().orElse(null);
+                if (item != null && item.getSecond() != null)
+                {
+                    if (!hoverTip.hasText(item.getSecond()))
+                    {
+                        hoverTip.setContent(null, cellPosition.getFirst());
+                        
+                        if (hoverCancel != null)
+                            hoverCancel.run();
+                        hoverCancel = FXUtility.runAfterDelay(Duration.seconds(1), () -> hoverTip.setContent(item.getSecond(), cellPositionFinal.getFirst()));
+                    }
+                }
+                else
+                {
+                    if (hoverCancel != null)
+                        hoverCancel.run();
+                    hoverCancel = null;
+                    hoverTip.setContent(null, cellPositionFinal.getFirst());
+                }
+            }
         }
 
         private void handlePossibleNudgeEvent(MouseEvent e)
@@ -1639,8 +1690,11 @@ public final class VirtualGrid implements ScrollBindable
             if (!activeOverlayPane.getChildren().remove(node))
             {
                 int index = getChildren().indexOf(node);
-                getChildren().remove(index);
-                viewOrders.remove(index);
+                if (index >= 0)
+                {
+                    getChildren().remove(index);
+                    viewOrders.remove(index);
+                }
             }
             return new Pair<>(translateXProperty(), translateYProperty());
         }
@@ -1963,9 +2017,9 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
-            return cellPosition.equals(buttonPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return cellPosition.equals(buttonPosition) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override
@@ -2427,6 +2481,75 @@ public final class VirtualGrid implements ScrollBindable
         public @OnThread(Tag.FXPlatform) void updateClip()
         {
 
+        }
+    }
+    
+    private class HoverTip extends FloatingItem<TextFlow>
+    {
+        private @Nullable CellPosition source;
+        private @Nullable StyledString content;
+        private @MonotonicNonNull TextFlow textFlow;
+
+        public HoverTip()
+        {
+            super(ViewOrder.TOOLTIP);
+        }
+
+        @Override
+        protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {
+            CellPosition pos = this.source;
+            if (content == null || pos == null)
+                return Optional.empty();
+            else
+            {
+                double width = Math.min(200, textFlow == null ? 200 : textFlow.prefWidth(-1));
+                double height = textFlow == null ? 50 : textFlow.prefHeight(width) + textFlow.getPadding().getTop() + textFlow.getPadding().getBottom();
+                width += textFlow == null ? 0 : textFlow.getPadding().getLeft() + textFlow.getPadding().getRight();
+                
+                return Optional.of(new BoundingBox(visibleBounds.getXCoordAfter(pos.columnIndex) - 10, visibleBounds.getYCoordAfter(pos.rowIndex) + 5, width, height));
+            }
+        }
+
+        @Override
+        protected TextFlow makeCell(VisibleBounds visibleBounds)
+        {
+            if (textFlow == null)
+            {
+                textFlow = new TextFlow();
+                textFlow.getStyleClass().add("virtual-grid-tooltip-flow");
+                textFlow.setMouseTransparent(true);
+            }
+            
+            textFlow.getChildren().setAll(content == null ? new Node[0] : content.toGUI().toArray(new Node[0]));
+            
+            return textFlow;
+        }
+
+        @Override
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        {
+            return null;
+        }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+        }
+
+        public boolean hasText(StyledString content)
+        {
+            return Objects.equals(this.content, content);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public void setContent(@Nullable StyledString content, @Nullable CellPosition position)
+        {
+            this.source = position;
+            this.content = content;
+            if (textFlow != null)
+                textFlow.getChildren().setAll(content == null ? ImmutableList.of() : content.toGUI());
+            container.redoLayout();
         }
     }
 }

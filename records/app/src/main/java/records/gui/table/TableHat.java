@@ -60,6 +60,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformSupplierInt;
+import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Workers;
@@ -566,13 +567,13 @@ class TableHat extends FloatingItem<TableHatDisplay>
     }
 
     @Override
-    public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         Node node = getNode();
         if (node != null)
         {
             Bounds screenBounds = node.localToScreen(node.getBoundsInLocal());
-            return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return screenBounds.contains(screenPos) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
         return null;
     }

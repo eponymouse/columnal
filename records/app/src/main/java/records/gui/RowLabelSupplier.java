@@ -30,6 +30,7 @@ import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.table.TableDisplay;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -282,7 +283,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
     {
         return null;
     }

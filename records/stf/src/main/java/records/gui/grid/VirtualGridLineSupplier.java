@@ -8,13 +8,14 @@ import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import styled.StyledString;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
 
@@ -95,7 +96,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }

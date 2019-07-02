@@ -29,6 +29,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.gui.dtf.Document.DocumentListener;
 import records.gui.dtf.Document.TrackedPosition.Bias;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -638,5 +639,13 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             return idealWidth;
         else
             return super.calcWidthToFitContent();
+    }
+
+    public @Nullable StyledString getHoverText()
+    {
+        if (calcWidthToFitContent() > getWidth() + 3)
+            return StyledString.s(document.getText());
+        else
+            return null;
     }
 }

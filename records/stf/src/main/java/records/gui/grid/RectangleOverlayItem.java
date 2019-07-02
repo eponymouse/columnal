@@ -5,12 +5,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.gui.ResizableRectangle;
 
 import java.util.Optional;
@@ -70,7 +73,7 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     protected abstract void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds);
 
     @Override
-    public final VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    public final @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }

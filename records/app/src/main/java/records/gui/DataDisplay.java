@@ -649,9 +649,9 @@ public abstract class DataDisplay extends HeadedDisplay
 
         @Override
         @OnThread(value = Tag.FXPlatform)
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
-            return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return cellPosition.equals(getFloatingPosition()) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override
@@ -791,9 +791,9 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
-            return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return cellPosition.equals(getFloatingPosition()) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override

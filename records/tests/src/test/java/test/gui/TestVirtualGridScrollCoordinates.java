@@ -42,6 +42,7 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -132,7 +133,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             }
 
             @Override
-            public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
             }
@@ -166,7 +167,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             }
 
             @Override
-            public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
             }

@@ -289,3 +289,12 @@
         -fx-stroke: derive($table-empty-background, -20%);
     }
 }
+
+.virtual-grid-tooltip-flow {
+    -fx-background-color: black, hsb(65, 8%, 100%);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 5, 5;
+    -fx-padding: 3;
+    -fx-effect: dropshadow(gaussian, grey(70%), 6, 0.2, 1, 1);
+    -fx-font-size: 80%;
+}

@@ -20,6 +20,7 @@ import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -46,6 +47,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.transformations.Check;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -88,6 +90,8 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         
         this.resultFloatingItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS) {
 
+            private @MonotonicNonNull Label label;
+
             @Override
             protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
             {
@@ -102,19 +106,19 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             @Override
             protected Label makeCell(VisibleBounds visibleBounds)
             {
-                Label label = new Label("");
+                Label labelFinal = label = new Label("");
                 label.getStyleClass().add("check-result");
                 label.textProperty().bind(resultContent);
                 FXUtility.addChangeListenerPlatformNN(label.hoverProperty(), h -> {
                     if (h && failExplanationProperty.get() != null)
                     {
-                        label.setUnderline(true);
-                        label.setCursor(Cursor.HAND);
+                        labelFinal.setUnderline(true);
+                        labelFinal.setCursor(Cursor.HAND);
                     }
                     else
                     {
-                        label.setUnderline(false);
-                        label.setCursor(null);
+                        labelFinal.setUnderline(false);
+                        labelFinal.setCursor(null);
                     }
                 });
                 label.setOnMouseClicked(e -> {
@@ -152,9 +156,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
-            public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
-                return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
+                @Nullable StyledString prompt = null;
+                if (label != null && label.prefWidth(-1) > label.getWidth() + 3)
+                    prompt = StyledString.s(label.getText());
+                return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, prompt) : null;
             }
 
             @Override

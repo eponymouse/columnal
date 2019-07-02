@@ -51,6 +51,7 @@ import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -64,6 +65,7 @@ import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -1097,7 +1099,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
 
         @Override
-        public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }

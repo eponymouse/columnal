@@ -36,6 +36,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
@@ -152,13 +153,13 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     }
 
     @Override
-    public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         Node node = getNode();
         if (node != null)
         {
             Bounds screenBounds = node.localToScreen(node.getBoundsInLocal());
-            return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return screenBounds.contains(screenPos) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
         return null;
     }

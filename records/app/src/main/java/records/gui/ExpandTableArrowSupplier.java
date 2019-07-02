@@ -17,6 +17,7 @@ import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.table.TableDisplay;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -29,7 +30,6 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.OptionalDouble;
 import java.util.WeakHashMap;
 
@@ -83,9 +83,9 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     }
 
     @Override
-    protected ItemState getItemState(Button item, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(Button item, Point2D screenPos)
     {
-        return ItemState.DIRECTLY_CLICKABLE;
+        return new Pair<>(ItemState.DIRECTLY_CLICKABLE, null);
     }
 
     public void addTable(TableDisplay tableDisplay, @Nullable FXPlatformRunnable addColumn, boolean addRows)

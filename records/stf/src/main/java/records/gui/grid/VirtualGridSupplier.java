@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -66,8 +67,9 @@ public abstract class VirtualGridSupplier<T extends Node>
     /**
      * Is there a cell at the given position and if so what it is its state?
      * If none, return null;
+     * The second item in the pair is a tooltip to show on hover
      */
-    protected abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition);
+    protected abstract @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition);
 
     protected abstract void keyboardActivate(CellPosition cellPosition);
     
@@ -113,6 +115,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         TABLE_BORDER,
         // Certain items look like popups, so they must go in front of all else.
         POPUP,
+        // Then there's tooltips.
+        TOOLTIP,
         // Final, special category: this is the overlays for selected cell, for
         // highlighting a table pick.  This goes on its own pane in front of all
         // else because that way we can blur the rest but keep the pick overlay sharp.

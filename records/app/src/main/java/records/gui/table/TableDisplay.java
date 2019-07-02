@@ -1353,12 +1353,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             if (container == null)
                 return null;
             Bounds screenBounds = container.localToScreen(container.getBoundsInLocal());
-            return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
+            return screenBounds.contains(screenPos) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override

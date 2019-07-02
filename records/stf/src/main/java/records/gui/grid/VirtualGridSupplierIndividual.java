@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -418,13 +419,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         @Nullable T item = getItemAt(cellPosition);
         return item == null ? null : getItemState(item, screenPos);
     }
 
-    protected abstract ItemState getItemState(T item, Point2D screenPos);
+    protected abstract @Nullable Pair<ItemState, @Nullable StyledString> getItemState(T item, Point2D screenPos);
     
     protected Stream<T> findItems(Predicate<T> findIf)
     {

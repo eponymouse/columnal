@@ -46,6 +46,7 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -144,12 +145,12 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             if (cellPosition.rowIndex == getPosition().rowIndex
                     && getPosition().columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex <= getBottomRightIncl().columnIndex)
             {
-                return tableNameField != null && tableNameField.isFocused() ? ItemState.EDITING : ItemState.DIRECTLY_CLICKABLE;
+                return new Pair<>(tableNameField != null && tableNameField.isFocused() ? ItemState.EDITING : ItemState.DIRECTLY_CLICKABLE, null);
             }
             return null;
         }
