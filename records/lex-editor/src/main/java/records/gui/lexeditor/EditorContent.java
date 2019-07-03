@@ -92,8 +92,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     @SuppressWarnings("units") // Because of min and max
     public void replaceSelection(String content, boolean putCaretAtLeadingEdge)
     {
-        replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content, putCaretAtLeadingEdge);
-        curAnchorPosition = curCaretPosition;
+        replaceText(Math.min(curCaretPosition, curAnchorPosition), Math.max(curCaretPosition, curAnchorPosition), content, putCaretAtLeadingEdge ? curCaretPosition : null);
     }
     
     public void replaceWholeText(String content)
@@ -103,25 +102,26 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content)
     {
-        replaceText(startIncl, endExcl, content, false);
+        replaceText(startIncl, endExcl, content, null);
     }
 
     @SuppressWarnings("units")
-    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content, boolean putCaretAtLeadingEdge)
+    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content, @Nullable @CanonicalLocation Integer setCaretPos)
     {
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
         
         final @RawInputLocation int newCaretPos;
         if (curCaretPosition < startIncl)
             newCaretPos = curCaretPosition;
-        else if (curCaretPosition <= endExcl && putCaretAtLeadingEdge)
-            newCaretPos = startIncl;
         else if (curCaretPosition <= endExcl)
             newCaretPos = startIncl + content.length();
         else
             newCaretPos = curCaretPosition - (endExcl - startIncl) + content.length();
         this.curContent = lexer.process(newText, newCaretPos);
-        this.curCaretPosition = curContent.removedChars.map(newCaretPos);
+        if (setCaretPos != null)
+            this.curCaretPosition = setCaretPos;
+        else
+            this.curCaretPosition = curContent.removedChars.map(newCaretPos);
         this.curAnchorPosition = curCaretPosition;
         Log.debug(">>>" + curContent.adjustedContent + " //" + curCaretPosition);
         for (FXPlatformRunnable contentListener : contentListeners)

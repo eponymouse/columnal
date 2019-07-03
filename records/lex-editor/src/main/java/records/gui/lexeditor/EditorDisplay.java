@@ -409,8 +409,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     {
         if (p.content != null)
         {
-            content.replaceText(p.startPos, content.getCaretPosition(), p.content);
-            content.positionCaret(p.startPos + p.relativeCaretPos, true);
+            content.replaceText(p.startPos, content.getCaretPosition(), p.content, p.startPos + p.relativeCaretPos);
         }
         else if (p.furtherDetails != null)
         {
