@@ -395,9 +395,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
          *                    will give you the expression content of the just-finished scope. 
          * @param terminator The keyword which is terminating the current scope.
          * @param keywordErrorDisplayer The error displayer for the keyword.
-         * @param keywordContext The callback with the context for the keyword.
+         * @return true if the keyword matched and was consumed (always true if forceConsume was true), false if it didn't match and wasn't saved.
          */
-        public abstract void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer);
+        public abstract boolean terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer);
     }
     
     // Op is typically an enum so we can't identity-hash-map it to a node, hence this wrapper
@@ -488,7 +488,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         currentScopesFinal.push(new Scope(CanonicalSpan.START, new Terminator("end")
         {
             @Override
-            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
+            public boolean terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
             {
                 CanonicalSpan start = CanonicalSpan.START;
                 CanonicalSpan end = keywordErrorDisplayer;
@@ -497,6 +497,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 currentScopesFinal.peek().items.add(Either.<@Recorded EXPRESSION, OpAndNode>left(makeContent.<EXPRESSION>fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
                 if (terminator != null)
                     currentScopesFinal.peek().items.add(Either.<@Recorded EXPRESSION, OpAndNode>left(thisSaver.<EXPRESSION>record(keywordErrorDisplayer, thisSaver.keywordToInvalid(terminator))));
+                return true;
             }
         }));
     }
@@ -638,7 +639,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
                     if (lastWasOperand.get() && iFinal > 0)
                     {
-                        CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression);
+                        CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression).lhs();
                         invalidReasons.add(new InvalidReason(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"), fixesForAdjacentOperands(validOperands.get(validOperands.size() - 2), expression)));
                     }
                     lastWasOperand.set(true);
@@ -886,7 +887,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         return new Terminator(expected.get(0).getContent()) {
             @Override
-            public void terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
+            public boolean terminate(FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT> makeContent, @Nullable KEYWORD terminator, CanonicalSpan keywordErrorDisplayer)
             {
                 int termIndex = expected.indexOf(terminator);
                 if (termIndex == 0)
@@ -895,6 +896,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     @Recorded EXPRESSION content = makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer));
                     Either<@Recorded EXPRESSION, Terminator> result = onSuccessfulClose.apply(content, keywordErrorDisplayer);
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
+                    return true;
                 }
                 else
                 {
@@ -914,11 +916,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     if (promptIfUnfinished != null)
                         locationRecorder.recordEntryPromptG(content, n -> promptIfUnfinished);
                     items.add(Either.right(content));
-                    if (terminator != null)
-                        items.add(Either.<OpAndNode, @Recorded EXPRESSION>right(SaverBase.this.<EXPRESSION>record(keywordErrorDisplayer, keywordToInvalid(terminator))));
+                    //if (terminator != null)
+                        //items.add(Either.<OpAndNode, @Recorded EXPRESSION>right(SaverBase.this.<EXPRESSION>record(keywordErrorDisplayer, keywordToInvalid(terminator))));
                     ImmutableList<Either<OpAndNode, @Recorded EXPRESSION>> built = items.build();
                     @Recorded EXPRESSION invalid = makeInvalidOp(CanonicalSpan.fromTo(built.get(0).either(opAndNode -> opAndNode.sourceNode, e -> recorderFor(e)), keywordErrorDisplayer), built);
                     currentScopes.peek().items.add(Either.left(invalid));
+                    return false;
                 }
             }};
     }

@@ -263,20 +263,25 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else
         {
-            // Should be a terminator:
-            Scope cur = currentScopes.pop();
-            if (currentScopes.size() == 0)
+            boolean consumed = false;
+            // Will terminate because addTopLevelScope always returns true
+            while (!consumed)
             {
-                addTopLevelScope();
-            }
-            cur.terminator.terminate(new FetchContent<Expression, ExpressionSaver, BracketContent>()
-            {
-                @Override
-                public <R extends StyledShowable> @Recorded R fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent, R> brackets)
+                // Should be a terminator:
+                Scope cur = currentScopes.pop();
+                if (currentScopes.size() == 0)
                 {
-                    return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
+                    addTopLevelScope();
                 }
-            }, keyword, errorDisplayer);
+                consumed = cur.terminator.terminate(new FetchContent<Expression, ExpressionSaver, BracketContent>()
+                {
+                    @Override
+                    public <R extends StyledShowable> @Recorded R fetchContent(BracketAndNodes<Expression, ExpressionSaver, BracketContent, R> brackets)
+                    {
+                        return ExpressionSaver.this.makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
+                    }
+                }, keyword, errorDisplayer);
+            }
         }
     }
 
@@ -308,7 +313,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @Override
             public @Recorded Expression apply(@NonNull BracketContent items)
             {
-                return record(closed.location, new InvalidOperatorExpression(items.expressions));
+                return record(closed.location, items.expressions.size() == 1 ? items.expressions.get(0) : new InvalidOperatorExpression(items.expressions));
             }
 
             @NonNull
@@ -718,7 +723,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new Terminator(choices.stream().map(c -> c.keyword.getContent()).collect(Collectors.joining(" or ")))
         {
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
+        public boolean terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
             BracketAndNodes<Expression, ExpressionSaver, BracketContent, Expression> brackets = miscBrackets(CanonicalSpan.fromTo(start, keywordErrorDisplayer));
             
@@ -730,7 +735,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     @Recorded Expression expressionBefore = makeContent.fetchContent(brackets);
                     Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.<Supplier<@Recorded Expression>>concat(prefixIfInvalid, Stream.<Supplier<@Recorded Expression>>of(() -> expressionBefore, () -> record(keywordErrorDisplayer, new InvalidIdentExpression(choice.keyword.getContent())))));
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
-                    return;
+                    return true;
                 }
             }
             
@@ -741,10 +746,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.<@Recorded Expression>map(s -> s.get()).collect(Collectors.<@Recorded Expression>toList()));
             items.add(makeContent.fetchContent(brackets));
-            if (terminator != null)
-                items.add(locationRecorder.record(keywordErrorDisplayer, new InvalidIdentExpression(terminator.getContent())));
+            //if (terminator != null)
+                //items.add(locationRecorder.record(keywordErrorDisplayer, new InvalidIdentExpression(terminator.getContent())));
             @Recorded InvalidOperatorExpression invalid = locationRecorder.<InvalidOperatorExpression>record(CanonicalSpan.fromTo(start, keywordErrorDisplayer), new InvalidOperatorExpression(items.build()));
             currentScopes.peek().items.add(Either.left(invalid));
+            return false;
         }};
     }
 
@@ -1100,7 +1106,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
+        public boolean terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
             final ArrayList<@Recorded Expression> itemsIfInvalid = new ArrayList<>();
             @SuppressWarnings("recorded") // We can't actually record BracketContent
@@ -1144,6 +1150,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 // Invalid
                 currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, itemsIfInvalid.isEmpty() ? initialFunction.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
             }
+            return foundThen;
         }
     }
 
@@ -1158,7 +1165,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
+        public boolean terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
             final ArrayList<@Recorded Expression> itemsIfInvalid = new ArrayList<>();
             @SuppressWarnings("recorded") // We can't actually record BracketContent
@@ -1202,7 +1209,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 // Invalid
                 currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
             }
-            
+            return foundThen;
         }
 
         // Returns null or the original array reference passed to constructor

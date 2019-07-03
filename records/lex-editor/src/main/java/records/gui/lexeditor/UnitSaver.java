@@ -164,7 +164,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             currentScopes.push(new Scope(errorDisplayer, new Terminator(")")
             {
                 @Override
-                public void terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer)
+                public boolean terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer)
                 {
                     BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, keywordErrorDisplayer));
                     if (terminator == UnitBracket.CLOSE_ROUND)
@@ -186,6 +186,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         @Recorded UnitExpression invalid = record(CanonicalSpan.fromTo(brackets.location, keywordErrorDisplayer), new InvalidOperatorUnitExpression(items.build()));
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
+                    return true;
                 }
             }));
         }

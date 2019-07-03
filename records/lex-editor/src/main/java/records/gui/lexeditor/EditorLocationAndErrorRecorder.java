@@ -65,7 +65,10 @@ public class EditorLocationAndErrorRecorder
 
         public static CanonicalSpan fromTo(CanonicalSpan start, CanonicalSpan end)
         {
-            return new CanonicalSpan(start.start, end.end);
+            if (start.start <= end.end)
+                return new CanonicalSpan(start.start, end.end);
+            else
+                return new CanonicalSpan(start.start, start.start);
         }
         
         public CanonicalSpan offsetBy(@CanonicalLocation int offsetBy)

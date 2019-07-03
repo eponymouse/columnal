@@ -191,11 +191,15 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            write(expressionSrc, 1);
+            for (char c : expressionSrc.toCharArray())
+            {
+                write(c);
+                if ("({[".contains("" + c))
+                    push(KeyCode.DELETE);
+            }
 
-            // Get rid of popups:
-            moveAndDismissPopupsAtPos(point(".ok-button"));
-            clickOn(MouseButton.PRIMARY);
+            // Close dialog, ignoring errors:
+            TestUtil.doubleOk(this);
             // Now close dialog, and check for equality;
             View view = correctTargetWindow().lookup(".view").query();
             if (view == null)
@@ -227,11 +231,6 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testSimple(String expressionSrc) throws Exception
     {
-        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function|apply|tag)", ""));
-    }
-    
-    private void testSimple(String expressionSrc, String plainEntry) throws Exception
-    {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
         Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         
@@ -244,12 +243,14 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             expression,
             null
         ), new Random(0));
-        
-        // And once using plain text entry:
-        // Plain entry turned off because function calls inside brackets
-        // don't work; bracket auto-entered, but not overtyped because
-        // they are mismatched.
-        //assertEquals(expression, plainEntry(plainEntry, dummyManager.getTypeManager()));
+    }
+
+    private void testSimple(String expressionSrc, String plainEntry) throws Exception
+    {
+        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+
+        assertEquals(expression, plainEntry(plainEntry, dummyManager.getTypeManager()));
     }
 
     @Test
@@ -605,5 +606,36 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         // Can't have function return type because it can't be stored in a column:
         testSimple("@define f = @function (x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2, [3], 5) @enddefine");
+    }
+    
+    // Check that if an internal is unterminated, the outer still counts as terminated:
+    @Test
+    public void testUnclosedInternal1() throws Exception
+    {
+        testSimple("[@invalidops(@unfinished \"(\", (1+2))]", "[(1+2]");
+    }
+
+    @Test
+    public void testUnclosedInternal2() throws Exception
+    {
+        testSimple("@invalidops(@unfinished \"(\", (0 + (1+2)))", "(0+(1+2)");
+    }
+
+    @Test
+    public void testUnclosedInternal2b() throws Exception
+    {
+        testSimple("0 + @invalidops(@unfinished \"[\", (1+2))", "(0+[1+2)");
+    }
+
+    @Test
+    public void testUnclosedInternal3() throws Exception
+    {
+        testSimple("@if @invalidops(@function abs, @unfinished \"(\", 5) @then @invalidops(@unfinished \"[\", 0) @else 1 @endif", "@if abs(5 @then [0 @else 1 @endif");
+    }
+
+    @Test
+    public void testUnclosedInternal3b() throws Exception
+    {
+        testSimple("@if @invalidops(@function abs, @unfinished \"(\", 5) @then @invalidops(@unfinished \"[\", 0) @else @invalidops(1, @unfinished \"]\") @endif", "@if abs(5 @then [0 @else 1] @endif");
     }
 }
