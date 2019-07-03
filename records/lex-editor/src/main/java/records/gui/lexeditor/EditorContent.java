@@ -35,7 +35,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     private @CanonicalLocation int curCaretPosition;
     private @CanonicalLocation int curAnchorPosition;
     private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
-    private final ArrayList<FXPlatformConsumer<@CanonicalLocation Integer>> caretPositionListeners = new ArrayList<>();
+    private final ArrayList<CaretPositionListener> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
     private final UndoManager undoManager;
     
@@ -63,14 +63,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         curCaretPosition = pos;
         if (alsoSetAnchor)
             curAnchorPosition = pos;
-        notifyCaretPositionListeners();
+        notifyCaretPositionListeners(CaretMoveReason.CARET_MOVED);
     }
 
-    void notifyCaretPositionListeners()
+    void notifyCaretPositionListeners(CaretMoveReason reason)
     {
-        for (FXPlatformConsumer<@CanonicalLocation Integer> caretPositionListener : caretPositionListeners)
+        for (CaretPositionListener caretPositionListener : caretPositionListeners)
         {
-            caretPositionListener.consume(curCaretPosition);
+            caretPositionListener.caretMoved(curCaretPosition, reason);
         }
     }
 
@@ -128,7 +128,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         {
             contentListener.run();
         }
-        notifyCaretPositionListeners();
+        notifyCaretPositionListeners(CaretMoveReason.TEXT_CHANGED);
     }
     
     public void forceSaveAsIfUnfocused()
@@ -142,7 +142,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         {
             contentListener.run();
         }
-        notifyCaretPositionListeners();
+        notifyCaretPositionListeners(CaretMoveReason.FORCED_SAVE);
     }
 
     public String getText()
@@ -193,7 +193,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return 0;
     }
 
-    public void addCaretPositionListener(FXPlatformConsumer<@CanonicalLocation Integer> listener)
+    public void addCaretPositionListener(CaretPositionListener listener)
     {
         caretPositionListeners.add(listener);
     }
@@ -295,5 +295,16 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             replaceWholeText(possible.getFirst());
             positionCaret(possible.getSecond(), true);
         }
+    }
+    
+    public static enum CaretMoveReason
+    {
+        FORCED_SAVE, CARET_MOVED, FOCUSED, TEXT_CHANGED
+
+    }
+    
+    public static interface CaretPositionListener
+    {
+        public void caretMoved(@CanonicalLocation int caretPos, CaretMoveReason caretMoveReason);
     }
 }

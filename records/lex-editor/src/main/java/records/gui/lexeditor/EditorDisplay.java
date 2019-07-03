@@ -25,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.gui.lexeditor.EditorContent.CaretMoveReason;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.LexAutoComplete;
@@ -324,7 +325,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         });
         
         content.addChangeListener(() -> render(true));
-        content.addCaretPositionListener(c -> render(false));
+        content.addCaretPositionListener((c, r) -> render(false));
         render(true);
     }
 
@@ -390,7 +391,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         if (focused)
         {
             hasBeenFocused = true;
-            content.notifyCaretPositionListeners();
+            content.notifyCaretPositionListeners(CaretMoveReason.FOCUSED);
         }
         else
             showAllErrors();
@@ -575,7 +576,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         {
             error.caretHasLeftSinceEdit = true;
         }
-        content.notifyCaretPositionListeners();
+        content.notifyCaretPositionListeners(CaretMoveReason.FORCED_SAVE);
         render(false);
     }
 

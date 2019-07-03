@@ -2,7 +2,6 @@ Express Priority (needed for task C)
 ===
 - Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
 - When you autocomplete Number, it shows error immediately
-- If you type '{' after Number, you don't get the completions for units immediately, you have to move caret in and out 
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other)
 
 
@@ -296,3 +295,4 @@ Done after Phil B & Jon A:
 - Check and Filter lets you click OK even if the expression isn't boolean 
 - Add a tooltip-like system for long values but don't use tooltips (separate windows bad), use another layer in the grid view.
 - Try to stop the layout pinging around so much when adding/removing brackets in an if.  Let outer scope still complete even if inner scope didn't?
+- If you type '{' after Number, you don't get the completions for units immediately, you have to move caret in and out 

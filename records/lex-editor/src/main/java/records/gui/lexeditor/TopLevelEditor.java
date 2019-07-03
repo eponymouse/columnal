@@ -32,6 +32,8 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
+import records.gui.lexeditor.EditorContent.CaretMoveReason;
+import records.gui.lexeditor.EditorContent.CaretPositionListener;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.transformations.expression.QuickFix.QuickFixAction;
@@ -113,17 +115,15 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             onChange.consume(Utility.later(this).save(false));
         });
         content.addCaretPositionListener(informationPopup::caretMoved);
-        content.addCaretPositionListener(new FXPlatformConsumer<@CanonicalLocation Integer>()
+        content.addCaretPositionListener(new CaretPositionListener()
         {
-            @MonotonicNonNull @CanonicalLocation Integer prev = null;
             @Override
-            public @OnThread(Tag.FXPlatform) void consume(@CanonicalLocation Integer n)
+            public void caretMoved(@CanonicalLocation int caretPos, CaretMoveReason caretMoveReason)
             {
-                if (!Objects.equals(prev, n))
+                if (caretMoveReason != CaretMoveReason.FORCED_SAVE)
                 {
-                    display.showCompletions(content.getLexerResult().getCompletionsFor(n));
+                    display.showCompletions(content.getLexerResult().getCompletionsFor(caretPos));
                 }
-                prev = n;
             }
         });
         onChange.consume(save(true));
@@ -509,7 +509,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         }
         */
         
-        public void caretMoved(@CanonicalLocation int newCaretPos)
+        public void caretMoved(@CanonicalLocation int newCaretPos, CaretMoveReason reason)
         {
             ImmutableList<ErrorDetails> allErrors = content.getErrors();
             ArrayList<StyledString> errors = new ArrayList<>();
