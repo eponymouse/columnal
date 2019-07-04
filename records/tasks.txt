@@ -23,7 +23,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 
 - Not obvious enough to type to see more auto complete?  (Esp when scroll not obvious)
 - Lots of confusion between date literals and date functions.
-- Investigate improving layout for long expressions
+- Investigate improving layout for long expressions: done if, still need to do define, match
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Allow unicode specifier in strings (^uXXXX)

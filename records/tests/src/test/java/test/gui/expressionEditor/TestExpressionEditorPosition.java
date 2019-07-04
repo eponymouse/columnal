@@ -186,7 +186,13 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Test
     public void testPosIncomplete5()
     {
-        testCaretPositionsAndDisplay("@if@then@else@endif", "@if \n    @then \n    @else \n@endif ", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay("@if@then@else@endif", "@if  \n    @then  \n    @else  \n@endif ", p(0, 3, 8, 13, 19));
+    }
+
+    @Test
+    public void testPosIncomplete6()
+    {
+        testCaretPositionsAndDisplay("@iftrue@then(1+2@else3@endif+1", "@if true\n    @then (1 + 2\n    @else 3\n@endif + 1", p(0, 3, 8, 13, 19));
     }
 
     @Test
@@ -238,7 +244,12 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             // Focus expression editor:
             push(KeyCode.TAB);
 
-            write(internalContent);
+            for (char c : internalContent.toCharArray())
+            {
+                write(c);
+                if ("({[".contains("" + c))
+                    push(KeyCode.DELETE);
+            }
 
             /*
             TestUtil.fx_(() -> {

@@ -533,8 +533,6 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPos = calculateCaretPos(chunks);
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
-        display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
-        
         try
         {
             display = addIndents(display, caretPos.getFirst(), saved, saver.locationRecorder);
@@ -544,6 +542,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             // Just abandon adding the indents, user will live without
             Log.log(e);
         }
+        display = Lexer.padZeroWidthErrors(display, caretPos.getFirst(), errors);
         
 
         return new LexerResult<Expression, ExpressionCompletionContext>(saved, internalContent, removedChars, lexOnMove, ImmutableList.copyOf(caretPos.getFirst()), ImmutableList.copyOf(caretPos.getSecond()), display, errors, saver.locationRecorder, Utility.concatI(Lexer.<ExpressionCompletionContext>makeCompletions(chunks, new MakeCompletions<ExpressionCompletionContext>()
@@ -590,8 +589,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         CaretPos posAfter = caretPos.stream().filter(p -> p.positionInternal == after).findFirst().orElse(null);
         if (posAfter == null)
             throw new InternalException("Could not find caret pos: " + after);
+        boolean removingExistingSpace = display.toPlain().startsWith(" ", posAfter.positionDisplay);
         StyledString displayBefore = display.substring(0, posAfter.positionDisplay);
-        StyledString displayAfter = display.substring(posAfter.positionDisplay, display.getLength());
+        StyledString displayAfter = display.substring(posAfter.positionDisplay + (removingExistingSpace ? 1 : 0), display.getLength());
 
         for (int i = 0; i < caretPos.size(); i++)
         {
@@ -600,7 +600,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 // Don't change internal position, only display position:
                 @SuppressWarnings("units")
-                CaretPos adjusted = new CaretPos(p.positionInternal, p.positionDisplay + displayContentToAdd.length());
+                CaretPos adjusted = new CaretPos(p.positionInternal, p.positionDisplay + displayContentToAdd.length() - (removingExistingSpace ? 1 : 0));
                 caretPos.set(i, adjusted);
             }
         }
