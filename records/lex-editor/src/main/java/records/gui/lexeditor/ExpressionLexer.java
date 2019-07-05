@@ -636,7 +636,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             guides.add(guideCompletion("Units", "units", v.startPos, v.lastShowPosIncl).withSideText("\u2248 units"));
         });
         matchWordStart(stem, canonIndex, "optional", null, WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
-            guides.add(guideCompletion("Optional", "optional", v.startPos, v.lastShowPosIncl).withSideText("\u2248 optional"));
+            guides.add(guideCompletion("Optional Type", "optional", v.startPos, v.lastShowPosIncl).withSideText("\u2248 optional"));
         });
         
         // Only add expression guide at positions where there are already completions:
@@ -650,6 +650,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if (guides.isEmpty())
             {
                 guides.add(guideCompletion("Expressions", "expressions", start, end));
+                guides.add(guideCompletion("Conversion", "conversion", start, end));
+                guides.add(guideCompletion("Units", "units", start, end));
+                guides.add(guideCompletion("Optional Type", "optional", start, end));
             }
         }
         

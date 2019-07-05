@@ -1,6 +1,6 @@
 Express Priority (needed for task C)
 ===
-- Improve guide for units - several smaller sections, make it clear how to convert units.  Also, show guide at all times, not just when entering units
+- Improve guide for units - several smaller sections, make it clear how to convert units.  Maybe show as a quick fix
 
 
 Probably fixed by recent changes but not definite
@@ -296,3 +296,4 @@ Done after Phil B & Jon A:
 - If you type '{' after Number, you don't get the completions for units immediately, you have to move caret in and out 
 - When you autocomplete Number, it shows error immediately
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other)
+- Show other guides at all times
