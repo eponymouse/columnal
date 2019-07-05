@@ -1,6 +1,6 @@
 Express Priority (needed for task C)
 ===
-- Improve guide for units - several smaller sections, make it clear how to convert units.  Maybe show as a quick fix
+- Improve guide for units - several smaller sections, make it clear how to convert units.
 
 
 Probably fixed by recent changes but not definite
@@ -297,3 +297,4 @@ Done after Phil B & Jon A:
 - When you autocomplete Number, it shows error immediately
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other)
 - Show other guides at all times
+- Show units guide as a quick fix for mismatched units.

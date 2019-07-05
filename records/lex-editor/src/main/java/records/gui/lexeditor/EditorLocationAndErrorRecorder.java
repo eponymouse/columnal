@@ -19,10 +19,12 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.typeExp.NumTypeExp;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
 import records.typeExp.TypeExp.TypeError;
+import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import styled.StyledString.Builder;
@@ -401,11 +403,29 @@ public class EditorLocationAndErrorRecorder
                                 }
                                 return null;
                             })));
+                        // If they're all numbers and there was an error, must be units problem:
+                        else if (err.getCouldNotUnify().stream().allMatch(this::isNumber))
+                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show units guide"), ImmutableList.<String>of(), src, typeManager -> {
+                                try
+                                {
+                                    new DocWindow("Units", "guide-units.html", null).show();
+                                }
+                                catch (InternalException e)
+                                {
+                                    Log.log(e);
+                                }
+                                return null;
+                            })));
                         else
                             recordError(src, err.getMessage());
                     }
                     return null;
                 }, val -> val);
+            }
+
+            private boolean isNumber(TypeExp typeExp)
+            {
+                return typeExp instanceof NumTypeExp;
             }
 
             private boolean isOptional(TypeExp typeExp)

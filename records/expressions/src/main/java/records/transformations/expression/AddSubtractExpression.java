@@ -17,6 +17,7 @@ import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -93,10 +94,10 @@ public class AddSubtractExpression extends NaryOpTotalExpression
                 else
                     return ImmutableMap.of(this, new Pair<>(null, fixes));
             }
-            @Nullable StyledString err = null;
-            if (p.expressionTypes.stream().filter(Optional::isPresent).count() > 1)
+            @Nullable TypeError err = null;
+            if (p.getAvailableTypesForError().size() > 1)
             {
-                err = StyledString.concat(StyledString.s("Adding/subtracting requires numbers (with identical units), but found "), ourType.toStyledString());
+                err = new TypeError(StyledString.concat(StyledString.s("Adding/subtracting requires numbers (with identical units), but found "), ourType.toStyledString()), p.getAvailableTypesForError());
             }
             ImmutableList.Builder<QuickFix<Expression>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
@@ -129,7 +130,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionUtil.getFixesForMatchingNumericUnits(state, p));
             ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
-            return err == null && builtFixes.isEmpty() ? ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
+            return err == null && builtFixes.isEmpty() ? ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
         }));
         return type;
     }

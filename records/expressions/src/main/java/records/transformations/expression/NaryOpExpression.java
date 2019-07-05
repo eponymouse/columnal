@@ -180,7 +180,7 @@ public abstract class NaryOpExpression extends Expression
     public static class TypeProblemDetails
     {
         // Same length as expressions.
-        final ImmutableList<Optional<TypeExp>> expressionTypes;
+        private final ImmutableList<Optional<TypeExp>> expressionTypes;
         public final ImmutableList<@Recorded Expression> expressions;
         final int index;
 
@@ -206,11 +206,16 @@ public abstract class NaryOpExpression extends Expression
         {
             return expressions.get(index);
         }
+        
+        public ImmutableList<TypeExp> getAvailableTypesForError()
+        {
+            return expressionTypes.stream().flatMap(t -> Utility.streamNullable(t.orElse(null))).collect(ImmutableList.<TypeExp>toImmutableList());
+        }
     }
     
     protected interface CustomError
     {
-        ImmutableMap<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
+        ImmutableMap<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
     }
     
     public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
@@ -244,14 +249,14 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                ImmutableMap<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
+                ImmutableMap<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
                 @Nullable TypeError unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
                 boolean recordedCustomError = false;
-                for (Entry<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
+                for (Entry<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
                 {
                     if (entry.getValue().getFirst() != null)
                     {
-                        onError.recordError(entry.getKey(), entry.getValue().getFirst());
+                        onError.recordError(entry.getKey(), Either.left(entry.getValue().getFirst()));
                         recordedCustomError = true;
                     }
                     else if (!entry.getValue().getSecond().isEmpty() && (entry.getKey() != expression || unifyError != null))

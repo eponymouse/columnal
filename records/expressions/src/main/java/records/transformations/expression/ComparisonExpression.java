@@ -14,6 +14,7 @@ import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -108,9 +109,9 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
     @Override
     public @Nullable CheckedExp checkNaryOp(@Recorded ComparisonExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> p.getOurType() instanceof NumTypeExp ? ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(this, new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.copyOf(
+        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> p.getOurType() instanceof NumTypeExp ? ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of(this, new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(new TypeError(StyledString.s("Mismatched units"), p.getAvailableTypesForError()), ImmutableList.copyOf(
                 ExpressionUtil.getFixesForMatchingNumericUnits(state, p)
-        ))) : ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of());
+        ))) : ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of());
         if (type == null)
             return null;
         return onError.recordType(this, state, TypeExp.bool(this));

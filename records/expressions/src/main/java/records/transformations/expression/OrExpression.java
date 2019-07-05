@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -51,11 +52,11 @@ public class OrExpression extends NaryOpShortCircuitExpression
             if (ourType == null || Objects.equals(ourType.prune(), TypeExp.bool(null)))
             {
                 // We're fine or we have no idea.
-                return ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of();
+                return ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of();
             }
             else
             {
-                return ImmutableMap.<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), ImmutableList.of()));
+                return ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(new TypeError(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), typeAndExpression.getAvailableTypesForError()), ImmutableList.of()));
             }
         }));
     }
