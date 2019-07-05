@@ -182,15 +182,15 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testEmptyIf()
     {
         testError("@iftrue@then@else1@endif",
-            e(12,12, 15,16, "missing", "@else"));
+            e(12,12, 19,20, "missing", "@else"));
     }
 
     @Test
     public void testEmptyIf2()
     {
         testError("@iftrue@then@else@endif",
-                e(12,12, 15,16, "missing", "@else"),
-                e(17,17, 23,24, "missing", "@endif"));
+                e(12,12, 19,20, "missing", "@else"),
+                e(17,17, 31,32, "missing", "@endif"));
     }
 
     @Test
@@ -218,7 +218,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testMissingOperator2()
     {
         testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
-                e(25,25, 32,33, "missing operator"));
+                e(25,25, 40,41, "missing operator"));
     }
 
     @Test
@@ -264,5 +264,14 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
             e(12, 13, 15, 17,  "{"),
             e(9, 9, 9, 10, "op"),
             e(12, 12, 15, 16, "op"));
+    }
+    
+    @Test
+    public void testUnknownIdents()
+    {
+        testError("@ifopt=~Is(x)@thenx@elsesubstitution@endif", 
+            e(3, 6, 4, 7, "unknown"),
+            e(24, 36, 31, 43, "unknown")
+        );
     }
 }
