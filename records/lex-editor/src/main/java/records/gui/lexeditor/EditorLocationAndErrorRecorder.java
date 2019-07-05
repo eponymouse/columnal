@@ -20,7 +20,9 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.typeExp.TypeConcretisationError;
+import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledShowable;
 import styled.StyledString;
 import styled.StyledString.Builder;
@@ -378,6 +380,37 @@ public class EditorLocationAndErrorRecorder
             {
                 EditorLocationAndErrorRecorder.this.recordType(expression, Either.right(typeExp));
                 return typeExp;
+            }
+
+            @Override
+            public @Nullable TypeExp recordError(Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
+            {
+                return errorOrType.<@Nullable TypeExp>either(err -> {
+                    if (err != null)
+                    {
+                        
+                        if (err.getCouldNotUnify().stream().anyMatch(this::isOptional) && !err.getCouldNotUnify().stream().allMatch(this::isOptional))
+                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show optional guide"), ImmutableList.<String>of(), src, typeManager -> {
+                                try
+                                {
+                                    new DocWindow("Optional", "guide-optional.html", null).show();
+                                }
+                                catch (InternalException e)
+                                {
+                                    Log.log(e);
+                                }
+                                return null;
+                            })));
+                        else
+                            recordError(src, err.getMessage());
+                    }
+                    return null;
+                }, val -> val);
+            }
+
+            private boolean isOptional(TypeExp typeExp)
+            {
+                return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals("Optional");
             }
         };
     }

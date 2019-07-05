@@ -14,6 +14,7 @@ import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -146,7 +147,7 @@ public class ArrayExpression extends Expression
             MutVar mut = new MutVar(null);
             TypeExp arrayOfMut = TypeExp.list(null, mut);
 
-            Either<StyledString, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
+            Either<TypeError, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
             // If it doesn't match, not an array:
             if (unifyResult.isLeft())
             {

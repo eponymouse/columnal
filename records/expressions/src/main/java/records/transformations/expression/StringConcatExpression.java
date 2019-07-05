@@ -12,6 +12,7 @@ import records.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import utility.Either;
 import utility.Utility;
@@ -56,7 +57,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             {
                 if (lastWasVariable)
                 {
-                    onError.recordError(expression, Either.left(StyledString.s("Cannot have two variables/match-any next to each other in text pattern match; how can we know where one match stops and the next begins?")));
+                    onError.recordError(expression, Either.left(new TypeError(StyledString.s("Cannot have two variables/match-any next to each other in text pattern match; how can we know where one match stops and the next begins?"), ImmutableList.of())));
                     return null;
                 }
                 else

@@ -52,7 +52,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<TypeError, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof TypeCons))
             return typeMismatch(b);
@@ -76,19 +76,19 @@ public class TypeCons extends TypeExp
             {
                 @Nullable UnitExp unified = us.getLeft("Impossible").unifyWith(them.getLeft("Impossible"));
                 if (unified == null)
-                    return Either.left(StyledString.s("Cannot match units " + us.getLeft("Impossible") + " with " + them.getLeft("Impossible")));
+                    return Either.left(new TypeError(StyledString.s("Cannot match units " + us.getLeft("Impossible") + " with " + them.getLeft("Impossible")), ImmutableList.of(this, b)));
                 unifiedOperands.add(Either.left(unified));
             }
             else if (us.isRight() && them.isRight())
             {
-                Either<StyledString, TypeExp> sub = us.getRight("Impossible").unifyWith(them.getRight("Impossible"));
+                Either<TypeError, TypeExp> sub = us.getRight("Impossible").unifyWith(them.getRight("Impossible"));
                 if (sub.isLeft())
                     return sub;
                 unifiedOperands.add(Either.right(sub.getRight("Impossible")));
             }
             else
             {
-                return Either.left(StyledString.s("Cannot match units with a type"));
+                return Either.left(new TypeError(StyledString.s("Cannot match units with a type"), ImmutableList.of(this, b)));
             }
         }
         return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build(), ImmutableSet.copyOf(Sets.<String>intersection(typeClasses, ((TypeCons) b).typeClasses))));
@@ -155,11 +155,11 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         if (operands.isEmpty())
         {
-            return typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses);
+            return typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses, this);
             
             /*
                 StyledString.Builder b = StyledString.builder();
@@ -173,14 +173,14 @@ public class TypeCons extends TypeExp
         {
             // Apply all type constraints to children.
             // First check that everything they want can be derived:
-            @Nullable StyledString derivationError = typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses);
+            @Nullable TypeError derivationError = typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses, this);
             if (derivationError == null)
             {
                 // Apply constraints to children so that they know them
                 // for future unification:
                 for (Either<UnitExp, TypeExp> operand : operands)
                 {
-                    @Nullable StyledString err = operand.<@Nullable StyledString>either(u -> null, t -> t.requireTypeClasses(typeClasses, visited));
+                    @Nullable TypeError err = operand.<@Nullable TypeError>either(u -> null, t -> t.requireTypeClasses(typeClasses, visited));
                     if (err != null)
                         return err;
                 }

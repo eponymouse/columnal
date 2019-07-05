@@ -49,7 +49,7 @@ public class MutVar extends TypeExp
      * this is also a MutVar.
      */
     @Override
-    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<TypeError, TypeExp> _unify(TypeExp b) throws InternalException
     {
         // If the other item is a MutVar, we just unify ourselves to them:
         if (this == b)
@@ -58,7 +58,7 @@ public class MutVar extends TypeExp
         }
         else if (b instanceof MutVar)
         {
-            @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
+            @Nullable TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
             if (maybeError != null)
                 return Either.left(maybeError);
             typeClassesOrPointer = Either.right(b);
@@ -71,12 +71,12 @@ public class MutVar extends TypeExp
             boolean cycle = b.containsMutVar(this);
             if (cycle)
             {
-                return Either.left(StyledString.concat(StyledString.s("Cyclic type while attempting to match "), toStyledString(), StyledString.s(" with "), b.toStyledString()));
+                return Either.left(new TypeError(StyledString.concat(StyledString.s("Cyclic type while attempting to match "), toStyledString(), StyledString.s(" with "), b.toStyledString()), ImmutableList.of(this, b)));
             }
             else
             {
                 // Check that the item we are pointing to is a member of the needed type-classes:
-                @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
+                @Nullable TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
                 if (maybeError != null)
                     return Either.left(maybeError);
                 typeClassesOrPointer = Either.right(b);
@@ -106,12 +106,12 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         if (visited.contains(this))
-            return StyledString.s("Cyclic type found");
+            return new TypeError(StyledString.s("Cyclic type found"), ImmutableList.of(this));
         
-        return typeClassesOrPointer.<@Nullable StyledString>either(t -> {
+        return typeClassesOrPointer.<@Nullable TypeError>either(t -> {
             typeClassesOrPointer = Either.left(TypeClassRequirements.union(t, typeClasses));
             return null;
         }, p -> {

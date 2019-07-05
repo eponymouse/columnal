@@ -11,6 +11,7 @@ import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
@@ -36,11 +37,13 @@ public interface ErrorAndTypeRecorder
      * @param errorOrType
      * @return
      */
-    public default @Nullable TypeExp recordError(Expression src, Either<@Nullable StyledString, TypeExp> errorOrType)
+    public default @Nullable TypeExp recordError(Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
     {
         return errorOrType.<@Nullable TypeExp>either(err -> {
             if (err != null)
-                recordError(src, err);
+            {
+                recordError(src, err.getMessage());
+            }
             return null;
         }, val -> val);
     }
@@ -98,12 +101,12 @@ public interface ErrorAndTypeRecorder
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Nullable CheckedExp recordTypeAndError(Expression expression,  Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
     {
         return recordTypeAndError(expression, expression, typeOrError, typeState);
     }
     
-    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, Expression errorExpression,Either<@Nullable StyledString, TypeExp> typeOrError, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, Expression errorExpression,Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
     {
         @Nullable @Recorded TypeExp typeExp = recordType(typeExpression, recordError(errorExpression, typeOrError));
         if (typeExp == null)

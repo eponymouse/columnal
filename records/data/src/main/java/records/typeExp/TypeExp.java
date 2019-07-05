@@ -131,20 +131,20 @@ public abstract class TypeExp implements StyledShowable
         this.src = src;
     }
     
-    public static Either<StyledString, TypeExp> unifyTypes(TypeExp... types) throws InternalException
+    public static Either<TypeError, TypeExp> unifyTypes(TypeExp... types) throws InternalException
     {
         return unifyTypes(Arrays.asList(types));
     }
     
-    public static Either<StyledString, TypeExp> unifyTypes(List<TypeExp> types) throws InternalException
+    public static Either<TypeError, TypeExp> unifyTypes(List<TypeExp> types) throws InternalException
     {
         if (types.isEmpty())
-            return Either.left(StyledString.s("Error: no types available"));
+            return Either.left(new TypeError(StyledString.s("Error: no types available"), ImmutableList.of()));
         else if (types.size() == 1)
             return Either.right(types.get(0));
         else
         {
-            Either<StyledString, TypeExp> r = types.get(0).unifyWith(types.get(1));
+            Either<TypeError, TypeExp> r = types.get(0).unifyWith(types.get(1));
             for (int i = 2; i < types.size(); i++)
             {
                 if (r.isLeft())
@@ -181,7 +181,7 @@ public abstract class TypeExp implements StyledShowable
     }
 
     // package-protected:
-    final Either<StyledString, TypeExp> unifyWith(TypeExp b) throws InternalException
+    final Either<TypeError, TypeExp> unifyWith(TypeExp b) throws InternalException
     {
         TypeExp aPruned = prune();
         TypeExp bPruned = b.prune();
@@ -200,7 +200,7 @@ public abstract class TypeExp implements StyledShowable
      * You can assume that b is pruned, and is not a MutVar unless
      * this is also a MutVar.
      */
-    public abstract Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException;
+    public abstract Either<TypeError, TypeExp> _unify(TypeExp b) throws InternalException;
     
     // Prunes any MutVars at the outermost level.
     public TypeExp prune()
@@ -214,9 +214,9 @@ public abstract class TypeExp implements StyledShowable
      */
     public abstract boolean containsMutVar(MutVar mutVar);
     
-    protected final Either<StyledString, TypeExp> typeMismatch(TypeExp other)
+    protected final Either<TypeError, TypeExp> typeMismatch(TypeExp other)
     {
-        return Either.left(StyledString.concat(StyledString.s("Type mismatch: "), toStyledString(), StyledString.s(" versus "), other.toStyledString()));
+        return Either.left(new TypeError(StyledString.concat(StyledString.s("Type mismatch: "), toStyledString(), StyledString.s(" versus "), other.toStyledString()), ImmutableList.of(this, other)));
     }
     
     // The first part of the pair is the overall tagged type.  The second part is a list, for all the constructors,
@@ -388,7 +388,7 @@ public abstract class TypeExp implements StyledShowable
     /**
      * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
      */
-    public final @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public final @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses)
     {
         return requireTypeClasses(typeClasses, new IdentityHashSet<>());
     }
@@ -398,7 +398,7 @@ public abstract class TypeExp implements StyledShowable
      * The visitedMutVar keeps track of visited MutVar to prevent infinite
      * recursion in case of there being a cycle in the type.
      */
-    public abstract  @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar);
+    public abstract @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar);
 
     @Override
     public final StyledString toStyledString()
@@ -407,4 +407,26 @@ public abstract class TypeExp implements StyledShowable
     }
     
     protected abstract StyledString toStyledString(int maxDepth);
+    
+    public static final class TypeError
+    {
+        private final StyledString message;
+        private final ImmutableList<TypeExp> couldNotUnify;
+
+        public TypeError(StyledString message, ImmutableList<TypeExp> couldNotUnify)
+        {
+            this.message = message;
+            this.couldNotUnify = couldNotUnify;
+        }
+
+        public StyledString getMessage()
+        {
+            return message;
+        }
+
+        public ImmutableList<TypeExp> getCouldNotUnify()
+        {
+            return couldNotUnify;
+        }
+    }
 }

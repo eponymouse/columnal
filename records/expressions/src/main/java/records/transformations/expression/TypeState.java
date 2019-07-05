@@ -16,6 +16,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import utility.Either;
 import utility.Utility;
@@ -86,8 +87,8 @@ public final class TypeState
         @Nullable TypeExp preType = variablePreTypes.get(varName);
         if (preType != null)
         {
-            Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(type, preType);
-            unified.ifLeft(error);
+            Either<TypeError, TypeExp> unified = TypeExp.unifyTypes(type, preType);
+            unified.ifLeft(typeError -> error.accept(typeError.getMessage()));
             if (unified.isLeft())
                 return null;
         }

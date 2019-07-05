@@ -22,6 +22,7 @@ import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -111,7 +112,7 @@ public class CallExpression extends Expression
                     @Nullable ArrayList<@NonNull TypeExp> paramTypeExps = new ArrayList<>();
                     for (int i = 0; i < paramTypes.size(); i++)
                     {
-                        Either<StyledString, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
+                        Either<TypeError, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
                         TypeExp t = onError.recordError(arguments.get(i), paramOutcome);
                         if (t != null && paramTypeExps != null)
                             paramTypeExps.add(t);
@@ -147,7 +148,7 @@ public class CallExpression extends Expression
         if (!doneIndivCheck)
         {
             TypeExp actualCallType = TypeExp.function(this, Utility.<CheckedExp, TypeExp>mapListI(paramTypes, p -> p.typeExp), returnType);
-            Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
+            Either<TypeError, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
             checked = onError.recordError(this, temp);
         }
         

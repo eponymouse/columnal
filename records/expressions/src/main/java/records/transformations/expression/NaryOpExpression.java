@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.typeExp.TypeExp;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -215,7 +216,7 @@ public abstract class NaryOpExpression extends Expression
     public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
-        ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
+        ArrayList<@Nullable Pair<@Nullable TypeError, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
         for (@Recorded Expression expression : expressions)
         {
             @Nullable CheckedExp type = expression.check(data, state, ExpressionKind.EXPRESSION, locationInfo, onError);
@@ -228,15 +229,15 @@ public abstract class NaryOpExpression extends Expression
             }
             else
             {
-                Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(target, type.typeExp);
+                Either<TypeError, TypeExp> unified = TypeExp.unifyTypes(target, type.typeExp);
                 // We have to recreate either to add nullable constraint:
-                unificationOutcomes.add(new Pair<>(unified.<@Nullable StyledString>either(err -> err, u -> null), type.typeExp));
+                unificationOutcomes.add(new Pair<>(unified.<@Nullable TypeError>either(err -> err, u -> null), type.typeExp));
                 if (unified.isLeft())
                     allValid = false;
             }
         }
 
-        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.<Optional<TypeExp>>toImmutableList());
+        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable TypeError, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.<Optional<TypeExp>>toImmutableList());
 
         if (!allValid)
         {
@@ -244,7 +245,7 @@ public abstract class NaryOpExpression extends Expression
             {
                 Expression expression = expressions.get(i);
                 ImmutableMap<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
-                @Nullable StyledString unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
+                @Nullable TypeError unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
                 boolean recordedCustomError = false;
                 for (Entry<@Recorded Expression, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
                 {
@@ -264,7 +265,7 @@ public abstract class NaryOpExpression extends Expression
                 }
                 
                 if (!recordedCustomError && unifyError != null)
-                    onError.recordError(expression, unifyError);
+                    onError.recordError(expression, unifyError.getMessage());
             }
         }
         

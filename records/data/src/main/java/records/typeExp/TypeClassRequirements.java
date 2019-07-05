@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import utility.Utility;
 
@@ -24,12 +25,12 @@ public class TypeClassRequirements
     }
 
     // Returns null if given set satisfies this requirement, or error if not.
-    public @Nullable StyledString checkIfSatisfiedBy(StyledString typeName, ImmutableSet<String> typeClasses)
+    public @Nullable TypeError checkIfSatisfiedBy(StyledString typeName, ImmutableSet<String> typeClasses, TypeExp involvedType)
     {
         if (typeClasses.containsAll(this.typeClasses.keySet()))
             return null;
         else
-            return StyledString.concat(typeName, StyledString.s(" is not " + Sets.difference(this.typeClasses.keySet(), typeClasses).stream().collect(Collectors.joining(" or "))));
+            return new TypeError(StyledString.concat(typeName, StyledString.s(" is not " + Sets.difference(this.typeClasses.keySet(), typeClasses).stream().collect(Collectors.joining(" or ")))), ImmutableList.of(involvedType));
     }
 
     private static class Context

@@ -37,7 +37,7 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<TypeError, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof NumTypeExp))
             return typeMismatch(b);
@@ -68,9 +68,9 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
-        return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES);
+        return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES, this);
     }
 
     @Override

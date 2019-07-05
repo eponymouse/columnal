@@ -12,10 +12,13 @@ import records.error.UserException;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RecordTypeExp extends TypeExp
 {
@@ -35,7 +38,7 @@ public class RecordTypeExp extends TypeExp
     }
 
     @Override
-    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<TypeError, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof RecordTypeExp))
             return typeMismatch(b);
@@ -64,9 +67,9 @@ public class RecordTypeExp extends TypeExp
             {
                 // Only occurs in one side, check completeness:
                 if ((p.getSecond() != null && complete) || (p.getFirst() != null && bt.complete))
-                    return Either.left(StyledString.s("Field \"" + entry.getKey() + "\" occurs in one record but not in the other complete record"));
+                    return Either.left(new TypeError(StyledString.s("Field \"" + entry.getKey() + "\" occurs in one record but not in the other complete record"), Utility.filterOutNulls(Stream.<@Nullable TypeExp>of(p.getFirst(), p.getSecond())).collect(ImmutableList.<TypeExp>toImmutableList())));
                 // Check type classes:
-                @Nullable StyledString typeClassErr = null;
+                @Nullable TypeError typeClassErr = null;
                 if (p.getFirst() != null)
                 {
                     typeClassErr = p.getFirst().requireTypeClasses(bt.requiredTypeClasses);
@@ -84,7 +87,7 @@ public class RecordTypeExp extends TypeExp
             else
             {
                 //Occurs in both sides, unify:
-                Either<StyledString, TypeExp> result = p.getFirst().unifyWith(p.getSecond());
+                Either<TypeError, TypeExp> result = p.getFirst().unifyWith(p.getSecond());
                 if (result.isLeft())
                     return result;
                 result.ifRight(t -> unified.put(entry.getKey(), t));
@@ -115,11 +118,11 @@ public class RecordTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar)
+    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar)
     {
         for (TypeExp member : knownMembers.values())
         {
-            @Nullable StyledString err = member.requireTypeClasses(typeClasses, visitedMutVar);
+            @Nullable TypeError err = member.requireTypeClasses(typeClasses, visitedMutVar);
             if (err != null)
                 return err;
         }
