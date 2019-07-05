@@ -635,6 +635,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         matchWordStart(stem, canonIndex, "units", null, WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
             guides.add(guideCompletion("Units", "units", v.startPos, v.lastShowPosIncl).withSideText("\u2248 units"));
         });
+        matchWordStart(stem, canonIndex, "optional", null, WordPosition.FIRST_WORD_NON_EMPTY).forEach((k, v) -> {
+            guides.add(guideCompletion("Optional", "optional", v.startPos, v.lastShowPosIncl).withSideText("\u2248 optional"));
+        });
         
         // Only add expression guide at positions where there are already completions:
         if (!directAndRelated.isEmpty())

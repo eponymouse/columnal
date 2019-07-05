@@ -172,4 +172,26 @@
             <p>For information on converting between units, see the <link guide="conversion">conversion guide</link>.</p>
         </section>
     </guide>
+    <guide id="optional">
+        <section>
+            <title>Optional Type</title>
+            <p>Sometimes you have data where a value can be blank or missing.  For example, you may have a column for when a product stopped being sold, but many of the products are still on sale.  If you make the column have type Date, you will be required to give a value.  But if you make the column Optional(Date) then you can have blank values.</p>
+            <p>A value for an optional type is always either:</p>
+            <ul>
+            <li>None: This is the blank or missing value.  Or it is</li>
+            <li>Is(value): This is a value which is non-blank.</li>
+            </ul>
+            <p>The present items have to be wrapped with Is(...), even though this may seem cumbersome at times.</p>
+        </section>
+        <section>
+            <title>How to extract values from Optional</title>
+            <p>The most common case is to supply a default value for a missing item.  Optional must be treated in two steps.  First, use a pattern match to check if it is present, and second decide what to do.  The most common form is: <code>@if Optional Column =~ Is(x) @then x @else default value @endif</code>  The =~ operator means that the right hand side is a pattern, so x takes on the value if present, and the then-part is evaluated.  Otherwise the else-part is evaluated and you must supply the missing value.</p>
+            <p>If you are certain the value will not be missing then you can write <code>@define Is(x) = Optional Column @then x @enddefine</code> to avoid needing an unnecessary if-then-else.</p>
+        </section>
+        <section>
+            <title>How to convert values to Optional</title>
+            <p>If you want to convert a value to Optional, you write Is() around it.  For example, Is(Price) takes the value of a number column Price and converts it to Optional(Number).</p>
+            <p>It is quite common to want to convert values to optional where missing has been encoded as a dummy value.  For example, you may have a Height column where -1 has been used to indicate missing.  In that case, the expression <code>@if Height = -1 @then None @else Is(Height) @endif</code> will convert -1 to blank, but all other values to present.</p>
+        </section>
+    </guide>
 </guides>

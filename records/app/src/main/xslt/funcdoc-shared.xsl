@@ -254,9 +254,18 @@
             </xsl:for-each>
         </div>
     </xsl:template>
+    
+    <xsl:template match="code">
+        <code>
+            <xsl:call-template name="processExpression">
+                <xsl:with-param name="expression" select="."/>
+                <xsl:with-param name="insertable" select="true()"/>
+            </xsl:call-template>
+        </code>
+    </xsl:template>
 
     <!-- Copy all a, p, ul, li, code as-is: -->
-    <xsl:template match="a|p|ul|li|code">
+    <xsl:template match="a|p|ul|li">
          <xsl:copy>
              <xsl:copy-of select="@*"/>
              <xsl:apply-templates select="node()" />

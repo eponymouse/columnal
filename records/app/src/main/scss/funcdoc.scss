@@ -129,6 +129,13 @@ body.indiv .examples .examples-header {
     font-size: 13pt;
 }
 
+html.autocomplete span.insertable-expression {
+    cursor: pointer;
+    &:hover {
+        background: grey(80%);
+    }
+}
+
 .examples {
     .examples-header {
         font-size: 14pt;
@@ -148,12 +155,6 @@ body.indiv .examples .examples-header {
         margin-bottom: 10pt;
         .example-call {
             padding-left: 20pt;
-        }
-        html.autocomplete & .insertable-expression {
-            cursor: pointer;
-            &:hover {
-                background: grey(80%);
-            }
         }
     }
     & .example-arrow {
