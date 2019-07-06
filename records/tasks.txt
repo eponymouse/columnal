@@ -1,6 +1,5 @@
 Task C
 ===
-- Make the expression editor wider and slightly taller by default.
 - Add mention of how to introduce units to the units guide, and to the as unit function.
 - Allow insertable expressions from DocWindow (remember which editor caused it)
 - Division by zero in an expression shows "Loading..." forever.
@@ -307,3 +306,4 @@ Done after Phil B & Jon A:
 - Show other guides at all times
 - Show units guide as a quick fix for mismatched units.
 - Improve guide for units - several smaller sections, make it clear how to convert units.
+- Make the expression editor wider and slightly taller by default.

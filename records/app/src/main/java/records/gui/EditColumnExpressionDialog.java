@@ -105,6 +105,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     private final @Nullable RecipeBar recipeBar;
     private final SidePane<T> sidePane;
     private @Nullable SubPicker subPicker = null;
+    private final @Nullable Node sidePaneNode;
 
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, ImmutableList<ExpressionRecipe> recipes, @Nullable DataType expectedType, SidePane<T> sidePane)
     {
@@ -259,7 +260,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             @SuppressWarnings("initialization") // Mainly because awkward to refer to our own type
             protected Dimension2D getEditorDimension()
             {
-                if (sidePane == null)
+                if (sidePaneNode == null)
                     return super.getEditorDimension();
                 else
                     return new Dimension2D(300.0, 130.0);
@@ -299,7 +300,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         content.addRow(LabelledGrid.labelledGridRow("edit.column.expression",
                 "edit-column/column-expression", expressionEditor.getContainer()));
 
-        Node sidePaneNode = sidePane.getSidePane();
+        sidePaneNode = sidePane.getSidePane();
         if (sidePaneNode != null)
             BorderPane.setMargin(sidePaneNode, new Insets(0, 10, 0, 0));
         mainContent = new BorderPane(content);
