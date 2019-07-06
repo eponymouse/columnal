@@ -11,6 +11,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledCSS;
 import styled.StyledShowable;
@@ -317,7 +318,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     }
     
     // Takes latest content, lexes it, returns result
-    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, @Nullable @RawInputLocation Integer caretPos);
+    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, @Nullable @RawInputLocation Integer caretPos, InsertListener insertListener);
 
     protected static StyledString padZeroWidthErrors(StyledString display, ArrayList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
     {

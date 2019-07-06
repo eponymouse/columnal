@@ -105,11 +105,9 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         this.autoComplete = Utility.later(new LexAutoComplete(this, new LexCompletionListener()
         {
             @Override
-            public void insert(@CanonicalLocation int start, String text)
+            public void insert(@Nullable @CanonicalLocation Integer start, String text)
             {
-                @CanonicalLocation int caretPosition = Utility.later(EditorDisplay.this).getCaretPosition();
-                if (start <= caretPosition)
-                    theContent.replaceText(start, caretPosition, text);
+                theContent.insert(start, text);
             }
 
             @Override

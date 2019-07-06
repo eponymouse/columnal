@@ -27,6 +27,7 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
@@ -199,9 +200,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     }
 
     @Override
-    public LexerResult<Expression, ExpressionCompletionContext> process(String content, @Nullable @RawInputLocation Integer curCaretPos)
+    public LexerResult<Expression, ExpressionCompletionContext> process(String content, @Nullable @RawInputLocation Integer curCaretPos, InsertListener insertListener)
     {
-        ExpressionSaver saver = new ExpressionSaver(functionLookup);
+        ExpressionSaver saver = new ExpressionSaver(functionLookup, insertListener);
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         // Index is in original parameter "content":
         RemovedCharacters removedChars = new RemovedCharacters();
@@ -321,7 +322,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 }
             }
 
-            for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(saver.lastWasNumber()))
+            for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(saver.lastWasNumber(), insertListener))
             {
                 @Nullable NestedLiteralSource nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, removedChars, saver.locationRecorder);
                 if (nestedOutcome != null)
@@ -554,7 +555,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             @Override
             public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk)
             {
-                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, saver);
+                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, saver, insertListener);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
     }
@@ -613,7 +614,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, ExpressionSaver expressionSaver)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, ExpressionSaver expressionSaver, InsertListener insertListener)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -623,7 +624,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         addColumnCompletions(completions, stem, canonIndex);
         addTagCompletions(completions, stem, canonIndex);
         addVariableCompletions(completions, stem, canonIndex);
-        addNestedLiteralCompletions(completions, stem, canonIndex);
+        addNestedLiteralCompletions(completions, stem, canonIndex, insertListener);
 
         addKeywordCompletions(completions, stem, canonIndex);
 
@@ -772,9 +773,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex, InsertListener insertListener)
     {
-        for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(false))
+        for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(false, insertListener))
         {
             map(matchWordStart(stem, canonIndex, nestedLiteral.getFirst(), "Value", WordPosition.FIRST_WORD), c -> c.withReplacement(nestedLiteral.getFirst() + "}", StyledString.s(nestedLiteral.getFirst() + "\u2026}"))
                     .withCaretPosAfterCompletion(nestedLiteral.getFirst().length())
@@ -1107,11 +1108,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
 
-    private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals(boolean lastWasNumber)
+    private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals(boolean lastWasNumber, InsertListener insertListener)
     {
         Function<NestedLiteralSource, LiteralOutcome> unitLit = c -> {
             UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
-            LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0);
+            LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0, insertListener);
             return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
         };
         ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> anywhere = ImmutableList.of(
@@ -1122,7 +1123,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             new Pair<>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
             new Pair<>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer(typeManager, true, false);
-                LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0);
+                LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0, insertListener);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             }),
             new Pair<>("unit{", unitLit)

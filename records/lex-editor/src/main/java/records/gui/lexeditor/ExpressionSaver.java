@@ -24,6 +24,7 @@ import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
 import records.gui.lexeditor.ExpressionSaver.BracketContent;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
+import records.gui.lexeditor.completion.InsertListener;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -44,7 +45,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunction;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 import utility.gui.Clickable;
 
@@ -80,8 +80,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     
     private final FunctionLookup functionLookup;
 
-    public ExpressionSaver(FunctionLookup functionLookup)
+    public ExpressionSaver(FunctionLookup functionLookup, InsertListener insertListener)
     {
+        super(insertListener);
         this.functionLookup = functionLookup;
     }
 
@@ -200,7 +201,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                                 {
                                     try
                                     {
-                                        new DocWindow(functionName + " function", docURL, toRightOf).show();
+                                        new DocWindow(functionName + " function", docURL, toRightOf, locationRecorder.getInsertListener()).show();
                                     }
                                     catch (InternalException e)
                                     {

@@ -8,17 +8,21 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.gui.lexeditor.completion.InsertListener;
+import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import utility.ResourceUtility;
+import utility.gui.FXUtility;
 
 import java.net.URL;
 
 public final class DocWindow extends Stage
 {
-    public DocWindow(String title, String docURL, @Nullable Node toRightOf) throws InternalException
+    public DocWindow(String title, String docURL, @Nullable Node toRightOf, InsertListener insertListener) throws InternalException
     {
         setTitle(title);
         setAlwaysOnTop(true);
         WebView webView = new WebView();
+        FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> LexAutoCompleteWindow.enableInsertLinks(webViewDoc, insertListener, () -> null));
         URL url = ResourceUtility.getResource(docURL);
         if (url != null)
         {

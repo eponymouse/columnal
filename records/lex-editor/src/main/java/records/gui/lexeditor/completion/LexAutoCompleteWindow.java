@@ -1,5 +1,6 @@
 package records.gui.lexeditor.completion;
 
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.PopupControl;
@@ -21,6 +22,7 @@ import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.ResourceUtility;
 import utility.Utility;
@@ -101,10 +103,18 @@ public final class LexAutoCompleteWindow extends PopupControl
             else
                 webView.setVisible(false);
         });
-        FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableInsertLinks(webViewDoc, triggerCompletion));
+        FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableInsertLinks(webViewDoc, triggerCompletion, () -> {
+            LexCompletion lexCompletion = listView.getSelectedItem();
+            if (lexCompletion != null)
+            {
+                return lexCompletion.startPos;
+            }
+            else
+                return null;
+        }));
     }
     
-    private void enableInsertLinks(@Nullable Document doc, LexCompletionListener triggerCompletion)
+    public static void enableInsertLinks(@Nullable Document doc, InsertListener insertListener, FXPlatformSupplier<@Nullable @CanonicalLocation Integer> getInsertPosition)
     {
         if (doc != null)
         {
@@ -127,11 +137,7 @@ public final class LexAutoCompleteWindow extends PopupControl
                     element.setAttribute("title", "Click to insert into editor");
                     ((EventTarget) span).addEventListener("click", e ->
                     {
-                        LexCompletion lexCompletion = listView.getSelectedItem();
-                        if (lexCompletion != null)
-                        {
-                            triggerCompletion.insert(lexCompletion.startPos, insert);
-                        }
+                        insertListener.insert(getInsertPosition.get(), insert);
                         e.stopPropagation();
                     }, true);
                 }

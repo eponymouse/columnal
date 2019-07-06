@@ -1,13 +1,9 @@
 package records.gui.lexeditor.completion;
 
 import annotation.units.CanonicalLocation;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface LexCompletionListener
+public interface LexCompletionListener extends InsertListener
 {
-    /**
-     * Replaces text between start and current caret position with text
-     */
-    void insert(@CanonicalLocation int start, String text);
-
     void complete(LexCompletion lexCompletion);
 }

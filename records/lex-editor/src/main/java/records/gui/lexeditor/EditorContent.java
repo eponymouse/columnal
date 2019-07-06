@@ -17,6 +17,7 @@ import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.TopLevelEditor.Focus;
+import records.gui.lexeditor.completion.InsertListener;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.FXPlatformConsumer;
@@ -29,7 +30,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.OptionalInt;
 
-public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext> implements InsertListener
 {
     private LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> curContent;
     private @CanonicalLocation int curCaretPosition;
@@ -43,7 +44,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     public EditorContent(String originalContent, Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer)
     {
         this.lexer = lexer;
-        this.curContent = this.lexer.process(originalContent, 0);
+        this.curContent = this.lexer.process(originalContent, 0, Utility.later(this));
         this.curCaretPosition = curContent.caretPositions.size() > 0 ? curContent.caretPositions.get(0).positionInternal : 0;
         this.curAnchorPosition = curCaretPosition;
         this.undoManager = new UndoManager(originalContent);
@@ -117,7 +118,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             newCaretPos = startIncl + content.length();
         else
             newCaretPos = curCaretPosition - (endExcl - startIncl) + content.length();
-        this.curContent = lexer.process(newText, newCaretPos);
+        this.curContent = lexer.process(newText, newCaretPos, this);
         if (setCaretPos != null)
             this.curCaretPosition = setCaretPos;
         else
@@ -133,7 +134,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     
     public void forceSaveAsIfUnfocused()
     {
-        this.curContent = lexer.process(getText(), null);
+        this.curContent = lexer.process(getText(), null, this);
         @SuppressWarnings("units")
         @RawInputLocation int oldPos = getCaretPosition();
         this.curCaretPosition = curContent.removedChars.map(oldPos);
@@ -295,6 +296,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             replaceWholeText(possible.getFirst());
             positionCaret(possible.getSecond(), true);
         }
+    }
+
+    @Override
+    public void insert(@Nullable @CanonicalLocation Integer start, String text)
+    {
+        @CanonicalLocation int caretPosition = getCaretPosition();
+        if (start == null || start <= caretPosition)
+            replaceText(start == null ? caretPosition : start, caretPosition, text);
     }
     
     public static enum CaretMoveReason

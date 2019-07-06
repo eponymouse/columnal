@@ -15,6 +15,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.completion.InsertListener;
+import records.gui.lexeditor.completion.LexCompletionListener;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -468,9 +470,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     protected final EditorLocationAndErrorRecorder locationRecorder;
     protected boolean hasUnmatchedBrackets = false;
     
-    protected SaverBase()
+    protected SaverBase(InsertListener insertListener)
     {
-        this.locationRecorder = new EditorLocationAndErrorRecorder();
+        this.locationRecorder = new EditorLocationAndErrorRecorder(insertListener);
         addTopLevelScope();
     }
     

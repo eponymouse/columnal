@@ -14,6 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.UnitLexer.UnitBracket;
 import records.gui.lexeditor.UnitLexer.UnitOp;
+import records.gui.lexeditor.completion.InsertListener;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
@@ -82,6 +83,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     //UnitManager getUnitManager();
+
+
+    public UnitSaver(InsertListener insertListener)
+    {
+        super(insertListener);
+    }
 
     @Override
     protected <R extends StyledShowable> @Recorded R makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void, R> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)

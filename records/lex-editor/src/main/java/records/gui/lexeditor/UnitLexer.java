@@ -12,6 +12,7 @@ import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.transformations.expression.InvalidSingleUnitExpression;
@@ -92,9 +93,9 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos)
+    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
     {
-        UnitSaver saver = new UnitSaver();
+        UnitSaver saver = new UnitSaver(insertListener);
         RemovedCharacters removedCharacters = new RemovedCharacters();
         ArrayList<ContentChunk> chunks = new ArrayList<>();
         @RawInputLocation int curIndex = RawInputLocation.ZERO;

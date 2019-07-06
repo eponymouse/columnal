@@ -13,6 +13,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
+import records.gui.lexeditor.completion.InsertListener;
+import records.gui.lexeditor.completion.LexCompletionListener;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
@@ -24,10 +26,8 @@ import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
 import records.typeExp.TypeExp.TypeError;
-import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
-import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -185,6 +185,8 @@ public class EditorLocationAndErrorRecorder
     // Function takes node that documentation should appear to the right of
     private final ArrayList<Pair<CanonicalSpan, FXPlatformFunction<Node, StyledString>>> entryPrompts = new ArrayList<>();
     private final IdentityHashMap<Expression, Pair<StyledString, ImmutableList<TextQuickFix>>> information = new IdentityHashMap<>();
+    // Used by DocWindow
+    private final InsertListener insertListener;
 
     private static interface UnresolvedErrorDetails
     {
@@ -231,8 +233,9 @@ public class EditorLocationAndErrorRecorder
     
     private final ArrayList<UnresolvedErrorDetails> errorsToShow = new ArrayList<>();
     
-    public EditorLocationAndErrorRecorder()
+    public EditorLocationAndErrorRecorder(InsertListener insertListener)
     {
+        this.insertListener = insertListener;
     }
 
     @SuppressWarnings("recorded")
@@ -395,7 +398,7 @@ public class EditorLocationAndErrorRecorder
                             showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show guide for Optional type"), ImmutableList.<String>of(), src, typeManager -> {
                                 try
                                 {
-                                    new DocWindow("Optional", "guide-optional.html", null).show();
+                                    new DocWindow("Optional", "guide-optional.html", null, insertListener).show();
                                 }
                                 catch (InternalException e)
                                 {
@@ -408,7 +411,7 @@ public class EditorLocationAndErrorRecorder
                             showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show units guide"), ImmutableList.<String>of(), src, typeManager -> {
                                 try
                                 {
-                                    new DocWindow("Units", "guide-units.html", null).show();
+                                    new DocWindow("Units", "guide-units.html", null, insertListener).show();
                                 }
                                 catch (InternalException e)
                                 {
@@ -522,5 +525,10 @@ public class EditorLocationAndErrorRecorder
     public void recordEntryPrompt(CanonicalSpan canonicalSpan, FXPlatformFunction<Node, StyledString> prompt)
     {
         entryPrompts.add(new Pair<>(canonicalSpan, prompt));
+    }
+
+    public InsertListener getInsertListener()
+    {
+        return insertListener;
     }
 }

@@ -15,6 +15,7 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.gui.lexeditor.TypeSaver.BracketContent;
+import records.gui.lexeditor.completion.InsertListener;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -66,6 +67,11 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             this.typeExpressions = typeExpressions;
             this.operators = operators;
         }
+    }
+
+    public TypeSaver(InsertListener insertListener)
+    {
+        super(insertListener);
     }
 
     public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer)

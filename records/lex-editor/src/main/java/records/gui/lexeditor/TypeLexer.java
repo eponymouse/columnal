@@ -23,6 +23,7 @@ import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.LexCompletionGroup;
@@ -114,9 +115,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos)
+    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
     {
-        TypeSaver saver = new TypeSaver();
+        TypeSaver saver = new TypeSaver(insertListener);
         boolean prevWasIdent = false;
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         ArrayList<ContentChunk> chunks = new ArrayList<>();
@@ -171,7 +172,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     // We don't require concrete as we do that bit so don't want do it twice:
                     UnitLexer unitLexer = new UnitLexer( typeManager.getUnitManager(), false);
-                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0);
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0, insertListener);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE));
                     chunks.add(new ContentChunk("{", ChunkType.NESTED_START));
                     @SuppressWarnings("units")
@@ -190,7 +191,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 {
                     saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content.substring(curIndex)), StyledString.s("Missing closing }"), ImmutableList.of());
                     UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
-                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0);
+                    LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0, insertListener);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content));
                     chunks.add(new ContentChunk(content.substring(curIndex), ChunkType.NESTED));
