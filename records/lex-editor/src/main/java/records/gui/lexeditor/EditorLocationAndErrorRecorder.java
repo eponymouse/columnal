@@ -392,7 +392,7 @@ public class EditorLocationAndErrorRecorder
                     {
                         
                         if (err.getCouldNotUnify().stream().anyMatch(this::isOptional) && !err.getCouldNotUnify().stream().allMatch(this::isOptional))
-                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show optional guide"), ImmutableList.<String>of(), src, typeManager -> {
+                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show guide for Optional type"), ImmutableList.<String>of(), src, typeManager -> {
                                 try
                                 {
                                     new DocWindow("Optional", "guide-optional.html", null).show();
