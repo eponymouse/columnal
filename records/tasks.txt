@@ -1,8 +1,3 @@
-Express Priority (needed for task C)
-===
-- Improve guide for units - several smaller sections, make it clear how to convert units.
-
-
 Probably fixed by recent changes but not definite
 ---
 - Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
@@ -20,12 +15,14 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Manual edit dialog pick column is modal and doesn't allow column picking
 - Manual edit summary dialog very weird when no edits to show
 
-- Not obvious enough to type to see more auto complete?  (Esp when scroll not obvious)
 - Lots of confusion between date literals and date functions.
 - Investigate improving layout for long expressions: done if, still need to do define, match
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Allow unicode specifier in strings (^uXXXX)
+
+- Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
+- Add a way to show more transformations in dialog, either a fold-out button, a scroll bar, and/or a box to type to show more.  Probably scroll bar is simplest for now
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
@@ -298,3 +295,4 @@ Done after Phil B & Jon A:
 - Add a guide for Optional, linked to when an error might be solved by adding/removing an Optional type (technically: by removing Optional from one side or the other)
 - Show other guides at all times
 - Show units guide as a quick fix for mismatched units.
+- Improve guide for units - several smaller sections, make it clear how to convert units.
