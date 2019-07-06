@@ -82,23 +82,23 @@
         <!-- TODO add more examples -->
     </function>
     
-    <function name="number from text">
+    <function name="extract number">
         <unitArg>u</unitArg>
         <argType name="text">Text</argType>
         <returnType name="number">Number</returnType>
         <description>
             <p>Extracts a number from the given text.  If there is no number, or two numbers, gives an error.</p>
-            <p>The difference between this function and <link function="from text"/> is that this function will accept and ignore extra text around the number, and deal with comma separators.  So whereas from text will give an error on "P65n" because it's not solely a number, this number from text function will return 65.</p>
+            <p>The difference between this function and <link function="from text"/> is that this function will accept and ignore extra text around the number, and deal with comma separators.  So whereas from text will give an error on "P65n" because it's not solely a number, this extract number function will return 65.</p>
             <p>The function assumes that commas are thousand separators, and dot is the decimal separator.  If you need to convert continental European style numbers where the opposite is true, use the replace many function as shown in the last example.</p>
         </description>
         <equivalence display="false">
             <forany name="x">Number</forany>
-            <lhs>@call @function number from text("a" ; @call @function to text(x) ; "z")</lhs>
+            <lhs>@call @function extract number("a" ; @call @function to text(x) ; "z")</lhs>
             <rhs>x</rhs>
         </equivalence>
         <equivalence display="false">
             <forany name="x">Number</forany>
-            <lhs>@call @function number from text(@call @function to text(x))</lhs>
+            <lhs>@call @function extract number(@call @function to text(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>

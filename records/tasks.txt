@@ -1,7 +1,6 @@
 Task C
 ===
 - Make the expression editor wider and slightly taller by default.
-- Rename "number from text" to "extract number" to make its difference to from text clearer.
 - Add mention of how to introduce units to the units guide, and to the as unit function.
 - Allow insertable expressions from DocWindow (remember which editor caused it)
 - Division by zero in an expression shows "Loading..." forever.

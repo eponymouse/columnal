@@ -23,7 +23,7 @@ public class ExtractNumber extends FunctionDefinition
 {
     public ExtractNumber() throws InternalException
     {
-        super("conversion:number from text");
+        super("conversion:extract number");
     }
 
     @Override
