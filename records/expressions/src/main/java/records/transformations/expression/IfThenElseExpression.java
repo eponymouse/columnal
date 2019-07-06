@@ -63,7 +63,7 @@ public class IfThenElseExpression extends NonOperatorExpression
             return null;
         }
         @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
-        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (thenType == null || elseType == null)
             return null;
 

@@ -1,7 +1,6 @@
 Task C
 ===
 - Add mention of how to introduce units to the units guide, and to the as unit function.
-- The expression @ifN100m Time=~Optional\Is(x)@then100{m}/x@else@ifN100yd time=~Optional\Is(x)@thenas unit(unit{m/s},100{yard}/x)@else0{m/s}@endif@endif should be valid, but it complains about trying to use undeclared variable x.
 - When using the quick fix on the error about "column is defined in this table, make new transformation to use it", nothing happened after clicking the quick fix other than closing the editor.  Ditto the info warning about using column redefined in this table.
 - Maven clean should also clean the XSD-generated XML files.
 
@@ -308,3 +307,4 @@ Done after Phil B & Jon A:
 - Make the expression editor wider and slightly taller by default.
 - Division by zero in an expression shows "Loading..." forever.
 - Allow insertable expressions from DocWindow (remember which editor caused it)
+- The expression @ifN100m Time=~Optional\Is(x)@then100{m}/x@else@ifN100yd time=~Optional\Is(x)@thenas unit(unit{m/s},100{yard}/x)@else0{m/s}@endif@endif should be valid, but it complains about trying to use undeclared variable x.

@@ -162,4 +162,10 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     {
         testError("element([],1)", e(0, 13, 0,14, "type"));
     }
+    
+    @Test
+    public void testVarNoError()
+    {
+        testError("@ifOptional\\None=~Optional\\Is(x)@thensingle(x)@else@ifOptional\\None=~Optional\\Is(x)@thenx+1{m/s}@else0{m/s}@endif@endif");
+    }
 }
