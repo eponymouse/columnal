@@ -657,18 +657,22 @@ public class Utility
     }
 
     @SuppressWarnings("value")
-    public static @Value Number divideNumbers(@Value Number lhs, @Value Number rhs)
+    public static @Value Number divideNumbers(@Value Number lhs, @Value Number rhs) throws UserException
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
-            return toBigDecimal(lhs).divide(toBigDecimal(rhs), MathContext.DECIMAL128);
+            @Value BigDecimal denom = toBigDecimal(rhs);
+            if (denom.compareTo(BigDecimal.ZERO) == 0)
+                throw new UserException("Division by zero");
+            else
+                return toBigDecimal(lhs).divide(denom, MathContext.DECIMAL128);
         }
         else
         {
             long lhsLong = lhs.longValue();
             long rhsLong = rhs.longValue();
             // Exact division possible:
-            if (lhsLong % rhsLong == 0 && (lhsLong != Long.MIN_VALUE || rhsLong != -1))
+            if (rhsLong != 0 && lhsLong % rhsLong == 0 && (lhsLong != Long.MIN_VALUE || rhsLong != -1))
                 return lhsLong / rhsLong;
             else
                 return divideNumbers(toBigDecimal(lhs), toBigDecimal(rhs));

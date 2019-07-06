@@ -2,7 +2,6 @@ Task C
 ===
 - Add mention of how to introduce units to the units guide, and to the as unit function.
 - Allow insertable expressions from DocWindow (remember which editor caused it)
-- Division by zero in an expression shows "Loading..." forever.
 - The expression @ifN100m Time=~Optional\Is(x)@then100{m}/x@else@ifN100yd time=~Optional\Is(x)@thenas unit(unit{m/s},100{yard}/x)@else0{m/s}@endif@endif should be valid, but it complains about trying to use undeclared variable x.
 - When using the quick fix on the error about "column is defined in this table, make new transformation to use it", nothing happened after clicking the quick fix other than closing the editor.  Ditto the info warning about using column redefined in this table.
 - Maven clean should also clean the XSD-generated XML files.
@@ -59,6 +58,7 @@ Medium Priority (significant quality of life, but not essential especially for b
  - Add "Transform type" recipe?
 - Column titles should be highlighted differently in code completion
 - Add explanation system for errors, to give a sort of stack trace of error cause
+- Errors in number columns seem to get right-shifted by the NumberColumnFormatter.
 
 
 Low Priority (good to have, but will not be hugely missed)
@@ -307,3 +307,4 @@ Done after Phil B & Jon A:
 - Show units guide as a quick fix for mismatched units.
 - Improve guide for units - several smaller sections, make it clear how to convert units.
 - Make the expression editor wider and slightly taller by default.
+- Division by zero in an expression shows "Loading..." forever.
