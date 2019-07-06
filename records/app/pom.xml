@@ -621,8 +621,8 @@
                                 </exec>
                                 
                                 <!-- Set version numbers: -->
-                                <copy file="../installers/windows_msi/launch4j.xml" tofile="../installers/windows_msi/launch4j_versioned.xml"/>
-                                <copy file="../installers/windows_msi/main.wxs" tofile="../installers/windows_msi/main_versioned.wxs"/>
+                                <copy file="../installers/windows_msi/launch4j.xml" tofile="../installers/windows_msi/launch4j_versioned.xml" overwrite="true"/>
+                                <copy file="../installers/windows_msi/main.wxs" tofile="../installers/windows_msi/main_versioned.wxs" overwrite="true"/>
                                 
                                 <replace dir="../installers/windows_msi" propertyFile="../installers/package.properties">
                                     <include name="*_versioned*"/>
@@ -639,7 +639,7 @@
                                     <arg line="main_versioned.wxs"/>
                                 </exec>
 
-                                <copy todir="../installers/windows_msi/SourceDir/jre">
+                                <copy todir="../installers/windows_msi/SourceDir/jre"  overwrite="true">
                                     <fileset dir="${jre_location}"/>
                                 </copy>
 
