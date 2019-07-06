@@ -670,7 +670,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/tools_${os.name}.properties"/>
                                 <property file="../installers/package.properties"/>
                                 
                                 <exec dir="../installers/windows_msi" executable="${putty_bin}/pscp.exe" failonerror="true">
@@ -686,7 +686,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <property file="../installers/tools.properties"/>
+                                <property file="../installers/tools_${os.name}.properties"/>
                                 <property file="../installers/package.properties"/>
                                 
                                 <echo file="../installers/columnal.version" append="false" message="${columnal.version}${line.separator}${columnal.description}"/>
