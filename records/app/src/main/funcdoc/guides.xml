@@ -168,7 +168,12 @@
         </section>
         <section>
             <title>How to start using units</title>
-            <p>Units are written after the Number type in curly brackets.  To associate a numeric column with a unit, change its type from Number to for example, Number{mile}.  To write a number in an expression with a given unit, write the unit after the number, for example 60{s} or 2.54{cm} or 10{m/s}.</p>
+            <p>Units are written after the Number type in curly brackets.  How to add units depends on the context:</p>
+            <ul>
+                <li>To set the units on a numeric column, change its type, for example from Number to Number{mile}.</li>
+                <li>To set the units on a number literal in an expression with a given unit, write the unit after the number, for example 60{s} or 2.54{cm} or 10{m/s}.</li>
+                <li>To set the unit on another number variable or calculation, multiply by it by the value 1 (one) with the given unit.  For example if you want to change the result of extract number into metres, use <code>extract number("10") * 1{m}</code></li>
+            </ul>
             <p>Several units are built-in to the software, such as m (metres), s (seconds), year, USD (US dollars) and more.</p>
         </section>
         <section>

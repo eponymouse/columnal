@@ -50,7 +50,7 @@
         <description>
             <p>Converts a number from one unit to another (if possible).</p>
             <p>Unit conversion is only available for exact conversions (e.g. metres to centimetres), not for approximate or changing conversions (e.g. euros to dollars).</p>
-            <p>Attempting to convert between unrelated units (e.g. metres to seconds) will result in an error.</p>
+            <p>Attempting to convert between unrelated units (e.g. metres to seconds) will result in an error.  This includes converting to/from plain numbers.  If you want to add a unit to a number multiply by 1 of that unit (for example, <code>duration * 1{s}</code>), if you want to remove a unit then divide by 1 of that unit (for example, <code>distance / 1{m}).</code></p>
         </description>
         <example>
             <inputArg>(unit{mile/hour}, (100{m} / 9.58{s}))</inputArg>
