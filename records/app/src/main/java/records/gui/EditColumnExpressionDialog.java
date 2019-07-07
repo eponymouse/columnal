@@ -268,10 +268,12 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
 
             @Override
             @OnThread(Tag.FXPlatform)
-            protected void forceCloseDialog()
+            protected @Nullable Pair<@Nullable ColumnId, Expression> forceCloseDialog()
             {
+                Pair<@Nullable ColumnId, Expression> result = new Pair<>(nameField.valueProperty().get(), Utility.later(EditColumnExpressionDialog.this).expressionEditor.save(true));
                 setResult(null);
                 close();
+                return result;
             }
         };
         curValue = expressionEditor.save(true);

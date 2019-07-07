@@ -54,7 +54,6 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.typeExp.ExpressionBase;
-import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledCSS;
 import styled.StyledShowable;
@@ -64,10 +63,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationConsumer;
 import utility.SimulationRunnable;
 import utility.Utility;
 
@@ -1008,7 +1006,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             // Gives back an action which will make a new Calculate depending on the current Calculate,
             // with the currently editing expression moved there.
             @OnThread(Tag.FXPlatform)
-            public SimulationRunnable moveExpressionToNewCalculation();
+            public SimulationConsumer<Pair<@Nullable ColumnId, Expression>> moveExpressionToNewCalculation();
         }
 
         public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId, @Nullable CalculationEditor editing)
@@ -1027,7 +1025,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) @Nullable SimulationRunnable doAction(TypeManager typeManager)
+                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
                 {
                     return editing.moveExpressionToNewCalculation();
                 }

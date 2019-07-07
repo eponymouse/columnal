@@ -31,8 +31,8 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.SimulationConsumer;
 import utility.SimulationFunction;
-import utility.SimulationRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -158,23 +158,19 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) SimulationRunnable moveExpressionToNewCalculation()
+            public @OnThread(Tag.FXPlatform) SimulationConsumer<Pair<@Nullable ColumnId, Expression>> moveExpressionToNewCalculation()
             {
                 CellPosition targetPos = getManager().getNextInsertPosition(getId());
-                return () -> {
+                return details -> {
                     TableManager mgr = getManager();
                     ImmutableMap.Builder<ColumnId, Expression> calcColumns = ImmutableMap.builder();
-                    Expression expression = newColumns.get(columnId);
                     for (Entry<ColumnId, Expression> entry : newColumns.entrySet())
                     {
                         if (!columnId.equals(entry.getKey()))
                             calcColumns.put(entry.getKey(), entry.getValue());
                     }
-                    if (expression != null)
-                    {
-                        mgr.edit(getId(), () -> new Calculate(mgr, getDetailsForCopy(), srcTableId, calcColumns.build()), null);
-                        mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(columnId, expression)), null);
-                    }
+                    mgr.edit(getId(), () -> new Calculate(mgr, getDetailsForCopy(), srcTableId, calcColumns.build()), null);
+                    mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(details.getFirst() == null ? columnId : details.getFirst(), details.getSecond())), null);
                 };
             }
         };

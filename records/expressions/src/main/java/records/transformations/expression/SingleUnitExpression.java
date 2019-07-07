@@ -3,8 +3,8 @@ package records.transformations.expression;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import javafx.scene.Scene;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.datatype.TypeManager;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitDeclaration;
@@ -17,13 +17,10 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformRunnable;
 import utility.Pair;
-import utility.SimulationRunnable;
+import utility.SimulationConsumer;
 import utility.Utility;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.stream.Stream;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
@@ -50,8 +47,7 @@ public class SingleUnitExpression extends UnitExpression
             QuickFix<UnitExpression> makeNew = new QuickFix<UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
             {
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable SimulationRunnable doAction(TypeManager typeManager)
+                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
                 {
                     typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
                     return null;

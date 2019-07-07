@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
+import records.data.ColumnId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.FixList;
@@ -36,6 +37,7 @@ import records.gui.lexeditor.EditorContent.CaretMoveReason;
 import records.gui.lexeditor.EditorContent.CaretPositionListener;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix.QuickFixAction;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -44,6 +46,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationConsumer;
 import utility.SimulationRunnable;
 import utility.Utility;
 import utility.Workers;
@@ -217,11 +220,12 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
                 actionOrReplacement.eitherInt_(a -> {
-                    @Nullable SimulationRunnable toRun = a.doAction(typeManager);
+                    @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> toRun = a.doAction(typeManager);
                     if (toRun != null)
                     {
-                        forceCloseDialog();
-                        Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_("Moving Calculate", () -> toRun.run()));
+                        @Nullable Pair<@Nullable ColumnId, Expression> latest = forceCloseDialog();
+                        if (latest != null)
+                            Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_("Moving Calculate", () -> toRun.consume(latest)));
                     }
                     else
                     {
@@ -239,10 +243,13 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         });
     }
 
+    // Its return type is quite hacky as it is specific to EditColumnExpressionDialog, but it gets the job done.
+    // returns the current values of columnId and expression.
     @OnThread(Tag.FXPlatform)
-    protected void forceCloseDialog()
+    protected @Nullable Pair<@Nullable ColumnId, Expression> forceCloseDialog()
     {
         // Currently only implemented by EditColumnExpressionDialog
+        return null;
     }
 
     public void setContent(String text)
