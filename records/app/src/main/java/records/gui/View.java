@@ -859,7 +859,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     break;
                 case TRANSFORM:
                     new PickTransformationDialog(thisView).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-                        @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
+                        @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView.getManager(), cellPosition, () ->
                             new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
                         if (makeTrans != null)
                         {
@@ -899,7 +899,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     public void createTransform(Table srcTable, Point2D mouseScreenPos)
     {
         new PickTransformationDialog(this).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-            @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(this, getManager(), tableManager.getNextInsertPosition(srcTable.getId()), () -> Optional.of(srcTable));
+            @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(getManager(), tableManager.getNextInsertPosition(srcTable.getId()), () -> Optional.of(srcTable));
             if (makeTrans != null)
             {
                 @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;

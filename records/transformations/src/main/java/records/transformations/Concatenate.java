@@ -6,32 +6,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.KnownLengthRecordSet;
-import records.data.RecordSet;
-import records.data.TableAndColumnRenames;
-import records.data.Table;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
+import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.DataParser;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.ConcatMissingContext;
-import records.gui.View;
-import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -43,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -341,7 +327,7 @@ public class Concatenate extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
             return () -> new Concatenate(mgr, new InitialLoadDetails(null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT, true);
         }

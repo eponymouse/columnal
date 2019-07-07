@@ -19,7 +19,6 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
-import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
@@ -433,7 +432,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Aggregate(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
         }

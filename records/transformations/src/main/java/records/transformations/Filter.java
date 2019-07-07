@@ -13,9 +13,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
-import records.gui.View;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.EvaluateState.TypeLookup;
@@ -262,7 +261,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
 
         @Override
         @OnThread(Tag.Simulation)
-        public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Filter(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
         }

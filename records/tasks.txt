@@ -22,8 +22,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Allow unicode specifier in strings (^uXXXX)
 
 - Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
-- Add a way to show more transformations in dialog, either a fold-out button, a scroll bar, and/or a box to type to show more.  Probably scroll bar is simplest for now
-- If current version is newer than version on server (shouldn't happen, but still...) then it offers to upgrade but it shouldn't.
+- Add a way to show more transformations in dialog, either a fold-out button, a scroll bar, and/or a box to type to show more.  Probably scroll bar is simplest for now.
 - Maven clean should also clean the XSD-generated XML files.
 
 Medium Priority (significant quality of life, but not essential especially for beta)
@@ -53,6 +52,7 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Add explanation system for errors, to give a sort of stack trace of error cause
 - Errors in number columns seem to get right-shifted by the NumberColumnFormatter.
 - When using quick fix to move column to new Calculate, scroll to it -- and re-open the calculation?
+  - Check what happens if used while column name is blank.
 
 
 Low Priority (good to have, but will not be hugely missed)

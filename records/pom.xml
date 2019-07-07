@@ -21,6 +21,7 @@
         <module>functions</module>
         <module>tests</module>
         <module>lex-editor</module>
+        <module>transformations</module>
     </modules>
     
     <dependencies>

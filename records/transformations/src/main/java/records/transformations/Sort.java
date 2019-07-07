@@ -8,9 +8,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.*;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
@@ -18,7 +18,6 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
-import records.gui.View;
 import records.loadsave.OutputBuilder;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -361,7 +360,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
 
         @Override
         @OnThread(Tag.Simulation)
-        public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Sort(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), ImmutableList.of());
         }

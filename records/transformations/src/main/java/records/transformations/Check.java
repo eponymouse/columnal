@@ -12,9 +12,6 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.ListExDTV;
 import records.data.datatype.TypeManager;
-import records.transformations.expression.EvaluateState.TypeLookup;
-import records.transformations.expression.Expression.ValueResult;
-import records.transformations.expression.explanation.Explanation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
@@ -23,17 +20,18 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.CheckContext;
 import records.grammar.TransformationParser.CheckTypeContext;
-import records.gui.View;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.TypeState;
-import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.explanation.Explanation;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -414,7 +412,7 @@ public class Check extends Transformation implements SingleSourceTransformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Check(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
         }

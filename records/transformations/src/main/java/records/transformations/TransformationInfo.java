@@ -10,7 +10,6 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.View;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
@@ -71,7 +70,7 @@ public abstract class TransformationInfo
     public abstract Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException;
 
     @OnThread(Tag.FXPlatform)
-    public abstract @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable);
+    public abstract @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable);
     
     public final String getImageFileName()
     {

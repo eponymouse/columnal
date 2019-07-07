@@ -10,7 +10,6 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.View;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
@@ -43,14 +42,14 @@ public abstract class SingleSourceTransformationInfo extends TransformationInfo
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public final @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+    public final @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
     {
         return askForSingleSrcTable.get().<@Nullable SimulationSupplier<Transformation>>map(srcTable -> {
-            SimulationSupplier<Transformation> simulationSupplier = () -> makeWithSource(view, mgr, destination, srcTable);
+            SimulationSupplier<Transformation> simulationSupplier = () -> makeWithSource(mgr, destination, srcTable);
             return simulationSupplier;
         }).orElse(null);
     }
 
     @OnThread(Tag.Simulation)
-    protected abstract Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException;
+    protected abstract Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException;
 }

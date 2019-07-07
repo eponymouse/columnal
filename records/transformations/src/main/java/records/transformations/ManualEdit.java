@@ -27,7 +27,6 @@ import records.grammar.TransformationParser.EditColumnContext;
 import records.grammar.TransformationParser.EditColumnDataContext;
 import records.grammar.TransformationParser.EditContext;
 import records.grammar.TransformationParser.ValueContext;
-import records.gui.View;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -631,7 +630,7 @@ edit : editHeader editColumn*;
         }
 
         @Override
-        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new ManualEdit(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), null, ImmutableMap.of());
         }

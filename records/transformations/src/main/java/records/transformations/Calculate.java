@@ -15,9 +15,8 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
-import records.gui.View;
-import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -332,9 +331,9 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         }
         
         @Override
-        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Calculate(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableMap.of());
+            return new Calculate(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableMap.of());
         }
     }
 }

@@ -10,7 +10,6 @@ import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.HideColumnsContext;
-import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -185,9 +184,9 @@ public class HideColumns extends Transformation implements SingleSourceTransform
         }
 
         @Override
-        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new HideColumns(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
+            return new HideColumns(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
         }
     }
 
