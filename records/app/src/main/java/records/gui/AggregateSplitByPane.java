@@ -168,8 +168,7 @@ public class AggregateSplitByPane extends BorderPane
             if (curEditing != null)
             {
                 curEditing.setContent(t.getSecond());
-                if (addButton != null)
-                    addButton.requestFocus();
+                focusAddButton();
             }
             else
             {

@@ -100,8 +100,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
             SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original);
             PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original, t -> {
                 curValue.set(t.getId().getRaw());
-                if (addButton != null)
-                    addButton.requestFocus();
+                focusAddButton();
             });
             FXUtility.addChangeListenerPlatformNN(pickTablePane.currentlyEditing(), ed -> {
                 if (ed)
@@ -130,8 +129,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
             if (curEditing != null)
             {
                 curEditing.setContent(t);
-                if (addButton != null)
-                    addButton.requestFocus();
+                focusAddButton();
             }
             else
             {

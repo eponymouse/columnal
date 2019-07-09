@@ -58,7 +58,7 @@ public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
     private final boolean allowDeleting;
     private final ScrollPaneFill scrollPane = new FancyListScrollPane(children);
     private final BorderPane bottomPane = new BorderPane();
-    protected final @Nullable Button addButton;
+    private final @Nullable Button addButton;
 
     /**
      * 
@@ -300,6 +300,12 @@ public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
         }
         
         return content;
+    }
+
+    protected void focusAddButton()
+    {
+        if (addButton != null)
+            addButton.requestFocus();
     }
 
     /**

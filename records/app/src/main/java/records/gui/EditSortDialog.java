@@ -153,8 +153,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
             if (curEditing != null)
             {
                 curEditing.setContent(t.getSecond());
-                if (addButton != null)
-                    addButton.requestFocus();
+                focusAddButton();
             }
             else
             {
