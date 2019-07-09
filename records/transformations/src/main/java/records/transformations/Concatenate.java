@@ -63,7 +63,7 @@ public class Concatenate extends Transformation
     private final IncompleteColumnHandling incompleteColumnHandling;
 
     @OnThread(Tag.Any)
-    private @Nullable String error = null;
+    private final @Nullable String error;
     @OnThread(Tag.Any)
     private final @Nullable RecordSet recordSet;
             
@@ -78,6 +78,7 @@ public class Concatenate extends Transformation
         this.includeMarkerColumn = includeMarkerColumn;
 
         KnownLengthRecordSet rs = null;
+        @Nullable String err = null;
         List<Table> tables = Collections.emptyList();
         try
         {
@@ -238,16 +239,15 @@ public class Concatenate extends Transformation
             }
             
             rs = new KnownLengthRecordSet(columns, totalLength);
-
-
         }
         catch (UserException e)
         {
             String msg = e.getLocalizedMessage();
             if (msg != null)
-                this.error = msg;
+                err = msg;
         }
         this.recordSet = rs;
+        this.error = err;
     }
     
     @Override
