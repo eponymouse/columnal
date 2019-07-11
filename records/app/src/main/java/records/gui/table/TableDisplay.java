@@ -73,6 +73,7 @@ import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Aggregate;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
+import records.transformations.Join;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
@@ -1203,6 +1204,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof Concatenate)
         {
             TableHat.editConcatenate(new Point2D(0, 0), parent, (Concatenate)table);
+        }
+        else if (table instanceof Join)
+        {
+            TableHat.editJoin(parent, (Join)table);
         }
         // For other tables, do nothing
     }

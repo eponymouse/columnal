@@ -53,6 +53,7 @@ public final class LabelledGrid extends GridPane
     public static Pair<CheckBox, Row> tickGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... tickBoxStyleClasses)
     {
         CheckBox checkBox = new CheckBox(TranslationUtility.getString(labelKey));
+        GUI.addIdClass(checkBox, labelKey);
         checkBox.getStyleClass().addAll(tickBoxStyleClasses);
         return new Pair<>(checkBox, classicRow(checkBox, GUI.helpBox(helpId, node), node));
     }

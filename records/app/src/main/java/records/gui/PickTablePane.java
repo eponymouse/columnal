@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.BooleanExpression;
 import javafx.geometry.Insets;
@@ -10,12 +11,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Table;
+import records.data.TableId;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.SimpleCompletion;
 import records.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.IdentifierUtility;
 import utility.gui.FXUtility;
 import utility.gui.Instruction;
 
@@ -97,6 +100,15 @@ public class PickTablePane extends BorderPane
         autoComplete.setContentDirect(table == null ? "" : table.getId().getRaw(), true);
         if (table != null)
             setResultAndClose.consume(table);
+    }
+    
+    public @Nullable TableId getValue()
+    {
+        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(tableField.getText());
+        if (valid == null)
+            return null;
+        else
+            return new TableId(valid);
     }
 
     public BooleanExpression currentlyEditing()

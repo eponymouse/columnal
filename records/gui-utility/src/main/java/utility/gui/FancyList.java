@@ -302,7 +302,7 @@ public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
         return content;
     }
 
-    protected void focusAddButton()
+    public void focusAddButton()
     {
         if (addButton != null)
             addButton.requestFocus();

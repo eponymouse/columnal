@@ -45,6 +45,7 @@ import records.transformations.Check.CheckType;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
+import records.transformations.Join;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
@@ -458,6 +459,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
         }
         return c -> null;
+    }
+
+    public static void editJoin(View parent, Join join)
+    {
+        new EditJoinDialog(parent, join).showAndWait().ifPresent(details ->
+            Workers.onWorkerThread("Editing join", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing join", () -> {
+                parent.getManager().edit(join.getId(), () -> new Join(parent.getManager(), join.getDetailsForCopy(), details.primaryTableId, details.secondaryTableId, details.isLeftJoin, details.joinOn), null);
+        })));
     }
 
     @Override

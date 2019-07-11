@@ -52,10 +52,13 @@ public class TransformationManager implements TransformationLoader
             new Aggregate.Info(),
             new Filter.Info(),
             new Sort.Info(),
-            new Check.Info(),
-            new ManualEdit.Info(),
+            new Join.Info(),
             //new HideColumns.Info(),
-            new Concatenate.Info()
+            new Concatenate.Info(),
+            new ManualEdit.Info(),
+                
+            // Not shown in dialog, as shown separately:
+            new Check.Info()
         );
     }
 
