@@ -18,6 +18,7 @@ public class GenNonsenseTransformation extends Generator<Transformation_Mgr>
         new GenNonsenseCheck(),
         new GenNonsenseConcatenate(),
         new GenNonsenseFilter(),
+        new GenNonsenseJoin(),
         //new GenNonsenseHideColumns(),
         new GenNonsenseManualEdit(),
         new GenNonsenseSort(),

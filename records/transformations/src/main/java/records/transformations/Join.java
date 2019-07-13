@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import log.Log;
@@ -11,6 +12,11 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.JoinColumnLineContext;
+import records.grammar.TransformationParser.JoinContext;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
@@ -21,6 +27,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +61,7 @@ public class Join extends Transformation
     private final @Nullable RecordSet recordSet;
 
     @OnThread(Tag.Simulation)
-    public Join(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId primarySource, TableId secondarySource, boolean keepPrimaryWithNoMatch, ImmutableList<Pair<ColumnId, ColumnId>> columnsToMatch)
+    public Join(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId primarySource, TableId secondarySource, boolean keepPrimaryWithNoMatch, ImmutableList<Pair<ColumnId, ColumnId>> columnsToMatch) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.primarySource = primarySource;
@@ -219,7 +226,9 @@ public class Join extends Transformation
     @Override
     protected @OnThread(Tag.Simulation) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return ImmutableList.of("TODO");
+        return Utility.<String>prependToList(keepPrimaryWithNoMatch ? "LEFTJOIN" : "INNERJOIN",
+            Utility.<Pair<ColumnId, ColumnId>, String>mapListI(columnsToMatch, p -> OutputBuilder.quoted(p.getFirst().getRaw()) + " EQUALS " + OutputBuilder.quoted(p.getSecond().getRaw())) 
+        );
     }
 
     @Override
@@ -233,7 +242,6 @@ public class Join extends Transformation
     {
         if (this == transformation) return true;
         if (transformation == null || getClass() != transformation.getClass()) return false;
-        if (!super.equals(transformation)) return false;
         Join join = (Join) transformation;
         return keepPrimaryWithNoMatch == join.keepPrimaryWithNoMatch &&
                 primarySource.equals(join.primarySource) &&
@@ -299,8 +307,19 @@ public class Join extends Transformation
         {
             if (source.size() != 2)
                 throw new UserException("Expected two tables as join sources but found " + source.size());
-            // TODO load the detail
-            return new Join(mgr, initialLoadDetails, source.get(0), source.get(1), false, ImmutableList.of());
+            JoinContext whole = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.join());
+            ArrayList<Pair<ColumnId, ColumnId>> columns = new ArrayList<>();
+            for (JoinColumnLineContext ctx : whole.joinColumnLine())
+            {
+                @ExpressionIdentifier String a = IdentifierUtility.asExpressionIdentifier(ctx.columnA.getText());
+                @ExpressionIdentifier String b = IdentifierUtility.asExpressionIdentifier(ctx.columnB.getText());
+                if (a == null)
+                    throw new UserException("Invalid column id: \"" + ctx.columnA.getText() + "\"");
+                if (b == null)
+                    throw new UserException("Invalid column id: \"" + ctx.columnB.getText() + "\"");
+                columns.add(new Pair<>(new ColumnId(a), new ColumnId(b)));
+            }
+            return new Join(mgr, initialLoadDetails, source.get(0), source.get(1), whole.joinTypeLine().leftJoinKW() != null, ImmutableList.copyOf(columns));
         }
 
         @SuppressWarnings("identifier")

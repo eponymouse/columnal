@@ -59,3 +59,10 @@ editColumnDataKW : {_input.LT(1).getText().equals("REPLACEMENT")}? ATOM;
 editColumnData : editColumnDataKW value value NEWLINE;
 editColumn : editColumnHeader editColumnData*;
 edit : editHeader editColumn*;
+
+/* Join: */
+innerJoinKW : {_input.LT(1).getText().equals("INNERJOIN")}? ATOM;
+leftJoinKW : {_input.LT(1).getText().equals("LEFTJOIN")}? ATOM;
+joinTypeLine : (innerJoinKW | leftJoinKW) NEWLINE;
+joinColumnLine : columnA=item {_input.LT(1).getText().equals("EQUALS")}? ATOM columnB=item NEWLINE;
+join : joinTypeLine joinColumnLine*;
