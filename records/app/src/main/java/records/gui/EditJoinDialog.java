@@ -44,6 +44,7 @@ public class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDeta
     {
         super(parent, true);
         FXUtility.preventCloseOnEscape(getDialogPane());
+        setResizable(true);
         Pair<CheckBox, Row> leftJoinRow = LabelledGrid.tickGridRow("join.isLeftJoin", "join/left-join", new Label());
         isLeftJoin = leftJoinRow.getFirst();
         isLeftJoin.setSelected(join.isKeepPrimaryWithNoMatch());
@@ -55,7 +56,10 @@ public class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDeta
         primaryTableNamePane = new PickTablePane(parent, exclude, join.getPrimarySource().getRaw(), t -> {
             secondaryTableNamePane.focusEntryField();
         });
+        // TODO add table and column picking
+        //primaryTableNamePane.focusedProperty()parent.enableTablePickingMode();
         
+        getDialogPane().setPrefWidth(600.0);
         getDialogPane().setContent(GUI.borderTopCenterBottom(
                 GUI.borderLeftRight(primaryTableNamePane, secondaryTableNamePane),
                 joinOn.getNode(),
@@ -110,6 +114,8 @@ public class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDeta
             this.secondaryColumn = new TextField();
             if (initialContent != null && initialContent.getFirst() != null)
                 primaryColumn.setText(initialContent.getFirst().getRaw());
+            if (initialContent != null && initialContent.getSecond() != null)
+                secondaryColumn.setText(initialContent.getSecond().getRaw());
             setLeft(primaryColumn);
             setRight(secondaryColumn);
         }
