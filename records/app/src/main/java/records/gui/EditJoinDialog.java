@@ -60,6 +60,7 @@ public class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDeta
         //primaryTableNamePane.focusedProperty()parent.enableTablePickingMode();
         
         getDialogPane().setPrefWidth(600.0);
+        getDialogPane().setPrefHeight(500.0);
         getDialogPane().setContent(GUI.borderTopCenterBottom(
                 GUI.borderLeftRight(primaryTableNamePane, secondaryTableNamePane),
                 joinOn.getNode(),
