@@ -12,7 +12,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
-import records.grammar.GrammarUtility;
 import records.transformations.Join;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -50,7 +49,7 @@ public class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDeta
         isLeftJoin.setSelected(join.isKeepPrimaryWithNoMatch());
         joinOn = new ColumnList((ImmutableList<Pair<@Nullable ColumnId, @Nullable ColumnId>>)join.getColumnsToMatch());
         ImmutableSet<Table> exclude = ImmutableSet.of(join); 
-        secondaryTableNamePane = new PickTablePane(parent, exclude, join.getJoinWith().getRaw(), t -> {
+        secondaryTableNamePane = new PickTablePane(parent, exclude, join.getSecondarySource().getRaw(), t -> {
             joinOn.focusAddButton();
         });
         primaryTableNamePane = new PickTablePane(parent, exclude, join.getPrimarySource().getRaw(), t -> {
