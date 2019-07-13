@@ -116,7 +116,7 @@ public class InitialWindow
                 @OnThread(value = Tag.Unique, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
-                    opt.ifPresent(u -> Platform.runLater(() -> u.showAtTopOf(content)));
+                    opt.ifPresent(u -> Platform.runLater(() -> u.showIn(content, 2)));
                 }
             });
         }

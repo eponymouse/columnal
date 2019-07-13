@@ -169,7 +169,7 @@ public class MainWindow
                 @OnThread(value = Tag.Unique, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
-                    opt.ifPresent(u -> Platform.runLater(() -> u.showAtTopOf(stackPane)));
+                    opt.ifPresent(u -> Platform.runLater(() -> u.showIn(stackPane, 1)));
                 }
             });
         }
@@ -272,7 +272,7 @@ public class MainWindow
         else if (v.isReadOnly())
         {
             Text text = new Text(
-                    "This file is open for reading only, due to a loading error.  Changes will not be saved."
+                "This file is open for reading only, due to a loading error.  Changes will not be saved."
             );
             text.getStyleClass().add("banner-message-text");
             FXUtility.setPseudoclass(banner, "error", true);

@@ -72,7 +72,7 @@ public class Main extends Application
         }
 
         @OnThread(Tag.FXPlatform)
-        public void showAtTopOf(Pane pane)
+        public void showIn(Pane pane, int childPosition)
         {
             BorderPane borderPane = new BorderPane();
             StyledString s = StyledString.concat(StyledString.s("Version " + version + " available.  "),
@@ -108,7 +108,7 @@ public class Main extends Application
             BorderPane.setAlignment(button, Pos.CENTER_RIGHT);
             BorderPane.setMargin(button, new Insets(4, 8, 4, 4));
             borderPane.getStyleClass().add("upgrade-banner");
-            pane.getChildren().add(borderPane);
+            pane.getChildren().add(childPosition, borderPane);
         }
     }
     
