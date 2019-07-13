@@ -398,6 +398,29 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries"))    
             );
         }
+        else if (table instanceof Join)
+        {
+            Join join = (Join) table;
+            collapsedContent = StyledString.s("Join");
+            Clickable clickToEdit = new Clickable() {
+
+                @Override
+                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                {
+                    editJoin(parent, join);
+                }
+            };
+            content = StyledString.concat(
+                StyledString.s("Join "),
+                join.getPrimarySource().toStyledString().withStyle(clickToEdit),
+                StyledString.s(" with "),
+                join.getSecondarySource().toStyledString().withStyle(clickToEdit),
+                join.getColumnsToMatch().isEmpty() ? StyledString.s("") : 
+                    StyledString.concat(StyledString.s(" on "),
+                    join.getColumnsToMatch().stream().map(p -> p.getFirst().equals(p.getSecond()) ? p.getFirst().toStyledString() : StyledString.concat(p.getFirst().toStyledString(), StyledString.s(" = "), p.getSecond().toStyledString())).collect(StyledString.joining(" and ")).withStyle(clickToEdit)
+                )
+            );
+        }
         else
         {
             content = StyledString.s("");
