@@ -20,7 +20,7 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class PickTransformationDialog extends LightDialog<Pair<Point2D, TransformationInfo>>
 {
-    private static final int BUTTON_WIDTH = 140;
+    private static final int BUTTON_WIDTH = 150;
     private static final int BUTTON_HEIGHT = 140;
     private static final double WIDTH = BUTTON_WIDTH * 4 + 3 * 10;
     private static final double HEIGHT = BUTTON_HEIGHT * 2 + 3 * 10;
