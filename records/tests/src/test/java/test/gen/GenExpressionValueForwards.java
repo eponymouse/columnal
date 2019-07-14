@@ -272,7 +272,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     () ->
                     {
                         @Value String value = TestUtil.makeStringV(r, gs);
-                        return literal(value, new StringLiteral(value));
+                        return literal(value, TestUtil.makeStringLiteral(value, r));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numOperands = r.nextInt(2, 5);
@@ -379,7 +379,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TestUtil.makeStringLiteral(zone.toString(), r)));
                         });
                         break;
                 }

@@ -105,7 +105,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType litText(StringLiteral self, @Value String value)
+            public UnitType litText(StringLiteral self, String value)
             {
                 write('"');
                 write(((StringLiteral)expression).editString().replaceAll("\"", "^q"));

@@ -176,7 +176,7 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> litText(StringLiteral self, @Value String value)
+    public Stream<T> litText(StringLiteral self, String value)
     {
         return Stream.of();
     }

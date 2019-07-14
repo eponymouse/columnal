@@ -13,6 +13,7 @@ import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
+import test.TestUtil;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class BackwardsFromText extends BackwardsProvider
         return ImmutableList.of(
             () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                 new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),
-                new StringLiteral(val)    
+                TestUtil.makeStringLiteral(val, r)
             )
         );
     }

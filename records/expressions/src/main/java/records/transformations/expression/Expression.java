@@ -553,7 +553,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitStringLiteral(StringLiteralContext ctx)
         {
-            return new StringLiteral(ctx.getText());
+            return new StringLiteral(ctx.RAW_STRING().getText());
         }
 
         @Override
@@ -878,7 +878,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            return new InvalidIdentExpression(ctx.STRING().getText());
+            return new InvalidIdentExpression(ctx.RAW_STRING().getText());
         }
 
         @Override

@@ -10,9 +10,9 @@ columnRefType : COLUMN | WHOLECOLUMN;
 columnRef : columnRefType (tableId SCOPE)? columnId;
 
 numericLiteral : ADD_OR_SUBTRACT? NUMBER CURLIED?;
-stringLiteral : STRING;
+stringLiteral : RAW_STRING;
 booleanLiteral : TRUE | FALSE;
-unfinished : UNFINISHED STRING;
+unfinished : UNFINISHED RAW_STRING;
 
 varRef  : ident;
 

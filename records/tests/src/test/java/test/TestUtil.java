@@ -1621,4 +1621,17 @@ public class TestUtil
         if (robot.lookup(".ok-button").tryQuery().isPresent())
             robot.clickOn(".ok-button");
     }
+    
+    public static StringLiteral makeStringLiteral(String target, SourceOfRandomness r)
+    {
+        StringBuilder b = new StringBuilder();
+        
+        target.codePoints().forEach(n -> {
+            if (r.nextInt(8) == 1)
+                b.append("^{" + Integer.toHexString(n) + "}");
+            else
+                b.append(GrammarUtility.escapeChars(Utility.codePointToString(n)));
+        });
+        return new StringLiteral(b.toString());
+    }
 }

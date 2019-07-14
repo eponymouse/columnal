@@ -1,6 +1,7 @@
 lexer grammar ExpressionLexer;
 
-import StringLexerShared;
+RAW_STRING : ('"' (~[\n\r"])*? '"')
+    { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 WS : ( ' ' | '\t' )+ -> skip ;
 
 OPEN_BRACKET : '(';

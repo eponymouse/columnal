@@ -68,7 +68,7 @@ public interface ExpressionVisitor<T>
 
     T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions);
 
-    T litText(StringLiteral self, @Value String value);
+    T litText(StringLiteral self, String rawValue);
 
     T litTemporal(TemporalLiteral self, DateTimeType literalType, String content, Either<StyledString, TemporalAccessor> value);
 

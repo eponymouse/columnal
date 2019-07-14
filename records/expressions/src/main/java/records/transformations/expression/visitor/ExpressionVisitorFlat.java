@@ -160,7 +160,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T litText(StringLiteral self, @Value String value)
+    public T litText(StringLiteral self, String value)
     {
         return makeDef(self);
     }

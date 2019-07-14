@@ -58,7 +58,7 @@ public class BackwardsLiteral extends BackwardsProvider
             @Override
             public List<ExpressionMaker> text() throws InternalException, UserException
             {
-                return ImmutableList.of(() -> new StringLiteral((String)targetValue));
+                return ImmutableList.of(() -> TestUtil.makeStringLiteral((String)targetValue, r));
             }
 
             @Override

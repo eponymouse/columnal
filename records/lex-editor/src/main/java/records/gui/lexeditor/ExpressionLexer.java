@@ -272,7 +272,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 @RawInputLocation int endQuote = content.indexOf("\"", curIndex + 1);
                 if (endQuote != -1)
                 {
-                    saver.saveOperand(new StringLiteral(GrammarUtility.processEscapes(content.substring(curIndex + 1, endQuote), false)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE));
+                    saver.saveOperand(new StringLiteral(content.substring(curIndex + 1, endQuote)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE));
                     String stringLit = content.substring(curIndex, endQuote + 1);
                     @SuppressWarnings("units")
                     ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());

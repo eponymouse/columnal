@@ -21,12 +21,14 @@ import utility.Pair;
  */
 public class StringLiteral extends Literal
 {
-    // The actual String value, without any escapes.
+    // The actual String value, without any remaining escapes.
     private final @Value String value;
+    private final String rawUnprocessed;
 
-    public StringLiteral(String value)
+    public StringLiteral(String rawUnprocessed)
     {
-        this.value = DataTypeUtility.value(value);
+        this.rawUnprocessed = rawUnprocessed;
+        this.value = DataTypeUtility.value(GrammarUtility.processEscapes(rawUnprocessed, false));
     }
 
     @Override
@@ -44,13 +46,13 @@ public class StringLiteral extends Literal
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return OutputBuilder.quoted(value);
+        return "\"" + rawUnprocessed + "\"";
     }
 
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s("\"" + value + "\"").withStyle(CommonStyles.MONOSPACE), this);
+        return expressionStyler.styleExpression(StyledString.s("\"" + rawUnprocessed + "\"").withStyle(CommonStyles.MONOSPACE), this);
     }
 
     @Override
@@ -61,25 +63,25 @@ public class StringLiteral extends Literal
 
         StringLiteral that = (StringLiteral) o;
 
-        return value.equals(that.value);
+        return rawUnprocessed.equals(that.rawUnprocessed);
     }
 
     @Override
     public int hashCode()
     {
-        return value.hashCode();
+        return rawUnprocessed.hashCode();
     }
 
     // Escapes the characters ready for editing.
     @Override
     public String editString()
     {
-        return GrammarUtility.escapeChars(value);
+        return rawUnprocessed;
     }
 
     @Override
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
-        return visitor.litText(this, value);
+        return visitor.litText(this, rawUnprocessed);
     }
 }

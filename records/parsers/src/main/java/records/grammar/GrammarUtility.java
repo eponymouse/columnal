@@ -16,7 +16,7 @@ public class GrammarUtility
     public static String processEscapes(String escaped, boolean beginsAndEndsWithQuotes)
     {
         // Removing escapes always shortens so longest length is original - 2 (the quotes):
-        char[] result = new char[escaped.length() - (beginsAndEndsWithQuotes ? 2 : 0)];
+        int[] result = new int[escaped.length() - (beginsAndEndsWithQuotes ? 2 : 0)];
         int resultIndex = 0;
         // Don't process first and last because they are quotes
         int end = escaped.length() - (beginsAndEndsWithQuotes ? 1 : 0);
@@ -24,7 +24,7 @@ public class GrammarUtility
         {
             // We can do it using chars not codepoints because non-^ characters
             // will be perfectly preserved:
-            char c = escaped.charAt(i);
+            int c = escaped.charAt(i);
             if (c == '^')
             {
                 if (i + 1 < end)
@@ -49,6 +49,27 @@ public class GrammarUtility
                             break;
                         case 't':
                             c = '\t';
+                            break;
+                        case '{':
+                            {
+                                int close = escaped.indexOf('}', i + 2);
+                                if (close != -1)
+                                {
+                                    String hex = escaped.substring(i + 2, close);
+                                    try
+                                    {
+                                        c = Integer.parseInt(hex.trim(), 16);
+                                        i = end;
+                                        break;
+                                    }
+                                    catch (NumberFormatException e)
+                                    {
+                                        // Not a number, invalid
+                                    }
+                                }
+                                // If invalid escape:
+                                c = escaped.charAt(i + 1);
+                            }
                             break;
                         default:
                             // Invalid escape, probably came from user edit.  Best bet

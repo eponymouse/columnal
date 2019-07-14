@@ -19,7 +19,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Investigate improving layout for long expressions: done if, still need to do define, match
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
-- Allow unicode specifier in strings (^uXXXX)
 
 - Maven clean should also clean the XSD-generated XML files.
 
@@ -305,3 +304,4 @@ Done after Phil B & Jon A:
 - When using the quick fix on the error about "column is defined in this table, make new transformation to use it", nothing happened after clicking the quick fix other than closing the editor.  Ditto the info warning about using column redefined in this table.
 - Add mention of how to introduce units to the units guide, and to the as unit function.
 - Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
+- Allow unicode specifier in strings (^uXXXX)

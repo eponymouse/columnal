@@ -179,7 +179,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                     () -> InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
                     () -> new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                     () -> new BooleanLiteral(r.nextBoolean()),
-                    () -> new StringLiteral(TestUtil.makeStringV(r, gs)),
+                    () -> TestUtil.makeStringLiteral(TestUtil.makeStringV(r, gs), r),
                     () -> {
                         ColumnId columnId = TestUtil.generateColumnId(r);
                         if (columnReferences.getOrDefault(columnId.getRaw(), true))
