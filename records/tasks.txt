@@ -22,7 +22,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Allow unicode specifier in strings (^uXXXX)
 
 - Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
-- Add a way to show more transformations in dialog, either a fold-out button, a scroll bar, and/or a box to type to show more.  Probably scroll bar is simplest for now.
 - Maven clean should also clean the XSD-generated XML files.
 
 Medium Priority (significant quality of life, but not essential especially for beta)

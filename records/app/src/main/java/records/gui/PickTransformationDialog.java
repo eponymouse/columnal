@@ -3,6 +3,8 @@ package records.gui;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -14,6 +16,7 @@ import utility.Pair;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;
+import utility.gui.ScrollPaneFill;
 
 import java.util.Optional;
 
@@ -21,7 +24,7 @@ import java.util.Optional;
 public class PickTransformationDialog extends LightDialog<Pair<Point2D, TransformationInfo>>
 {
     private static final int BUTTON_WIDTH = 150;
-    private static final int BUTTON_HEIGHT = 140;
+    private static final int BUTTON_HEIGHT = 165;
     private static final double WIDTH = BUTTON_WIDTH * 4 + 3 * 10;
     private static final double HEIGHT = BUTTON_HEIGHT * 2 + 3 * 10;
 
@@ -36,7 +39,19 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
         makeTransformationButtons(gridPane);
         
         FXUtility.forcePrefSize(gridPane);
-        getDialogPane().setContent(new BorderPane(gridPane));
+        ScrollPane scrollPane = new ScrollPane(gridPane) {
+            @Override
+            public void requestFocus()
+            {
+            }
+        };
+        scrollPane.getStyleClass().add("pick-transformation-scroll-pane");
+        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+        BorderPane borderPane = new BorderPane(scrollPane);
+        borderPane.getStyleClass().add("pick-transformation-scroll-pane-wrapper");
+        borderPane.setPrefHeight(HEIGHT + 50);
+        getDialogPane().setContent(borderPane);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);
         centreDialogButtons();

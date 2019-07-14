@@ -44,7 +44,16 @@
 .pick-transformation-tile-pane {
     -fx-hgap: 10px;
     -fx-vgap: 10px;
+    -fx-padding: 0 5px 0 0;
 }
+.pick-transformation-scroll-pane-wrapper {
+    -fx-padding: 10px;
+}
+.pick-transformation-scroll-pane {
+    -fx-background-insets: 0, 0 1 1 0;
+    -fx-padding: 0 1 1 0;
+}
+
 .pick-table-dialog .button-bar .container {
     -fx-padding: 0;
 }
