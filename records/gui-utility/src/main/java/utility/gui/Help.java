@@ -52,7 +52,7 @@ class Help
             Builder builder = new Builder();
             // We can't pass a URL through to the XML library because it doesn't understand files in JARs.
             // So it's important we pass an InputStream instead
-            @Nullable InputStream resource = ResourceUtility.getResourceAsStream("/" + fileStem + ".help");
+            @Nullable InputStream resource = ResourceUtility.getResourceAsStream(fileStem + ".help");
             if (resource == null)
                 throw new FileNotFoundException(fileStem + ".help");
             
