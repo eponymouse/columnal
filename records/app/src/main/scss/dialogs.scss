@@ -283,3 +283,15 @@
         }
     }
 }
+
+.edit-join-content {
+    .table-label {
+        -fx-alignment: center;
+        -fx-text-alignment: center;
+        -fx-max-width: 9999.0;
+        -fx-text-fill: grey(60%);
+    }
+    .fancy-list {
+        -fx-min-height: 150px;
+    }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-join" title="Edit Join Transformation">
+    <help id="left-join" title="Include unmatched primary rows">
+        <short>If selected, rows from the primary table with no match will still be included.</short>
+        <full>
+            <p>By default, rows in either source table which are not matched in the other table are discarded.  If this option is selected, rows in the primary source table are included even if unmatched, with empty optional values.  Therefore the matched rows from the secondary table will all be wrapped into an optional type if this is selected.</p>
+        </full>
+    </help>
+    <help id="tables" title="Source tables">
+        <short>Join transformations join two tables together.</short>
+        <full>
+            <p>The distinction between primary and secondary table only really matters if you select the option to include unmatched primary rows (unmatched secondary rows are always discarded).</p>
+            <p>If you want to join more than two tables (e.g. A, B, C) then use one join transformation to put A and B together, and a second join transformation to join that with C.</p>
+        </full>
+    </help>
+    <help id="columns" title="Columns to match">
+        <short>Columns to match against each other.</short>
+        <full>
+            <p>The join transformation takes values in a particular column of the primary table (on the left here) and finds all rows that match the given column of the secondary table (on the right here) and shows them as a single row in the result.</p>
+            <p>You can select multiple columns here, in which case only the rows where all pairs of columns match will be included.  If you select no columns, all possible pairings of the primary and secondary rows will be included.</p>
+        </full>
+    </help>
+</dialog>

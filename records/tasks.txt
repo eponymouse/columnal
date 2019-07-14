@@ -21,7 +21,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Allow unicode specifier in strings (^uXXXX)
 
-- Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
 - Maven clean should also clean the XSD-generated XML files.
 
 Medium Priority (significant quality of life, but not essential especially for beta)
@@ -305,3 +304,4 @@ Done after Phil B & Jon A:
 - The expression @ifN100m Time=~Optional\Is(x)@then100{m}/x@else@ifN100yd time=~Optional\Is(x)@thenas unit(unit{m/s},100{yard}/x)@else0{m/s}@endif@endif should be valid, but it complains about trying to use undeclared variable x.
 - When using the quick fix on the error about "column is defined in this table, make new transformation to use it", nothing happened after clicking the quick fix other than closing the editor.  Ditto the info warning about using column redefined in this table.
 - Add mention of how to introduce units to the units guide, and to the as unit function.
+- Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)

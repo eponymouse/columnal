@@ -3,6 +3,8 @@ package records.gui;
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -52,7 +54,8 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         FXUtility.preventCloseOnEscape(getDialogPane());
         initModality(Modality.NONE);
         setResizable(true);
-        Pair<CheckBox, Row> leftJoinRow = LabelledGrid.tickGridRow("join.isLeftJoin", "join/left-join", new Label());
+        
+        Pair<CheckBox, Row> leftJoinRow = LabelledGrid.tickGridRow("join.isLeftJoin", "edit-join/left-join", new Label());
         isLeftJoin = leftJoinRow.getFirst();
         isLeftJoin.setSelected(join.isKeepPrimaryWithNoMatch());
         joinOn = new ColumnList((ImmutableList<Pair<@Nullable ColumnId, @Nullable ColumnId>>)join.getColumnsToMatch());
@@ -64,13 +67,16 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
             secondaryTableNamePane.focusEntryField();
         });
         
-        getDialogPane().setPrefWidth(600.0);
-        getDialogPane().setPrefHeight(500.0);
-        getDialogPane().setContent(GUI.borderTopCenterBottom(
-                GUI.borderLeftRight(primaryTableNamePane, secondaryTableNamePane),
+        getDialogPane().setPrefWidth(650.0);
+        getDialogPane().setContent(setBorderPaneGaps(10, GUI.borderTopCenterBottom(GUI.borderTopCenterBottom(
+                GUI.labelWrapHelp("join.edit.explanation", "edit-join/tables"),
+                GUI.borderLeftRight(
+                    GUI.borderTopCenter(GUI.label("join.edit.table.primary", "table-label"), primaryTableNamePane),
+                    GUI.borderTopCenter(GUI.label("join.edit.table.secondary", "table-label"), secondaryTableNamePane)),
+                GUI.labelWrapHelp("join.edit.columns", "edit-join/columns"), "edit-join-top"),
                 joinOn.getNode(),
-                new LabelledGrid(leftJoinRow.getSecond(), LabelledGrid.fullWidthRow(getErrorLabel()))
-        ));
+                new LabelledGrid(leftJoinRow.getSecond(), LabelledGrid.fullWidthRow(getErrorLabel())),
+        "edit-join-content")));
         FXUtility.onceNotNull(primaryTableNamePane.sceneProperty(), s -> FXUtility.runAfter(() -> primaryTableNamePane.focusEntryField()));
         
         setOnShowing(e -> {
@@ -95,7 +101,22 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
             parent.disablePickingMode();
         });
     }
-    
+
+    private BorderPane setBorderPaneGaps(int pixels, BorderPane pane)
+    {
+        for (Node child : pane.getChildren())
+        {
+            if (child != pane.getBottom())
+                BorderPane.setMargin(child, new Insets(0, 0, pixels, 0));
+            
+            if (child instanceof BorderPane)
+            {
+                setBorderPaneGaps(pixels, (BorderPane) child);
+            }
+        }
+        return pane;
+    }
+
     private @Nullable Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>> pick()
     {
         long curTime = System.currentTimeMillis();
@@ -149,7 +170,7 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
     }
     
     @OnThread(Tag.FXPlatform)
-    private class DualColumnPane extends BorderPane
+    private final class DualColumnPane extends BorderPane
     {
         private final TextField primaryColumn;
         private final TextField secondaryColumn;
@@ -164,7 +185,9 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
                 primaryColumn.setText(initialContent.getFirst().getRaw());
             if (initialContent != null && initialContent.getSecond() != null)
                 secondaryColumn.setText(initialContent.getSecond().getRaw());
+            BorderPane.setMargin(this, new Insets(1, 5, 3, 2));
             setLeft(primaryColumn);
+            setCenter(new Label(" = "));
             setRight(secondaryColumn);
             FXUtility.addChangeListenerPlatformNN(primaryColumn.focusedProperty(), f -> {
                 if (!f)

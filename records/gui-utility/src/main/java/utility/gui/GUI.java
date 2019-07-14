@@ -225,7 +225,7 @@ public class GUI
     
     
     /**
-     * Like label but the text is permitted to wrap (by using a TextFlow)
+     * A label but the text is permitted to wrap
      */
     public static Label labelWrap(@LocalizableKey String contentKey, String... styleClasses)
     {
@@ -245,6 +245,13 @@ public class GUI
     public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
         HBox hBox = new HBox(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
+        hBox.getStyleClass().add("labelled-wrapper");
+        return hBox;
+    }
+
+    public static Node labelWrapHelp(@LocalizableKey String labelKey, @HelpKey String helpId)
+    {
+        HBox hBox = new HBox(labelWrap(labelKey), helpBox(helpId, null));
         hBox.getStyleClass().add("labelled-wrapper");
         return hBox;
     }
