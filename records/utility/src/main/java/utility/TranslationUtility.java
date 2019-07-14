@@ -111,7 +111,7 @@ public class TranslationUtility
                 }
             }
         }
-
+        Log.error("Did not find translated key: \"" + key + "\"");
         return key; // Best we can do, if we can't find the labels file.
     }
 

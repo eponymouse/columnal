@@ -419,9 +419,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     SwingUtilities.invokeLater(() -> {
                         try
                         {
-                            URL resource = ResourceUtility.getResource("/" + furtherDetailsURL.getFirst());
+                            URL resource = ResourceUtility.getResource(furtherDetailsURL.getFirst());
                             if (resource != null)
                                 Desktop.getDesktop().browse(resource.toURI());
+                            else
+                                Log.error("Did not find resource: \"" + furtherDetailsURL.getFirst() + "\"");
                         }
                         catch (Exception e)
                         {
