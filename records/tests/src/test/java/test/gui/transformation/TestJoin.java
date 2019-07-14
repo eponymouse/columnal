@@ -52,10 +52,10 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait
 {
-    @Property(trials=3)
+    @Property(trials=5)
     @SuppressWarnings("identifier")
     @OnThread(Tag.Simulation)
-    public void testJoin(@When(seed=1L) @From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testJoin(@From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws Exception
     {
         // We make four types for columns (T1-T4), where table A has
         // T1-T3 and table B has T2-T4.  Table A has 
@@ -67,6 +67,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         List<SimulationFunction<RecordSet, EditableColumn>> aColumns = new ArrayList<>();
         List<SimulationFunction<RecordSet, EditableColumn>> bColumns = new ArrayList<>();
         boolean columnsNamedSame = r.nextBoolean();
+        boolean leftJoin = r.nextBoolean();
         // One entry per output row.  Which row numbers do the result rows come from? 
         ArrayList<Pair<Integer, OptionalInt>> resultSourceRows = new ArrayList<>();
         // Join on nothing (0), T1-T2 (1) or T1-T2+T2-T3 (2)
@@ -77,6 +78,10 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
             for (int j = 0; j < bSize; j++)
             {
                 resultSourceRows.add(new Pair<>(i, OptionalInt.of(j)));
+            }
+            if (leftJoin)
+            {
+                resultSourceRows.add(new Pair<>(i, OptionalInt.empty()));
             }
         }
         for (int i = 0; i < 4; i++)
@@ -90,7 +95,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
 
             ArrayList<Either<String, @Value Object>> bValues = new ArrayList<>();
             // Pick some amount that are the same, and the rest that may or may not be:
-            int duplicate = r.nextInt(aValues.size());
+            int duplicate = r.nextInt(bSize);
             for (int d = 0; d < duplicate; d++)
             {
                 bValues.add(aValues.get(r.nextInt(aValues.size())));
@@ -117,9 +122,18 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 }
             }
         }
+        
+        // Remove left join matches if any are present:
+        for (int a = 0; a < aSize; a++)
+        {
+            int aFinal = a;
+            if (resultSourceRows.stream().anyMatch(p -> p.getFirst() == aFinal && p.getSecond().isPresent()))
+                resultSourceRows.remove(new Pair<>(a, OptionalInt.empty()));
+        }
+        
         srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table A"), null, null), new EditableRecordSet(aColumns, () -> aSize)));
         srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table B"), null, null), new EditableRecordSet(bColumns, () -> bSize)));
-        boolean leftJoin = r.nextBoolean();
+        
         
         
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, srcMgr).get();
@@ -209,7 +223,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 {
                     joinColName = new ColumnId(tableB.getId().getRaw() + " " + joinColName.getRaw());
                 }
-                TestUtil.assertValueListEitherEqual("Values",
+                TestUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
                     expected,
                     TestUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
             }

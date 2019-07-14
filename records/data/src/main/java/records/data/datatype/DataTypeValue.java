@@ -12,9 +12,11 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType.UnknownTypeException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -441,9 +443,37 @@ public final class DataTypeValue
 
     }
 
+    /**
+     * The function maps a destination index to an index in the original DataTypeValue (this).
+     */
     public DataTypeValue copyReorder(SimulationFunction<Integer, Integer> mapToOriginalIndex) throws InternalException
     {
         return copySeveral(dataType, i -> new Pair<DataTypeValue, Integer>(this, mapToOriginalIndex.apply(i)));
+    }
+
+    /**
+     * The function maps a destination index to either an empty optional (null) or an index in the original DataTypeValue (this) which will get wrapped into an optional.
+     * @param mapToOriginalIndex
+     * @return
+     * @throws InternalException
+     */
+    public DataTypeValue copyReorderWrapOptional(TypeManager typeManager, SimulationFunction<Integer, @Nullable Integer> mapToOriginalIndex) throws InternalException
+    {
+        try
+        {
+            DataType maybeType = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(dataType)), typeManager);
+            return copySeveral(maybeType, i -> {
+                @Nullable Integer mapped = mapToOriginalIndex.apply(i);
+                if (mapped == null)
+                    return new Pair<DataTypeValue, Integer>(maybeType.fromCollapsed((a, b) -> typeManager.maybeMissing()), 0);
+                else
+                    return new Pair<DataTypeValue, Integer>(maybeType.fromCollapsed((j, b) -> typeManager.maybePresent(this.getCollapsed(j))), mapped);
+            });
+        }
+        catch (TaggedInstantiationException | UnknownTypeException e)
+        {
+            throw new InternalException("Cannot find optional type", e);
+        }
     }
 
     private static <T> @Nullable GetValue<@Value T> several(SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<@Value T>> g)

@@ -1767,6 +1767,15 @@ public class Utility
         {
             return values;
         }
+
+        // Useful for debugging
+        @Override
+        public String toString()
+        {
+            return "RecordMap{" +
+                    "values=" + values +
+                    '}';
+        }
     }
 
     @OnThread(Tag.Simulation)

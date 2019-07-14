@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
@@ -19,11 +20,13 @@ import records.grammar.TransformationParser.JoinContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
+import utility.TaggedValue;
 import utility.Utility;
 
 import java.io.File;
@@ -88,8 +91,8 @@ public class Join extends Transformation
             // Right columns of S."d".  These remain in, named "d" if it does not also occur in a non-joined P column, or "S c" if there is a name clash.
             // After joining index maps are sorted, the first and second category is the same
             theRecordSet = new <Column>RecordSet(Utility.<SimulationFunction<RecordSet, Column>>concatI(
-                Utility.<Column, SimulationFunction<RecordSet, Column>>mapListI(primary.getColumns(), c -> copyColumn(c, avoidNameClash(primarySource, c.getName(), secondary.getColumnIds()), primaryIndexMap, primSec)),
-                Utility.<Column, SimulationFunction<RecordSet, Column>>mapListI(secondary.getColumns(), c -> copyColumn(c, avoidNameClash(secondarySource, c.getName(), primary.getColumnIds()), secondaryIndexMap, primSec))
+                Utility.<Column, SimulationFunction<RecordSet, Column>>mapListI(primary.getColumns(), c -> copyColumn(c, avoidNameClash(primarySource, c.getName(), secondary.getColumnIds()), primaryIndexMap, primSec, null)),
+                Utility.<Column, SimulationFunction<RecordSet, Column>>mapListI(secondary.getColumns(), c -> copyColumn(c, avoidNameClash(secondarySource, c.getName(), primary.getColumnIds()), secondaryIndexMap, primSec, keepPrimaryWithNoMatch ? mgr.getTypeManager() : null))
             ))
             {
                 @Override
@@ -125,18 +128,24 @@ public class Join extends Transformation
         return columnName;
     }
 
-    private SimulationFunction<RecordSet, Column> copyColumn(@UnknownInitialization(Transformation.class) Join this, Column c, ColumnId name, NumericColumnStorage indexMap, Pair<RecordSet, RecordSet> recordSets)
+    // If typeManager != null, wrap into optional, else keep original type
+    private SimulationFunction<RecordSet, Column> copyColumn(@UnknownInitialization(Transformation.class) Join this, Column c, ColumnId name, NumericColumnStorage indexMap, Pair<RecordSet, RecordSet> recordSets, @Nullable TypeManager typeManager)
     {
         return rs -> new Column(rs, name)
         {
             @Override
-            @SuppressWarnings({"nullness", "initialization"})
             public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
             {
-                return addManualEditSet(getName(), c.getType().copyReorder(i ->
+                return addManualEditSet(getName(), typeManager == null ? 
+                c.getType().copyReorder(i -> {
+                    Utility.later(Join.this).fillJoinMapTo(i, recordSets);
+                    return indexMap.getInt(i);
+                })
+                : c.getType().copyReorderWrapOptional(typeManager, i ->
                 {
-                    fillJoinMapTo(i, recordSets);
-                    return DataTypeUtility.value(indexMap.getInt(i));
+                    Utility.later(Join.this).fillJoinMapTo(i, recordSets);
+                    int mapped = indexMap.getInt(i);
+                    return mapped < 0 ? null : mapped;
                 }));
             }
 
@@ -159,38 +168,28 @@ public class Join extends Transformation
         while (recordSets.getFirst().indexValid(nextPrimaryToExamine))
         {
             boolean foundSecondary = false;
-            for (Pair<ColumnId, ColumnId> toMatch : columnsToMatch)
+            for (int secondaryIndex = 0; recordSets.getSecond().indexValid(secondaryIndex); secondaryIndex++)
             {
-                @Value Object primaryVal = recordSets.getFirst().getColumn(toMatch.getFirst()).getType().getCollapsed(nextPrimaryToExamine);
-                for (int secondaryIndex = 0; recordSets.getSecond().indexValid(secondaryIndex); secondaryIndex++)
+                boolean allMatch = true;
+                for (Pair<ColumnId, ColumnId> toMatch : columnsToMatch)
                 {
+                    @Value Object primaryVal = recordSets.getFirst().getColumn(toMatch.getFirst()).getType().getCollapsed(nextPrimaryToExamine);
                     @Value Object secondaryVal = recordSets.getSecond().getColumn(toMatch.getSecond()).getType().getCollapsed(secondaryIndex);
-                    if (Utility.compareValues(primaryVal, secondaryVal) == 0)
+                    if (Utility.compareValues(primaryVal, secondaryVal) != 0)
                     {
-                        foundSecondary = true;
-                        primaryIndexMap.add(nextPrimaryToExamine);
-                        secondaryIndexMap.add(secondaryIndex);
+                        allMatch = false;
+                        break;
                     }
+                }
+                if (allMatch)
+                {
+                    foundSecondary = true;
+                    primaryIndexMap.add(nextPrimaryToExamine);
+                    secondaryIndexMap.add(secondaryIndex);
                 }
             }
             
-            if (columnsToMatch.isEmpty())
-            {
-                boolean added = false;
-                for (int secondaryIndex = 0; recordSets.getSecond().indexValid(secondaryIndex); secondaryIndex++)
-                {
-                    primaryIndexMap.add(nextPrimaryToExamine);
-                    secondaryIndexMap.add(secondaryIndex);
-                    added = true;
-                }
-                if (!added && keepPrimaryWithNoMatch)
-                {
-                    // Add row with blank secondary
-                    primaryIndexMap.add(nextPrimaryToExamine);
-                    secondaryIndexMap.add(-1);
-                }
-            }
-            else if (!foundSecondary && keepPrimaryWithNoMatch)
+            if (!foundSecondary && keepPrimaryWithNoMatch)
             {
                 // Add row with blank secondary
                 primaryIndexMap.add(nextPrimaryToExamine);
