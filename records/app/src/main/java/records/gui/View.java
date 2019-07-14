@@ -338,6 +338,57 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         if (screenPos != null)
             mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
+
+    public static enum Pick {
+        TABLE, COLUMN, NONE;
+    }
+    
+    @OnThread(Tag.FXPlatform)
+    public void enableTableOrColumnPickingMode(@Nullable Point2D screenPos, FXPlatformFunction<Pair<Table, @Nullable ColumnId>, Pick> check, FXPlatformConsumer<Pair<Table, @Nullable ColumnId>> onPick)
+    {
+        disablePickingMode();
+
+        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+
+        pickPaneMouseFinal.setPickOnBounds(true);
+        class Ref
+        {
+            @Nullable Pair<Table, @Nullable ColumnId> pick = null;
+        }
+        Ref picked = new Ref();
+        Picker<Pair<Table, @Nullable ColumnId>> validPick = (g, cell) -> {
+            if (!(g instanceof TableDisplay))
+                return null;
+            TableDisplay tableDisplay = (TableDisplay) g;
+            @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
+            Pick pick = check.apply(new Pair<Table, @Nullable ColumnId>(tableDisplay.getTable(), c == null ? null : c.getFirst()));
+            if (pick == Pick.COLUMN && c != null)
+                return new Pair<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+            else if (pick == Pick.TABLE)
+                return new Pair<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), new Pair<>(tableDisplay.getTable(), null));
+            else
+                return null;
+        };
+        pickPaneMouseFinal.setOnMouseMoved(e -> {
+            picked.pick = mainPane.highlightGridAreaAtScreenPos(
+                new Point2D(e.getScreenX(), e.getScreenY()),
+                validPick,
+                pickPaneMouseFinal::setCursor);
+            e.consume();
+        });
+        pickPaneMouseFinal.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && picked.pick != null)
+                onPick.consume(picked.pick);
+        });
+        pickPaneMouseFinal.addEventFilter(ScrollEvent.ANY, scrollEvent -> {
+            getGrid().getScrollGroup().requestScroll(scrollEvent);
+            scrollEvent.consume();
+        });
+        getChildren().add(pickPaneMouseFinal);
+        // Highlight immediately:
+        if (screenPos != null)
+            mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+    }
     
     // If any sources are invalid, they are skipped
     private ImmutableList<Table> getSources(Table table)
