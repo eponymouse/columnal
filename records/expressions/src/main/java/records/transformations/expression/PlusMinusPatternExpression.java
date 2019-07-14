@@ -43,7 +43,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(@Recorded PlusMinusPatternExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (kind != ExpressionKind.PATTERN)
         {

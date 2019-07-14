@@ -37,7 +37,7 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkBinaryOp(@Recorded NotEqualExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // TODO add this as a quick fix
         //onError.recordError(this, StyledString.s("Patterns not allowed in <>  Use not(... =~ ...) instead"));

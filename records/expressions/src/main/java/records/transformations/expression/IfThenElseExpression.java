@@ -44,7 +44,7 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(condition, thenExpression, elseExpression), state, onError);
         state = lambda.getSecond();
@@ -53,7 +53,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Nullable
-    private CheckedExp checkIfThenElse(ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    private CheckedExp checkIfThenElse(@Recorded IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable CheckedExp conditionType = condition.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (conditionType == null)

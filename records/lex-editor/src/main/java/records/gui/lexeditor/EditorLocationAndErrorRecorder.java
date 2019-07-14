@@ -388,7 +388,7 @@ public class EditorLocationAndErrorRecorder
             }
 
             @Override
-            public @Nullable TypeExp recordError(Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
+            public @Nullable TypeExp recordError(@Recorded Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
             {
                 return errorOrType.<@Nullable TypeExp>either(err -> {
                     if (err != null)

@@ -94,7 +94,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
         
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded TypeLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
         if (dataType == null)

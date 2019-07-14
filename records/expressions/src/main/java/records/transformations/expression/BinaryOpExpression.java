@@ -139,7 +139,7 @@ public abstract class BinaryOpExpression extends Expression
     public abstract Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(@Recorded BinaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState, onError);
         typeState = lambda.getSecond();
@@ -163,7 +163,7 @@ public abstract class BinaryOpExpression extends Expression
     protected abstract Pair<ExpressionKind, ExpressionKind> getOperandKinds();
     
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable CheckedExp checkBinaryOp(@Recorded BinaryOpExpression this, ColumnLookup data, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @SuppressWarnings("recorded")
     @Override

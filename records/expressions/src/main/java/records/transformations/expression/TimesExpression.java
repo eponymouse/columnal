@@ -59,7 +59,7 @@ public class TimesExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(@Recorded TimesExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (@Recorded Expression expression : expressions)

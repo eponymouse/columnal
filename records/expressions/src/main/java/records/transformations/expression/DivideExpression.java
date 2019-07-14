@@ -47,7 +47,7 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(@Recorded DivideExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp lhsTypeFinal = lhsType.typeExp;
         @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;

@@ -37,7 +37,7 @@ public interface ErrorAndTypeRecorder
      * @param errorOrType
      * @return
      */
-    public default @Nullable TypeExp recordError(Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
+    public default @Nullable TypeExp recordError(@Recorded Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
     {
         return errorOrType.<@Nullable TypeExp>either(err -> {
             if (err != null)
@@ -101,12 +101,12 @@ public interface ErrorAndTypeRecorder
     
     public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Nullable CheckedExp recordTypeAndError(Expression expression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(@Recorded Expression expression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
     {
         return recordTypeAndError(expression, expression, typeOrError, typeState);
     }
     
-    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, Expression errorExpression,Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
+    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, @Recorded Expression errorExpression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
     {
         @Nullable @Recorded TypeExp typeExp = recordType(typeExpression, recordError(errorExpression, typeOrError));
         if (typeExp == null)

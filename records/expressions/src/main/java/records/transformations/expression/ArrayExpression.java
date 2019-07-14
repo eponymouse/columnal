@@ -50,7 +50,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded ArrayExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())

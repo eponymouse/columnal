@@ -36,7 +36,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(@Recorded UnitLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT

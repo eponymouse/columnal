@@ -42,7 +42,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, final ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(@Recorded StringConcatExpression this, ColumnLookup dataLookup, TypeState state, final ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration

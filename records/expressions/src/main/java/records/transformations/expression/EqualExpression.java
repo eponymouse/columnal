@@ -52,7 +52,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(@Recorded EqualExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (lastIsPattern && expressions.size() > 2)
         {
