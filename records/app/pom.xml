@@ -213,6 +213,40 @@
         </resources>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>../installers</directory>
+                            <includes>
+                                <include>*.icns</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/mac_dmg</directory>
+                            <includes>
+                                <include>*.dmg</include>
+                                <include>*.icns</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/Columnal.app</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/mac_dmg/Columnal.app</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/Columnal.iconset</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/mac_dmg/Columnal.iconset</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

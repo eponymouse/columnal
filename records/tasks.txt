@@ -20,7 +20,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 
-- Maven clean should also clean the XSD-generated XML files.
+- Maven clean should also clean the MSI-related files.
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
