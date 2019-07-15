@@ -34,7 +34,6 @@ import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
-import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;

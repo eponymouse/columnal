@@ -25,7 +25,6 @@ import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
-import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
 import threadchecker.Tag;

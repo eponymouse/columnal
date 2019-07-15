@@ -25,7 +25,6 @@ import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.GuessFormat.FinalTextFormat;
-import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

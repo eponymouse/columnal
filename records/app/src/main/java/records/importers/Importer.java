@@ -1,4 +1,4 @@
-package records.importers.base;
+package records.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;

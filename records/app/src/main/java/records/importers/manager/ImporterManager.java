@@ -23,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.TableManager;
-import records.importers.base.Importer;
+import records.importers.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
