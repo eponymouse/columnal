@@ -223,6 +223,7 @@
                             <directory>../installers</directory>
                             <includes>
                                 <include>*.icns</include>
+                                <include>columnal.version</include>
                             </includes>
                         </fileset>
                         <fileset>
@@ -243,6 +244,26 @@
                         </fileset>
                         <fileset>
                             <directory>../installers/mac_dmg/Columnal.iconset</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/windows_msi/jre</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/windows_msi/SourceDir</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>../installers/windows_msi/</directory>
+                            <includes>
+                                <include>*.exe</include>
+                                <include>*.wixobj</include>
+                                <include>*.wixpdb</include>
+                                <include>*.msi</include>
+                                <include>*.bmp</include>
+                                <include>*.png</include>
+                                <include>*.ico</include>
+                                <include>jre-files.wxs</include>
+                                <include>*_versioned.*</include>
+                            </includes>
                         </fileset>
                     </filesets>
                 </configuration>
