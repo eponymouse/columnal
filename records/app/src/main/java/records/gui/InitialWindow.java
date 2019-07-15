@@ -26,6 +26,7 @@ import utility.Pair;
 import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.*;
+import utility.gui.DimmableParent.Undimmed;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class InitialWindow
                 })
             ),
             GUI.menu("menu.help",
-                GUI.menuItem("menu.help.about", () -> new AboutDialog(d -> stage).showAndWait())
+                GUI.menuItem("menu.help.about", () -> new AboutDialog(new Undimmed(stage)).showAndWait())
             )
         );
         menuBar.setUseSystemMenuBar(true);

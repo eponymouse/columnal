@@ -29,6 +29,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.TranslationUtility;
 import utility.Utility;
+import utility.gui.DimmableParent.Undimmed;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.Instruction;
@@ -49,7 +50,7 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
 
     public SelectColumnDialog(Window parent, @Nullable Table srcTable, ColumnPicker columnPicker, ImmutableList<SelectInfo> selectors)
     {
-        super(d -> parent, true);
+        super(new Undimmed(parent), true);
         initOwner(parent);
         initModality(Modality.NONE);
         this.selectors = selectors;

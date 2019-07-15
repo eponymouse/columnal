@@ -471,10 +471,13 @@ public class FXUtility
         testingMode = true;
     }
 
-    public static @Nullable File getFileSaveAs(Node parent)
+    public static @Nullable File getFileSaveAs(DimmableParent parent)
     {
-        Window parentWindow = parent.getScene() == null ? null : parent.getScene().getWindow();
-        
+        return parent.<@Nullable File>dimAndWait(FXUtility::getFileSaveAs);
+    }
+
+    public static @Nullable File getFileSaveAs(Window parentWindow)
+    {
         if (testingMode)
         {
             TextInputDialog textInputDialog = new TextInputDialog();

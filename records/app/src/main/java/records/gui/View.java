@@ -876,6 +876,16 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         return getWindow();
     }
 
+    @Override
+    public <T> @OnThread(Tag.FXPlatform) T dimAndWait(FXPlatformFunction<Window, T> showAndWait)
+    {
+        Effect dim = new ColorAdjust(0.0, 0.0, -0.2, 0.0);
+        getGrid().setEffectOnNonOverlays(dim);
+        T t = showAndWait.apply(getWindow());
+        getGrid().setEffectOnNonOverlays(null);
+        return t;
+    }
+
     private static void createTable(View thisView, TableManager tableManager, CellPosition cellPosition, Point2D mouseScreenPos, VirtualGrid virtualGrid)
     {
         // Ask what they want

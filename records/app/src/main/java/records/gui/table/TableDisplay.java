@@ -52,6 +52,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
+import records.exporters.manager.ExporterManager;
 import records.gui.*;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -693,13 +694,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
             GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_("Error copying values", () -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier(), null))),
-            GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
-                File file = FXUtility.getFileSaveAs(parent);
-                if (file != null)
-                {
-                    final File fileNonNull = file;
-                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE, () -> FXUtility.alertOnError_("Error exporting", () -> exportToCSV(table, fileNonNull)));
-                }
+            GUI.menuItem("tableDisplay.menu.exportData", () -> {
+                ExporterManager.getInstance().chooseAndExportFile(parent, table);
             }),
             GUI.menuItem("tableDisplay.menu.delete", () -> {
                 Workers.onWorkerThread("Deleting " + table.getId(), Workers.Priority.SAVE, () ->
@@ -745,45 +741,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         super.tableDraggedToNewPosition();
         parent.modified();
-    }
-
-    @OnThread(Tag.Simulation)
-    private static void exportToCSV(Table src, File dest) throws InternalException, UserException
-    {
-        // Write column names:
-        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), StandardCharsets.UTF_8)))
-        {
-            @OnThread(Tag.Any) RecordSet data = src.getData();
-            @OnThread(Tag.Any) List<Column> columns = data.getColumns();
-            for (int i = 0; i < columns.size(); i++)
-            {
-                Column column = columns.get(i);
-                out.write(quoteCSV(column.getName().getRaw()));
-                if (i < columns.size() - 1)
-                    out.write(",");
-            }
-            out.write("\n");
-            for (int row = 0; data.indexValid(row); row += 1)
-            {
-                for (int i = 0; i < columns.size(); i++)
-                {
-                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType().getType(), columns.get(i).getType().getCollapsed(row), null)));
-                    if (i < columns.size() - 1)
-                        out.write(",");
-                }
-                out.write("\n");
-            }
-        }
-        catch (IOException e)
-        {
-            throw new UserException("Problem writing to file: " + dest.getAbsolutePath(), e);
-        }
-    }
-
-    @OnThread(Tag.Any)
-    private static String quoteCSV(String original)
-    {
-        return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
     
     @OnThread(Tag.FXPlatform)

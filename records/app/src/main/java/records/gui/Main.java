@@ -19,6 +19,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.exporters.CSVExporter;
+import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
 import utility.gui.Clickable;
 import records.importers.ExcelImporter;
@@ -142,10 +144,10 @@ public class Main extends Application
         Log.normal("Loaded fonts");
 
         ImporterManager.getInstance().registerImporter(new TextImporter());
-        // TODO move this to a plugin:
         ImporterManager.getInstance().registerImporter(new HTMLImporter());
         ImporterManager.getInstance().registerImporter(new ExcelImporter());
         Log.normal("Registered importers");
+        ExporterManager.getInstance().registerExporter(new CSVExporter());
 
         CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
         Thread thread = new Thread()
