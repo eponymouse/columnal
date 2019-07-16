@@ -245,10 +245,6 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             this.unitManager = typeManager.getUnitManager();
             initOwner(parent.dimWhileShowing(this));
             initModality(Modality.WINDOW_MODAL);
-            getDialogPane().getStylesheets().addAll(
-                    FXUtility.getStylesheet("general.css"),
-                    FXUtility.getStylesheet("dialogs.css")
-            );
             
             AlignedLabels alignedLabels = new AlignedLabels(Pos.CENTER_LEFT);
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());

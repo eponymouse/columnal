@@ -170,10 +170,6 @@ public class ImporterManager
             pickImporterPane = new PickImporterPane("html");
             getDialogPane().setContent(GUI.vbox("import-link-contents", linkPane, GUI.label("importer.importer"), pickImporterPane, getErrorLabel()));
             setResizable(true);
-            getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
-            getDialogPane().getStylesheets().add(
-                FXUtility.getStylesheet("dialogs.css")
-            );
             
             FXUtility.addChangeListenerPlatformNN(linkField.textProperty(), link -> {
                 // Will only set it if definitely recognised, otherwise will leave as-is:

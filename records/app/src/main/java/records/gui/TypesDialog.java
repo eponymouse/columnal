@@ -173,10 +173,6 @@ public class TypesDialog extends Dialog<Void>
                 initOwner(parentScene.getWindow());
             initModality(Modality.WINDOW_MODAL);
             setTitle(TranslationUtility.getString("types.edit.title"));
-            getDialogPane().getStylesheets().addAll(
-                    FXUtility.getStylesheet("general.css"),
-                    FXUtility.getStylesheet("dialogs.css")
-            );
 
             typeName = new TextField();
             Node name = GUI.labelled("edit.type.name", typeName);

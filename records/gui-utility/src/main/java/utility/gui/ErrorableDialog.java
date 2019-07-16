@@ -43,6 +43,10 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
                 e.consume(); // Prevent OK doing anything
             }, r -> {result = r;});
         });
+        getDialogPane().getStylesheets().addAll(
+            FXUtility.getStylesheet("general.css"),
+            FXUtility.getStylesheet("dialogs.css")
+        );
         //We bind so that if subclass mistakenly tries to set, it will get an error:
         resultConverterProperty().bind(new ReadOnlyObjectWrapper<javafx.util.Callback<ButtonType, @Nullable R>>(bt -> {
             if (bt == ButtonType.OK)
