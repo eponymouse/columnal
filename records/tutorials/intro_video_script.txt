@@ -1,0 +1,26 @@
+Abstract
+===
+Give a brief (under one minute overview of Columnal)
+
+Script
+===
+[Logo, fade out]
+Columnal allows you to process data.  [animate in an example value as it is spoken, with white space between]
+
+Every item of data has a type like number or date. [animate in the type above the item]
+
+Columns of data all have the same type, [animate in further data items below the number and date]
+and they always have a name [animate in a name]
+
+Tables are a collection of columns of the same length [join the columns together]
+
+There are two kinds of table: the first kind are data tables which you can import from files or webpages, [show CSV, XLS, HTML]
+or type in; [animate typing a value]
+the second kind are transformations like sort, [animate a sort]
+or filtering. [animate filtering]
+
+You can chain transformations together, so for example you can filter then sum. [animate this]
+
+When you're done, you can also export your results to a variety of formats (show CSV, for now)
+
+Columnal is free and available now. [Show logo and URL]

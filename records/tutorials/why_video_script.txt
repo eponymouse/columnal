@@ -1,0 +1,11 @@
+Abstract
+===
+Want to give reasons why Columnal is different and better than other solutions in under 3 minutes.  Key points:
+ - Constructive not destructive [better than Excel]
+ - Safer; types prevent mistakes [better than everything]
+ - Supportive; provide hints and tips at every turn [better than everything]
+ - Live; see the results of every step [better than R/Python]
+ - No walls; easy to get data in and out [better than Excel]
+
+Script
+===
