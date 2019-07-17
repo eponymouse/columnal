@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.Column;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
@@ -36,12 +37,13 @@ public class CSVExporter implements Exporter
 
     @Override
     @OnThread(Tag.Simulation)
-    public void exportData(File dest, RecordSet data) throws UserException, InternalException
+    public void exportData(File dest, Table data) throws UserException, InternalException
     {
+        RecordSet rs = data.getData();
         // Write column names:
         try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), StandardCharsets.UTF_8)))
         {
-            List<Column> columns = data.getColumns();
+            List<Column> columns = rs.getColumns();
             for (int i = 0; i < columns.size(); i++)
             {
                 Column column = columns.get(i);
@@ -50,7 +52,7 @@ public class CSVExporter implements Exporter
                     out.write(",");
             }
             out.write("\n");
-            for (int row = 0; data.indexValid(row); row += 1)
+            for (int row = 0; rs.indexValid(row); row += 1)
             {
                 for (int i = 0; i < columns.size(); i++)
                 {

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.exporters.CSVExporter;
+import records.exporters.HTMLExporter;
 import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
 import utility.gui.Clickable;
@@ -148,6 +149,8 @@ public class Main extends Application
         ImporterManager.getInstance().registerImporter(new ExcelImporter());
         Log.normal("Registered importers");
         ExporterManager.getInstance().registerExporter(new CSVExporter());
+        ExporterManager.getInstance().registerExporter(new HTMLExporter());
+        Log.normal("Registered exporters");
 
         CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
         Thread thread = new Thread()

@@ -55,7 +55,7 @@ public class ExporterManager
             if (file != null)
             {
                 final File fileNonNull = file;
-                Workers.onWorkerThread("Export to " + file.getAbsolutePath(), Workers.Priority.SAVE, () -> FXUtility.alertOnError_("Error exporting", () -> exporter.exportData(fileNonNull, table.getData())));
+                Workers.onWorkerThread("Export to " + file.getAbsolutePath(), Workers.Priority.SAVE, () -> FXUtility.alertOnError_("Error exporting", () -> exporter.exportData(fileNonNull, table)));
             }
         });
     }
