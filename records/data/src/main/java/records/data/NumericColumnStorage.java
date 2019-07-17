@@ -435,7 +435,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     private void checkRange(int index) throws UserException
     {
         if (index < 0 || index >= filled)
-            throw new UserException("Trying to access element " + index + " but only have "+ filled);
+            throw new UserException("Trying to access zero-based element " + index + " but only have "+ filled);
     }
 
     @OnThread(Tag.Any)
