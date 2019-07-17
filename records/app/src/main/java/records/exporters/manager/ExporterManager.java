@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -20,6 +21,7 @@ import records.exporters.Exporter;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.TranslationUtility;
 import utility.Workers;
@@ -74,7 +76,7 @@ public class ExporterManager
     {
         private final ListView<Exporter> exporterList;
 
-        public PickExporterPane()
+        public PickExporterPane(FXPlatformConsumer<Exporter> onDoubleClick)
         {
             this.exporterList = new ListView<>(FXCollections.observableArrayList(registeredExporters));
             exporterList.setCellFactory(lv -> {
@@ -92,6 +94,14 @@ public class ExporterManager
             });
             exporterList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
             exporterList.getSelectionModel().selectFirst();
+            exporterList.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
+                {
+                    Exporter selected = exporterList.getSelectionModel().getSelectedItem();
+                    if (selected != null)
+                        onDoubleClick.consume(selected);
+                }
+            });
             setCenter(exporterList);
         }
 
@@ -108,7 +118,10 @@ public class ExporterManager
 
         public PickExporterDialog()
         {
-            pickExporterPane = new PickExporterPane();
+            pickExporterPane = new PickExporterPane(e -> {
+                setResult(e);
+                close();
+            });
             getDialogPane().setContent(new VBox(new Label("Pick Exporter"), pickExporterPane, getErrorLabel()));
 
         }
