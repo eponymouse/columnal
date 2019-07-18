@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>undefined</title>
+  <meta name="generator" content="Google Web Designer 5.1.1.0611">
+  <style type="text/css" id="gwd-text-style">
+    p {
+      margin: 0px;
+    }
+    h1 {
+      margin: 0px;
+    }
+    h2 {
+      margin: 0px;
+    }
+    h3 {
+      margin: 0px;
+    }
+  </style>
+  <style type="text/css">
+    html, body {
+      width: 800px;
+      height: 500px;
+      margin: 0px;
+      background-color: #D9D9D9;
+    }
+    body {
+      transform: scale(2);
+      font-family: "Noto Sans";
+      font-size: 16px;
+      animation: zoom-keyframes 0.5s linear 2s 1 normal forwards running;
+    }
+    @keyframes zoom-keyframes {
+      0% {
+        transform: scale(2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .cell {
+      width: 100px;
+      height: 24px;
+      line-height: 24px;
+      border-image-source: none;
+      border-image-width: 1;
+      border-image-outset: 0;
+      border-image-repeat: stretch;
+      border-color: rgb(204, 204, 204);
+      border-style: solid;
+      border-width: 1px;
+      text-align: right;
+      background-color: white;
+      box-sizing: border-box;
+      margin-right: 2px;
+    }
+    @keyframes fade-in-keyframes {
+      0% {
+        opacity: 0;
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        animation-timing-function: linear;
+      }
+    }
+    .fade-in-a {
+      animation: fade-in-keyframes 0.5s linear 0s 1 normal forwards running;
+    }
+    .fade-in-b {
+      animation: fade-in-keyframes 0.5s linear 1s 1 normal forwards running;
+    }
+    .fade-in-c {
+      animation: fade-in-keyframes 0.5s linear 2s 1 normal forwards running;
+    }
+    .fade-in-d {
+      animation: fade-in-keyframes 0.5s linear 3s 1 normal forwards running;
+    }
+    .fade-in-e {
+      animation: fade-in-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .fade-in-f {
+      animation: fade-in-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .fade-in-g {
+      animation: fade-in-keyframes 0.5s linear 8s 1 normal forwards running;
+    }
+    .initial-hidden {
+      opacity: 0;
+    }
+    .decimal {
+      font-size: 80%;
+    }
+    .name-header, .type-header {
+      background-color: rgb(199, 211, 228);
+      color: rgb(41, 57, 78);
+      text-align: center;
+    }
+    .type-header {
+      font-size: 80%;
+    }
+    .table-header {
+      width: 195px;
+      height: 24px;
+      line-height: 24px;
+      text-align: left;
+      color: white;
+      background-color: rgb(149, 182, 242);
+      padding-left: 5px;
+    }
+    .table-header.transformation-header {
+      background-color: rgb(79, 176, 69);
+    }
+    .src-header {
+      position: absolute;
+      left: 150px;
+      top: 150px;
+    }
+    .column-left {
+      position: absolute;
+      left: 100px;
+      top: 174px;
+      animation: column-left-keyframes 0.5s linear 4s 1 normal forwards running;
+    }
+    .column-right {
+      position: absolute;
+      left: 300px;
+      top: 174px;
+      animation: column-right-keyframes 0.5s linear 4s 1 normal forwards running;
+    }
+    .sort-header {
+      position: absolute;
+      left: 500px;
+      top: -24px;
+    }
+    .sort-column-left {
+      position: absolute;
+      left: 500px;
+      top: 0px;
+    }
+    .sort-column-right {
+      position: absolute;
+      left: 600px;
+      top: 0px;
+    }
+    .filter-header {
+      position: absolute;
+      left: 500px;
+      top: 176px;
+    }
+    .filter-column-left {
+      position: absolute;
+      left: 500px;
+      top: 200px;
+    }
+    .filter-column-right {
+      position: absolute;
+      left: 600px;
+      top: 200px;
+    }
+    .sum-header {
+      position: absolute;
+      left: 500px;
+      top: 376px;
+    }
+    .sum-header .table-header {
+      width: 100px;
+    }
+    .sum-column {
+      position: absolute;
+      left: 500px;
+      top: 400px;
+    }
+    @keyframes column-left-keyframes {
+      0% {
+        left: 100px;
+        animation-timing-function: linear;
+      }
+      100% {
+        left: 150px;
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes column-right-keyframes {
+      0% {
+        left: 300px;
+        animation-timing-function: linear;
+      }
+      100% {
+        left: 250px;
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-sort-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, -48px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-sort-a-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, -48px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-sort-b-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, 0px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-sort-c-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, 48px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    .move-sort {
+      animation: move-sort-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .move-sort-a {
+      animation: move-sort-a-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .move-sort-b {
+      animation: move-sort-b-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .move-sort-c {
+      animation: move-sort-c-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    @keyframes move-filter-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, -48px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-filter-a-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, -48px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes move-filter-b-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(-400px, 0px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    .move-filter {
+      animation: move-filter-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .move-filter-a {
+      animation: move-filter-a-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    .move-filter-b {
+      animation: move-filter-b-keyframes 0.5s linear 5s 1 normal forwards running;
+    }
+    @keyframes move-sum-keyframes {
+      0% {
+        opacity: 0.25;
+        transform: translate(0px, -100px);
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0px, 0px);
+        animation-timing-function: linear;
+      }
+    }
+    .move-sum {
+      animation: move-sum-keyframes 0.5s linear 7s 1 normal forwards running;
+    }
+    .format {
+      border-radius: 10px;
+      border-width: 2px;
+      width: 80px;
+      height: 40px;
+      color: white;
+    }
+    .format p {
+      text-align: center;
+      line-height: 40px;
+    }
+    .format.import {
+      position: absolute;
+      left: 35px;
+      border-color: pink;
+      background-color: salmon;
+      animation: fade-in-keyframes 0.5s linear 3s 1 normal forwards running;
+    }
+    .format.export {
+      position: absolute;
+      left: 800px;
+      border-color: purple;
+      background-color: mediumpurple;
+      animation: fade-in-keyframes 0.5s linear 7s 1 normal forwards running;
+    }
+    .format.csv { top: 155px; }
+    .format.xlsx { top: 205px; }
+    .format.html { top: 255px; }
+  </style>
+</head>
+
+<body class="htmlNoPages">
+  <div class="format import csv initial-hidden">
+    <p>CSV</p>
+  </div>
+  <div class="format import xlsx initial-hidden">
+    <p>XLSX</p>
+  </div>
+  <div class="format import html initial-hidden">
+    <p>HTML</p>
+  </div>
+  <div class="column-left">
+    <div class="fade-in-d name-header cell initial-hidden"><p>Cost</p></div>
+    <div class="fade-in-b type-header cell initial-hidden"><p>Number</p></div>
+    <div class="fade-in-a cell initial-hidden"><p>162<span class="decimal">.09</span></p></div>
+    <div class="fade-in-c cell initial-hidden"><p>39<span class="decimal">.99</span></p></div>
+    <div class="fade-in-c cell initial-hidden"><p>19<span class="decimal">.99</span></p></div>
+  </div>
+  <div class="column-right">
+    <div class="fade-in-d name-header cell initial-hidden"><p>Sale Date</p></div>
+    <div class="fade-in-b type-header cell initial-hidden"><p>Date</p></div>
+    <div class="fade-in-a cell initial-hidden"><p>2018-12-31</p></div>
+    <div class="fade-in-c cell initial-hidden"><p>2019-01-10</p></div>
+    <div class="fade-in-c cell initial-hidden"><p>2019-01-29</p></div>
+  </div>
+  <div class="src-header">
+    <p class="fade-in-e table-header initial-hidden">Sales</p>
+  </div>
+  <div class="sort-column-left">
+    <div class="move-sort name-header cell initial-hidden"><p>Cost</p></div>
+    <div class="move-sort type-header cell initial-hidden"><p>Number</p></div>
+    <div class="move-sort-c cell initial-hidden"><p>19<span class="decimal">.99</span></p></div>
+    <div class="move-sort-b cell initial-hidden"><p>39<span class="decimal">.99</span></p></div>
+    <div class="move-sort-a cell initial-hidden"><p>162<span class="decimal">.09</span></p></div>
+  </div>
+  <div class="sort-column-right">
+    <div class="move-sort name-header cell initial-hidden"><p>Sale Date</p></div>
+    <div class="move-sort type-header cell initial-hidden"><p>Date</p></div>
+    <div class="move-sort-c cell initial-hidden"><p>2018-12-31</p></div>
+    <div class="move-sort-b cell initial-hidden"><p>2019-01-10</p></div>
+    <div class="move-sort-a cell initial-hidden"><p>2019-01-29</p></div>
+  </div>
+  <div class="sort-header">
+    <p class="move-sort table-header transformation-header initial-hidden">Sorted by Amount</p>
+  </div>
+  <div class="filter-column-left">
+    <div class="move-filter name-header cell initial-hidden"><p>Cost</p></div>
+    <div class="move-filter type-header cell initial-hidden"><p>Number</p></div>
+    <div class="move-filter-b cell initial-hidden"><p>39<span class="decimal">.99</span></p></div>
+    <div class="move-filter-a cell initial-hidden"><p>162<span class="decimal">.09</span></p></div>
+  </div>
+  <div class="filter-column-right">
+    <div class="move-filter name-header cell initial-hidden"><p>Sale Date</p></div>
+    <div class="move-filter type-header cell initial-hidden"><p>Date</p></div>
+    <div class="move-filter-b cell initial-hidden"><p>2019-01-10</p></div>
+    <div class="move-filter-a cell initial-hidden"><p>2019-01-29</p></div>
+  </div>
+  <div class="filter-header">
+    <p class="move-filter table-header transformation-header initial-hidden">Only 2019 Sales</p>
+  </div>
+  <div class="sum-column">
+    <div class="move-sum name-header cell initial-hidden"><p>Total Cost</p></div>
+    <div class="move-sum type-header cell initial-hidden"><p>Number</p></div>
+    <div class="move-sum cell initial-hidden"><p>202<span class="decimal">.08</span></p></div>
+  </div>
+  <div class="sum-header">
+    <p class="move-sum table-header transformation-header initial-hidden">Total 2019 Sales</p>
+  </div>
+  <div class="format export csv initial-hidden">
+    <p>CSV</p>
+  </div>
+  <div class="format export xlsx initial-hidden">
+    <p>XLSX</p>
+  </div>
+  <div class="format export html initial-hidden">
+    <p>HTML</p>
+  </div>
+</body>
+
+</html>
