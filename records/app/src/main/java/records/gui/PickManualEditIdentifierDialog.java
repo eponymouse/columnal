@@ -1,23 +1,31 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
+import com.google.common.collect.ImmutableList;
+import javafx.beans.value.ObservableStringValue;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.gui.AutoComplete.Completion;
+import records.gui.AutoComplete.CompletionListener;
+import records.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.gui.ErrorableLightDialog;
-import utility.gui.GUI;
+import utility.IdentifierUtility;
 import utility.TranslationUtility;
+import utility.gui.ErrorableLightDialog;
+import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Lets you pick a column, or select to use row numbers
@@ -27,28 +35,59 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
 {
     private final RadioButton byColumnRadio;
     private final TextField byColumnName;
-    // If column exists, return it -- else return null
-    private final Function<String, @Nullable ColumnId> columnIdExists;
+    private final ImmutableList<ColumnId> srcTableColumns;
 
-    public PickManualEditIdentifierDialog(View parent, Optional<ColumnId> startingValue, Function<String, @Nullable ColumnId> columnIdExists)
+    public PickManualEditIdentifierDialog(View parent, @Nullable Optional<ColumnId> startingValue, ImmutableList<ColumnId> srcTableColumns)
     {
         super(parent, true);
-        this.columnIdExists = columnIdExists;
+        initModality(Modality.NONE);
+        this.srcTableColumns = srcTableColumns;
 
         ToggleGroup group = new ToggleGroup();
 
         RadioButton byRowRadio = GUI.radioButton(group, "manual.edit.byrownum");
         byColumnRadio = GUI.radioButton(group, "manual.edit.bycolumn");
-        byRowRadio.setSelected(!startingValue.isPresent());
-        byColumnRadio.setSelected(startingValue.isPresent());
-        byColumnName = new TextField(startingValue.map(c -> c.getRaw()).orElse(""));
+        byRowRadio.setSelected(startingValue != null && !startingValue.isPresent());
+        byColumnRadio.setSelected(startingValue == null || startingValue.isPresent());
+        byColumnName = new TextField(startingValue == null ? "" : startingValue.map(c -> c.getRaw()).orElse(""));
         byColumnName.disableProperty().bind(byRowRadio.selectedProperty());
         getDialogPane().setContent(new VBox(
             new Label("Pick column to use to identify the edited rows if the source data changes:"),
-                byRowRadio,
             new HBox(byColumnRadio, byColumnName),
+            byRowRadio,
             getErrorLabel()
         ));
+        
+        new AutoComplete<ColumnCompletion>(byColumnName, content -> {
+            return srcTableColumns.stream()
+                .filter(columnId -> columnId.getRaw().startsWith(content))
+                .map(columnId -> new ColumnCompletion(columnId));
+        }, new CompletionListener<ColumnCompletion>()
+        {
+            @Override
+            public @Nullable String doubleClick(String currentText, ColumnCompletion selectedItem)
+            {
+                return selectedItem.columnId.getRaw();
+            }
+
+            @Override
+            public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable ColumnCompletion selectedItem, boolean wasTab)
+            {
+                return selectedItem != null ? selectedItem.columnId.getRaw() : null;
+            }
+        }, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
+        
+        setOnShowing(e -> {
+            parent.enableColumnPickingMode(null, p -> srcTableColumns.contains(p.getSecond()), p -> {
+                byColumnRadio.setSelected(true);
+                byColumnName.setText(p.getSecond().getRaw());
+            });
+            if (byColumnRadio.isSelected())
+                FXUtility.runAfter(byColumnName::requestFocus);
+        });
+        setOnHiding(e -> {
+            parent.disablePickingMode();
+        });
     }
 
     @Override
@@ -56,16 +95,32 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
     {
         if (byColumnRadio.isSelected())
         {
-            @Nullable ColumnId columnId = columnIdExists.apply(byColumnName.getText().trim());
+            @Nullable @ExpressionIdentifier String id = IdentifierUtility.asExpressionIdentifier(byColumnName.getText().trim());
             
-            if (columnId != null)
-                return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>of(columnId));
+            if (id != null && srcTableColumns.contains(new ColumnId(id)))
+                return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>of(new ColumnId(id)));
             else
                 return Either.left(TranslationUtility.getString("manual.edit.column.not.found", byColumnName.getText().trim()));
         }
         else
         {
             return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>empty());
+        }
+    }
+
+    private class ColumnCompletion extends Completion
+    {
+        private final ColumnId columnId;
+
+        public ColumnCompletion(ColumnId columnId)
+        {
+            this.columnId = columnId;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) CompletionContent makeDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(columnId.getRaw(), null);
         }
     }
 }

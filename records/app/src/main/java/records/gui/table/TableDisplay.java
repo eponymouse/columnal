@@ -1156,7 +1156,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
         else if (table instanceof ManualEdit)
         {
-            TableHat.editManualEdit(parent, (ManualEdit)table, false);
+            TableHat.editManualEdit(parent, (ManualEdit)table, true);
         }
         else if (table instanceof Concatenate)
         {

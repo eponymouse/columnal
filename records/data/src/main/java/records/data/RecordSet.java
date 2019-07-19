@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -256,9 +257,9 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Any)
-    public final List<ColumnId> getColumnIds()
+    public final ImmutableList<ColumnId> getColumnIds()
     {
-        return Utility.<Column, ColumnId>mapList(columns, Column::getName);
+        return Utility.<Column, ColumnId>mapListI(columns, Column::getName);
     }
 
     @Override

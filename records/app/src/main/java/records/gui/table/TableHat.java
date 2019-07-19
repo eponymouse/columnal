@@ -452,7 +452,19 @@ class TableHat extends FloatingItem<TableHatDisplay>
     
     protected static void editManualEdit(View parent, ManualEdit manualEdit, boolean deleteIfCancel)
     {
-        Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), hasColumn(manualEdit.getSrcTable())).showAndWait();
+        ImmutableList<ColumnId> columnIds = ImmutableList.of();
+        try
+        {
+            Table srcTable = manualEdit.getSrcTable();
+            if (srcTable != null)
+                columnIds = srcTable.getData().getColumnIds();
+        }
+        catch (InternalException | UserException e)
+        {
+            if (e instanceof InternalException)
+                Log.log(e);
+        }
+        Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, deleteIfCancel ? null : manualEdit.getReplacementIdentifier(), columnIds).showAndWait();
         columnId.ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
             ManualEdit swapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
             parent.getManager().edit(manualEdit.getId(), () -> swapped, TableAndColumnRenames.EMPTY);

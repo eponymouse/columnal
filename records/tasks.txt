@@ -10,10 +10,8 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Undo area in import dialog does not redisplay RHS
 
 - Manual edit pick primary key is too confusing
-  - Row number should not be default
-- No autocomplete on picking column in manual edit
-- Manual edit dialog pick column is modal and doesn't allow column picking
 - Manual edit summary dialog very weird when no edits to show
+- No way to change manual edit key after creation (should be shown as editable link in table head)
 
 - Lots of confusion between date literals and date functions.
 - Investigate improving layout for long expressions: done if, still need to do define, match
@@ -50,7 +48,7 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Errors in number columns seem to get right-shifted by the NumberColumnFormatter.
 - When using quick fix to move column to new Calculate, scroll to it -- and re-open the calculation?
   - Check what happens if used while column name is blank.
-
+- Allow importing variable length rows into list type
 
 Low Priority (good to have, but will not be hugely missed)
 ===
@@ -306,3 +304,6 @@ Done after Phil B & Jon A:
 - Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
 - Allow unicode specifier in strings (^uXXXX)
 - Add recent projects to main menu window
+- Manual edit row number should not be default
+- No autocomplete on picking column in manual edit
+- Manual edit dialog pick column is modal and doesn't allow column picking
