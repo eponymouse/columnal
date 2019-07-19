@@ -873,7 +873,7 @@ public class Utility
         mruList.removeAll(Collections.singletonList(src));
         mruList.removeAll(Collections.singletonList(src.getAbsoluteFile()));
         mruList.add(0, src);
-        while (mruList.size() > 15)
+        while (mruList.size() > 12)
             mruList.remove(mruList.size() - 1);
 
         try

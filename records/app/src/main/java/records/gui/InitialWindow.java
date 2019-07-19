@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -53,6 +54,7 @@ public class InitialWindow
                     if (chooseAndOpenProject(stage, upgradeInfo))
                         stage.hide();
                 }),
+                GUI.menu("menu.project.open.recent", InitialWindow.makeRecentProjectMenu(stage, upgradeInfo).toArray(new MenuItem[0])),
                 GUI.menuItem("menu.exit", () -> {
                     MainWindow.closeAll();
                     stage.hide();
@@ -190,6 +192,17 @@ public class InitialWindow
                 return MainWindow.show(new Stage(), dest, null, upgradeInfo);
             else
                 return null;
+        });
+    }
+    
+    static ImmutableList<MenuItem> makeRecentProjectMenu(Stage window, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    {
+        return Utility.mapListI(Utility.readRecentFilesList(), recent -> {
+            MenuItem menuItem = new MenuItem(recent.getAbsolutePath());
+            menuItem.setOnAction(e -> {
+                openProject(window, recent, upgradeInfo);
+            });
+            return menuItem;
         });
     }
 }

@@ -305,3 +305,4 @@ Done after Phil B & Jon A:
 - Add mention of how to introduce units to the units guide, and to the as unit function.
 - Add a join transformation, with inner join and left join (I think left join is just a tickbox on inner join?)
 - Allow unicode specifier in strings (^uXXXX)
+- Add recent projects to main menu window

@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -82,6 +83,7 @@ public class MainWindow
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage, null)),
                 GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage, null)),
+                GUI.menu("menu.project.open.recent", InitialWindow.makeRecentProjectMenu(stage, upgradeInfo).toArray(new MenuItem[0])),
                 new SaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {
                     FileChooser fc = new FileChooser();
@@ -124,6 +126,7 @@ public class MainWindow
                 GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
             )
         );
+        menuBar.setUseSystemMenuBar(true);
 
         /*
         MenuItem saveItem = new MenuItem("Save to Clipboard");
