@@ -20,90 +20,114 @@
     }
   </style>
   <style type="text/css">
+    html {
+      --k: 5.0;
+    }
+  
+    .logo {
+      animation: fade-out-keyframes calc(var(--k) * 0.3s) linear calc(var(--k) * 1s) 1 normal forwards running,
+                 fade-in-keyframes calc(var(--k) * 0.3s) linear calc(var(--k) * 50s) 1 normal forwards running;
+    }
     /* Animate in the data values */
     .fade-in-a {
-      animation: fade-in-keyframes 0.5s linear 2s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 2s) 1 normal forwards running;
     }
-    /* Animate in the type */
-    .fade-in-b {
-      animation: fade-in-keyframes 0.5s linear 4s 1 normal forwards running;
+    /* Animate in the types */
+    .fade-in-type-number {
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 7s) 1 normal forwards running;
+    }
+    .fade-in-type-date {
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 8s) 1 normal forwards running;
     }
     /* Animate in the further items */
     .fade-in-c {
-      animation: fade-in-keyframes 0.5s linear 6s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 11.5s) 1 normal forwards running;
     }
     /* Animate in column name */
     .fade-in-d {
-      animation: fade-in-keyframes 0.5s linear 8s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 12.5s) 1 normal forwards running;
     }
     /* Move columns together */
     .column-left {
-      animation: column-left-keyframes 0.5s linear 10s 1 normal forwards running;
+      animation: column-left-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 16.5s) 1 normal forwards running;
     }
     .column-right {
-      animation: column-right-keyframes 0.5s linear 10s 1 normal forwards running;
+      animation: column-right-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 16.5s) 1 normal forwards running;
     }
     /* Animate in the table name */
     .fade-in-e {
-      animation: fade-in-keyframes 0.5s linear 14s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 18s) 1 normal forwards running;
     }
     /* Zoom out */
     body {
-      animation: zoom-keyframes 0.5s linear 16s 1 normal forwards running;
+      animation: zoom-in-keyframes calc(var(--k) * 0.1s) linear calc(var(--k) * 1.6s) 1 normal forwards running,
+                 zoom-out-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 19s) 1 normal forwards running;
     }
     /* Show imports */
     .format.import {
-      animation: fade-in-keyframes 0.5s linear 18s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 0.5s) linear calc(var(--k) * 25s) 1 normal forwards running;
     }
     /*TODO animate typing */
     /* Animate in the sort */
     .move-sort {
-      animation: move-sort-keyframes 0.5s linear 20s 1 normal forwards running;
+      animation: move-sort-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 31.5s) 1 normal forwards running;
     }
     .move-sort-a {
-      animation: move-sort-a-keyframes 0.5s linear 20s 1 normal forwards running;
+      animation: move-sort-a-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 31.5s) 1 normal forwards running;
     }
     .move-sort-b {
-      animation: move-sort-b-keyframes 0.5s linear 20s 1 normal forwards running;
+      animation: move-sort-b-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 31.5s) 1 normal forwards running;
     }
     .move-sort-c {
-      animation: move-sort-c-keyframes 0.5s linear 20s 1 normal forwards running;
+      animation: move-sort-c-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 31.5s) 1 normal forwards running;
     }
     /* Animate in the filter */
     .move-filter {
-      animation: move-filter-keyframes 0.5s linear 22s 1 normal forwards running;
+      animation: move-filter-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 33.5s) 1 normal forwards running;
     }
     .move-filter-a {
-      animation: move-filter-a-keyframes 0.5s linear 22s 1 normal forwards running;
+      animation: move-filter-a-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 33.5s) 1 normal forwards running;
     }
     .move-filter-b {
-      animation: move-filter-b-keyframes 0.5s linear 22s 1 normal forwards running;
+      animation: move-filter-b-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 33.5s) 1 normal forwards running;
     }
     /* Animate in the sum */
     .move-sum {
-      animation: move-sum-keyframes 0.5s linear 24s 1 normal forwards running;
+      animation: move-sum-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 40s) 1 normal forwards running;
     }
     /* Animate in the exports */
     .format.export {
-      animation: fade-in-keyframes 0.5s linear 26s 1 normal forwards running;
+      animation: fade-in-keyframes calc(var(--k) * 1.0s) linear calc(var(--k) * 46.5s) 1 normal forwards running;
     }
     
     
     
     
     
-    html, body {
+    html, body, .logo {
       width: 800px;
       height: 500px;
       margin: 0px;
       background-color: rgb(217, 217, 217);
     }
     body {
-      transform: scale(2) translate(150px, 0);
       font-family: "Noto Sans";
       font-size: 16px;
+      overflow: hidden;
     }
-    @keyframes zoom-keyframes {
+    .logo {
+      background: url('../logo.svg') no-repeat 0 0;
+      background-position: center;
+    }
+    @keyframes zoom-in-keyframes {
+      0% {
+        transform: scale(1) translate(0, 0);
+      }
+      100% {
+        transform: scale(2) translate(150px, 0);
+      }
+    }
+    @keyframes zoom-out-keyframes {
       0% {
         transform: scale(2) translate(150px, 0);
       }
@@ -136,6 +160,16 @@
       }
       100% {
         opacity: 1;
+        animation-timing-function: linear;
+      }
+    }
+    @keyframes fade-out-keyframes {
+      0% {
+        opacity: 1;
+        animation-timing-function: linear;
+      }
+      100% {
+        opacity: 0;
         animation-timing-function: linear;
       }
     }
@@ -376,6 +410,8 @@
 </head>
 
 <body class="htmlNoPages">
+  <div class="logo">
+  </div>
   <div class="format import csv initial-hidden">
     <p>CSV</p>
   </div>
@@ -389,7 +425,7 @@
     <div class="fade-in-d name-header cell initial-hidden">
       <p>Cost</p>
     </div>
-    <div class="fade-in-b type-header cell initial-hidden">
+    <div class="fade-in-type-number type-header cell initial-hidden">
       <p>Number</p>
     </div>
     <div class="fade-in-a cell initial-hidden">
@@ -409,7 +445,7 @@
     <div class="fade-in-d name-header cell initial-hidden">
       <p>Sale Date</p>
     </div>
-    <div class="fade-in-b type-header cell initial-hidden">
+    <div class="fade-in-type-date type-header cell initial-hidden">
       <p>Date</p>
     </div>
     <div class="fade-in-a cell initial-hidden">

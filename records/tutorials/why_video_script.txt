@@ -9,3 +9,11 @@ Want to give reasons why Columnal is different and better than other solutions i
 
 Script
 ===
+Columnal's three key features.
+
+One: Columnal is constructive not destructive.  Have you ever loaded a spreadsheet, sorted or deleted data, then later wanted to undo it?  Columnal encourages you to never modify data values; instead you use transformations that sort or filter without ever losing the original data.  Plus, if the original data ever changes, you can replace the data and all of your transformations will recalculate instantly without needing to redo any changes manually.
+
+Two: Columnal is safe.  Every data value has a type, which helps prevent mistakes like treating a number as text or adding two dates together.  Numbers can have units which prevents mix-ups between currencies or different measurements.  Having the data in tables prevents forgetting to change a sum formula if the table grows longer.
+
+Three: Columnal is interoperable.  Many people like to use a variety of tools to accomplish their goals and Columnal aims to interoperate with them.  It offers easy data import and export, and its own file format is text-based, meaning it plays well with version control systems like Git.
+

@@ -25,3 +25,28 @@ You can chain transformations together, so for example you can filter then sum. 
 When you're done, you can also export your results to a variety of formats [show CSV, XLS, HTML]
 
 Columnal is free and available now. [Show logo and URL]
+
+
+Script v2
+===
+
+Here are the key concepts of Columnal in under a minute.
+
+Columnal is all about data values.
+
+Every item of data in Columnal has a type, like number or date.
+
+Data are arranged into columns, which have a name.  All values in a column have the same type.
+
+Tables are a collection of columns of the same length,
+and also have a name.
+
+There are two kinds of table: the first kind are data tables which you can import from files or webpages,
+or type in directly.
+The second kind of table are transformation tables like sorting a table,
+or filtering certain rows.
+
+You can chain transformations together, so for example you can apply a sum transformation to the results of the filter.
+
+All tables can be exported to a variety of formats.
+
