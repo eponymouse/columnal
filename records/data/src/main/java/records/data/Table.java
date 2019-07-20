@@ -189,7 +189,7 @@ public abstract class Table
         @OnThread(Tag.Simulation)
         public String getCompleteFile()
         {
-            return "VERSION 1\n\nUNITS @BEGIN\n"
+            return "COLUMNAL\nVERSION 1\n\nUNITS @BEGIN\n"
                 + units.stream().collect(Collectors.joining())
                 + "@END UNITS\n\nTYPES @BEGIN\n"
                 + types.stream().collect(Collectors.joining())
