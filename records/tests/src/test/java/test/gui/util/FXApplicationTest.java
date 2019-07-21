@@ -30,6 +30,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.error.InternalException;
 import test.TestUtil;
 import test.gui.trait.FocusOwnerTrait;
+import test.gui.trait.ScreenshotTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
 
-public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait
+public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait, ScreenshotTrait
 {
     @Rule
     public TestWatcher screenshotOnFail = new TestWatcher()
@@ -120,13 +121,13 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     }
 
     @OnThread(Tag.FXPlatform)
-    protected final void dumpScreenshot()
+    public final void dumpScreenshot()
     {
         printBase64(capture(Screen.getPrimary().getBounds()).getImage());
     }
     
     @OnThread(Tag.FXPlatform)
-    protected static void dumpScreenshot(Window target)
+    public final void dumpScreenshot(Window target)
     {
         if (target.getScene() == null)
         {
