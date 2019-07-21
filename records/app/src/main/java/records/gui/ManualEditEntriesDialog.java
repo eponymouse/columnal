@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,6 +45,7 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
     public ManualEditEntriesDialog(DimmableParent parent, @Nullable ColumnId keyColumn, ExFunction<ColumnId, DataType> lookupColumnType, ImmutableList<Entry> originalEntries)
     {
         super(parent);
+        setResizable(true);
         FancyList<Entry, HBox> fancyList = new FancyList<Entry, HBox>(originalEntries, true, false, false)
         {
             @Override
@@ -83,10 +85,17 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
                 return new Pair<>(content, () -> initialContent);
             }
         };
+
+        Label emptyLabel = new Label("No edits");
+        StackPane stackPane = new StackPane(fancyList.getNode(), emptyLabel);
+        stackPane.setMinWidth(300);
+        stackPane.setMinHeight(200);
+        fancyList.addEmptyListenerAndCallNow(emptyLabel::setVisible);
         
-        getDialogPane().setContent(fancyList.getNode());
+        getDialogPane().setContent(stackPane);
         getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
+        centreDialogButtons();
     
         setResultConverter(bt -> {
             ImmutableList<Entry> items = fancyList.getItems();

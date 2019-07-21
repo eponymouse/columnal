@@ -10,8 +10,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Undo area in import dialog does not redisplay RHS
 
 - Manual edit pick primary key is too confusing (add help box?)
-- Manual edit summary dialog very weird when no edits to show
-- Manual edit summary dialog too small, and not resizable
 - Manual edit "N entries" header doesn't update after an edit
 - No way to change manual edit key after creation (should be shown as editable link in table head)
 
@@ -309,3 +307,5 @@ Done after Phil B & Jon A:
 - Manual edit row number should not be default
 - No autocomplete on picking column in manual edit
 - Manual edit dialog pick column is modal and doesn't allow column picking
+- Manual edit summary dialog very weird when no edits to show
+- Manual edit summary dialog too small, and not resizable
