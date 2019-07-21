@@ -133,24 +133,7 @@ public class Main extends Application
         if (classLoader != null)
             ResourceUtility.setClassLoader(classLoader);
 
-        FXUtility.ensureFontLoaded("Kalam-Regular.ttf");
-        FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
-        FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
-        FXUtility.ensureFontLoaded("NotoSansSymbols-Regular.ttf");
-        FXUtility.ensureFontLoaded("NotoSans-Italic.ttf");
-        FXUtility.ensureFontLoaded("NotoSans-Bold.ttf");
-        FXUtility.ensureFontLoaded("NotoSans-BoldItalic.ttf");
-        FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
-        FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
-        Log.normal("Loaded fonts");
-
-        ImporterManager.getInstance().registerImporter(new TextImporter());
-        ImporterManager.getInstance().registerImporter(new HTMLImporter());
-        ImporterManager.getInstance().registerImporter(new ExcelImporter());
-        Log.normal("Registered importers");
-        ExporterManager.getInstance().registerExporter(new CSVExporter());
-        ExporterManager.getInstance().registerExporter(new HTMLExporter());
-        Log.normal("Registered exporters");
+        initialise();
 
         CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
         Thread thread = new Thread()
@@ -195,6 +178,29 @@ public class Main extends Application
                 }
             }
         }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void initialise()
+    {
+        FXUtility.ensureFontLoaded("Kalam-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoSansSymbols-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoSans-Italic.ttf");
+        FXUtility.ensureFontLoaded("NotoSans-Bold.ttf");
+        FXUtility.ensureFontLoaded("NotoSans-BoldItalic.ttf");
+        FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
+        FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
+        Log.normal("Loaded fonts");
+
+        ImporterManager.getInstance().registerImporter(new TextImporter());
+        ImporterManager.getInstance().registerImporter(new HTMLImporter());
+        ImporterManager.getInstance().registerImporter(new ExcelImporter());
+        Log.normal("Registered importers");
+        ExporterManager.getInstance().registerExporter(new CSVExporter());
+        ExporterManager.getInstance().registerExporter(new HTMLExporter());
+        Log.normal("Registered exporters");
     }
 
     @OnThread(Tag.Unique)

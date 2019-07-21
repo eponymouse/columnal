@@ -28,6 +28,7 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.error.InternalException;
+import records.gui.Main;
 import test.TestUtil;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScreenshotTrait;
@@ -100,6 +101,8 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     public void start(Stage stage) throws Exception
     {
         windowToUse = stage;
+        // Don't run now because can upset the loading timeout:
+        FXUtility.runAfter(Main::initialise);
         FXUtility._test_setTestingMode();
         targetWindow(stage);
         
