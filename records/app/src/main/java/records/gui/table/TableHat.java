@@ -60,6 +60,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.SimulationConsumer;
@@ -82,8 +83,9 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 class TableHat extends FloatingItem<TableHatDisplay>
 {
+    private FXPlatformRunnable updateGUI = () -> {};
     private HeadedDisplay tableDisplay;
-    private final StyledString content;
+    private StyledString content;
     private final StyledString collapsedContent;
     private boolean collapsed = false;
     
@@ -391,12 +393,20 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 }
             };
             
-            content = StyledString.concat(
-                StyledString.s("Edit "),
-                editSourceLink(parent, manualEdit),
-                StyledString.s(" to change "),
-                StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries"))    
-            );
+            // Satisfy static analysis (will be overwritten by the runnable):
+            content = StyledString.s("");
+            
+            FXPlatformRunnable setContent = () -> {
+                content = StyledString.concat(
+                        StyledString.s("Edit "),
+                        editSourceLink(parent, manualEdit),
+                        StyledString.s(" to change "),
+                        StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries"))
+                );
+                updateGUI.run();
+            };
+            setContent.run();
+            Workers.onWorkerThread("Adding edit listener", Priority.FETCH, () -> manualEdit.addModificationListener(() -> FXUtility.runFX(setContent)));
         }
         else if (table instanceof Join)
         {
@@ -592,6 +602,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
         //org.scenicview.ScenicView.show(display.getScene());
         collapsed = !collapsed;
         FXUtility.setPseudoclass(display, "collapsed", collapsed);
+        updateGUI(display);
+    }
+
+    private void updateGUI(TableHatDisplay display)
+    {
         display.textFlow.getChildren().setAll((collapsed ? collapsedContent : content).toGUI().toArray(new Node[0]));
         display.collapse.setText(collapsed ? " \u25ba" : " \u25c4");
         display.collapseTip.setText(collapsed ? "Show detail" : "Hide detail");
@@ -599,7 +614,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         display.requestLayout();
         FXUtility.runAfterDelay(Duration.millis(100), () -> tableDisplay.relayoutGrid());
     }
-    
+
     void setCollapsed(boolean collapsed)
     {
         if (this.collapsed != collapsed)
@@ -698,7 +713,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
     }
 
     @OnThread(Tag.FXPlatform)
-    class TableHatDisplay extends Region
+    final class TableHatDisplay extends Region
     {
         private static final double INSET = 4.0;
         private final TextFlow textFlow;
@@ -719,16 +734,17 @@ class TableHat extends FloatingItem<TableHatDisplay>
             getChildren().setAll(textFlow);
 
             collapse.setOnMouseClicked(e -> {
-                toggleCollapse(FXUtility.mouse(this));
+                toggleCollapse(this);
                 e.consume();
             });
             setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.MIDDLE)
                 {
-                    toggleCollapse(FXUtility.mouse(this));
+                    toggleCollapse(this);
                     e.consume();
                 }
             });
+            updateGUI = () -> updateGUI(this);
         }
 
         @Override

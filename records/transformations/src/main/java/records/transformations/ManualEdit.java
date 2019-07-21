@@ -35,6 +35,7 @@ import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationRunnableNoError;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -68,6 +69,7 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
     private final Either<StyledString, RecordSet> recordSet;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private final HashMap<ColumnId, ColumnReplacementValues> replacements;
+    private final ArrayList<SimulationRunnableNoError> modificationListeners = new ArrayList<>();
 
     public ManualEdit(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, @Nullable Pair<ColumnId, DataType> replacementKey, ImmutableMap<ColumnId, ColumnReplacementValues> replacements) throws InternalException
     {
@@ -360,6 +362,11 @@ edit : editHeader editColumn*;
         return r.build();
     }
 
+    public void addModificationListener(SimulationRunnableNoError listener)
+    {
+        modificationListeners.add(listener);
+    }
+
     private class ReplacedColumn extends Column
     {
         private final Column original;
@@ -424,6 +431,7 @@ edit : editHeader editColumn*;
                     ));
                     // Notify dependents:
                     recordSet.modified(getName(), index);
+                    modificationListeners.forEach(SimulationRunnableNoError::run);
                 });
                         
                         /*
