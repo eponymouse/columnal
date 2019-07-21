@@ -12,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.*;
+import records.data.TableManager.TableMaker;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
@@ -264,6 +265,9 @@ edit : editHeader editColumn*;
         return recordSet.eitherEx(e -> {throw new UserException(e);}, rs -> rs);
     }
 
+    /**
+     * Empty means identified by row number
+     */
     @Pure
     @OnThread(Tag.Any)
     public Optional<ColumnId> getReplacementIdentifier()
@@ -276,9 +280,19 @@ edit : editHeader editColumn*;
     {
         return new ManualEdit(getManager(), getDetailsForCopy(), getSrcTableId(), keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), newReplacements);
     }
-    
+
+    /**
+     * This method gives back a TableMaker which is only permitted to throw an InternalException, so most of the work is done in this method which may throw a UserException, and only the actual creation is inside the returned TableMaker. 
+     * 
+     * This method looks up values for the existing replacement key for each edit, and maps them to a corresponding value of the new replacement key.  Duplicates will not cause an exception to be thrown.
+     * 
+     * @param newReplacementKey The new column to replace by (or null for row number).  If not found a UserException will be thrown.
+     * @return
+     * @throws InternalException
+     * @throws UserException
+     */
     @OnThread(Tag.Simulation)
-    public synchronized ManualEdit swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
+    public synchronized TableMaker<ManualEdit> swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
     {
         if (src == null)
             throw new UserException("Cannot modify manual edit when original table is missing.");
@@ -316,8 +330,10 @@ edit : editHeader editColumn*;
                 matchingValues.clear();
             }
         }
+
+        Pair<ColumnId, DataType> replacementKeyPair = newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType().getType());
         
-        return new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType().getType()), ImmutableMap.copyOf(newReplacements));
+        return () -> new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, replacementKeyPair, ImmutableMap.copyOf(newReplacements));
     }
     
     @Pure

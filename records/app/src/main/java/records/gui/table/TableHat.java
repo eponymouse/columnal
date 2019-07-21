@@ -26,6 +26,7 @@ import records.data.SingleSourceTransformation;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
+import records.data.TableManager.TableMaker;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
@@ -307,6 +308,31 @@ class TableHat extends FloatingItem<TableHatDisplay>
             ManualEdit manualEdit = (ManualEdit) table;
             collapsedContent = StyledString.s("Edit");
             
+            Clickable editBy = new Clickable()
+            {
+                @Override
+                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                {
+
+                    ImmutableList<ColumnId> columnIds = ImmutableList.of();
+                    try
+                    {
+                        columnIds = manualEdit.getData().getColumnIds();
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        if (e instanceof InternalException)
+                            Log.log(e);
+                    }
+                    new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), columnIds).showAndWait().ifPresent(newEditBy -> {
+                        Workers.onWorkerThread("Changing edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Changing edit transformation", () -> {
+                            TableMaker<ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
+                            parent.getManager().edit(manualEdit.getId(), maker, null);
+                        }));
+                    });
+                }
+            };
+            
             Clickable editList = new Clickable() {
 
                 @Override
@@ -397,11 +423,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
             content = StyledString.s("");
             
             FXPlatformRunnable setContent = () -> {
+                Optional<ColumnId> byColumn = manualEdit.getReplacementIdentifier();
                 content = StyledString.concat(
-                        StyledString.s("Edit "),
-                        editSourceLink(parent, manualEdit),
-                        StyledString.s(" to change "),
-                        StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries"))
+                    StyledString.s("Edit "),
+                    editSourceLink(parent, manualEdit),
+                    StyledString.s(" to change "),
+                    StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries")),
+                    StyledString.s(" identified by "),
+                    byColumn.map(c -> c.toStyledString()).orElse(StyledString.s("row number")).withStyle(editBy)
                 );
                 updateGUI.run();
             };
@@ -476,8 +505,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
         Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, deleteIfCancel ? null : manualEdit.getReplacementIdentifier(), columnIds).showAndWait();
         columnId.ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
-            ManualEdit swapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
-            parent.getManager().edit(manualEdit.getId(), () -> swapped, TableAndColumnRenames.EMPTY);
+            TableMaker<ManualEdit> makeSwapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
+            parent.getManager().edit(manualEdit.getId(), makeSwapped, TableAndColumnRenames.EMPTY);
         })));
         if (!columnId.isPresent() && deleteIfCancel)
         {
