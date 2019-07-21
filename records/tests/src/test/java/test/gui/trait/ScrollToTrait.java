@@ -179,10 +179,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         if (usingMenu)
         {
             clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
+            assertTrue("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
             TestUtil.sleep(200);
             // UI expects one-based:
             write(Integer.toString(row + 1));
             push(KeyCode.ENTER);
+            assertFalse("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
         }
         // Wait for complete refresh:
         TestUtil.sleep(1000);

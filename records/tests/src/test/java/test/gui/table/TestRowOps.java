@@ -103,7 +103,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         triggerRowLabelContextMenu(srcData.getId(), randomRow);
         clickOn(".id-virtGrid-row-delete");
         TestUtil.delay(500);
-        scrollToRow(calculated.getId(), randomRow);
+        scrollToRow(calculated.getId(), randomRow == 0 ? randomRow : randomRow - TableDataRowIndex.ONE);
 
         // There's now several aspects to check:
         // - The row is immediately no longer visible in srcData.
@@ -365,7 +365,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     {
         // Move to first cell in that row, which will make row labels visible
         // and ensure we are at correct Y position
-        keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
+        keyboardMoveTo(virtualGrid, tableManager, id, targetRow == 0 ? targetRow : targetRow - TableDataRowIndex.ONE);
         Set<Node> possibles = 
             lookup(".virt-grid-row-label-pane")
             .match(Node::isVisible)
