@@ -34,8 +34,13 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
     default void exportToCSVAndCheck(VirtualGrid virtualGrid, TableManager tableManager, String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
         triggerTableHeaderContextMenu(virtualGrid, tableManager, tableId);
-        clickOn(".id-tableDisplay-menu-exportToCSV");
+        clickOn(".id-tableDisplay-menu-exportData");
         WaitForAsyncUtils.waitForFxEvents();
+        
+        // Pick CSV:
+        sleep(200);
+        clickOn(".ok-button");
+        sleep(200);
 
         File destCSV = File.createTempFile("dest", "csv");
         destCSV.deleteOnExit();
