@@ -20,6 +20,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.exporters.CSVExporter;
+import records.exporters.ExcelExporter;
 import records.exporters.HTMLExporter;
 import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
@@ -200,6 +201,7 @@ public class Main extends Application
         Log.normal("Registered importers");
         ExporterManager.getInstance().registerExporter(new CSVExporter());
         ExporterManager.getInstance().registerExporter(new HTMLExporter());
+        ExporterManager.getInstance().registerExporter(new ExcelExporter());
         Log.normal("Registered exporters");
     }
 

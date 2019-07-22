@@ -117,6 +117,9 @@ public class ExcelImporter implements Importer
                     }
                 }
             }
+            workbook.close();
+            
+            
             ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
             int numSrcColumns = vals.isEmpty() ? 0 : vals.get(0).size();
 
