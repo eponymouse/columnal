@@ -195,22 +195,11 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             write("Src Data");
             push(KeyCode.ENTER);
             sleep(300);
-            boolean skipFirst;
-            if (aggColumns.isEmpty() || aggColumns.get(0).calculations.isEmpty())
-            {
-                moveAndDismissPopupsAtPos(point(".cancel-button"));
-                clickOn(".cancel-button");
-                skipFirst = false;
-            }
-            else
-            {
-                write(aggColumns.get(0).calculations.get(0).columnName.getRaw(), 1);
-                push(KeyCode.TAB);
-                enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), aggColumns.get(0).calculations.get(0).expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
-                moveAndDismissPopupsAtPos(point(".ok-button"));
-                clickOn(".ok-button");
-                skipFirst = true;
-            }
+            write(aggColumns.get(0).calculations.get(0).columnName.getRaw(), 1);
+            push(KeyCode.TAB);
+            enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), aggColumns.get(0).calculations.get(0).expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            moveAndDismissPopupsAtPos(point(".id-agg-split-columns"));
+            clickOn(".id-agg-split-columns");
             sleep(300);
             clickOn(".id-fancylist-add");
             if (r.nextBoolean())
@@ -253,6 +242,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
             // Now add the calculations:
             int colCount = initialAgg.size();
+            boolean skipFirst = true;
             for (AggColumns aggColumn : aggColumns)
             {
                 for (AggCalculation calculation : aggColumn.calculations)
@@ -297,7 +287,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
     private List<AggColumns> makeSourceAndCalculations(TypeManager copyTypesTo, DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
     {
-        int numColumns = r.nextInt(4);
+        int numColumns = 1 + r.nextInt(4);
         int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
         
         List<AggColumns> aggColumns = new ArrayList<>();
@@ -502,7 +492,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     {
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId(tableName))
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
+        TestUtil.sleep(2000);
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(clip.isPresent());
         return clip.get();
