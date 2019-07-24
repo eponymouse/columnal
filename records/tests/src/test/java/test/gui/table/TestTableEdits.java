@@ -607,7 +607,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         return new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
     }
 
-    @Property(trials = 5)
+    @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void testChangeColumnType(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
@@ -701,6 +701,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         TestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
         
         // Now change type back:
+        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
         clickOnItemInBounds(
                 r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
                 virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBoolean ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBoolean ? 0 : 1))
