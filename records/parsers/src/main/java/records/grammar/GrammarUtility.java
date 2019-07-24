@@ -59,7 +59,7 @@ public class GrammarUtility
                                     try
                                     {
                                         c = Integer.parseInt(hex.trim(), 16);
-                                        i = end;
+                                        i = close - 1;
                                         break;
                                     }
                                     catch (NumberFormatException e)
