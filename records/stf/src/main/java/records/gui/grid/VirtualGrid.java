@@ -2545,11 +2545,13 @@ public final class VirtualGrid implements ScrollBindable
         @OnThread(Tag.FXPlatform)
         public void setContent(@Nullable StyledString content, @Nullable CellPosition position)
         {
+            boolean needLayout = !Objects.equals(content, this.content) || ((content != null || this.content != null) && !Objects.equals(position, this.source));
             this.source = position;
             this.content = content;
             if (textFlow != null)
                 textFlow.getChildren().setAll(content == null ? ImmutableList.of() : content.toGUI());
-            container.redoLayout();
+            if (needLayout)
+                container.redoLayout();
         }
     }
 }
