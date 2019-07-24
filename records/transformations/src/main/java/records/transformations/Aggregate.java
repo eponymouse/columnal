@@ -1,12 +1,15 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -229,10 +232,11 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                 }
             }
 
-            ColumnLookup columnLookup = new AggTableLookup(getManager());
+            
 
             // It's important that our splits and record set are initialised
             // before trying to calculate these expressions:
+            ColumnLookup columnLookup = getColumnLookup(theResult);
             for (Pair<ColumnId, Expression> e : summaries)
             {
                 Expression expression = e.getSecond();
@@ -855,119 +859,147 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
         return result;
     }
     
-    public class AggTableLookup implements ColumnLookup
-    {
-        private final TableManager tableManager;
-
-        @OnThread(Tag.Any)
-        private AggTableLookup(TableManager tableManager)
-        {
-            this.tableManager = tableManager;
-        }
-        
-        @Override
-        public @Nullable FoundColumn getColumn(ColumnReference columnReference)
-        {
-            TableId tableId = columnReference.getTableId();
-            ColumnId columnId = columnReference.getColumnId();
-            ColumnReferenceType columnReferenceType = columnReference.getReferenceType();
-            boolean grouped = false;
-            if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
-            {
-                // It's us -- may be a grouped or split column
-                grouped = !splitBy.contains(columnId);
-            }
-
-            try
-            {
-                Table table = !grouped && (tableId == null || tableId.equals(getId())) ? Aggregate.this : tableManager.getSingleTableOrNull(tableId == null ? srcTableId : tableId);
-                if (table == null)
-                    return null;
-                Column column = table.getData().getColumnOrNull(columnId);
-                if (column == null && tableId == null)
-                {
-                    // Could be in our source table but not copied forwards to us:
-                    Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
-                    if (srcTable != null)
-                    {
-                        column = srcTable.getData().getColumnOrNull(columnId);
-                        table = srcTable;
-                    }
-                }
-                
-                if (column == null)
-                    throw new UserException("Could not find column: " + columnId.getRaw());
-
-                @NonNull Column columnFinal = column;
-                switch (columnReferenceType)
-                {
-                    case CORRESPONDING_ROW:
-                        if (grouped)
-                        {
-                            return new FoundColumn(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
-                                Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
-                                return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
-                            }), null);
-                        }
-                        else
-                        {
-                            // If not grouped, must be in split by
-                            return new FoundColumn(table.getId(), columnFinal.getType(), null);
-                        }
-                    case WHOLE_COLUMN:
-                        return new FoundColumn(table.getId(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
-                }
-            }
-            catch (InternalException e)
-            {
-                Log.log(e);
-            }
-            catch (UserException e)
-            {
-                // Just give back null:
-            }
-            return null;
-        }
-
-        @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
-        {
-            return getAvailableColumnReferences(true);
-        }
-
-        @Override
-        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
-        {
-            return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
-        }
-
-        public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
-        {
-            return
-                tableManager.getAllTablesAvailableTo(getId()).stream()
-                    .flatMap(t -> {
-                        try
-                        {
-                            @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
-                            return t.getData().getColumns().stream()
-                                .flatMap(c -> (tableId != null ? Stream.of(ColumnReferenceType.WHOLE_COLUMN) : Arrays.stream(ColumnReferenceType.values()))
-                                .map(rt -> new ColumnReference(tableId, c.getName(), rt)));
-                        }
-                        catch (UserException e)
-                        {
-                        }
-                        catch (InternalException e)
-                        {
-                            Log.log(e);
-                        }
-                        return Stream.empty();
-                    }).distinct();
-        }
-    }
-
     @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
-        return new AggTableLookup(getManager());
+        if (result != null)
+            return getColumnLookup(result);
+        return new ColumnLookup()
+        {
+            @Override
+            public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
+            {
+                return null;
+            }
+
+            @Override
+            public Stream<ColumnReference> getAvailableColumnReferences()
+            {
+                return Stream.empty();
+            }
+
+            @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return Stream.empty();
+            }
+        };
+    }
+
+    @RequiresNonNull({"splitBy", "splits", "srcTableId"})
+    @OnThread(Tag.Any)
+    private ColumnLookup getColumnLookup(@UnknownInitialization(Transformation.class) Aggregate this, RecordSet thisRecordSet)
+    {
+        return new ColumnLookup()
+        {
+            private final TableManager tableManager = getManager();
+
+            @Override
+            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+            {
+                TableId tableId = columnReference.getTableId();
+                ColumnId columnId = columnReference.getColumnId();
+                ColumnReferenceType columnReferenceType = columnReference.getReferenceType();
+                boolean grouped = false;
+                if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
+                {
+                    // It's us -- may be a grouped or split column
+                    grouped = !splitBy.contains(columnId);
+                }
+    
+                try
+                {
+                    Pair<TableId, RecordSet> table;
+                    if (!grouped && (tableId == null || tableId.equals(getId())))
+                        table = new Pair<>(getId(), thisRecordSet);
+                    else
+                    {
+                        @Nullable Table found = tableManager.getSingleTableOrNull(tableId == null ? srcTableId : tableId);
+                        if (found != null)
+                            table = new Pair<>(found.getId(), found.getData());
+                        else
+                            return null;
+                    }
+                    Column column = table.getSecond().getColumnOrNull(columnId);
+                    if (column == null && tableId == null)
+                    {
+                        // Could be in our source table but not copied forwards to us:
+                        Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
+                        if (srcTable != null)
+                        {
+                            column = srcTable.getData().getColumnOrNull(columnId);
+                            table = new Pair<>(srcTable.getId(), srcTable.getData());
+                        }
+                    }
+                    
+                    if (column == null)
+                        throw new UserException("Could not find column: " + columnId.getRaw());
+    
+                    @NonNull Column columnFinal = column;
+                    switch (columnReferenceType)
+                    {
+                        case CORRESPONDING_ROW:
+                            if (grouped)
+                            {
+                                return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
+                                    Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
+                                    return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
+                                }), null);
+                            }
+                            else
+                            {
+                                // If not grouped, must be in split by
+                                return new FoundColumn(table.getFirst(), columnFinal.getType(), null);
+                            }
+                        case WHOLE_COLUMN:
+                            return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
+                    }
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                }
+                catch (UserException e)
+                {
+                    // Just give back null:
+                }
+                return null;
+            }
+
+            @Override
+            public Stream<ColumnReference> getAvailableColumnReferences()
+            {
+                return getAvailableColumnReferences(true);
+            }
+
+            @Override
+            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+            }
+
+            public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
+            {
+                return
+                    tableManager.getAllTablesAvailableTo(getId()).stream()
+                        .flatMap(t -> {
+                            try
+                            {
+                                @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
+                                return t.getData().getColumns().stream()
+                                    .flatMap(c -> (tableId != null ? Stream.of(ColumnReferenceType.WHOLE_COLUMN) : Arrays.stream(ColumnReferenceType.values()))
+                                    .map(rt -> new ColumnReference(tableId, c.getName(), rt)));
+                            }
+                            catch (UserException e)
+                            {
+                            }
+                            catch (InternalException e)
+                            {
+                                Log.log(e);
+                            }
+                            return Stream.empty();
+                        }).distinct();
+            }
+        };
     }
 }
