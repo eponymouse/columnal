@@ -224,7 +224,6 @@ public final class VirtualGrid implements ScrollBindable
     private boolean updatingSizeAndPositions = false;
     
     private final VirtualGridSupplierFloating supplierFloating = new VirtualGridSupplierFloating();
-    private @Nullable GridAreaHighlight highlightedGridArea;
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
     private boolean suppressSelectionUpdate = false;
@@ -1101,81 +1100,11 @@ public final class VirtualGrid implements ScrollBindable
         return Optional.ofNullable(selection.get());
     }
 
-    public void stopHighlightingGridArea()
-    {
-        if (highlightedGridArea != null)
-        {
-            highlightedGridArea.removeFrom(supplierFloating);
-            highlightedGridArea = null;
-            container.redoLayout();
-        }
-    }
     
-    // Ways to highlight a grid area.
-    public static enum HighlightType
-    {
-        // SELECT is for picking sources when you hover over the table,
-        // SOURCE is for showing sources (with arrow) when hovering over table hat.
-        SELECT, SOURCE;
-    }
     
-    public static class PickResult<T>
-    {
-        private final RectangleBounds highlightBounds;
-        private final HighlightType highlightType;
-        private final T value;
-        private final @Nullable Point2D arrowToScreenPos;
-
-        public PickResult(RectangleBounds highlightBounds, T value)
-        {
-            this(highlightBounds, HighlightType.SELECT, value, null);
-        }
-        
-        public PickResult(RectangleBounds highlightBounds, HighlightType highlightType, T value, @Nullable Point2D arrowToScreenPos)
-        {
-            this.highlightBounds = highlightBounds;
-            this.highlightType = highlightType;
-            this.value = value;
-            this.arrowToScreenPos = arrowToScreenPos;
-        }
-
-        // We don't use value in .equals(), we're only interested
-        // whether it causes the same pick display.
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            PickResult<?> that = (PickResult<?>) o;
-            return highlightBounds.equals(that.highlightBounds) &&
-                    highlightType == that.highlightType &&
-                    Objects.equals(arrowToScreenPos, that.arrowToScreenPos);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash(highlightBounds, highlightType, arrowToScreenPos);
-        }
-    }
     
-    public static interface Picker<T>
-    {
-        // Given a grid area and a cell contained within it, is it a valid pick?  If so,
-        // return a non-null pair of the area to highlight, and some custom type T.
-        public @Nullable PickResult<T> pick(@Nullable Pair<GridArea, CellPosition> gridAreaAndCell);
-    }
     
-    public <T> @Nullable T highlightGridAreaAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
-    {
-        if (highlightedGridArea == null)
-        {
-            GridAreaHighlight g = new GridAreaHighlight();
-            g.addTo(supplierFloating);
-            this.highlightedGridArea = g;
-        }
-        return highlightedGridArea.highlightAtScreenPos(screenPos, picker, setCursor);
-    }
+    
 
     /**
      * Useful for add/removing children outside of layout.
@@ -1958,6 +1887,11 @@ public final class VirtualGrid implements ScrollBindable
         gridAreas.remove(gridArea);
         updateSizeAndPositions();
     }
+    
+    public ImmutableList<GridArea> getGridAreas()
+    {
+        return ImmutableList.copyOf(gridAreas);
+    }
 
     public VisibleBounds getVisibleBounds()
     {
@@ -2243,166 +2177,6 @@ public final class VirtualGrid implements ScrollBindable
         public Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
     }
     
-    @OnThread(Tag.FXPlatform)
-    private class GridAreaHighlight extends RectangleOverlayItem
-    {
-        private @Nullable PickResult<?> picked;
-        private final TableArrow arrow = new TableArrow();
-        
-        private GridAreaHighlight()
-        {
-            super(ViewOrder.OVERLAY_ACTIVE);
-        }
-
-        @Override
-        public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
-        {
-            if (picked == null)
-                return Optional.empty();
-            else
-            {
-                RectangleBounds highlightBounds = picked.highlightBounds;
-                ResizableRectangle r = getNode();
-                if (r != null)
-                {
-                    setPseudoClasses(r);
-                }
-                return visibleBounds.clampVisible(highlightBounds).map(b -> Either.<BoundingBox, RectangleBounds>left(getRectangleBoundsInContainer(b)));
-            }
-        }
-
-        public void setPseudoClasses(Node node)
-        {
-            if (picked != null)
-            {
-                HighlightType highlightType = picked.highlightType;
-                FXUtility.setPseudoclass(node, "pick-select", highlightType == HighlightType.SELECT);
-                FXUtility.setPseudoclass(node, "pick-source", highlightType == HighlightType.SOURCE);
-            }
-        }
-
-        @Override
-        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
-        {
-            r.getStyleClass().add("pick-table-overlay");
-            setPseudoClasses(r);
-        }
-
-        public <T> @Nullable T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
-        {
-            Point2D localPos = container.screenToLocal(screenPos);
-            @Nullable Pair<CellPosition, Point2D> cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
-            @Nullable PickResult<?> oldPicked = picked;
-            final PickResult<T> result;
-            if (cellAtScreenPos == null)
-            {
-                result = picker.pick(null);
-            }
-            else
-            {
-                @NonNull CellPosition pos = cellAtScreenPos.getFirst();
-                result = gridAreas.stream().filter(g -> g.contains(pos))
-                    .flatMap(g -> Utility.streamNullable(picker.pick(new Pair<>(g, pos))))
-                    .findFirst().<@Nullable Pair<RectangleBounds, T>>orElseGet(new Supplier<@Nullable PickResult<T>>()
-                        {
-                            @Override
-                            public @Nullable PickResult<T> get()
-                            {
-                                return picker.pick(null);
-                            }
-                        });
-            }
-            picked = result;
-            if (!Objects.equals(picked, oldPicked))
-            {
-                container.redoLayout();
-            }
-            setCursor.consume(picked != null ? Cursor.HAND : null);
-            return result == null ? null : result.value;
-        }
-
-        public void addTo(VirtualGridSupplierFloating supplierFloating)
-        {
-            supplierFloating.addItem(this);
-            supplierFloating.addItem(arrow);
-        }
-
-        public void removeFrom(VirtualGridSupplierFloating supplierFloating)
-        {
-            supplierFloating.removeItem(this);
-            supplierFloating.removeItem(arrow);
-        }
-        
-        private class TableArrow extends FloatingItem<Path>
-        {
-            protected TableArrow()
-            {
-                super(ViewOrder.OVERLAY_ACTIVE);
-            }
-
-            @Override
-            protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-            {
-                if (picked != null)
-                {
-                    Path path = getNode();
-                    Point2D topLeft = setPathElements(path, visibleBounds);
-                    return Optional.of(new BoundingBox(topLeft.getX(), topLeft.getY(), 10, 10));
-                }
-                return Optional.empty();
-            }
-            
-            @OnThread(Tag.FXPlatform)
-            private Point2D setPathElements(@Nullable Path path, VisibleBounds visibleBounds)
-            {
-                if (picked != null && picked.arrowToScreenPos != null)
-                {
-                    RectangleBounds srcBounds = picked.highlightBounds;
-                    Point2D arrowTo = container.screenToLocal(picked.arrowToScreenPos);
-                    double xSrc = (visibleBounds.getXCoord(srcBounds.topLeftIncl.columnIndex) + visibleBounds.getXCoordAfter(srcBounds.bottomRightIncl.columnIndex)) / 2.0;
-                    double ySrc = (visibleBounds.getYCoord(srcBounds.topLeftIncl.rowIndex) + visibleBounds.getYCoordAfter(srcBounds.bottomRightIncl.rowIndex)) / 2.0;
-                    if (path != null)
-                    {
-                        double headX = arrowTo.getX() - xSrc - 5;
-                        double xMiddle = headX / 2.0;
-                        double headY = arrowTo.getY() - ySrc - 5;
-                        double yMiddle = headY / 2.0;
-                        double angle = Math.atan2(yMiddle, xMiddle);
-                        double headSize = 10;
-                        path.getElements().setAll(new MoveTo(0, 0),
-                            new QuadCurveTo(xMiddle + 50, yMiddle - 50, headX, headY),
-                            new LineTo(headX + headSize * Math.cos(angle - Math.toRadians(135)), headY + headSize * Math.sin(angle - Math.toRadians(135))),
-                            new MoveTo(headX, headY),
-                            new LineTo(headX + headSize * Math.cos(angle + Math.toRadians(135)), headY + headSize * Math.sin(angle + Math.toRadians(135)))    
-                        );
-                    }
-                    return new Point2D(xSrc, ySrc);
-                }
-                return new Point2D(0, 0);
-            }
-
-            @Override
-            protected Path makeCell(VisibleBounds visibleBounds)
-            {
-                Path path = new Path();
-                setPathElements(path, visibleBounds);
-                path.getStyleClass().add("table-highlight-arrow");
-                setPseudoClasses(path);
-                return path;
-            }
-
-            @Override
-            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
-            {
-                return null;
-            }
-
-            @Override
-            public void keyboardActivate(CellPosition cellPosition)
-            {
-            }
-        }
-    }
 
     // The scroll speed when in nudge mode
     private static enum NudgeScrollSpeed

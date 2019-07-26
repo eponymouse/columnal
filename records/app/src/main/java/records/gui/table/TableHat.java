@@ -35,12 +35,12 @@ import records.error.UserException;
 import records.gui.*;
 import records.gui.ManualEditEntriesDialog.Entry;
 import records.gui.grid.RectangleBounds;
-import records.gui.grid.VirtualGrid.HighlightType;
-import records.gui.grid.VirtualGrid.PickResult;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import records.gui.highlights.TableHighlights.HighlightType;
+import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.table.TableHat.TableHatDisplay;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
@@ -187,6 +187,22 @@ class TableHat extends FloatingItem<TableHatDisplay>
                             {
                                 editConcatenate(screenPoint, parent, concatenate);
                             }
+                        }
+
+                        @Override
+                        protected void setHovering(boolean hovering, Point2D screenPos)
+                        {
+                            if (hovering)
+                            {
+                                ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<@Nullable Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<@Nullable TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
+                                ImmutableList<RectangleBounds> srcTableBounds = Utility.mapListI(tableDisplays, t -> new RectangleBounds(t.getMostRecentPosition(), t.getBottomRightIncl()));
+                                parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
+                                        return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<Point2D>copyOf(Utility.<Point2D>replicate(srcTableBounds.size(), screenPos)));
+                                }, c -> {
+                                });
+                            }
+                            else
+                                parent.getHighlights().stopHighlightingGridArea();
                         }
                     }
                 ),
@@ -715,14 +731,14 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     if (table != null && table.getDisplay() != null)
                     {
                         RectangleBounds srcTableBounds = new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
-                        parent.getGrid().highlightGridAreaAtScreenPos(new Point2D(0, 0), p -> {
-                            return new PickResult<>(srcTableBounds, HighlightType.SOURCE, "", screenPos);
+                        parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
+                            return new PickResult<>(ImmutableList.of(srcTableBounds), HighlightType.SOURCE, "", ImmutableList.of(screenPos));
                         }, c -> {
                         });
                     }
                 }
                 else
-                    parent.getGrid().stopHighlightingGridArea();
+                    parent.getHighlights().stopHighlightingGridArea();
             }
         });
     }

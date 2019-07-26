@@ -48,8 +48,6 @@ import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGrid.PickResult;
-import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
@@ -58,6 +56,9 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import records.gui.highlights.TableHighlights;
+import records.gui.highlights.TableHighlights.PickResult;
+import records.gui.highlights.TableHighlights.Picker;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.table.CheckDisplay;
 import records.gui.table.TableDisplay;
@@ -101,6 +102,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     private final TableManager tableManager;
     // The pane which actually holds the TableDisplay items:
     private final VirtualGrid mainPane;
+    private final TableHighlights tableHighlights;
     private final Pane overlayPane;
     private final Pane snapGuidePane;
     // The STF supplier for the main pane:
@@ -253,7 +255,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     {
         if (pickPaneMouse != null)
         {
-            mainPane.stopHighlightingGridArea();
+            tableHighlights.stopHighlightingGridArea();
             getChildren().remove(pickPaneMouse);
             pickPaneMouse = null;
         }
@@ -279,7 +281,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 return null;
         };
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            picked[0] = mainPane.highlightGridAreaAtScreenPos(
+            picked[0] = tableHighlights.highlightAtScreenPos(
                 new Point2D(e.getScreenX(), e.getScreenY()),
                 validPick,
                 pickPaneMouseFinal::setCursor);
@@ -295,7 +297,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         });
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
-        mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+        tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -328,7 +330,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             return null;
         };
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            picked.pick = mainPane.highlightGridAreaAtScreenPos(
+            picked.pick = tableHighlights.highlightAtScreenPos(
                 new Point2D(e.getScreenX(), e.getScreenY()),
                 validPick,
                 pickPaneMouseFinal::setCursor);
@@ -345,7 +347,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
         if (screenPos != null)
-            mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+            tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
     public static enum Pick {
@@ -383,7 +385,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 return null;
         };
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            picked.pick = mainPane.highlightGridAreaAtScreenPos(
+            picked.pick = tableHighlights.highlightAtScreenPos(
                 new Point2D(e.getScreenX(), e.getScreenY()),
                 validPick,
                 pickPaneMouseFinal::setCursor);
@@ -400,7 +402,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:
         if (screenPos != null)
-            mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+            tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
     
     // If any sources are invalid, they are skipped
@@ -794,6 +796,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         mainPane = new VirtualGrid(vgManager,
             10, 20, "main-view-grid");
+        tableHighlights = new TableHighlights(mainPane);
         expandTableArrowSupplier = new ExpandTableArrowSupplier();
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         this.dataCellSupplier = new DataCellSupplier(mainPane);
@@ -813,6 +816,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         pickPaneMouse = new Pane();
         getChildren().addAll(mainPane.getNode(), overlayPane, snapGuidePane);
         getStyleClass().add("view");
+    }
+    
+    public TableHighlights getHighlights()
+    {
+        return tableHighlights;
     }
 
     private void addDisplay(TableDisplay tableDisplay)
