@@ -52,7 +52,9 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -89,9 +91,11 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ResizableRectangle;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -1101,9 +1105,57 @@ public final class VirtualGrid implements ScrollBindable
     {
         if (highlightedGridArea != null)
         {
-            supplierFloating.removeItem(highlightedGridArea);
+            highlightedGridArea.removeFrom(supplierFloating);
             highlightedGridArea = null;
             container.redoLayout();
+        }
+    }
+    
+    // Ways to highlight a grid area.
+    public static enum HighlightType
+    {
+        // SELECT is for picking sources when you hover over the table,
+        // SOURCE is for showing sources (with arrow) when hovering over table hat.
+        SELECT, SOURCE;
+    }
+    
+    public static class PickResult<T>
+    {
+        private final RectangleBounds highlightBounds;
+        private final HighlightType highlightType;
+        private final T value;
+        private final @Nullable Point2D arrowToScreenPos;
+
+        public PickResult(RectangleBounds highlightBounds, T value)
+        {
+            this(highlightBounds, HighlightType.SELECT, value, null);
+        }
+        
+        public PickResult(RectangleBounds highlightBounds, HighlightType highlightType, T value, @Nullable Point2D arrowToScreenPos)
+        {
+            this.highlightBounds = highlightBounds;
+            this.highlightType = highlightType;
+            this.value = value;
+            this.arrowToScreenPos = arrowToScreenPos;
+        }
+
+        // We don't use value in .equals(), we're only interested
+        // whether it causes the same pick display.
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PickResult<?> that = (PickResult<?>) o;
+            return highlightBounds.equals(that.highlightBounds) &&
+                    highlightType == that.highlightType &&
+                    Objects.equals(arrowToScreenPos, that.arrowToScreenPos);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(highlightBounds, highlightType, arrowToScreenPos);
         }
     }
     
@@ -1111,7 +1163,7 @@ public final class VirtualGrid implements ScrollBindable
     {
         // Given a grid area and a cell contained within it, is it a valid pick?  If so,
         // return a non-null pair of the area to highlight, and some custom type T.
-        public @Nullable Pair<RectangleBounds, T> pick(GridArea gridArea, CellPosition cell);
+        public @Nullable PickResult<T> pick(@Nullable Pair<GridArea, CellPosition> gridAreaAndCell);
     }
     
     public <T> @Nullable T highlightGridAreaAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
@@ -1119,7 +1171,7 @@ public final class VirtualGrid implements ScrollBindable
         if (highlightedGridArea == null)
         {
             GridAreaHighlight g = new GridAreaHighlight();
-            supplierFloating.addItem(g);
+            g.addTo(supplierFloating);
             this.highlightedGridArea = g;
         }
         return highlightedGridArea.highlightAtScreenPos(screenPos, picker, setCursor);
@@ -2194,7 +2246,8 @@ public final class VirtualGrid implements ScrollBindable
     @OnThread(Tag.FXPlatform)
     private class GridAreaHighlight extends RectangleOverlayItem
     {
-        private @Nullable RectangleBounds picked;
+        private @Nullable PickResult<?> picked;
+        private final TableArrow arrow = new TableArrow();
         
         private GridAreaHighlight()
         {
@@ -2208,7 +2261,23 @@ public final class VirtualGrid implements ScrollBindable
                 return Optional.empty();
             else
             {
-                return visibleBounds.clampVisible(picked).map(b -> Either.<BoundingBox, RectangleBounds>left(getRectangleBoundsInContainer(b)));
+                RectangleBounds highlightBounds = picked.highlightBounds;
+                ResizableRectangle r = getNode();
+                if (r != null)
+                {
+                    setPseudoClasses(r);
+                }
+                return visibleBounds.clampVisible(highlightBounds).map(b -> Either.<BoundingBox, RectangleBounds>left(getRectangleBoundsInContainer(b)));
+            }
+        }
+
+        public void setPseudoClasses(Node node)
+        {
+            if (picked != null)
+            {
+                HighlightType highlightType = picked.highlightType;
+                FXUtility.setPseudoclass(node, "pick-select", highlightType == HighlightType.SELECT);
+                FXUtility.setPseudoclass(node, "pick-source", highlightType == HighlightType.SOURCE);
             }
         }
 
@@ -2216,32 +2285,122 @@ public final class VirtualGrid implements ScrollBindable
         protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
         {
             r.getStyleClass().add("pick-table-overlay");
+            setPseudoClasses(r);
         }
 
         public <T> @Nullable T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
         {
             Point2D localPos = container.screenToLocal(screenPos);
             @Nullable Pair<CellPosition, Point2D> cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
-            @Nullable RectangleBounds oldPicked = picked;
-            final Pair<RectangleBounds, T> result;
+            @Nullable PickResult<?> oldPicked = picked;
+            final PickResult<T> result;
             if (cellAtScreenPos == null)
             {
-                result = null;
+                result = picker.pick(null);
             }
             else
             {
                 @NonNull CellPosition pos = cellAtScreenPos.getFirst();
                 result = gridAreas.stream().filter(g -> g.contains(pos))
-                    .flatMap(g -> Utility.streamNullable(picker.pick(g, pos)))
-                    .findFirst().orElse(null);
+                    .flatMap(g -> Utility.streamNullable(picker.pick(new Pair<>(g, pos))))
+                    .findFirst().<@Nullable Pair<RectangleBounds, T>>orElseGet(new Supplier<@Nullable PickResult<T>>()
+                        {
+                            @Override
+                            public @Nullable PickResult<T> get()
+                            {
+                                return picker.pick(null);
+                            }
+                        });
             }
-            picked = result == null ? null : result.getFirst();
-            if (picked != oldPicked)
+            picked = result;
+            if (!Objects.equals(picked, oldPicked))
             {
                 container.redoLayout();
             }
             setCursor.consume(picked != null ? Cursor.HAND : null);
-            return result == null ? null : result.getSecond();
+            return result == null ? null : result.value;
+        }
+
+        public void addTo(VirtualGridSupplierFloating supplierFloating)
+        {
+            supplierFloating.addItem(this);
+            supplierFloating.addItem(arrow);
+        }
+
+        public void removeFrom(VirtualGridSupplierFloating supplierFloating)
+        {
+            supplierFloating.removeItem(this);
+            supplierFloating.removeItem(arrow);
+        }
+        
+        private class TableArrow extends FloatingItem<Path>
+        {
+            protected TableArrow()
+            {
+                super(ViewOrder.OVERLAY_ACTIVE);
+            }
+
+            @Override
+            protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+            {
+                if (picked != null)
+                {
+                    Path path = getNode();
+                    Point2D topLeft = setPathElements(path, visibleBounds);
+                    return Optional.of(new BoundingBox(topLeft.getX(), topLeft.getY(), 10, 10));
+                }
+                return Optional.empty();
+            }
+            
+            @OnThread(Tag.FXPlatform)
+            private Point2D setPathElements(@Nullable Path path, VisibleBounds visibleBounds)
+            {
+                if (picked != null && picked.arrowToScreenPos != null)
+                {
+                    RectangleBounds srcBounds = picked.highlightBounds;
+                    Point2D arrowTo = container.screenToLocal(picked.arrowToScreenPos);
+                    double xSrc = (visibleBounds.getXCoord(srcBounds.topLeftIncl.columnIndex) + visibleBounds.getXCoordAfter(srcBounds.bottomRightIncl.columnIndex)) / 2.0;
+                    double ySrc = (visibleBounds.getYCoord(srcBounds.topLeftIncl.rowIndex) + visibleBounds.getYCoordAfter(srcBounds.bottomRightIncl.rowIndex)) / 2.0;
+                    if (path != null)
+                    {
+                        double headX = arrowTo.getX() - xSrc - 5;
+                        double xMiddle = headX / 2.0;
+                        double headY = arrowTo.getY() - ySrc - 5;
+                        double yMiddle = headY / 2.0;
+                        double angle = Math.atan2(yMiddle, xMiddle);
+                        double headSize = 10;
+                        path.getElements().setAll(new MoveTo(0, 0),
+                            new QuadCurveTo(xMiddle + 50, yMiddle - 50, headX, headY),
+                            new LineTo(headX + headSize * Math.cos(angle - Math.toRadians(135)), headY + headSize * Math.sin(angle - Math.toRadians(135))),
+                            new MoveTo(headX, headY),
+                            new LineTo(headX + headSize * Math.cos(angle + Math.toRadians(135)), headY + headSize * Math.sin(angle + Math.toRadians(135)))    
+                        );
+                    }
+                    return new Point2D(xSrc, ySrc);
+                }
+                return new Point2D(0, 0);
+            }
+
+            @Override
+            protected Path makeCell(VisibleBounds visibleBounds)
+            {
+                Path path = new Path();
+                setPathElements(path, visibleBounds);
+                path.getStyleClass().add("table-highlight-arrow");
+                setPseudoClasses(path);
+                return path;
+            }
+
+            @Override
+            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+            {
+                return null;
+            }
+
+            @Override
+            public void keyboardActivate(CellPosition cellPosition)
+            {
+            }
         }
     }
 

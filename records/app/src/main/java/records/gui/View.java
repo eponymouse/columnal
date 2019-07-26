@@ -45,8 +45,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.NewTableDialog.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
+import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.PickResult;
 import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
@@ -267,9 +269,12 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         pickPaneMouseFinal.setPickOnBounds(true);
         @Nullable Table[] picked = new @Nullable Table[1];
-        Picker<Table> validPick = (g, cell) -> {
+        Picker<Table> validPick = p -> {
+            if (p == null)
+                return null;
+            GridArea g = p.getFirst();
             if (g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable()))
-                return new Pair<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), ((TableDisplay) g).getTable());
+                return new PickResult<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), ((TableDisplay) g).getTable());
             else
                 return null;
         };
@@ -307,14 +312,18 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             @Nullable Pair<Table, ColumnId> pick = null;
         }
         Ref picked = new Ref();
-        Picker<Pair<Table, ColumnId>> validPick = (g, cell) -> {
+        Picker<Pair<Table, ColumnId>> validPick = p -> {
+            if (p == null)
+                return null;
+            GridArea g = p.getFirst();
+            CellPosition cell = p.getSecond();
             if (!(g instanceof TableDisplay))
                 return null;
             TableDisplay tableDisplay = (TableDisplay) g;
             @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
             if (c != null && includeColumn.test(new Pair<>(tableDisplay.getTable(), c.getFirst())))
             {
-                return new Pair<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+                return new PickResult<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
             }
             return null;
         };
@@ -356,16 +365,20 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             @Nullable Pair<Table, @Nullable ColumnId> pick = null;
         }
         Ref picked = new Ref();
-        Picker<Pair<Table, @Nullable ColumnId>> validPick = (g, cell) -> {
+        Picker<Pair<Table, @Nullable ColumnId>> validPick = p -> {
+            if (p == null)
+                return null;
+            GridArea g = p.getFirst();
+            CellPosition cell = p.getSecond();
             if (!(g instanceof TableDisplay))
                 return null;
             TableDisplay tableDisplay = (TableDisplay) g;
             @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
             Pick pick = check.apply(new Pair<Table, @Nullable ColumnId>(tableDisplay.getTable(), c == null ? null : c.getFirst()));
             if (pick == Pick.COLUMN && c != null)
-                return new Pair<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+                return new PickResult<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
             else if (pick == Pick.TABLE)
-                return new Pair<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), new Pair<>(tableDisplay.getTable(), null));
+                return new PickResult<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), new Pair<>(tableDisplay.getTable(), null));
             else
                 return null;
         };

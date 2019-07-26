@@ -47,6 +47,8 @@ $table-row-label-border-color: $table-border-color;
 $table-row-label-text-color: grey(50%);
 $table-pick-overlay-stroke: grey(30%);
 $table-pick-overlay-fill: greya(30%, 0.5);
+$table-source-overlay-stroke: hsl(105, 100%, 30%);
+$table-source-overlay-fill: hsla(105, 100%, 30%, 0.35);
 $column-header-background-color: hsb(218, 11%, 89%);
 $column-header-text-color: hsb(218, 41%, 30%);
 $expand-arrow-color: grey(60%);

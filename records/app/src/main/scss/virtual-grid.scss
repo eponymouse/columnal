@@ -202,6 +202,22 @@
 .pick-table-overlay {    
     -fx-stroke-type: outside;
 }
+.pick-table-overlay:pick-source {
+    -fx-fill: $table-source-overlay-fill;
+    -fx-stroke: $table-source-overlay-stroke;
+}
+.table-highlight-arrow {
+    -fx-stroke-width: 3;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+    &:pick-select {
+        -fx-stroke: $table-pick-overlay-stroke;
+    }
+    &:pick-source {
+        -fx-stroke: $table-source-overlay-stroke;
+    }
+    
+}
 
 .virt-grid-row-label {
     /* First is colour of vertical separator between rows */

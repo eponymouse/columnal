@@ -34,6 +34,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.*;
 import records.gui.ManualEditEntriesDialog.Entry;
+import records.gui.grid.RectangleBounds;
+import records.gui.grid.VirtualGrid.HighlightType;
+import records.gui.grid.VirtualGrid.PickResult;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -701,6 +704,25 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     if (target != null)
                         parent.getGrid().select(new EntireTableSelection(target, target.getPosition().columnIndex));
                 }
+            }
+
+            @Override
+            protected void setHovering(boolean hovering, Point2D screenPos)
+            {
+                if (hovering)
+                {
+                    Table table = parent.getManager().getSingleTableOrNull(srcTableId);
+                    if (table != null && table.getDisplay() != null)
+                    {
+                        RectangleBounds srcTableBounds = new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
+                        parent.getGrid().highlightGridAreaAtScreenPos(new Point2D(0, 0), p -> {
+                            return new PickResult<>(srcTableBounds, HighlightType.SOURCE, "", screenPos);
+                        }, c -> {
+                        });
+                    }
+                }
+                else
+                    parent.getGrid().stopHighlightingGridArea();
             }
         });
     }
