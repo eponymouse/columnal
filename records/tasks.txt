@@ -7,16 +7,13 @@ Probably fixed by recent changes but not definite
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
 ===
 - Server internal exception logging (and stats logging?)
-- Undo area in import dialog does not redisplay RHS
-
-- Manual edit pick primary key is too confusing (add help box?)
 
 - Lots of confusion between date literals and date functions.
 - Investigate improving layout for long expressions: done if, still need to do define, match
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
-- Allow AM/PM in data entry
+- Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
@@ -70,6 +67,8 @@ Low Priority (good to have, but will not be hugely missed)
 - Add multiple columns in initial dialog?
 - Auto-generated table name is confusing.
 - Long value tooltip wrong size on first show
+- Manual edit pick primary key is too confusing (add help box?)
+
 
 Skipping
 ===
@@ -311,3 +310,4 @@ Done after Phil B & Jon A:
 - No way to change manual edit key after creation (should be shown as editable link in table head)
 - Add multiple export formats; XLSX and HTML alongside CSV
 - Make the source table highlight (and show an arrow?) when you hover over an editable source table link
+- Undo area in import dialog does not redisplay RHS
