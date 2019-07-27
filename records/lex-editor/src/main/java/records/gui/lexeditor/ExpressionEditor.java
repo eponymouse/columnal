@@ -7,11 +7,13 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.input.DataFormat;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -49,7 +51,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                     {
                         if (showing)
                         {
-                            columnPicker.enableColumnPickingMode(null, c -> display.isFocused() && columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).findFirst().isPresent(), c -> {
+                            columnPicker.enableColumnPickingMode(null, display.sceneProperty(), c -> display.isFocused() && columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).findFirst().isPresent(), c -> {
                                 String ref = "";
                                 ImmutableList<ColumnReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.<ColumnReference,  Boolean>comparing(cr -> cr.getTableId() != null).thenComparing(cr -> cr.getReferenceType())).collect(ImmutableList.<ColumnReference>toImmutableList());
                                 if (!columnReferences.get(0).getReferenceType().equals(ColumnReferenceType.CORRESPONDING_ROW))
@@ -83,7 +85,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     @OnThread(Tag.FXPlatform)
     public static interface ColumnPicker
     {
-        public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick);
+        public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick);
         
         public void disablePickingMode();
     }

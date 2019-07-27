@@ -149,11 +149,6 @@ public class TableHighlights
         private final T value;
         private final ImmutableList<FXPlatformFunction<Point2D, Point2D>> arrowToScreenPos;
 
-        public PickResult(RectangleBounds highlightBounds, T value)
-        {
-            this(ImmutableList.of(highlightBounds), HighlightType.SELECT, value, ImmutableList.of());
-        }
-
         public PickResult(ImmutableList<RectangleBounds> highlightBounds, HighlightType highlightType, T value, ImmutableList<FXPlatformFunction<Point2D, Point2D>> arrowToScreenPos)
         {
             this.highlightBounds = highlightBounds;
@@ -260,7 +255,7 @@ public class TableHighlights
                 RectangleBounds srcBounds = picked.highlightBounds.get(index);
                 double xSrc = (visibleBounds.getXCoord(srcBounds.topLeftIncl.columnIndex) + visibleBounds.getXCoordAfter(srcBounds.bottomRightIncl.columnIndex)) / 2.0;
                 double ySrc = (visibleBounds.getYCoord(srcBounds.topLeftIncl.rowIndex) + visibleBounds.getYCoordAfter(srcBounds.bottomRightIncl.rowIndex)) / 2.0;
-                Point2D arrowTo = picked.arrowToScreenPos.get(index).apply(new Point2D(xSrc, ySrc));
+                Point2D arrowTo = picked.arrowToScreenPos.get(index).apply(grid.getNode().localToScreen(xSrc, ySrc));
                 arrowTo = grid.getNode().screenToLocal(arrowTo);
                 
                 if (path != null)
@@ -272,7 +267,7 @@ public class TableHighlights
                     double angle = Math.atan2(yMiddle, xMiddle);
                     double headSize = 10;
                     path.getElements().setAll(new MoveTo(0, 0),
-                            new QuadCurveTo(xMiddle + 50, yMiddle - 50, headX, headY),
+                            new QuadCurveTo(xMiddle + 20, yMiddle - 20, headX, headY),
                             new LineTo(headX + headSize * Math.cos(angle - Math.toRadians(135)), headY + headSize * Math.sin(angle - Math.toRadians(135))),
                             new MoveTo(headX, headY),
                             new LineTo(headX + headSize * Math.cos(angle + Math.toRadians(135)), headY + headSize * Math.sin(angle + Math.toRadians(135)))

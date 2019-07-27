@@ -279,18 +279,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             GridArea g = p.getFirst();
             if (g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable()))
             {
-                FXPlatformFunction<Point2D, Point2D> screenWindowPoint = null;
-                Scene scene = sceneProperty.get();
-                if (scene != null)
-                {
-                    Window window = scene.getWindow();
-                    if (window != null)
-                    {
-                        BoundingBox bounds = FXUtility.getWindowBounds(window);
-                        screenWindowPoint = from -> new Point2D(Utility.clampIncl(bounds.getMinX(), from.getX(), bounds.getMaxX()), Utility.clampIncl(bounds.getMinY(), from.getY(), bounds.getMaxY()));
-                    }
-                }
-                return new PickResult<>(ImmutableList.of(new RectangleBounds(g.getPosition(), g.getBottomRightIncl())), HighlightType.SELECT, ((TableDisplay) g).getTable(), screenWindowPoint == null ? ImmutableList.of() : ImmutableList.of(screenWindowPoint));
+                return new PickResult<>(ImmutableList.of(new RectangleBounds(g.getPosition(), g.getBottomRightIncl())), HighlightType.SELECT, ((TableDisplay) g).getTable(), getWindowTargetPoint(sceneProperty));
             }
             else
                 return null;
@@ -315,8 +304,23 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
+    private static ImmutableList<FXPlatformFunction<Point2D, Point2D>> getWindowTargetPoint(ObjectExpression<@PolyNull Scene> sceneProperty)
+    {
+        Scene scene = sceneProperty.get();
+        if (scene != null)
+        {
+            Window window = scene.getWindow();
+            if (window != null)
+            {
+                BoundingBox bounds = FXUtility.getWindowBounds(window);
+                return ImmutableList.of(from -> new Point2D(Utility.clampIncl(bounds.getMinX(), from.getX(), bounds.getMaxX()), Utility.clampIncl(bounds.getMinY(), from.getY(), bounds.getMaxY())));
+            }
+        }
+        return ImmutableList.of();
+    }
+
     @OnThread(Tag.FXPlatform)
-    public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+    public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
     {
         if (pickPaneMouse != null)
             disablePickingMode();
@@ -340,7 +344,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
             if (c != null && includeColumn.test(new Pair<>(tableDisplay.getTable(), c.getFirst())))
             {
-                return new PickResult<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+                return new PickResult<>(ImmutableList.of(c.getSecond()), HighlightType.SELECT, new Pair<>(tableDisplay.getTable(), c.getFirst()), getWindowTargetPoint(sceneProperty));
             }
             return null;
         };
@@ -370,7 +374,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
     
     @OnThread(Tag.FXPlatform)
-    public void enableTableOrColumnPickingMode(@Nullable Point2D screenPos, FXPlatformFunction<Pair<Table, @Nullable ColumnId>, Pick> check, FXPlatformConsumer<Pair<Table, @Nullable ColumnId>> onPick)
+    public void enableTableOrColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, FXPlatformFunction<Pair<Table, @Nullable ColumnId>, Pick> check, FXPlatformConsumer<Pair<Table, @Nullable ColumnId>> onPick)
     {
         disablePickingMode();
 
@@ -393,9 +397,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
             Pick pick = check.apply(new Pair<Table, @Nullable ColumnId>(tableDisplay.getTable(), c == null ? null : c.getFirst()));
             if (pick == Pick.COLUMN && c != null)
-                return new PickResult<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+                return new PickResult<>(ImmutableList.of(c.getSecond()), HighlightType.SELECT, new Pair<>(tableDisplay.getTable(), c.getFirst()), getWindowTargetPoint(sceneProperty));
             else if (pick == Pick.TABLE)
-                return new PickResult<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), new Pair<>(tableDisplay.getTable(), null));
+                return new PickResult<>(ImmutableList.of(new RectangleBounds(g.getPosition(), g.getBottomRightIncl())), HighlightType.SELECT, new Pair<>(tableDisplay.getTable(), null), getWindowTargetPoint(sceneProperty));
             else
                 return null;
         };

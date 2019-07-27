@@ -78,7 +78,7 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
         }, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
         
         setOnShowing(e -> {
-            parent.enableColumnPickingMode(null, p -> srcTableColumns.contains(p.getSecond()), p -> {
+            parent.enableColumnPickingMode(null, getDialogPane().sceneProperty(), p -> srcTableColumns.contains(p.getSecond()), p -> {
                 byColumnRadio.setSelected(true);
                 byColumnName.setText(p.getSecond().getRaw());
             });

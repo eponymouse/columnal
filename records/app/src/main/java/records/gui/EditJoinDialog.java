@@ -80,7 +80,7 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         FXUtility.onceNotNull(primaryTableNamePane.sceneProperty(), s -> FXUtility.runAfter(() -> primaryTableNamePane.focusEntryField()));
         
         setOnShowing(e -> {
-            parent.enableTableOrColumnPickingMode(null, p -> {
+            parent.enableTableOrColumnPickingMode(null, getDialogPane().sceneProperty(), p -> {
                 Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>> pick = pick();
                 if (pick == null || p.getFirst() == join)
                     return Pick.NONE;

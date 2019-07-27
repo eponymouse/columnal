@@ -87,7 +87,7 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
         columnFields = Utility.mapListI(items, p -> p.getSecond());
         getDialogPane().setContent(new LabelledGrid(Stream.<Row>concat(items.stream().<Row>map(p -> p.getFirst()), Stream.<Row>of(LabelledGrid.fullWidthRow(getErrorLabel()))).toArray(Row[]::new)));
         setOnShown(e -> {
-            columnPicker.enableColumnPickingMode(null, p -> p.getFirst() == srcTable, p -> {
+            columnPicker.enableColumnPickingMode(null, getDialogPane().sceneProperty(), p -> p.getFirst() == srcTable, p -> {
                 if (mostRecentlyFocusedField != null)
                 {
                     mostRecentlyFocusedField.setText(p.getSecond().getRaw());

@@ -89,7 +89,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         getDialogPane().getStyleClass().add("sort-list-dialog");
         setOnShowing(e -> {
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
-            parent.enableColumnPickingMode(lastScreenPos, p -> Objects.equals(srcTable, p.getFirst()) || Objects.equals(destTable, p.getFirst()),t -> {
+            parent.enableColumnPickingMode(lastScreenPos, getDialogPane().sceneProperty(), p -> Objects.equals(srcTable, p.getFirst()) || Objects.equals(destTable, p.getFirst()),t -> {
                 sortList.pickColumnIfEditing(t);
             });
         });

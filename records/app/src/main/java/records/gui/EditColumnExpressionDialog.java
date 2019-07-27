@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
@@ -8,6 +9,7 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
@@ -21,6 +23,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -171,9 +174,9 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         ColumnPicker columnPicker = new ColumnPicker()
         {
             @Override
-            public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
+            public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
             {
-                parent.enableColumnPickingMode(screenPos, tc -> {
+                parent.enableColumnPickingMode(screenPos, getDialogPane().sceneProperty(), tc -> {
                     @Nullable TimedFocusable item = getRecentlyFocused();
                     if (subPicker != null)
                     {
@@ -463,7 +466,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             return new ColumnPicker()
             {
                 @Override
-                public void enableColumnPickingMode(@Nullable Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+                public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
                 {
                     // Column picking already enabled, just need to register ourselves:
                     subPicker = new SubPicker(includeColumn, onPick);
