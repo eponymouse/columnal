@@ -1,6 +1,9 @@
 package test.gui.expressionEditor;
 
 import com.google.common.primitives.Ints;
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -10,7 +13,10 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
@@ -25,6 +31,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
 import test.TestUtil;
+import test.gen.GenRandom;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ListUtilTrait;
@@ -42,12 +49,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+@RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait, PopupTrait
 {    
@@ -75,130 +84,130 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         testCaretPositions("@iftrue@thensum(3+\"az\")@elsefalse@endif");
     }
 
-    @Test
-    public void testPos1()
+    @Property(trials=1)
+    public void testPos1(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("1", "1", p(0, 1));
+        testCaretPositionsAndDisplay(r, "1", "1", p(0, 1));
     }
 
-    @Test
-    public void testPos2()
+    @Property(trials=1)
+    public void testPos2(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("1+2", "1 + 2", p(0, 1, 2, 3));
+        testCaretPositionsAndDisplay(r, "1+2", "1 + 2", p(0, 1, 2, 3));
     }
 
-    @Test
-    public void testPos3()
+    @Property(trials=1)
+    public void testPos3(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true\n    @then sum(3 + \"az\")\n    @else false\n@endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
+        testCaretPositionsAndDisplay(r, "@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true\n    @then sum(3 + \"az\")\n    @else false\n@endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
         p(0, 3, 7, 12, 15,16,17,18,19,21,22,23,28,33,39)
         );
     }
 
-    @Test
-    public void testPos4()
+    @Property(trials=1)
+    public void testPos4(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("ACC1>ACC2", "ACC1 > ACC2", p(0,1,2,3,4, 5,6,7,8,9), p(0, 4, 5, 9));
+        testCaretPositionsAndDisplay(r, "ACC1>ACC2", "ACC1 > ACC2", p(0,1,2,3,4, 5,6,7,8,9), p(0, 4, 5, 9));
     }
 
-    @Test
-    public void testPos5()
+    @Property(trials=1)
+    public void testPos5(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("Str>Str", "Str > Str", p(0,1,2,3, 4,5,6,7), p(0, 3, 4, 7));
+        testCaretPositionsAndDisplay(r, "Str>Str", "Str > Str", p(0,1,2,3, 4,5,6,7), p(0, 3, 4, 7));
     }
 
-    @Test
-    public void testPos6()
+    @Property(trials=1)
+    public void testPos6(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("ACC1<>3{(m/s)/s}", "ACC1 <> 3{(m/s)/s}", p(0,1,2,3,4, 6,7,8,9,10,11,12,13,14,15,16),
+        testCaretPositionsAndDisplay(r, "ACC1<>3{(m/s)/s}", "ACC1 <> 3{(m/s)/s}", p(0,1,2,3,4, 6,7,8,9,10,11,12,13,14,15,16),
             p(0,4,6,7,8,9,10,11,12,13,14,15,16));
     }
 
-    @Test
-    public void testPos7()
+    @Property(trials=1)
+    public void testPos7(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("abs(1+2)=sum([3/4])", "abs(1 + 2) = sum([3 / 4])", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19),
+        testCaretPositionsAndDisplay(r, "abs(1+2)=sum([3/4])", "abs(1 + 2) = sum([3 / 4])", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19),
             p(0,3,4,5,6,7,8,9,12,13,14,15,16,17,18,19)
                 );
     }
 
-    @Test
-    public void testPos8()
+    @Property(trials=1)
+    public void testPos8(@From(GenRandom.class) Random r)
     {
         int m = TypeManager.MAYBE_NAME.length();
-        testCaretPositionsAndDisplay("from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 51 + m)).toArray(),
+        testCaretPositionsAndDisplay(r, "from string to(type{" + TypeManager.MAYBE_NAME + "(Number{m},Text)},\"Maybe Not\")", "from string to(type{" + TypeManager.MAYBE_NAME +  "(Number{m}, Text)}, \"Maybe Not\")", IntStream.concat(IntStream.range(0, 16), IntStream.range(20, 51 + m)).toArray(),
             p(0, 14, 15, 20, 20+m, 21+m, 27+m,28+m,29+m,30+m,31+m,35+m,36+m,37+m,38+m,39+m,48+m,49+m,50+m));
     }
 
-    @Test
-    public void testPos9()
+    @Property(trials=1)
+    public void testPos9(@From(GenRandom.class) Random r)
     {
         // Space added in unit because it's an error
-        testCaretPositionsAndDisplay("date{2019}<=time{20:10}<type{Number{}}",
+        testCaretPositionsAndDisplay(r, "date{2019}<=time{20:10}<type{Number{}}",
             "date{2019} <= time{20:10} < type{Number{ }}",
             p(0, 5,6,7,8,9,10, 12, 17,18,19,20,21,22,23, 24, 29,30,31,32,33,34,35,36,37,38),
             p(0, 5, 9, 10, 12, 17, 22,23,24, 29, 35,36,37,38)
         );
     }
 
-    @Test
-    public void testPosDoubleSpace()
+    @Property(trials=1)
+    public void testPosDoubleSpace(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("The quick  brown fox>Str", "The quick brown fox > Str", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23), p(0,19, 20,23));
+        testCaretPositionsAndDisplay(r, "The quick  brown fox>Str", "The quick brown fox > Str", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23), p(0,19, 20,23));
     }
 
-    @Test
-    public void testPosDoubleSpace2()
+    @Property(trials=1)
+    public void testPosDoubleSpace2(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("The quick  brown  fox>The quick brown fox", "The quick brown fox > The quick brown fox", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39), p(0,19, 20, 39));
+        testCaretPositionsAndDisplay(r, "The quick  brown  fox>The quick brown fox", "The quick brown fox > The quick brown fox", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39), p(0,19, 20, 39));
     }
 
-    @Test
-    public void testPosIncomplete1()
+    @Property(trials=1)
+    public void testPosIncomplete1(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("1+", "1 +  ", p(0, 1, 2));
+        testCaretPositionsAndDisplay(r, "1+", "1 +  ", p(0, 1, 2));
     }
     
-    @Test
-    public void testPosIncomplete2()
+    @Property(trials=1)
+    public void testPosIncomplete2(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("1<", "1 <  ", p(0, 1, 2));
+        testCaretPositionsAndDisplay(r, "1<", "1 <  ", p(0, 1, 2));
     }
     
-    @Test
-    public void testPosIncomplete2b()
+    @Property(trials=1)
+    public void testPosIncomplete2b(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("1<=", "1 <=  ", p(0, 1, 3));
+        testCaretPositionsAndDisplay(r, "1<=", "1 <=  ", p(0, 1, 3));
     }
     
-    @Test
-    public void testPosIncomplete3()
+    @Property(trials=1)
+    public void testPosIncomplete3(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@i", "@i", p(0, 1, 2), p(0,2));
+        testCaretPositionsAndDisplay(r, "@i", "@i", p(0, 1, 2), p(0,2));
     }
 
-    @Test
-    public void testPosIncomplete4()
+    @Property(trials=1)
+    public void testPosIncomplete4(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@if", "@if  ", p(0, 3));
+        testCaretPositionsAndDisplay(r, "@if", "@if  ", p(0, 3));
     }
 
-    @Test
-    public void testPosIncomplete5()
+    @Property(trials=1)
+    public void testPosIncomplete5(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@if@then@else@endif", "@if  \n    @then  \n    @else  \n@endif ", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay(r, "@if@then@else@endif", "@if  \n    @then  \n    @else  \n@endif ", p(0, 3, 8, 13, 19));
     }
 
-    @Test
-    public void testPosIncomplete6()
+    @Property(trials=1)
+    public void testPosIncomplete6(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@iftrue@then(1+2@else3@endif+1", "@if true\n    @then (1 + 2\n    @else 3\n@endif + 1", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay(r, "@iftrue@then(1+2@else3@endif+1", "@if true\n    @then (1 + 2\n    @else 3\n@endif + 1", p(0, 3, 8, 13, 19));
     }
 
-    @Test
-    public void testPosIncompleteCase()
+    @Property(trials=1)
+    public void testPosIncompleteCase(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay("@case", "  @case ", p(0, 5));
+        testCaretPositionsAndDisplay(r, "@case", "  @case ", p(0, 5));
     }
 
     private int[] p(int... values)
@@ -207,7 +216,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @SuppressWarnings("identifier")
-    private void testCaretPositionsAndDisplay(String internalContent, String display, int[] internalCaretPos, int... wordBoundaryCaretPos)
+    private void testCaretPositionsAndDisplay(Random r, String internalContent, String display, int[] internalCaretPos, int... wordBoundaryCaretPos)
     {
         // If last param missing, means it's same as penultimate:
         if (wordBoundaryCaretPos.length == 0)
@@ -263,20 +272,23 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             });
             */
 
-            Point2D[] caretCentres = new Point2D[internalCaretPos.length];
-
             // Once for initial load, twice for opening editor again
             for (int i = 0; i < 2; i++)
             {
+                @MonotonicNonNull Point2D[] caretCentres = new Point2D[internalCaretPos.length];
                 assertEquals(display, getDisplayText());
 
                 push(KeyCode.HOME);
                 int curIndex = 0;
                 while (curIndex < internalCaretPos.length)
                 {
-                    // Make sure to wait for caret reposition on blink:
-                    sleep(1300);
-                    caretCentres[curIndex] = getCaretPosOnScreen();
+                    // Speed up by not assessing every position on every run:
+                    if (r.nextInt(10) == 1)
+                    {
+                        // Make sure to wait for caret reposition on blink:
+                        sleep(1300);
+                        caretCentres[curIndex] = getCaretPosOnScreen();
+                    }
                     assertEquals("Index " + curIndex, internalCaretPos[curIndex], getPosition().getSecond().intValue());
                     curIndex += 1;
                     push(KeyCode.RIGHT);
@@ -312,25 +324,28 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
 
                 for (int clickIndex = 0; clickIndex < caretCentres.length; clickIndex++)
                 {
-                    System.out.println("Clicking on " + clickIndex + ": " + caretCentres[clickIndex]);
+                    Point2D caretCentre = caretCentres[clickIndex];
+                    if (caretCentre == null)
+                        continue;
+                    System.out.println("Clicking on " + clickIndex + ": " + caretCentre);
                     //TestUtil.fx_(() -> dumpScreenshot());
-                    moveAndDismissPopupsAtPos(point(caretCentres[clickIndex]));
+                    moveAndDismissPopupsAtPos(point(caretCentre));
                     sleep(400);
-                    clickOn(caretCentres[clickIndex].add(1, 0));
-                    assertEquals("Clicked: " + caretCentres[clickIndex].add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
+                    clickOn(caretCentre.add(1, 0));
+                    assertEquals("Clicked: " + caretCentre.add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());
                     // Try double-click just after the position:
                     push(KeyCode.LEFT);
                     // Double click is unreliable in TestFX, so fake it:
-                    Point2D doubleClick = caretCentres[clickIndex].add(1, 0);
+                    Point2D doubleClick = caretCentre.add(1, 0);
                     EditorDisplay editorDisplay = getEditorDisplay();
                     TestUtil.fx_(() -> editorDisplay._test_doubleClickOn(doubleClick));
                     int lhsSel = findPrev(wordBoundaryCaretPos, internalCaretPos[clickIndex == internalCaretPos.length - 1 ? clickIndex - 1 : clickIndex]);
-                    assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), lhsSel, getAnchorPosition());
-                    assertEquals("Double clicked: " + caretCentres[clickIndex].add(1, 0), findNext(wordBoundaryCaretPos, internalCaretPos[clickIndex]), getPosition().getSecond().intValue());
+                    assertEquals("Double clicked: " + caretCentre.add(1, 0), lhsSel, getAnchorPosition());
+                    assertEquals("Double clicked: " + caretCentre.add(1, 0), findNext(wordBoundaryCaretPos, internalCaretPos[clickIndex]), getPosition().getSecond().intValue());
                     
                     // Cancel selection:
                     push(KeyCode.LEFT);
-                    assertEquals("Left after click: " + caretCentres[clickIndex].add(1, 0), lhsSel, getPosition().getSecond().intValue());
+                    assertEquals("Left after click: " + caretCentre.add(1, 0), lhsSel, getPosition().getSecond().intValue());
                 }
 
                 // Dismiss dialog:
