@@ -54,7 +54,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
         getDialogPane().getStyleClass().add("table-list-dialog");
         
         setOnShowing(e -> {
-            parent.enableTablePickingMode(lastScreenPos, excludeTables, t -> {
+            parent.enableTablePickingMode(lastScreenPos, getDialogPane().sceneProperty(), excludeTables, t -> {
                 tableList.pickTableIfEditing(t);
             });
         });

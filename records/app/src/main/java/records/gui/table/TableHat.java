@@ -64,6 +64,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
+import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
@@ -197,7 +198,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                 ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<@Nullable Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<@Nullable TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
                                 ImmutableList<RectangleBounds> srcTableBounds = Utility.mapListI(tableDisplays, t -> new RectangleBounds(t.getMostRecentPosition(), t.getBottomRightIncl()));
                                 parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
-                                        return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<Point2D>copyOf(Utility.<Point2D>replicate(srcTableBounds.size(), screenPos)));
+                                        return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<FXPlatformFunction<Point2D, Point2D>>copyOf(Utility.<FXPlatformFunction<Point2D, Point2D>>replicate(srcTableBounds.size(), s -> screenPos)));
                                 }, c -> {
                                 });
                             }
@@ -732,7 +733,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     {
                         RectangleBounds srcTableBounds = new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
                         parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
-                            return new PickResult<>(ImmutableList.of(srcTableBounds), HighlightType.SOURCE, "", ImmutableList.of(screenPos));
+                            return new PickResult<>(ImmutableList.of(srcTableBounds), HighlightType.SOURCE, "", ImmutableList.of(s -> screenPos));
                         }, c -> {
                         });
                     }

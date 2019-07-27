@@ -27,6 +27,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -146,14 +147,14 @@ public class TableHighlights
         private final ImmutableList<RectangleBounds> highlightBounds;
         private final HighlightType highlightType;
         private final T value;
-        private final ImmutableList<Point2D> arrowToScreenPos;
+        private final ImmutableList<FXPlatformFunction<Point2D, Point2D>> arrowToScreenPos;
 
         public PickResult(RectangleBounds highlightBounds, T value)
         {
             this(ImmutableList.of(highlightBounds), HighlightType.SELECT, value, ImmutableList.of());
         }
 
-        public PickResult(ImmutableList<RectangleBounds> highlightBounds, HighlightType highlightType, T value, ImmutableList<Point2D> arrowToScreenPos)
+        public PickResult(ImmutableList<RectangleBounds> highlightBounds, HighlightType highlightType, T value, ImmutableList<FXPlatformFunction<Point2D, Point2D>> arrowToScreenPos)
         {
             this.highlightBounds = highlightBounds;
             this.highlightType = highlightType;
@@ -170,14 +171,13 @@ public class TableHighlights
             if (o == null || getClass() != o.getClass()) return false;
             PickResult<?> that = (PickResult<?>) o;
             return highlightBounds.equals(that.highlightBounds) &&
-                    highlightType == that.highlightType &&
-                    Objects.equals(arrowToScreenPos, that.arrowToScreenPos);
+                    highlightType == that.highlightType;
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(highlightBounds, highlightType, arrowToScreenPos);
+            return Objects.hash(highlightBounds, highlightType);
         }
     }
 
@@ -258,10 +258,11 @@ public class TableHighlights
             if (picked != null && picked.arrowToScreenPos != null && index < picked.highlightBounds.size() && index < picked.arrowToScreenPos.size())
             {
                 RectangleBounds srcBounds = picked.highlightBounds.get(index);
-                Point2D arrowTo = picked.arrowToScreenPos.get(index);
-                arrowTo = grid.getNode().screenToLocal(arrowTo);
                 double xSrc = (visibleBounds.getXCoord(srcBounds.topLeftIncl.columnIndex) + visibleBounds.getXCoordAfter(srcBounds.bottomRightIncl.columnIndex)) / 2.0;
                 double ySrc = (visibleBounds.getYCoord(srcBounds.topLeftIncl.rowIndex) + visibleBounds.getYCoordAfter(srcBounds.bottomRightIncl.rowIndex)) / 2.0;
+                Point2D arrowTo = picked.arrowToScreenPos.get(index).apply(new Point2D(xSrc, ySrc));
+                arrowTo = grid.getNode().screenToLocal(arrowTo);
+                
                 if (path != null)
                 {
                     double headX = arrowTo.getX() - xSrc - 5;

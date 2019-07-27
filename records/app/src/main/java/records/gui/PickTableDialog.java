@@ -36,7 +36,7 @@ public class PickTableDialog extends LightDialog<Table>
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         
         setOnShowing(e -> {
-            view.enableTablePickingMode(lastScreenPos, excludeTables, t -> {
+            view.enableTablePickingMode(lastScreenPos, getDialogPane().sceneProperty(), excludeTables, t -> {
                 // We shouldn't need the mouse call here, I think this is a checker framework bug:
                 FXUtility.mouse(this).setResult(t);
                 close();

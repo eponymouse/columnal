@@ -35,6 +35,7 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
@@ -57,6 +58,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.highlights.TableHighlights;
+import records.gui.highlights.TableHighlights.HighlightType;
 import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.highlights.TableHighlights.Picker;
 import records.gui.lexeditor.ExpressionEditor;
@@ -262,7 +264,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
     
     @OnThread(Tag.FXPlatform)
-    public void enableTablePickingMode(Point2D screenPos, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
+    public void enableTablePickingMode(Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)
             disablePickingMode();
@@ -276,7 +278,20 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 return null;
             GridArea g = p.getFirst();
             if (g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable()))
-                return new PickResult<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), ((TableDisplay) g).getTable());
+            {
+                FXPlatformFunction<Point2D, Point2D> screenWindowPoint = null;
+                Scene scene = sceneProperty.get();
+                if (scene != null)
+                {
+                    Window window = scene.getWindow();
+                    if (window != null)
+                    {
+                        BoundingBox bounds = FXUtility.getWindowBounds(window);
+                        screenWindowPoint = from -> new Point2D(Utility.clampIncl(bounds.getMinX(), from.getX(), bounds.getMaxX()), Utility.clampIncl(bounds.getMinY(), from.getY(), bounds.getMaxY()));
+                    }
+                }
+                return new PickResult<>(ImmutableList.of(new RectangleBounds(g.getPosition(), g.getBottomRightIncl())), HighlightType.SELECT, ((TableDisplay) g).getTable(), screenWindowPoint == null ? ImmutableList.of() : ImmutableList.of(screenWindowPoint));
+            }
             else
                 return null;
         };
