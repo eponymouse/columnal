@@ -83,7 +83,7 @@ $string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
 }
 
 .expression-editor {
-    .expression-if, .expression-then, .expression-else, .expression-endif {
+    .expression-if, .expression-then, .expression-else, .expression-endif, .expression-define, .expression-enddefine, .expression-match, .expression-case, .expression-orcase, .expression-given, .expression-endmatch, .expression-function, .expression-endfunction {
         -fx-fill: hsb(120, 44%, 40%);
     }
     .expression-string-literal {
