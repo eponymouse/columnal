@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import log.Log;
 import org.assertj.core.util.Arrays;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -178,7 +179,8 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         {
             assertTrue(getFocusOwner() instanceof TextField);
             // Click on existing column name to use it
-            clickOnItemInBounds(findColumnTitle(columnNameToReplace), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(CellPosition.ORIGIN, CellPosition.ORIGIN.offsetByRowCols(2, 3)));            moveAndDismissPopupsAtPos(point(".expression-editor .editor-display"));
+            clickOnItemInBounds(findColumnTitle(columnNameToReplace), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(CellPosition.ORIGIN.offsetByRowCols(1, 1), CellPosition.ORIGIN.offsetByRowCols(1+2, 1+3)));
+            moveAndDismissPopupsAtPos(point(".expression-editor .editor-display"));
             clickOn(".expression-editor .editor-display");
             Node focusOwner = getFocusOwner();
             assertTrue("Focus owner: " + (focusOwner == null ? "null" : focusOwner.getClass().toString()), focusOwner instanceof EditorDisplay);
