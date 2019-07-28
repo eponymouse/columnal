@@ -742,6 +742,16 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         {
             completions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, stem.length(), "@if@then@else@endif").withDisplay(StyledString.s("@if \u2026 @then \u2026 @else \u2026 @endif")).withFurtherDetailsURL("syntax-if.html").withCaretPosAfterCompletion(3).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP), CompletionType.KEYWORD_CHAIN)));
         }
+
+        if (Utility.startsWithIgnoreCase("@matc", stem))
+        {
+            completions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, stem.length(), "@match@case@then@case@then@endmatch").withDisplay(StyledString.s("@match \u2026 @case \u2026 @then \u2026 @case \u2026 @then \u2026 @endmatch")).withFurtherDetailsURL("syntax-match.html").withCaretPosAfterCompletion(6).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP), CompletionType.KEYWORD_CHAIN)));
+        }
+
+        if (Utility.startsWithIgnoreCase("@defin", stem))
+        {
+            completions.add(new Pair<>(CompletionStatus.DIRECT, new ExpressionCompletion(new LexCompletion(canonIndex, stem.length(), "@define@then@enddefine").withDisplay(StyledString.s("@define \u2026 @then \u2026 @enddefine")).withFurtherDetailsURL("syntax-define.html").withCaretPosAfterCompletion(7).withSelectionBehaviour(LexSelectionBehaviour.SELECT_IF_TOP), CompletionType.KEYWORD_CHAIN)));
+        }
         
         for (Keyword keyword : Keyword.values())
         {
