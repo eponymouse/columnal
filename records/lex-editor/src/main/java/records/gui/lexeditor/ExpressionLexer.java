@@ -37,6 +37,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
@@ -1345,6 +1346,21 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
                 new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
             ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
+        }
+
+        @Override
+        public Stream<AddedSpace> match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
+        {
+            Stream.Builder<AddedSpace> r = Stream.builder();
+
+            r.add(new AddedSpace(locations.recorderFor(expression).end, "\n    "));
+            for (int i = 0; i < clauses.size(); i++)
+            {
+                @Recorded Expression e = clauses.get(i).getOutcome();
+                r.add(new AddedSpace(locations.recorderFor(e).end, i < clauses.size() - 1 ? "\n    " : "\n"));
+            }
+            
+            return Stream.<AddedSpace>concat(r.build(), increaseIndent(super.match(self, expression, clauses)));
         }
 
         @Override

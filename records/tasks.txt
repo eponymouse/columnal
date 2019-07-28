@@ -9,12 +9,12 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Server internal exception logging (and stats logging?)
 
 - Lots of confusion between date literals and date functions.
-- Investigate improving layout for long expressions: done if, still need to do define, match
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
 - Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
 - @define/@enddefine are not right colour
+- Add autocompletes for full define, match (like we have for if)
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
@@ -312,3 +312,4 @@ Done after Phil B & Jon A:
 - Add multiple export formats; XLSX and HTML alongside CSV
 - Make the source table highlight (and show an arrow?) when you hover over an editable source table link
 - Undo area in import dialog does not redisplay RHS
+- Investigate improving layout for long expressions: done if, define, match

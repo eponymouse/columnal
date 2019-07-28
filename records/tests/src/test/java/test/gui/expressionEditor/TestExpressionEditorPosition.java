@@ -166,6 +166,20 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Property(trials=1)
+    public void testPos12(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "@match3@case5@then7@endmatch", "@match 3\n    @case 5 @then 7\n@endmatch ", p(0, 6,7, 12,13, 18,19, 28)
+        );
+    }
+
+    @Property(trials=1)
+    public void testPos13(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "@match3@case5@then7@casexyz@thenxyz@endmatch", "@match 3\n    @case 5 @then 7\n    @case xyz @then xyz\n@endmatch ", p(0, 6,7, 12,13, 18,19, 24,25,26,27, 32,33,34,35, 44), p(0, 6,7, 12,13, 18,19, 24,27, 32,35, 44)
+        );
+    }
+
+    @Property(trials=1)
     public void testPosDoubleSpace(@From(GenRandom.class) Random r)
     {
         testCaretPositionsAndDisplay(r, "The quick  brown fox>Str", "The quick brown fox > Str", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23), p(0,19, 20,23));
