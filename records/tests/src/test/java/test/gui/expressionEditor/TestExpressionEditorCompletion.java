@@ -264,8 +264,8 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         // Click first cell:
         Node cell = TestUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TestUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
         // Doesn't matter if registered as double click or two single:
-        clickOn(point(cell));
-        clickOn(point(cell));
+        clickOn(point(cell).atOffset(5, 0));
+        clickOn(point(cell).atOffset(5, 0));
         assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
     }
 
