@@ -35,6 +35,7 @@ import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
@@ -45,6 +46,7 @@ import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformSupplierInt;
 import utility.IdentifierUtility;
 import utility.IdentifierUtility.Consumed;
@@ -1343,6 +1345,23 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
                 new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
             ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
+        }
+
+        @Override
+        public Stream<AddedSpace> define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+        {
+            Stream.Builder<AddedSpace> r = Stream.builder();
+
+            for (int i = 0; i < defines.size(); i++)
+            {
+                Either<@Recorded HasTypeExpression, Definition> item = defines.get(i);
+                @Recorded Expression expression = item.either(t -> t, d -> d.rhsValue);
+                boolean followedByComma = defines.size() > 1 && i < defines.size() - 1;
+                r.add(new AddedSpace(locations.recorderFor(expression).end + (followedByComma ? CanonicalLocation.ONE : CanonicalLocation.ZERO), "\n"));
+            }
+            r.add(new AddedSpace(locations.recorderFor(body).end, "\n"));
+            
+            return Stream.<AddedSpace>concat(r.build(), increaseIndent(super.define(self, defines, body)));
         }
 
         private Stream<AddedSpace> increaseIndent(Stream<AddedSpace> indents)
