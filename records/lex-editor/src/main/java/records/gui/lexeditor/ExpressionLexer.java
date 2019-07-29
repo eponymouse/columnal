@@ -1381,7 +1381,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             for (int i = 0; i < defines.size(); i++)
             {
                 Either<@Recorded HasTypeExpression, Definition> item = defines.get(i);
-                @Recorded Expression expression = item.either(t -> t, d -> d.rhsValue);
+                @Recorded Expression expression = item.<@Recorded Expression>either(t -> t, d -> d.rhsValue);
                 boolean followedByComma = defines.size() > 1 && i < defines.size() - 1;
                 r.add(new AddedSpace(locations.recorderFor(expression).end + (followedByComma ? CanonicalLocation.ONE : CanonicalLocation.ZERO), "\n"));
             }
