@@ -78,7 +78,7 @@ public class TransformationManager implements TransformationLoader
             TransformationNameContext transformationName = transformationContext.transformationName();
             TransformationInfo t = getTransformation(transformationName.getText());
             DetailContext detailContext = transformationContext.detail();
-            String detail = detailContext.DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
+            String detail = Utility.getDetail(detailContext);
             @SuppressWarnings("identifier")
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
             TableIdContext tableIdContext = transformationContext.tableId();

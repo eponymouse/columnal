@@ -225,7 +225,7 @@ public abstract class Table
     {
         if (detailContext == null)
             return new InitialLoadDetails(tableId, null, null);
-        return Utility.parseAsOne(detailContext.detail().DETAIL_LINE().stream().map(d -> d.getText()).collect(Collectors.joining()), DisplayLexer::new, DisplayParser::new, p -> {
+        return Utility.parseAsOne(Utility.getDetail(detailContext.detail()), DisplayLexer::new, DisplayParser::new, p -> {
             return loadDetails(tableId, p.tableDisplayDetails());
         });
     }

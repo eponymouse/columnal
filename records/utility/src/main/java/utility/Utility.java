@@ -1379,6 +1379,11 @@ public class Utility
         return i;
     }
 
+    public static String getDetail(DetailContext detail)
+    {
+        return detail.DETAIL_LINE().stream().map(l -> l.getText().trim() + "\n").collect(Collectors.joining());
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);
