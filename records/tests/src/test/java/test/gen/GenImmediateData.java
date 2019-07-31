@@ -1,5 +1,6 @@
 package test.gen;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.GeneratorConfiguration;
@@ -117,12 +118,12 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     {
         public final TableManager mgr;
         // Amount is set by Precision annotation (for laziness), default is 1
-        public final List<ImmediateDataSource> data;
+        public final ImmutableList<ImmediateDataSource> data;
 
         public ImmediateData_Mgr(TableManager mgr, List<ImmediateDataSource> data)
         {
             this.mgr = mgr;
-            this.data = new ArrayList<>(data);
+            this.data = ImmutableList.copyOf(data);
         }
 
         // Shortcut for first item:

@@ -1,5 +1,7 @@
 package records.data;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -17,24 +19,26 @@ import records.data.TableOperations.RenameTable;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.DisplayLexer;
 import records.grammar.DisplayParser;
 import records.grammar.DisplayParser.ColumnWidthContext;
 import records.grammar.DisplayParser.GlobalDisplayDetailsContext;
+import records.grammar.GrammarUtility;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
+import records.grammar.MainParser.CommentContext;
 import records.grammar.MainParser.FileContext;
 import records.grammar.MainParser.TableContext;
+import records.grammar.MainParser.TopLevelItemContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformConsumer;
 import utility.GraphUtility;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
-import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
@@ -42,7 +46,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -60,6 +63,7 @@ public class TableManager
     private final Set<DataSource> sources = Sets.newIdentityHashSet();
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Set<Transformation> transformations = Sets.newIdentityHashSet();
+    private final List<GridComment> comments = new ArrayList<>();
     private final UnitManager unitManager;
     private final TypeManager typeManager;
     private final TableManagerListener listener;
@@ -143,7 +147,7 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public synchronized List<Table> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
+    public synchronized Pair<ImmutableList<Table>, ImmutableList<GridComment>> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
         unitManager.clearAllUser();
@@ -155,12 +159,18 @@ public class TableManager
         {
             remove(id);
         }
-        List<Table> loaded = new ArrayList<>();
+        ImmutableList.Builder<Table> loaded = ImmutableList.builder();
         List<Exception> exceptions = new ArrayList<>();
-        int total = file.table().size();
-        for (TableContext tableContext : file.table())
+        
+        for (TopLevelItemContext topLevelItemContext : file.topLevelItem())
         {
-            loadOneTable(tableContext).either_(exceptions::add, loaded::add);
+            if (topLevelItemContext.table() != null)
+                loadOneTable(topLevelItemContext.table()).either_(exceptions::add, loaded::add);
+            if (topLevelItemContext.comment() != null)
+                loadComment(topLevelItemContext.comment()).either_(exceptions::add, c -> {
+                    comments.add(c);
+                    listener.addComment(c);
+            });
         }
         
         if (file.display() != null)
@@ -185,13 +195,32 @@ public class TableManager
         }
 
         if (exceptions.isEmpty())
-            return loaded;
+            return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
         else if (exceptions.get(0) instanceof UserException)
             throw new UserException("Loading problem", exceptions.get(0));
         else if (exceptions.get(0) instanceof InternalException)
             throw new InternalException("Loading problem", exceptions.get(0));
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
+    }
+
+    @OnThread(Tag.Simulation)
+    public Either<Exception, GridComment> loadComment(CommentContext commentContext) throws UserException, InternalException
+    {
+        String comment = GrammarUtility.processEscapes(Utility.getDetail(commentContext.detail()).trim(), false);
+        
+        int[] items = Utility.parseAsOne(Utility.getDetail(commentContext.display().detail()), DisplayLexer::new, DisplayParser::new, p -> {
+            try
+            {
+                return p.commentDisplayDetails().item().stream().mapToInt(i -> Integer.parseInt(i.getText())).toArray();
+            }
+            catch (NumberFormatException e)
+            {
+                throw new UserException("Problem parsing comment position", e);
+            }
+        });
+        
+        return Either.right(new GridComment(comment, new CellPosition(items[1] * AbsRowIndex.ONE, items[0] * AbsColIndex.ONE), items[2], items[3]));
     }
 
     @OnThread(Tag.Simulation)
@@ -277,6 +306,11 @@ public class TableManager
                 table.save(destination, saver, TableAndColumnRenames.EMPTY);
             }
         }
+
+        for (GridComment comment : comments)
+        {
+            comment.save(saver);
+        }
     }
     
     public synchronized ImmutableList<Table> getAllTablesAvailableTo(@Nullable TableId tableId)
@@ -325,6 +359,11 @@ public class TableManager
     private CellPosition getTopRight(TableDisplayBase display)
     {
         return new CellPosition(display.getMostRecentPosition().rowIndex, display.getBottomRightIncl().columnIndex);
+    }
+
+    public void addComment(GridComment comment)
+    {
+        comments.add(comment);
     }
 
     public static interface TableMaker<T extends Table>
@@ -571,6 +610,8 @@ public class TableManager
         public void addSource(DataSource dataSource);
 
         public void addTransformation(Transformation transformation);
+        
+        public void addComment(GridComment gridComment);
     }
 
     public static interface TransformationLoader

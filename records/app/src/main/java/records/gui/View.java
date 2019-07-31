@@ -756,6 +756,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     thisView.save(true);
                 });
             }
+
+            @Override
+            public void addComment(GridComment gridComment)
+            {
+                FXUtility.runFX(() -> {
+                    // TODO
+                    thisView.save(true);
+                });
+            }
         });
         
         VirtualGridManager vgManager = new VirtualGridManager()

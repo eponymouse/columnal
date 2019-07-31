@@ -130,6 +130,9 @@ public abstract class Table
 
         @OnThread(Tag.Simulation)
         public void saveType(String typeSrc);
+
+        @OnThread(Tag.Simulation)
+        public void saveComment(String commentSrc);
     }
 
     @OnThread(Tag.Simulation)
@@ -151,6 +154,12 @@ public abstract class Table
         public void saveType(String typeSrc)
         {
         }
+
+        @Override
+        @OnThread(Tag.Simulation)
+        public void saveComment(String commentSrc)
+        {
+        }
     }
 
     @OnThread(Tag.Simulation)
@@ -159,6 +168,7 @@ public abstract class Table
         private final List<String> units = new ArrayList<>();
         private final List<String> types = new ArrayList<>();
         private final List<String> tables = new ArrayList<>();
+        private final List<String> comments = new ArrayList<>();
         private final @Nullable ImmutableList<String> displayDetailLines;
 
         public FullSaver(@Nullable ImmutableList<String> displayDetailLines)
@@ -186,6 +196,12 @@ public abstract class Table
             types.add(typeSrc.endsWith("\n") ? typeSrc : typeSrc + "\n");
         }
 
+        @Override
+        public @OnThread(Tag.Simulation) void saveComment(String commentSrc)
+        {
+            comments.add(commentSrc);
+        }
+
         @OnThread(Tag.Simulation)
         public String getCompleteFile()
         {
@@ -195,6 +211,7 @@ public abstract class Table
                 + types.stream().collect(Collectors.joining())
                 + "@END TYPES\n"
                 + tables.stream().collect(Collectors.joining("\n"))
+                + comments.stream().collect(Collectors.joining("\n"))
                 + (displayDetailLines == null ? "" : ("DISPLAY @BEGIN\n" + displayDetailLines.stream().collect(Collectors.joining("\n")) + "\n@END DISPLAY"))
                 + "\n";
         }

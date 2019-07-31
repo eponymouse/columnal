@@ -18,4 +18,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface AbsColIndex
 {
+    public static final @AbsColIndex int ONE = 1;
 }

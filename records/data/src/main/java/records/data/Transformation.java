@@ -119,6 +119,12 @@ public abstract class Transformation extends Table
             {
                 b.append(typeSrc);
             }
+
+            @Override
+            public @OnThread(Tag.Simulation) void saveComment(String commentSrc)
+            {
+                b.append(commentSrc);
+            }
         }, TableAndColumnRenames.EMPTY);
         return b.toString();
     }

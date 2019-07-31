@@ -38,4 +38,8 @@ table : (dataSource | transformation) display? END tableId NEWLINE;
 units : UNITS detail UNITS NEWLINE;
 types : TYPES detail TYPES NEWLINE;
 
-file : SOFTWARE NEWLINE VERSION item NEWLINE blank* units blank* types blank* (table blank*)* (display blank*)?;
+comment : COMMENT CONTENT detail CONTENT NEWLINE display END COMMENT NEWLINE;
+
+topLevelItem : table | comment;
+
+file : SOFTWARE NEWLINE VERSION item NEWLINE blank* units blank* types blank* (topLevelItem blank*)* (display blank*)?;
