@@ -258,7 +258,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
                     }
                 }
             }
-            else
+            else if (!shownGuidanceFor.isEmpty()) // Optimisation; remove strangely expensive on empty collection
             {
                 shownGuidanceFor.remove(document);
             }
