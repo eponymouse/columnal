@@ -1,7 +1,9 @@
 package records.gui.grid;
 
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.error.InternalException;
 import utility.Utility;
 
 import java.util.Objects;
@@ -14,8 +16,25 @@ public class RectangleBounds
     
     public RectangleBounds(CellPosition topLeftIncl, CellPosition bottomRightIncl)
     {
-        this.topLeftIncl = topLeftIncl;
-        this.bottomRightIncl = bottomRightIncl;
+        if (bottomRightIncl.rowIndex < topLeftIncl.rowIndex || bottomRightIncl.columnIndex < topLeftIncl.columnIndex)
+        {
+            try
+            {
+                throw new InternalException("Bottom right " + bottomRightIncl + " is left/above the top left: " + topLeftIncl);
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+            // For safety:
+            this.bottomRightIncl = new CellPosition(Utility.maxRow(topLeftIncl.rowIndex, bottomRightIncl.rowIndex), Utility.maxCol(topLeftIncl.columnIndex, bottomRightIncl.columnIndex));
+            this.topLeftIncl = topLeftIncl;
+        }
+        else
+        {
+            this.topLeftIncl = topLeftIncl;
+            this.bottomRightIncl = bottomRightIncl;
+        }
     }
 
     public boolean contains(CellPosition cellPosition)

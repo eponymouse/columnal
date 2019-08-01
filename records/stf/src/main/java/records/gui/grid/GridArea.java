@@ -4,16 +4,19 @@ import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataRowIndex;
 import javafx.geometry.Point2D;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.Utility;
 
 import java.util.Optional;
 
@@ -107,6 +110,19 @@ public abstract class GridArea
         @GridAreaRowIndex int gridAreaRow = checkUpToRowIncl - getPosition().rowIndex;
         updateKnownRows(gridAreaRow, updateSizeAndPositions);
         bottomRight = recalculateBottomRightIncl();
+        if (bottomRight.rowIndex < topLeft.rowIndex || bottomRight.columnIndex < topLeft.columnIndex)
+        {
+            try
+            {
+                throw new InternalException("Bottom right " + bottomRight + " is left/above the top left: " + topLeft);
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+            // For safety:
+            bottomRight = new CellPosition(Utility.maxRow(topLeft.rowIndex, bottomRight.rowIndex), Utility.maxCol(topLeft.columnIndex, bottomRight.columnIndex));
+        }
         return bottomRight.rowIndex;
     }
 
