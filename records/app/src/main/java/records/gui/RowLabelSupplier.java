@@ -4,6 +4,8 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -41,9 +43,11 @@ import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Row label supplier for all tables for a given grid.
@@ -75,7 +79,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     @OnThread(Tag.FXPlatform)
     private class RowLabels
     {
-        private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
+        private final Cache<@TableDataRowIndex Integer, LabelPane> rowLabelCache;
+        // For ease of use, keep reference to rowLabelCache.asMap():
+        private final ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
         private final RowLabelBorder borderShadowRectangle;
         private final DataDisplay dataDisplay;
         private boolean floating = false;
@@ -84,9 +90,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         private RowLabels(DataDisplay dataDisplay)
         {
             this.dataDisplay = dataDisplay;
-            final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap = new HashMap<>();
-            this.rowLabels = rowLabelMap;
-            borderShadowRectangle = new RowLabelBorder(rowLabelMap, dataDisplay);
+            this.rowLabelCache = CacheBuilder.newBuilder().maximumSize(150).build();
+            this.rowLabels = rowLabelCache.asMap();
+            borderShadowRectangle = new RowLabelBorder(rowLabels, dataDisplay);
             virtualGridSupplierFloating.addItem(borderShadowRectangle);
         }
 
@@ -113,10 +119,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         @OnThread(Tag.FXPlatform)
         private class RowLabelBorder extends RectangleOverlayItem
         {
-            private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap;
+            private final ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap;
             private final DataDisplay dataDisplay;
 
-            public RowLabelBorder(HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap, DataDisplay dataDisplay)
+            public RowLabelBorder(ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap, DataDisplay dataDisplay)
             {
                 super(ViewOrder.TABLE_BORDER);
                 this.rowLabelMap = rowLabelMap;
@@ -398,7 +404,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         // Zero based row
         private @TableDataRowIndex int row;
         private final Label label = new Label();
-        private final Tooltip tooltip;
+        private @MonotonicNonNull Tooltip tooltip;
         private RowLabels rowLabels;
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
@@ -418,8 +424,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 if (contextMenu != null)
                     contextMenu.show(label, e.getScreenX(), e.getScreenY());
             });
-            this.tooltip = new Tooltip();
-            Tooltip.install(this, tooltip);
+            // We only make the tooltip when we need to, to speed up repeated scrolling: 
+            label.setOnMouseEntered(e -> {
+                if (this.tooltip == null)
+                {
+                    this.tooltip = new Tooltip();
+                    Tooltip.install(this, tooltip);
+                    this.tooltip.setText(Integer.toString(row + 1));
+                }
+            });
             FXUtility.onceNotNull(label.skinProperty(), sk -> {
                 Utility.later(this).updateLayout(getLayoutX(), getLayoutY(), prefWidth(-1), getHeight());
                 Utility.later(this).updateClipAndTranslate();
@@ -437,7 +450,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             this.row = row;
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
-            this.tooltip.setText(Integer.toString(row + 1));
+            if (this.tooltip != null)
+            {
+                this.tooltip.setText(Integer.toString(row + 1));
+            }
             label.requestLayout();
             rowLabels.setFloating((int)getTranslateX() != 0);
         }
