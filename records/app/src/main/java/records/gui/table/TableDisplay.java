@@ -387,7 +387,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @OnThread(Tag.FXPlatform)
     public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {
-        return new GridAreaCellPosition(getHeaderRowCount() + (columnDisplay.get().getFirst() == Display.COLLAPSED ? 0 : currentKnownRows - 1), displayColumns == null ? 0 : (displayColumns.size() - 1));
+        return new GridAreaCellPosition(getHeaderRowCount() + Math.max(0, columnDisplay.get().getFirst() == Display.COLLAPSED ? 0 : currentKnownRows - 1), Math.max(0, displayColumns == null ? 0 : (displayColumns.size() - 1)));
     }
 
     @Override

@@ -467,7 +467,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             this.destData = destData;
             setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 1));
             this.mousePane = new Pane();
-            this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
+            CellPosition bottomRight = getBottomRightIncl();
+            this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(Math.min(1, bottomRight.rowIndex - getPosition().rowIndex), 0), bottomRight);
             // Will be set right at first layout:
             this.curBoundingBox = new BoundingBox(0, 0, 0, 0);
             this.selectionRectangle = new RectangleOverlayItem(ViewOrder.CELL_SELECTION) {
@@ -672,7 +673,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 mostRecentTrimSelections.addLast(this.trim);
             }
             this.trim = trim;            
-            curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1 + trim.trimFromTop, trim.trimFromLeft),
+            curSelectionBounds = RectangleBounds.fixBottomRight(getPosition().offsetByRowCols(1 + trim.trimFromTop, trim.trimFromLeft),
                 getBottomRightIncl().offsetByRowCols(-trim.trimFromBottom, -trim.trimFromRight));
             destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
             withParent_(p -> p.positionOrAreaChanged());

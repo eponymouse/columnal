@@ -264,7 +264,7 @@ public abstract class DataDisplay extends HeadedDisplay
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
-        return getPosition().offsetByRowCols(currentKnownRows + (displayColumns.isEmpty() ? 0 : getHeaderRowCount()) - 1, Math.max(0, displayColumns.size() - 1));
+        return getPosition().offsetByRowCols(Math.max(0, currentKnownRows + (displayColumns.isEmpty() ? 0 : getHeaderRowCount()) - 1), Math.max(0, displayColumns.size() - 1));
     }
 
     // The top left data item in grid area terms, not including any headers
@@ -280,7 +280,7 @@ public abstract class DataDisplay extends HeadedDisplay
     @OnThread(Tag.FXPlatform)
     public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
     {
-        return new GridAreaCellPosition(getHeaderRowCount() + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
+        return new GridAreaCellPosition(getHeaderRowCount() + Math.max(0, currentKnownRows - 1), Math.max(0, displayColumns == null ? 0 : (displayColumns.size() - 1)));
     }
 
     public GridCellInfo<VersionedSTF, CellStyle> getDataGridCellInfo()

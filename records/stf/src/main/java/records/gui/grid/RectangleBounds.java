@@ -43,6 +43,13 @@ public class RectangleBounds
             && topLeftIncl.rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRightIncl.rowIndex;
     }
 
+    // Makes sure bottom right isn't left/above the top left
+    public static RectangleBounds fixBottomRight(CellPosition topLeft, CellPosition bottomRight)
+    {
+        return new RectangleBounds(topLeft, new CellPosition(Utility.maxRow(topLeft.rowIndex, bottomRight.rowIndex), Utility.maxCol(topLeft.columnIndex, bottomRight.columnIndex)));
+    }
+
+
     @Override
     public boolean equals(@Nullable Object o)
     {
