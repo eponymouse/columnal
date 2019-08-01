@@ -380,7 +380,7 @@ public class FXUtility
     @OnThread(Tag.Simulation)
     public static void runFX(FXPlatformRunnable runnable)
     {
-        ImmutableList<StackTraceElement[]> callerStack = Log.getTotalStack();
+        ImmutableList<Throwable> callerStack = Log.getTotalStack();
         Platform.runLater(() -> {
             Log.storeThreadedCaller(callerStack);
             runnable.run();

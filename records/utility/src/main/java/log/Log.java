@@ -26,7 +26,7 @@ public class Log
     // Used to remember which thread set off which runnable.  Each thread can only manipulate
     // its own caller state.
     @OnThread(Tag.Any)
-    private static final ThreadLocal<@Nullable ImmutableList<StackTraceElement[]>> threadCaller = new ThreadLocal<>();
+    private static final ThreadLocal<@Nullable ImmutableList<Throwable>> threadCaller = new ThreadLocal<>();
 
     public static void normal(String message)
     {
@@ -68,8 +68,12 @@ public class Log
      * For the current thread, store the stack (which comes from another thread that
      * spawned us) as extra info that will be printed if an exception is logged in this thread.
      * Will be overwritten by another call to this same method on the same thread.
+     * 
+     * Stack is passed as a Throwable as this saves time if the full stack trace is never needed, see
+     * https://ionutbalosin.com/2018/06/an-even-faster-way-than-stackwalker-api-for-asynchronously-processing-the-stack-frames/
+     * https://ionutbalosin.com/2018/06/getting-the-stack-trace-versus-throwing-an-exception-what-is-common-and-what-is-different/
      */
-    public static void storeThreadedCaller(@Nullable ImmutableList<StackTraceElement[]> stack)
+    public static void storeThreadedCaller(@Nullable ImmutableList<Throwable> stack)
     {
         if (stack != null)
             threadCaller.set(stack);
@@ -79,10 +83,10 @@ public class Log
     
     // Gets the current stack trace, plus any stack trace of our caller, as recorded in storeThreadedCaller
     // for the current thread.
-    public static ImmutableList<StackTraceElement[]> getTotalStack()
+    public static ImmutableList<Throwable> getTotalStack()
     {
-        StackTraceElement[] ourStack = Thread.currentThread().getStackTrace();
-        @Nullable ImmutableList<StackTraceElement[]> prev = threadCaller.get();
+        Throwable ourStack = new Throwable();
+        @Nullable ImmutableList<Throwable> prev = threadCaller.get();
         return prev == null ? ImmutableList.of(ourStack) : Utility.prependToList(ourStack, prev);
     }
 
@@ -122,13 +126,13 @@ public class Log
 
     private static void logCallers(StringBuilder sb)
     {
-        @Nullable ImmutableList<StackTraceElement[]> traces = threadCaller.get();
-        if (traces != null)
+        @Nullable ImmutableList<Throwable> throwables = threadCaller.get();
+        if (throwables != null)
         {
-            for (StackTraceElement[] el : traces)
+            for (Throwable throwable : throwables)
             {
                 sb.append("Called from another thread by:\n");
-                for (StackTraceElement traceElement : el)
+                for (StackTraceElement traceElement : throwable.getStackTrace())
                     sb.append("\tat " + traceElement + "\n");
             }
         }

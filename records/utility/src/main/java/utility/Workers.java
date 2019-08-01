@@ -66,9 +66,9 @@ public class Workers
         private final String title;
         private final long timeReady;
         private final Priority priority;
-        private final ImmutableList<StackTraceElement[]> caller;
+        private final ImmutableList<Throwable> caller;
 
-        public WorkChunk(String title, Priority priority, Worker work, long timeReady, ImmutableList<StackTraceElement[]> caller)
+        public WorkChunk(String title, Priority priority, Worker work, long timeReady, ImmutableList<Throwable> caller)
         {
             this.title = title;
             this.priority = priority;
