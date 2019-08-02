@@ -379,7 +379,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         if (columnDisplay.get().getFirst() == Display.COLLAPSED)
             return getPosition();
         else
-            return getPosition().offsetByRowCols(getCurrentKnownRows() - 1, Math.max(0, internal_getColumnCount(table) - 1));
+            return getPosition().offsetByRowCols(Math.max(0, getCurrentKnownRows() - 1), Math.max(0, internal_getColumnCount(table) - 1));
     }
 
     // The last data row in grid area terms, not including any append buttons
