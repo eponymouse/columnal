@@ -56,6 +56,7 @@ public abstract class GridArea
     
     public void setPosition(@UnknownInitialization(GridArea.class) GridArea this, CellPosition cellPosition)
     {
+        bottomRight = bottomRight.offsetByRowCols(cellPosition.rowIndex - topLeft.rowIndex, cellPosition.columnIndex - topLeft.columnIndex);
         topLeft = cellPosition;
         updateParent();
     }
