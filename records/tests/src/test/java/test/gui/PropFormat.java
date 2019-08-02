@@ -122,7 +122,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         
         checkTrim(maybeICD);
         
-        setTrim(formatAndData.format.trimChoice, maybeICD);
+        setTrim(new TrimChoice(formatAndData.format.trimChoice.trimFromTop - 1, formatAndData.format.trimChoice.trimFromBottom, formatAndData.format.trimChoice.trimFromLeft, formatAndData.format.trimChoice.trimFromRight), maybeICD);
         
         clickOn(".ok-button");
         f.get();
