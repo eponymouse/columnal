@@ -70,6 +70,7 @@ import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -1022,14 +1023,43 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         {
             if (editing == null)
                 return null;
-            return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
+            
+            final ImmutableList<ColumnId> columnsFromSrc;
+            final ImmutableList<ColumnId> columnsInUs;
+            
+            try
             {
-                @Override
-                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
+                if (us != null)
                 {
-                    return editing.moveExpressionToNewCalculation();
+                    Table ourTable = tableManager.getSingleTableOrNull(us);
+                    if (ourTable != null)
+                        columnsInUs = ourTable.getData().getColumnIds();
+                    else
+                        columnsInUs = ImmutableList.of();
                 }
-            });
+                else
+                    columnsInUs = ImmutableList.of();
+
+                columnsFromSrc = srcTable == null ? ImmutableList.of() : srcTable.getData().getColumnIds();
+
+                if (columnsInUs.contains(new ColumnId(ident)) && !columnsFromSrc.contains(new ColumnId(ident)))
+                {
+                    return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
+                    {
+                        @Override
+                        public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
+                        {
+                            return editing.moveExpressionToNewCalculation();
+                        }
+                    });
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                if (e instanceof InternalException)
+                    Log.log(e);
+            }
+            return null;
         }
 
         @Override

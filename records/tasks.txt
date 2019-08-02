@@ -17,7 +17,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Documentation for @define and @function is missing.
 - If you import text file where one column has all same values, but no numbers, it gets treated as Optional(Number)!
 - Can't make a new table by pasting from clipboard (from HTML page)
-- If you have an invalid column name XX, you get a quick fix offered to "Make a new calculation that can use this table's XX" -- but XX doesn't exist. 
 - Add graphical element to display and edit comments
 - Quick fix not offered when literal lacked units, in expression: @ifN100m Time=~Is(x)@then100{m}/x@else0@endif
 
@@ -321,3 +320,4 @@ Done after Phil B & Jon A:
 - Add autocompletes for full define, match (like we have for if)
 - Click to insert doesn't work on the @match examples, @if examples, operators, type/unit literals.
 - @define, @enddefine and more are not right colour
+- If you have an invalid column name XX, you get a quick fix offered to "Make a new calculation that can use this table's XX" -- but XX doesn't exist. 
