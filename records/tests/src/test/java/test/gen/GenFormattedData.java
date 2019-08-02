@@ -75,6 +75,7 @@ public class GenFormattedData extends Generator<FormatAndData>
         fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.initialTextFormat.separator)));
         htmlContent.append("<tr><th>").append(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("</th><th>"))).append("</th></tr>");
         int rowCount = r.nextInt(50, 200);
+        ArrayList<Integer> columnsWithSingleValue = new ArrayList<>();
         for (int row = 0; row < rowCount; row++)
         {
             List<@Value Object> data = new ArrayList<>();
@@ -110,14 +111,25 @@ public class GenFormattedData extends Generator<FormatAndData>
                 }
                 else if (c.type instanceof TextColumnType)
                 {
-                    String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
-                    // Get rid of any characters which can't be saved in that encoding:
-                    str = str.chars().filter(ch -> format.initialTextFormat.charset.newEncoder().canEncode((char)ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
-                    // TODO quote separators instead of removing them:
-                    if (format.initialTextFormat.quote != null)
-                        str = str.replace(format.initialTextFormat.quote, format.initialTextFormat.quote + format.initialTextFormat.quote);
-                    if (format.initialTextFormat.separator != null)
-                        str = str.replace(format.initialTextFormat.separator, "");
+                    if (row == 0 && r.nextInt(8) == 1)
+                        columnsWithSingleValue.add(i);
+                    
+                    String str;
+                    if (columnsWithSingleValue.contains(i) && row > 0)
+                    {
+                        str = intendedContent.get(0).get(i).toString();
+                    }
+                    else
+                    {
+                        str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
+                        // Get rid of any characters which can't be saved in that encoding:
+                        str = str.chars().filter(ch -> format.initialTextFormat.charset.newEncoder().canEncode((char) ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+                        // TODO quote separators instead of removing them:
+                        if (format.initialTextFormat.quote != null)
+                            str = str.replace(format.initialTextFormat.quote, format.initialTextFormat.quote + format.initialTextFormat.quote);
+                        if (format.initialTextFormat.separator != null)
+                            str = str.replace(format.initialTextFormat.separator, "");
+                    }
                     data.add(DataTypeUtility.value(str));
                     entry.append(str);
                 }
