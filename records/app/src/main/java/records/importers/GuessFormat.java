@@ -761,6 +761,7 @@ public class GuessFormat
         {
             // Have a guess at column columntype:
             boolean allNumeric = true;
+            boolean anyNumeric = false;
             // The "blank", which may be empty string, or might be another value (e.g. "NA")
             String numericBlank = null;
             // Only false if we find content which is not parseable as a number:
@@ -869,7 +870,7 @@ public class GuessFormat
                                 decimalPlaces.add(0);
                             else
                                 decimalPlaces.add(val.length() - (dot + 1));
-
+                            anyNumeric = true;
                         }
                         catch (NumberFormatException e)
                         {
@@ -939,7 +940,7 @@ public class GuessFormat
             {
                 columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix, commonSuffix));
             }
-            else if (allNumericOrBlank && numericBlank != null)
+            else if (allNumericOrBlank && anyNumeric && numericBlank != null)
             {
                 columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix, commonSuffix), numericBlank));
             }
