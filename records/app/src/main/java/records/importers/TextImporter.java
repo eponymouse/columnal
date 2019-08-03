@@ -31,6 +31,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationConsumerNoError;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
@@ -72,7 +73,7 @@ public class TextImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
     {
         Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
         {
@@ -80,7 +81,7 @@ public class TextImporter implements Importer
             {
                 importTextFile(parent, tableManager, src, destination, rs -> onLoad.consume(rs));
             }
-            catch (InternalException | UserException | IOException ex)
+            catch (IOException ex)
             {
                 FXUtility.logAndShowError("import.text.error", ex);
             }
@@ -94,7 +95,7 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static void importTextFile(@Nullable Window parentWindow, TableManager mgr, File textFile, CellPosition destination, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
+    public static void importTextFile(@Nullable Window parentWindow, TableManager mgr, File textFile, CellPosition destination, SimulationConsumerNoError<DataSource> then) throws IOException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         GuessFormat.guessTextFormatGUI_Then(parentWindow, mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, impInfo ->
@@ -103,7 +104,7 @@ public class TextImporter implements Importer
             {
                 Log.debug("Importing format " + impInfo.getFormat());
                 DataSource ds = makeDataSource(mgr, textFile, impInfo.getInitialLoadDetails(destination), impInfo.getFormat());
-                Platform.runLater(() -> then.consume(ds));
+                then.consume(ds);
             }
             catch (InternalException | UserException | IOException e)
             {

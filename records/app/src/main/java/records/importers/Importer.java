@@ -11,6 +11,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationConsumerNoError;
 
 import java.io.File;
 import java.net.URL;
@@ -36,7 +37,7 @@ public interface Importer
      *               is safe.
      */
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, FXPlatformConsumer<DataSource> onLoad);
+    public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad);
 
     /**
      * The name of the importer to display to the user when picking an importer

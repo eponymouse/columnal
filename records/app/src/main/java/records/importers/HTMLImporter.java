@@ -40,6 +40,7 @@ import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
+import utility.SimulationConsumerNoError;
 import utility.SimulationSupplier;
 import records.error.InternalException;
 import records.error.UserException;
@@ -378,18 +379,16 @@ public class HTMLImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
     {
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error importing HTML", () -> {
             try
             {
                 importHTMLFileThen(parent, tableManager, src, destination, origin, dataSources -> {
-                    Platform.runLater(() -> {
-                        for (DataSource dataSource : dataSources)
-                        {
-                            onLoad.consume(dataSource);
-                        }
-                    });
+                    for (DataSource dataSource : dataSources)
+                    {
+                        onLoad.consume(dataSource);
+                    }
                 });
             }
             catch (IOException e)

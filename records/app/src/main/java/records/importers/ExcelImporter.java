@@ -31,6 +31,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationConsumerNoError;
 import utility.SimulationSupplier;
 import utility.UnitType;
 import utility.Workers;
@@ -63,7 +64,7 @@ public class ExcelImporter implements Importer
 
     @SuppressWarnings("deprecation")
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
     {
         try
         {
@@ -149,7 +150,7 @@ public class ExcelImporter implements Importer
                 SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
                 Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error importing Excel", () -> {
                     DataSource dataSource = makeDataSource.get();
-                    Platform.runLater(() -> onLoad.consume(dataSource));
+                    onLoad.consume(dataSource);
                 }));
             }
         }

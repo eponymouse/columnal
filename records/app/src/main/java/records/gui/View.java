@@ -947,7 +947,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         if (choice.isPresent())
         {
             InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
-            FXPlatformConsumer<DataSource> record = tableManager::record;
+            SimulationConsumerNoError<DataSource> record = tableManager::record;
             switch (choice.get().getSecond())
             {
                 case DATA:

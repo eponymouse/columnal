@@ -29,6 +29,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationConsumerNoError;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -56,7 +57,7 @@ public class ImporterManager
         registeredImporters.add(importer);
     }
 
-    public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
+    public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, SimulationConsumerNoError<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();
         filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap(ImporterManager::streamSecond)).collect(Collectors.<String>toList())));
@@ -87,7 +88,7 @@ public class ImporterManager
     }
 
     @OnThread(Tag.FXPlatform)
-    public void chooseAndImportURL(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
+    public void chooseAndImportURL(Window parent, TableManager tableManager, CellPosition destination, SimulationConsumerNoError<DataSource> onLoad)
     {
         @Nullable URLImportDetails choice = new ImportURLDialog().showAndWait().orElse(null);
         if (choice != null)
@@ -114,7 +115,7 @@ public class ImporterManager
 
 
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, CellPosition destination, File file, URL source, FXPlatformConsumer<DataSource> onLoad)
+    public void importFile(Window parent, TableManager tableManager, CellPosition destination, File file, URL source, SimulationConsumerNoError<DataSource> onLoad)
     {
         // Work out which importer will handle it:
         for (Importer importer : registeredImporters)
