@@ -282,10 +282,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     @OnThread(Tag.FXPlatform)
     private Optional<RectangleBounds> getVisibleDataArea(VisibleBounds visibleBounds, DataDisplay dataDisplay)
     {
+        CellPosition topLeft = dataDisplay.getDataDisplayTopLeftIncl().from(dataDisplay.getPosition());
+        CellPosition bottomRight = dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition());
+        if (topLeft.columnIndex > bottomRight.columnIndex || topLeft.rowIndex > bottomRight.rowIndex)
+            return Optional.empty();
+        
         return visibleBounds.clampVisible(
             new RectangleBounds(
-                dataDisplay.getDataDisplayTopLeftIncl().from(dataDisplay.getPosition()), 
-                dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition())));
+                    topLeft,
+                    bottomRight));
     }
 
     @Override
