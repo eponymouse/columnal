@@ -7,6 +7,7 @@ import records.data.datatype.DataType.TagType;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
+import utility.ParseProgress;
 import utility.TaggedValue;
 import utility.Utility;
 

@@ -6,6 +6,7 @@ import records.grammar.GrammarUtility;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
+import utility.ParseProgress;
 
 public class StringRecogniser extends Recogniser<@Value String>
 {

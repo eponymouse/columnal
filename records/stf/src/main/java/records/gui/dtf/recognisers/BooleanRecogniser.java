@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
 import utility.Either;
+import utility.ParseProgress;
 
 public class BooleanRecogniser extends Recogniser<@Value Boolean>
 {

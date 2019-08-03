@@ -10,6 +10,7 @@ import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.ParseProgress;
 import utility.Utility;
 import utility.Utility.Record;
 import utility.Utility.RecordMap;

@@ -1,7 +1,5 @@
 package records.gui.dtf;
 
-import annotation.qual.UnknownIfValue;
-import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
@@ -12,13 +10,11 @@ import javafx.scene.input.KeyCode;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.gui.dtf.Recogniser.ErrorDetails;
-import records.gui.dtf.Recogniser.ParseProgress;
+import utility.ParseProgress;
 import records.gui.dtf.Recogniser.SuccessDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;

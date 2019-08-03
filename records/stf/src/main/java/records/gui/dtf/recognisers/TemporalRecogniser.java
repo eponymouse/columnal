@@ -9,6 +9,7 @@ import records.error.UserException;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
+import utility.ParseProgress;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;

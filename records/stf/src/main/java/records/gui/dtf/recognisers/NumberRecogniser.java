@@ -5,6 +5,7 @@ import records.error.UserException;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
+import utility.ParseProgress;
 import utility.Utility;
 
 public class NumberRecogniser extends Recogniser<@Value Number>
