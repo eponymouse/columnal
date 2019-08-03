@@ -38,7 +38,7 @@ public class TemporalLiteral extends Literal
         {
             v = Either.right(DataTypeUtility.parseTemporalFlexible(new DateTimeInfo(literalType), stringView));
             stringView.skipSpaces();
-            if (stringView.charStart != content.length())
+            if (stringView.getPosition() != content.length())
                 v = Either.left(StyledString.s("Unrecognised content: " + stringView.snippet()));
         }
         catch (UserException e)

@@ -33,6 +33,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.ParseProgress;
 import utility.TaggedValue;
 import utility.UnitType;
 import utility.Utility;
@@ -588,13 +589,13 @@ public class DataTypeUtility
         ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.<DateTimeFormatter>toImmutableList());
         // Updated char position and return value:
         ArrayList<Pair<Integer, @Value TemporalAccessor>> possibles = new ArrayList<>();
-        WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
+        WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.parseProgress.src, src.parseProgress.curCharIndex);
         ArrayList<DateTimeFormatter> possibleFormatters = new ArrayList<>();
         for (DateTimeFormatter formatter : formatters)
         {
             try
             {
-                ParsePosition position = new ParsePosition(src.charStart);
+                ParsePosition position = new ParsePosition(src.parseProgress.curCharIndex);
                 TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
                 @Value TemporalAccessor value = value(dateTimeInfo, temporalAccessor);
                 if (value != null)
@@ -610,7 +611,7 @@ public class DataTypeUtility
         }
         if (possibles.size() == 1)
         {
-            src.charStart = possibles.get(0).getFirst();
+            src.setPosition(possibles.get(0).getFirst());
             @Nullable @Value TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
             if (value != null)
                 return value;
@@ -624,7 +625,7 @@ public class DataTypeUtility
             if (longest > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
             {
                 Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
-                src.charStart = chosen.getFirst();
+                src.setPosition(chosen.getFirst());
                 @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
@@ -636,7 +637,7 @@ public class DataTypeUtility
             if (distinctValues.size() == 1)
             {
                 Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
-                src.charStart = chosen.getFirst();
+                src.setPosition(chosen.getFirst());
                 @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
@@ -712,7 +713,7 @@ public class DataTypeUtility
     }
 
     // Keeps track of a trailing substring of a string.  Saves memory compared to copying
-    // the substrings over and over.  The data is immutable, the position is mutable.
+    // the substrings over and over.  The data is immutable, the position is mutable.  Wraps ParseProgress
     public static class StringView
     {
         private static final ImmutableList<Integer> whiteSpaceCategories = ImmutableList.of(
@@ -723,19 +724,16 @@ public class DataTypeUtility
             (int)Character.CONTROL
         );
         
-        public final String original;
-        public int charStart;
+        private ParseProgress parseProgress;
         
         public StringView(String s)
         {
-            this.original = s;
-            this.charStart = 0;
+            this.parseProgress = ParseProgress.fromStart(s);
         }
         
         public StringView(StringView stringView)
         {
-            this.original = stringView.original;
-            this.charStart = stringView.charStart;
+            this.parseProgress = stringView.parseProgress;
         }
         
         // Tries to read the given literal, having skipped any spaces at current position.
@@ -743,31 +741,25 @@ public class DataTypeUtility
         // are still consumed, and false is returned.
         public boolean tryRead(String literal)
         {
-            skipSpaces();
-            if (original.regionMatches(charStart, literal, 0, literal.length()))
-            {
-                charStart += literal.length();
-                return true;
-            }
-            return false;
+            ParseProgress attempt = parseProgress.consumeNext(literal);
+            if (attempt == null)
+                return false;
+            parseProgress = attempt;
+            return true;
         }
 
         public boolean tryReadIgnoreCase(String literal)
         {
-            skipSpaces();
-            if (original.regionMatches(true, charStart, literal, 0, literal.length()))
-            {
-                charStart += literal.length();
-                return true;
-            }
-            return false;
+            ParseProgress attempt = parseProgress.consumeNextIC(literal);
+            if (attempt == null)
+                return false;
+            parseProgress = attempt;
+            return true;
         }
 
         public void skipSpaces()
         {
-            // Don't try and get clever recurse to call tryRead, because it calls us!
-            while (charStart < original.length() && whiteSpaceCategories.contains(Character.getType(original.charAt(charStart))))
-                charStart += 1;
+            parseProgress = parseProgress.skipSpaces();
         }
 
         // TODO use styledstring here
@@ -775,32 +767,39 @@ public class DataTypeUtility
         {
             StringBuilder s = new StringBuilder();
             // Add prefix:
-            s.append("\"" + original.substring(Math.max(0, charStart - 20), charStart) + ">>>");
-            return s.append(original.substring(charStart, Math.min(charStart + 40, original.length())) + "\"").toString();
+            s.append("\"" + parseProgress.src.substring(Math.max(0, parseProgress.curCharIndex - 20), parseProgress.curCharIndex) + ">>>");
+            return s.append(parseProgress.src.substring(parseProgress.curCharIndex, Math.min(parseProgress.curCharIndex + 40, parseProgress.src.length())) + "\"").toString();
         }
 
         // Reads up until that character, and also consumes that character
         // Returns null if end of string is found first
         public @Nullable String readUntil(char c)
         {
-            int start = charStart;
-            while (charStart < original.length() && original.charAt(charStart) != c)
+            @Nullable Pair<String, ParseProgress> p = parseProgress.consumeUpToAndIncluding("" + c);
+            if (p != null)
             {
-                charStart += 1;
+                parseProgress = p.getSecond();
+                return p.getFirst();
             }
-            if (charStart >= original.length())
-                return null;
-            // End is exclusive, but then add one to consume it:
-            return original.substring(start, charStart++);
+            return null;
         }
 
         // Doesn't skip spaces!
         public String consumeNumbers()
         {
-            int start = charStart;
-            while (charStart < original.length() && Character.isDigit(original.charAt(charStart)))
-                charStart += 1;
-            return original.substring(start, charStart);
+            Pair<String, ParseProgress> p = parseProgress.consumeNumbers();
+            parseProgress = p.getSecond();
+            return p.getFirst();
+        }
+
+        public void setPosition(int pos)
+        {
+            parseProgress = ParseProgress.fromStart(parseProgress.src).skip(pos);
+        }
+
+        public int getPosition()
+        {
+            return parseProgress.curCharIndex;
         }
     }
 

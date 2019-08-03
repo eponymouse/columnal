@@ -73,4 +73,13 @@ public class ParseProgress
             i += 1;
         return new ParseProgress(src, i);
     }
+
+    // Doesn't skip spaces!
+    public Pair<String, ParseProgress> consumeNumbers()
+    {
+        int start = curCharIndex;
+        while (start < src.length() && Character.isDigit(src.charAt(start)))
+            start += 1;
+        return new Pair<>(src.substring(curCharIndex, start), new ParseProgress(src, start));
+    }
 }

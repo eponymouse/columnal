@@ -95,7 +95,7 @@ public class FromString
         stringView.skipSpaces();
         @Value Object value = convertFromString(type, stringView);
         stringView.skipSpaces();
-        if (stringView.charStart < src.length())
+        if (stringView.getPosition() < src.length())
             throw new UserException("Entire string was not used during conversion, remainder: " + stringView.snippet());
         return value;
     }
