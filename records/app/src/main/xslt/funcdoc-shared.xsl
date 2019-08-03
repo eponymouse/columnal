@@ -195,7 +195,7 @@
                 <xsl:for-each select="example">
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param
-                            name="insertable" select="true()"/><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
+                            name="insertable" select="true()"/><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><span class="insertable-expression" data-insert="{$literalName}{{{inputArg}}}"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</span></xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>

@@ -13,7 +13,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
 - Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
-- Click to insert doesn't work on temporal input literals (inputArg)
 - Documentation for @define and @function is missing.
 - Add graphical element to display and edit comments
 - Quick fix not offered when literal lacked units, in expression: @ifN100m Time=~Is(x)@then100{m}/x@else0@endif
@@ -321,3 +320,4 @@ Done after Phil B & Jon A:
 - If you have an invalid column name XX, you get a quick fix offered to "Make a new calculation that can use this table's XX" -- but XX doesn't exist. 
 - If you import text file where one column has all same values, but no numbers, it gets treated as Optional(Number)!
 - Can't make a new table by pasting from clipboard (from HTML page)
+- Click to insert doesn't work on temporal input literals (inputArg)
