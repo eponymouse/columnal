@@ -66,6 +66,7 @@ import records.gui.table.CheckDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
+import records.importers.TextImporter;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
@@ -800,25 +801,53 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             public void pasteIntoEmpty(CellPosition target)
             {
                 @Initialized View thisView = Utility.later(View.this);
-                ClipboardUtils.loadValuesFromClipboard(thisView.getManager().getTypeManager()).ifPresent((ImmutableList<LoadedColumnInfo> content) -> {
+                FXPlatformConsumer<DataSource> selectAfter = data -> {
+                    if (data.getDisplay() instanceof TableDisplay)
+                    {
+                        TableDisplay display = (TableDisplay) data.getDisplay();
+                        if (display != null)
+                            thisView.getGrid().select(new EntireTableSelection(display, target.columnIndex));
+                    }
+                };
+                Optional<ImmutableList<LoadedColumnInfo>> loaded = ClipboardUtils.loadValuesFromClipboard(thisView.getManager().getTypeManager());
+                if (loaded.isPresent())
+                {
+                    ImmutableList<LoadedColumnInfo> content = loaded.get();
                     if (!content.isEmpty())
                     {
                         Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error pasting table data", () -> {
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
                                 tableManager.record(data);
-                                Platform.runLater(() -> {
-                                    if (data.getDisplay() instanceof TableDisplay)
-                                    {
-                                        TableDisplay display = (TableDisplay) data.getDisplay();
-                                        if (display != null)
-                                            thisView.getGrid().select(new EntireTableSelection(display, target.columnIndex));
-                                    }
-                                });
+                                Platform.runLater(() -> selectAfter.consume(data));
                             });
                         });
                     }
-                });
+                }
+                else
+                {
+                    // Try treating them as text values:
+                    String clip = Clipboard.getSystemClipboard().getString();
+                    if (!clip.trim().isEmpty())
+                    {
+                        Window window = thisView.getWindow();
+                        Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {
+                            try
+                            {
+                                File tmp = File.createTempFile("clipboard", "txt");
+                                FileUtils.write(tmp, clip, StandardCharsets.UTF_8);
+                                TextImporter.importTextFile(window, thisView.tableManager, tmp, target, t -> {
+                                    tableManager.record(t);
+                                    Platform.runLater(() -> selectAfter.consume(t));
+                                });
+                            }
+                            catch (IOException e)
+                            {
+                                Log.log(e);
+                            }
+                        });
+                    }
+                }
             }
         };
         
