@@ -158,6 +158,7 @@
             <xsl:when test="@type='typevar' or @type='List' or @type='unitvar'"><a class="internal-link" href="type-{@type}.html"><xsl:copy-of select="child::node()"/></a></xsl:when>
             <xsl:when test="@type"><a class="internal-link" alt="Type {@type}" href="type-{@type}.html"><xsl:value-of select="@type"/></a></xsl:when>
             <xsl:when test="@operator"><a class="internal-link" href="operator-{string-join(string-to-codepoints(@operator), '-')}.html">operator <xsl:value-of select="@operator"/></a></xsl:when>
+            <xsl:when test="@syntax"><a class="internal-link" href="syntax-{@syntax}.html"><xsl:value-of select="@syntax"/></a></xsl:when>
         </xsl:choose>
     </xsl:template>
 </xsl:stylesheet>

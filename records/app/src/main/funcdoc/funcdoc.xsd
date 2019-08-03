@@ -317,6 +317,7 @@
                     <xs:attribute name="namespace" use="optional" type="xs:string"/>
                     <xs:attribute name="type" use="optional" type="xs:string"/>
                     <xs:attribute name="guide" use="optional" type="xs:string"/>
+                    <xs:attribute name="syntax" use="optional" type="xs:string"/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>

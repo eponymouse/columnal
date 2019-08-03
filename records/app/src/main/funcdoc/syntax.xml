@@ -59,6 +59,71 @@
             <output>"Positive"</output>
         </example>
     </syntax>
+    <syntax id="define" title="Define">
+        <syntaxElements>
+            <keyword>@define</keyword>
+            <type name="definition">_</type>
+            <keyword>@then</keyword>
+            <type name="expression">t</type>
+            <keyword>@enddefine</keyword>
+        </syntaxElements>
+        <description>
+            <p>Defines a name for a value, to allow later use.  Often you may find yourself repeating the same piece of code, which is both tiresome to enter, and awkward when you need to edit it in multiple places later.  By defining a name for the shared code, it's easier to reference and edit.</p>
+            
+            <p>Another use for definitions is to do pattern matching, especially for things like optional types; for example <code>@define Is(x) = Column with optional type @then x @enddefine</code></p>
+        </description>
+        <example>
+            <input>@define feet mm = @call @function as unit(unit{mm},1{foot}) @then (6 * feet mm) * (4 * feet mm) @enddefine</input>
+            <output>2229672.96{mm^2}</output>
+        </example>
+        <example>
+            <input>@define sq = @function (x) @then x*x @endfunction, x = @call sq(256) @then x - 1 @enddefine</input>
+            <output>65535</output>
+        </example>
+        <example>
+            <input>@define distance :: type{Number{m}}, distance = @call @function from text("23") @then distance * 2 @enddefine</input>
+            <output>46{m}</output>
+        </example>
+    </syntax>
+    <syntax id="function" title="Function">
+        <syntaxElements>
+            <keyword>@function</keyword>
+            <type name="parameters">a</type>
+            <keyword>@then</keyword>
+            <type name="body">b</type>
+            <keyword>@endfunction</keyword>
+        </syntaxElements>
+        <description>
+            <p>Makes a function.  The comma-separated list of parameters goes after the @function keyword, and the body of the function goes after the @then.  Functions are very often used with @define, which allows you to name and re-use the function.</p>
+            
+            <p>If the function you need is very simple and uses its parameter once, you may find the <link syntax="quest"/> syntax useful.</p>
+        </description>
+        <example>
+            <input>@define low = @function (a, b) @then @if a &lt; b @then a @else b @endif @endfunction @then @call low(3, -5) @enddefine</input>
+            <output>-5</output>
+        </example>
+        <example>
+            <input>@call @function apply each([2,3,4], @function (x) @then x * x @endfunction)</input>
+            <output>[4,9,16]</output>
+        </example>
+    </syntax>
+    <syntax id="quest" title="Implicit Function">
+        <syntaxElements>
+            <keyword>?</keyword>
+        </syntaxElements>
+        <description>
+            <p>Sometimes you want a function that does something very simple, like adding one to a number.  The full <link syntax="function"/> syntax is cumbersome for this.  Instead you can write <code>(? + 1)</code>, which is a function with a single parameter that adds one to get the result.  If you have multiple question marks, e.g. <code>? * ?</code>, the function has as many parameters as there are question marks.</p>
+            <p>The function extends to the single expression that the question mark(s) appear in.  So <code>0 &lt;= ? &lt; ? &lt;= 1</code> takes two parameters and checks that the first is less than the second, and they are both between zero and one.  The expression <code>(? + 1) * 2</code> is a type error because you can't multiply a function like two (use the full function syntax instead).</p>
+        </description>
+        <example>
+            <input>@call @function apply each([3,7,-4], (? + 1))</input>
+            <output>[4,8,-3]</output>
+        </example>
+        <example>
+            <input>@call @function combine([2, 4, 3], (? * ?))</input>
+            <output>24</output>
+        </example>
+    </syntax>
     <variable name="group count">
         <type>Number</type>
         <description>

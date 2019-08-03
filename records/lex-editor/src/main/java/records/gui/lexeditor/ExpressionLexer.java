@@ -960,7 +960,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         switch (keyword)
         {
             case IF:
-            case THEN:
+            //case THEN:  // Overloaded!
             case ELSE:
             case ENDIF:
                 return "syntax-if.html";
@@ -970,6 +970,15 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             case GIVEN:
             case ENDMATCH:
                 return "syntax-match.html";
+            case DEFINE:
+            case ENDDEFINE:
+                return "syntax-define.html";
+            case FUNCTION:
+            case ENDFUNCTION:
+                return "syntax-function.html";
+            case QUEST:
+                return "syntax-quest.html";
+                
         }
         return null;
     }
