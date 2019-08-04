@@ -1467,22 +1467,24 @@ public class Utility
 
             private void checkUpTo(int index)
             {
-                while (checkedUpToInOriginal < index && checkedUpToInOriginal < firstColonIndexInOriginal)
+                while (checkedUpToInOriginal < index && checkedUpToInOriginal < original.length() - 1)
                 {
                     // Must do more checking:
                     checkedUpToInOriginal += 1;
-                    if (checkedUpToInOriginal >= original.length())
-                        return;
                     char c = original.charAt(checkedUpToInOriginal);
+                    boolean notLetterNorDigit = !Character.isLetterOrDigit(c);
+                    boolean seenColon = firstColonIndexInOriginal != Integer.MAX_VALUE;
+                    boolean whitespace = Character.isWhitespace(c);
                     if (c == ':')
                     {
-                        firstColonIndexInOriginal = Math.min(firstColonIndexInOriginal, checkedUpToInOriginal);
+                        if (!seenColon)
+                            firstColonIndexInOriginal = Math.min(firstColonIndexInOriginal, checkedUpToInOriginal);
                     }
-                    else if (!Character.isLetterOrDigit(c))
+                    else if (notLetterNorDigit && (!seenColon || whitespace))
                     {
                         int start = checkedUpToInOriginal;
                         int end = start + 1;
-                        while (end < original.length() && !Character.isLetterOrDigit(original.charAt(end)))
+                        while (end < original.length() && ((!Character.isLetterOrDigit(original.charAt(end)) && !whitespace) || (Character.isWhitespace(original.charAt(end)) && whitespace)))
                         {
                             end += 1;
                         }

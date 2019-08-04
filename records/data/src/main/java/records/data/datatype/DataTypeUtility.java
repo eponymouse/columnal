@@ -29,6 +29,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.loadsave.OutputBuilder;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -581,9 +582,25 @@ public class DataTypeUtility
         else
             return either.getRight("Error fetching list");
     }
+    
+    public static class PositionedUserException extends UserException
+    {
+        private final int position;
+
+        public PositionedUserException(String message, int position)
+        {
+            super(message);
+            this.position = position;
+        }
+
+        public int getPosition()
+        {
+            return position;
+        }
+    }
 
     @OnThread(Tag.Any)
-    public static @Value TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws UserException
+    public static @Value TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws PositionedUserException
     {
         src.skipSpaces();
         ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.<DateTimeFormatter>toImmutableList());
@@ -644,15 +661,15 @@ public class DataTypeUtility
             }
             
             // Otherwise, throw because it's too ambiguous:
-            throw new UserException(Integer.toString(distinctValues.size()) + " ways to interpret " + dateTimeInfo + " value "
+            throw new PositionedUserException(Integer.toString(distinctValues.size()) + " ways to interpret " + dateTimeInfo + " value "
                 + src.snippet() + ": "
                 + Utility.listToString(Utility.<Pair<Integer, @Value TemporalAccessor>, @Value TemporalAccessor>mapList(possibles, p -> p.getSecond()))
                 + " using formatters "
-                + Utility.listToString(possibleFormatters));
+                + Utility.listToString(possibleFormatters), src.getPosition());
         }
 
         //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
-        throw new UserException("Expected " + DataType.date(dateTimeInfo).toString() + " value but found: " + src.snippet());
+        throw new PositionedUserException("Expected " + DataType.date(dateTimeInfo).toString() + " value but found: " + src.snippet(), src.getPosition());
     }
 
     @OnThread(Tag.Simulation)
@@ -731,9 +748,9 @@ public class DataTypeUtility
             this.parseProgress = ParseProgress.fromStart(s);
         }
         
-        public StringView(StringView stringView)
+        public StringView(ParseProgress parseProgress)
         {
-            this.parseProgress = stringView.parseProgress;
+            this.parseProgress = parseProgress;
         }
         
         // Tries to read the given literal, having skipped any spaces at current position.
@@ -800,6 +817,11 @@ public class DataTypeUtility
         public int getPosition()
         {
             return parseProgress.curCharIndex;
+        }
+
+        public ParseProgress getParseProgress()
+        {
+            return parseProgress;
         }
     }
 

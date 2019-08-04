@@ -12,7 +12,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
-- Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
 - Add graphical element to display and edit comments
 
 Medium Priority (significant quality of life, but not essential especially for beta)
@@ -321,3 +320,4 @@ Done after Phil B & Jon A:
 - Can't make a new table by pasting from clipboard (from HTML page)
 - Click to insert doesn't work on temporal input literals (inputArg)
 - Documentation for @define and @function and ? is missing.
+- Allow AM/PM in data entry (and more generally, more flexible date recognisers?)

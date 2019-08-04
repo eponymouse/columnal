@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -50,6 +51,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private final TypeEditor typeEditor;
     private @Nullable DataType latestType;
     private final @Nullable TableNameTextField tableNameTextField;
+    private @MonotonicNonNull RecogniserDocument<?> defaultValueDocument;
 
     public static class ColumnDetails
     {
@@ -198,7 +200,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         if (dataType == null)
             return Either.left(TranslationUtility.getString("edit.column.invalid.column.type"));
         if (defaultValue == null)
-            return Either.left(TranslationUtility.getString("edit.column.invalid.column.defaultValue"));
+            return Either.left(TranslationUtility.getString("edit.column.invalid.column.defaultValue", defaultValueDocument == null ? "" : defaultValueDocument.getLatestValue().<String>either(err -> err.error.toPlain(), o -> "")));
         
         return Either.right(new ColumnDetails(tableId, columnId, dataType, defaultValue));
     }
@@ -214,7 +216,8 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             {
                 if (!t.equals(latestType))
                 {
-                    textField.setDocument(makeEditorKit(t));
+                    defaultValueDocument = makeEditorKit(t);
+                    textField.setDocument(defaultValueDocument);
                     latestType = t;
                 }
                 textField.setDisable(false);
