@@ -117,11 +117,23 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 }
                 if (dateTimeInfo.getType().hasTime())
                 {
-                    write(String.format("%02d", t.get(ChronoField.HOUR_OF_DAY)) + ":", DELAY);
-                    write(String.format("%02d", t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
+                    String format = r.nextBoolean() ? "%02d" : "%d";
+                    String after = null;
+                    if (r.nextBoolean())
+                    {
+                        write(String.format(format, t.get(ChronoField.HOUR_OF_DAY)) + ":", DELAY);
+                    }
+                    else
+                    {
+                        write(String.format(format, t.get(ChronoField.CLOCK_HOUR_OF_AMPM)) + ":", DELAY);
+                        after = (r.nextBoolean() ? "" : "  ") + (t.get(ChronoField.AMPM_OF_DAY) == 0 ? "AM" : "PM");
+                    }
+                    write(String.format(format, t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
                     int nano = t.get(ChronoField.NANO_OF_SECOND);
-                    write(String.format("%02d", t.get(ChronoField.SECOND_OF_MINUTE)) + (nano == 0 ? "" : "."), DELAY);
+                    write(String.format(format, t.get(ChronoField.SECOND_OF_MINUTE)) + (nano == 0 ? "" : "."), DELAY);
                     write(String.format("%09d", nano).replaceAll("0*$", ""), DELAY);
+                    if (after != null)
+                        write(after, DELAY);
                 }
                 if (dateTimeInfo.getType().hasZoneId())
                 {
