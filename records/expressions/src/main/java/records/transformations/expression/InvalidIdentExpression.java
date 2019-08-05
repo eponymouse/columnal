@@ -89,11 +89,6 @@ public class InvalidIdentExpression extends NonOperatorExpression
         return Objects.hash(text);
     }
 
-    public String getText()
-    {
-        return text;
-    }
-
     @Override
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
