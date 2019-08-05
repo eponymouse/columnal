@@ -34,18 +34,6 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class PropStringFunctions
 {
-    private UnitManager mgr;
-    {
-        try
-        {
-            mgr = new UnitManager();
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Property
     @OnThread(Tag.Simulation)
     public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
