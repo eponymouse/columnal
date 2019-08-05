@@ -35,6 +35,7 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
+import records.grammar.GrammarUtility;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -879,7 +880,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            return new InvalidIdentExpression(ctx.RAW_STRING().getText());
+            return new InvalidIdentExpression(GrammarUtility.processEscapes(ctx.RAW_STRING().getText(), false));
         }
 
         @Override
