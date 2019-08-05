@@ -758,6 +758,7 @@ public class DataTypeUtility
         // are still consumed, and false is returned.
         public boolean tryRead(String literal)
         {
+            skipSpaces();
             ParseProgress attempt = parseProgress.consumeNext(literal);
             if (attempt == null)
                 return false;
@@ -767,6 +768,7 @@ public class DataTypeUtility
 
         public boolean tryReadIgnoreCase(String literal)
         {
+            skipSpaces();
             ParseProgress attempt = parseProgress.consumeNextIC(literal);
             if (attempt == null)
                 return false;
