@@ -146,7 +146,18 @@ public class ImporterGUI
         @Override
         public @Localized String toString()
         {
-            return value == null ? TranslationUtility.getString("import.choice.specify") : Utility.universal(value.toString());
+            return value == null ? TranslationUtility.getString("import.choice.specify") : Utility.universal(convertInvisible(value.toString()));
+        }
+
+        private String convertInvisible(String s)
+        {
+            switch (s)
+            {
+                case " ": return "Space";
+                case "\t": return "Tab";
+                case "": return "None";
+            }
+            return s;
         }
     }
 }
