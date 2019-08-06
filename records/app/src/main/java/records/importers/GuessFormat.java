@@ -745,7 +745,7 @@ public class GuessFormat
 
     private static String replaceTab(String s)
     {
-        return s.replace("\t", "\u27FE");
+        return s.replace('\t', '\u27FE');
     }
 
     // Note that the trim choice should not already have been applied.  But values should be rectangular
