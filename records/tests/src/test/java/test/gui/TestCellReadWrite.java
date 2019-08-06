@@ -95,7 +95,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             pushCopy();
             // Need to wait for hop to simulation thread and back:
             TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), columnDTV.getCollapsed(row), null);
             assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
@@ -134,7 +134,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             pushCopy();
             // Need to wait for hop to simulation thread and back:
             TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             Column col = table.getData().getColumns().get(column);
             DataTypeValue columnDTV = col.getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), TestUtil.checkNonNull(col.getDefaultValue()), null);
@@ -239,7 +239,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             pushCopy();
             // Need to wait for hop to simulation thread and back:
             TestUtil.delay(10000);
-            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
             String valueEntered = value.eitherEx(s -> "@INVALID\"" + s + "\"", v -> DataTypeUtility.valueToString(columnDTV.getType(), v, null));
             assertEquals(valueEntered, copiedFromTable);
@@ -257,7 +257,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
                 pushCopy();
                 // Need to wait for hop to simulation thread and back:
                 TestUtil.delay(2000);
-                String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+                String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
                 assertEquals("Position " + target, written.getFirst(), copiedFromTable);
             }
             catch (UserException e)
@@ -299,7 +299,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             pushCopy();
             // Need to wait for hop to simulation thread and back:
             TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
             // Now start editing:
             write("" + r.nextLong());
@@ -320,7 +320,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             pushCopy();
             // Need to wait for hop to simulation thread and back:
             TestUtil.delay(2000);
-            copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
             valueFromData = DataTypeUtility.valueToString(col.getType().getType(), col.getType().getCollapsed(row), null);
             assertEquals("Location " + pos + " row : " + row + " col: " + column + " escape: " + escape, valueFromData, copiedFromTable);

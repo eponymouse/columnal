@@ -12,6 +12,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
@@ -315,10 +316,10 @@ public class TestExpressionEditorDelete extends FXApplicationTest
             // Test copy does same as cut:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.C);
-            String copied = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+            String copied = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.X);
-            assertEquals(copied, TestUtil.fx(() -> Clipboard.getSystemClipboard().getString()));
+            assertEquals(copied, TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString()));
         }
         
 

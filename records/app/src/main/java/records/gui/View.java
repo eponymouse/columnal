@@ -828,7 +828,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 {
                     // Try treating them as text values:
                     String clip = Clipboard.getSystemClipboard().getString();
-                    if (!clip.trim().isEmpty())
+                    if (clip != null && !clip.trim().isEmpty())
                     {
                         Window window = thisView.getWindow();
                         Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {

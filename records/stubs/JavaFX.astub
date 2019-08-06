@@ -266,6 +266,7 @@ package javafx.scene.input;
 class Clipboard
 {
     @Nullable Object getContent(DataFormat dataFormat);
+    @Nullable String getString();
 }
 class ContextMenuEvent
 {
