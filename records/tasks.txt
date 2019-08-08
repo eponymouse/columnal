@@ -12,7 +12,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
-- Add graphical element to display and edit comments
 - Combine import file/URL into a single option in the New dialog
 - When you click sum recipe in aggregate, it says compare column
 - When text file is UTF16, UTF8 is selected by default.
@@ -327,3 +326,4 @@ Done after Phil B & Jon A:
 - Documentation for @define and @function and ? is missing.
 - Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
 - When importing, not obvious that blank item on separator drop down is tab.
+- Add graphical element to display and edit comments

@@ -37,6 +37,11 @@ public class DummyManager extends TableManager
             public void addComment(GridComment gridComment)
             {
             }
+
+            @Override
+            public void removeComment(GridComment gridComment)
+            {
+            }
         });
     };
     

@@ -103,7 +103,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         }
     }
 
-    private void mouseEvent(MouseEvent mouseEvent)
+    protected void mouseEvent(MouseEvent mouseEvent)
     {
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
         //    Log.debug("Got mouse event: " + mouseEvent);

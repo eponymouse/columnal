@@ -762,8 +762,27 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             public void addComment(GridComment gridComment)
             {
                 FXUtility.runFX(() -> {
-                    // TODO
+                    GridCommentDisplay display = new GridCommentDisplay(thisView.tableManager, gridComment);
+                    thisView.getGrid().addGridAreas(ImmutableList.of(display));
+                    thisView.getGrid().getFloatingSupplier().addItem(display.getFloatingItem());
                     thisView.save(true);
+                    thisView.getGrid().redoLayoutAfterScroll();
+                    display.requestFocus();
+                });
+            }
+
+            @Override
+            public void removeComment(GridComment gridComment)
+            {
+                FXUtility.runFX(() -> {
+                    GridCommentDisplay gridCommentDisplay = (GridCommentDisplay)gridComment.getDisplay();
+                    if (gridCommentDisplay != null)
+                    {
+                        thisView.getGrid().getFloatingSupplier().removeItem(gridCommentDisplay.getFloatingItem());
+                        thisView.getGrid().removeGridArea(gridCommentDisplay);
+                    }
+                    thisView.save(true);
+                    thisView.getGrid().redoLayoutAfterScroll();
                 });
             }
         });
@@ -995,6 +1014,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     break;
                 case IMPORT_URL:
                     ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, record);
+                    break;
+                case COMMENT:
+                    Workers.onWorkerThread("Adding new comment", Priority.SAVE, () -> thisView.tableManager.addComment(new GridComment("", cellPosition, 2, 2)));
                     break;
                 case TRANSFORM:
                     new PickTransformationDialog(thisView).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {

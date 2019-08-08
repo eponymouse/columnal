@@ -140,6 +140,21 @@
     -rtfx-underline-width: 2;
 }
 
+.grid-comment-field {
+    -fx-background-color: $table-divider, $grid-comment;
+    -fx-background-insets: 0, 0 1 1 0;
+    &:hover {
+        -fx-background-color: $grid-comment-hover, $grid-comment-hover;
+    }
+    &:focused, &:resizing {
+        -fx-background-color: $table-divider, $grid-comment;
+    }
+    
+    .document-text-flow {
+        -fx-padding: 0 2 0 2;
+    }
+}
+
 .expand-arrow {
     -fx-padding: 0;
     -fx-background-color: $table-cell;

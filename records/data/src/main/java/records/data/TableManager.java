@@ -361,9 +361,18 @@ public class TableManager
         return new CellPosition(display.getMostRecentPosition().rowIndex, display.getBottomRightIncl().columnIndex);
     }
 
+    @OnThread(Tag.Simulation)
     public void addComment(GridComment comment)
     {
         comments.add(comment);
+        listener.addComment(comment);
+    }
+
+    @OnThread(Tag.Simulation)
+    public void removeComment(GridComment comment)
+    {
+        comments.remove(comment);
+        listener.removeComment(comment);
     }
 
     public static interface TableMaker<T extends Table>
@@ -612,6 +621,8 @@ public class TableManager
         public void addTransformation(Transformation transformation);
         
         public void addComment(GridComment gridComment);
+        
+        public void removeComment(GridComment gridComment);
     }
 
     public static interface TransformationLoader
