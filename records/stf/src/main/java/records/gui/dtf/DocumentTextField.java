@@ -132,7 +132,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             else
             {
                 // And important to map caret pos after change:
-                caretPosition.moveTo(document.mapCaretPos(hitInfo.getInsertionIndex()));
+                caretPosition.moveTo(Math.min(document.getLength(), document.mapCaretPos(hitInfo.getInsertionIndex())));
                 if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED && !mouseEvent.isShiftDown())
                     moveAnchorToCaret();
             }
@@ -262,7 +262,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     @OnThread(Tag.FXPlatform)
     protected void replaceSelection(String character)
     {
-        document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.max(caretPosition.getPosition(), anchorPosition.getPosition()), character);
+        document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.min(document.getLength(), Math.max(caretPosition.getPosition(), anchorPosition.getPosition())), character);
     }
 
     @Override
