@@ -25,6 +25,11 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * A document which can display differently when unfocused.
+ * When focused, behaves like plain text, but also uses a Recogniser
+ * to potentially show errors.
+ */
 public final class RecogniserDocument<V> extends DisplayDocument
 {
     private final Recogniser<V> recogniser;
