@@ -394,7 +394,7 @@ public class AggregateSplitByPane extends BorderPane
             public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
                 return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(
-                        new SelectInfo("agg.recipe.pick.calc", "agg-recipe/calc-column", t -> true, false),
+                        new SelectInfo("agg.recipe.pick.compare", "agg-recipe/calc-column", t -> true, false),
                         new SelectInfo("agg.recipe.pick.result", "agg-recipe/result-column", t -> true, true)
                     )
                 ).showAndWait()

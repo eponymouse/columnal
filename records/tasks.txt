@@ -12,9 +12,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
-- When you click sum recipe in aggregate, it says compare column
-- When text file is UTF16, UTF8 is selected by default.
-
 
 
 Medium Priority (significant quality of life, but not essential especially for beta)
@@ -47,6 +44,8 @@ Medium Priority (significant quality of life, but not essential especially for b
   - Check what happens if used while column name is blank.
 - Allow importing variable length rows into list type
 - Quick fix not offered when literal lacked units, in expression: @ifN100m Time=~Is(x)@then100{m}/x@else0@endif
+- When text file is UTF16, UTF8 is selected by default.
+
 
 Low Priority (good to have, but will not be hugely missed)
 ===
@@ -326,3 +325,4 @@ Done after Phil B & Jon A:
 - Allow AM/PM in data entry (and more generally, more flexible date recognisers?)
 - When importing, not obvious that blank item on separator drop down is tab.
 - Add graphical element to display and edit comments
+- When you click sum recipe in aggregate, it says compare column
