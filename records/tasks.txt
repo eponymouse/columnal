@@ -16,7 +16,6 @@ Task C Items (unprioritised)
 - The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Close any standalone documentation windows when exiting window with expression editor
-- Standalone documentation windows lack icon
 - Add a quick fix for abs(x){m/s} to suggest abs(x) * 1{m/s}
 - The as type examples are also not good, and the docs mention "from string" which does not exist
 - Maybe we should add an extract optional item
@@ -361,3 +360,4 @@ Done after Phil B & Jon A:
 - When importing, not obvious that blank item on separator drop down is tab.
 - Add graphical element to display and edit comments
 - When you click sum recipe in aggregate, it says compare column
+- Standalone documentation windows lack icon

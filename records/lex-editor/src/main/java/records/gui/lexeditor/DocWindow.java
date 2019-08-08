@@ -21,6 +21,7 @@ public final class DocWindow extends Stage
     {
         setTitle(title);
         setAlwaysOnTop(true);
+        FXUtility.setIcon(this);
         WebView webView = new WebView();
         FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> LexAutoCompleteWindow.enableInsertLinks(webViewDoc, insertListener, () -> null));
         URL url = ResourceUtility.getResource(docURL);
