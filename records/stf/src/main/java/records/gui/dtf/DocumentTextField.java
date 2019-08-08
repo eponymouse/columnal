@@ -3,7 +3,6 @@ package records.gui.dtf;
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import javafx.event.Event;
@@ -13,8 +12,6 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -23,7 +20,6 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import log.Log;
-import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -35,8 +31,8 @@ import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TextEditorBase;
 import utility.gui.FXUtility;
+import utility.gui.TextEditorBase;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -366,6 +362,8 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefWidth(double height)
     {
+        if (idealWidth != null)
+            return idealWidth;
         return 300;
     }
 
@@ -521,13 +519,15 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
-        if (expanded)
+        if (expanded || idealWidth != null)
         {
             textFlow.setPrefWidth(getWidth());
+            textFlow.setMaxWidth(getWidth());
         }
         else
         {
             textFlow.setPrefWidth(USE_COMPUTED_SIZE);
+            textFlow.setMaxWidth(Double.MAX_VALUE);
         }
 
         // 10 is fudge factor; if you set exactly its desired width,
