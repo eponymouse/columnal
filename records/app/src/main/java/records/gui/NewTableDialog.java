@@ -30,7 +30,7 @@ import java.util.Optional;
 public class NewTableDialog extends LightDialog<Pair<Point2D, DataOrTransform>>
 {
     private static final double WIDTH = 380;
-    private static final double HEIGHT = 260;
+    private static final double HEIGHT = 290;
 
     public NewTableDialog(DimmableParent parent, boolean transformIsValid)
     {

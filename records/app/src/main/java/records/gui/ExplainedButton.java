@@ -33,7 +33,7 @@ class ExplainedButton extends Button
     
     private ExplainedButton(double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
-        getStyleClass().add("explanation");
+        getStyleClass().add("explanation-button");
         setOnAction(e -> onAction.consume(getPos()));
         setMaxWidth(Double.MAX_VALUE);
         setMaxHeight(Double.MAX_VALUE);
