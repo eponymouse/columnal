@@ -29,18 +29,10 @@ import records.gui.lexeditor.EditorDisplay;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.transformations.Calculate;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StandardFunction;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
@@ -377,16 +369,66 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     }
     
     @Test
-    public void testWholeIf() throws Exception
+    public void testWholeIfByCompletion() throws Exception
     {
-        // Default in blank expression should be to insert
-        // a complete if statement.
+        // Top completion in blank expression should be to insert a complete if statement.
         loadExpression("@unfinished \"\"");
         write("@i");
         checkPosition();
         push(KeyCode.ENTER);
         // It's going to be invalid due to the empty bits:
         assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
+    }
+
+    @Test
+    public void testWholeIfByCompletion2() throws Exception
+    {
+        // Top completion in blank expression should be to insert a complete if statement.
+        loadExpression("@unfinished \"\"");
+        write("if");
+        checkPosition();
+        push(KeyCode.ENTER);
+        // It's going to be invalid due to the empty bits:
+        assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
+    }
+
+    @Test
+    public void testWholeIfByTyping() throws Exception
+    {
+        // Top completion in blank expression should be to insert a complete if statement.
+        loadExpression("@unfinished \"\"");
+        write("@i");
+        checkPosition();
+        write("f");
+        // It's going to be invalid due to the empty bits:
+        assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
+    }
+
+    @Test
+    public void testJustIfByCompletion() throws Exception
+    {
+        // Top completion in blank expression should be to insert a complete if statement.
+        loadExpression("@unfinished \"\"");
+        write("@i");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        // It's going to be invalid due to the empty bits:
+        assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
+    }
+
+    @Test
+    public void testJustIfByTypingWithoutAt() throws Exception
+    {
+        // Top completion in blank expression should be to insert a complete if statement.
+        loadExpression("@unfinished \"\"");
+        write("if");
+        checkPosition();
+        push(KeyCode.DOWN);
+        push(KeyCode.DOWN);
+        push(KeyCode.ENTER);
+        // It's going to be invalid due to the empty bits:
+        assertEquals(new InvalidIdentExpression("@if"), finish());
     }
 
     @Test
