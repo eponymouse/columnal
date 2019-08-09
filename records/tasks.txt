@@ -16,7 +16,7 @@ Task C Items (unprioritised)
 - When using an undeclared variable you get a type mismatch, but more useful would probably be unknown variable.  Or are both showing?  But maybe only show undeclared variable (Phil C6 5:20)
 - Add support for @elif ?
 - When user tries to click to select column defined in this calculate, give hint?  Could also add it to autocomplete, but with error highlighting and explain why?
-- Clicking check "Fail" multiple times brings up multiple stacked copies of the explanation.
+
 Documentation items
 ---
 - Some of the displayed equals examples are a bit perverse
@@ -365,3 +365,4 @@ Done after Phil B & Jon A:
 - Close any standalone documentation windows when exiting window with expression editor
 - The expression @if (Column = "blah") @then... goes multiline, but the closing bracket is on the second line; should be on the first line
 - Edit check dialog immediately shows an error, but shouldn't until edited
+- Clicking check "Fail" multiple times brings up multiple stacked copies of the explanation.

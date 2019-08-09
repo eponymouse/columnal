@@ -133,6 +133,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 @Nullable Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
+                    if (explanationDisplay != null)
+                        removeExplanationDisplay();
+                    
                     explanationDisplay = new ExplanationDisplay(check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
                         Table t = parent.getManager().getSingleTableOrNull(l.tableId);
                         if (t != null && l.rowIndex.isPresent() && t.getDisplay() instanceof DataDisplay)
@@ -142,10 +145,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                                 withParent_(g -> g.select(selection));
                         }
                     }, item -> {
-                        withParent_(g -> {
-                            g.getFloatingSupplier().removeItem(item);
-                            g.positionOrAreaChanged();
-                        });
+                        removeExplanationDisplay();
                     }, () -> withParent_(g -> g.positionOrAreaChanged()));
                     withParent_(g -> {
                         if (explanationDisplay != null)
@@ -208,6 +208,18 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         this.check.setDisplay(usInit);
     }
 
+    private void removeExplanationDisplay(@UnknownInitialization(HeadedDisplay.class) CheckDisplay this)
+    {
+        withParent_(g -> {
+            if (explanationDisplay != null)
+            {
+                g.getFloatingSupplier().removeItem(explanationDisplay);
+                explanationDisplay = null;
+            }
+            g.positionOrAreaChanged();
+        });
+    }
+
     /*
     private @Nullable CellSelection makeSelection(TableManager tableManager, ExplanationLocation explanationLocation)
     {
@@ -242,7 +254,10 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         floating.removeItem(tableHat);
         floating.removeItem(resultFloatingItem);
         if (explanationDisplay != null)
+        {
             floating.removeItem(explanationDisplay);
+            explanationDisplay = null;
+        }
     }
 
     @Override
