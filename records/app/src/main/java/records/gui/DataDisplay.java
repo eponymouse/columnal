@@ -46,6 +46,7 @@ import records.data.TableOperations;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
+import records.gui.DataDisplay.ColumnHeaderOps.EditTarget;
 import records.gui.ErrorableTextField.ConversionResult;
 import records.gui.dtf.ReadOnlyDocument;
 import records.gui.dtf.RecogniserDocument;
@@ -593,9 +594,11 @@ public abstract class DataDisplay extends HeadedDisplay
         @Pure
         public @Nullable ColumnOperation getDeleteOperation();
         
+        public static enum EditTarget { EDIT_NAME, EDIT_TYPE }
+        
         // Used as the hyperlinked edit operation on column headers, if non-null.
         @Pure
-        public @Nullable FXPlatformRunnable getPrimaryEditOperation(); 
+        public @Nullable FXPlatformConsumer<EditTarget> getPrimaryEditOperation(); 
     }
 
     private void setColumnOperationContextMenu(Label columnHeader, @Nullable ColumnHeaderOps columnActions)
@@ -686,12 +689,12 @@ public abstract class DataDisplay extends HeadedDisplay
             GUI.showTooltipWhenAbbrev(columnName);
             if (columnActions != null && columnActions.getPrimaryEditOperation() != null)
             {
-                @NonNull FXPlatformRunnable primaryEditOp = columnActions.getPrimaryEditOperation();
+                @NonNull FXPlatformConsumer<EditTarget> primaryEditOp = columnActions.getPrimaryEditOperation();
                 addEditableStyling(columnName);
                 columnName.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
                     {
-                        primaryEditOp.run();
+                        primaryEditOp.consume(EditTarget.EDIT_NAME);
                         e.consume();
                     }
                 });
@@ -719,7 +722,7 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             if (getFloatingPosition().equals(cellPosition) && columnActions != null && columnActions.getPrimaryEditOperation() != null)
             {
-                columnActions.getPrimaryEditOperation().run();
+                columnActions.getPrimaryEditOperation().consume(EditTarget.EDIT_NAME);
             }
         }
 
@@ -760,9 +763,10 @@ public abstract class DataDisplay extends HeadedDisplay
     {
         private final int columnIndex;
         private final ColumnDetails column;
-        private final @Nullable FXPlatformRunnable editOp;
+        private final @Nullable FXPlatformConsumer<EditTarget> editOp;
         private final @Nullable ColumnHeaderOps columnActions;
 
+        @OnThread(Tag.FXPlatform)
         public ColumnTypeItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnHeaderOps)
         {
             super(ViewOrder.STANDARD_CELLS);
@@ -816,12 +820,12 @@ public abstract class DataDisplay extends HeadedDisplay
             GUI.showTooltipWhenAbbrev(typeLabel);
             if (editOp != null)
             {
-                @NonNull FXPlatformRunnable editOpFinal = editOp;
+                @Nullable FXPlatformConsumer<EditTarget> editOpFinal = editOp;
                 addEditableStyling(typeLabel);
                 typeLabel.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
                     {
-                        editOpFinal.run();
+                        editOpFinal.consume(EditTarget.EDIT_TYPE);
                         e.consume();
                     }
                 });
@@ -834,7 +838,7 @@ public abstract class DataDisplay extends HeadedDisplay
         public void keyboardActivate(CellPosition cellPosition)
         {
             if (getFloatingPosition().equals(cellPosition) && editOp != null)
-                editOp.run();
+                editOp.consume(EditTarget.EDIT_TYPE);
         }
     }
 

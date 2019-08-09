@@ -24,6 +24,7 @@ import records.gui.dtf.DocumentTextField;
 import records.gui.dtf.RecogniserDocument;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
+import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.gui.lexeditor.TypeEditor;
 import records.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
@@ -72,8 +73,10 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     
     private @Nullable @Value Object defaultValue;
     
+    public static enum InitialFocus { FOCUS_TABLE_NAME, FOCUS_COLUMN_NAME, FOCUS_TYPE }
+    
     @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(View parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
+    public EditImmediateColumnDialog(View parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable, InitialFocus initialFocus)
     {
         super(parent, true);
         setResizable(true);
@@ -164,7 +167,24 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         });
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter((tableNameTextField != null ? tableNameTextField : columnNameTextField)::requestFocusWhenInScene);
+            FXUtility.runAfter(() -> {
+                switch (initialFocus)
+                {
+                    case FOCUS_TABLE_NAME:
+                        if (tableNameTextField != null)
+                        {
+                            tableNameTextField.requestFocusWhenInScene();
+                            break;
+                        }
+                        // else fall through and focus column:
+                    case FOCUS_COLUMN_NAME:
+                        columnNameTextField.requestFocusWhenInScene();
+                        break;
+                    case FOCUS_TYPE:
+                        typeEditor.focus(Focus.RIGHT);
+                        break;
+                }
+            });
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }

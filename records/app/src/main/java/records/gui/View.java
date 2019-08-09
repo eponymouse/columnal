@@ -44,6 +44,7 @@ import records.data.Table.TableDisplayBase;
 import records.data.TableManager.TableManagerListener;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.NewTableDialog.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.GridArea;
@@ -999,7 +1000,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             switch (choice.get().getSecond())
             {
                 case DATA:
-                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), null, null, true).showAndWait();
+                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), null, null, true, InitialFocus.FOCUS_TABLE_NAME).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error creating first column", () -> {

@@ -54,6 +54,7 @@ import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
 import records.exporters.manager.ExporterManager;
 import records.gui.*;
+import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
@@ -890,13 +891,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
 
             @Override
-            public @Nullable FXPlatformRunnable getPrimaryEditOperation()
+            public @Nullable FXPlatformConsumer<EditTarget> getPrimaryEditOperation()
             {
                 if (table instanceof Calculate)
                 {
                     Calculate calc = (Calculate) table;
                     // Allow editing of any column:
-                    return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
+                    return t -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
                         TransformationEdits.editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
@@ -907,7 +908,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         if (columnExpression.getFirst().equals(c))
                         {
-                            return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
+                            return t -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
                                 TransformationEdits.editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, aggregate, c);
                             });
                         }
@@ -917,7 +918,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 else if (table instanceof ImmediateDataSource)
                 {
                     ImmediateDataSource data = (ImmediateDataSource) table;
-                    return () -> TransformationEdits.editColumn_IDS(FXUtility.mouse(TableDisplay.this).parent, data, c, typeFinal);
+                    return t -> TransformationEdits.editColumn_IDS(FXUtility.mouse(TableDisplay.this).parent, data, c, typeFinal, t == EditTarget.EDIT_NAME ? InitialFocus.FOCUS_COLUMN_NAME : InitialFocus.FOCUS_TYPE);
                 }
                 
                 return null;
@@ -991,7 +992,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
     {
-        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), null, null, false).showAndWait();
+        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), null, null, false, InitialFocus.FOCUS_COLUMN_NAME).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
             FXUtility.alertOnError_("Error adding column", () ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))

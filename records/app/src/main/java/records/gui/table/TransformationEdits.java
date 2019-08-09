@@ -25,6 +25,7 @@ import records.gui.AggregateSplitByPane;
 import records.gui.EditAggregateSplitByDialog;
 import records.gui.EditColumnExpressionDialog;
 import records.gui.EditImmediateColumnDialog;
+import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.View;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
@@ -187,9 +188,9 @@ public class TransformationEdits
     }
 
     @OnThread(Tag.FXPlatform)
-    static void editColumn_IDS(View parent, ImmediateDataSource data, ColumnId columnId, @Nullable DataType type)
+    static void editColumn_IDS(View parent, ImmediateDataSource data, ColumnId columnId, @Nullable DataType type, InitialFocus initialFocus)
     {
-        new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
+        new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false, initialFocus).showAndWait().ifPresent(columnDetails -> {
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () -> {
                     @Nullable TableMaker<ImmediateDataSource> makeReplacement = null;
