@@ -1,5 +1,6 @@
 package records.gui.lexeditor;
 
+import javafx.beans.binding.ObjectExpression;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -17,7 +18,7 @@ import java.net.URL;
 
 public final class DocWindow extends Stage
 {
-    public DocWindow(String title, String docURL, @Nullable Node toRightOf, InsertListener insertListener) throws InternalException
+    public DocWindow(String title, String docURL, @Nullable Node toRightOf, InsertListener insertListener, ObjectExpression<Scene> lastAsLongAsSceneIsNotNull) throws InternalException
     {
         setTitle(title);
         setAlwaysOnTop(true);
@@ -40,5 +41,9 @@ public final class DocWindow extends Stage
             setY(screenBounds.getMinY());
         }
         setScene(new Scene(new BorderPane(webView)));
+        FXUtility.addChangeListenerPlatform(lastAsLongAsSceneIsNotNull, scene -> {
+            if (scene == null)
+                close();
+        });
     }
 }

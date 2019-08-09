@@ -3,6 +3,8 @@ package records.transformations.expression;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.ObjectExpression;
+import javafx.scene.Scene;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.datatype.TypeManager;
@@ -47,7 +49,7 @@ public class SingleUnitExpression extends UnitExpression
             QuickFix<UnitExpression> makeNew = new QuickFix<UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
+                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
                 {
                     typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
                     return null;

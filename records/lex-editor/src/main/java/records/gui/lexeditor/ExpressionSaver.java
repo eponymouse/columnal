@@ -201,7 +201,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                                 {
                                     try
                                     {
-                                        new DocWindow(functionName + " function", docURL, toRightOf, locationRecorder.getInsertListener()).show();
+                                        new DocWindow(functionName + " function", docURL, toRightOf, locationRecorder.getInsertListener(), toRightOf.sceneProperty()).show();
                                     }
                                     catch (InternalException e)
                                     {

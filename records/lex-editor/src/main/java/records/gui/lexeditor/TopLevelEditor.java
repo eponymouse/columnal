@@ -220,7 +220,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             {
                 Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
                 actionOrReplacement.eitherInt_(a -> {
-                    @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> toRun = a.doAction(typeManager);
+                    @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> toRun = a.doAction(typeManager, scrollPane.sceneProperty());
                     if (toRun != null)
                     {
                         @Nullable Pair<@Nullable ColumnId, Expression> latest = forceCloseDialog();

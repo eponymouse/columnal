@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.ObjectExpression;
 import javafx.scene.Scene;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -110,7 +111,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
         // Will only be called once.  If non-null return, force-close expression editor
         // and then run the item on the simulation thread.
         @OnThread(Tag.FXPlatform)
-        public @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager);
+        public @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty);
     }
     
     public static interface QuickFixReplace<EXPRESSION>

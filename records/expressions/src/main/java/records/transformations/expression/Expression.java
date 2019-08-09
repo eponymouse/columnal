@@ -4,6 +4,8 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.ObjectExpression;
+import javafx.scene.Scene;
 import javafx.scene.text.Text;
 import log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -1048,7 +1050,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
                     {
                         @Override
-                        public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager)
+                        public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
                         {
                             return editing.moveExpressionToNewCalculation();
                         }

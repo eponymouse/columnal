@@ -395,10 +395,10 @@ public class EditorLocationAndErrorRecorder
                     {
                         
                         if (err.getCouldNotUnify().stream().anyMatch(this::isOptional) && !err.getCouldNotUnify().stream().allMatch(this::isOptional))
-                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show guide for Optional type"), ImmutableList.<String>of(), src, typeManager -> {
+                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show guide for Optional type"), ImmutableList.<String>of(), src, (typeManager, sceneProp) -> {
                                 try
                                 {
-                                    new DocWindow("Optional", "guide-optional.html", null, insertListener).show();
+                                    new DocWindow("Optional", "guide-optional.html", null, insertListener, sceneProp).show();
                                 }
                                 catch (InternalException e)
                                 {
@@ -408,10 +408,10 @@ public class EditorLocationAndErrorRecorder
                             })));
                         // If they're all numbers and there was an error, must be units problem:
                         else if (err.getCouldNotUnify().stream().allMatch(this::isNumber))
-                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show units guide"), ImmutableList.<String>of(), src, typeManager -> {
+                            showUnresolvedError(src, err.getMessage(), ImmutableList.of(new QuickFix<Expression>(StyledString.s("Show units guide"), ImmutableList.<String>of(), src, (typeManager, sceneProp) -> {
                                 try
                                 {
-                                    new DocWindow("Units", "guide-units.html", null, insertListener).show();
+                                    new DocWindow("Units", "guide-units.html", null, insertListener, sceneProp).show();
                                 }
                                 catch (InternalException e)
                                 {
