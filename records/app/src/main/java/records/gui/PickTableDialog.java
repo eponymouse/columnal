@@ -29,6 +29,7 @@ public class PickTableDialog extends LightDialog<Table>
             setResult(t);
             close();
         });
+        pickTablePane.setFieldPrefWidth(400.0);
         getDialogPane().setContent(pickTablePane);
 
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);

@@ -2,7 +2,6 @@ Task C Items (unprioritised)
 ===
 - When installing an upgrade with Columnal still open, letting MSI installer close the application doesn't work right (not sure if not closed, or closed and re-opened)
 - Black arrow doesn't stand out well against background
-- Table selection entry text box (in pick table) should be as wide as autocomplete
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - In error message for "Missing @else before ENDIF" and "Closing ENDIF without opening" should be using @endif instead of ENDIF.  Also, not ideal for both errors to appear
   - Related: If you have @then without @if, the message is "Closing THEN without opening".  Missing what is opening (@if), same for ENDIF above actually 
@@ -361,3 +360,4 @@ Done after Phil B & Jon A:
 - When you click sum recipe in aggregate, it says compare column
 - Standalone documentation windows lack icon
 - When you click type to edit column details, title is focused in the dialog which appears
+- Table selection entry text box (in pick table) should be as wide as autocomplete

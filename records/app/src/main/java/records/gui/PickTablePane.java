@@ -121,6 +121,11 @@ public class PickTablePane extends BorderPane
         return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
     }
 
+    public void setFieldPrefWidth(double width)
+    {
+        tableField.setPrefWidth(width);
+    }
+
     private static class TableCompletion extends SimpleCompletion
     {
         private final Table t;
