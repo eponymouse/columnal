@@ -72,6 +72,7 @@ import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
+import records.transformations.expression.BooleanLiteral;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -1045,7 +1046,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     break;
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                        new EditCheckExpressionDialog(thisView, srcTable, CheckType.ALL_ROWS, null, ct -> Check.getColumnLookup(tableManager, srcTable.getId(), ct)).showAndWait().ifPresent(details -> {
+                        new EditCheckExpressionDialog(thisView, srcTable, CheckType.ALL_ROWS, new BooleanLiteral(true), true, ct -> Check.getColumnLookup(tableManager, srcTable.getId(), ct)).showAndWait().ifPresent(details -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), details.getFirst(), details.getSecond());
                                 tableManager.record(check);

@@ -35,7 +35,7 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
     private Expression curValue;
     private final ComboBox<CheckType> combo;
 
-    public EditCheckExpressionDialog(View parent, @Nullable Table srcTable, CheckType initialCheckType, @Nullable Expression initialExpression, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
+    public EditCheckExpressionDialog(View parent, @Nullable Table srcTable, CheckType initialCheckType, @Nullable Expression initialExpression, boolean selectAll, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
@@ -88,7 +88,11 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(() -> expressionEditor.focus(Focus.LEFT));
+            FXUtility.runAfter(() -> {
+                expressionEditor.focus(Focus.LEFT);
+                if (selectAll)
+                    expressionEditor.selectAll();
+            });
         });
         setOnHiding(e -> {
             expressionEditor.cleanup();
