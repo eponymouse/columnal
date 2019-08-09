@@ -123,17 +123,15 @@ public class Unit
         {
             StringJoiner bottom = new StringJoiner("*");
 
-            boolean showAsNegative = allUnits.isEmpty();
-
             units.forEach((u, p) ->
             {
-                if (p < -1 || (p == -1 && showAsNegative))
-                    bottom.add(u.toString() + "^" + (showAsNegative ? p : -p));
+                if (p < -1)
+                    bottom.add(u.toString() + "^" + (-p));
                 else if (p == -1)
                     bottom.add(u.toString());
             });
             if (allUnits.isEmpty())
-                allUnits = bottom.toString();
+                allUnits = "1/" + bottom.toString();
             else if (neg > 1)
                 allUnits += "/(" + bottom + ")";
             else

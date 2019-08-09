@@ -54,8 +54,8 @@ public class TestUnit
         SingleUnit s = mgr.getDeclared("s");
         SingleUnit d = mgr.getDeclared("USD");
         assertEquals("m", Unit._test_make(m, 1).toString());
-        assertEquals("m^-1", Unit._test_make(m, -1).toString());
-        assertEquals("s^-1", Unit._test_make(s, -1).toString());
+        assertEquals("1/m", Unit._test_make(m, -1).toString());
+        assertEquals("1/s^2", Unit._test_make(s, -2).toString());
         assertEquals("m/s", Unit._test_make(m, 1, s, -1).toString());
         assertEquals("m/s^2", Unit._test_make(m, 1, s, -2).toString());
         assertEquals("m/(g^3*s^2)", Unit._test_make(m, 1, s, -2, g, -3).toString());
@@ -81,6 +81,10 @@ public class TestUnit
         assertEquals(Unit._test_make(), mgr.loadUse("m^0"));
         assertEquals(Unit._test_make(), mgr.loadUse("m/m"));
 
+        assertEquals(Unit._test_make(m, -2), mgr.loadUse("m^-2"));
+        assertEquals(Unit._test_make(m, -2), mgr.loadUse("1/m^2"));
+        assertEquals(Unit._test_make(m, -2), mgr.loadUse("(1/m)*(m^-1)"));
+        
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/s^2"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s^2)"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m*s^-2"));

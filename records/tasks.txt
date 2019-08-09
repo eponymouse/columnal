@@ -18,7 +18,6 @@ Task C Items (unprioritised)
 - The as type examples are also not good, and the docs mention "from string" which does not exist
 - Maybe we should add an extract optional item
 - When you load blah =~ Is(x), it should load as "Is" not "Optional\Is"
-- Should we display m^-1 as 1/m ?  Perhaps rule is, if any negative show a slash, and always put negatives on RHS of slash.
 - Units guide, says acceleration is m^/s, but should be m/s^2.
 - Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
 - Give some more examples for as unit
@@ -361,3 +360,4 @@ Done after Phil B & Jon A:
 - Standalone documentation windows lack icon
 - When you click type to edit column details, title is focused in the dialog which appears
 - Table selection entry text box (in pick table) should be as wide as autocomplete
+- Should we display m^-1 as 1/m ?  Perhaps rule is, if any negative show a slash, and always put negatives on RHS of slash.
