@@ -11,7 +11,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.gui.lexeditor.TypeSaver.BracketContent;

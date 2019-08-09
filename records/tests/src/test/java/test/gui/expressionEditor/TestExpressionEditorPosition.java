@@ -180,6 +180,14 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     }
 
     @Property(trials=1)
+    public void testPos14(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "@if1<(2*3)@then0@else1@endif", "@if 1 < (2 * 3)\n    @then 0\n    @else 1\n@endif ", 
+            p(0, 3,4,5,6,7,8,9,10,  15,16, 21,22, 28)
+        );
+    }
+
+    @Property(trials=1)
     public void testPosDoubleSpace(@From(GenRandom.class) Random r)
     {
         testCaretPositionsAndDisplay(r, "The quick  brown fox>Str", "The quick brown fox > Str", p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19, 20,21,22,23), p(0,19, 20,23));

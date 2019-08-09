@@ -213,11 +213,11 @@ public class BackwardsMatch extends BackwardsProvider
         varContexts.remove(varContexts.size() -1);
 
         Expression toMatch = parent.make(t, actual, maxLevels - 1);
-        IfThenElseExpression cur = new IfThenElseExpression(clauses.get(0).getFirst().toEquals(toMatch), clauses.get(0).getSecond(), parent.make(targetType, parent.makeValue(targetType), maxLevels - 1));
+        IfThenElseExpression cur = IfThenElseExpression.unrecorded(clauses.get(0).getFirst().toEquals(toMatch), clauses.get(0).getSecond(), parent.make(targetType, parent.makeValue(targetType), maxLevels - 1));
 
         for (int i = 1; i < clauses.size(); i++)
         {
-            cur = new IfThenElseExpression(clauses.get(i).getFirst().toEquals(toMatch), clauses.get(i).getSecond(), cur);
+            cur = IfThenElseExpression.unrecorded(clauses.get(i).getFirst().toEquals(toMatch), clauses.get(i).getSecond(), cur);
         }
         
         return cur;
@@ -257,7 +257,7 @@ public class BackwardsMatch extends BackwardsProvider
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
             defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
             defines.add(Either.right(new Definition(match.pattern, toMatch)));
-            return new DefineExpression(defines.build(), new IfThenElseExpression(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
+            return new DefineExpression(defines.build(), IfThenElseExpression.unrecorded(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }
         else
         {

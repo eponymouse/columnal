@@ -655,7 +655,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
         {
-            return new IfThenElseExpression(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
+            return IfThenElseExpression.unrecorded(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
         }
 
         @Override

@@ -1,6 +1,5 @@
 package records.gui.lexeditor;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
@@ -25,7 +24,7 @@ import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
@@ -1361,9 +1360,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
         {
             return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
-                new AddedSpace(locations.recorderFor(condition).end, "\n    "),
-                new AddedSpace(locations.recorderFor(thenExpression).end, "\n    "),
-                new AddedSpace(locations.recorderFor(elseExpression).end, "\n")
+                new AddedSpace(self.getThenLocation().start, "\n    "),
+                new AddedSpace(self.getElseLocation().start, "\n    "),
+                new AddedSpace(self.getEndIfLocation().start, "\n")
             ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
         }
 

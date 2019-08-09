@@ -21,7 +21,7 @@ import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;

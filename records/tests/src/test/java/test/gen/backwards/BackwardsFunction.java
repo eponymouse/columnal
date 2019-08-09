@@ -117,7 +117,7 @@ public class BackwardsFunction extends BackwardsProvider
         @Override
         protected Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> makeDef(Expression expression)
         {
-            return new Pair<>(ImmutableList.of(new BooleanLiteral(true)), ps -> new IfThenElseExpression(ps.get(0), expression, expression));
+            return new Pair<>(ImmutableList.of(new BooleanLiteral(true)), ps -> IfThenElseExpression.unrecorded(ps.get(0), expression, expression));
         }
 
         // Note: can't do if-then-else because its condition may define variables that are used in the body.

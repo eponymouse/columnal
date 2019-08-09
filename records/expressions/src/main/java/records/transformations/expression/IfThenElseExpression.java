@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -31,12 +32,29 @@ import java.util.stream.Stream;
  */
 public class IfThenElseExpression extends NonOperatorExpression
 {
+    private final CanonicalSpan ifLocation;
+    private final CanonicalSpan thenLocation;
+    private final CanonicalSpan elseLocation;
+    private final CanonicalSpan endLocation;
     private final @Recorded Expression condition;
     private final @Recorded Expression thenExpression;
     private final @Recorded Expression elseExpression;
 
-    public IfThenElseExpression(@Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+    public static IfThenElseExpression unrecorded(@Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
     {
+        CanonicalSpan dummy = new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO);
+        return new IfThenElseExpression(dummy, condition, dummy, thenExpression, dummy, elseExpression, dummy);
+    }
+
+    public IfThenElseExpression(CanonicalSpan ifLocation, @Recorded Expression condition, 
+                                CanonicalSpan thenLocation, @Recorded Expression thenExpression, 
+                                CanonicalSpan elseLocation, @Recorded Expression elseExpression,
+                                CanonicalSpan endLocation)
+    {
+        this.ifLocation = ifLocation;
+        this.thenLocation = thenLocation;
+        this.elseLocation = elseLocation;
+        this.endLocation = endLocation;
         this.condition = condition;
         this.thenExpression = thenExpression;
         this.elseExpression = elseExpression;
@@ -170,9 +188,13 @@ public class IfThenElseExpression extends NonOperatorExpression
             return replaceWith;
         else 
             return new IfThenElseExpression(
+                ifLocation,
                 condition.replaceSubExpression(toReplace, replaceWith),
+                thenLocation,
                 thenExpression.replaceSubExpression(toReplace, replaceWith),
-                elseExpression.replaceSubExpression(toReplace, replaceWith)
+                elseLocation,
+                elseExpression.replaceSubExpression(toReplace, replaceWith),
+                endLocation
             );
     }
 
@@ -180,5 +202,20 @@ public class IfThenElseExpression extends NonOperatorExpression
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
         return visitor.ifThenElse(this, condition, thenExpression, elseExpression);
+    }
+
+    public CanonicalSpan getThenLocation()
+    {
+        return thenLocation;
+    }
+
+    public CanonicalSpan getElseLocation()
+    {
+        return elseLocation;
+    }
+
+    public CanonicalSpan getEndIfLocation()
+    {
+        return endLocation;
     }
 }

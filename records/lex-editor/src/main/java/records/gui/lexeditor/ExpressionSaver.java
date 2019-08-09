@@ -18,7 +18,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.ExpressionLexer.AddedSpaceCalculator;
 import records.gui.lexeditor.ExpressionLexer.Keyword;
 import records.gui.lexeditor.ExpressionLexer.Op;
@@ -245,7 +245,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     invalid.add(thenPart);
                     invalid.add(record(thenEnd, new InvalidIdentExpression(Keyword.ELSE.getContent())));
                     return Either.right(expect(ImmutableList.of(Keyword.ENDIF), miscBracketsFrom(thenEnd), (elsePart, elseEnd) -> {
-                        return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(CanonicalSpan.fromTo(errorDisplayer, elseEnd), new IfThenElseExpression(condition, thenPart, elsePart)));
+                        IfThenElseExpression ifThenElseExpression = new IfThenElseExpression(errorDisplayer, condition, conditionEnd, thenPart, thenEnd, elsePart, elseEnd);
+                        return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(CanonicalSpan.fromTo(errorDisplayer, elseEnd), ifThenElseExpression));
                     }, invalid::build, ifPrompt(2), false));
                 }, invalid::build, ifPrompt(1), false));
             }, invalid::build, ifPrompt(0), false)));

@@ -5,12 +5,11 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.CanonicalSpan;
+import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
@@ -32,9 +31,6 @@ import utility.TranslationUtility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.IntStream;
 
 public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
 {
