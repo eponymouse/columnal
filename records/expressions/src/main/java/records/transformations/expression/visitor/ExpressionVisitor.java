@@ -82,7 +82,7 @@ public interface ExpressionVisitor<T>
 
     T match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses);
     
-    T define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body);
+    T define(DefineExpression self, ImmutableList<DefineExpression.DefineItem> defines, @Recorded Expression body);
 
     T hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type);
 

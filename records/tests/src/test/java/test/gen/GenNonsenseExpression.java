@@ -2,6 +2,7 @@ package test.gen;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -133,7 +134,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new CallExpression(genTerminal(r, gs, true), TestUtil.makeList(r, 1, 5, () -> genDepth(true, r, depth + 1, gs))),
-                () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
+                () -> new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO)),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
                 () -> new RecordExpression(TestUtil.<Pair<@ExpressionIdentifier String, @Recorded Expression>>makeList(r, 2, 6, () -> new Pair<>("x", genDepth(r, depth + 1, gs))))
                 /*,
@@ -225,7 +226,7 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private MatchExpression.MatchClause genClause(SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return new MatchClause(TestUtil.makeList(r, 1, 4, () -> genPattern(r, gs, depth)), genDepth(r, depth, gs));
+        return MatchClause.unrecorded(TestUtil.makeList(r, 1, 4, () -> genPattern(r, gs, depth)), genDepth(r, depth, gs));
     }
 
     private MatchExpression.Pattern genPattern(SourceOfRandomness r, GenerationStatus gs, int depth)

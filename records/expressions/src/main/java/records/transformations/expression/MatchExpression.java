@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -44,15 +45,22 @@ public class MatchExpression extends NonOperatorExpression
      */
     public static class MatchClause implements ExplanationSource
     {
+        private final CanonicalSpan caseLocation;
         private final ImmutableList<Pattern> patterns;
         private final @Recorded Expression outcome;
 
-        public MatchClause(ImmutableList<Pattern> patterns, @Recorded Expression outcome)
+        public MatchClause(CanonicalSpan caseLocation, ImmutableList<Pattern> patterns, @Recorded Expression outcome)
         {
+            this.caseLocation = caseLocation;
             this.patterns = patterns;
             this.outcome = outcome;
         }
-
+        
+        public static MatchClause unrecorded(ImmutableList<Pattern> patterns, @Recorded Expression outcome)
+        {
+            return new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns, outcome);
+        }
+        
         public List<Pattern> getPatterns()
         {
             return patterns;
@@ -164,9 +172,9 @@ public class MatchExpression extends NonOperatorExpression
             return toDisplay((s, e) -> s).toPlain();
         }
 
-        public MatchClause copy()
+        public MatchClause _test_copy()
         {
-            return new MatchClause(patterns, outcome); //TODO deep copy patterns
+            return new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns, outcome); //TODO deep copy patterns
         }
 
         @Override
@@ -193,7 +201,12 @@ public class MatchExpression extends NonOperatorExpression
         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
         public MatchClause replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
-            return new MatchClause(Utility.mapListI(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
+            return new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), Utility.mapListI(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
+        }
+
+        public CanonicalSpan getCaseLocation()
+        {
+            return caseLocation;
         }
     }
 
@@ -314,13 +327,17 @@ public class MatchExpression extends NonOperatorExpression
         }
     }
 
+    private final CanonicalSpan matchLocation;
     private final @Recorded Expression expression;
     private final ImmutableList<MatchClause> clauses;
+    private final CanonicalSpan endLocation;
 
-    public MatchExpression(@Recorded Expression expression, ImmutableList<MatchClause> clauses)
+    public MatchExpression(CanonicalSpan matchLocation, @Recorded Expression expression, ImmutableList<MatchClause> clauses, CanonicalSpan endLocation)
     {
+        this.matchLocation = matchLocation;
         this.expression = expression;
         this.clauses = clauses;
+        this.endLocation = endLocation;
     }
 
     public Expression getExpression()
@@ -453,7 +470,7 @@ public class MatchExpression extends NonOperatorExpression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         // TODO allow replacement within clauses
-        return expression._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), e -> new MatchExpression(p.getSecond().apply(e), Utility.<MatchClause, MatchClause>mapListI(clauses, MatchClause::copy))));
+        return expression._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), e -> new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), p.getSecond().apply(e), Utility.<MatchClause, MatchClause>mapListI(clauses, MatchClause::_test_copy), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
     }
 
     @Override
@@ -469,12 +486,17 @@ public class MatchExpression extends NonOperatorExpression
         if (toReplace == this)
             return replaceWith;
         else
-            return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
+            return new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), expression.replaceSubExpression(toReplace, replaceWith), Utility.mapListI(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO));
     }
 
     @Override
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
         return visitor.match(this, expression, clauses);
+    }
+
+    public CanonicalSpan getEndLocation()
+    {
+        return endLocation;
     }
 }

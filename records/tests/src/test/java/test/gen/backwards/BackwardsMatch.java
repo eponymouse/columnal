@@ -2,6 +2,7 @@ package test.gen.backwards;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -257,7 +258,7 @@ public class BackwardsMatch extends BackwardsProvider
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
             defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
             defines.add(Either.right(new Definition(match.pattern, toMatch)));
-            return new DefineExpression(defines.build(), IfThenElseExpression.unrecorded(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
+            return DefineExpression.unrecorded(defines.build(), IfThenElseExpression.unrecorded(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }
         else
         {
@@ -286,7 +287,7 @@ public class BackwardsMatch extends BackwardsProvider
             Expression outcome = parent.make(targetType, parent.makeValue(targetType), maxLevels - 1);
             if (patterns.isEmpty())
                 return Optional.<MatchClause>empty();
-            return Optional.<MatchClause>of(new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), outcome));
+            return Optional.<MatchClause>of(MatchClause.unrecorded(Utility.mapListExI(patterns, p -> p.toPattern()), outcome));
         }).stream().<MatchClause>flatMap(o -> o.isPresent() ? Stream.<MatchClause>of(o.get()) : Stream.<MatchClause>empty()).collect(Collectors.<MatchClause>toList()));
         List<PatternInfo> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
 
@@ -304,8 +305,8 @@ public class BackwardsMatch extends BackwardsProvider
         patterns.add(r.nextInt(0, patterns.size()), successful);
         // Remove for successful pattern:
         varContexts.remove(varContexts.size() -1);
-        clauses.add(r.nextInt(0, clauses.size()), new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), toMatch));
-        return new MatchExpression(parent.make(t, actual, maxLevels - 1), ImmutableList.copyOf(clauses));
+        clauses.add(r.nextInt(0, clauses.size()), MatchClause.unrecorded(Utility.mapListExI(patterns, p -> p.toPattern()), toMatch));
+        return new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), parent.make(t, actual, maxLevels - 1), ImmutableList.copyOf(clauses), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO));
     }
     
     class PatternInfo

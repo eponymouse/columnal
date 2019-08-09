@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,13 +101,38 @@ public class DefineExpression extends Expression
         }
     }
     
-    private final ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines;
-    private final @Recorded Expression body;
-    
-    public DefineExpression(ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+    public static class DefineItem
     {
+        public final Either<@Recorded HasTypeExpression, Definition> typeOrDefinition;
+        public final CanonicalSpan trailingCommaOrThenLocation;
+
+        public DefineItem(Either<@Recorded HasTypeExpression, Definition> typeOrDefinition, CanonicalSpan trailingCommaOrThenLocation)
+        {
+            this.typeOrDefinition = typeOrDefinition;
+            this.trailingCommaOrThenLocation = trailingCommaOrThenLocation;
+        }
+    }
+
+    private final CanonicalSpan defineLocation;
+    // List will not be empty for a valid define:
+    private final ImmutableList<DefineItem> defines;
+    private final @Recorded Expression body;
+    private final CanonicalSpan endLocation;
+    
+    public DefineExpression(CanonicalSpan defineLocation, ImmutableList<DefineItem> defines, 
+                            @Recorded Expression body,
+                            CanonicalSpan endLocation)
+    {
+        this.defineLocation = defineLocation;
         this.defines = defines;
         this.body = body;
+        this.endLocation = endLocation;
+    }
+
+    public static DefineExpression unrecorded(ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+    {
+        CanonicalSpan dummy = new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO);
+        return new DefineExpression(dummy, Utility.mapListI(defines, d -> new DefineItem(d, dummy)), body, dummy);
     }
 
     @Override
@@ -116,9 +142,10 @@ public class DefineExpression extends Expression
         
         HashSet<String> shouldBeDeclaredInNextDefine = new HashSet<>();
         
-        for (Either<@Recorded HasTypeExpression, Definition> define : defines)
+        for (DefineItem defineItem : defines)
         {
             TypeState typeStateThisTime = typeState;
+            Either<@Recorded HasTypeExpression, Definition> define = defineItem.typeOrDefinition;
             @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
                 if (!shouldBeDeclaredInNextDefine.add(hasType.getVarName()))
                 {
@@ -154,7 +181,7 @@ public class DefineExpression extends Expression
 
         if (!shouldBeDeclaredInNextDefine.isEmpty())
         {
-            onError.recordError(defines.get(defines.size() - 1).<Expression>either(x -> x, x -> x.lhsPattern), StyledString.s("Type was given for " + shouldBeDeclaredInNextDefine.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
+            onError.recordError(defines.get(defines.size() - 1).typeOrDefinition.<Expression>either(x -> x, x -> x.lhsPattern), StyledString.s("Type was given for " + shouldBeDeclaredInNextDefine.stream().collect(Collectors.joining(", ")) + " but variable(s) were not declared"));
             return null;
         }
 
@@ -168,7 +195,7 @@ public class DefineExpression extends Expression
     @Override
     public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        for (Definition define : Either.getRights(defines))
+        for (Definition define : Either.<@Recorded HasTypeExpression, Definition>getRights(Utility.<DefineItem, Either<@Recorded HasTypeExpression, Definition>>mapListI(defines, d -> d.typeOrDefinition)))
         {
             @Nullable EvaluateState outcome = define.evaluate(state);
             if (outcome == null)
@@ -189,7 +216,7 @@ public class DefineExpression extends Expression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@define " + defines.stream().map(e -> e.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
+        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
     }
 
     @Override
@@ -225,7 +252,7 @@ public class DefineExpression extends Expression
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@define "),
-            defines.stream().map(e -> e.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(", ")),
+            defines.stream().map(e -> e.typeOrDefinition.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(", ")),
             StyledString.s(" @then "),
             body.toStyledString(),
             StyledString.s(" @enddefine")
@@ -239,6 +266,11 @@ public class DefineExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new DefineExpression(Utility.mapListI(defines, e -> e.mapBoth(x -> (HasTypeExpression)x.replaceSubExpression(toReplace, replaceWith), x -> x.replaceSubExpression(toReplace, replaceWith))), body.replaceSubExpression(toReplace, replaceWith));
+            return DefineExpression.unrecorded(Utility.mapListI(defines, e -> e.typeOrDefinition.mapBoth(x -> (HasTypeExpression)x.replaceSubExpression(toReplace, replaceWith), x -> x.replaceSubExpression(toReplace, replaceWith))), body.replaceSubExpression(toReplace, replaceWith));
+    }
+
+    public CanonicalSpan getEndLocation()
+    {
+        return endLocation;
     }
 }

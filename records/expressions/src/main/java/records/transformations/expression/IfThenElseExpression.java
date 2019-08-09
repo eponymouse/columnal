@@ -187,14 +187,10 @@ public class IfThenElseExpression extends NonOperatorExpression
         if (this == toReplace)
             return replaceWith;
         else 
-            return new IfThenElseExpression(
-                ifLocation,
+            return IfThenElseExpression.unrecorded(
                 condition.replaceSubExpression(toReplace, replaceWith),
-                thenLocation,
                 thenExpression.replaceSubExpression(toReplace, replaceWith),
-                elseLocation,
-                elseExpression.replaceSubExpression(toReplace, replaceWith),
-                endLocation
+                elseExpression.replaceSubExpression(toReplace, replaceWith)
             );
     }
 

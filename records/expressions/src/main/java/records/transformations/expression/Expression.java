@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.scene.Scene;
@@ -41,6 +42,7 @@ import records.grammar.GrammarUtility;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -672,7 +674,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 b.add(visitTopLevelExpression(ctx.topLevelExpression()));
                 b.add(new InvalidIdentExpression("@enddefine"));
                 return new InvalidOperatorExpression(b.build());
-            }, mixed -> new DefineExpression(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
+            }, mixed -> DefineExpression.unrecorded(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
         }
         
         private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, Definition>>> visitDefinitions(List<DefinitionContext> definitionContexts)
@@ -836,9 +838,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
                     patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                 }
-                clauses.add(new MatchClause(patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
+                clauses.add(new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
             }
-            return new MatchExpression(visitTopLevelExpression(ctx.topLevelExpression()), clauses.build());
+            return new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), visitTopLevelExpression(ctx.topLevelExpression()), clauses.build(), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO));
         }
 
         @Override

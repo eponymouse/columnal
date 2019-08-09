@@ -6,7 +6,6 @@ Task C Items (unprioritised)
 - In error message for "Missing @else before ENDIF" and "Closing ENDIF without opening" should be using @endif instead of ENDIF.  Also, not ideal for both errors to appear
   - Related: If you have @then without @if, the message is "Closing THEN without opening".  Missing what is opening (@if), same for ENDIF above actually 
 - Phil C4 5:44, was it down that caused him to move past @endif, or must it have been right (which would be fine)?
-- The expression @if (Column = "blah") @then... goes multiline, but the closing bracket is on the second line; should be on the first line
 - Make full @if completion the default when entering @if?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Add a quick fix for abs(x){m/s} to suggest abs(x) * 1{m/s}
@@ -365,3 +364,4 @@ Done after Phil B & Jon A:
 - Table selection entry text box (in pick table) should be as wide as autocomplete
 - Should we display m^-1 as 1/m ?  Perhaps rule is, if any negative show a slash, and always put negatives on RHS of slash.
 - Close any standalone documentation windows when exiting window with expression editor
+- The expression @if (Column = "blah") @then... goes multiline, but the closing bracket is on the second line; should be on the first line

@@ -1,5 +1,6 @@
 package test;
 
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
@@ -25,6 +26,7 @@ import records.error.UserException;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.CanonicalSpan;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
@@ -319,30 +321,30 @@ public class PropTypecheckIndividual
         Assume.assumeFalse(resultType.equals(otherType));
 
         // Not valid to have zero clauses as can't determine result type:
-        assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), ImmutableList.of())));
+        assertEquals(null, check(new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
 
         // One clause with one pattern, all checks out:
-        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
         // One clause, two patterns
-        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
         // Two clauses, two patterns each
-        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        assertEquals(resultType, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
         // Two clauses, two patterns, one pattern doesn't match:
-        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType))))));
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
         // Two clauses, two patterns, one clause doesn't match:
-        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(otherType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType)), new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(otherType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType)), MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
         // Two clauses, two patterns, one result doesn't match:
-        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new DummyExpression(matchType), ImmutableList.of(new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), new MatchClause(
-            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))))));
+        assertEquals(null, checkConcrete(typeMaker.getTypeManager(), new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), new DummyExpression(matchType), ImmutableList.of(MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), MatchClause.unrecorded(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
     }
 
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException

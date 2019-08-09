@@ -29,6 +29,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -539,7 +540,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         private final CanonicalSpan matchKeyword;
         // If null, we are the first case.  Otherwise we are a later case,
         // in which case we are Right with the given patterns
-        private final @Nullable Pair<@Recorded Expression, ImmutableList<Pattern>> matchAndPatterns;
+        private final @Nullable Pair<CanonicalSpan, Pair<@Recorded Expression, ImmutableList<Pattern>>> matchAndPatterns;
         // Previous complete clauses
         private final ImmutableList<MatchClause> previousClauses;
         
@@ -553,11 +554,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         
         // Matches a later @case, meaning we follow a @then and an outcome
-        public Case(CanonicalSpan matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> patternsForCur)
+        public Case(CanonicalSpan matchKeyword, CanonicalSpan caseLocation, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> patternsForCur)
         {
             super(Keyword.CASE);
             this.matchKeyword = matchKeyword;
-            matchAndPatterns = new Pair<>(matchFrom, patternsForCur);
+            matchAndPatterns = new Pair<>(caseLocation, new Pair<>(matchFrom, patternsForCur));
             this.previousClauses = previousClauses;
         }
 
@@ -575,14 +576,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 // Otherwise this is the outcome for the most recent clause:
-                m = matchAndPatterns.getFirst();
-                ImmutableList<Pattern> patterns = matchAndPatterns.getSecond();
-                newClauses = Utility.appendToList(previousClauses, new MatchClause(patterns, expressionBefore));
+                m = matchAndPatterns.getSecond().getFirst();
+                ImmutableList<Pattern> patterns = matchAndPatterns.getSecond().getSecond();
+                newClauses = Utility.appendToList(previousClauses, new MatchClause(matchAndPatterns.getFirst(), patterns, expressionBefore));
             }
             return Either.right(expectOneOf(node, ImmutableList.of(
-                new Then(matchKeyword, m, newClauses, ImmutableList.of(), Keyword.CASE),
-                new Given(matchKeyword, m, newClauses, ImmutableList.of()),
-                new OrCase(matchKeyword, m, newClauses, ImmutableList.of(), null)
+                new Then(matchKeyword, m, newClauses, ImmutableList.of(), node, Keyword.CASE),
+                new Given(matchKeyword, m, newClauses, ImmutableList.of(), node),
+                new OrCase(matchKeyword, m, newClauses, ImmutableList.of(), node, null)
             ), prefixIfInvalid));
         }
     }
@@ -594,14 +595,16 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
+        private final CanonicalSpan caseLocation;
 
-        public Given(CanonicalSpan matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases)
+        public Given(CanonicalSpan matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, CanonicalSpan caseLocation)
         {
             super(Keyword.GIVEN);
             this.matchKeyword = matchKeyword;
             this.matchFrom = matchFrom;
             this.previousClauses = previousClauses;
             this.previousCases = previousCases;
+            this.caseLocation = caseLocation;
         }
 
         @Override
@@ -609,8 +612,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         {
             // Expression here is the pattern, which comes before the guard:
             return Either.right(expectOneOf(node, ImmutableList.of(
-                new OrCase(matchKeyword, matchFrom, previousClauses, previousCases, expressionBefore),
-                new Then(matchKeyword, matchFrom, previousClauses, Utility.appendToList(previousCases, new Pattern(expressionBefore, null)), Keyword.GIVEN)
+                new OrCase(matchKeyword, matchFrom, previousClauses, previousCases, caseLocation, expressionBefore),
+                new Then(matchKeyword, matchFrom, previousClauses, Utility.appendToList(previousCases, new Pattern(expressionBefore, null)), caseLocation, Keyword.GIVEN)
             ), prefixIfInvalid));
         }
     }
@@ -622,9 +625,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousCases;
+        private final CanonicalSpan caseLocation;
         private final @Nullable @Recorded Expression curMatch; // if null, nothing so far, if non-null we are a guard
 
-        private OrCase(CanonicalSpan matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, @Nullable @Recorded Expression curMatch)
+        private OrCase(CanonicalSpan matchKeyword, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousCases, CanonicalSpan caseLocation, @Nullable @Recorded Expression curMatch)
         {
             super(Keyword.ORCASE);
             this.matchKeyword = matchKeyword;
@@ -632,6 +636,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             this.previousClauses = previousClauses;
             this.previousCases = previousCases;
             this.curMatch = curMatch;
+            this.caseLocation = caseLocation;
         }
 
         @Override
@@ -644,9 +649,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 new Pattern(curMatch, expressionBefore)
             );
             return Either.right(expectOneOf(node, ImmutableList.of(
-                new Given(matchKeyword, matchFrom, previousClauses, newCases),
-                new OrCase(matchKeyword, matchFrom, previousClauses, newCases, null),
-                new Then(matchKeyword, matchFrom, previousClauses, newCases, Keyword.ORCASE)
+                new Given(matchKeyword, matchFrom, previousClauses, newCases, caseLocation),
+                new OrCase(matchKeyword, matchFrom, previousClauses, newCases, caseLocation, null),
+                new Then(matchKeyword, matchFrom, previousClauses, newCases, caseLocation, Keyword.ORCASE)
             ), prefixIfInvalid));
         }
     }
@@ -658,17 +663,19 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         private final @Recorded Expression matchFrom;
         private final ImmutableList<MatchClause> previousClauses;
         private final ImmutableList<Pattern> previousPatterns;
+        private final CanonicalSpan caseLocation;
         private final Keyword precedingKeyword;
         
 
         // Preceding keyword may be CASE, GIVEN or ORCASE:
-        private Then(CanonicalSpan matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
+        private Then(CanonicalSpan matchKeywordNode, @Recorded Expression matchFrom, ImmutableList<MatchClause> previousClauses, ImmutableList<Pattern> previousPatterns, CanonicalSpan caseLocation, Keyword precedingKeyword)
         {
             super(Keyword.THEN);
             this.matchKeywordNode = matchKeywordNode;
             this.matchFrom = matchFrom;
             this.previousClauses = previousClauses;
             this.previousPatterns = previousPatterns;
+            this.caseLocation = caseLocation;
             this.precedingKeyword = precedingKeyword;
         }
 
@@ -687,26 +694,17 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 newPatterns = Utility.appendToList(previousPatterns, new Pattern(expressionBefore, null));
             }
             return Either.right(expectOneOf(node, ImmutableList.of(
-                new Case(matchKeywordNode, matchFrom, previousClauses, newPatterns),
+                new Case(matchKeywordNode, caseLocation, matchFrom, previousClauses, newPatterns),
                 new Choice(Keyword.ENDMATCH) {
                     @Override
                     public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, CanonicalSpan node, Stream<Supplier<@Recorded Expression>> prefixIfInvalid)
                     {
-                        MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, new MatchClause(newPatterns, lastExpression)));
+                        MatchExpression matchExpression = new MatchExpression(matchKeywordNode, matchFrom, Utility.appendToList(previousClauses, new MatchClause(caseLocation, newPatterns, lastExpression)), node);
                         return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(CanonicalSpan.fromTo(matchKeywordNode, node), matchExpression));
                     }
                 }
             ), prefixIfInvalid));
         }
-    }
-
-    private @Recorded Expression defineOrInvalid(ImmutableList<Pair<CanonicalSpan, @Recorded Expression>> defines, CanonicalSpan beginLocation, @Recorded Expression body, CanonicalSpan endLocation)
-    {
-        CanonicalSpan overallLocation = new CanonicalSpan(defines.get(0).getFirst().start, endLocation.end);
-        if (defines.stream().allMatch(p -> isEqualDefinition(p.getSecond()) || p.getSecond() instanceof HasTypeExpression))
-            return locationRecorder.record(overallLocation, new DefineExpression(Utility.<Pair<CanonicalSpan, @Recorded Expression>, Either<@Recorded HasTypeExpression, Definition>>mapListI(defines, p -> p.getSecond() instanceof HasTypeExpression ? Either.<@Recorded HasTypeExpression, Definition>left((HasTypeExpression)p.getSecond()) : Either.<@Recorded HasTypeExpression, Definition>right(new Definition(((EqualExpression)p.getSecond()).getOperands().get(0), ((EqualExpression)p.getSecond()).getOperands().get(1)))), body));
-        else
-            return locationRecorder.record(overallLocation, new InvalidOperatorExpression(Stream.<@Recorded Expression>concat(defines.stream().<@Recorded Expression>flatMap(p -> Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.DEFINE, p.getFirst()), p.getSecond())), Stream.<@Recorded Expression>of(keywordToInvalid(Keyword.THEN, beginLocation), body, keywordToInvalid(Keyword.ENDDEFINE, endLocation))).collect(ImmutableList.<@Recorded Expression>toImmutableList())));
     }
 
     private boolean isEqualDefinition(Expression expression)
@@ -1190,7 +1188,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             
             boolean foundThen = (terminator == Keyword.THEN);
             
-            @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions = foundThen ? new ArrayList<>() : null;
+            @Nullable ArrayList<DefineItem> definitions = foundThen ? new ArrayList<>() : null;
             for (int i = 0; i < bracketContent.expressions.size(); i++)
             {
                 @Recorded Expression e = bracketContent.expressions.get(i);
@@ -1198,13 +1196,16 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 if (i < bracketContent.commas.size())
                     itemsIfInvalid.add(locationRecorder.record(bracketContent.commas.get(i).getSecond(), new InvalidIdentExpression(bracketContent.commas.get(i).getFirst().getContent())));
                 if (definitions != null)
-                    definitions = e.visit(new VisitDefinitions(definitions));
+                    definitions = e.visit(new VisitDefinitions(definitions, i < bracketContent.commas.size() ? bracketContent.commas.get(i).getSecond() : keywordErrorDisplayer));
             }
 
             if (definitions != null)
             {
-                ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defs = ImmutableList.<Either<@Recorded HasTypeExpression, Definition>>copyOf(definitions);
-                currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(locationRecorder, s), (e, s) -> Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, s.end), new DefineExpression(defs, e))), () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
+                ImmutableList<DefineItem> defs = ImmutableList.<DefineItem>copyOf(definitions);
+                currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(locationRecorder, s), (e, s) -> {
+                    DefineExpression defineExpression = new DefineExpression(initialDefine, defs, e, s);
+                    return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, s.end), defineExpression));
+                }, () -> ImmutableList.copyOf(itemsIfInvalid), null, false)));
             }
             else
             {
@@ -1216,34 +1217,36 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
         // Returns null or the original array reference passed to constructor
         @OnThread(Tag.Any)
-        private class VisitDefinitions extends ExpressionVisitorFlat<@Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>>>
+        private class VisitDefinitions extends ExpressionVisitorFlat<@Nullable ArrayList<DefineItem>>
         {
-            private final ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions;
+            private final ArrayList<DefineItem> definitions;
+            private final CanonicalSpan terminatorLocation; // of either comma or @then
 
-            public VisitDefinitions(ArrayList<Either<@Recorded HasTypeExpression, Definition>> definitions)
+            public VisitDefinitions(ArrayList<DefineItem> definitions, CanonicalSpan terminatorLocation)
             {
                 this.definitions = definitions;
+                this.terminatorLocation = terminatorLocation;
             }
 
             @Override
-            protected @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> makeDef(Expression expression)
+            protected @Nullable ArrayList<DefineItem> makeDef(Expression expression)
             {
                 return null;
             }
 
             @Override
-            public @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+            public @Nullable ArrayList<DefineItem> hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
             {
-                definitions.add(Either.left(self));
+                definitions.add(new DefineItem(Either.left(self), terminatorLocation));
                 return definitions;
             }
 
             @Override
-            public @Nullable ArrayList<Either<@Recorded HasTypeExpression, Definition>> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            public @Nullable ArrayList<DefineItem> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
             {
                 if (expressions.size() == 2 && !lastIsPattern)
                 {
-                    definitions.add(Either.right(new Definition(expressions.get(0), expressions.get(1))));
+                    definitions.add(new DefineItem(Either.right(new Definition(expressions.get(0), expressions.get(1))), terminatorLocation));
                     return definitions;
                 }
                 else

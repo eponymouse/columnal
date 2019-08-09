@@ -261,7 +261,7 @@ public class TestExpressionExplanation
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression outcomeExpression = Expression.parse(null, outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        return new Explanation(new MatchClause(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
+        return new Explanation(MatchClause.unrecorded(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException

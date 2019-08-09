@@ -18,6 +18,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -337,16 +338,16 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType define(DefineExpression self, ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+            public UnitType define(DefineExpression self, ImmutableList<DefineItem> defines, @Recorded Expression body)
             {
                 write("@define");
                 boolean first = true;
-                for (Either<@Recorded HasTypeExpression, Definition> define : defines)
+                for (DefineItem define : defines)
                 {
                     if (!first)
                         write(",");
                     first = false;
-                    define.either_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
+                    define.typeOrDefinition.either_(x -> enterExpression(typeManager, x, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r),
                             x -> {
                                 enterExpression(typeManager, x.lhsPattern, EntryBracketStatus.SUB_EXPRESSION, r);
                                 write("=");

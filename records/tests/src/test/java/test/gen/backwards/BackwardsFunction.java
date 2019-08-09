@@ -68,7 +68,7 @@ public class BackwardsFunction extends BackwardsProvider
             }
             
             //Either.left(new HasTypeExpression(funcName, new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(ImmutableList.of())))))
-            return new DefineExpression(ImmutableList.of(Either.right(new Definition(new IdentExpression(funcName), function))), new CallExpression(new IdentExpression(funcName), paramsAndBody.getFirst()));
+            return DefineExpression.unrecorded(ImmutableList.of(Either.right(new Definition(new IdentExpression(funcName), function))), new CallExpression(new IdentExpression(funcName), paramsAndBody.getFirst()));
         });
     }
     
