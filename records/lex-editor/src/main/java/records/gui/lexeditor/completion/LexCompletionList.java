@@ -375,7 +375,8 @@ final class LexCompletionList extends Region
                     Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> key = Either.left(new Pair<>(group, group.completions.get(i)));
                     Node item = visible.computeIfAbsent(key, this::makeFlow);
                     item.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
-                    FXUtility.setPseudoclass(item, "selected", sel != null && sel.equals(key.<@Nullable LexCompletion>either(c -> c.getSecond(), g -> null)));
+                    // Note -- deliberate use of == to compare for reference equality, as completions can be equal according to .equals() by appearing in normal and related sections:
+                    FXUtility.setPseudoclass(item, "selected", sel != null && sel == key.<@Nullable LexCompletion>either(c -> c.getSecond(), g -> null));
                     toKeep.add(key);
                 }
             }

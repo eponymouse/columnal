@@ -8,7 +8,6 @@ Task C Items (unprioritised)
 - Make full @if completion the default when entering @if?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Maybe we should add an extract optional item
-- Phil C6 4:47, when selecting yards in units, both normal entry and related entry appear highlighted, but shouldn't
 - When using an undeclared variable you get a type mismatch, but more useful would probably be unknown variable.  Or are both showing?  But maybe only show undeclared variable (Phil C6 5:20)
 
 
@@ -101,6 +100,7 @@ Low Priority (good to have, but will not be hugely missed)
 - Auto-generated table name is confusing.
 - Long value tooltip wrong size on first show
 - Manual edit pick primary key is too confusing (add help box?)
+- Stop units in unit completion showing up in related section when already in the main section
 
 
 Skipping
@@ -367,3 +367,4 @@ Done after Phil B & Jon A:
 - Clicking check "Fail" multiple times brings up multiple stacked copies of the explanation.
 - Phil C4 5:44, was it down that caused him to move past @endif, or must it have been right (which would be fine)?
 - Parameter info prompts appear doubled, e.g. "as unit()" between parentheses
+- Phil C6 4:47, when selecting yards in units, both normal entry and related entry appear highlighted, but shouldn't
