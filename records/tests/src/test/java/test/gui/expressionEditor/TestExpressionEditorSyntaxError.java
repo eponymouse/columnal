@@ -74,7 +74,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void test3A()
     {
         // Display part will be (backslash for newline: "@if %\    @then %\    @else 0\@endif"
-        testError("@if%@then%@else0@endif", e(3,4, 4,5, "%"), e(9,10, 16,17, "%"));
+        testError("@if%@then%@else0@endif", e(3,4, 4,5, "%"), e(9,10, 14,15, "%"));
     }
 
     @Test
@@ -143,15 +143,15 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testEmptyIf()
     {
         testError("@iftrue@then@else1@endif",
-            e(12,12, 19,20, "missing", "@else"));
+            e(12,12, 17,18, "missing", "@else"));
     }
 
     @Test
     public void testEmptyIf2()
     {
         testError("@iftrue@then@else@endif",
-                e(12,12, 19,20, "missing", "@else"),
-                e(17,17, 31,32, "missing", "@endif"));
+                e(12,12, 17,18, "missing", "@else"),
+                e(17,17, 27,28, "missing", "@endif"));
     }
 
     @Test
@@ -179,7 +179,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testMissingOperator2()
     {
         testError("@iftrue@then0@else1@endif@iftrue@then0@else1@endif",
-                e(25,25, 40,41, "missing operator"));
+                e(25,25, 36,37, "missing operator"));
     }
 
     @Test

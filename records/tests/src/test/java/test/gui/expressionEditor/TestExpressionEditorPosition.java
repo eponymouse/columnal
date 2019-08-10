@@ -99,7 +99,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPos3(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true\n    @then sum(3 + \"az\")\n    @else false\n@endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
+        testCaretPositionsAndDisplay(r, "@iftrue@thensum(3+\"az\")@elsefalse@endif", "@if true\n  @then sum(3 + \"az\")\n  @else false\n@endif ", p(0, 3,4,5,6,7, 12,13,14,15,16,17,18,19,20,21,22,23,  28,29,30,31,32,33, 39),
         p(0, 3, 7, 12, 15,16,17,18,19,21,22,23,28,33,39)
         );
     }
@@ -153,14 +153,14 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPos10(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@definex=3@thenx@enddefine", "@define x = 3\n@then x\n@enddefine ", p(0, 7,8,9,10, 15,16, 26)
+        testCaretPositionsAndDisplay(r, "@definex=3@thenx@enddefine", "@define x = 3\n  @then x\n@enddefine ", p(0, 7,8,9,10, 15,16, 26)
         );
     }
 
     @Property(trials=1)
     public void testPos11(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@definex=3,abc=x@thenabc@enddefine", "@define x = 3, \nabc = x\n@then abc\n@enddefine ", p(0, 7,8,9,10, 11,12,13,14,15,16, 21,22,23,24, 34),
+        testCaretPositionsAndDisplay(r, "@definex=3,abc=x@thenabc@enddefine", "@define x = 3, \n       abc = x\n  @then abc\n@enddefine ", p(0, 7,8,9,10, 11,12,13,14,15,16, 21,22,23,24, 34),
                 p(0, 7,8,9,10, 11,14,15,16, 21,24, 34)
         );
     }
@@ -168,7 +168,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPos12(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@match3@case5@then7@endmatch", "@match 3\n    @case 5 @then 7\n@endmatch ",
+        testCaretPositionsAndDisplay(r, "@match3@case5@then7@endmatch", "@match 3\n  @case 5 @then 7\n@endmatch ",
             p(0, 6,7, 12,13, 18,19, 28)
         );
     }
@@ -176,7 +176,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPos13(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@match3@case5@then7@casexyz@thenxyz@endmatch", "@match 3\n    @case 5 @then 7\n    @case xyz @then xyz\n@endmatch ",
+        testCaretPositionsAndDisplay(r, "@match3@case5@then7@casexyz@thenxyz@endmatch", "@match 3\n  @case 5 @then 7\n  @case xyz @then xyz\n@endmatch ",
             p(0, 6,7, 12,13, 18,19, 24,25,26,27, 32,33,34,35, 44),
             p(0, 6,7, 12,13, 18,19, 24,27, 32,35, 44)
         );
@@ -185,7 +185,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPos14(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@if1<(2*3)@then0@else1@endif", "@if 1 < (2 * 3)\n    @then 0\n    @else 1\n@endif ", 
+        testCaretPositionsAndDisplay(r, "@if1<(2*3)@then0@else1@endif", "@if 1 < (2 * 3)\n  @then 0\n  @else 1\n@endif ", 
             p(0, 3,4,5,6,7,8,9,10,  15,16, 21,22, 28)
         );
     }
@@ -194,7 +194,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     public void testPos15(@From(GenRandom.class) Random r)
     {
         testCaretPositionsAndDisplay(r, "@match[3]@case[]@then7@case[1+(2*3)]@then99@case[1]@giventrue&(true|false)@then8@endmatch", 
-            "@match [3]\n    @case [] @then 7\n    @case [1 + (2 * 3)] @then 99\n    @case [1] @given true & (true | false) @then 8\n@endmatch ",
+            "@match [3]\n  @case [] @then 7\n  @case [1 + (2 * 3)] @then 99\n  @case [1] @given true & (true | false) @then 8\n@endmatch ",
             p(0, 6,7,8,9,  14,15,16, 21,22, 27,28,29,30,31,32,33,34,35,36, 41,42,43, 48,49,50,51, 57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74, 79,80,89),
             p(0, 6,7,8,9,  14,15,16, 21,22, 27,28,29,30,31,32,33,34,35,36, 41,43, 48,49,50,51, 57,61,62,63,67,68,73,74, 79,80,89));
     }
@@ -203,7 +203,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     public void testPos16(@From(GenRandom.class) Random r)
     {
         testCaretPositionsAndDisplay(r, "@definex::[Text],x=[\"a\";\"b\"]@thenx;(x;x)@enddefine",
-            "@define x :: [Text],\n    x = [\"a\" ; \"b\"]\n@thenx;(x;x)@enddefine ",
+            "@define x :: [Text],\n       x = [\"a\" ; \"b\"]\n@thenx;(x;x)@enddefine ",
             p(0,7,8,10,11,12,13,14,15,16, 17,18,19,20,21,22,23,24,25,26,27,28,  33,34,35,36,37,38,39,40,50),
             p(0,7,8,10,11,15,16, 17,18,19,20,21,22,23,24,25,26,27,28,  33,34,35,36,37,38,39,40,50)
         );
@@ -254,13 +254,15 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     @Property(trials=1)
     public void testPosIncomplete5(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@if@then@else@endif", "@if  \n    @then  \n    @else  \n@endif ", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay(r, "@if@then@else@endif", "@if  \n  @then  \n  @else  \n@endif ", p(0, 3, 8, 13, 19));
     }
 
     @Property(trials=1)
     public void testPosIncomplete6(@From(GenRandom.class) Random r)
     {
-        testCaretPositionsAndDisplay(r, "@iftrue@then(1+2@else3@endif+1", "@if true\n    @then (1 + 2\n    @else 3\n@endif + 1", p(0, 3, 8, 13, 19));
+        testCaretPositionsAndDisplay(r, "@iftrue@then(1+2@else3@endif+1", "@if true\n  @then (1 + 2\n  @else 3\n@endif  + 1",
+            p(0, 3,4,5,6,7, 12,13,14,15,16, 21,22, 28,29,30),
+            p(0, 3,7, 12,13,14,15,16, 21,22, 28,29,30));
     }
 
     @Property(trials=1)
