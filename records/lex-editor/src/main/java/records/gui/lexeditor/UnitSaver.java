@@ -182,7 +182,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     else
                     {
                         // Error!
-                        locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.s("Missing ) before " + (terminator == null ? "end" : terminator)), ImmutableList.of());
+                        locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.concat(StyledString.s("Missing ) before "), terminator == null ? StyledString.s("end") : terminator.toStyledString()), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
                         ImmutableList.Builder<@Recorded UnitExpression> items = ImmutableList.builder();
                         items.add(record(errorDisplayer, new InvalidSingleUnitExpression(bracket.getContent())));

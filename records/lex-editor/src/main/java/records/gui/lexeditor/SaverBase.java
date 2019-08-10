@@ -491,7 +491,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             {
                 CanonicalSpan start = CanonicalSpan.START;
                 CanonicalSpan end = keywordErrorDisplayer;
-                locationRecorder.addErrorAndFixes(end, StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
+                locationRecorder.addErrorAndFixes(end, StyledString.concat(StyledString.s("Unexpected "), terminator == null ? StyledString.s("item") : terminator.toStyledString()), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, BRACKET_CONTENT> thisSaver = Utility.later(SaverBase.this);
                 currentScopesFinal.peek().items.add(Either.<@Recorded EXPRESSION, OpAndNode>left(makeContent.<EXPRESSION>fetchContent(expectSingle(locationRecorder, CanonicalSpan.fromTo(start, end)))));
                 if (terminator != null)
@@ -906,7 +906,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     ImmutableList<KEYWORD> toAdd = termIndex == -1 ? expected : expected.subList(0, termIndex);
                     StyledString toAddSS = toAdd.stream().map(s -> s.toStyledString()).collect(StyledString.joining("\u2026"));
                     TextQuickFix fix = new TextQuickFix(StyledString.s("Add missing item(s)"), ImmutableList.of(), keywordErrorDisplayer.lhs(), () -> new Pair<>(toAdd.stream().map(k -> k.getContent()).collect(Collectors.joining()), toAddSS));
-                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.concat(StyledString.s("Missing "), toAddSS, StyledString.s(" before " + (terminator == null ? "end" : terminator))), ImmutableList.of(fix));
+                    locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.concat(StyledString.s("Missing "), toAddSS, StyledString.s(" before "), terminator == null ? StyledString.s("end") : terminator.toStyledString()), ImmutableList.of(fix));
                     @Nullable CanonicalSpan start = currentScopes.peek().openingNode;
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OpAndNode, @Recorded EXPRESSION>> items = ImmutableList.builder();
