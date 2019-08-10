@@ -5,7 +5,6 @@ Task C Items (unprioritised)
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - In error message for "Missing @else before ENDIF" and "Closing ENDIF without opening" should be using @endif instead of ENDIF.  Also, not ideal for both errors to appear
   - Related: If you have @then without @if, the message is "Closing THEN without opening".  Missing what is opening (@if), same for ENDIF above actually 
-- Phil C4 5:44, was it down that caused him to move past @endif, or must it have been right (which would be fine)?
 - Make full @if completion the default when entering @if?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Maybe we should add an extract optional item
@@ -367,3 +366,4 @@ Done after Phil B & Jon A:
 - The expression @if (Column = "blah") @then... goes multiline, but the closing bracket is on the second line; should be on the first line
 - Edit check dialog immediately shows an error, but shouldn't until edited
 - Clicking check "Fail" multiple times brings up multiple stacked copies of the explanation.
+- Phil C4 5:44, was it down that caused him to move past @endif, or must it have been right (which would be fine)?
