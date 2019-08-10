@@ -51,7 +51,7 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testTypeErrorThenElse()
     {
-        testError("@iftrue@then100{m}@else13@endif", e(23,25, 36,38,  "mismatch"));
+        testError("@iftrue@then100{m}@else13@endif", e(23,25, 32,34,  "mismatch"));
     }
 
     @Test
@@ -111,7 +111,7 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testAmbiguousTypeError1c()
     {
-        testError("@iftrue@thenfrom text(\"\")@else[]@endif", e(0, 38, 0,53, "type"));
+        testError("@iftrue@thenfrom text(\"\")@else[]@endif", e(0, 38, 0,49, "type"));
     }
 
     @Test
