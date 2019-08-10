@@ -111,6 +111,21 @@ public class DefineExpression extends Expression
             this.typeOrDefinition = typeOrDefinition;
             this.trailingCommaOrThenLocation = trailingCommaOrThenLocation;
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DefineItem that = (DefineItem) o;
+            return typeOrDefinition.equals(that.typeOrDefinition);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(typeOrDefinition);
+        }
     }
 
     private final CanonicalSpan defineLocation;
