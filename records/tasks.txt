@@ -1,7 +1,6 @@
 Task C Items (unprioritised)
 ===
 - When installing an upgrade with Columnal still open, letting MSI installer close the application doesn't work right (not sure if not closed, or closed and re-opened)
-- Black arrow doesn't stand out well against background
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - Make full @if completion the default when entering @if?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
@@ -364,3 +363,4 @@ Done after Phil B & Jon A:
 - Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
 - Why doesn't Pete Antony completion show?  (Jon A3A4, 4:40, and 6:00ish)  Code completion blank but shouldn't be.
 - When using an undeclared variable you get a type mismatch, but more useful would probably be unknown variable.  Or are both showing?  But maybe only show undeclared variable (Phil C6 5:20)
+- Black arrow doesn't stand out well against background
