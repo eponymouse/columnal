@@ -20,12 +20,6 @@ Documentation items
 - Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
 - Give some more examples for as unit
 
- 
-
-Probably fixed by recent changes but not definite
----
-- Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
-- Why doesn't Pete Antony completion show?  (Jon A3A4, 4:40, and 6:00ish)  Code completion blank but shouldn't be.
 
 
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
@@ -368,3 +362,5 @@ Done after Phil B & Jon A:
 - Phil C6 4:47, when selecting yards in units, both normal entry and related entry appear highlighted, but shouldn't
 - In error message for "Missing @else before ENDIF" and "Closing ENDIF without opening" should be using @endif instead of ENDIF.  Also, not ideal for both errors to appear
   - Related: If you have @then without @if, the message is "Closing THEN without opening".  Missing what is opening (@if), same for ENDIF above actually 
+- Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
+- Why doesn't Pete Antony completion show?  (Jon A3A4, 4:40, and 6:00ish)  Code completion blank but shouldn't be.
