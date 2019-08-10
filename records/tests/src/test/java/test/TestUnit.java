@@ -62,6 +62,8 @@ public class TestUnit
         assertEquals("m/(g^3*l*s^2)", Unit._test_make(m, 1, s, -2, l, -1, g, -3).toString());
         assertEquals("(l*m)/(g^3*s^2)", Unit._test_make(m, 1, s, -2, l, 1, g, -3).toString());
         assertEquals("m/(USD*s^2)", Unit._test_make(m, 1, d, -1, s, -2).toString());
+        assertEquals("1/(USD*s^2)", Unit._test_make(s, -2, d, -1).toString());
+        assertEquals("1/(USD*g^3*s^2)", Unit._test_make(g, -3, s, -2, d, -1).toString());
     }
     
     @Test

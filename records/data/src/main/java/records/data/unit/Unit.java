@@ -119,6 +119,8 @@ public class Unit
         });
         int neg = units.size() - pos[0];
         String allUnits = pos[0] > 1 ? "(" + top.toString() + ")" : top.toString();
+        if (allUnits.isEmpty())
+            allUnits = "1";
         if (neg > 0)
         {
             StringJoiner bottom = new StringJoiner("*");
@@ -130,18 +132,15 @@ public class Unit
                 else if (p == -1)
                     bottom.add(u.toString());
             });
-            if (allUnits.isEmpty())
-                allUnits = "1/" + bottom.toString();
-            else if (neg > 1)
+            
+            
+            if (neg > 1)
                 allUnits += "/(" + bottom + ")";
             else
                 allUnits += "/" + bottom;
 
         }
-        if (!allUnits.isEmpty())
-            return allUnits;
-        else
-            return "1";
+        return allUnits;
     }
 
     public String forDisplay()
