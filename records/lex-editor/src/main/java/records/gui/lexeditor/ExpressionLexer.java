@@ -569,7 +569,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         for (AddedSpace addedSpace : addedSpaces)
         {
-            display = addDisplayAfter(display, caretPos, addedSpace.addedAtInternalPos, addedSpace.added);
+            display = addDisplayAfter(display, caretPos, addedSpace.addedAtInternalPos, StyledString.s(addedSpace.added).withStyle(new StyledCSS("expression-indent")));
         }
         
         return display;
@@ -587,7 +587,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
     
-    private StyledString addDisplayAfter(StyledString display, ArrayList<CaretPos> caretPos, @CanonicalLocation int after, String displayContentToAdd) throws InternalException
+    private StyledString addDisplayAfter(StyledString display, ArrayList<CaretPos> caretPos, @CanonicalLocation int after, StyledString displayContentToAdd) throws InternalException
     {
         // We find the caret pos at the end of the span:
         CaretPos posAfter = caretPos.stream().filter(p -> p.positionInternal == after).findFirst().orElse(null);
@@ -604,12 +604,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 // Don't change internal position, only display position:
                 @SuppressWarnings("units")
-                CaretPos adjusted = new CaretPos(p.positionInternal, p.positionDisplay + displayContentToAdd.length() - (removingExistingSpace ? 1 : 0));
+                CaretPos adjusted = new CaretPos(p.positionInternal, p.positionDisplay + displayContentToAdd.toPlain().length() - (removingExistingSpace ? 1 : 0));
                 caretPos.set(i, adjusted);
             }
         }
         
-        return StyledString.concat(displayBefore, StyledString.s(displayContentToAdd), displayAfter);
+        return StyledString.concat(displayBefore, displayContentToAdd, displayAfter);
     }
 
     private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
@@ -1351,6 +1351,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     class AddedSpaceCalculator extends ExpressionVisitorStream<AddedSpace>
     {
         private final EditorLocationAndErrorRecorder locations;
+        private final String INDENT = "  ";
 
         public AddedSpaceCalculator(EditorLocationAndErrorRecorder locations)
         {
@@ -1361,8 +1362,8 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
         {
             return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
-                new AddedSpace(self.getThenLocation().start, "\n    "),
-                new AddedSpace(self.getElseLocation().start, "\n    "),
+                new AddedSpace(self.getThenLocation().start, "\n" + INDENT),
+                new AddedSpace(self.getElseLocation().start, "\n" + INDENT),
                 new AddedSpace(self.getEndIfLocation().start, "\n")
             ), increaseIndent(super.ifThenElse(self, condition, thenExpression, elseExpression)));
         }
@@ -1374,7 +1375,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
             for (int i = 0; i < clauses.size(); i++)
             {
-                r.add(new AddedSpace(clauses.get(i).getCaseLocation().start, "\n    "));
+                r.add(new AddedSpace(clauses.get(i).getCaseLocation().start, "\n" + INDENT));
             }
             r.add(new AddedSpace(self.getEndLocation().start, "\n"));
             return Stream.<AddedSpace>concat(r.build(), increaseIndent(super.match(self, expression, clauses)));
@@ -1390,7 +1391,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 Either<@Recorded HasTypeExpression, Definition> item = defines.get(i).typeOrDefinition;
                 @Recorded Expression expression = item.<@Recorded Expression>either(t -> t, d -> d.rhsValue);
                 boolean followedByComma = defines.size() > 1 && i < defines.size() - 1;
-                r.add(new AddedSpace(locations.recorderFor(expression).end + (followedByComma ? CanonicalLocation.ONE : CanonicalLocation.ZERO), "\n"));
+                r.add(new AddedSpace(defines.get(i).trailingCommaOrThenLocation.start + (followedByComma ? CanonicalLocation.ONE : CanonicalLocation.ZERO), followedByComma ? "\n       " : "\n  " ));
             }
             r.add(new AddedSpace(self.getEndLocation().start, "\n"));
             
@@ -1399,7 +1400,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         private Stream<AddedSpace> increaseIndent(Stream<AddedSpace> indents)
         {
-            return indents.map(a -> new AddedSpace(a.addedAtInternalPos, a.added + "    "));
+            return indents.map(a -> new AddedSpace(a.addedAtInternalPos, a.added + INDENT));
         }
     }
 }
