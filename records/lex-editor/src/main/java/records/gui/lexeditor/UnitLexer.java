@@ -5,10 +5,12 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.InsertListener;
@@ -171,7 +173,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             }
         }
 
-        return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets(), (i, n) -> ImmutableMap.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>of());
     }
     
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)

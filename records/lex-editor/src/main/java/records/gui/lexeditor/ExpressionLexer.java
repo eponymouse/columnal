@@ -558,9 +558,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             @Override
             public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk)
             {
-                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, saver, insertListener);
+                return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, insertListener);
             }
-        }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets());
+        }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets(), saver::getDisplayFor);
     }
 
     private StyledString addIndents(StyledString display, ArrayList<CaretPos> caretPos, @Recorded Expression expression, EditorLocationAndErrorRecorder locations) throws InternalException
@@ -617,7 +617,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, ExpressionSaver expressionSaver, InsertListener insertListener)
+    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, InsertListener insertListener)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -662,7 +662,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         
         ImmutableList<LexCompletion> operators = getOperatorCompletions(canonIndex, stem, curChunk, precedingChunk);
         
-        return new ExpressionCompletionContext(sort(directAndRelated, operators, ImmutableList.copyOf(guides)), expressionSaver::getDisplayFor);
+        return new ExpressionCompletionContext(sort(directAndRelated, operators, ImmutableList.copyOf(guides)));
     }
 
     private Pair<CompletionStatus, ExpressionCompletion> excludeFirstPos(Pair<CompletionStatus, ExpressionCompletion> original)

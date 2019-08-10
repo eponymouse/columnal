@@ -21,6 +21,7 @@ import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.InsertListener;
@@ -311,7 +312,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         if (saved.isEmpty() && emptyAllowed)
             errors = ImmutableList.of();
         
-        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets());
+        return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets(), (i, n) -> ImmutableMap.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>of());
     }
     
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)

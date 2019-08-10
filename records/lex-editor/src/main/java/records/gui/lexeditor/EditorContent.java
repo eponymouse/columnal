@@ -271,11 +271,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int newCaretPos, Node toRightOf)
     {
-        EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> accum = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
-        curContent.autoCompleteDetails.stream().filter(acd -> acd.location.touches(newCaretPos)).<ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>>map(acd -> acd.codeCompletionContext.getInfoAndPrompt(newCaretPos, toRightOf)).distinct().forEach(m -> {
-            m.forEach((k, v) -> accum.merge(k, v, (a, b) -> new Pair<>(StyledString.intercalate(StyledString.s("\n"), ImmutableList.of(a.getFirst(), b.getFirst())), Utility.concatI(a.getSecond(), b.getSecond()))));
-        });
-        return ImmutableMap.copyOf(accum);
+        return getLexerResult().infoAndPromptForPosition.apply(newCaretPos, toRightOf);
     }
 
     public void undo()

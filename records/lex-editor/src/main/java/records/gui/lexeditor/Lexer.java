@@ -5,8 +5,11 @@ import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import javafx.scene.Node;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
@@ -16,6 +19,7 @@ import records.gui.lexeditor.completion.LexCompletionGroup;
 import styled.StyledCSS;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.FXPlatformBiFunction;
 import utility.IdentifierUtility.Consumed;
 import utility.Pair;
 import utility.Utility;
@@ -188,9 +192,10 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         // types a ({[ opening bracket then do not insert the closing bracket.
         public final BitSet suppressBracketMatching;
         public final boolean bracketsAreBalanced;
+        public final FXPlatformBiFunction<@CanonicalLocation Integer, Node, ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced)
+        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced, FXPlatformBiFunction<@CanonicalLocation Integer, Node,  ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -204,6 +209,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             this.autoCompleteDetails = completeDetails;
             this.suppressBracketMatching = suppressBracketMatching;
             this.bracketsAreBalanced = bracketsBalanced;
+            this.infoAndPromptForPosition = infoAndPromptForPosition;
             Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
