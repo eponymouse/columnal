@@ -82,7 +82,9 @@ public class CallExpression extends Expression
         ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
         for (@Recorded Expression argument : arguments)
         {
-            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, function instanceof ConstructorExpression ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+            // Pattern can go through constructors, but arguments of functions must be expressions:
+            ExpressionKind argKind = function instanceof ConstructorExpression ? kind : ExpressionKind.EXPRESSION;
+            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, argKind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
             state = checkedExp.typeState;

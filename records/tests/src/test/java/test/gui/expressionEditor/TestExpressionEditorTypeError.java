@@ -125,4 +125,16 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     {
         testError("@ifOptional\\None=~Optional\\Is(x)@thensingle(x)@else@ifOptional\\None=~Optional\\Is(x)@thenx+1{m/s}@else0{m/s}@endif@endif");
     }
+
+    @Test
+    public void testUnknownVar()
+    {
+        testError("1+y", e(2, 3, 4, 5, "unknown"));
+    }
+
+    @Test
+    public void testUnknownVar2()
+    {
+        testError("1+Is(y)", e(5, 6, 7, 8, "unknown"));
+    }
 }

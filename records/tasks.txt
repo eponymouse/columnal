@@ -6,7 +6,7 @@ Task C Items (unprioritised)
 - Make full @if completion the default when entering @if?
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Maybe we should add an extract optional item
-- When using an undeclared variable you get a type mismatch, but more useful would probably be unknown variable.  Or are both showing?  But maybe only show undeclared variable (Phil C6 5:20)
+- When you load blah =~ Is(x), it should load as "Is" not "Optional\Is"
 
 
 Documentation items
@@ -64,7 +64,6 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Quick fix not offered when literal lacked units, in expression: @ifN100m Time=~Is(x)@then100{m}/x@else0@endif
 - When text file is UTF16, UTF8 is selected by default.
 - Add a quick fix for abs(x){m/s} to suggest abs(x) * 1{m/s}
-- When you load blah =~ Is(x), it should load as "Is" not "Optional\Is"
 - Add support for @elif ?
 - When user tries to click to select column defined in this calculate, give hint?  Could also add it to autocomplete, but with error highlighting and explain why?
 
@@ -364,3 +363,4 @@ Done after Phil B & Jon A:
   - Related: If you have @then without @if, the message is "Closing THEN without opening".  Missing what is opening (@if), same for ENDIF above actually 
 - Phil B3_1 12:07 autocomplete is blank, ditto B5 1:19
 - Why doesn't Pete Antony completion show?  (Jon A3A4, 4:40, and 6:00ish)  Code completion blank but shouldn't be.
+- When using an undeclared variable you get a type mismatch, but more useful would probably be unknown variable.  Or are both showing?  But maybe only show undeclared variable (Phil C6 5:20)
