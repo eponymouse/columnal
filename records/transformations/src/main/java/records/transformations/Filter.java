@@ -218,7 +218,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     {
         renames.useColumnsFromTo(srcTableId, getId());
         
-        return Collections.singletonList(PREFIX + " " + filterExpression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, null, renames.withDefaultTableId(srcTableId)));
     }
 
     @Override

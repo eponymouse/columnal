@@ -11,6 +11,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.UnitLexer.UnitBracket;
 import records.gui.lexeditor.UnitLexer.UnitOp;
@@ -85,9 +86,9 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     //UnitManager getUnitManager();
 
 
-    public UnitSaver(InsertListener insertListener)
+    public UnitSaver(TypeManager typeManager, InsertListener insertListener)
     {
-        super(insertListener);
+        super(typeManager, insertListener);
     }
 
     @Override
@@ -225,15 +226,6 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     protected CanonicalSpan recorderFor(@Recorded UnitExpression unitExpression)
     {
         return locationRecorder.recorderFor(unitExpression);
-    }
-
-    @Override
-    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded UnitExpression expression)
-    {
-        return ImmutableMap.of(
-                UNIT_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, true),
-                DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, true)
-        );
     }
 
     @Override

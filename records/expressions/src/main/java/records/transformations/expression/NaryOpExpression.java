@@ -7,6 +7,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -79,7 +80,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         StringBuilder s = new StringBuilder(surround == BracketedStatus.NEED_BRACKETS ? "(" : "");
         s.append(getSpecialPrefix());
@@ -87,7 +88,7 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(saveDestination, BracketedStatus.NEED_BRACKETS, renames));
+            s.append(expressions.get(i).save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames));
         }
         if (surround == BracketedStatus.NEED_BRACKETS)
             s.append(")");

@@ -119,7 +119,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     @Override
     public LexerResult<TypeExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
     {
-        TypeSaver saver = new TypeSaver(insertListener);
+        TypeSaver saver = new TypeSaver(typeManager, insertListener);
         boolean prevWasIdent = false;
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         ArrayList<ContentChunk> chunks = new ArrayList<>();
@@ -173,7 +173,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 if (end != -1)
                 {
                     // We don't require concrete as we do that bit so don't want do it twice:
-                    UnitLexer unitLexer = new UnitLexer( typeManager.getUnitManager(), false);
+                    UnitLexer unitLexer = new UnitLexer( typeManager, false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, end), 0, insertListener);
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE));
                     chunks.add(new ContentChunk("{", ChunkType.NESTED_START));
@@ -192,7 +192,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 else
                 {
                     saver.locationRecorder.addErrorAndFixes(removedCharacters.map(curIndex, content.substring(curIndex)), StyledString.s("Missing closing }"), ImmutableList.of());
-                    UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
+                    UnitLexer unitLexer = new UnitLexer(typeManager, false);
                     LexerResult<UnitExpression, CodeCompletionContext> lexerResult = unitLexer.process(content.substring(curIndex + 1, content.length()), 0, insertListener);
                     saver.addNestedLocations(lexerResult.locationRecorder, removedCharacters.map(curIndex + RawInputLocation.ONE));
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, content));

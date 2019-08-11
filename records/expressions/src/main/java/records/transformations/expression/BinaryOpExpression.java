@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -61,9 +62,9 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        String inner = lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " " + saveOp() + " " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
+        String inner = lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + " " + saveOp() + " " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
         if (surround != BracketedStatus.NEED_BRACKETS)
             return inner;
         else

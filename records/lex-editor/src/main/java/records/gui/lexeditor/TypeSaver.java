@@ -11,6 +11,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
@@ -70,9 +71,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
 
-    public TypeSaver(InsertListener insertListener)
+    public TypeSaver(TypeManager typeManager, InsertListener insertListener)
     {
-        super(insertListener);
+        super(typeManager, insertListener);
     }
 
     public void saveKeyword(Keyword keyword, CanonicalSpan errorDisplayer)
@@ -358,15 +359,6 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     protected TypeExpression opToInvalid(Operator operator)
     {
         return InvalidIdentTypeExpression.identOrUnfinished(operator.getContent());
-    }
-
-    @Override
-    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded TypeExpression expression)
-    {
-        return ImmutableMap.of(
-                TYPE_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, TableAndColumnRenames.EMPTY),
-                DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, TableAndColumnRenames.EMPTY)
-        );
     }
 
     @Override

@@ -10,6 +10,7 @@ import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -105,7 +106,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName, null);
 

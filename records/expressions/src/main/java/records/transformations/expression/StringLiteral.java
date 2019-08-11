@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
@@ -40,7 +41,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         return "\"" + rawUnprocessed + "\"";
     }

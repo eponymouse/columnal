@@ -5,6 +5,7 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -124,9 +125,9 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS,renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
+        String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + " @then " + thenExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + " @endif";
         return content;
     }
 

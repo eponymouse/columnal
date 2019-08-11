@@ -100,7 +100,7 @@ public class PropTypecheckIndividual
         }
         
         @Override
-        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
         {
             return "Testing";
         }
@@ -395,7 +395,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
         {
             return "Testing";
         }

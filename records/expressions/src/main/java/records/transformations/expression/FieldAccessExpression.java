@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -78,9 +79,9 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        String content = lhsRecord.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
+        String content = lhsRecord.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + "#" + fieldName.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
         if (surround == BracketedStatus.NEED_BRACKETS)
             return "(" + content + ")";
         else

@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -286,9 +287,9 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return (saveDestination == SaveDestination.SAVE_EXTERNAL ? "@call " : "") + function.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "(" + arguments.stream().map(a -> a.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
+        return (saveDestination == SaveDestination.SAVE_EXTERNAL ? "@call " : "") + function.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + "(" + arguments.stream().map(a -> a.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

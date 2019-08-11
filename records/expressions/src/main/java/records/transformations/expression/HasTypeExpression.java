@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -73,9 +74,9 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return varName + " :: " + type.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
+        return varName + " :: " + type.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
     }
 
     @Override

@@ -28,6 +28,7 @@ import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.AutoComplete.Completion;
@@ -110,10 +111,12 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     private final SidePane<T> sidePane;
     private @Nullable SubPicker subPicker = null;
     private final @Nullable Node sidePaneNode;
-
+    private final TypeManager typeManager;
+    
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, ImmutableList<ExpressionRecipe> recipes, @Nullable DataType expectedType, SidePane<T> sidePane)
     {
         super(parent, new DialogPaneWithSideButtons());
+        this.typeManager = parent.getManager().getTypeManager();
         this.sidePane = sidePane;
         setResizable(true);
         initModality(Modality.NONE);
@@ -451,14 +454,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     @NonNull Window window = getScene().getWindow();
                     Expression expression = recipe.makeExpression(window, makeColumnPicker());
                     if (expression != null)
-                        expressionEditor.setContent(expression.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+                        expressionEditor.setContent(expression.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
                 }, "recipe-button"));
             }
         }
         
         public void update(Expression curContent)
         {
-            boolean empty = curContent.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY).trim().isEmpty();
+            boolean empty = curContent.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY).trim().isEmpty();
             setVisible(empty);
         }
         

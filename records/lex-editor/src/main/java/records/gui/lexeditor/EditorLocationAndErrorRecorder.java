@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.InsertListener;
@@ -108,6 +109,7 @@ public class EditorLocationAndErrorRecorder
     private final IdentityHashMap<Expression, Pair<StyledString, ImmutableList<TextQuickFix>>> information = new IdentityHashMap<>();
     // Used by DocWindow
     private final InsertListener insertListener;
+    private final TypeManager typeManager;
 
     private static interface UnresolvedErrorDetails
     {
@@ -154,8 +156,9 @@ public class EditorLocationAndErrorRecorder
     
     private final ArrayList<UnresolvedErrorDetails> errorsToShow = new ArrayList<>();
     
-    public EditorLocationAndErrorRecorder(InsertListener insertListener)
+    public EditorLocationAndErrorRecorder(TypeManager typeManager, InsertListener insertListener)
     {
+        this.typeManager = typeManager;
         this.insertListener = insertListener;
     }
 
@@ -174,7 +177,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {

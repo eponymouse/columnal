@@ -12,6 +12,7 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.InsertListener;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
  * @param <KEYWORD> Keywords that can alter scope levels, either beginning or ending scopes
  * @param <BRACKET_CONTENT> The content of brackets.  For units this is EXPRESSION, for others it is list of expression and operators (which will be commas)
  */
-public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP extends ExpressionToken, KEYWORD extends ExpressionToken, BRACKET_CONTENT> implements ClipboardSaver
+public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP extends ExpressionToken, KEYWORD extends ExpressionToken, BRACKET_CONTENT>
 {
     /**
      * Gets all special keywords available in child operators,
@@ -93,24 +94,24 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      */
     //boolean canDeclareVariable(EEDisplayNode chid);
 
-    public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP, BRACKET_CONTENT>
+    public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER, OP, BRACKET_CONTENT>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved
         public <R extends StyledShowable> @Nullable @Recorded R makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
     }
 
-    public static interface MakeNarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
+    public static interface MakeNarySimple<EXPRESSION extends StyledShowable, SAVER, OP>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved)
         public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators);
     }
 
-    public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
+    public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER>
     {
         public <R extends StyledShowable> @Recorded R makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER, ?, R> bracketedStatus, EditorLocationAndErrorRecorder locationRecorder);
     }
 
-    public static interface MakeBinarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
+    public static interface MakeBinarySimple<EXPRESSION extends StyledShowable, SAVER>
     {
         public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, CanonicalSpan opNode, @Recorded EXPRESSION rhs);
     }
@@ -362,7 +363,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     /**
      * A function to give back the content of a scope being ended.
      */
-    public static interface FetchContent<EXPRESSION, SAVER extends ClipboardSaver, BRACKET_CONTENT>
+    public static interface FetchContent<EXPRESSION, SAVER, BRACKET_CONTENT>
     {
         /**
          * 
@@ -431,7 +432,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      * @param <EXPRESSION>
      * @param <SAVER>
      */
-    public static class BracketAndNodes<EXPRESSION, SAVER extends ClipboardSaver, BRACKET_CONTENT, RESULT>
+    public static class BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, RESULT>
     {
         public final ApplyBrackets<BRACKET_CONTENT, EXPRESSION, RESULT> applyBrackets;
         public final CanonicalSpan location;
@@ -467,9 +468,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     protected final EditorLocationAndErrorRecorder locationRecorder;
     protected boolean hasUnmatchedBrackets = false;
     
-    protected SaverBase(InsertListener insertListener)
+    protected SaverBase(TypeManager typeManager, InsertListener insertListener)
     {
-        this.locationRecorder = new EditorLocationAndErrorRecorder(insertListener);
+        this.locationRecorder = new EditorLocationAndErrorRecorder(typeManager, insertListener);
         addTopLevelScope();
     }
     
@@ -927,16 +928,6 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected abstract BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT, EXPRESSION> unclosedBrackets(BracketAndNodes<EXPRESSION,SAVER,BRACKET_CONTENT, EXPRESSION> closed);
 
-    public final @Nullable Map<DataFormat, Object> finishClipboard()
-    {
-        if (currentScopes.isEmpty())
-            return null;
-        
-        return toClipboard(finish(currentScopes.peek().openingNode));
-    }
-
-    protected abstract Map<DataFormat, Object> toClipboard(@UnknownIfRecorded EXPRESSION expression);
-    
     public ImmutableList<ErrorDetails> getErrors()
     {
         return locationRecorder.getErrors();

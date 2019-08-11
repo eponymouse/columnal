@@ -92,7 +92,7 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName());

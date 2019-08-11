@@ -461,10 +461,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      * @param saveDestination If SAVE_EXTERNAL, include full keywords for things like invalid, function calls etc.
      *                   If EDITOR, give back string which could be entered direct in the GUI.
      * @param surround
+     * @param typeManager
      * @param renames
      * @return
      */
-    public abstract String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames);
+    public abstract String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames);
 
     public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
     {
@@ -938,7 +939,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public String toString()
     {
-        return save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

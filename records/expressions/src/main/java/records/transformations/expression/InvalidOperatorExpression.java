@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -50,12 +51,12 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         if (saveDestination == SaveDestination.SAVE_EXTERNAL)
-            return "@invalidops(" + items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", "))+ ")";
+            return "@invalidops(" + items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", "))+ ")";
         else
-            return items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(""));
+            return items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(""));
     }
 
     @Override

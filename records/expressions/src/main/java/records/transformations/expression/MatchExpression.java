@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -151,9 +152,9 @@ public class MatchExpression extends NonOperatorExpression
             };
         }
 
-        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save(saveDestination, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
+            return " @case " + patterns.stream().map(p -> p.save(saveDestination, typeManager, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
@@ -279,9 +280,9 @@ public class MatchExpression extends NonOperatorExpression
             return ImmutableList.of(patternOutcome);
         }
 
-        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
         {
-            return pattern.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + (guard == null ? "" : " @given " + guard.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames));
+            return pattern.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + (guard == null ? "" : " @given " + guard.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames));
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
@@ -367,13 +368,13 @@ public class MatchExpression extends NonOperatorExpression
                     Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.EDITOR, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.EDITOR, BracketedStatus.NEED_BRACKETS, state.getTypeManager(), TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        String inner = "@match " + expression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + clauses.stream().map(c -> c.save(saveDestination, renames)).collect(Collectors.joining("")) + " @endmatch";
+        String inner = "@match " + expression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + clauses.stream().map(c -> c.save(saveDestination, typeManager, renames)).collect(Collectors.joining("")) + " @endmatch";
         return (surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : ("(" + inner + ")");
     }
 

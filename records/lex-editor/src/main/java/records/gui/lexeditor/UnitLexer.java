@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
@@ -37,6 +38,8 @@ import java.util.Collections;
 
 public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
 {
+    private final TypeManager typeManager;
+
     public static enum UnitOp implements ExpressionToken
     {
         MULTIPLY("*", "op.times"), DIVIDE("/", "op.divide"), RAISE("^", "op.raise");
@@ -85,16 +88,17 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     private final UnitManager unitManager;
     private final boolean requireConcrete;
 
-    public UnitLexer(UnitManager unitManager, boolean requireConcrete)
+    public UnitLexer(TypeManager typeManager, boolean requireConcrete)
     {
-        this.unitManager = unitManager;
+        this.typeManager = typeManager;
+        this.unitManager = typeManager.getUnitManager();
         this.requireConcrete = requireConcrete;
     }
 
     @Override
     public LexerResult<UnitExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
     {
-        UnitSaver saver = new UnitSaver(insertListener);
+        UnitSaver saver = new UnitSaver(typeManager, insertListener);
         RemovedCharacters removedCharacters = new RemovedCharacters();
         ArrayList<ContentChunk> chunks = new ArrayList<>();
         @RawInputLocation int curIndex = RawInputLocation.ZERO;

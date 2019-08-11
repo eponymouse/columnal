@@ -205,7 +205,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     @Override
     public LexerResult<Expression, ExpressionCompletionContext> process(String content, @Nullable @RawInputLocation Integer curCaretPos, InsertListener insertListener)
     {
-        ExpressionSaver saver = new ExpressionSaver(functionLookup, insertListener);
+        ExpressionSaver saver = new ExpressionSaver(typeManager, functionLookup, insertListener);
         @RawInputLocation int curIndex = RawInputLocation.ZERO;
         // Index is in original parameter "content":
         RemovedCharacters removedChars = new RemovedCharacters();
@@ -1133,7 +1133,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> getNestedLiterals(boolean lastWasNumber, InsertListener insertListener)
     {
         Function<NestedLiteralSource, LiteralOutcome> unitLit = c -> {
-            UnitLexer unitLexer = new UnitLexer(typeManager.getUnitManager(), false);
+            UnitLexer unitLexer = new UnitLexer(typeManager, false);
             LexerResult<UnitExpression, CodeCompletionContext> processed = unitLexer.process(c.innerContent, 0, insertListener);
             return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
         };

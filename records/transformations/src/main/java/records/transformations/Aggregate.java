@@ -469,7 +469,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             b.kw("SUMMARY");
             b.id(renames.columnId(getId(), entry.getFirst(), null).getSecond());
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getSecond().save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames));
+            b.raw(entry.getSecond().save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, null, renames));
             b.nl();
         }
         for (ColumnId c : splitBy)

@@ -9,6 +9,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.StringView;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
@@ -74,7 +75,7 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         String prefix;
         switch (literalType)
@@ -105,7 +106,7 @@ public class TemporalLiteral extends Literal
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(save(SaveDestination.SAVE_EXTERNAL, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of()))), this);
+        return expressionStyler.styleExpression(StyledString.s(save(SaveDestination.SAVE_EXTERNAL, bracketedStatus, null, new TableAndColumnRenames(ImmutableMap.of()))), this);
     }
 
     @Override

@@ -15,6 +15,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -82,9 +83,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     
     private final FunctionLookup functionLookup;
 
-    public ExpressionSaver(FunctionLookup functionLookup, InsertListener insertListener)
+    public ExpressionSaver(TypeManager typeManager, FunctionLookup functionLookup, InsertListener insertListener)
     {
-        super(insertListener);
+        super(typeManager, insertListener);
         this.functionLookup = functionLookup;
     }
 
@@ -933,15 +934,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
-    {
-        return ImmutableMap.of(
-            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY),
-            DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY)
-        );
-    }
-
-    @Override
     protected ImmutableList<TextQuickFix> fixesForAdjacentOperands(@Recorded Expression first, @Recorded Expression second)
     {
         // We look for things where people have tried to use
@@ -960,7 +952,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 
                 return ImmutableList.of(new <Expression>TextQuickFix("fix.useElement",location, () -> {
                     Expression callElement = new CallExpression(functionLookup, "element", first, arrayExpression.getElements().get(0));
-                    return new Pair<>(callElement.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), callElement.toStyledString());
+                    return new Pair<>(callElement.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY), callElement.toStyledString());
                 }));
             }
         }
@@ -1015,9 +1007,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
         {
-            return lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + ": " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
+            return lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + ": " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
         }
 
         @Override
