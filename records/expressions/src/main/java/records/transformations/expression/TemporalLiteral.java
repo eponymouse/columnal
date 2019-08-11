@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -16,7 +15,6 @@ import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
-import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
@@ -76,7 +74,7 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String prefix;
         switch (literalType)
@@ -107,7 +105,7 @@ public class TemporalLiteral extends Literal
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(save(true, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of()))), this);
+        return expressionStyler.styleExpression(StyledString.s(save(SaveDestination.SAVE_EXTERNAL, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of()))), this);
     }
 
     @Override

@@ -2,8 +2,6 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -21,12 +19,9 @@ import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
-import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -92,13 +87,13 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String num = numberAsString();
         if (unit == null)
             return num;
         else
-            return num + "{" + unit.save(structured, true) + "}";
+            return num + "{" + unit.save(saveDestination, true) + "}";
     }
 
     @Override

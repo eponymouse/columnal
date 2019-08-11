@@ -2,17 +2,15 @@ package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.InvalidIdentExpression;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 import utility.IdentifierUtility;
 
@@ -34,9 +32,9 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INCOMPLETE) + " " + OutputBuilder.quoted(value);
         else
             return value;

@@ -6,12 +6,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
-import utility.Either;
-import utility.Pair;
-
-import java.util.Collections;
-import java.util.List;
 
 public class UnitExpressionIntLiteral extends UnitExpression
 {
@@ -32,7 +28,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
         return Integer.toString(number);
     }

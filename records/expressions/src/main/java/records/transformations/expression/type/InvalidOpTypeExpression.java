@@ -8,10 +8,10 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 import utility.Utility;
 
@@ -28,14 +28,14 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
-                items.stream().map(item -> item.save(structured, renames)).collect(Collectors.joining(", ")) 
+                items.stream().map(item -> item.save(saveDestination, renames)).collect(Collectors.joining(", ")) 
                 + ")";
         else
-            return items.stream().map(item -> item.save(structured, renames)).collect(Collectors.joining(""));
+            return items.stream().map(item -> item.save(saveDestination, renames)).collect(Collectors.joining(""));
     }
 
     @Override

@@ -6,12 +6,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
+import records.transformations.expression.Expression.SaveDestination;
 import utility.Utility;
-
-import java.util.List;
 
 public class UnitTimesExpression extends UnitExpression
 {
@@ -34,14 +30,14 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
         StringBuilder b = new StringBuilder();
         if (!topLevel)
             b.append("(");
         for (int i = 0; i < operands.size(); i++)
         {
-            b.append(operands.get(i).save(structured, false));
+            b.append(operands.get(i).save(saveDestination, false));
             if (i < operands.size() - 1)
             {
                 b.append("*");

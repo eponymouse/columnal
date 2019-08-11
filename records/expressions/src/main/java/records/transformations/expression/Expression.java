@@ -42,7 +42,6 @@ import records.grammar.GrammarUtility;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -71,11 +70,9 @@ import utility.ExFunction;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
-import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -451,15 +448,23 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     
     public abstract <T> T visit(@Recorded Expression this, ExpressionVisitor<T> visitor);
 
+    public static enum SaveDestination
+    {
+        // Include things like @invalid, @call for saving to disk, clipboard, etc
+        SAVE_EXTERNAL,
+        // Load into editor, so leave out keywords, don't scope things which don't need scoping:
+        EDITOR
+    }
+    
     /**
      * 
-     * @param structured If true, include full keywords for things like invalid, function calls etc.
-     *                   If false, give back string which could be entered direct in the GUI.
+     * @param saveDestination If SAVE_EXTERNAL, include full keywords for things like invalid, function calls etc.
+     *                   If EDITOR, give back string which could be entered direct in the GUI.
      * @param surround
      * @param renames
      * @return
      */
-    public abstract String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames);
+    public abstract String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames);
 
     public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
     {
@@ -933,7 +938,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public String toString()
     {
-        return save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

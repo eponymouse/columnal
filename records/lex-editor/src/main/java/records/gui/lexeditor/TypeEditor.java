@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.type.TypeExpression;
 import utility.FXPlatformConsumer;
 
@@ -13,6 +14,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCo
 {
     public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, boolean requireConcreteType, boolean emptyAllowed, FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
     {
-        super(originalContent == null ? null : originalContent.save(false, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), typeManager, onChange, "type-editor");
+        super(originalContent == null ? null : originalContent.save(SaveDestination.EDITOR, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), typeManager, onChange, "type-editor");
     }
 }

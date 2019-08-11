@@ -5,15 +5,12 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.visitor.ExpressionVisitor;
-import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -89,14 +86,11 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String params = parameters.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
-        String body = this.body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
-        if (structured)
-            return "@function (" + params + ") @then " + body + "@endfunction";
-        else
-            return "@function " + params + " @then " + body + "@endfunction";
+        String params = parameters.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
+        String body = this.body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
+        return "@function (" + params + ") @then " + body + "@endfunction";
     }
 
     @Override

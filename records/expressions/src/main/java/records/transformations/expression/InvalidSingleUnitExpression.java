@@ -7,12 +7,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
-import utility.Either;
 import utility.IdentifierUtility;
-import utility.Pair;
-
-import java.util.List;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
 public class InvalidSingleUnitExpression extends UnitExpression
@@ -31,9 +28,9 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return "@unfinished "+ OutputBuilder.quoted(name);
         else
             return name;

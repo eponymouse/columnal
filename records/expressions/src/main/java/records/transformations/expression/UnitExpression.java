@@ -15,6 +15,7 @@ import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.ComparableEither;
@@ -169,12 +170,12 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
 
     public abstract JellyUnit asUnit(@Recorded UnitExpression this, UnitManager unitManager) throws UnitLookupException;
     
-    public abstract String save(boolean structured, boolean topLevel);
+    public abstract String save(SaveDestination saveDestination, boolean topLevel);
 
     @Override
     public final StyledString toStyledString()
     {
-        return StyledString.s(save(true, true));
+        return StyledString.s(save(SaveDestination.SAVE_EXTERNAL, true));
     }
 
     @Override
@@ -193,6 +194,6 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     @Override
     public String toString()
     {
-        return save(true, true);
+        return save(SaveDestination.SAVE_EXTERNAL, true);
     }
 }

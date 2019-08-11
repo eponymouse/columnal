@@ -35,6 +35,7 @@ import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Replaceable;
 import records.transformations.expression.UnitExpression;
@@ -185,7 +186,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
         });
     }
 
-    public abstract String save(boolean structured, TableAndColumnRenames renames);
+    public abstract String save(SaveDestination saveDestination, TableAndColumnRenames renames);
 
     public abstract @Nullable DataType toDataType(TypeManager typeManager);
 
@@ -417,6 +418,6 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
     @Override
     public String toString()
     {
-        return save(true, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.SAVE_EXTERNAL, TableAndColumnRenames.EMPTY);
     }
 }

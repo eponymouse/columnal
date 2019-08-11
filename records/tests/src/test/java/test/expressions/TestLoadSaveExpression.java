@@ -15,6 +15,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
@@ -118,6 +119,6 @@ public class TestLoadSaveExpression
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(expression, Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
-        assertEquals(src, expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+        assertEquals(src, expression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 }

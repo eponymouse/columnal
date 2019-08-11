@@ -124,9 +124,9 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = "@if " + condition.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS,renames) + " @else " + elseExpression.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
+        String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS,renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
         return content;
     }
 

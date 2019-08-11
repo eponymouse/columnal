@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -17,7 +16,6 @@ import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -61,9 +59,9 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "unit{" + unitExpression.save(structured, true) + "}";
+        return "unit{" + unitExpression.save(saveDestination, true) + "}";
     }
 
     @Override

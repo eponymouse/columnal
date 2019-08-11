@@ -114,9 +114,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "type{" + type.save(structured, renames) + "}";
+        return "type{" + type.save(saveDestination, renames) + "}";
     }
 
     @Override

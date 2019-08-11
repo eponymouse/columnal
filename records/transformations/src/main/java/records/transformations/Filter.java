@@ -21,6 +21,7 @@ import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -217,7 +218,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     {
         renames.useColumnsFromTo(srcTableId, getId());
         
-        return Collections.singletonList(PREFIX + " " + filterExpression.save(true, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
     }
 
     @Override

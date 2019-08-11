@@ -1,15 +1,10 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
-
-import java.util.List;
+import records.transformations.expression.Expression.SaveDestination;
 
 public class UnitDivideExpression extends UnitExpression
 {
@@ -32,9 +27,9 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        String core = numerator.save(structured, false) + "/" + denominator.save(structured, false);
+        String core = numerator.save(saveDestination, false) + "/" + denominator.save(saveDestination, false);
         if (topLevel)
             return core;
         else

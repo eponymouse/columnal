@@ -13,6 +13,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 
 import java.util.Objects;
@@ -33,7 +34,7 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
         return value;
     }

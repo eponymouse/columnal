@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -79,9 +78,9 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = lhsRecord.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        String content = lhsRecord.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         if (surround == BracketedStatus.NEED_BRACKETS)
             return "(" + content + ")";
         else

@@ -23,6 +23,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.MultipleTableLookup.CalculationEditor;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -233,7 +234,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);
             b.kw("CALCULATE").id(renamed.getSecond());
             b.kw("@EXPRESSION");
-            b.raw(entry.getValue().save(true, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
+            b.raw(entry.getValue().save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }

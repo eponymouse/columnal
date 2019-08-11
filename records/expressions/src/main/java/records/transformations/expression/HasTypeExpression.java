@@ -73,9 +73,9 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return varName + " :: " + type.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames);
+        return varName + " :: " + type.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
     }
 
     @Override

@@ -105,20 +105,15 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(tableName, columnName, null);
 
         final @Nullable TableId renamedTableId = renamed.getFirst();
         String tableColonColumn = (renamedTableId != null ? (renamedTableId.getRaw() + "\\") : "") + renamed.getSecond().getRaw();
         
-        if (!structured)
-        {
-            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + tableColonColumn;
-        }
-        
         // Sanity check to avoid saving something we can't load:
-        if (IdentifierUtility.asExpressionIdentifier(renamed.getSecond().getRaw()) != null && (renamedTableId == null || IdentifierUtility.asExpressionIdentifier(renamedTableId.getRaw()) != null))
+        if (saveDestination == SaveDestination.EDITOR || (IdentifierUtility.asExpressionIdentifier(renamed.getSecond().getRaw()) != null && (renamedTableId == null || IdentifierUtility.asExpressionIdentifier(renamedTableId.getRaw()) != null)))
             return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "@column ") + tableColonColumn;
         else
             return "@unfinished " + OutputBuilder.quoted(tableColonColumn);

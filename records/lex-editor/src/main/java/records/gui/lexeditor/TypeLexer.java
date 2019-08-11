@@ -30,6 +30,7 @@ import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.UnknownTypeException;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -289,7 +290,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                             try
                             {
                                 TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
-                                String str = fixedExpression.save(false, new TableAndColumnRenames(ImmutableMap.of()));
+                                String str = fixedExpression.save(SaveDestination.EDITOR, new TableAndColumnRenames(ImmutableMap.of()));
                                 return new Pair<>(str, fixedExpression.toStyledString());
                             }
                             catch (UserException ex)

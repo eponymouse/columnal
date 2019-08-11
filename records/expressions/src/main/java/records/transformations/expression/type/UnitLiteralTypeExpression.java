@@ -2,14 +2,13 @@ package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.error.UserException;
 import records.jellytype.JellyType;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 
@@ -25,9 +24,9 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        return "{" + unitExpression.save(structured, true) + "}";
+        return "{" + unitExpression.save(saveDestination, true) + "}";
     }
 
     @Override

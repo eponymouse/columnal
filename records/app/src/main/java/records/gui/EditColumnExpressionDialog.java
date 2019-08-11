@@ -41,6 +41,7 @@ import records.gui.recipe.ExpressionRecipe;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
@@ -450,14 +451,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     @NonNull Window window = getScene().getWindow();
                     Expression expression = recipe.makeExpression(window, makeColumnPicker());
                     if (expression != null)
-                        expressionEditor.setContent(expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+                        expressionEditor.setContent(expression.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
                 }, "recipe-button"));
             }
         }
         
         public void update(Expression curContent)
         {
-            boolean empty = curContent.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY).trim().isEmpty();
+            boolean empty = curContent.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY).trim().isEmpty();
             setVisible(empty);
         }
         

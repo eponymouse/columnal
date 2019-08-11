@@ -16,6 +16,7 @@ import records.gui.lexeditor.TypeLexer.Keyword;
 import records.gui.lexeditor.TypeLexer.Operator;
 import records.gui.lexeditor.TypeSaver.BracketContent;
 import records.gui.lexeditor.completion.InsertListener;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -363,8 +364,8 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded TypeExpression expression)
     {
         return ImmutableMap.of(
-                TYPE_CLIPBOARD_TYPE, expression.save(true, TableAndColumnRenames.EMPTY),
-                DataFormat.PLAIN_TEXT, expression.save(false, TableAndColumnRenames.EMPTY)
+                TYPE_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, TableAndColumnRenames.EMPTY),
+                DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, TableAndColumnRenames.EMPTY)
         );
     }
 

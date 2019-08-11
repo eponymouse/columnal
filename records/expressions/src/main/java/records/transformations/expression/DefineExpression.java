@@ -15,7 +15,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -64,9 +63,9 @@ public class DefineExpression extends Expression
                 return null;
         }
 
-        public String save(boolean structured, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
-            return lhsPattern.save(structured, BracketedStatus.NEED_BRACKETS, renames) + " = " + rhsValue.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+            return lhsPattern.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " = " + rhsValue.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         }
 
         @SuppressWarnings("recorded")
@@ -229,9 +228,9 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(structured, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
+        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(saveDestination, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
     }
 
     @Override

@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -10,8 +9,6 @@ import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import utility.Either;
-import utility.Pair;
 
 /**
  * Created by neil on 27/11/2016.
@@ -38,7 +35,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return Boolean.toString(value);
     }

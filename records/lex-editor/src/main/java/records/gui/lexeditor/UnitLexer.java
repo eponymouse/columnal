@@ -16,6 +16,7 @@ import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
@@ -168,7 +169,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             {
                 if (e.errorMessage != null || !e.quickFixes.isEmpty())
                 {
-                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), e.errorMessage == null ? StyledString.s("") : e.errorMessage, Utility.mapListI(e.quickFixes, f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(false, true), f)));
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), e.errorMessage == null ? StyledString.s("") : e.errorMessage, Utility.mapListI(e.quickFixes, f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(SaveDestination.EDITOR, true), f)));
                 }
             }
         }

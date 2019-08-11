@@ -30,6 +30,7 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -468,7 +469,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             b.kw("SUMMARY");
             b.id(renames.columnId(getId(), entry.getFirst(), null).getSecond());
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getSecond().save(true, BracketedStatus.DONT_NEED_BRACKETS, renames));
+            b.raw(entry.getSecond().save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames));
             b.nl();
         }
         for (ColumnId c : splitBy)

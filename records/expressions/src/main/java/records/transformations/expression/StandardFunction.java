@@ -70,9 +70,9 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return "@function " + functionDefinition.getName();
         else
             return functionDefinition.getName();

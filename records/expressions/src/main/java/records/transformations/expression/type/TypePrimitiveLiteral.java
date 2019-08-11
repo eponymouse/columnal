@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 
 import java.util.Objects;
@@ -45,7 +46,7 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
         try
         {
@@ -54,7 +55,7 @@ public class TypePrimitiveLiteral extends TypeExpression
         catch (InternalException e)
         {
             Log.log(e);
-            return new InvalidIdentTypeExpression("").save(structured, renames);
+            return new InvalidIdentTypeExpression("").save(saveDestination, renames);
         }
     }
 

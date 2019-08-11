@@ -286,9 +286,9 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (structured ? "@call " : "") + function.save(structured, BracketedStatus.NEED_BRACKETS, renames) + "(" + arguments.stream().map(a -> a.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
+        return (saveDestination == SaveDestination.SAVE_EXTERNAL ? "@call " : "") + function.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "(" + arguments.stream().map(a -> a.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

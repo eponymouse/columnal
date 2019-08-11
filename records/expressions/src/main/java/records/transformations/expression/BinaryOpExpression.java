@@ -61,9 +61,9 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = lhs.save(structured, BracketedStatus.NEED_BRACKETS, renames) + " " + saveOp() + " " + rhs.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+        String inner = lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " " + saveOp() + " " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         if (surround != BracketedStatus.NEED_BRACKETS)
             return inner;
         else

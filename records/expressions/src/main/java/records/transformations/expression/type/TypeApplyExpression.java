@@ -18,12 +18,11 @@ import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.QuickFix;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import styled.StyledString;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -52,10 +51,10 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
         StringBuilder sb = new StringBuilder();
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
         {
             sb.append(OutputBuilder.stripQuotes(FormatLexer.VOCABULARY.getLiteralName(FormatLexer.APPLY)));
             sb.append(" ");
@@ -65,7 +64,7 @@ public class TypeApplyExpression extends TypeExpression
         {
             // Bit of a hack to look for RecordTypeExpression exactly...
             Either<UnitExpression, TypeExpression> e = arguments.get(i);
-            sb.append(e.<String>either(u -> "({" + u.save(structured,  true) + "})", x -> x instanceof RecordTypeExpression ? x.save(structured, renames) : "(" + x.save(structured, renames) + ")"));
+            sb.append(e.<String>either(u -> "({" + u.save(saveDestination,  true) + "})", x -> x instanceof RecordTypeExpression ? x.save(saveDestination, renames) : "(" + x.save(saveDestination, renames) + ")"));
         }
         return sb.toString();
     }

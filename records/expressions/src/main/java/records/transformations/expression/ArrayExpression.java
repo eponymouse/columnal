@@ -108,9 +108,9 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "[" + items.stream().map(e -> e.save(structured, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + "]";
+        return "[" + items.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + "]";
     }
 
     @Override

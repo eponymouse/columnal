@@ -12,11 +12,11 @@ import records.error.InternalException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyTypeRecord;
 import records.jellytype.JellyTypeRecord.Field;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -98,9 +98,9 @@ public class RecordTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(structured, renames)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(saveDestination, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     public ImmutableList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> _test_getItems()

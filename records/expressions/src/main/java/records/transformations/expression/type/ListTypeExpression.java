@@ -7,8 +7,8 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.error.UserException;
 import records.jellytype.JellyType;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
 
 import java.util.Objects;
@@ -29,9 +29,9 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        return "[" + innerType.save(structured, renames) + "]";
+        return "[" + innerType.save(saveDestination, renames) + "]";
     }
 
     @Override

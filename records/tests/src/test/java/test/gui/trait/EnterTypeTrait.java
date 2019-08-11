@@ -5,6 +5,7 @@ import annotation.recorded.qual.Recorded;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -126,7 +127,7 @@ public interface EnterTypeTrait extends FxRobotInterface
     public default void enterUnit(UnitExpression unitExpression, Random r) throws InternalException
     {
         // Bit of a hack...
-        for (char c : unitExpression.save(false, true).toCharArray())
+        for (char c : unitExpression.save(SaveDestination.EDITOR, true).toCharArray())
         {
             write(c);
             if (c == '(')

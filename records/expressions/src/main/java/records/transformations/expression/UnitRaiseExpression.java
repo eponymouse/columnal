@@ -5,11 +5,8 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.Expression.SaveDestination;
 import styled.StyledString;
-import utility.Either;
-import utility.Pair;
-
-import java.util.List;
 
 public class UnitRaiseExpression extends UnitExpression
 {
@@ -36,9 +33,9 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        return unit.save(structured, false) + "^" + power.save(structured, false);
+        return unit.save(saveDestination, false) + "^" + power.save(saveDestination, false);
     }
 
     @Override

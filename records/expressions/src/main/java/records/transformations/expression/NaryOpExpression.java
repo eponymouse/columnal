@@ -79,7 +79,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         StringBuilder s = new StringBuilder(surround == BracketedStatus.NEED_BRACKETS ? "(" : "");
         s.append(getSpecialPrefix());
@@ -87,7 +87,7 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(structured, BracketedStatus.NEED_BRACKETS, renames));
+            s.append(expressions.get(i).save(saveDestination, BracketedStatus.NEED_BRACKETS, renames));
         }
         if (surround == BracketedStatus.NEED_BRACKETS)
             s.append(")");

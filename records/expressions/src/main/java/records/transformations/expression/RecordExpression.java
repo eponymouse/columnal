@@ -22,7 +22,6 @@ import utility.Utility.Record;
 import utility.Utility.RecordMap;
 import utility.Utility.TransparentBuilder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
@@ -138,9 +137,9 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(structured, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @SuppressWarnings("recorded")

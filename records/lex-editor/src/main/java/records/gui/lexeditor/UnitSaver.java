@@ -15,6 +15,7 @@ import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.UnitLexer.UnitBracket;
 import records.gui.lexeditor.UnitLexer.UnitOp;
 import records.gui.lexeditor.completion.InsertListener;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
@@ -230,8 +231,8 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded UnitExpression expression)
     {
         return ImmutableMap.of(
-                UNIT_CLIPBOARD_TYPE, expression.save(true, true),
-                DataFormat.PLAIN_TEXT, expression.save(false, true)
+                UNIT_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, true),
+                DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, true)
         );
     }
 

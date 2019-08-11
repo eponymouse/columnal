@@ -14,6 +14,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyUnit;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.QuickFix.QuickFixAction;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -61,7 +62,7 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
         return name;
     }

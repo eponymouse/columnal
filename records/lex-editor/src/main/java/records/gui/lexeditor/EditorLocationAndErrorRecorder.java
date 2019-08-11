@@ -18,6 +18,7 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.CanonicalSpan;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -173,7 +174,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {
@@ -188,7 +189,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.EDITOR, new TableAndColumnRenames(ImmutableMap.of())), q)));
             }
             else
             {
@@ -203,7 +204,7 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(false, false), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.EDITOR, false), q)));
             }
             else
             {

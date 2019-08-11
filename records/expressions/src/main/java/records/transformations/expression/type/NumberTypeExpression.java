@@ -2,10 +2,8 @@ package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -13,17 +11,13 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
-import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
-import records.transformations.expression.QuickFix;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import styled.StyledString;
-import utility.Pair;
-import utility.Utility;
 
-import java.util.List;
 import java.util.Objects;
 
 public class NumberTypeExpression extends TypeExpression
@@ -36,12 +30,12 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(boolean structured, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
         if (unitExpression == null || unitExpression.isEmpty() || unitExpression.isScalar())
             return "Number";
         else
-            return "Number{" + unitExpression.save(structured, true) + "}"; 
+            return "Number{" + unitExpression.save(saveDestination, true) + "}"; 
     }
 
     @Override

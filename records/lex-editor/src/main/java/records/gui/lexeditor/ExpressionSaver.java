@@ -31,6 +31,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.FunctionLookup;
@@ -935,8 +936,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
     {
         return ImmutableMap.of(
-            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY),
-            DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY)
+            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY),
+            DataFormat.PLAIN_TEXT, expression.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY)
         );
     }
 
@@ -959,7 +960,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 
                 return ImmutableList.of(new <Expression>TextQuickFix("fix.useElement",location, () -> {
                     Expression callElement = new CallExpression(functionLookup, "element", first, arrayExpression.getElements().get(0));
-                    return new Pair<>(callElement.save(false, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), callElement.toStyledString());
+                    return new Pair<>(callElement.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), callElement.toStyledString());
                 }));
             }
         }
@@ -1014,9 +1015,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
         {
-            return lhs.save(structured, BracketedStatus.NEED_BRACKETS, renames) + ": " + rhs.save(structured, BracketedStatus.NEED_BRACKETS, renames);
+            return lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + ": " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         }
 
         @Override

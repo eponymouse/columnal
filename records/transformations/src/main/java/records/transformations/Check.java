@@ -29,6 +29,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
@@ -350,7 +351,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                 checkTypeStr = "STANDALONE";
                 break;
         }
-        return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(true, BracketedStatus.DONT_NEED_BRACKETS, renames));
+        return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, renames));
     }
     
     @OnThread(Tag.Any)

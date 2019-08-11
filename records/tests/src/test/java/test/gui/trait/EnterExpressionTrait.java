@@ -20,6 +20,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.function.StandardFunctionDefinition;
@@ -177,7 +178,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 write("unit{", DELAY);
                 push(KeyCode.DELETE);
-                write(self.getUnit().save(false, true));
+                write(self.getUnit().save(SaveDestination.EDITOR, true));
                 write("}");
                 return UnitType.UNIT;
             }

@@ -5,13 +5,9 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
+import records.transformations.expression.Expression.SaveDestination;
 import utility.Utility;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
@@ -30,14 +26,14 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean structured, boolean topLevel)
+    public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        if (structured)
+        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
             return "@INVALIDOPS (" + 
-                items.stream().map(item -> item.save(structured, false)).collect(Collectors.joining(", "))
+                items.stream().map(item -> item.save(saveDestination, false)).collect(Collectors.joining(", "))
                 + ")";
         else
-            return items.stream().map(item -> item.save(structured, false)).collect(Collectors.joining(""));
+            return items.stream().map(item -> item.save(saveDestination, false)).collect(Collectors.joining(""));
     }
 
     @Override

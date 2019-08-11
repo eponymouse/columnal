@@ -35,7 +35,6 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -101,7 +100,7 @@ public class PropTypecheckIndividual
         }
         
         @Override
-        public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
         }
@@ -396,7 +395,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
         }
