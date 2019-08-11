@@ -209,6 +209,39 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         );
     }
 
+    // This (slightly indirectly) tests loading of scoped identifiers:
+    @Property(trials=1)
+    public void testPosConstructors(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "1+Is(2)", "1 + Is(2)",
+            p(0,1,2,3,4,5,6,7),
+            p(0,1,2, 4,5,6,7));
+    }
+
+    @Property(trials=1)
+    public void testPosConstructors2(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "1+Nested(2)", "1 + Nested(2)",
+            p(0,1,2,3,4,5,6,7,8,9,10,11),
+            p(0,1,2, 8,9,10,11));
+    }
+
+    @Property(trials=1)
+    public void testPosConstructors3(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "1+B\\Single(2)", "1 + B\\Single(2)",
+            p(0,1,2,3,4,5,6,7,8,9,10,11,12,13),
+            p(0,1,2, 10,11,12,13));
+    }
+
+    @Property(trials=1)
+    public void testPosConstructors4(@From(GenRandom.class) Random r)
+    {
+        testCaretPositionsAndDisplay(r, "1+Nested(A\\Single(2))", "1 + Nested(A\\Single(2))",
+            p(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21),
+            p(0,1,2,8,9,17,18,19,20,21));
+    }
+
     @Property(trials=1)
     public void testPosDoubleSpace(@From(GenRandom.class) Random r)
     {
@@ -451,6 +484,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
+            typeManager._test_copyTaggedTypesFrom(TestUtil.managerWithTestTypes().getFirst().getTypeManager());
             List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {

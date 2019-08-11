@@ -95,9 +95,20 @@ public class ConstructorExpression extends NonOperatorExpression
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         if (saveDestination == SaveDestination.SAVE_EXTERNAL)
-            return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName());
+            return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + getQualifiedTagName(t));
         else
-            return tag.either(s -> s, t -> t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName());
+            return tag.either(s -> s, t -> saveDestination == SaveDestination.EDITOR && typeManager != null && unambiguousTagName(typeManager, t) ? t.getTagInfo().getName() : getQualifiedTagName(t));
+    }
+
+    private boolean unambiguousTagName(TypeManager typeManager, TagInfo tagInfo)
+    {
+        // Look for any types which are not the same as the given tag's type, but have a tag share a name with the parameter tag:
+        return !typeManager.getKnownTaggedTypes().values().stream().anyMatch(ttd -> !ttd.getTaggedTypeName().equals(tagInfo.getTypeName()) && ttd.getTags().stream().anyMatch(tt -> tt.getName().equals(tagInfo.getTagInfo().getName())));
+    }
+
+    private static String getQualifiedTagName(TagInfo t)
+    {
+        return t.getTypeName().getRaw() + "\\" + t.getTagInfo().getName();
     }
 
     @Override
