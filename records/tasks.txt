@@ -2,7 +2,6 @@ Task C Items (unprioritised)
 ===
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - Make full @if completion the default when entering @if?
-- Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - Maybe we should add an extract optional item
 
 
@@ -364,3 +363,4 @@ Done after Phil B & Jon A:
 - Black arrow doesn't stand out well against background
 - When installing an upgrade with Columnal still open, letting MSI installer close the application doesn't work right (not sure if not closed, or closed and re-opened)
 - When you load blah =~ Is(x), it should load as "Is" not "Optional\Is"
+- Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?

@@ -140,7 +140,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         for (char c : internalContent.toCharArray())
         {
             write(c);
-            if ("({[".contains("" + c))
+            if ("({[\"".contains("" + c))
                 push(KeyCode.DELETE);
         }
     }

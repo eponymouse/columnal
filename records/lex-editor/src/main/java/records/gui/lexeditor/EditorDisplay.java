@@ -298,22 +298,24 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             if (FXUtility.checkKeyTyped(keyEvent))
             {
                 String character = keyEvent.getCharacter();
-                if ("({[".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
+                if (")}]\"".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
+                {
+                    // Overtype instead
+                    @SuppressWarnings("units")
+                    @CanonicalLocation int one = 1;
+                    this.content.positionCaret(content.getCaretPosition() + one, true);
+                }
+                else if ("({[\"".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
                 {
                     this.content.replaceSelection(character);
                     if (character.equals("("))
                         this.content.replaceSelection(")", true);
                     else if (character.equals("["))
                         this.content.replaceSelection("]", true);
-                    else
+                    else if (character.equals("{"))
                         this.content.replaceSelection("}", true);
-                }
-                else if (")}]".contains(character) && content.getCaretPosition() < content.getText().length() && content.getText().charAt(content.getCaretPosition()) == character.charAt(0) && content.areBracketsBalanced())
-                {
-                    // Overtype instead
-                    @SuppressWarnings("units")
-                    @CanonicalLocation int one = 1;
-                    this.content.positionCaret(content.getCaretPosition() + one, true);
+                    else // Add a duplicate:
+                        this.content.replaceSelection(character, true);
                 }
                 else
                 {
