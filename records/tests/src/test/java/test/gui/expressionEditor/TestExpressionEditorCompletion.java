@@ -425,10 +425,9 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         write("if");
         checkPosition();
         push(KeyCode.DOWN);
-        push(KeyCode.DOWN);
         push(KeyCode.ENTER);
         // It's going to be invalid due to the empty bits:
-        assertEquals(new InvalidIdentExpression("@if"), finish());
+        assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
     }
 
     @Test
