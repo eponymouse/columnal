@@ -110,6 +110,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             public UnitType litText(StringLiteral self, String value)
             {
                 write('"');
+                push(KeyCode.DELETE);
                 write(((StringLiteral)expression).editString().replaceAll("\"", "^q"));
                 write('"');
                 return UnitType.UNIT;
