@@ -115,7 +115,7 @@ public class ColumnReference extends NonOperatorExpression
         
         // Sanity check to avoid saving something we can't load:
         if (saveDestination == SaveDestination.EDITOR || (IdentifierUtility.asExpressionIdentifier(renamed.getSecond().getRaw()) != null && (renamedTableId == null || IdentifierUtility.asExpressionIdentifier(renamedTableId.getRaw()) != null)))
-            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "@column ") + tableColonColumn;
+            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : (saveDestination == SaveDestination.EDITOR ? "" : "@column ")) + tableColonColumn;
         else
             return "@unfinished " + OutputBuilder.quoted(tableColonColumn);
     }
