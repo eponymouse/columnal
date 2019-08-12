@@ -95,7 +95,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 if (c != 0)
                     write(c);
                 // Delete auto-matched brackets:
-                if (!expression.startsWith("\u0000") && "({[".contains("" + c))
+                if (!expression.startsWith("\u0000") && "({[\"".contains("" + c))
                     push(KeyCode.DELETE);
             }
             sleep(200);
