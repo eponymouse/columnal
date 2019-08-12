@@ -52,6 +52,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:5.4.0" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.4.0" level="project" />
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="anns" />
     <orderEntry type="module" module-name="data" />

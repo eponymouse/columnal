@@ -79,6 +79,12 @@
             <scope>system</scope>
             <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.4.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

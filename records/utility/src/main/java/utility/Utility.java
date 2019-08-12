@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -70,6 +71,7 @@ import threadchecker.Tag;
 public class Utility
 {
     public static final String MRU_FILE_NAME = "recent.mru";
+    public static final ReentrantLock saveLock = new ReentrantLock();
 
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {

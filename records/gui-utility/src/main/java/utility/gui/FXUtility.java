@@ -3,6 +3,17 @@ package utility.gui;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.tk.TKPulseListener;
 import com.sun.javafx.tk.Toolkit;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef.DWORD;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinDef.LPARAM;
+import com.sun.jna.platform.win32.WinDef.LRESULT;
+import com.sun.jna.platform.win32.WinDef.WPARAM;
+import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.win32.StdCallLibrary;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -97,6 +108,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by neil on 17/02/2017.
  */
@@ -107,6 +120,7 @@ public class FXUtility
     private static final Set<String> loadedFonts = new HashSet<>();
     // Need to keep strong reference until they run:
     private static ArrayList<TKPulseListener> pulseListeners = new ArrayList<>();
+    private static WeakHashMap<Stage, MyHookProc> windowsHookSetOn = new WeakHashMap<>();
 
     @OnThread(Tag.FXPlatform)
     public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
@@ -1330,7 +1344,8 @@ public class FXUtility
         
         return false;
     }
-    
+
+    @SuppressWarnings("nullness")
     public static void setIcon(Stage stage)
     {
         for (int size : new int[]{16, 24, 32, 48, 64, 256})
@@ -1345,6 +1360,98 @@ public class FXUtility
             {
                 Log.error("Could not find file: logo-" + size + ".png");
             }
+        }
+        
+        if (SystemUtils.IS_OS_WINDOWS && !testingMode)
+        {
+            FXUtility.onceTrue(stage.focusedProperty(), () -> {
+                if (!windowsHookSetOn.containsKey(stage))
+                {
+                    
+                    try
+                    {
+                        String oldTitle = stage.getTitle();
+                        stage.setTitle("ColumnalSeekWindowTitle");
+                        HWND hwnd = User32.INSTANCE.FindWindow(null, "ColumnalSeekWindowTitle");
+                        stage.setTitle(oldTitle);
+                        char[] title = new char[128];
+                        int numChars = User32.INSTANCE.GetWindowText(hwnd, title, 128);
+                        Log.debug("Adding window hook to window: " + new String(title, 0, numChars));
+                        int windowThreadID = User32.INSTANCE.GetWindowThreadProcessId(hwnd, null);
+                        // See https://github.com/mirror/jdownloader/blob/master/src/org/jdownloader/osevents/windows/jna/ShutdownDetect.java
+                        final MyHookProc proc = new MyHookProc();
+                        proc.hhook = User32.INSTANCE.SetWindowsHookEx(4/* WH_CALLWNDPROCRET */, proc, null, windowThreadID/* dwThreadID */);
+                        windowsHookSetOn.put(stage, proc);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.log(e);
+                    }
+                }
+            });
+        }
+    }
+
+    private static final int WM_QUERYENDSESSION = 0x11;
+    private static final int WM_ENDSESSION = 0x16;
+
+
+    private interface WinHookProc extends WinUser.HOOKPROC {
+        /**
+         * @see <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms644975(v=vs.85).aspx">CallWndProc callback function</a>
+         * @param nCode
+         *            is an action parameter. anything less than zero indicates I should ignore this call.
+         * @param wParam
+         *            Specifies whether the message was sent by the current thread. If the message was sent by the current thread, it is
+         *            nonzero; otherwise, it is zero
+         * @param hookProcStruct
+         *            A pointer to a CWPSTRUCT structure that contains details about the message.
+         * @return If nCode is less than zero, the hook procedure must return the value returned by CallNextHookEx.
+         */
+        LRESULT callback(int nCode, WPARAM wParam, WinUser.CWPSTRUCT hookProcStruct);
+    }
+
+    @SuppressWarnings("nullness")
+    public static final class MyHookProc implements WinHookProc {
+        public WinUser.HHOOK     hhook;
+
+        @Override
+        public LRESULT callback(int nCode, WPARAM wParam, WinUser.CWPSTRUCT hookProcStruct)
+        {
+            if (nCode >= 0)
+            {
+                // tell the OS it's OK to shut down
+                if (hookProcStruct.message == WM_QUERYENDSESSION)
+                {
+                    Log.debug("Received query end session from Windows");
+                    return new LRESULT(1);
+                }
+                // process the actual shutting down message
+                if (hookProcStruct.message == WM_ENDSESSION)
+                {
+                    Log.debug("Received end session from Windows");
+                    // Permanently lock the save lock.  This prevents any further saves, which may seem bad if there are unsaved changes,
+                    // but at the same time, an old intact save is better than a save being killed partway through saving:
+                    Utility.saveLock.lock();
+                    Platform.exit();
+                    // In case JavaFX doesn't exit by itself:
+                    Thread failsafe = new Thread(() -> {
+                        try
+                        {
+                            sleep(2000);
+                        }
+                        catch (InterruptedException e)
+                        {
+                        }
+                        Log.debug("Performing failsafe exit");
+                        System.exit(2); });
+                    failsafe.setDaemon(true);
+                    failsafe.start();
+                    return new LRESULT(0); // return success
+                }
+            }
+            // pass the callback on to the next hook in the chain
+            return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, new LPARAM(Pointer.nativeValue(hookProcStruct.getPointer())));
         }
     }
 

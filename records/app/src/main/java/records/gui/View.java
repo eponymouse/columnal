@@ -1,6 +1,5 @@
 package records.gui;
 
-import annotation.identifier.qual.UnitIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +51,6 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.VirtualGridManager;
 import records.gui.grid.VirtualGridLineSupplier;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -151,9 +149,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             FullSaver fetcher = new FullSaver(displayDetailLines);
             tableManager.save(dest, fetcher);
             String completeFile = fetcher.getCompleteFile();
+            Utility.saveLock.lock();
+            Instant now = Instant.now();
             try
             {
-                Instant now = Instant.now();
                 // This will do backup for undo, but also for
                 // files being replaced, in extreme cases:
                 if (dest.exists() && keepPrevForUndo)
@@ -161,14 +160,16 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     undoManager.backupForUndo(dest, now);
                 }
                 FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
-                
-                //System.out.println("@NOW:\n" + completeFile);
-                Platform.runLater(() -> lastSaveTime.setValue(now));
             }
             catch (IOException ex)
             {
                 FXUtility.logAndShowError("save.error", ex);
             }
+            finally
+            {
+                Utility.saveLock.unlock();
+            }
+            Platform.runLater(() -> lastSaveTime.setValue(now));
         });
     }
 

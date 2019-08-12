@@ -64,6 +64,8 @@
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: one.util:streamex:0.6.3" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.4.0" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:5.4.0" level="project" />
     <orderEntry type="module-library">
       <library name="Maven: com.fxexperience:scenic-view:8.7.0">
         <CLASSES>
