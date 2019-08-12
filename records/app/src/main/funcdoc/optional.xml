@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="optional">
+    <function name="get optional">
+        <typeArg>t</typeArg>
+        <argType name="optional value">@apply Optional(t)</argType>
+        <returnType name="inner value">t</returnType>
+        <description>
+            <p>Gets the value from inside an optional value, if it is present.  If the value is blank, gives an error.  If you want to supply a value in this case, use <link function="get optional or"/>.</p>
+        </description>
+        <example>
+            <inputArg>@call @tag Optional\Is(17)</inputArg>
+            <output>17</output>
+        </example>
+        <example>
+            <inputArg>@tag Optional\None</inputArg>
+            <output>error</output>
+        </example>
+    </function>
+    <function name="get optional or">
+        <typeArg>t</typeArg>
+        <argType name="optional value">@apply Optional(t)</argType>
+        <argType name="default value">t</argType>
+        <returnType name="result">t</returnType>
+        <description>
+            <p>Gets the value from inside an optional value, if it is present.  If the value is blank, returns the second parameter instead.</p>
+        </description>
+        <example>
+            <inputArg>(@call @tag Optional\Is(17), 12)</inputArg>
+            <output>17</output>
+        </example>
+        <example>
+            <inputArg>(@tag Optional\None, 12)</inputArg>
+            <output>12</output>
+        </example>
+    </function>
+</functionDocumentation>

@@ -1,8 +1,3 @@
-Task C Items (unprioritised)
-===
-- Maybe we should add an extract optional item
-
-
 Documentation items
 ---
 - Some of the displayed equals examples are a bit perverse
@@ -364,3 +359,4 @@ Done after Phil B & Jon A:
 - When you load blah =~ Is(x), it should load as "Is" not "Optional\Is"
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
+- Maybe we should add an extract optional item

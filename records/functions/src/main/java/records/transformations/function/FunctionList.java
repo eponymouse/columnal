@@ -25,6 +25,8 @@ import records.transformations.function.math.LogarithmNatural;
 import records.transformations.function.number.Round;
 import records.transformations.function.number.RoundDP;
 import records.transformations.function.number.RoundSF;
+import records.transformations.function.optional.GetOptionalOrDefault;
+import records.transformations.function.optional.GetOptionalOrError;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
 import records.transformations.function.text.StringReplace;
@@ -56,6 +58,8 @@ public class FunctionList
             new ExtractNumber(),
             new GetElement(),
             new GetElementOrDefault(),
+            new GetOptionalOrError(),
+            new GetOptionalOrDefault(),
             new InList(),
             new JoinLists(),
             new KeepFunction(),

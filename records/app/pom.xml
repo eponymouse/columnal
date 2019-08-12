@@ -402,6 +402,7 @@
                             <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
+                            <otherDepends>optional.xml</otherDepends>
                             <otherDepends>syntax.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
                             <otherDepends>types.xml</otherDepends>
@@ -455,6 +456,7 @@
                             <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
+                            <otherDepends>optional.xml</otherDepends>
                             <otherDepends>syntax.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
                             <otherDepends>types.xml</otherDepends>
