@@ -1,5 +1,6 @@
 package test.expressions;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
@@ -7,18 +8,10 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SaveDestination;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StringLiteral;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 
@@ -113,6 +106,12 @@ public class TestLoadSaveExpression
             ), Arrays.asList(AddSubtractOp.SUBTRACT, AddSubtractOp.ADD)),
             "@call @function abs(true + false - 632 + @column Date) - 62 + \"hi\""
         );
+    }
+    
+    @Test
+    public void testCalls() throws UserException, InternalException
+    {
+        assertBothWays(new CallExpression(new ConstructorExpression(DummyManager.make().getTypeManager(), "Optional", "Is"), ImmutableList.of(new NumericLiteral(3, null))), "@call @tag Optional\\Is(3)");
     }
 
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException

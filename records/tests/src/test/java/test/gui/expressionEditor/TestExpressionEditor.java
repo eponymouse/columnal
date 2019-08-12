@@ -283,6 +283,24 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("@call @function abs(2/3)");
     }
+
+    @Test
+    public void testCall5() throws Exception
+    {
+        testSimple("@call @tag Optional\\Is(1)");
+    }
+
+    @Test
+    public void testCall6() throws Exception
+    {
+        testSimple("@call @tag A\\Single(1)");
+    }
+
+    @Test
+    public void testCall7() throws Exception
+    {
+        testSimple("1 + @call @tag Optional\\Is(@call @tag A\\Single(1))");
+    }
     
     @Test
     public void testUnit() throws Exception
