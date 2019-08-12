@@ -320,6 +320,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
+            typeManager._test_copyTaggedTypesFrom(TestUtil.managerWithTestTypes().getFirst().getTypeManager());
             List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {
