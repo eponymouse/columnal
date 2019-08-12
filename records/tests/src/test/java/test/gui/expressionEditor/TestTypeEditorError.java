@@ -22,6 +22,7 @@ import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
+import test.gui.trait.EnterTypeTrait;
 import test.gui.trait.ListUtilTrait;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
@@ -42,7 +43,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestTypeEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
+public class TestTypeEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait, EnterTypeTrait
 {
     @Test
     public void testFine1()
@@ -209,13 +210,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
             write("Column1");
             // Focus type editor:
             push(KeyCode.TAB);
-            for (char c : expression.toCharArray())
-            {
-                write(c);
-                // Delete auto-matched brackets:
-                if ("({[".contains("" + c))
-                    push(KeyCode.DELETE);
-            }
+            enterAndDeleteSmartBrackets(expression);
             sleep(200);
             
             if (errors.length == 0)

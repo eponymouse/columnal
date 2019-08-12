@@ -33,6 +33,7 @@ import records.gui.lexeditor.EditorDisplay;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.trait.ClickTableLocationTrait;
+import test.gui.trait.EnterTypeTrait;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ListUtilTrait;
 import test.gui.trait.PopupTrait;
@@ -58,7 +59,7 @@ import static org.junit.Assert.assertNotEquals;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait, PopupTrait
+public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait, PopupTrait, EnterTypeTrait
 {    
     @Test
     public void testPosition1()
@@ -347,12 +348,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             // Focus expression editor:
             push(KeyCode.TAB);
 
-            for (char c : internalContent.toCharArray())
-            {
-                write(c);
-                if ("({[".contains("" + c))
-                    push(KeyCode.DELETE);
-            }
+            enterAndDeleteSmartBrackets(internalContent);
 
             /*
             TestUtil.fx_(() -> {

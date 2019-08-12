@@ -25,6 +25,7 @@ import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenInvalidExpressionSource;
+import test.gui.trait.EnterTypeTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -34,7 +35,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestExpressionEditorInvalid extends FXApplicationTest
+public class TestExpressionEditorInvalid extends FXApplicationTest implements EnterTypeTrait
 {
     @OnThread(Tag.Simulation)
     @Property(trials=20)
@@ -47,12 +48,7 @@ public class TestExpressionEditorInvalid extends FXApplicationTest
             windowToUse.show();
         });
         clickOn(".top-level-editor");
-        for (char c : invalid.toCharArray())
-        {
-            write(c);
-            if ("({[".contains("" + c))
-                push(KeyCode.DELETE);
-        }
+        enterAndDeleteSmartBrackets(invalid);
         @Recorded @NonNull Expression savedInvalid = TestUtil.fx(() -> expressionEditorA.save(false));
         ExpressionEditor expressionEditorB = makeExpressionEditor(dummyManager, savedInvalid);
         assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TestUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));

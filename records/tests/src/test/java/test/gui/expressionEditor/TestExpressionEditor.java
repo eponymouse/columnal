@@ -191,12 +191,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            for (char c : expressionSrc.toCharArray())
-            {
-                write(c);
-                if ("({[".contains("" + c))
-                    push(KeyCode.DELETE);
-            }
+            enterAndDeleteSmartBrackets(expressionSrc);
 
             // Close dialog, ignoring errors:
             TestUtil.doubleOk(this);

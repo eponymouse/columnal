@@ -125,13 +125,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             // Focus expression editor:
             push(KeyCode.TAB);
             // Enter content:
-            for (char c : original.toCharArray())
-            {
-                write(c);
-                // Delete auto-matched brackets:
-                if ("({[".contains("" + c))
-                    push(KeyCode.DELETE);
-            }
+            enterAndDeleteSmartBrackets(original);
             // Click OK so that errors show up (cancel masking on new fields):
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");

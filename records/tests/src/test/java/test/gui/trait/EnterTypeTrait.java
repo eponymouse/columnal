@@ -134,4 +134,14 @@ public interface EnterTypeTrait extends FxRobotInterface
                 push(KeyCode.DELETE);
         }
     }
+
+    public default void enterAndDeleteSmartBrackets(String internalContent)
+    {
+        for (char c : internalContent.toCharArray())
+        {
+            write(c);
+            if ("({[".contains("" + c))
+                push(KeyCode.DELETE);
+        }
+    }
 }
