@@ -231,7 +231,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             }, val -> {
                 enterStructuredValue(columnDTV.getType(), val, r, true, false);
             });
-            push(KeyCode.ESCAPE);
+            push(KeyCode.ENTER);
+            push(KeyCode.UP);
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);
             // Clear clipboard to prevent tests interfering:
