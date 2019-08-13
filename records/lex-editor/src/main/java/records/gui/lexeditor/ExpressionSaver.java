@@ -1141,7 +1141,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 // Invalid
-                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, itemsIfInvalid.isEmpty() ? initialFunction.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
+                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialFunction.start, itemsIfInvalid.isEmpty() ? initialFunction.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(Utility.<@Recorded Expression>prependToList(keywordToInvalid(Keyword.FUNCTION, initialFunction), ImmutableList.<@Recorded Expression>copyOf(itemsIfInvalid))))));
             }
             return foundThen;
         }
@@ -1203,7 +1203,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 // Invalid
-                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.copyOf(itemsIfInvalid)))));
+                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(Utility.<@Recorded Expression>prependToList(keywordToInvalid(Keyword.DEFINE, initialDefine), ImmutableList.<@Recorded Expression>copyOf(itemsIfInvalid))))));
             }
             return foundThen;
         }
