@@ -48,20 +48,4 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
             return Either.left(new ErrorDetails(e.getStyledMessage(), e.getPosition()));
         }
     }
-
-    private ParseProgress consumeNext(String s, ParseProgress pp) throws UserException
-    {
-        ParseProgress after = pp.consumeNext(s);
-        if (after == null)
-            throw new UserException("Expected \"" + s + "\"");
-        return after;
-    }
-
-    public Pair<Integer, ParseProgress> consumeInt(ParseProgress pp) throws UserException
-    {
-        Pair<String, ParseProgress> pair = consumeDigits(pp);
-        if (pair == null)
-            throw new UserException("Expected number");
-        return pair.mapFirst(Integer::parseInt);
-    }
 }
