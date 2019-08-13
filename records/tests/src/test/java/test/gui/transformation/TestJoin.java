@@ -31,6 +31,7 @@ import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
+import test.gen.type.GenDataTypeMaker.MustHaveValues;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
@@ -55,7 +56,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
     @Property(trials=5)
     @SuppressWarnings("identifier")
     @OnThread(Tag.Simulation)
-    public void testJoin(@From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws Exception
+    public void testJoin(@MustHaveValues @From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws Exception
     {
         // We make four types for columns (T1-T4), where table A has
         // T1-T3 and table B has T2-T4.  Table A has 
