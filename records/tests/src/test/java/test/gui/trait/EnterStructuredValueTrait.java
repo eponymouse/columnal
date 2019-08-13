@@ -128,10 +128,14 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                         write(String.format(format, t.get(ChronoField.CLOCK_HOUR_OF_AMPM)) + ":", DELAY);
                         after = (r.nextBoolean() ? "" : "  ") + (t.get(ChronoField.AMPM_OF_DAY) == 0 ? "AM" : "PM");
                     }
-                    write(String.format(format, t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
+                    write(String.format("%02d", t.get(ChronoField.MINUTE_OF_HOUR)), DELAY);
                     int nano = t.get(ChronoField.NANO_OF_SECOND);
-                    write(String.format(format, t.get(ChronoField.SECOND_OF_MINUTE)) + (nano == 0 ? "" : "."), DELAY);
-                    write(String.format("%09d", nano).replaceAll("0*$", ""), DELAY);
+                    int second = t.get(ChronoField.SECOND_OF_MINUTE);
+                    if (nano != 0 || second != 0 || r.nextInt(3) == 1)
+                    {
+                        write(":" + String.format("%02d", second) + (nano == 0 ? "" : "."), DELAY);
+                        write(String.format("%09d", nano).replaceAll("0*$", ""), DELAY);
+                    }
                     if (after != null)
                         write(after, DELAY);
                 }
