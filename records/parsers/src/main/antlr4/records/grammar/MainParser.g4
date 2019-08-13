@@ -20,9 +20,9 @@ transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE source
 // For copy and paste:
 isolatedValues : units types dataFormat values;
 
-detailPrefixed locals [String prefix]: ({$prefix = _input.LT(1).getText().substring("@BEGIN".length()).trim();} BEGIN) detailLine[$prefix]* ({!$prefix.isEmpty() && _input.LT(1).getText().equals($prefix)}? ATOM | ({$prefix.isEmpty()}? )) DETAIL_END;
-detailLine[String prefix] : {_input.LT(1).getText().startsWith($prefix)}? DETAIL_LINE;
-detail: BEGIN detailLine[""]* DETAIL_END;
+detailLine : DETAIL_LINE;
+detail: BEGIN detailLine* DETAIL_END;
+detailPrefixed: BEGIN detailLine* DETAIL_END;
 
 numRows : item;
 dataFormat : FORMAT (SKIPROWS numRows)? detailPrefixed FORMAT NEWLINE;

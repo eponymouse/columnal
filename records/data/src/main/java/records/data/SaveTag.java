@@ -1,5 +1,9 @@
 package records.data;
 
+import org.checkerframework.dataflow.qual.Pure;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+
 import java.util.Random;
 
 /**
@@ -28,7 +32,9 @@ public class SaveTag
         return new SaveTag(new String(cs));
     }
 
-    public String getTag()
+    @OnThread(Tag.Any)
+    @Pure
+    public final String getTag()
     {
         return tag;
     }

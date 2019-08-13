@@ -253,7 +253,7 @@ public abstract class Table
     public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, @Nullable DisplayContext detailContext) throws UserException, InternalException
     {
         if (detailContext == null)
-            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.prefix), null, null);
+            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), null, null);
         return Utility.parseAsOne(Utility.getDetail(detailContext.detail()), DisplayLexer::new, DisplayParser::new, p -> {
             return loadDetails(tableId, tagFromContext, p.tableDisplayDetails());
         });
@@ -286,7 +286,7 @@ public abstract class Table
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
-            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.prefix), initialPosition, initialShowColumns);
+            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), initialPosition, initialShowColumns);
         }
         catch (Exception e)
         {
@@ -301,7 +301,8 @@ public abstract class Table
         {
             prevPosition = display.getMostRecentPosition();
         }
-        out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().nl();
+        out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().raw(saveTag.getTag()).nl();
+        out.pushPrefix(saveTag);
         out.t(DisplayLexer.POSITION, DisplayLexer.VOCABULARY).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
         out.t(DisplayLexer.SHOWCOLUMNS, DisplayLexer.VOCABULARY);
         switch (showColumns.getFirst())
@@ -316,6 +317,7 @@ public abstract class Table
         }
         out.nl();
         out.end().t(MainLexer.DISPLAY, MainLexer.VOCABULARY).nl();
+        out.pop();
     }
 
     @OnThread(Tag.Any)

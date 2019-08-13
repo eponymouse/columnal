@@ -51,6 +51,8 @@ public class OutputBuilder
     private final ArrayList<List<String>> lines = new ArrayList<>();
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @Nullable ArrayList<String> curLine = null;
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private final ArrayList<String> curLinePrefixStack = new ArrayList<>();
 
     @OnThread(Tag.Any)
     public OutputBuilder()
@@ -63,7 +65,7 @@ public class OutputBuilder
     private synchronized ArrayList<String> cur()
     {
         if (curLine == null)
-            curLine = new ArrayList<>();
+            curLine = new ArrayList<>(curLinePrefixStack);
         return curLine;
     }
 
@@ -204,9 +206,7 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder nl()
     {
-        if (curLine == null)
-            curLine = new ArrayList<>();
-        lines.add(curLine);
+        lines.add(cur());
         curLine = null;
         return this;
     }
@@ -388,14 +388,37 @@ public class OutputBuilder
 
     // Outputs the set of lines between @BEGIN/@END tags
     @OnThread(Tag.Simulation)
-    public synchronized void inner(Supplier<List<String>> genDetail, SaveTag saveTag)
+    public synchronized OutputBuilder inner(Supplier<List<String>> genDetail, SaveTag saveTag)
     {
-        begin().raw(" " + saveTag.getTag()).nl();
+        begin().ws(" ").raw(saveTag.getTag()).nl();
+        pushPrefix(saveTag);
+        pushIndent();
         for (String line : genDetail.get())
         {
-            raw(saveTag.getTag()).indent().raw(line).nl();
+            raw(line).nl();
         }
-        raw(saveTag.getTag() + " ").end().nl();
+        end().nl();
+        pop();
+        pop();
+        return this;
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void pop()
+    {
+        curLinePrefixStack.remove(curLinePrefixStack.size() - 1);
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void pushIndent()
+    {
+        curLinePrefixStack.add("");
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void pushPrefix(SaveTag saveTag)
+    {
+        curLinePrefixStack.add(saveTag.getTag());
     }
 
     @OnThread(Tag.Any)
