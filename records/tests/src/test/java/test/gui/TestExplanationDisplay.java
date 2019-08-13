@@ -52,12 +52,12 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         columns.add(bools("all true", true, true, true, true));
         columns.add(bools("half false", false, true, false, true));
         columns.add(bools("all false", false, false, false, false));
-        tempManager.record(new ImmediateDataSource(tempManager, new InitialLoadDetails(new TableId("T1"), null, null), new EditableRecordSet(columns, () -> 4)));
+        tempManager.record(new ImmediateDataSource(tempManager, new InitialLoadDetails(new TableId("T1"), null, null, null), new EditableRecordSet(columns, () -> 4)));
 
         columns.clear();
         columns.add(nums("asc", 1, 2, 3, 4));
         columns.add(text("alphabet animals", "Aardvark", "Bear", "Cat", "Deer"));
-        tempManager.record(new ImmediateDataSource(tempManager, new InitialLoadDetails(new TableId("T2"), null, null), new EditableRecordSet(columns, () -> 4)));
+        tempManager.record(new ImmediateDataSource(tempManager, new InitialLoadDetails(new TableId("T2"), null, null, null), new EditableRecordSet(columns, () -> 4)));
         
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, tempManager).get();
     }
@@ -81,7 +81,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     private void addCheck(@ExpressionIdentifier String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
     {
         Expression expression = Expression.parse(null, expressionSrc, mainWindowActions._test_getTableManager().getTypeManager(), FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()));
-        Check check = new Check(mainWindowActions._test_getTableManager(), new InitialLoadDetails(null, CHECK_POS, null), new TableId(srcTable), checkType, expression);
+        Check check = new Check(mainWindowActions._test_getTableManager(), new InitialLoadDetails(null, null, CHECK_POS, null), new TableId(srcTable), checkType, expression);
         mainWindowActions._test_getTableManager().record(check);
         // Wait for GUI:
         sleep(2000);

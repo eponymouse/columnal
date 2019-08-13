@@ -304,7 +304,7 @@ public class UnitManager
 
     public synchronized void loadUserUnits(UnitsContext units) throws UserException, InternalException
     {
-        List<FileItemContext> unitDecls = Utility.parseAsOne(units.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
+        List<FileItemContext> unitDecls = Utility.parseAsOne(units.detail().detailLine().stream().<String>map(l -> l.DETAIL_LINE().getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
 
         for (FileItemContext decl : unitDecls)
         {

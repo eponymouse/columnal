@@ -51,7 +51,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
 
         try
         {
-            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null), srcIds, incompleteColumnHandling, r.nextBoolean()));
+            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null, null), srcIds, incompleteColumnHandling, r.nextBoolean()));
         }
         catch (InternalException e)
         {

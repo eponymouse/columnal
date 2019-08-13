@@ -136,7 +136,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                         colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
                         colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
                     ), () -> tableLength);
-                    details._test_getTableManager().record(new ImmediateDataSource(details._test_getTableManager(), new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
+                    details._test_getTableManager().record(new ImmediateDataSource(details._test_getTableManager(), new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
                     break;
                 case 1:
                     addTransformation(details._test_getTableManager(), "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(1, 4), r);
@@ -195,7 +195,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
                 colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
         ), () -> tableLength);
-        dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
+        dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
         // Now add two transformations:
         addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(1, 4), r);
         addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
@@ -265,13 +265,13 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         switch (r.nextInt(3))
         {
             case 0:
-                mgr.record(new Sort(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), ImmutableList.of()));
+                mgr.record(new Sort(mgr, new InitialLoadDetails(new TableId(destTable), null, position, null), new TableId(srcTable), ImmutableList.of()));
                 break;
             case 1:
-                mgr.record(new Calculate(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), ImmutableMap.of()));
+                mgr.record(new Calculate(mgr, new InitialLoadDetails(new TableId(destTable), null, position, null), new TableId(srcTable), ImmutableMap.of()));
                 break;
             case 2:
-                mgr.record(new Filter(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), new BooleanLiteral(true)));
+                mgr.record(new Filter(mgr, new InitialLoadDetails(new TableId(destTable), null, position, null), new TableId(srcTable), new BooleanLiteral(true)));
                 break;
         }
     }

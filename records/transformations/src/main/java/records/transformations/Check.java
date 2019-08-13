@@ -415,7 +415,7 @@ public class Check extends Transformation implements SingleSourceTransformation
         @Override
         public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Check(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
+            return new Check(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
         }
     }
 }

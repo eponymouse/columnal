@@ -38,7 +38,7 @@ public class GenNonsenseCheck extends Generator<Transformation_Mgr>
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Check(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), CheckType.values()[sourceOfRandomness.nextInt(CheckType.values().length)], nonsenseExpression));
+            return new Transformation_Mgr(mgr, new Check(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), CheckType.values()[sourceOfRandomness.nextInt(CheckType.values().length)], nonsenseExpression));
         }
         catch (InternalException e)
         {

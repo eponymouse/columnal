@@ -170,7 +170,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
                             calcColumns.put(entry.getKey(), entry.getValue());
                     }
                     mgr.edit(getId(), () -> new Calculate(mgr, getDetailsForCopy(), srcTableId, calcColumns.build()), null);
-                    mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(details.getFirst() == null ? columnId : details.getFirst(), details.getSecond())), null);
+                    mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(details.getFirst() == null ? columnId : details.getFirst(), details.getSecond())), null);
                 };
             }
         };
@@ -334,7 +334,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Calculate(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableMap.of());
+            return new Calculate(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableMap.of());
         }
     }
 }

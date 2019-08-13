@@ -109,7 +109,7 @@ public class ClipboardUtils
         {
             cols.add(new Pair<>(format.get(i), ImmutableList.<Either<String, @Value Object>>builder()));
         }
-        Utility.loadData(ctx.values().detail(), p -> {
+        Utility.loadData(ctx.values().detailPrefixed(), p -> {
             for (int i = 0; i < format.size(); i++)
             {
                 LoadedFormat colFormat = format.get(i);

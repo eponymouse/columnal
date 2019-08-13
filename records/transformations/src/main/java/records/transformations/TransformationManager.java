@@ -13,6 +13,7 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.DetailContext;
+import records.grammar.MainParser.DetailPrefixedContext;
 import records.grammar.MainParser.SourceNameContext;
 import records.grammar.MainParser.TableContext;
 import records.grammar.MainParser.TableIdContext;
@@ -77,13 +78,13 @@ public class TransformationManager implements TransformationLoader
             TransformationContext transformationContext = table.transformation();
             TransformationNameContext transformationName = transformationContext.transformationName();
             TransformationInfo t = getTransformation(transformationName.getText());
-            DetailContext detailContext = transformationContext.detail();
+            DetailPrefixedContext detailContext = transformationContext.detailPrefixed();
             String detail = Utility.getDetail(detailContext);
             @SuppressWarnings("identifier")
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
             TableIdContext tableIdContext = transformationContext.tableId();
             @SuppressWarnings("identifier")
-            Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), table.display()), source, detail);
+            Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), detailContext, table.display()), source, detail);
             mgr.record(transformation);
             return transformation;
         }

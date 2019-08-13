@@ -75,7 +75,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
             }
 
             
-            return new Transformation_Mgr(mgr, new ManualEdit(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), replacementKey, ImmutableMap.copyOf(replacements)));
+            return new Transformation_Mgr(mgr, new ManualEdit(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), replacementKey, ImmutableMap.copyOf(replacements)));
         }
         catch (InternalException e)
         {

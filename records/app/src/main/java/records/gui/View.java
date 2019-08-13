@@ -839,7 +839,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     {
                         Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error pasting table data", () -> {
-                                ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
+                                ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
                                 tableManager.record(data);
                                 Platform.runLater(() -> selectAfter.consume(data));
                             });
@@ -997,7 +997,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
 
         if (choice.isPresent())
         {
-            InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
+            InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, null, cellPosition, null);
             SimulationConsumerNoError<DataSource> record = tableManager::record;
             switch (choice.get().getSecond())
             {
@@ -1049,7 +1049,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                         new EditCheckExpressionDialog(thisView, srcTable, CheckType.ALL_ROWS, new BooleanLiteral(true), true, ct -> Check.getColumnLookup(tableManager, srcTable.getId(), ct)).showAndWait().ifPresent(details -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
-                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), details.getFirst(), details.getSecond());
+                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, null, cellPosition, null), srcTable.getId(), details.getFirst(), details.getSecond());
                                 tableManager.record(check);
                             }));
                         });

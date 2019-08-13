@@ -86,10 +86,10 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
-        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(expressionValue.recordSet));
+        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(null, null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
+        InitialLoadDetails ild = new InitialLoadDetails(null, null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
         Table calculated = new Calculate(manager, ild, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
@@ -157,7 +157,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         Table srcData = srcDataAndMgr.data.get(0);
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
-        InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
+        InitialLoadDetails ild = new InitialLoadDetails(null, null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
         Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING))));
         MainWindowActions details = TestUtil.sim(() -> {
             manager.record(calculated);

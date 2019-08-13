@@ -45,7 +45,7 @@ public class GenNonsenseJoin extends GenValueBase<Transformation_Mgr>
 
         try
         {
-            return new Transformation_Mgr(mgr, new Join(mgr, new InitialLoadDetails(ourId, null, null), srcIdA, srcIdB, r.nextBoolean(), columns));
+            return new Transformation_Mgr(mgr, new Join(mgr, new InitialLoadDetails(ourId, null, null, null), srcIdA, srcIdB, r.nextBoolean(), columns));
         }
         catch (InternalException e)
         {

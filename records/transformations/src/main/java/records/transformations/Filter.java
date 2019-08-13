@@ -264,7 +264,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
         @OnThread(Tag.Simulation)
         public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Filter(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
+            return new Filter(mgr, new InitialLoadDetails(null, null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
         }
     }
 

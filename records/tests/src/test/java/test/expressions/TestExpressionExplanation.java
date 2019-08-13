@@ -68,12 +68,12 @@ public class TestExpressionExplanation
         columns.add(bools("all true", true, true, true, true));
         columns.add(bools("half false", false, true, false, true));
         columns.add(bools("all false", false, false, false, false));
-        tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T1"), null, null), new EditableRecordSet(columns, () -> 4)));
+        tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T1"), null, null, null), new EditableRecordSet(columns, () -> 4)));
         
         columns.clear();
         columns.add(nums("asc", 1, 2, 3, 4));
         columns.add(text("alphabet animals", "Aardvark", "Bear", "Cat", "Deer"));
-        tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T2"), null, null), new EditableRecordSet(columns, () -> 4)));
+        tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T2"), null, null, null), new EditableRecordSet(columns, () -> 4)));
     }
 
     private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)

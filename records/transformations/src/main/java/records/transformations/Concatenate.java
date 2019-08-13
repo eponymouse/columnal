@@ -329,7 +329,7 @@ public class Concatenate extends Transformation
         @Override
         public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
-            return () -> new Concatenate(mgr, new InitialLoadDetails(null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT, true);
+            return () -> new Concatenate(mgr, new InitialLoadDetails(null, null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT, true);
         }
     }
 

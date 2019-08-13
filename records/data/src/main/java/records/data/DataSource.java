@@ -24,6 +24,7 @@ import records.grammar.MainParser;
 import records.grammar.MainParser.DataFormatContext;
 import records.grammar.MainParser.DataSourceContext;
 import records.grammar.MainParser.DataSourceImmediateContext;
+import records.grammar.MainParser.DetailLineContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -80,7 +81,7 @@ public abstract class DataSource extends Table
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
-            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(columnName), table.display()), recordSet);
+            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(columnName), table.dataSource().dataSourceImmediate().dataFormat().detailPrefixed(), table.display()), recordSet);
             manager.record(immediateDataSource);
             return immediateDataSource;
         }
@@ -107,9 +108,9 @@ public abstract class DataSource extends Table
     public static List<LoadedFormat> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext, boolean editable) throws UserException, InternalException
     {
         List<LoadedFormat> r = new ArrayList<>();
-        for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
+        for (DetailLineContext line : dataFormatContext.detailPrefixed().detailLine())
         {
-            Utility.parseAsOne(line.getText(), FormatLexer::new, FormatParser::new, p -> {
+            Utility.parseAsOne(line.DETAIL_LINE().getText(), FormatLexer::new, FormatParser::new, p -> {
                 ColumnContext column = p.column();
                 ColumnNameContext colName;
                 if (column == null || (colName = column.columnName()) == null)
@@ -158,7 +159,7 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detail(), p ->
+            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detailPrefixed(), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {

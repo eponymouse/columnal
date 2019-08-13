@@ -170,7 +170,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 SimulationFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("Boolean"), booleans.stream().map(b -> Either.<String, Boolean>right(b)).collect(Collectors.toList()), false);
                 SimulationFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("Number"), NumberInfo.DEFAULT, numbers.stream().map(n -> Either.<String, Number>right(n)).collect(Collectors.toList()), 6);
                 ImmutableList<SimulationFunction<RecordSet, EditableColumn>> columns = ImmutableList.of(a, b);
-                ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
+                ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);
                 
@@ -210,25 +210,25 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     private CellPosition addTransforms(TableManager dummyManager, TableId srcId, int depth, CellPosition targetPos) throws InternalException, UserException
     {
         TableId sortId = new TableId(srcId.getRaw() + " then Sort");
-        Sort sort = new Sort(dummyManager, new InitialLoadDetails(sortId, targetPos, null), srcId, sortBy);
+        Sort sort = new Sort(dummyManager, new InitialLoadDetails(sortId, null, targetPos, null), srcId, sortBy);
         dummyManager.record(sort);
         transformPositions.put(sortId, targetPos);
         targetPos = nextPos(sort);
 
         TableId filterId = new TableId(srcId.getRaw() + " then Filter");
-        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, targetPos, null), srcId, makeFilterCalcExpression(dummyManager.getTypeManager()));
+        Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, null, targetPos, null), srcId, makeFilterCalcExpression(dummyManager.getTypeManager()));
         dummyManager.record(filter);
         transformPositions.put(filterId, targetPos);
         targetPos = nextPos(filter);
 
         TableId calculateId = new TableId(srcId.getRaw() + " then Calculate");
-        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
 
         TableId manualId = new TableId(srcId.getRaw() + " then Edit");
-        ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, targetPos, null), srcId, null, ImmutableMap.of());
+        ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, null, targetPos, null), srcId, null, ImmutableMap.of());
         dummyManager.record(manualEdit);
         transformPositions.put(manualId, targetPos);
         targetPos = nextPos(manualEdit);

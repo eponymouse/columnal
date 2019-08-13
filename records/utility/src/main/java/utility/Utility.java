@@ -62,6 +62,8 @@ import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.MainParser.DetailContext;
+import records.grammar.MainParser.DetailLineContext;
+import records.grammar.MainParser.DetailPrefixedContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -1091,13 +1093,13 @@ public class Utility
         return r;
     }
 
-    public static int loadData(DetailContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
+    public static int loadData(DetailPrefixedContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
     {
         int count = 0;
-        for (TerminalNode line : detail.DETAIL_LINE())
+        for (DetailLineContext line : detail.detailLine())
         {
             count += 1;
-            String lineText = line.getText();
+            String lineText = line.DETAIL_LINE().getText();
             try
             {
                 parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
@@ -1383,7 +1385,12 @@ public class Utility
 
     public static String getDetail(DetailContext detail)
     {
-        return detail.DETAIL_LINE().stream().map(l -> l.getText().trim() + "\n").collect(Collectors.joining());
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").collect(Collectors.joining());
+    }
+
+    public static String getDetail(DetailPrefixedContext detail)
+    {
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").collect(Collectors.joining());
     }
 
     public interface WrappedCharSequence extends CharSequence

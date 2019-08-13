@@ -54,7 +54,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
                     columnId = TestUtil.generateColumnId(sourceOfRandomness);
                 columns.put(columnId, nonsenseExpression);
             }
-            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
+            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
         }
         catch (InternalException e)
         {

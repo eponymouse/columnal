@@ -770,7 +770,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
             Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Creating edit", () -> {
-                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().edit(null, () -> new ManualEdit(parent.getManager(), new InitialLoadDetails(null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))), null);
+                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().edit(null, () -> new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))), null);
                 Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true));
             }));
         }
@@ -854,18 +854,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 })::makeMenuItem);
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
-                return new Aggregate(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
+                return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
             })::makeMenuItem);
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
-                return new Sort(tableManager, new InitialLoadDetails(null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
+                return new Sort(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
             })::makeMenuItem);
         }
         catch (InternalException | UserException e)

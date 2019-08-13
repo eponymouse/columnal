@@ -37,7 +37,7 @@ public class GenNonsenseFilter extends Generator<Transformation_Mgr>
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), nonsenseExpression));
+            return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), nonsenseExpression));
         }
         catch (InternalException e)
         {

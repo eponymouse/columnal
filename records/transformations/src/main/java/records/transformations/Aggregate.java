@@ -439,7 +439,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
         @Override
         public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Aggregate(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
+            return new Aggregate(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
         }
 
         @Override

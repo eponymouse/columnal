@@ -1037,7 +1037,7 @@ validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(vali
         
         public InitialLoadDetails getInitialLoadDetails(CellPosition destination)
         {
-            return new InitialLoadDetails(suggestedTableId, destination, null);
+            return new InitialLoadDetails(suggestedTableId, null, destination, null);
         }
         
         public FORMAT getFormat()

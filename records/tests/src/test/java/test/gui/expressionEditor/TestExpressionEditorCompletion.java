@@ -67,11 +67,11 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         TableManager toLoad = new DummyManager();
         toLoad.record(
             new ImmediateDataSource(toLoad,
-                new InitialLoadDetails(new TableId("IDS"), new CellPosition(CellPosition.row(1), CellPosition.col(1)), null),
+                new InitialLoadDetails(new TableId("IDS"), null, new CellPosition(CellPosition.row(1), CellPosition.col(1)), null),
                 new EditableRecordSet(
                     ImmutableList.of(rs -> DataType.NUMBER.makeImmediateColumn(new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
                     (SimulationSupplier<Integer>)() -> 0)));
-        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), Expression.parse(null, expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
+        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), Expression.parse(null, expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
 
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);

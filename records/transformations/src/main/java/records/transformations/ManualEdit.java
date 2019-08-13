@@ -656,7 +656,7 @@ edit : editHeader editColumn*;
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new ManualEdit(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), null, ImmutableMap.of());
+            return new ManualEdit(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), null, ImmutableMap.of());
         }
     }
 }

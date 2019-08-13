@@ -186,7 +186,7 @@ public class HideColumns extends Transformation implements SingleSourceTransform
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new HideColumns(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
+            return new HideColumns(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableList.of());
         }
     }
 

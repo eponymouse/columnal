@@ -132,8 +132,8 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 resultSourceRows.remove(new Pair<>(a, OptionalInt.empty()));
         }
         
-        srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table A"), null, null), new EditableRecordSet(aColumns, () -> aSize)));
-        srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table B"), null, null), new EditableRecordSet(bColumns, () -> bSize)));
+        srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table A"), null, null, null), new EditableRecordSet(aColumns, () -> aSize)));
+        srcMgr.record(new ImmediateDataSource(srcMgr, new InitialLoadDetails(new TableId("Table B"), null, null, null), new EditableRecordSet(bColumns, () -> bSize)));
         
         
         

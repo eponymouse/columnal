@@ -112,7 +112,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             TableManager tableManager = mainWindowActions._test_getTableManager();
 
             CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));
-            tableManager.edit(null, () -> new Calculate(tableManager, new InitialLoadDetails(null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()), null);
+            tableManager.edit(null, () -> new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()), null);
 
             TestUtil.sleep(3000);
             NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));

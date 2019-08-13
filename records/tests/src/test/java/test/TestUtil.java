@@ -136,7 +136,7 @@ import static org.junit.Assume.assumeNoException;
 public class TestUtil
 {
     public static final @LocalizableKey String EMPTY_KEY = makeEmptyKey();
-    public static final InitialLoadDetails ILD = new InitialLoadDetails(null, null, null);
+    public static final InitialLoadDetails ILD = new InitialLoadDetails(null, null, null, null);
 
     private static @LocalizableKey String makeEmptyKey()
     {
@@ -1001,7 +1001,7 @@ public class TestUtil
     public static MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
     {
         TableManager manager = new DummyManager();
-        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(new TableId("Table1"), CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(data));
+        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(new TableId("Table1"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(data));
         manager.record(t);
         if (typeManager != null)
         {

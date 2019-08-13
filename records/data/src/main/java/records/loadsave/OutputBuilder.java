@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.SaveTag;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -387,14 +388,14 @@ public class OutputBuilder
 
     // Outputs the set of lines between @BEGIN/@END tags
     @OnThread(Tag.Simulation)
-    public synchronized void inner(Supplier<List<String>> genDetail)
+    public synchronized void inner(Supplier<List<String>> genDetail, SaveTag saveTag)
     {
-        begin().nl();
+        begin().raw(" " + saveTag.getTag()).nl();
         for (String line : genDetail.get())
         {
-            indent().raw(line).nl();
+            raw(saveTag.getTag()).indent().raw(line).nl();
         }
-        end().nl();
+        raw(saveTag.getTag() + " ").end().nl();
     }
 
     @OnThread(Tag.Any)

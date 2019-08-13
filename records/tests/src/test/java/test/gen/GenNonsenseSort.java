@@ -44,7 +44,7 @@ public class GenNonsenseSort extends Generator<Transformation_Mgr>
         try
         {
             DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new Sort(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), cols));
+            return new Transformation_Mgr(mgr, new Sort(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), cols));
         }
         catch (InternalException | UserException e)
         {

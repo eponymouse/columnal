@@ -9,21 +9,23 @@ importType : item;
 filePath : item;
 dataSourceLinkHeader : DATA tableId LINKED importType filePath dataFormat;
 dataSourceImmediate : DATA tableId dataFormat values NEWLINE;
-values : VALUES detail VALUES;
+values : VALUES detailPrefixed VALUES;
 
 dataSource : dataSourceLinkHeader | dataSourceImmediate;
 
 transformationName : item;
 sourceName : item;
-transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName* NEWLINE detail NEWLINE;
+transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName* NEWLINE detailPrefixed NEWLINE;
 
 // For copy and paste:
 isolatedValues : units types dataFormat values;
 
-detail: BEGIN DETAIL_LINE* DETAIL_END;
+detailPrefixed locals [String prefix]: ({$prefix = _input.LT(1).getText().substring("@BEGIN".length()).trim();} BEGIN) detailLine[$prefix]* ({!$prefix.isEmpty() && _input.LT(1).getText().equals($prefix)}? ATOM | ({$prefix.isEmpty()}? )) DETAIL_END;
+detailLine[String prefix] : {_input.LT(1).getText().startsWith($prefix)}? DETAIL_LINE;
+detail: BEGIN detailLine[""]* DETAIL_END;
 
 numRows : item;
-dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
+dataFormat : FORMAT (SKIPROWS numRows)? detailPrefixed FORMAT NEWLINE;
 
 //columnFormat : columnType item NEWLINE;
 

@@ -23,6 +23,7 @@ import records.grammar.DisplayParser;
 import records.grammar.DisplayParser.TableDisplayDetailsContext;
 import records.grammar.MainLexer;
 import records.grammar.MainParser.DetailContext;
+import records.grammar.MainParser.DetailPrefixedContext;
 import records.grammar.MainParser.DisplayContext;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
@@ -60,6 +61,7 @@ public abstract class Table
 
     private final TableManager mgr;
     private final TableId id;
+    protected final SaveTag saveTag;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
@@ -73,20 +75,22 @@ public abstract class Table
     public static class InitialLoadDetails
     {
         private final @Nullable TableId tableId;
+        private final @Nullable SaveTag saveTag;
         private final @Nullable CellPosition initialPosition;
         private final @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
 
         @OnThread(Tag.Any)
-        public InitialLoadDetails(@Nullable TableId tableId, @Nullable CellPosition initialPosition, @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns)
+        public InitialLoadDetails(@Nullable TableId tableId, @Nullable SaveTag saveTag, @Nullable CellPosition initialPosition, @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns)
         {
             this.tableId = tableId;
+            this.saveTag = saveTag;
             this.initialPosition = initialPosition;
             this.initialShowColumns = initialShowColumns;
         }
         
         public InitialLoadDetails withTableId(TableId tableId)
         {
-            return new InitialLoadDetails(tableId, this.initialPosition, this.initialShowColumns);
+            return new InitialLoadDetails(tableId, this.saveTag, this.initialPosition, this.initialShowColumns);
         }
     }
     
@@ -103,6 +107,14 @@ public abstract class Table
         else
         {
             this.id = initialLoadDetails.tableId;
+        }
+        if (initialLoadDetails.saveTag == null)
+        {
+            this.saveTag = SaveTag.generateRandom();
+        }
+        else
+        {
+            this.saveTag = initialLoadDetails.saveTag;
         }
         if (initialLoadDetails.initialPosition != null)
             prevPosition = initialLoadDetails.initialPosition;
@@ -238,16 +250,16 @@ public abstract class Table
         display.loadPosition(prevPosition, showColumns);
     }
 
-    public static InitialLoadDetails loadDetails(TableId tableId, @Nullable DisplayContext detailContext) throws UserException, InternalException
+    public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, @Nullable DisplayContext detailContext) throws UserException, InternalException
     {
         if (detailContext == null)
-            return new InitialLoadDetails(tableId, null, null);
+            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.prefix), null, null);
         return Utility.parseAsOne(Utility.getDetail(detailContext.detail()), DisplayLexer::new, DisplayParser::new, p -> {
-            return loadDetails(tableId, p.tableDisplayDetails());
+            return loadDetails(tableId, tagFromContext, p.tableDisplayDetails());
         });
     }
 
-    public static InitialLoadDetails loadDetails(TableId tableId, TableDisplayDetailsContext displayContext) throws UserException
+    public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, TableDisplayDetailsContext displayContext) throws UserException
     {
         try
         {
@@ -274,7 +286,7 @@ public abstract class Table
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
-            return new InitialLoadDetails(tableId, initialPosition, initialShowColumns);
+            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.prefix), initialPosition, initialShowColumns);
         }
         catch (Exception e)
         {
@@ -372,7 +384,7 @@ public abstract class Table
 
     public synchronized InitialLoadDetails getDetailsForCopy(@UnknownInitialization(Table.class) Table this)
     {
-        return new InitialLoadDetails(id, prevPosition, showColumns);
+        return new InitialLoadDetails(id, saveTag, prevPosition, showColumns);
     }
     
     /**

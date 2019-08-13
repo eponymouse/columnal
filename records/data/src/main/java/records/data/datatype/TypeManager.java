@@ -133,7 +133,7 @@ public class TypeManager
 
     public void loadTypeDecls(TypesContext types) throws UserException, InternalException
     {
-        TypeDeclsContext typeDecls = Utility.parseAsOne(types.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), FormatLexer::new, FormatParser::new, p -> p.typeDecls());
+        TypeDeclsContext typeDecls = Utility.parseAsOne(types.detail().detailLine().stream().<String>map(l -> l.DETAIL_LINE().getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), FormatLexer::new, FormatParser::new, p -> p.typeDecls());
         for (TypeDeclContext typeDeclContext : typeDecls.typeDecl())
         {
             loadTypeDecl(typeDeclContext);

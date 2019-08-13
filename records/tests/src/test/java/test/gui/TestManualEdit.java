@@ -82,7 +82,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
+            @When(seed=1203768326779328452L)
             @MustHaveValues @From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker,
+            @When(seed=4500905981534881993L)
             @From(GenRandom.class) Random r) throws Exception
     {
         int length = 1 + r.nextInt(50);

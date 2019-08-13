@@ -362,7 +362,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
         @OnThread(Tag.Simulation)
         public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Sort(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), ImmutableList.of());
+            return new Sort(mgr, new InitialLoadDetails(null, null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), ImmutableList.of());
         }
     }
 

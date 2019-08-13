@@ -6,7 +6,7 @@ DATA : 'DATA';
 TEXTFILE : 'TEXTFILE';
 LINKED : 'LINKED';
 END : '@END';
-BEGIN : '@BEGIN' '\r'? '\n' -> pushMode(DETAIL);
+BEGIN : '@BEGIN' ' '* ([A-Z][A-Z]+)? '\r'? '\n' -> pushMode(DETAIL);
 TRANSFORMATION: 'TRANSFORMATION';
 SOURCE: 'SOURCE';
 FORMAT : 'FORMAT';

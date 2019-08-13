@@ -325,7 +325,7 @@ public class Join extends Transformation
         @Override
         public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
-            return () -> new Join(mgr, new InitialLoadDetails(null, destination, null), new TableId(""), new TableId(""), false, ImmutableList.of());
+            return () -> new Join(mgr, new InitialLoadDetails(null, null, destination, null), new TableId(""), new TableId(""), false, ImmutableList.of());
         }
     }
 }

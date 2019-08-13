@@ -10,7 +10,7 @@ ym: POSITIVE_INTEGER MINUS POSITIVE_INTEGER WS?;
 localDateTime: ymd localTime;
 localTime: POSITIVE_INTEGER COLON POSITIVE_INTEGER COLON POSITIVE_INTEGER (DOT POSITIVE_INTEGER)? WS?;
 // UNQUOTED_IDENT because it can be Z:
-offset: (UNQUOTED_IDENT { getCurrentToken().getText().equals("Z"); } | ((PLUS | MINUS) POSITIVE_INTEGER COLON POSITIVE_INTEGER));
+offset: (({ _input.LT(1).getText().equals("Z") }? UNQUOTED_IDENT) | ((PLUS | MINUS) POSITIVE_INTEGER COLON POSITIVE_INTEGER));
 offsetTime: localTime offset;
 zone : UNQUOTED_IDENT ((SLASH | MINUS) UNQUOTED_IDENT ((PLUS | MINUS) POSITIVE_INTEGER)?)*;
 zonedDateTime: localDateTime (offset | zone) WS?;
