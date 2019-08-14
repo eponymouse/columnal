@@ -108,7 +108,7 @@ public abstract class Table
         {
             this.id = initialLoadDetails.tableId;
         }
-        if (initialLoadDetails.saveTag == null)
+        if (initialLoadDetails.saveTag == null || initialLoadDetails.saveTag.getTag().isEmpty())
         {
             this.saveTag = SaveTag.generateRandom();
         }
