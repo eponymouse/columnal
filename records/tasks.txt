@@ -361,3 +361,4 @@ Done after Phil B & Jon A:
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - Maybe we should add an extract optional item
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
+- Add an option to remove wikipedia footnotes

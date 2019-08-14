@@ -57,4 +57,10 @@
             <p>The import can either keep the values exactly as they appear in the HTML including all spaces (in which case leave this box empty) or it can remove these extra spaces, which is usually preferred (in which case tick the box).</p>
         </full>
     </help>
+    <help id="remove-wikipedia-footnotes" title="Remove wikipedia footnotes">
+        <short>Removes wikipedia foonotes from the table</short>
+        <full>
+            <p>Wikipedia tables often have lots of footnotes.  This option, available when importing wikipedia URLs, removes the footnotes before importing the table.</p>
+        </full>
+    </help>
 </dialog>

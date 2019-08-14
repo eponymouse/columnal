@@ -101,7 +101,7 @@ public class HTMLImporter implements Importer
         }
         
         FXPlatformConsumer<Integer> importTable = tableIndex -> {
-            importTable(parentWindow, mgr, htmlFile, destination, withDataSources, results, tables, tableIndex);
+            importTable(parentWindow, mgr, htmlFile, destination, withDataSources, results, tables, tableIndex, source.toExternalForm().contains("wikipedia.org"));
         };
         
         return new Pair<>(doc, importTable);
@@ -110,7 +110,7 @@ public class HTMLImporter implements Importer
     private enum TableState { HEAD, BODY };
 
     @OnThread(Tag.FXPlatform)
-    protected static void importTable(@Nullable Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex)
+    protected static void importTable(@Nullable Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex, boolean fromWikipedia)
     {
         Element table = tables.get(tableIndex);
         // vals is a list of rows:
@@ -124,7 +124,7 @@ public class HTMLImporter implements Importer
         @SuppressWarnings("units")
         final @GridAreaColIndex int COL = 1;
         
-        ArrayList<Pair<ColumnId, @Localized String>> columnNames = new ArrayList<>();
+        ArrayList<@Localized String> columnNames = new ArrayList<>();
         
         
         TableState tableState = null;
@@ -233,7 +233,7 @@ public class HTMLImporter implements Importer
                 {
                     columnNames.clear();
                     @SuppressWarnings("i18n")
-                    boolean _added = columnNames.addAll(Utility.<String, Pair<ColumnId, @Localized String>>mapList_Index(rowVals, (n, s) -> new Pair<ColumnId, @Localized String>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Col", n))), s)));
+                    boolean _added = columnNames.addAll(Utility.<String, @Localized String>mapList_Index(rowVals, (n, s) -> s));
                 }
             }
         }
@@ -245,6 +245,8 @@ public class HTMLImporter implements Importer
             // By default, trim:
             @OnThread(Tag.Any)
             AtomicBoolean trimWhitespace = new AtomicBoolean(true);
+            @OnThread(Tag.Any)
+            AtomicBoolean removeWikipediaFootnotes = new AtomicBoolean(fromWikipedia);
             @MonotonicNonNull LabelledGrid labelledGrid;
 
             @Override
@@ -262,6 +264,20 @@ public class HTMLImporter implements Importer
                         format.set(UnitType.UNIT);
                     });
                     labelledGrid = new LabelledGrid(LabelledGrid.labelledGridRow("import.trimWhitespace", "guess-format/trimWhitespace", checkBox));
+                    
+                    // Only show wikipedia box if applicable:
+                    if (fromWikipedia)
+                    {
+                        CheckBox footnoteCheckBox = new CheckBox();
+                        footnoteCheckBox.setSelected(removeWikipediaFootnotes.get());
+                        FXUtility.addChangeListenerPlatformNN(footnoteCheckBox.selectedProperty(), b -> {
+                            removeWikipediaFootnotes.set(b);
+                            // Force refresh:
+                            format.set(null);
+                            format.set(UnitType.UNIT);
+                        });
+                        labelledGrid.addRow(LabelledGrid.labelledGridRow("import.removeWikipediaFootnotes", "guess-format/remove-wikipedia-footnotes", footnoteCheckBox));
+                    }
                 }
                 return labelledGrid;
             }
@@ -270,7 +286,7 @@ public class HTMLImporter implements Importer
             public Pair<ColumnId, @Localized String> srcColumnName(int index)
             {
                 if (index < columnNames.size())
-                    return columnNames.get(index);
+                    return new Pair<>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(columnNames.get(index), IdentifierUtility.identNum("Col", index))), columnNames.get(index));
                 else
                 {
                     ColumnId columnId = new ColumnId(IdentifierUtility.identNum("C", (index + 1)));
@@ -282,7 +298,14 @@ public class HTMLImporter implements Importer
             public ColumnId destColumnName(TrimChoice trimChoice, int index)
             {
                 if (index < columnNames.size())
-                    return columnNames.get(index).getFirst();
+                {
+                    @Localized String orig = columnNames.get(index);
+                    if (removeWikipediaFootnotes.get())
+                    {
+                        orig = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                    }
+                    return new ColumnId(IdentifierUtility.fixExpressionIdentifier(orig, IdentifierUtility.identNum("Col", index)));
+                }
                 else if (trimChoice.trimFromTop > 0)
                 {
                     String valAbove = vals.get(trimChoice.trimFromTop - 1).get(index);
@@ -296,8 +319,16 @@ public class HTMLImporter implements Importer
             @OnThread(Tag.Simulation)
             public List<? extends List<String>> processTrimmed(List<List<String>> all)
             {
-                if (trimWhitespace.get())
-                    return Utility.mapListI(all, line -> Utility.mapListI(line, CharMatcher.whitespace()::trimFrom));
+                boolean trimWS = trimWhitespace.get();
+                boolean removeFoot = removeWikipediaFootnotes.get();
+                if (trimWS || removeFoot)
+                    return Utility.mapListI(all, line -> Utility.mapListI(line, s -> {
+                        if (trimWS)
+                            s = CharMatcher.whitespace().trimFrom(s);
+                        if (removeFoot)
+                            s = s.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                        return s;
+                    }));
                 else
                     return all;
             }
