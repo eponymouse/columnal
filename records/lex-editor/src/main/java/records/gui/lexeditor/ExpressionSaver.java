@@ -1161,6 +1161,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         public boolean terminate(FetchContent<Expression, ExpressionSaver, BracketContent> makeContent, @Nullable Keyword terminator, CanonicalSpan keywordErrorDisplayer)
         {
             final ArrayList<@Recorded Expression> itemsIfInvalid = new ArrayList<>();
+            itemsIfInvalid.add(keywordToInvalid(Keyword.DEFINE, initialDefine));
             @SuppressWarnings("recorded") // We can't actually record BracketContent
             BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
             {
@@ -1195,6 +1196,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             if (definitions != null)
             {
                 ImmutableList<DefineItem> defs = ImmutableList.<DefineItem>copyOf(definitions);
+                itemsIfInvalid.add(keywordToInvalid(Keyword.THEN, keywordErrorDisplayer));
                 currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(locationRecorder, s), (e, s) -> {
                     DefineExpression defineExpression = new DefineExpression(initialDefine, defs, e, s);
                     return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, s.end), defineExpression));
@@ -1203,7 +1205,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
             {
                 // Invalid
-                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(Utility.<@Recorded Expression>prependToList(keywordToInvalid(Keyword.DEFINE, initialDefine), ImmutableList.<@Recorded Expression>copyOf(itemsIfInvalid))))));
+                currentScopes.peek().items.add(Either.<@Recorded Expression, OpAndNode>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, itemsIfInvalid.isEmpty() ? initialDefine.end : locationRecorder.recorderFor(itemsIfInvalid.get(itemsIfInvalid.size() - 1)).end), new InvalidOperatorExpression(ImmutableList.<@Recorded Expression>copyOf(itemsIfInvalid)))));
             }
             return foundThen;
         }
