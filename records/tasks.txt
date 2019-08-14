@@ -18,7 +18,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Lots of confusion between date literals and date functions.
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
-- Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
+
 
 
 Medium Priority (significant quality of life, but not essential especially for beta)
@@ -360,3 +360,4 @@ Done after Phil B & Jon A:
 - Phil C4 19:22, didn't like that it went from multiline to single line due to bracket mismatch.  Or was it unterminated string literal?  Maybe auto insert closing quote?
 - When you type if (no @), it should show the full if-then-else-endif in the related completions
 - Maybe we should add an extract optional item
+- Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
