@@ -14,6 +14,6 @@ tableDisplayDetails : displayTablePosition displayShowColumns EOF;
 commentDisplayDetails : POSITION item item item item NEWLINE;
 
 // Column index (zero-based), then column width
-columnWidth: COLUMNWIDTH item item NEWLINE EOF; 
+columnWidth: COLUMNWIDTH item item NEWLINE; 
 
 globalDisplayDetails : columnWidth* EOF;

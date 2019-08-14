@@ -176,7 +176,7 @@ public class TableManager
         if (file.display() != null)
         {
             ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
-            GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(Utility.getDetail(file.display().detail()).trim(), DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
+            GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(Utility.getDetail(file.display().detail()).trim() + "\n", DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
             for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
             {
                 try
