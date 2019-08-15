@@ -73,7 +73,8 @@ public class MainWindow
     public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
     {
         View v = new View(destinationFile);
-        stage.titleProperty().bind(v.titleProperty());
+        // We don't use bind because FXUtility.setIcon needs to temporarily change title:
+        FXUtility.addChangeListenerPlatformNNAndCallNow(v.titleProperty(), stage::setTitle);
         views.put(v, stage);
         stage.setOnHidden(e -> {
             views.remove(v);
