@@ -1935,7 +1935,7 @@ public class Utility
     //package-visible
     public static File getStorageDirectory() throws IOException
     {
-        File dir = new File(System.getProperty("user.home"), ".records");
+        File dir = new File(System.getProperty("user.home"), ".columnal");
         dir.mkdirs();
         if (!dir.exists() || !dir.isDirectory())
         {
