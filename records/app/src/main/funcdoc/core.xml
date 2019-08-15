@@ -9,13 +9,15 @@
         <returnType name="value">@typevar t</returnType>
         <description>
             <p>Clarifies the type of a value.</p>
-            <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
+            <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous and you get a type error.  For conversions, see functions like <link function="conversion:from text"/>.</p>
         </description>
         <example>
+            <description>Specifies that the destination type of the conversion from text is Boolean.</description>
             <inputArg>(type{Boolean}, @call @function from text("True"))</inputArg>
             <output>true</output>
         </example>
         <example>
+            <description>Specifies that the given empty list is a list of dates.</description>
             <inputArg>(type{[Date]}, [])</inputArg>
             <output>[]</output>
         </example>

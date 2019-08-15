@@ -1,12 +1,8 @@
 Documentation items
 ---
-- The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
-- The as type examples are also not good, and the docs mention "from string" which does not exist
 - Units guide, says acceleration is m^/s, but should be m/s^2.
 - Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
 - Give some more examples for as unit
-
-
 
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
 ===
@@ -15,6 +11,7 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Lots of confusion between date literals and date functions.
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
+- The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
 
 
 
@@ -362,3 +359,4 @@ Done after Phil B & Jon A:
 - The type display on the = and =~ completion is screwed up
 - Some of the displayed equals examples are a bit perverse
 - Add explanation text to some of the pattern examples?
+- The as type examples are also not good, and the docs mention "from string" which does not exist
