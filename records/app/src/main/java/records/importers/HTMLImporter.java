@@ -303,7 +303,7 @@ public class HTMLImporter implements Importer
                     if (removeWikipediaFootnotes.get())
                     {
                         @SuppressWarnings("i18n")
-                        String origLocal = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                        @Localized String origLocal = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
                         orig = origLocal;
                     }
                     return new ColumnId(IdentifierUtility.fixExpressionIdentifier(orig, IdentifierUtility.identNum("Col", index)));
