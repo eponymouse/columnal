@@ -40,6 +40,8 @@
     <xsl:template match="link">
         <xsl:choose>
             <xsl:when test="@function"><a class="internal-link" href="#function-{@function}"><xsl:value-of select="@function"/>(..)</a></xsl:when>
+            <xsl:when test="@literal"><a class="internal-link" href="#literal-{@literal}"><xsl:value-of select="@literal"/>{..}</a></xsl:when>
+            <xsl:when test="@guide"><a class="internal-link" href="#guide-{@literal}"><xsl:value-of select="@guide"/> guide</a></xsl:when>
             <xsl:when test="@namespace"><a class="internal-link" href="#namespace-{@namespace}"><xsl:value-of select="@namespace"/></a></xsl:when>
             <xsl:when test="@type='typevar' or @type='List' or @type='unitvar'"><a class="internal-link" href="#type-{@type}"><xsl:copy-of select="child::node()"/></a></xsl:when>
             <xsl:when test="@type"><a class="internal-link" alt="Type {@type}" href="#type-{@type}"><xsl:value-of select="@type"/></a></xsl:when>

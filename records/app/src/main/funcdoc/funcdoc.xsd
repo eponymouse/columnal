@@ -312,7 +312,6 @@
                 <xs:extension base="xs:string">
                     <xs:attribute name="function" use="optional" type="xs:string"/>
                     <xs:attribute name="operator" use="optional" type="xs:string"/>
-                    <xs:attribute name="keyword" use="optional" type="xs:string"/>
                     <xs:attribute name="literal" use="optional" type="xs:string"/>
                     <xs:attribute name="namespace" use="optional" type="xs:string"/>
                     <xs:attribute name="type" use="optional" type="xs:string"/>

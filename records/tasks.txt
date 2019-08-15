@@ -1,8 +1,3 @@
-Documentation items
----
-- Units guide, says acceleration is m^/s, but should be m/s^2.
-- Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
-
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
 ===
 - Server internal exception logging (and stats logging?)
@@ -360,3 +355,5 @@ Done after Phil B & Jon A:
 - Add explanation text to some of the pattern examples?
 - The as type examples are also not good, and the docs mention "from string" which does not exist
 - Give some more examples for convert unit
+- Units guide, says acceleration is m^/s, but should be m/s^2.
+- Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"

@@ -164,7 +164,7 @@
     <guide id="units">
         <section>
             <title>Units of measure</title>
-            <p>Numbers often relate to some unit, such as metres, dollars, grams, items sold, and so on.  Units of measure all you to track which units a number is measured in, which can help you to remember the units, and also check that two numbers with different units are not compared (e.g. comparing centimetres to metres, or dollars to euros).</p>
+            <p>Numbers often relate to some unit, such as metres, dollars, grams, items sold, and so on.  Units of measure allow you to track which units a number is measured in, which can help you to remember the units, and also check that two numbers with different units are not compared (e.g. comparing centimetres to metres, or dollars to euros).</p>
         </section>
         <section>
             <title>How to start using units</title>
@@ -178,7 +178,7 @@
         </section>
         <section>
             <title>More details</title>
-            <p>Units can be multiplied together or divided, for example speed might use the unit {m/s} (metres per second) and acceleration might be {m^2/s}.  These units are tracked when you multiply or divide, so <code>10{m} / 4{s}</code> gives 2.5{m/s}, and <code>30{USD}/2{hour}</code> gives 15{USD/hour}.</p>
+            <p>Units can be multiplied together or divided, for example speed might use the unit {m/s} (metres per second) and acceleration might be {m/s^2}.  These units are tracked when you multiply or divide, so <code>10{m} / 4{s}</code> gives 2.5{m/s}, and <code>30{USD}/2{hour}</code> gives 15{USD/hour}.</p>
             <p>Many numeric functions work on numbers with units, and preserve them, e.g. <code>abs(-1{hour})</code> will give back 1{hour}.</p>
             <p>For information on converting between units, see the <link guide="conversion">conversion guide</link>.</p>
         </section>
