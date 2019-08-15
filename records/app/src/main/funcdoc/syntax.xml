@@ -73,7 +73,7 @@
             <p>Another use for definitions is to do pattern matching, especially for things like optional types; for example <code>@define Is(x) = Column with optional type @then x @enddefine</code></p>
         </description>
         <example>
-            <input>@define feet mm = @call @function as unit(unit{mm},1{foot}) @then (6 * feet mm) * (4 * feet mm) @enddefine</input>
+            <input>@define feet mm = @call @function convert unit(unit{mm},1{foot}) @then (6 * feet mm) * (4 * feet mm) @enddefine</input>
             <output>2229672.96{mm^2}</output>
         </example>
         <example>

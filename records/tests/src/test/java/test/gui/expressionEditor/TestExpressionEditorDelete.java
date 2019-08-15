@@ -160,7 +160,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 2)
     public void testRetypeParameter3(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call @function as unit(foo*unit{m}, 1{cm})", 10, 2, "fo", r);
+        testBackspaceRetype("@call @function convert unit(foo*unit{m}, 1{cm})", 10, 2, "fo", r);
     }
 
     @Property(trials = 2)

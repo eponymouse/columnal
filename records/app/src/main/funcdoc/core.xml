@@ -43,7 +43,7 @@
         </example>
     </function>
     
-    <function name="as unit">
+    <function name="convert unit">
         <unitArg>u</unitArg>
         <unitArg>v</unitArg>
         <argType name="target unit">@apply Unit(@unitvar u)</argType>

@@ -24,7 +24,7 @@ public class AsUnit extends FunctionDefinition
 {
     public AsUnit() throws InternalException
     {
-        super("core:as unit");
+        super("core:convert unit");
     }
 
     @Override
