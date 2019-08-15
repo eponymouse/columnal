@@ -70,6 +70,9 @@ import java.util.stream.Collectors;
  */
 public class HTMLImporter implements Importer
 {
+
+    public static final String FOOTNOTE_REGEX = "(\\[[A-Za-z0-9]+( [0-9]+)?\\]\\s*)+$";
+
     // Gives back an HTML document to display, and a function which takes a table index then imports that.
     @OnThread(Tag.Simulation)
     public static Pair<Document, FXPlatformConsumer<Integer>> importHTMLFile(
@@ -303,7 +306,7 @@ public class HTMLImporter implements Importer
                     if (removeWikipediaFootnotes.get())
                     {
                         @SuppressWarnings("i18n")
-                        @Localized String origLocal = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                        @Localized String origLocal = orig.replaceFirst(FOOTNOTE_REGEX, "");
                         orig = origLocal;
                     }
                     return new ColumnId(IdentifierUtility.fixExpressionIdentifier(orig, IdentifierUtility.identNum("Col", index)));
@@ -328,7 +331,7 @@ public class HTMLImporter implements Importer
                         if (trimWS)
                             s = CharMatcher.whitespace().trimFrom(s);
                         if (removeFoot)
-                            s = s.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                            s = s.replaceFirst(FOOTNOTE_REGEX, "");
                         return s;
                     }));
                 else
