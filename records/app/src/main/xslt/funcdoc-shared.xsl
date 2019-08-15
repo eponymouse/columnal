@@ -116,7 +116,8 @@
     
     <xsl:template match="binaryOperator|naryOperatorGroup">
         <xsl:param name="operator" select="."/>
-        <xsl:variable name="op" select="operator"/>
+        <xsl:variable name="op" select="operator[1]"/>
+        <xsl:variable name="op2" select="operator[2 - (2 mod max((1, count(./operator))))]"/>
 
         <div class="operator-item">
             <xsl:for-each select="$operator/operator">
@@ -129,7 +130,7 @@
                 </xsl:if>
                 <xsl:if test="local-name($operator)='naryOperatorGroup'">
                     <!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
-                        name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op"/><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op"/>...</xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template>
+                        name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op"/><xsl:value-of select="$operator/argType"/><xsl:value-of select="$op2"/>...</xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template>
                 </xsl:if>
             <span class="function-arrow"/> <xsl:call-template
                     name="processType"><xsl:with-param name="type" select="$operator/resultType"/></xsl:call-template>
