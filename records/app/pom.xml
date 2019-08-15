@@ -616,12 +616,17 @@
                                     <arg value="--output"/><arg value="installers/mac_dmg/Columnal.app"/>
                                 </java>
                                 
+                                <exec executable="bash" dir="../installers/mac_dmg" failonerror="true">
+                                    <arg value="sign-app.sh"/>
+                                    <arg value="Columnal.app"/>
+                                </exec>
+                                
                                 <delete file="../installers/mac_dmg/Columnal-${columnal.version}.dmg"/>
                                 <!-- This needs appdmg, see https://github.com/LinusU/node-appdmg -->
                                 <!-- brew install npm && npm install -g appdmg -->
                                 <exec executable="appdmg" dir="../installers/mac_dmg" failonerror="true">
                                     <arg value="appdmg.json"/>
-                                    <arg value="Columnal-${columnal.version}.dmg"/>
+                                    <arg value="columnal-${columnal.version}.dmg"/>
                                 </exec>
                             </target>
                         </configuration>
