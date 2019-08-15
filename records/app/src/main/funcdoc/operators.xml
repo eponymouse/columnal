@@ -89,8 +89,8 @@
             <p>Checks that all the items are equal.</p>
             <p>Note that you can compare more than two items at once.  The equals expression is true only if all the items are equal to each other.</p>
             <p>Checks if the value on the left, matches the pattern on the right.</p>
-            <p>If there are no special patterns on the right-hand side (e.g. <link keyword="_"/>, <link operator="&#x00B1;"/>, new variables) then it is equivalent to <link operator="="/>.</p>
-            <p>If you do declare a variable in the right-hand side, the variable will not be accessible outside the pattern.  For that, use the full <link keyword="@match"/> expression.</p>
+            <p>If there are no special patterns on the right-hand side (e.g. <link syntax="_"/>, <link operator="&#x00B1;"/>, new variables) then it is equivalent to <link operator="="/>.</p>
+            <p>If you do declare a variable in the right-hand side, the variable will not be accessible outside the pattern.  For that, use the full <link syntax="match"/> expression.</p>
         </description>
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Equatable</typeConstraint></foranytype>
