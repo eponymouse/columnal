@@ -128,7 +128,7 @@
             <output>false</output>
         </example>
         <example>
-            <description>Check if a pair has two numbers, with the second being one higher than the first</description>
+            <description>Check if the high item is exactly 2 higher than the low item</description>
             <input>(low:2, high:4) =~ (low:x, high:(x + 2))</input>
             <output>true</output>
         </example>

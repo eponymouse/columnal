@@ -101,7 +101,7 @@
                         name="processExpression"><xsl:with-param
                         name="insertable" select="true()"/><xsl:with-param name="expression"><xsl:value-of select="$functionName"/><xsl:call-template
                             name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span><xsl:if test="description"><span class="example-description"><xsl:value-of select="description"/></span></xsl:if></div>
                 </xsl:for-each>
             </div>
             <xsl:for-each select="seeAlso">
@@ -148,7 +148,7 @@
                             name="processExpression"><xsl:with-param
                             name="insertable" select="true()"/><xsl:with-param name="expression"><xsl:call-template
                             name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span><xsl:if test="description"><span class="example-description"><xsl:value-of select="description"/></span></xsl:if></div>
                 </xsl:for-each>
             </div>
             <xsl:for-each select="$operator/seeAlso">
@@ -197,7 +197,7 @@
                     <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
                             name="processExpression"><xsl:with-param
                             name="insertable" select="true()"/><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><span class="insertable-expression" data-insert="{$literalName}{{{inputArg}}}"><xsl:value-of select="$literalName"/>{<xsl:value-of select="inputArg"/>}</span></xsl:if> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span><xsl:if test="description"><span class="example-description"><xsl:value-of select="description"/></span></xsl:if></div>
                 </xsl:for-each>
             </div>
             <xsl:for-each select="seeAlso">
@@ -247,7 +247,7 @@
                     <div class="example"><span class="example-call"><xsl:call-template
                             name="processExpression"><xsl:with-param
                             name="insertable" select="true()"/><xsl:with-param name="expression" select="input"/></xsl:call-template> <xsl:copy-of select="$example-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span><xsl:if test="description"><span class="example-description"><xsl:value-of select="description"/></span></xsl:if></div>
                 </xsl:for-each>
             </div>
 

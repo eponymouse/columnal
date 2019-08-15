@@ -1,7 +1,5 @@
 Documentation items
 ---
-- Some of the displayed equals examples are a bit perverse
-- Add explanation text to some of the pattern examples?
 - The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
 - The as type examples are also not good, and the docs mention "from string" which does not exist
 - Units guide, says acceleration is m^/s, but should be m/s^2.
@@ -362,3 +360,5 @@ Done after Phil B & Jon A:
 - Fix three issues with irritating diff (see vcs/tic commit 21/07/19, 20:39 or so)
 - Add an option to remove wikipedia footnotes
 - The type display on the = and =~ completion is screwed up
+- Some of the displayed equals examples are a bit perverse
+- Add explanation text to some of the pattern examples?
