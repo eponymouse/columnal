@@ -302,7 +302,9 @@ public class HTMLImporter implements Importer
                     @Localized String orig = columnNames.get(index);
                     if (removeWikipediaFootnotes.get())
                     {
-                        orig = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                        @SuppressWarnings("i18n")
+                        String origLocal = orig.replaceFirst("\\[[A-Za-z0-9]+\\]\\s*$", "");
+                        orig = origLocal;
                     }
                     return new ColumnId(IdentifierUtility.fixExpressionIdentifier(orig, IdentifierUtility.identNum("Col", index)));
                 }
