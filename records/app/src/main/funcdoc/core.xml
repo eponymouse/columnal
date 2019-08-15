@@ -55,10 +55,23 @@
             <p>Attempting to convert between unrelated units (e.g. metres to seconds) will result in an error.  This includes converting to/from plain numbers.  If you want to add a unit to a number multiply by 1 of that unit (for example, <code>duration * 1{s}</code>), if you want to remove a unit then divide by 1 of that unit (for example, <code>distance / 1{m}).</code></p>
         </description>
         <example>
+            <description>Convert one inch into centimetres</description>
+            <inputArg>(unit{cm}, 1{inch})</inputArg>
+            <output>2.54{cm}</output>
+        </example>
+
+        <example>
+            <description>Convert a volume in cubic centimetres into litres</description>
+            <inputArg>(unit{l}, 30{cm} * 20{cm} * 10{cm})</inputArg>
+            <output>6{l}</output>
+        </example>
+        <example>
+            <description>Convert speed running 100 metres in 9.58 seconds into miles per hour</description>
             <inputArg>(unit{mile/hour}, (100{m} / 9.58{s}))</inputArg>
             <outputPattern>23.350{mile/hour} &#x00B1; 0.001{mile/hour}</outputPattern>
         </example>
         <example>
+            <description>Try to convert between unrelated or impossible units (here: length and area) gives an error.</description>
             <inputArg>(unit{m^2}, 10{m})</inputArg>
             <output>error</output>
         </example>
