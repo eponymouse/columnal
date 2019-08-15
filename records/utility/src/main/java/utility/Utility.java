@@ -1385,12 +1385,12 @@ public class Utility
 
     public static String getDetail(DetailContext detail)
     {
-        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").collect(Collectors.joining());
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
     }
 
     public static String getDetail(DetailPrefixedContext detail)
     {
-        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").collect(Collectors.joining());
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
     }
 
     public interface WrappedCharSequence extends CharSequence
