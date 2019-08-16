@@ -634,6 +634,22 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <!-- Must be run manually using mvn antrun:run@publish-dmg -->
+                        <id>publish-dmg</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools_${os.name}.properties"/>
+                                <property file="../installers/package.properties"/>
+
+                                <exec dir="../installers/mac_dmg" executable="scp" failonerror="true">
+                                    <arg line="columnal-${columnal.version}.dmg"/>
+                                    <arg line="neil@columnal.xyz:/home/neil/columnal-live/download/columnal-${columnal.version}.dmg"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
