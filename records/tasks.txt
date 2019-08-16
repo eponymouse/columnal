@@ -357,3 +357,4 @@ Done after Phil B & Jon A:
 - Give some more examples for convert unit
 - Units guide, says acceleration is m^/s, but should be m/s^2.
 - Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
+- If number column has a wikipedia footnote but otherwise is all valid, removing the footnotes still imports as Optional(Number), rather than Number.

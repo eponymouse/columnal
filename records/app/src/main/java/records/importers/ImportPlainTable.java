@@ -29,7 +29,7 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
 {
     private final int numSrcColumns;
     private final TableManager mgr;
-    private final List<? extends List<String>> vals;
+    private final List<List<String>> vals;
     protected final SimpleObjectProperty<@Nullable UnitType> format = new SimpleObjectProperty<>(UnitType.UNIT);
 
     // vals must be rectangular
@@ -37,7 +37,8 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     {
         this.numSrcColumns = numSrcColumns;
         this.mgr = mgr;
-        this.vals = vals;
+        // Fix type issue:
+        this.vals = vals.stream().<List<String>>map(v -> v).collect(ImmutableList.<List<String>>toImmutableList());
     }
 
     @Override
@@ -73,7 +74,7 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     @Override
     public Pair<PlainImportInfo, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
     {
-        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice, (trim, i) -> destColumnName(trim, i));
+        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), processTrimmed(vals), trimChoice, (trim, i) -> destColumnName(trim, i));
         return new Pair<>(new PlainImportInfo(columns, trimChoice), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), processTrimmed(trimChoice.trim(vals)), columns));
     }
 
