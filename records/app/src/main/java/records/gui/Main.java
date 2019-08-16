@@ -177,6 +177,11 @@ public class Main extends Application
                         Log.error("No window actions found for blank new project");
                     }
                 }
+                else
+                {
+                    Log.normal("Showing initial window (no file params)");
+                    InitialWindow.show(primaryStage, upgradeInfo);
+                }
             }
         }
     }
