@@ -91,6 +91,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -126,6 +128,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull TableManager tableManager;
+
+    @OnThread(Tag.Simulation)
+    private final HashMap<TableId, BiConsumer<Table, ColumnId>> postRenameChecks = new HashMap<>();
     
     private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(2));
     @OnThread(Tag.Simulation)
@@ -214,6 +219,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         dummyManager.record(sort);
         transformPositions.put(sortId, targetPos);
         targetPos = nextPos(sort);
+        postRenameChecks.put(sortId, (t, newCol) -> {
+            assertEquals(((Sort)t).getSortBy().get(0).getFirst(), newCol);
+        });
 
         TableId filterId = new TableId(srcId.getRaw() + " then Filter");
         Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, null, targetPos, null), srcId, makeFilterCalcExpression(dummyManager.getTypeManager()));
@@ -309,6 +317,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         {
             assertEquals(entry.getKey().getRaw(), ImmutableSet.<ColumnId>of(new ColumnId("Number"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(entry.getKey()).getData().getColumnIds()));
         }
+
+        for (Entry<TableId, BiConsumer<Table, ColumnId>> e : postRenameChecks.entrySet())
+        {
+            e.getValue().accept(tableManager.getSingleTableOrThrow(e.getKey()), newColumnId);
+        }
+        
         // Check we haven't amassed multiple tables during the rename re-runs:
         assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
         assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());

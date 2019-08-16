@@ -6,7 +6,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - Record syntax does not directly solve the "to date" from datetime, datetimezoned problems.
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
-- Sort doesn't obey column renames for the columns being sorted by.
 - Need a better solution for accessing values from previous row.
 
 
