@@ -7,11 +7,13 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
   - But could offer an hms from time that gives back all three in a record, rather than individual accessors.
 - The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
 - Sort doesn't obey column renames for the columns being sorted by.
+- Need a better solution for accessing values from previous row.
 
 
 Medium Priority (significant quality of life, but not essential especially for beta)
 ===
 - Could improve table name on HTML import; number doesn't need so many digits!
+  - Think the digits come from the temporary file name?
 - Text entry box for row and column limits in the import dialog?
 - Undo area/Reset area, rename to selection?
 - No mouse-over highlight in table autocomplete
@@ -358,3 +360,8 @@ Done after Phil B & Jon A:
 - Units guide, says acceleration is m^/s, but should be m/s^2.
 - Units guide, broken link at end: "see the ."  Also typo early on: "all you to track"
 - If number column has a wikipedia footnote but otherwise is all valid, removing the footnotes still imports as Optional(Number), rather than Number.
+
+
+Changelog since 0.5.1
+===
+- Added a "split text" function.

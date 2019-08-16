@@ -174,4 +174,36 @@
             <output>"Tabs and newlines also removed."</output>
         </example>
     </function>
+    
+    <function name="split text">
+        <argType name="original">Text</argType>
+        <argType name="separator">Text</argType>
+        <returnType name="split">[Text]</returnType>
+        <description>
+            <p>Splits a text item into a list of smaller text items by dividing at the places where the separator occurs.</p>
+            <p>The returned list does not feature the separators.</p>
+        </description>
+        <equivalence display="false">
+            <forany name="x">Text</forany>
+            <forany name="y">Text</forany>
+            <lhs>@call @function join text with(@call @function split text(x, y), y)</lhs>
+            <rhs>x</rhs>
+        </equivalence>
+        <example>
+            <inputArg>("The quick brown fox", " ")</inputArg>
+            <output>["The", "quick", "brown", "fox"]</output>
+        </example>
+        <example>
+            <inputArg>("6:08:32", ":")</inputArg>
+            <output>["6", "08", "32"]</output>
+        </example>
+        <example>
+            <inputArg>("*abc*", "*")</inputArg>
+            <output>["", "abc", ""]</output>
+        </example>
+        <example>
+            <inputArg>("Hello", "")</inputArg>
+            <output>["H", "e", "l", "l", "o"]</output>
+        </example>
+    </function>
 </functionDocumentation>

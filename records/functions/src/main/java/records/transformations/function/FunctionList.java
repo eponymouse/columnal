@@ -31,6 +31,7 @@ import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
 import records.transformations.function.text.StringReplace;
 import records.transformations.function.text.StringReplaceMany;
+import records.transformations.function.text.StringSplit;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -85,6 +86,7 @@ public class FunctionList
             //new StringMid(),
             new StringReplace(),
             new StringReplaceMany(),
+            new StringSplit(),
             //new StringRight(),
             new StringTrim(),
             //new StringWithin(),
