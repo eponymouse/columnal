@@ -196,8 +196,9 @@
         </section>
         <section>
             <title>How to extract values from Optional</title>
-            <p>The most common case is to supply a default value for a missing item.  Optional must be treated in two steps.  First, use a pattern match to check if it is present, and second decide what to do.  The most common form is: <code>@if Optional Column =~ Is(x) @then x @else default value @endif</code>  The =~ operator means that the right hand side is a pattern, so x takes on the value if present, and the then-part is evaluated.  Otherwise the else-part is evaluated and you must supply the missing value.</p>
-            <p>If you are certain the value will not be missing then you can write <code>@define Is(x) = Optional Column @then x @enddefine</code> to avoid needing an unnecessary if-then-else.</p>
+            <p>The most common case is to supply a default value for a missing item.  This can be done with the "get optional or" function, for example <code>@call @function get optional or(Your optional column, 0)</code> will get the number out of a column named "Your optional column" or zero if the column has a blank value.</p>
+            <p>You can also use pattern matches.  The most common form is: <code>@if Optional Column =~ Is(x) @then x @else default value @endif</code>  The =~ operator means that the right hand side is a pattern, so x takes on the value if present, and the then-part is evaluated.  Otherwise the else-part is evaluated and you must supply the missing value.</p>
+            <p>If you are certain the value will not be missing then you can write <code>@call @function get optional(Your optional column)</code> without specifying a default; an error will occur if the value is blank.</p>
         </section>
         <section>
             <title>How to convert values to Optional</title>
