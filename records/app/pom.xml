@@ -609,7 +609,7 @@
                                     <arg value="--platform"/><arg value="mac"/>
                                     <arg value="--jdk"/><arg value="${jdk_location}"/>
                                     <arg value="--executable"/><arg value="columnal"/>
-                                    <arg value="--vmargs"/><arg value="Dcolumnal.version=${columnal.version} Dcolumnal.production=true"/>
+                                    <arg value="--vmargs"/><arg value="Dcolumnal.version=${columnal.version}"/><arg value="Dcolumnal.production=true"/>
                                     <arg value="--classpath"/><arg value="app/target/app-1.0-SNAPSHOT-jar-with-dependencies.jar"/>
                                     <arg value="--mainclass"/><arg value="records.gui.Main"/>
                                     <arg value="--icon"/><arg value="installers/mac_dmg/Columnal.icns"/>
