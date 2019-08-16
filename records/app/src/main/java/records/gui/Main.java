@@ -164,7 +164,7 @@ public class Main extends Application
                     Log.normal("Showing main window, to load file: \"" + paramFile.getAbsolutePath() + "\"");
                     MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, StandardCharsets.UTF_8)), upgradeInfo);
                 }
-                else
+                else if (!param.startsWith("-"))
                 {
                     Log.normal("Showing main window, to import file: \"" + paramFile.getAbsolutePath() + "\"");
                     @Nullable MainWindowActions mainWindowActions = InitialWindow.newProject(null, upgradeInfo);
