@@ -87,6 +87,12 @@ public abstract class Table
             this.initialPosition = initialPosition;
             this.initialShowColumns = initialShowColumns;
         }
+
+        @OnThread(Tag.Any)
+        public InitialLoadDetails(CellPosition initialPosition)
+        {
+            this(null, null, initialPosition, null);
+        }
         
         public InitialLoadDetails withTableId(TableId tableId)
         {

@@ -45,8 +45,16 @@ import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameTable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
@@ -70,6 +78,7 @@ import records.gui.stable.ColumnDetails;
 import records.gui.stable.SimpleColumnOperation;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
+import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Aggregate;
@@ -87,14 +96,18 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
+import records.transformations.function.ToString;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
+import utility.Utility.ListEx;
+import utility.Utility.Record;
 import utility.Workers.Priority;
 import utility.gui.Clickable;
 import utility.gui.FXUtility;
@@ -106,6 +119,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -598,7 +612,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
     }
     
-    @RequiresNonNull("onModify")
+    @RequiresNonNull({"onModify", "parent"})
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
     {
         ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify);
@@ -776,6 +790,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
+    @RequiresNonNull("parent")
     public ColumnHeaderOps getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)
     {
         ImmutableList.Builder<FXPlatformSupplier<MenuItem>> r = ImmutableList.builder();
@@ -842,7 +857,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         DataType type = null;
         try
         {
-            type = table.getData().getColumn(c).getType().getType();
+            DataTypeValue dataTypeValue = table.getData().getColumn(c).getType();
+            type = dataTypeValue.getType();
             r.add(() -> new MenuItem("Recipes") {
                 {
                     setDisable(true);
@@ -867,6 +883,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
                 return new Sort(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
             })::makeMenuItem);
+            r.add(transformType(tableManager, table, c, dataTypeValue, "recipe.transformType")::makeMenuItem);
         }
         catch (InternalException | UserException e)
         {
@@ -922,6 +939,85 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 }
                 
                 return null;
+            }
+        };
+    }
+
+    @RequiresNonNull("parent")
+    private ColumnOperation transformType(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId columnId, DataTypeValue dataTypeValue, @LocalizableKey String nameKey)
+    {
+        return new SimpleColumnOperation(tableManager, table.getId(), nameKey)
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void execute(CellPosition insertPosition)
+            {
+                FXUtility.alertOnError_("Investigating type transformation", () -> {
+                    // Check the type, then hop back to the FX thread for confirmation.
+                    ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
+                    {
+                        @Override
+                        public ImmutableList<TypeTransform> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> text(GetValue<@Value String> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+
+                        @Override
+                        public ImmutableList<TypeTransform> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+                        {
+                            return ImmutableList.of(toText());
+                        }
+                        
+                        @SuppressWarnings("recorded")
+                        private TypeTransform toText() throws InternalException
+                        {
+                            return new TypeTransform(new CallExpression(new StandardFunction(new ToString()), ImmutableList.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))), DataType.TEXT);
+                        }
+                    });
+                    
+                    FXUtility.runFX(() -> {
+                        if (possibles.isEmpty())
+                            return;
+                        new PickTypeTransformDialog(parent, possibles).showAndWait().ifPresent(tt -> {
+                            CellPosition targetPos = tableManager.getNextInsertPosition(table.getId());
+                            Workers.onWorkerThread("Creating type transformation", Priority.SAVE, () -> {
+                                FXUtility.alertOnError_("Making type transformation", () -> {
+                                    Calculate calculate = new Calculate(tableManager, new InitialLoadDetails(targetPos), table.getId(), ImmutableMap.of(columnId, tt.transformed));
+                                    tableManager.record(calculate);
+                                });
+                            });
+                        });
+                    });
+                });
             }
         };
     }
