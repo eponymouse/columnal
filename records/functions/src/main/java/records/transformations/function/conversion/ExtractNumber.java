@@ -21,13 +21,21 @@ import utility.Utility;
 
 public class ExtractNumber extends FunctionDefinition
 {
+    public static final String NAME = "conversion:extract number";
+
     public ExtractNumber() throws InternalException
     {
-        super("conversion:extract number");
+        super(NAME);
     }
 
     @Override
     public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    {
+        return getInstance();
+    }
+
+    @OnThread(Tag.Simulation)
+    public ValueFunction getInstance()
     {
         return new ValueFunction1<String>(String.class) {
             @Override

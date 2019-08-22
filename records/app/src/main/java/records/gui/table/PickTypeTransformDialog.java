@@ -12,21 +12,30 @@ import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
 
+import java.util.Optional;
+
 @OnThread(Tag.FXPlatform)
 public class PickTypeTransformDialog extends LightDialog<TypeTransform>
 {
     public static class TypeTransform
     {
-        public final Expression transformed;
+        public final FXPlatformSupplier<Optional<Expression>> transformed;
         private final DataType destinationType;
 
         public TypeTransform(Expression transformed, DataType destinationType)
+        {
+            this.transformed = () -> Optional.of(transformed);
+            this.destinationType = destinationType;
+        }
+
+        public TypeTransform(FXPlatformSupplier<Optional<Expression>> transformed, DataType destinationType)
         {
             this.transformed = transformed;
             this.destinationType = destinationType;

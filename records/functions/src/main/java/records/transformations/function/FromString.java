@@ -38,6 +38,9 @@ import java.util.HashMap;
 
 public class FromString
 {
+
+    public static final String FROM_TEXT_TO = "conversion:from text to";
+
     public static ImmutableList<FunctionDefinition> getFunctions() throws InternalException
     {
         return ImmutableList.of(
@@ -59,7 +62,7 @@ public class FromString
                     };
                 }
             },
-            new FunctionDefinition("conversion:from text to")
+            new FunctionDefinition(FROM_TEXT_TO)
             {
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
@@ -88,7 +91,7 @@ public class FromString
 
     @OnThread(Tag.Simulation)
     @Value
-    protected static Object convertEntireString(@Value Object arg, DataType type) throws InternalException, UserException
+    public static Object convertEntireString(@Value Object arg, DataType type) throws InternalException, UserException
     {
         @Value String src = Utility.cast(arg, String.class);
         StringView stringView = new StringView(src);

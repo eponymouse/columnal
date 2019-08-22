@@ -24,6 +24,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
+import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -40,7 +41,10 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
 import test.gen.GenImmediateData;
@@ -56,6 +60,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
+import utility.TaggedValue;
 import utility.Utility;
 
 import java.util.Random;
@@ -172,6 +177,62 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     {
         testTypeTransform(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.TEXT, c -> new CallExpression(getFunctionLookup(), "to text", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of());
     }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualNumberToText() throws Exception
+    {
+        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37", "0", "1.65", "-3.562", "none"));
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualNumberToText2() throws Exception
+    {
+        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"));
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testNonDateToText() throws Exception
+    {
+        testTypeTransform(DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), null, ImmutableList.of("37", "0", "1.65", "-3.562"));
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualTimeToTime() throws Exception
+    {
+        DataType time = DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
+        testTypeTransform(DataType.TEXT, time, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(time)), new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("4:51", "16:05", "5:21PM", "0:00:03.435346346 AM"));
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualDateToDate() throws Exception
+    {
+        DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+        testTypeTransform(DataType.TEXT, date, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(date)), new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(ERR, "May 12 2018", "30-04-17", "21 Jun 2018", ERR, "2018-03-04"));
+    }
+    
+    // TODO test Text to Optional Number
+    // TODO test datetime to date
+    // TODO test Y/N, T/F to boolean 
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testOptionalNumberToNumber() throws Exception
+    {
+        Unit s = new UnitManager().loadUse("s");
+        testTypeTransform(optional(DataType.number(new NumberInfo(s))), DataType.number(new NumberInfo(s)), c -> new CallExpression(getFunctionLookup(), "get optional or", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("TODO")), ImmutableList.of(new TaggedValue(0, null)));
+    }
+
+    private DataType optional(DataType inner) throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        return typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(inner)), typeManager);
+    }
+
 
     private static FunctionLookup getFunctionLookup()
     {

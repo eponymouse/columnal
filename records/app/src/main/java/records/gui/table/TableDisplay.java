@@ -46,6 +46,7 @@ import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameTable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -95,21 +96,17 @@ import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
+import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StandardFunction;
-import records.transformations.expression.TypeState;
+import records.transformations.expression.function.ValueFunction;
+import records.transformations.expression.type.TypePrimitiveLiteral;
+import records.transformations.function.FromString;
 import records.transformations.function.FunctionList;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import records.transformations.function.ToString;
+import records.transformations.function.conversion.ExtractNumber;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -985,8 +982,60 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         {
                             // Don't offer toText as that is redundant.
                             // TODO Check for likely conversions to number (or optional number), date, boolean
+                            class FromText
+                            {
+                                private final DataType destType;
+                                private final SimulationFunction<@Value String, Boolean> conversionTrial;
+                                private final Expression conversionExpression;
+                                // Mutable:
+                                private int failCount = 0;
+
+                                FromText(DataType destType, SimulationFunction<@Value String, Boolean> conversionTrial, Expression conversionExpression)
+                                {
+                                    this.destType = destType;
+                                    this.conversionTrial = conversionTrial;
+                                    this.conversionExpression = conversionExpression;
+                                }
+                            }
                             
-                            return ImmutableList.of();
+                            final ArrayList<FromText> conversions = new ArrayList<>();
+
+                            ValueFunction extractNumber = new ExtractNumber().getInstance();
+                            conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), ExtractNumber.NAME, new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))));
+                            for (DateTimeType dtt : DateTimeType.values())
+                            {
+                                DataType destType = DataType.date(new DateTimeInfo(dtt));
+                                conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))));
+                            }
+                            
+                            
+                            final ImmutableList<@Value String> samples = sample(g);
+                            // Everything will look plausible if no data:
+                            if (samples.isEmpty())
+                                return ImmutableList.of();
+                            final int maxFail = samples.size() / 5;
+                            for (@Value String sample : samples)
+                            {
+                                if (conversions.isEmpty())
+                                    break;
+                                for (FromText conversion : conversions)
+                                {
+                                    boolean failed = false;
+                                    try
+                                    {
+                                        failed = !conversion.conversionTrial.apply(sample);
+                                    }
+                                    catch (UserException e)
+                                    {
+                                        failed = true;
+                                    }
+                                    if (failed)
+                                        conversion.failCount += 1;
+                                }
+                                conversions.removeIf(c -> c.failCount > maxFail);
+                            }
+                            
+                            return Utility.mapListI(conversions, c -> new TypeTransform(c.conversionExpression, c.destType));
                         }
 
                         @Override
@@ -1005,6 +1054,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @Override
                         public ImmutableList<TypeTransform> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
                         {
+                            if (typeName.equals(tableManager.getTypeManager().getMaybeType().getTaggedTypeName()))
+                            {
+                                if (typeVars.size() != 1)
+                                    throw new UserException("Wrong number of type variables for type " + typeName.getRaw());
+                                DataType inner = typeVars.get(0).eitherEx(u -> {throw new UserException("Unit as parameter to type " + typeName.getRaw());}, t -> t);
+                                TypeTransform unwrap = new TypeTransform(() -> Optional.<Expression>empty(), inner);
+                                
+                                return ImmutableList.of(unwrap, toText());
+                            }
                             // TODO offer to unwrap optional
                             return ImmutableList.of(toText());
                         }
@@ -1054,11 +1112,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     });
                     
                     FXUtility.runFX(() -> {
-                        new PickTypeTransformDialog(parent, possibles).showAndWait().ifPresent(tt -> {
+                        new PickTypeTransformDialog(parent, possibles).showAndWait().flatMap(tt -> tt.transformed.get()).ifPresent(expression -> {
                             CellPosition targetPos = tableManager.getNextInsertPosition(table.getId());
                             Workers.onWorkerThread("Creating type transformation", Priority.SAVE, () -> {
                                 FXUtility.alertOnError_("Making type transformation", () -> {
-                                    Calculate calculate = new Calculate(tableManager, new InitialLoadDetails(targetPos), table.getId(), ImmutableMap.of(columnId, tt.transformed));
+                                    Calculate calculate = new Calculate(tableManager, new InitialLoadDetails(targetPos), table.getId(), ImmutableMap.of(columnId, expression));
                                     tableManager.record(calculate);
                                 });
                             });
