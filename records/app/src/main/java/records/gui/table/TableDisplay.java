@@ -37,15 +37,14 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.*;
 import records.data.Column.AlteredState;
 import records.data.RecordSet.RecordSetListener;
-import records.data.Table.InitialLoadDetails;
 import records.data.Table.Display;
+import records.data.Table.InitialLoadDetails;
 import records.data.Table.TableDisplayBase;
 import records.data.TableOperations.DeleteColumn;
 import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameTable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
@@ -61,8 +60,16 @@ import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
 import records.exporters.manager.ExporterManager;
-import records.gui.*;
+import records.gui.AggregateSplitByPane;
+import records.gui.DataCellSupplier;
+import records.gui.DataDisplay;
+import records.gui.EditColumnExpressionDialog;
+import records.gui.EditExpressionDialog;
+import records.gui.EditImmediateColumnDialog;
 import records.gui.EditImmediateColumnDialog.InitialFocus;
+import records.gui.View;
+import records.gui.dtf.TableDisplayUtility;
+import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
@@ -73,15 +80,14 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
-import records.gui.stable.ColumnOperation;
 import records.gui.stable.ColumnDetails;
+import records.gui.stable.ColumnOperation;
 import records.gui.stable.SimpleColumnOperation;
-import records.gui.dtf.TableDisplayUtility;
-import records.gui.dtf.TableDisplayUtility.GetDataPosition;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Aggregate;
+import records.transformations.Calculate;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.Join;
@@ -89,13 +95,15 @@ import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.IfThenElseExpression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
@@ -113,12 +121,6 @@ import utility.gui.Clickable;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -958,30 +960,52 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @Override
                         public ImmutableList<TypeTransform> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                         {
-                            return ImmutableList.of(toText());
+                            ImmutableList.Builder<TypeTransform> r = ImmutableList.builder();
+                            r.add(toText());
+                            
+                            ImmutableList<@Value Number> sample = sample(g);
+                            if (!sample.isEmpty())
+                            {
+                                if (displayInfo.getUnit().equals(Unit.SCALAR))
+                                {
+                                    long zeroCount = sample.stream().filter(n -> Utility.compareNumbers(n, 0L) == 0).count();
+                                    long oneCount = sample.stream().filter(n -> Utility.compareNumbers(n, 1L) == 0).count();
+                                    if (zeroCount > 0 && oneCount > 0 && zeroCount + oneCount == sample.size())
+                                    {
+                                        // Offer boolean
+                                        r.add(new TypeTransform(new EqualExpression(ImmutableList.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(1, null)), false), DataType.BOOLEAN));
+                                    }
+                                }
+                            }
+                            return r.build();
                         }
 
                         @Override
                         public ImmutableList<TypeTransform> text(GetValue<@Value String> g) throws InternalException, UserException
                         {
-                            return ImmutableList.of(toText());
+                            // Don't offer toText as that is redundant.
+                            // TODO Check for likely conversions to number (or optional number), date, boolean
+                            
+                            return ImmutableList.of();
                         }
 
                         @Override
                         public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                         {
-                            return ImmutableList.of(toText());
+                            return ImmutableList.of(toText(), new TypeTransform(IfThenElseExpression.unrecorded(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(1, null), new NumericLiteral(0, null)), DataType.NUMBER));
                         }
 
                         @Override
                         public ImmutableList<TypeTransform> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                         {
+                            // TODO offer to extract date from datetime
                             return ImmutableList.of(toText());
                         }
 
                         @Override
                         public ImmutableList<TypeTransform> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
                         {
+                            // TODO offer to unwrap optional
                             return ImmutableList.of(toText());
                         }
 
@@ -1002,11 +1026,34 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         {
                             return new TypeTransform(new CallExpression(new StandardFunction(new ToString()), ImmutableList.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))), DataType.TEXT);
                         }
+                        
+                        private <@NonNull @Value T> ImmutableList<@Value T> sample(GetValue<@NonNull @Value T> getValue) throws InternalException, UserException
+                        {
+                            ImmutableList.Builder<@Value T> r = ImmutableList.builder();
+                            long startMillis = System.currentTimeMillis();
+                            // Spend up to half a second getting as many values as possible:
+                            RecordSet recordSet = table.getData();
+                            int i = 0;
+                            do
+                            {
+                                if (!recordSet.indexValid(i))
+                                    break;
+                                try
+                                {
+                                    r.add(getValue.get(i));
+                                }
+                                catch (UserException e)
+                                {
+                                    // Ignore values that we can't fetch
+                                }
+                                i += 1;
+                            }
+                            while (System.currentTimeMillis() < startMillis + 500L);
+                            return r.build();
+                        }
                     });
                     
                     FXUtility.runFX(() -> {
-                        if (possibles.isEmpty())
-                            return;
                         new PickTypeTransformDialog(parent, possibles).showAndWait().ifPresent(tt -> {
                             CellPosition targetPos = tableManager.getNextInsertPosition(table.getId());
                             Workers.onWorkerThread("Creating type transformation", Priority.SAVE, () -> {

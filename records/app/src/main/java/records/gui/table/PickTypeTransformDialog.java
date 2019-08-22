@@ -3,6 +3,7 @@ package records.gui.table;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
@@ -36,6 +37,11 @@ public class PickTypeTransformDialog extends LightDialog<TypeTransform>
         {
             return destinationType.toString();
         }
+        
+        public boolean _test_hasDestinationType(DataType dataType)
+        {
+            return destinationType.equals(dataType);
+        }
     }
 
     public PickTypeTransformDialog(DimmableParent parent, ImmutableList<TypeTransform> pickFrom)
@@ -43,8 +49,8 @@ public class PickTypeTransformDialog extends LightDialog<TypeTransform>
         super(parent, new DialogPaneWithSideButtons());
         initModality(Modality.APPLICATION_MODAL);
         ListView<TypeTransform> listView = new ListView<>();
+        listView.getStyleClass().add("destination-type-list");
         listView.getItems().setAll(pickFrom);
-        listView.getSelectionModel().selectFirst();
         listView.setPrefHeight(150);
         BorderPane.setMargin(listView, new Insets(10, 0, 0, 0));
         getDialogPane().setContent(GUI.borderTopCenter(
@@ -52,6 +58,15 @@ public class PickTypeTransformDialog extends LightDialog<TypeTransform>
             listView
         ));
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
+        getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
+        if (!pickFrom.isEmpty())
+            listView.getSelectionModel().selectFirst();
+        else
+        {
+            listView.setPlaceholder(new Label("No suitable destination types"));
+            getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+        }
         setResultConverter(bt -> bt == ButtonType.OK ? listView.getSelectionModel().getSelectedItem() : null);
         setOnShown(e -> FXUtility.runAfter(listView::requestFocus));
         

@@ -18,5 +18,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface TableDataRowIndex
 {
+    public static final @TableDataRowIndex int ZERO = 0;
     public static final @TableDataRowIndex int ONE = 1;
 }
