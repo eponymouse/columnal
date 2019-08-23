@@ -1,5 +1,6 @@
 package records.gui.dtf.recognisers;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.gui.dtf.Recogniser;
@@ -8,21 +9,21 @@ import utility.ParseProgress;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
-public class ListRecogniser extends Recogniser<@Value ListEx>
+public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
 {
-    private final Recogniser<@Value ?> inner;
+    private final Recogniser<@ImmediateValue ?> inner;
 
-    public ListRecogniser(Recogniser<@Value ?> inner)
+    public ListRecogniser(Recogniser<@ImmediateValue ?> inner)
     {
         this.inner = inner;
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value ListEx>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<@ImmediateValue ListEx>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
     {
         try
         {
-            ImmutableList.Builder<@Value Object> list = ImmutableList.builder();
+            ImmutableList.Builder<@ImmediateValue Object> list = ImmutableList.builder();
             ParseProgress pp = parseProgress;
             pp = pp.consumeNext("[");
             if (pp == null)
@@ -49,7 +50,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
             if (pp == null)
                 return error("Expected ']' to end list", beforeBracket.curCharIndex);
 
-            return success(new ListExList(list.build()), pp);
+            return success(ListExList.immediate(list.build()), pp);
         }
         catch (ListException e)
         {
@@ -67,7 +68,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
         }
     }
 
-    private <T> ParseProgress addToList(ImmutableList.Builder<@Value Object> list, Either<ErrorDetails, SuccessDetails<@Value T>> process) throws ListException
+    private <T> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, Either<ErrorDetails, SuccessDetails<@ImmediateValue T>> process) throws ListException
     {
         return process.either(err -> {throw new ListException(err);}, 
             succ -> { list.add(succ.value); return succ.parseProgress; });

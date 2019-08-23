@@ -1,5 +1,6 @@
 package utility;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -20,6 +21,12 @@ public final @Value class TaggedValue
         this.tagIndex = tagIndex;
         this.innerItem = innerItem;
     }
+    
+    @SuppressWarnings("value")
+    public static @ImmediateValue TaggedValue immediate(int tagIndex, @Nullable @ImmediateValue Object innerItem)
+    {
+        return new TaggedValue(tagIndex, innerItem);
+    }    
 
     public int getTagIndex()
     {

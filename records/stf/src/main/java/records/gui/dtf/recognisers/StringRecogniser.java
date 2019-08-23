@@ -1,5 +1,6 @@
 package records.gui.dtf.recognisers;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
@@ -8,10 +9,10 @@ import utility.Either;
 import utility.Pair;
 import utility.ParseProgress;
 
-public class StringRecogniser extends Recogniser<@Value String>
+public class StringRecogniser extends Recogniser<@ImmediateValue String>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value String>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<@ImmediateValue String>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.consumeNext("\"");
         if (pp == null)

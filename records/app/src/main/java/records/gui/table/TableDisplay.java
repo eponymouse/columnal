@@ -1,6 +1,7 @@
 package records.gui.table;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
@@ -26,6 +27,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.TextFlow;
+import log.ErrorHandler.RunOrError;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -34,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.apputility.AppUtility;
 import records.data.*;
 import records.data.Column.AlteredState;
 import records.data.RecordSet.RecordSetListener;
@@ -71,6 +74,7 @@ import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.View;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.GetDataPosition;
+import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
@@ -99,6 +103,7 @@ import records.transformations.Sort.Direction;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FromString;
@@ -107,6 +112,7 @@ import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import records.transformations.function.ToString;
 import records.transformations.function.conversion.ExtractNumber;
+import records.transformations.function.optional.GetOptionalOrDefault;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -947,14 +953,23 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         return new SimpleColumnOperation(tableManager, table.getId(), nameKey)
         {
+            private final FunctionLookup functionLookup = FunctionList.getFunctionLookup(tableManager.getUnitManager());
+
             @Override
             public @OnThread(Tag.Simulation) void execute(CellPosition insertPosition)
             {
-                FXUtility.alertOnError_("Investigating type transformation", () -> {
+                FXUtility.alertOnError_("Investigating type transformation", new RunOrError()
+                {
+                    @Override
+                    public @OnThread(Tag.Simulation) void run() throws InternalException, UserException
+                    {
                     // Check the type, then hop back to the FX thread for confirmation.
                     ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
                     {
+                        private final ColumnReference columnReference = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW);
+
                         @Override
+                        @OnThread(Tag.Simulation)
                         public ImmutableList<TypeTransform> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                         {
                             ImmutableList.Builder<TypeTransform> r = ImmutableList.builder();
@@ -970,7 +985,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                     if (zeroCount > 0 && oneCount > 0 && zeroCount + oneCount == sample.size())
                                     {
                                         // Offer boolean
-                                        r.add(new TypeTransform(new EqualExpression(ImmutableList.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(1, null)), false), DataType.BOOLEAN));
+                                        r.add(new TypeTransform(new EqualExpression(ImmutableList.of(columnReference, new NumericLiteral(1, null)), false), DataType.BOOLEAN));
                                     }
                                 }
                             }
@@ -978,6 +993,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         }
 
                         @Override
+                        @OnThread(Tag.Simulation)
                         public ImmutableList<TypeTransform> text(GetValue<@Value String> g) throws InternalException, UserException
                         {
                             // Don't offer toText as that is redundant.
@@ -1001,11 +1017,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             final ArrayList<FromText> conversions = new ArrayList<>();
 
                             ValueFunction extractNumber = new ExtractNumber().getInstance();
-                            conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), ExtractNumber.NAME, new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))));
+                            conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumber.NAME, columnReference)));
                             for (DateTimeType dtt : DateTimeType.values())
                             {
                                 DataType destType = DataType.date(new DateTimeInfo(dtt));
-                                conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))));
+                                conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, new CallExpression(functionLookup, FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), columnReference)));
                             }
                             
                             
@@ -1041,7 +1057,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @Override
                         public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                         {
-                            return ImmutableList.of(toText(), new TypeTransform(IfThenElseExpression.unrecorded(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(1, null), new NumericLiteral(0, null)), DataType.NUMBER));
+                            return ImmutableList.of(toText(), new TypeTransform(IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(1, null), new NumericLiteral(0, null)), DataType.NUMBER));
                         }
 
                         @Override
@@ -1059,11 +1075,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                 if (typeVars.size() != 1)
                                     throw new UserException("Wrong number of type variables for type " + typeName.getRaw());
                                 DataType inner = typeVars.get(0).eitherEx(u -> {throw new UserException("Unit as parameter to type " + typeName.getRaw());}, t -> t);
-                                TypeTransform unwrap = new TypeTransform(() -> Optional.<Expression>empty(), inner);
+                                TypeTransform unwrap = new TypeTransform(new FXPlatformSupplier<Optional<Expression>>()
+                                {
+                                    @Override
+                                    @OnThread(Tag.FXPlatform)
+                                    public Optional<Expression> get()
+                                    {
+                                        return unwrapOptionalType(inner, columnReference, () -> TableDisplayUtility.recogniser(inner));
+                                    }
+                                }, inner);
                                 
                                 return ImmutableList.of(unwrap, toText());
                             }
-                            // TODO offer to unwrap optional
                             return ImmutableList.of(toText());
                         }
 
@@ -1082,9 +1105,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @SuppressWarnings("recorded")
                         private TypeTransform toText() throws InternalException
                         {
-                            return new TypeTransform(new CallExpression(new StandardFunction(new ToString()), ImmutableList.of(new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW))), DataType.TEXT);
+                            return new TypeTransform(new CallExpression(new StandardFunction(new ToString()), ImmutableList.of(columnReference)), DataType.TEXT);
                         }
                         
+                        @OnThread(Tag.Simulation)
                         private <@NonNull @Value T> ImmutableList<@Value T> sample(GetValue<@NonNull @Value T> getValue) throws InternalException, UserException
                         {
                             ImmutableList.Builder<@Value T> r = ImmutableList.builder();
@@ -1122,7 +1146,17 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             });
                         });
                     });
-                });
+                }});
+            }
+
+            @SuppressWarnings("cast.unsafe")
+            @OnThread(Tag.FXPlatform)
+            private <@NonNull T> Optional<Expression> unwrapOptionalType(DataType inner, ColumnReference columnReference, FXPlatformSupplierInt<RecogniserAndType<@NonNull @ImmediateValue T>> recogniser)
+            {
+                return Optional.<Optional<Expression>>ofNullable(FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> new EnterValueDialog<@ImmediateValue T>(parent, inner, recogniser.get()).showAndWait().flatMap((@NonNull @ImmediateValue T v) -> Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
+                    Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@NonNull @ImmediateValue T) v);
+                    return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
+                }))))).orElse(Optional.<Expression>empty());
             }
         };
     }

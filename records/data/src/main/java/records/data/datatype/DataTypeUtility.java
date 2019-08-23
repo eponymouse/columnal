@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
@@ -33,6 +34,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.ParseProgress;
 import utility.TaggedValue;
@@ -221,19 +223,19 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static <T extends Number> @Value T value(@UnknownIfValue T number)
+    public static <T extends Number> @ImmediateValue T value(@UnknownIfValue T number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Boolean value(@UnknownIfValue Boolean bool)
+    public static @ImmediateValue Boolean value(@UnknownIfValue Boolean bool)
     {
         return bool;
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value String value(@UnknownIfValue String string)
+    public static @ImmediateValue String value(@UnknownIfValue String string)
     {
         return string;
     }
@@ -257,7 +259,7 @@ public class DataTypeUtility
     }
     
     @SuppressWarnings("valuetype")
-    public static @Nullable @Value TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
+    public static @Nullable @ImmediateValue TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
     {
         try
         {
@@ -322,6 +324,12 @@ public class DataTypeUtility
         return new ListExList(list);
     }
 
+    @SuppressWarnings("valuetype")
+    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue ? extends Object> list)
+    {
+        return new ListExList(list);
+    }
+
     public static String _test_valueToString(@Value Object item)
     {
         if (item instanceof Object[])
@@ -345,6 +353,12 @@ public class DataTypeUtility
     public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent) throws UserException, InternalException
     {
         return valueToString(dataType, item, parent, false);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static String valueToStringFX(DataType dataType, @ImmediateValue Object item) throws UserException, InternalException
+    {
+        return Utility.launderSimulationEx(() -> valueToString(dataType, item, null, false));
     }
 
     @OnThread(Tag.Simulation)
@@ -478,72 +492,72 @@ public class DataTypeUtility
         return elementType.fromCollapsed((i, prog) -> listEx.get(i));
     }
 
-    public static <DT extends DataType> TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
+    public static <DT extends DataType> @ImmediateValue TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
     {
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
         if (noInnerIndex.isPresent())
         {
-            return new TaggedValue(noInnerIndex.getAsInt(), null);
+            return TaggedValue.immediate(noInnerIndex.getAsInt(), null);
         }
         else
         {
             @Nullable DataType inner = tagTypes.get(0).getInner();
             if (inner == null)
                 throw new InternalException("Impossible: no tags without inner value, yet no inner value!");
-            return new TaggedValue(0, makeDefaultValue(inner));
+            return TaggedValue.immediate(0, makeDefaultValue(inner));
         }
     }
 
-    public static @Value Object makeDefaultValue(DataType dataType) throws InternalException
+    public static @ImmediateValue Object makeDefaultValue(DataType dataType) throws InternalException
     {
-        return dataType.apply(new DataTypeVisitorEx<@Value Object, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<@ImmediateValue Object, InternalException>()
         {
             @Override
-            public @Value Object number(NumberInfo numberInfo) throws InternalException, InternalException
+            public @ImmediateValue Object number(NumberInfo numberInfo) throws InternalException, InternalException
             {
                 return DataTypeUtility.value(0);
             }
 
             @Override
-            public @Value Object text() throws InternalException, InternalException
+            public @ImmediateValue Object text() throws InternalException, InternalException
             {
                 return DataTypeUtility.value("");
             }
 
             @Override
-            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            public @ImmediateValue Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 return dateTimeInfo.getDefaultValue();
             }
 
             @Override
-            public @Value Object bool() throws InternalException, InternalException
+            public @ImmediateValue Object bool() throws InternalException, InternalException
             {
                 return DataTypeUtility.value(false);
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public @ImmediateValue Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 return makeDefaultTaggedValue(tags);
             }
 
             @Override
-            public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public @ImmediateValue Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> values = ImmutableMap.builderWithExpectedSize(fields.size());
+                ImmutableMap.Builder<@ExpressionIdentifier String, @ImmediateValue Object> values = ImmutableMap.builderWithExpectedSize(fields.size());
                 for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
                 {
                     values.put(entry.getKey(), makeDefaultValue(entry.getValue()));
                 }
                 
-                return DataTypeUtility.value(new RecordMap(values.build()));
+                return RecordMap.immediate(values.build());
             }
 
             @Override
-            public @Value Object array(@Nullable DataType inner) throws InternalException, InternalException
+            public @ImmediateValue Object array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return DataTypeUtility.value(Collections.emptyList());
+                return DataTypeUtility.valueImmediate(Collections.emptyList());
             }
         });
     }
@@ -600,7 +614,7 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Any)
-    public static @Value TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws PositionedUserException
+    public static @ImmediateValue TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws PositionedUserException
     {
         src.skipSpaces();
         ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.<DateTimeFormatter>toImmutableList());
@@ -629,7 +643,7 @@ public class DataTypeUtility
         if (possibles.size() == 1)
         {
             src.setPosition(possibles.get(0).getFirst());
-            @Nullable @Value TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
+            @Nullable @ImmediateValue TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
             if (value != null)
                 return value;
         }
@@ -643,7 +657,7 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
                 src.setPosition(chosen.getFirst());
-                @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                @ImmediateValue TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
             }
@@ -655,7 +669,7 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
                 src.setPosition(chosen.getFirst());
-                @Value TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                @ImmediateValue TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
             }

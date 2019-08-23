@@ -18,9 +18,12 @@ import utility.TaggedValue;
 
 public class GetOptionalOrDefault extends FunctionDefinition
 {
+
+    public static final String NAME = "optional:get optional or";
+
     public GetOptionalOrDefault() throws InternalException
     {
-        super("optional:get optional or");
+        super(NAME);
     }
     
     @Override

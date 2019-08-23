@@ -27,6 +27,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UserIndex;
@@ -532,13 +533,13 @@ public class Utility
         Log.log(e); // TODO log and send back
     }
     
-    public static @Value Number parseNumber(String number) throws UserException
+    public static @ImmediateValue Number parseNumber(String number) throws UserException
     {
         return parseNumberOpt(number).orElseThrow(() -> new UserException("Problem parsing number \"" + number + "\""));
     }
 
     @SuppressWarnings("value")
-    public static Optional<@Value Number> parseNumberOpt(String number)
+    public static Optional<@ImmediateValue Number> parseNumberOpt(String number)
     {
         // First try as a long:
         try
@@ -1768,6 +1769,12 @@ public class Utility
         {
             this.values = ImmutableMap.copyOf(values);
         }
+        
+        @SuppressWarnings("value")
+        public static @ImmediateValue RecordMap immediate(Map<@ExpressionIdentifier String, @ImmediateValue Object> values)
+        {
+            return new RecordMap(values);
+        }
 
         @Override
         public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
@@ -1895,6 +1902,12 @@ public class Utility
         public @Value ListExList(List<? extends @Value Object> items)
         {
             this.items = items;
+        }
+
+        @SuppressWarnings("value")
+        public static @ImmediateValue ListExList immediate(List<? extends @ImmediateValue Object> items)
+        {
+            return new ListExList(items);
         }
 
         @Override
@@ -2126,5 +2139,14 @@ public class Utility
     public static <K> boolean contains(Set<K> set, K key)
     {
         return set.contains(key);
+    }
+
+    /**
+     * For running simulation on FX; only to be used where you're certain it's safe.
+     */
+    @OnThread(Tag.FXPlatform)
+    public static <T> T launderSimulationEx(SimulationSupplier<T> simulationSupplier) throws UserException, InternalException
+    {
+        return ((ExSupplier<T>)simulationSupplier::get).get();
     }
 }

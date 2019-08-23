@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
@@ -21,6 +22,7 @@ import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.dtf.Document;
 import records.gui.dtf.DocumentTextField;
+import records.gui.dtf.Recogniser;
 import records.gui.dtf.RecogniserDocument;
 import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
@@ -273,9 +275,9 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         return DataTypeUtility.valueToString(dataType, defValue, null, false);
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> RecogniserDocument<T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
+    private <@NonNull @ImmediateValue T> RecogniserDocument<@Value T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, recogniser.itemClass, recogniser.recogniser, null, (String s, @Value T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, (Class<@Value T>)recogniser.itemClass, (Recogniser<@Value T>)recogniser.recogniser, null, (String s, @Value T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }

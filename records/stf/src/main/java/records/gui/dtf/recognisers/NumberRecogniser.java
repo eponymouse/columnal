@@ -1,5 +1,6 @@
 package records.gui.dtf.recognisers;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import records.error.UserException;
 import records.gui.dtf.Recogniser;
@@ -8,10 +9,10 @@ import utility.Pair;
 import utility.ParseProgress;
 import utility.Utility;
 
-public class NumberRecogniser extends Recogniser<@Value Number>
+public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value Number>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<@ImmediateValue Number>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.skipSpaces();
         String sign = "";

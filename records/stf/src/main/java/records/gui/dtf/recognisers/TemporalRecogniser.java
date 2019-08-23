@@ -1,5 +1,6 @@
 package records.gui.dtf.recognisers;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import log.Log;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -25,7 +26,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
+public class TemporalRecogniser extends Recogniser<@ImmediateValue TemporalAccessor>
 {
     private final DateTimeType dateTimeType;
 
@@ -35,12 +36,12 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value TemporalAccessor>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<@ImmediateValue TemporalAccessor>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         try
         {
             StringView stringView = new StringView(orig);
-            @Value TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(new DateTimeInfo(dateTimeType), stringView);
+            @ImmediateValue TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(new DateTimeInfo(dateTimeType), stringView);
             return success(temporal, stringView.getParseProgress());
         }
         catch (PositionedUserException e)

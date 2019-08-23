@@ -1,49 +1,49 @@
-import annotation.qual.Value;
+import annotation.qual.ImmediateValue;
 
 package java.time;
 class LocalTime
 {
-    public static @Value LocalTime of(int a, int b, int c, int d);
-    public static @Value LocalTime from(TemporalAccessor temporal);
+    public static @ImmediateValue LocalTime of(int a, int b, int c, int d);
+    public static @ImmediateValue LocalTime from(TemporalAccessor temporal);
 }
 class OffsetTime
 {
-    public static @Value OffsetTime of(LocalTime time, ZoneOffset offset);
-    public static @Value OffsetTime from(TemporalAccessor temporal);
+    public static @ImmediateValue OffsetTime of(LocalTime time, ZoneOffset offset);
+    public static @ImmediateValue OffsetTime from(TemporalAccessor temporal);
 }
 class LocalDateTime
 {
-    public static @Value LocalDateTime of(LocalDate date, LocalTime time);
-    public static @Value LocalDateTime from(TemporalAccessor temporal);
+    public static @ImmediateValue LocalDateTime of(LocalDate date, LocalTime time);
+    public static @ImmediateValue LocalDateTime from(TemporalAccessor temporal);
 }
 class ZonedDateTime
 {
-    public static @Value ZonedDateTime of(LocalDate date, LocalTime time, ZoneId zone);
-    public static @Value ZonedDateTime of(LocalDateTime dateTime, ZoneId zone);
-    public @Value ZonedDateTime withFixedOffsetZone();
-    public static @Value ZonedDateTime from(TemporalAccessor temporal);
+    public static @ImmediateValue ZonedDateTime of(LocalDate date, LocalTime time, ZoneId zone);
+    public static @ImmediateValue ZonedDateTime of(LocalDateTime dateTime, ZoneId zone);
+    public @ImmediateValue ZonedDateTime withFixedOffsetZone();
+    public static @ImmediateValue ZonedDateTime from(TemporalAccessor temporal);
 }
 class LocalDate
 {
-    public static @Value LocalDate of(int year, Month month, int dayOfMonth);
-    public static @Value LocalDate of(int year, int month, int dayOfMonth);
-    public static @Value LocalDate from(TemporalAccessor temporal);
+    public static @ImmediateValue LocalDate of(int year, Month month, int dayOfMonth);
+    public static @ImmediateValue LocalDate of(int year, int month, int dayOfMonth);
+    public static @ImmediateValue LocalDate from(TemporalAccessor temporal);
 }
 class YearMonth
 {
-    public static @Value YearMonth of(int year, int month);
-    public static @Value YearMonth from(TemporalAccessor temporal);
+    public static @ImmediateValue YearMonth of(int year, int month);
+    public static @ImmediateValue YearMonth from(TemporalAccessor temporal);
 }
 class ZoneId
 {
-    public static @Value ZoneId of(String zone);
+    public static @ImmediateValue ZoneId of(String zone);
 }
 class ZoneOffset
 {
-    public static @Value ZoneOffset ofHoursMinutes(int hours, int minutes);
+    public static @ImmediateValue ZoneOffset ofHoursMinutes(int hours, int minutes);
 }
 package java.time.format;
 class DateTimeFormatter
 {
-    public <T> @Value T parse(CharSequence text, TemporalQuery<T> query);
+    public <T> @ImmediateValue T parse(CharSequence text, TemporalQuery<T> query);
 }

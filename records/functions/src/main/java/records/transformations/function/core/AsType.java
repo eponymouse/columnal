@@ -15,9 +15,12 @@ import records.transformations.expression.function.ValueFunction;
 
 public class AsType extends FunctionDefinition
 {
+
+    public static final String NAME = "core:as type";
+
     public AsType() throws InternalException
     {
-        super("core:as type");
+        super(NAME);
     }
 
     @Override

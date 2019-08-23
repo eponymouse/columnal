@@ -1,6 +1,7 @@
 package records.gui.dtf.recognisers;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -17,17 +18,17 @@ import utility.Utility.RecordMap;
 
 import java.util.HashMap;
 
-public class RecordRecogniser extends Recogniser<@Value Record>
+public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
 {
-    private final ImmutableMap<@ExpressionIdentifier String, Recogniser<@Value ?>> members;
+    private final ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> members;
 
-    public RecordRecogniser(ImmutableMap<@ExpressionIdentifier String, Recogniser<@Value ?>> members)
+    public RecordRecogniser(ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> members)
     {
         this.members = members;
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value Record>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig;
         if (!immediatelySurroundedByRoundBrackets)
@@ -35,13 +36,13 @@ public class RecordRecogniser extends Recogniser<@Value Record>
         if (pp == null)
             return error("Expected '(' to begin a record", orig.curCharIndex);
 
-        HashMap<@ExpressionIdentifier String, Recogniser<@Value ?>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<@Value ?>>(members);
+        HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>>(members);
         
         return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()));
     }
 
     // Recurse down the list of members, processing one and if no error, process next, until no more members and then look for closing bracket:
-    private Either<ErrorDetails, SuccessDetails<@Value Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<@Value ?>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@Value Object>> soFar)
+    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar)
     {
         ParseProgress pp = orig;
         // If no more members, look for closing bracket:
@@ -51,8 +52,8 @@ public class RecordRecogniser extends Recogniser<@Value Record>
                 pp = pp.consumeNext(")");
             if (pp == null)
                 return error("Expected ')' to end record", orig.curCharIndex);
-            ImmutableMap<@ExpressionIdentifier String, SuccessDetails<@Value Object>> all = soFar.build();
-            return success(DataTypeUtility.value(new RecordMap(Utility.<@ExpressionIdentifier String, SuccessDetails<@Value Object>, @Value Object>mapValues(all, s -> s.value))), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
+            ImmutableMap<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> all = soFar.build();
+            return success(RecordMap.immediate(Utility.<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>, @ImmediateValue Object>mapValues(all, s -> s.value)), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
         }
 
         if (expectComma)
@@ -75,8 +76,8 @@ public class RecordRecogniser extends Recogniser<@Value Record>
             return error("Unknown field name: \"" + name + "\"", pp.curCharIndex);
         pp = fieldName.getSecond();
         
-        return recogniser.process(pp, false).<SuccessDetails<@Value Object>>map(s -> s.asObject())
-            .<SuccessDetails<@Value Record>>flatMap((SuccessDetails<@Value Object> succ) -> {
+        return recogniser.process(pp, false).<SuccessDetails<@ImmediateValue Object>>map(s -> s.asObject())
+            .<SuccessDetails<@ImmediateValue Record>>flatMap((SuccessDetails<@ImmediateValue Object> succ) -> {
                 soFar.put(name, succ);
                 return next(true, expectClosingBracket, remainingMembers, succ.parseProgress, soFar);
             });

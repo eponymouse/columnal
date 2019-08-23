@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -1514,7 +1515,7 @@ public abstract class DataType implements StyledShowable
 
         public static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-        public @Value TemporalAccessor getDefaultValue() throws InternalException
+        public @ImmediateValue TemporalAccessor getDefaultValue() throws InternalException
         {
             switch (type)
             {

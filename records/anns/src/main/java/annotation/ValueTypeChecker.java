@@ -1,5 +1,6 @@
 package annotation;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.qual.ValueBottom;
@@ -73,6 +74,7 @@ public class ValueTypeChecker extends BaseTypeChecker
                     {
                         return new HashSet<>(Arrays.asList(
                             UnknownIfValue.class,
+                            ImmediateValue.class,
                             Value.class,
                             ValueBottom.class
                         ));
