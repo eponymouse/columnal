@@ -222,10 +222,40 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
         testTypeTransform(DataType.TEXT, date, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(date)), new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(ERR, "May 12 2018", "30-04-17", "21 Jun 2018", ERR, "2018-03-04"), null);
     }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualNumberToBoolean() throws Exception
+    {
+        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("T")), false), ImmutableList.of("T", "F", "T", "T", "F"), null);
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testTextualNumberToBoolean2() throws Exception
+    {
+        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("T")), false), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testDateTimeToDate() throws Exception
+    {
+        DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIME));
+        DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "date from datetime", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(ERR), null);
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testDateTimeZonedToYearYM() throws Exception
+    {
+        DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
+        DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH));
+        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "dateym from date", new CallExpression(getFunctionLookup(), "date from datetime", new CallExpression(getFunctionLookup(), "datetime from datetimezoned", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)))), ImmutableList.of(ERR), null);
+    }
     
     // TODO test Text to Optional Number
-    // TODO test datetime to date
-    // TODO test Y/N, T/F to boolean 
 
     @Test
     @OnThread(Tag.Simulation)

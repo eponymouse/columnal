@@ -24,11 +24,14 @@ import java.time.temporal.TemporalAccessor;
  * Created by neil on 16/12/2016.
  */
 public class ToYearMonth extends ToTemporalFunction
-{    
+{
+
+    public static final String DATEYM_FROM_DATE = "datetime:dateym from date";
+
     ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(new FromTemporal("datetime:dateym from date"));
+        r.add(new FromTemporal(DATEYM_FROM_DATE));
         /* TODO
         r.add(fromString("dateym.from.string", "dateym.from.string.mini"));
         r.add(new FunctionDefinition("dateym.from.date", "dateym.from.date.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));

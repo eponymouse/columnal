@@ -31,11 +31,13 @@ import java.util.List;
 public class ToTime extends ToTemporalFunction
 {
 
+    public static final String TIME_FROM_DATETIME = "datetime:time from datetime";
+
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(new FromTemporal("datetime:time from datetime"));
+        r.add(new FromTemporal(TIME_FROM_DATETIME));
         r.add(new FromTemporal("datetime:time from datetimezoned"));
         r.add(new FunctionDefinition("datetime:time from hms") {
             @Override

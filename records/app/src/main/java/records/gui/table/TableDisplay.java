@@ -110,7 +110,11 @@ import records.transformations.function.FromString;
 import records.transformations.function.FunctionList;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
+import records.transformations.function.ToDate;
+import records.transformations.function.ToDateTime;
 import records.transformations.function.ToString;
+import records.transformations.function.ToTime;
+import records.transformations.function.ToYearMonth;
 import records.transformations.function.conversion.ExtractNumber;
 import records.transformations.function.optional.GetOptionalOrDefault;
 import styled.StyledString;
@@ -125,14 +129,7 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -1063,8 +1060,33 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @Override
                         public ImmutableList<TypeTransform> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                         {
-                            // TODO offer to extract date from datetime
-                            return ImmutableList.of(toText());
+                            HashMap<DateTimeType, ImmutableList<String>> destTypesAndFunctions = new HashMap<>();
+                            destTypesAndFunctions.put(dateTimeInfo.getType(), ImmutableList.of());
+                            // Important to go in descending order:
+                            add(destTypesAndFunctions, DateTimeType.DATETIMEZONED, DateTimeType.DATETIME, ToDateTime.DATETIME_FROM_DATETIMEZONED);
+                            add(destTypesAndFunctions, DateTimeType.DATETIME, DateTimeType.YEARMONTHDAY, ToDate.DATE_FROM_DATETIME);
+                            add(destTypesAndFunctions, DateTimeType.DATETIME, DateTimeType.TIMEOFDAY, ToTime.TIME_FROM_DATETIME);
+                            add(destTypesAndFunctions, DateTimeType.YEARMONTHDAY, DateTimeType.YEARMONTH, ToYearMonth.DATEYM_FROM_DATE);
+
+                            ImmutableList<TypeTransform> smaller = destTypesAndFunctions.entrySet().stream().filter(e -> !e.getValue().isEmpty()).sorted(Comparator.comparing(e -> e.getKey())).<TypeTransform>map(e -> new TypeTransform(foldFunctions(e.getValue(), columnReference), DataType.date(new DateTimeInfo(e.getKey())))).collect(ImmutableList.<TypeTransform>toImmutableList());
+                            return Utility.<TypeTransform>prependToList(toText(), smaller);
+                        }
+
+                        private Expression foldFunctions(List<String> functions, Expression cur)
+                        {
+                            if (functions.isEmpty())
+                                return cur;
+                            else
+                                return foldFunctions(functions.subList(1, functions.size()), new CallExpression(functionLookup, functions.get(0), cur));
+                        }
+
+                        private void add(HashMap<DateTimeType, ImmutableList<String>> destTypesAndFunctions, DateTimeType from, DateTimeType to, String function)
+                        {
+                            ImmutableList<String> funcs = destTypesAndFunctions.get(from);
+                            if (funcs != null)
+                            {
+                                destTypesAndFunctions.put(to, Utility.appendToList(funcs, function));
+                            }
                         }
 
                         @Override

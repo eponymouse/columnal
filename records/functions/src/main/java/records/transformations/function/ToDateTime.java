@@ -27,6 +27,9 @@ import java.time.temporal.TemporalAccessor;
  */
 public class ToDateTime extends ToTemporalFunction
 {
+
+    public static final String DATETIME_FROM_DATETIMEZONED = "datetime:datetime from datetimezoned";
+
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
@@ -35,7 +38,7 @@ public class ToDateTime extends ToTemporalFunction
         r.add(fromString("datetime.from.string", "datetime.from.string.mini"));
         r.add(new FunctionDefinition("datetime.from.datetimezoned", "datetime.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         */
-        r.add(new FromTemporal("datetime:datetime from datetimezoned"));
+        r.add(new FromTemporal(DATETIME_FROM_DATETIMEZONED));
         r.add(new FunctionDefinition("datetime:datetime from dt")
         {
             @Override
