@@ -188,14 +188,14 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
 
     @Test
     @OnThread(Tag.Simulation)
-    public void testTextualNumberToText() throws Exception
+    public void testTextualNumberToNumber() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37", "0", "1.65", "-3.562", "none"), null);
     }
 
     @Test
     @OnThread(Tag.Simulation)
-    public void testTextualNumberToText2() throws Exception
+    public void testTextualNumberToNumber2() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
     }
