@@ -126,4 +126,33 @@
             <output>10449.99</output>
         </example>
     </function>
+
+    <function name="extract number or none">
+        <argType name="text">Text</argType>
+        <returnType name="number">@apply Optional(Number)</returnType>
+        <description>
+            <p>Extracts a number from the given text.  If there is no number, or two numbers, gives back None.</p>
+            <p>The difference between this function and <link function="extract number"/> is that this function gives back an Optional(Number), so rather than giving an error when there is no number, it gives back None.  Successfully extracted numbers are wrapped in the opposing Is constructor; see the <link guide="optional"/>.</p>
+        </description>
+        <example>
+            <inputArg>"-34.20m"</inputArg>
+            <output>@call @tag Optional\Is(-34.2)</output>
+        </example>
+        <example>
+            <inputArg>"£17,000,000"</inputArg>
+            <output>@call @tag Optional\Is(17000000)</output>
+        </example>
+        <example>
+            <inputArg>"The 6 cats"</inputArg>
+            <output>@call @tag Optional\Is(6)</output>
+        </example>
+        <example>
+            <inputArg>"2 and 2 makes 4"</inputArg>
+            <output>@tag Optional\None</output>
+        </example>
+        <example>
+            <inputArg>"Two"</inputArg>
+            <output>@tag Optional\None</output>
+        </example>
+    </function>
 </functionDocumentation>

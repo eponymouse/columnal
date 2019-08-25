@@ -116,6 +116,7 @@ import records.transformations.function.ToString;
 import records.transformations.function.ToTime;
 import records.transformations.function.ToYearMonth;
 import records.transformations.function.conversion.ExtractNumber;
+import records.transformations.function.conversion.ExtractNumberOrNone;
 import records.transformations.function.list.InList;
 import records.transformations.function.optional.GetOptionalOrDefault;
 import records.transformations.function.text.StringLowerCase;
@@ -1016,6 +1017,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
                             ValueFunction extractNumber = new ExtractNumber().getInstance();
                             conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumber.NAME, columnReference)));
+                            conversions.add(new FromText(parent.getManager().getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(DataType.NUMBER)), parent.getManager().getTypeManager()), s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumberOrNone.NAME, columnReference)));
                             for (DateTimeType dtt : DateTimeType.values())
                             {
                                 DataType destType = DataType.date(new DateTimeInfo(dtt));

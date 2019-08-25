@@ -32,7 +32,6 @@ Medium Priority (significant quality of life, but not essential especially for b
 - Calculate adding column does not put it at the end, which is odd.
 - Allow re-ordering calculate columns?  And IDS columns
 - Is it worth working out what type should be in each hole?  Would involve type-checking with that item forced to MutVar then displaying that MutVar result.
- - Add "Transform type" recipe?
 - Column titles should be highlighted differently in code completion
 - Add explanation system for errors, to give a sort of stack trace of error cause
 - Errors in number columns seem to get right-shifted by the NumberColumnFormatter.
@@ -364,3 +363,4 @@ Done after Phil B & Jon A:
 Changelog since 0.5.1
 ===
 - Added a "split text" function.
+- Added a "Transform type" recipe.

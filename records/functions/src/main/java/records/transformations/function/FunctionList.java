@@ -12,6 +12,7 @@ import records.transformations.function.comparison.MaxIndex;
 import records.transformations.function.comparison.Min;
 import records.transformations.function.comparison.MinIndex;
 import records.transformations.function.conversion.ExtractNumber;
+import records.transformations.function.conversion.ExtractNumberOrNone;
 import records.transformations.function.core.AsType;
 import records.transformations.function.core.AsUnit;
 import records.transformations.function.core.TypeOf;
@@ -58,6 +59,7 @@ public class FunctionList
             new CountWhere(),
             new DaysBetween(),
             new ExtractNumber(),
+            new ExtractNumberOrNone(),
             new GetElement(),
             new GetElementOrDefault(),
             new GetOptionalOrError(),

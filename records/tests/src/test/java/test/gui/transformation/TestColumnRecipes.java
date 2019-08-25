@@ -194,6 +194,14 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
 
     @Test
     @OnThread(Tag.Simulation)
+    public void testTextualNumberToNumber3() throws Exception
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        testTypeTransform(DataType.TEXT, typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.NUMBER)), typeManager), c -> new CallExpression(getFunctionLookup(), "extract number or none", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
     public void testNonDateToText() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), null, ImmutableList.of("37", "0", "1.65", "-3.562"), null);
@@ -248,8 +256,6 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "dateym from date", new CallExpression(getFunctionLookup(), "date from datetime", new CallExpression(getFunctionLookup(), "datetime from datetimezoned", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)))), ImmutableList.of(ERR), null);
     }
     
-    // TODO test Text to Optional Number
-
     @Test
     @OnThread(Tag.Simulation)
     public void testOptionalNumberToNumber() throws Exception
