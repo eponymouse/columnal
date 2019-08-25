@@ -206,4 +206,24 @@
             <output>["H", "e", "l", "l", "o"]</output>
         </example>
     </function>
+    
+    <function name="lower case">
+        <argType name="text">Text</argType>
+        <returnType name="lower case text">Text</returnType>
+        <description>
+            <p>Changes all characters in the text value into lower-case versions, where possible.</p>
+        </description>
+        <example>
+            <inputArg>"HELLO"</inputArg>
+            <output>"hello</output>
+        </example>
+        <example>
+            <inputArg>"Paris"</inputArg>
+            <output>"paris"</output>
+        </example>
+        <example>
+            <inputArg>"12345"</inputArg>
+            <output>"12345"</output>
+        </example>
+    </function>
 </functionDocumentation>

@@ -29,6 +29,7 @@ import records.transformations.function.optional.GetOptionalOrDefault;
 import records.transformations.function.optional.GetOptionalOrError;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
+import records.transformations.function.text.StringLowerCase;
 import records.transformations.function.text.StringReplace;
 import records.transformations.function.text.StringReplaceMany;
 import records.transformations.function.text.StringSplit;
@@ -83,6 +84,7 @@ public class FunctionList
             // TODO document and put back all these string functions:
             //new StringLeft(),
             new StringLength(),
+            new StringLowerCase(),
             //new StringMid(),
             new StringReplace(),
             new StringReplaceMany(),
