@@ -26,7 +26,7 @@
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
             <forany name="x">[@typevar t]</forany>
-            <lhs>@call @function in list(@call @function minimum(x), x)</lhs>
+            <lhs>@call @function list contains(x, @call @function minimum(x))</lhs>
             <rhs>true</rhs>
         </equivalence>
         <example>
@@ -72,7 +72,7 @@
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
             <forany name="x">[@typevar t]</forany>
-            <lhs>@call @function in list(@call @function maximum(x), x)</lhs>
+            <lhs>@call @function list contains(x, @call @function maximum(x))</lhs>
             <rhs>true</rhs>
         </equivalence>
         <example>

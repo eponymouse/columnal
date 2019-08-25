@@ -215,7 +215,7 @@
         </description>
         <example>
             <inputArg>"HELLO"</inputArg>
-            <output>"hello</output>
+            <output>"hello"</output>
         </example>
         <example>
             <inputArg>"Paris"</inputArg>

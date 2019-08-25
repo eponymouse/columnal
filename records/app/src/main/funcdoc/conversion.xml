@@ -83,7 +83,6 @@
     </function>
     
     <function name="extract number">
-        <unitArg>u</unitArg>
         <argType name="text">Text</argType>
         <returnType name="number">Number</returnType>
         <description>
@@ -122,6 +121,7 @@
             <output>error</output>
         </example>
         <example>
+            <description>Swaps dots and commas</description>
             <inputArg>@call @function replace many([(find: ".", replace: ","), (find: ",", replace: ".")], "10.449,99")</inputArg>
             <output>10449.99</output>
         </example>
