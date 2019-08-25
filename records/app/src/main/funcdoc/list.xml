@@ -78,26 +78,6 @@
         </example>
     </function>
     
-    <function name="in list">
-        <synonym>contains</synonym>
-        
-        <typeArg>t</typeArg>
-        <typeConstraint>Comparable t</typeConstraint>
-        <argType name="item">@typevar t</argType>
-        <argType name="list">[@typevar t]</argType>
-        <returnType name="is in list">Boolean</returnType>
-        <description>
-            <p>Checks if the item is in the list.</p>
-        </description>
-        <example>
-            <inputArg>(2, [1, 2, 3])</inputArg>
-            <output>true</output>
-        </example>
-        <example>
-            <inputArg>("A", ["a", "b", "c"])</inputArg>
-            <output>false</output>
-        </example>
-    </function>
     
     <function name="single">
         <typeArg>t</typeArg>

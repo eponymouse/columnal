@@ -176,4 +176,22 @@
             <output>0</output>
         </example>
     </function>
+    <function name="list contains">
+        <typeArg>t</typeArg>
+        <typeConstraint>Equatable t</typeConstraint>
+        <argType name="item">@typevar t</argType>
+        <argType name="list">[@typevar t]</argType>
+        <returnType name="is in list">Boolean</returnType>
+        <description>
+            <p>Checks if the item is in the list.</p>
+        </description>
+        <example>
+            <inputArg>([1, 2, 3], 2)</inputArg>
+            <output>true</output>
+        </example>
+        <example>
+            <inputArg>(["a", "b", "c"], "d")</inputArg>
+            <output>false</output>
+        </example>
+    </function>
 </functionDocumentation>

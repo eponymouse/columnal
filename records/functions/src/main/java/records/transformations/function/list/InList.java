@@ -18,9 +18,11 @@ import records.transformations.expression.function.ValueFunction;
 
 public class InList extends FunctionDefinition
 {
+    public static final String NAME = "listprocess:list contains";
+
     public InList() throws InternalException
     {
-        super("list:in list");
+        super(NAME);
     }
     
     @Override
@@ -34,10 +36,11 @@ public class InList extends FunctionDefinition
         @Override
         public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
-            ListEx list = Utility.cast(arg(1), ListEx.class);
+            ListEx list = Utility.cast(arg(0), ListEx.class);
+            @Value Object target = arg(1);
             for (int i = 0; i < list.size(); i++)
             {
-                if (Utility.compareValues(list.get(i), arg(0)) == 0)
+                if (Utility.compareValues(list.get(i), target) == 0)
                     return DataTypeUtility.value(true);
             }
             return DataTypeUtility.value(false);
