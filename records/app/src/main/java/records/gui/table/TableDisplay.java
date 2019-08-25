@@ -116,7 +116,9 @@ import records.transformations.function.ToString;
 import records.transformations.function.ToTime;
 import records.transformations.function.ToYearMonth;
 import records.transformations.function.conversion.ExtractNumber;
+import records.transformations.function.list.InList;
 import records.transformations.function.optional.GetOptionalOrDefault;
+import records.transformations.function.text.StringLowerCase;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -994,7 +996,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         public ImmutableList<TypeTransform> text(GetValue<@Value String> g) throws InternalException, UserException
                         {
                             // Don't offer toText as that is redundant.
-                            // TODO Check for likely conversions to number (or optional number), date, boolean
                             class FromText
                             {
                                 private final DataType destType;
@@ -1020,6 +1021,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                 DataType destType = DataType.date(new DateTimeInfo(dtt));
                                 conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, new CallExpression(functionLookup, FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), columnReference)));
                             }
+                            ImmutableList<String> trues = ImmutableList.of("true", "t", "yes", "y", "on");
+                            ImmutableList<String> bools = Utility.<String>concatI(trues, ImmutableList.<String>of("no", "n", "false", "f", "off"));
+                            conversions.add(new FromText(DataType.BOOLEAN, s -> bools.contains(s.toLowerCase(Locale.ENGLISH)), new CallExpression(functionLookup, InList.NAME, new ArrayExpression(Utility.mapListI(trues, StringLiteral::new)), new CallExpression(functionLookup, StringLowerCase.NAME, columnReference))));
                             
                             
                             final ImmutableList<@Value String> samples = sample(g);

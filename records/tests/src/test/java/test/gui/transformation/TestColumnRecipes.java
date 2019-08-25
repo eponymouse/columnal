@@ -34,16 +34,8 @@ import records.gui.grid.RectangleBounds;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
+import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.expression.UnitExpression;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
@@ -227,14 +219,15 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @OnThread(Tag.Simulation)
     public void testTextualNumberToBoolean() throws Exception
     {
-        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("T")), false), ImmutableList.of("T", "F", "T", "T", "F"), null);
+        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW))), ImmutableList.of("T", "F", "T", "T", "F"), null);
     }
 
     @Test
     @OnThread(Tag.Simulation)
     public void testTextualNumberToBoolean2() throws Exception
     {
-        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("T")), false), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
+        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c ->
+            new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW))), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
     }
 
     @Test
