@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
@@ -26,7 +27,7 @@ import java.time.temporal.TemporalAccessor;
 public class ToYearMonth extends ToTemporalFunction
 {
 
-    public static final String DATEYM_FROM_DATE = "datetime:dateym from date";
+    public static final @FuncDocKey String DATEYM_FROM_DATE = "datetime:dateym from date";
 
     ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {

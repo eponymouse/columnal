@@ -40,6 +40,7 @@ public class AppUtility
     }
     
     @OnThread(Tag.Simulation)
+    @SuppressWarnings("recorded")
     public static Expression valueToExpression(TypeManager typeManager, FunctionLookup functionLookup, DataType dataType, @Value Object value) throws UserException, InternalException
     {
         return dataType.apply(new DataTypeVisitor<Expression>()

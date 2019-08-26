@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
@@ -28,7 +29,7 @@ import java.time.temporal.TemporalAccessor;
 public class ToDateTime extends ToTemporalFunction
 {
 
-    public static final String DATETIME_FROM_DATETIMEZONED = "datetime:datetime from datetimezoned";
+    public static final @FuncDocKey String DATETIME_FROM_DATETIMEZONED = "datetime:datetime from datetimezoned";
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException

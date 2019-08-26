@@ -56,6 +56,6 @@ public class EnterValueDialog<@NonNull V> extends ErrorableLightDialog<V>
     @Override
     protected @OnThread(Tag.FXPlatform) Either<@Localized String, V> calculateResult()
     {
-        return document.getLatestValue().mapBoth(err -> err.error.toPlain(), v -> v);
+        return document.getLatestValue().<@Localized String, V>mapBoth(err -> err.error.toPlain(), v -> v);
     }
 }

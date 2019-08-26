@@ -1,5 +1,6 @@
 package records.transformations.function.core;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -16,7 +17,7 @@ import records.transformations.expression.function.ValueFunction;
 public class AsType extends FunctionDefinition
 {
 
-    public static final String NAME = "core:as type";
+    public static final @FuncDocKey String NAME = "core:as type";
 
     public AsType() throws InternalException
     {

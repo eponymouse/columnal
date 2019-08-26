@@ -21,7 +21,7 @@ import utility.Utility;
 
 public class ExtractNumber extends FunctionDefinition
 {
-    public static final String NAME = "conversion:extract number";
+    public static final @FuncDocKey String NAME = "conversion:extract number";
 
     public ExtractNumber() throws InternalException
     {

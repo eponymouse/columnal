@@ -1,5 +1,6 @@
 package records.transformations.function.conversion;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -20,7 +21,7 @@ import utility.Utility;
 
 public class ExtractNumberOrNone extends FunctionDefinition
 {
-    public static final String NAME = "conversion:extract number or none";
+    public static final @FuncDocKey String NAME = "conversion:extract number or none";
 
     public ExtractNumberOrNone() throws InternalException
     {

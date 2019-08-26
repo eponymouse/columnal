@@ -3,6 +3,7 @@ package records.gui.table;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -966,7 +967,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     // Check the type, then hop back to the FX thread for confirmation.
                     ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
                     {
-                        private final ColumnReference columnReference = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW);
+                        @SuppressWarnings("recorded")
+                        private final @Recorded ColumnReference columnReference = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW);
 
                         @Override
                         @OnThread(Tag.Simulation)
@@ -985,7 +987,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                     if (zeroCount > 0 && oneCount > 0 && zeroCount + oneCount == sample.size())
                                     {
                                         // Offer boolean
-                                        r.add(new TypeTransform(new EqualExpression(ImmutableList.of(columnReference, new NumericLiteral(1, null)), false), DataType.BOOLEAN));
+                                        @SuppressWarnings("recorded")
+                                        EqualExpression equalExpression = new EqualExpression(ImmutableList.of(columnReference, new NumericLiteral(1, null)), false);
+                                        r.add(new TypeTransform(equalExpression, DataType.BOOLEAN));
                                     }
                                 }
                             }
@@ -1001,10 +1005,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             {
                                 private final DataType destType;
                                 private final SimulationFunction<@Value String, Boolean> conversionTrial;
-                                private final Expression conversionExpression;
+                                private final @Recorded Expression conversionExpression;
                                 // Mutable:
                                 private int failCount = 0;
 
+                                @SuppressWarnings("recorded")
                                 FromText(DataType destType, SimulationFunction<@Value String, Boolean> conversionTrial, Expression conversionExpression)
                                 {
                                     this.destType = destType;
@@ -1021,11 +1026,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             for (DateTimeType dtt : DateTimeType.values())
                             {
                                 DataType destType = DataType.date(new DateTimeInfo(dtt));
-                                conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, new CallExpression(functionLookup, FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), columnReference)));
+                                @SuppressWarnings("recorded")
+                                CallExpression call = new CallExpression(functionLookup, FromString.FROM_TEXT_TO, new TypeLiteralExpression(new TypePrimitiveLiteral(destType)), columnReference);
+                                conversions.add(new FromText(destType, s -> {FromString.convertEntireString(s, destType); return true;}, call));
                             }
                             ImmutableList<String> trues = ImmutableList.of("true", "t", "yes", "y", "on");
                             ImmutableList<String> bools = Utility.<String>concatI(trues, ImmutableList.<String>of("no", "n", "false", "f", "off"));
-                            conversions.add(new FromText(DataType.BOOLEAN, s -> bools.contains(s.toLowerCase(Locale.ENGLISH)), new CallExpression(functionLookup, InList.NAME, new ArrayExpression(Utility.mapListI(trues, StringLiteral::new)), new CallExpression(functionLookup, StringLowerCase.NAME, columnReference))));
+                            @SuppressWarnings("recorded")
+                            CallExpression call = new CallExpression(functionLookup, InList.NAME, new ArrayExpression(Utility.mapListI(trues, StringLiteral::new)), new CallExpression(functionLookup, StringLowerCase.NAME, columnReference));
+                            conversions.add(new FromText(DataType.BOOLEAN, s -> bools.contains(s.toLowerCase(Locale.ENGLISH)), call));
                             
                             
                             final ImmutableList<@Value String> samples = sample(g);
@@ -1060,7 +1069,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @Override
                         public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                         {
-                            return ImmutableList.of(toText(), new TypeTransform(IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(1, null), new NumericLiteral(0, null)), DataType.NUMBER));
+                            @SuppressWarnings("recorded")
+                            @Recorded IfThenElseExpression ifThenElseExpression = IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(1, null), new NumericLiteral(0, null));
+                            return ImmutableList.of(toText(), new TypeTransform(ifThenElseExpression, DataType.NUMBER));
                         }
 
                         @Override

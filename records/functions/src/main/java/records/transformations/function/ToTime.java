@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -31,7 +32,7 @@ import java.util.List;
 public class ToTime extends ToTemporalFunction
 {
 
-    public static final String TIME_FROM_DATETIME = "datetime:time from datetime";
+    public static final @FuncDocKey String TIME_FROM_DATETIME = "datetime:time from datetime";
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException

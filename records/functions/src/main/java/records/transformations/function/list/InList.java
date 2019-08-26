@@ -1,5 +1,6 @@
 package records.transformations.function.list;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -18,7 +19,7 @@ import records.transformations.expression.function.ValueFunction;
 
 public class InList extends FunctionDefinition
 {
-    public static final String NAME = "listprocess:list contains";
+    public static final @FuncDocKey String NAME = "listprocess:list contains";
 
     public InList() throws InternalException
     {

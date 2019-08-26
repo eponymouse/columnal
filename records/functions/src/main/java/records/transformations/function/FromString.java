@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +40,7 @@ import java.util.HashMap;
 public class FromString
 {
 
-    public static final String FROM_TEXT_TO = "conversion:from text to";
+    public static final @FuncDocKey String FROM_TEXT_TO = "conversion:from text to";
 
     public static ImmutableList<FunctionDefinition> getFunctions() throws InternalException
     {

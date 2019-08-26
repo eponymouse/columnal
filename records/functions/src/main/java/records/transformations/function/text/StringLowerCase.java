@@ -21,7 +21,7 @@ import java.util.Locale;
 public class StringLowerCase extends FunctionDefinition
 {
 
-    public static final String NAME = "text:lower case";
+    public static final @FuncDocKey String NAME = "text:lower case";
 
     public StringLowerCase() throws InternalException
     {

@@ -1,5 +1,6 @@
 package records.transformations.function.optional;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -19,7 +20,7 @@ import utility.TaggedValue;
 public class GetOptionalOrDefault extends FunctionDefinition
 {
 
-    public static final String NAME = "optional:get optional or";
+    public static final @FuncDocKey String NAME = "optional:get optional or";
 
     public GetOptionalOrDefault() throws InternalException
     {
