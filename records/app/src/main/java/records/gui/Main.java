@@ -24,6 +24,7 @@ import records.exporters.ExcelExporter;
 import records.exporters.HTMLExporter;
 import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
+import records.plugins.PluginManager;
 import utility.gui.Clickable;
 import records.importers.ExcelImporter;
 import records.importers.HTMLImporter;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 18/10/2016.
@@ -208,6 +210,16 @@ public class Main extends Application
         ExporterManager.getInstance().registerExporter(new HTMLExporter());
         ExporterManager.getInstance().registerExporter(new ExcelExporter());
         Log.normal("Registered exporters");
+        
+        try
+        {
+            PluginManager.getInstance().scanForPlugins(new File(Utility.getStorageDirectory(), "plugins"));
+            Log.normal("Loaded plugins: " + PluginManager.getInstance().getLoadedPluginNames().collect(Collectors.joining(", ")));
+        }
+        catch (IOException e)
+        {
+            Log.log("Error loading plugins", e);
+        }
     }
 
     @OnThread(Tag.Unique)
