@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
@@ -14,6 +15,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeExpression.JellyRecorder;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -32,19 +34,56 @@ import java.util.stream.Stream;
 public class HasTypeExpression extends Expression
 {
     // Var name, without the leading decorator
-    private final @ExpressionIdentifier String varName;
-    private final @Recorded TypeLiteralExpression type;
+    private final @Recorded Expression lhsVar;
+    private final @Recorded Expression rhsType;
+    private @MonotonicNonNull @ExpressionIdentifier String checkedVarName;
 
-    public HasTypeExpression(@ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+    public HasTypeExpression(@Recorded Expression lhsVar, @Recorded Expression rhsType)
     {
-        this.varName = varName;
-        this.type = type;
+        this.lhsVar = lhsVar;
+        this.rhsType = rhsType;
     }
 
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        TypeState typeState = original.addPreType(varName, type.getType().toJellyType(original.getTypeManager(), new JellyRecorder()
+        @Nullable @ExpressionIdentifier String varName = lhsVar.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
+        {
+            @Override
+            protected @Nullable @ExpressionIdentifier String makeDef(Expression expression)
+            {
+                onError.recordError(lhsVar, StyledString.s("Left-hand side of :: must be a valid name"));
+                return null;
+            }
+
+            @Override
+            public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @ExpressionIdentifier String text)
+            {
+                return text;
+            }
+        });
+        
+        @Nullable TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable TypeExpression>()
+        {
+            @Override
+            protected @Nullable TypeExpression makeDef(Expression expression)
+            {
+                onError.recordError(rhsType, StyledString.s("Right-hand side of :: must be a type{} expression"));
+                return null;
+            }
+
+            @Override
+            public @Nullable TypeExpression litType(TypeLiteralExpression self, TypeExpression type)
+            {
+                return type;
+            }
+        });
+        
+        if (varName == null || rhsTypeExpression == null)
+            return null;
+        this.checkedVarName = varName;
+        
+        TypeState typeState = original.addPreType(varName, rhsTypeExpression.toJellyType(original.getTypeManager(), new JellyRecorder()
         {
             @SuppressWarnings("recorded")
             @Override
@@ -70,13 +109,13 @@ public class HasTypeExpression extends Expression
     @Override
     public <T> T visit(@Recorded HasTypeExpression this, ExpressionVisitor<T> visitor)
     {
-        return visitor.hasType(this, varName, type);
+        return visitor.hasType(this, lhsVar, rhsType);
     }
 
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return varName + " :: " + type.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
+        return lhsVar.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + " :: " + rhsType.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
     }
 
     @Override
@@ -97,20 +136,20 @@ public class HasTypeExpression extends Expression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         HasTypeExpression that = (HasTypeExpression) o;
-        return varName.equals(that.varName) &&
-                type.equals(that.type);
+        return lhsVar.equals(that.lhsVar) &&
+                rhsType.equals(that.rhsType);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(varName, type);
+        return Objects.hash(lhsVar, rhsType);
     }
 
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(StyledString.s(varName), type.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)), this);
+        return expressionStyler.styleExpression(StyledString.concat(lhsVar.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s(" :: "), rhsType.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler)), this);
     }
 
     @SuppressWarnings("recorded")
@@ -120,11 +159,11 @@ public class HasTypeExpression extends Expression
         if (toReplace == this)
             return replaceWith;
         else
-            return new HasTypeExpression(varName, (TypeLiteralExpression)type.replaceSubExpression(toReplace, replaceWith));
+            return new HasTypeExpression(lhsVar.replaceSubExpression(toReplace, replaceWith), rhsType.replaceSubExpression(toReplace, replaceWith));
     }
 
-    public @ExpressionIdentifier String getVarName()
+    public @Nullable @ExpressionIdentifier String getVarName()
     {
-        return varName;
+        return checkedVarName;
     }
 }

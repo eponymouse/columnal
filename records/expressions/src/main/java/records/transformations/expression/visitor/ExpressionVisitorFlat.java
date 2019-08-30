@@ -216,7 +216,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+    public T hasType(@Recorded HasTypeExpression self, @Recorded Expression lhsVar, @Recorded Expression rhsType)
     {
         return makeDef(self);
     }

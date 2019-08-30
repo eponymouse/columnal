@@ -860,6 +860,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             new OperatorExpressionInfo(ImmutableList.of(Op.AND), ExpressionSaver::makeAnd),
             new OperatorExpressionInfo(ImmutableList.of(Op.OR), ExpressionSaver::makeOr)
         ),
+
+        ImmutableList.<OperatorExpressionInfo>of(
+            new OperatorExpressionInfo(Op.HAS_TYPE, (lhs, opLoc, rhs) -> new HasTypeExpression(lhs, rhs))
+        ),
         
         ImmutableList.<OperatorExpressionInfo>of(
             new OperatorExpressionInfo(Op.COLON, (lhs, opLoc, rhs) -> new KeyValueExpression(lhs, new OpAndNode(Op.COLON, opLoc), rhs))
@@ -1230,7 +1234,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
 
             @Override
-            public @Nullable ArrayList<DefineItem> hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+            public @Nullable ArrayList<DefineItem> hasType(@Recorded HasTypeExpression self, @Recorded Expression lhsVar, @Recorded Expression rhsType)
             {
                 definitions.add(new DefineItem(Either.left(self), terminatorLocation));
                 return definitions;

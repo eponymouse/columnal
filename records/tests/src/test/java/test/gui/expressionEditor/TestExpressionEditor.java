@@ -589,6 +589,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
 
     @Test
+    public void testDefine2() throws Exception
+    {
+        testSimple("@define x :: type{Number}, x = 3, y = x @then x / y @enddefine");
+    }
+
+    @Test
     public void testFieldAccess() throws Exception
     {
         testSimple("@define x 1 = (a 0: 5, b 3: 6) @then (x 1#a 0) + ( x 1 # b 3 ) @enddefine");

@@ -110,6 +110,12 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             {
                 return new ListTypeExpression(inner == null ? new InvalidIdentTypeExpression("") : fromDataType(inner));
             }
+
+            @Override
+            public TypeExpression function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, InternalException
+            {
+                return new TypeApplyExpression("Function", Utility.<DataType, Either<UnitExpression, TypeExpression>>mapListInt(Utility.<DataType>concatI(argTypes, ImmutableList.<DataType>of(resultType)), t -> Either.<UnitExpression, TypeExpression>right(fromDataType(t))));
+            }
         });
     }
 

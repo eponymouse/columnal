@@ -718,9 +718,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public Expression visitHasTypeExpression(HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            if (customLiteralExpression instanceof TypeLiteralExpression)
-                return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.varRef().ident()), (TypeLiteralExpression)customLiteralExpression);
-            return new InvalidOperatorExpression(ImmutableList.of(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), new InvalidIdentExpression("::"), customLiteralExpression));
+            return new HasTypeExpression(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
         }
 
         @Override

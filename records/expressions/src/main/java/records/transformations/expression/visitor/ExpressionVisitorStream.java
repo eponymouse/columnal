@@ -231,9 +231,9 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> hasType(HasTypeExpression self, @ExpressionIdentifier String varName, @Recorded TypeLiteralExpression type)
+    public Stream<T> hasType(@Recorded HasTypeExpression self, @Recorded Expression lhsVar, @Recorded Expression rhsType)
     {
-        return type.visit(this);
+        return apply(lhsVar, rhsType);
     }
 
     @Override

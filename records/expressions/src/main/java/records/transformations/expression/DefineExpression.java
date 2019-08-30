@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
@@ -162,9 +163,15 @@ public class DefineExpression extends Expression
             TypeState typeStateThisTime = typeState;
             Either<@Recorded HasTypeExpression, Definition> define = defineItem.typeOrDefinition;
             @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
-                if (!shouldBeDeclaredInNextDefine.add(hasType.getVarName()))
+                @ExpressionIdentifier String varName = hasType.getVarName();
+                if (varName == null)
                 {
-                    onError.recordError(hasType, StyledString.s("Duplicate type for variable " + hasType.getVarName()));
+                    // Should already be error
+                    return null;
+                }
+                else if (!shouldBeDeclaredInNextDefine.add(varName))
+                {
+                    onError.recordError(hasType, StyledString.s("Duplicate type for variable " + varName));
                     return null;
                 }
                 return hasType.check(dataLookup, typeStateThisTime, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);

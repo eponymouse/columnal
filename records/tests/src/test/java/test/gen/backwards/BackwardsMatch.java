@@ -256,7 +256,7 @@ public class BackwardsMatch extends BackwardsProvider
         if (!declVars.isEmpty())
         {
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
-            defines.add(Either.left(new HasTypeExpression(v.name, new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
+            defines.add(Either.left(new HasTypeExpression(new IdentExpression(v.name), new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
             defines.add(Either.right(new Definition(match.pattern, toMatch)));
             return DefineExpression.unrecorded(defines.build(), IfThenElseExpression.unrecorded(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }

@@ -55,38 +55,56 @@ public class BackwardsFunction extends BackwardsProvider
     {
         return ImmutableList.of(() -> {
             Expression expression = parent.make(targetType, targetValue, maxLevels - 1);
-            Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> paramsAndBody = expression.visit(new Functioniser(new Random(r.nextLong())));
+            Functioned paramsAndBody = expression.visit(new Functioniser(new Random(r.nextLong()), targetType));
             
             String funcName = "func " + r.nextInt(1000000);
             Expression function;
             if (r.nextBoolean())
-                function = paramsAndBody.getSecond().apply(Utility.replicateM(paramsAndBody.getFirst().size(), () -> new ImplicitLambdaArg()));
+                function = paramsAndBody.turnFormalNamesIntoBody.apply(Utility.replicateM(paramsAndBody.callActualParameters.size(), () -> new ImplicitLambdaArg()));
             else
             {
-                ImmutableList<String> paramNames = IntStream.range(0, paramsAndBody.getFirst().size()).mapToObj(n -> funcName + " param " + n).collect(ImmutableList.toImmutableList());
-                function = new LambdaExpression(Utility.mapListI(paramNames, name -> new IdentExpression(name)), paramsAndBody.getSecond().apply(Utility.mapListI(paramNames, name -> new IdentExpression(name))));
+                ImmutableList<String> paramNames = IntStream.range(0, paramsAndBody.callActualParameters.size()).mapToObj(n -> funcName + " param " + n).collect(ImmutableList.toImmutableList());
+                function = new LambdaExpression(Utility.mapListI(paramNames, name -> new IdentExpression(name)), paramsAndBody.turnFormalNamesIntoBody.apply(Utility.mapListI(paramNames, name -> new IdentExpression(name))));
             }
             
-            //Either.left(new HasTypeExpression(funcName, new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(ImmutableList.of())))))
-            return DefineExpression.unrecorded(ImmutableList.of(Either.right(new Definition(new IdentExpression(funcName), function))), new CallExpression(new IdentExpression(funcName), paramsAndBody.getFirst()));
+            Either<@Recorded HasTypeExpression, Definition> definition = Either.right(new Definition(new IdentExpression(funcName), function));
+            return DefineExpression.unrecorded(paramsAndBody.actualParameterTypes == null ? ImmutableList.of(definition)
+                : ImmutableList.of(Either.left(new HasTypeExpression(new IdentExpression(funcName), new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
+                , new CallExpression(new IdentExpression(funcName), paramsAndBody.callActualParameters));
         });
+    }
+    
+    class Functioned
+    {
+        private final ImmutableList<Expression> callActualParameters;
+        private final @Nullable ImmutableList<DataType> actualParameterTypes;
+        private final Function<ImmutableList<Expression>, Expression> turnFormalNamesIntoBody;
+
+        public Functioned(ImmutableList<Expression> callActualParameters, @Nullable ImmutableList<DataType> actualParameterTypes, Function<ImmutableList<Expression>, Expression> turnFormalNamesIntoBody)
+        {
+            this.callActualParameters = callActualParameters;
+            this.actualParameterTypes = actualParameterTypes;
+            this.turnFormalNamesIntoBody = turnFormalNamesIntoBody;
+        }
     }
     
     // Gives back list of expressions, and a function that takes replacements for those expressions and reassembles the original.
     // The idea being that you swap the originals for function parameters.
-    @OnThread(Tag.Any)
-    private class Functioniser extends ExpressionVisitorFlat<Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>>>
+    @OnThread(Tag.Simulation)
+    private class Functioniser extends ExpressionVisitorFlat<Functioned>
     {
         private final Random random;
+        private final DataType targetType;
 
-        public Functioniser(Random random)
+        public Functioniser(Random random, DataType targetType)
         {
             this.random = random;
+            this.targetType = targetType;
         }
         
         // Given a list of expressions, picks N of them (1 <= N <= list size) and returns those expressions, plus a function that given replacements for those expressions,
         // calls make with the right ones in the list replaced.
-        private Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> pick(ImmutableList<Expression> expressions, Function<ImmutableList<Expression>, Expression> make)
+        private Functioned pick(ImmutableList<Expression> expressions, @Nullable ImmutableList<DataType> paramTypes, Function<ImmutableList<Expression>, Expression> make)
         {
             int numPicked = 1 + r.nextInt(expressions.size() - 1);
 
@@ -100,7 +118,7 @@ public class BackwardsFunction extends BackwardsProvider
                     substitutions.add(expressions.get(i));
             }
             
-            return new Pair<>(substitutions.build(), subs -> {
+            return new Functioned(substitutions.build(), paramTypes, subs -> {
                 ImmutableList.Builder<Expression> substituted = ImmutableList.builder();
                 int nextParam = 0;
                 for (int i = 0; i < picked.size(); i++)
@@ -115,9 +133,10 @@ public class BackwardsFunction extends BackwardsProvider
         }
 
         @Override
-        protected Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> makeDef(Expression expression)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        protected Functioned makeDef(Expression expression)
         {
-            return new Pair<>(ImmutableList.of(new BooleanLiteral(true)), ps -> IfThenElseExpression.unrecorded(ps.get(0), expression, expression));
+            return new Functioned(ImmutableList.of(new BooleanLiteral(true)), ImmutableList.of(DataType.BOOLEAN), ps -> IfThenElseExpression.unrecorded(ps.get(0), expression, expression));
         }
 
         // Note: can't do if-then-else because its condition may define variables that are used in the body.
@@ -130,39 +149,45 @@ public class BackwardsFunction extends BackwardsProvider
         */
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
         {
-            return pick(expressions, es -> new AddSubtractExpression(es, ops));
+            return pick(expressions, ImmutableList.copyOf(Utility.replicate(expressions.size(), targetType)), es -> new AddSubtractExpression(es, ops));
         }
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
         {
-            return pick(ImmutableList.of(lhs, rhs), es -> new NotEqualExpression(es.get(0), es.get(1)));
+            return pick(ImmutableList.of(lhs, rhs), null, es -> new NotEqualExpression(es.get(0), es.get(1)));
         }
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
         {
-            return pick(ImmutableList.of(lhs, rhs), es -> new DivideExpression(es.get(0), es.get(1)));
+            return pick(ImmutableList.of(lhs, rhs), null, es -> new DivideExpression(es.get(0), es.get(1)));
         }
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
         {
-            return pick(expressions, es -> new OrExpression(es));
+            return pick(expressions, ImmutableList.copyOf(Utility.replicate(expressions.size(), DataType.BOOLEAN)), es -> new OrExpression(es));
         }
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
         {
-            return pick(expressions, es -> new ComparisonExpression(es, operators));
+            return pick(expressions, null, es -> new ComparisonExpression(es, operators));
         }
 
         @Override
-        public Pair<ImmutableList<Expression>, Function<ImmutableList<Expression>, Expression>> multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
+        public Functioned multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
         {
-            return pick(expressions, es -> new TimesExpression(es));
+            return pick(expressions, null, es -> new TimesExpression(es));
         }
 
         // TODO lots more, call pick

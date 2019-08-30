@@ -158,6 +158,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 return "+-";
             }
         }, RAISE("^", "op.raise"),
+        HAS_TYPE("::", "op.hasType"),
         COLON(":", "op.colon"),
         FIELD_ACCESS("#", "op.fieldAccess"),
         COMMA(",", "op.separator");
