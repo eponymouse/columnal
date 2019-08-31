@@ -65,6 +65,7 @@ import records.grammar.DataParser;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.DetailLineContext;
 import records.grammar.MainParser.DetailPrefixedContext;
+import records.grammar.MainParser2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -1390,6 +1391,11 @@ public class Utility
     }
 
     public static String getDetail(DetailPrefixedContext detail)
+    {
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
+    }
+
+    public static String getDetail(MainParser2.DetailContext detail)
     {
         return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
     }

@@ -27,11 +27,14 @@ import records.grammar.DisplayParser.ColumnWidthContext;
 import records.grammar.DisplayParser.GlobalDisplayDetailsContext;
 import records.grammar.GrammarUtility;
 import records.grammar.MainLexer;
+import records.grammar.MainLexer2;
 import records.grammar.MainParser;
 import records.grammar.MainParser.CommentContext;
 import records.grammar.MainParser.FileContext;
 import records.grammar.MainParser.TableContext;
 import records.grammar.MainParser.TopLevelItemContext;
+import records.grammar.MainParser2;
+import records.grammar.MainParser2.ContentContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -46,6 +49,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -146,62 +150,117 @@ public class TableManager
         return unitManager;
     }
 
+    public static OptionalInt detectVersion(String completeSrc)
+    {
+        // Bit of manual parsing to find file version:
+        Iterator<String> lines = Utility.<String>iterableStream(Pattern.compile("\\r?\\n").splitAsStream(completeSrc).map(s -> s.trim()).filter(s -> !s.isEmpty())).iterator();
+        if (lines.hasNext())
+        {
+            String top = lines.next();
+            if (top.equals("COLUMNAL") && lines.hasNext())
+            {
+                String version = lines.next();
+                if (version.startsWith("VERSION"))
+                {
+                    try
+                    {
+                        int v = Integer.parseInt(version.substring("COLUMNAL".length()).trim());
+                        return OptionalInt.of(v);
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        
+                    }
+                }
+            }
+        }
+        return OptionalInt.empty();
+    }
+    
     @OnThread(Tag.Simulation)
     public synchronized Pair<ImmutableList<Table>, ImmutableList<GridComment>> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
-        FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
-        unitManager.clearAllUser();
-        unitManager.loadUserUnits(file.units());
-        typeManager.clearAllUser();
-        typeManager.loadTypeDecls(file.types());
-        List<TableId> ids = new ArrayList<>(usedIds.keySet());
-        for (TableId id : ids)
+        int version = detectVersion(completeSrc).orElse(-1);
+        if (version == 1)
         {
-            remove(id);
-        }
-        ImmutableList.Builder<Table> loaded = ImmutableList.builder();
-        List<Exception> exceptions = new ArrayList<>();
-        
-        for (TopLevelItemContext topLevelItemContext : file.topLevelItem())
-        {
-            if (topLevelItemContext.table() != null)
-                loadOneTable(topLevelItemContext.table()).either_(exceptions::add, loaded::add);
-            if (topLevelItemContext.comment() != null)
-                loadComment(topLevelItemContext.comment()).either_(exceptions::add, c -> {
-                    comments.add(c);
-                    listener.addComment(c);
-            });
-        }
-        
-        if (file.display() != null)
-        {
-            ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
-            GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(Utility.getDetail(file.display().detail()), DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
-            for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
+            FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
+            unitManager.clearAllUser();
+            unitManager.loadUserUnits(file.units());
+            typeManager.clearAllUser();
+            typeManager.loadTypeDecls(file.types());
+            List<TableId> ids = new ArrayList<>(usedIds.keySet());
+            for (TableId id : ids)
             {
-                try
+                remove(id);
+            }
+            ImmutableList.Builder<Table> loaded = ImmutableList.builder();
+            List<Exception> exceptions = new ArrayList<>();
+
+            for (TopLevelItemContext topLevelItemContext : file.topLevelItem())
+            {
+                if (topLevelItemContext.table() != null)
+                    loadOneTable(topLevelItemContext.table()).either_(exceptions::add, loaded::add);
+                if (topLevelItemContext.comment() != null)
+                    loadComment(topLevelItemContext.comment()).either_(exceptions::add, c -> {
+                        comments.add(c);
+                        listener.addComment(c);
+                    });
+            }
+
+            if (file.display() != null)
+            {
+                ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
+                GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(Utility.getDetail(file.display().detail()), DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
+                for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
                 {
-                    int columnIndex = Integer.parseInt(columnWidthContext.item(0).getText());
-                    double columnWidth = Double.parseDouble(columnWidthContext.item(1).getText());
-                    widths.add(new Pair<>(columnIndex, columnWidth));
+                    try
+                    {
+                        int columnIndex = Integer.parseInt(columnWidthContext.item(0).getText());
+                        double columnWidth = Double.parseDouble(columnWidthContext.item(1).getText());
+                        widths.add(new Pair<>(columnIndex, columnWidth));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        // Not a big deal, log but don't worry user
+                        Log.log(e);
+                    }
                 }
-                catch (NumberFormatException e)
+                setColumnWidths.consume(widths.build());
+            }
+
+            if (exceptions.isEmpty())
+                return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
+            else if (exceptions.get(0) instanceof UserException)
+                throw new UserException("Loading problem", exceptions.get(0));
+            else if (exceptions.get(0) instanceof InternalException)
+                throw new InternalException("Loading problem", exceptions.get(0));
+            else
+                throw new InternalException("Unrecognised exception", exceptions.get(0));
+        }
+        else if (version == 2)
+        {
+            MainParser2.FileContext file = Utility.parseAsOne(completeSrc, MainLexer2::new, MainParser2::new, p -> p.file());
+            HashMap<String, SimulationConsumer<String>> contentHandlers = new HashMap<>();
+            for (ContentContext contentContext : file.content())
+            {
+                String contentType = contentContext.ATOM(0).getText();
+                SimulationConsumer<String> handler = contentHandlers.get(contentType);
+                if (handler == null)
                 {
-                    // Not a big deal, log but don't worry user
-                    Log.log(e);
+                    // TODO give warning, but keep content for writing again
+                }
+                else
+                {
+                    handler.consume(Utility.getDetail(contentContext.detail()));
                 }
             }
-            setColumnWidths.consume(widths.build());
+            // TODO return actual
+            return new Pair<>(ImmutableList.of(), ImmutableList.of());
         }
-
-        if (exceptions.isEmpty())
-            return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
-        else if (exceptions.get(0) instanceof UserException)
-            throw new UserException("Loading problem", exceptions.get(0));
-        else if (exceptions.get(0) instanceof InternalException)
-            throw new InternalException("Loading problem", exceptions.get(0));
         else
-            throw new InternalException("Unrecognised exception", exceptions.get(0));
+        {
+            throw new UserException("Unknown file version: " + version + "; corrupt file or not a Columnal file?");
+        }
     }
 
     @OnThread(Tag.Simulation)

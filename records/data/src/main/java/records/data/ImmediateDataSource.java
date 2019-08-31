@@ -46,8 +46,9 @@ public class ImmediateDataSource extends DataSource
         //dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
 
         OutputBuilder b = new OutputBuilder();
-        b.t(MainLexer.DATA).id(renames.tableId(getId())).t(MainLexer.FORMAT).begin().raw(saveTag.getTag()).nl();
+        b.t(MainLexer.DATA).begin().raw(saveTag.getTag()).nl();
         b.pushPrefix(saveTag);
+        b.id(renames.tableId(getId())).t(MainLexer.FORMAT).nl();
         String errorTitle = "Error saving table: " + getId().getRaw();
         ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () ->
         {
