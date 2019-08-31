@@ -74,7 +74,7 @@ public interface ExpressionVisitor<T>
 
     T multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions);
 
-    T litType(TypeLiteralExpression self, TypeExpression type);
+    T litType(TypeLiteralExpression self, @Recorded TypeExpression type);
 
     T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression);
 

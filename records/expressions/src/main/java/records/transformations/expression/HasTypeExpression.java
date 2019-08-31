@@ -63,17 +63,17 @@ public class HasTypeExpression extends Expression
             }
         });
         
-        @Nullable TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable TypeExpression>()
+        @Nullable @Recorded TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable @Recorded TypeExpression>()
         {
             @Override
-            protected @Nullable TypeExpression makeDef(Expression expression)
+            protected @Nullable @Recorded TypeExpression makeDef(Expression expression)
             {
                 onError.recordError(rhsType, StyledString.s("Right-hand side of :: must be a type{} expression"));
                 return null;
             }
 
             @Override
-            public @Nullable TypeExpression litType(TypeLiteralExpression self, TypeExpression type)
+            public @Nullable @Recorded TypeExpression litType(TypeLiteralExpression self, @Recorded TypeExpression type)
             {
                 return type;
             }

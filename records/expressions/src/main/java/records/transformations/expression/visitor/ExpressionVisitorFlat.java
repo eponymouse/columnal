@@ -186,7 +186,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T litType(TypeLiteralExpression self, TypeExpression type)
+    public T litType(TypeLiteralExpression self, @Recorded TypeExpression type)
     {
         return makeDef(self);
     }
