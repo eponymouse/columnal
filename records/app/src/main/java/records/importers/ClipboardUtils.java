@@ -150,7 +150,10 @@ public class ClipboardUtils
             }
             b.end().t(MainLexer.UNITS).raw("UU").nl();
             b.t(MainLexer.TYPES).begin().nl();
-            b.raw(typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond().getType())))).nl();
+            for (String typeLine : typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond().getType()))))
+            {
+                b.raw(typeLine).nl();
+            }
             b.end().t(MainLexer.TYPES).nl();
             b.t(MainLexer.FORMAT).begin().nl();
             for (Pair<ColumnId, DataTypeValue> c : columns)

@@ -62,7 +62,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
+        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
         assertEquals(ImmutableMap.of(unitDetails.name, unitDetails.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
@@ -143,7 +143,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
+        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
         assertEquals(ImmutableMap.of(details.name, details.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
@@ -178,7 +178,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
+        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
         assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
@@ -211,7 +211,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
+        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
         assertEquals(ImmutableMap.of(unitDetailsB.name, unitDetailsB.aliasOrDeclaration, unitDetailsC.name, unitDetailsC.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 

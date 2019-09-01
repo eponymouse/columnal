@@ -62,7 +62,12 @@ public abstract class Transformation extends Table
         for (TableId src : getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
-        saveDetail(destination, renames);
+        b.begin().nl();
+        for (String line : saveDetail(destination, renames))
+        {
+            b.raw(line).nl();
+        }
+        b.end().nl();
         savePosition(b);
         b.pop();
         b.end().raw(saveTag.getTag()).t(MainLexer.TRANSFORMATION).nl();

@@ -35,6 +35,9 @@ import records.grammar.MainParser.TableContext;
 import records.grammar.MainParser.TopLevelItemContext;
 import records.grammar.MainParser2;
 import records.grammar.MainParser2.ContentContext;
+import records.grammar.TableLexer2;
+import records.grammar.TableParser2;
+import records.grammar.TableParser2.TableTransformationContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -181,20 +184,21 @@ public class TableManager
     public synchronized Pair<ImmutableList<Table>, ImmutableList<GridComment>> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
         int version = detectVersion(completeSrc).orElse(-1);
+        ImmutableList.Builder<Table> loaded = ImmutableList.builder();
+        List<Exception> exceptions = new ArrayList<>();
         if (version == 1)
         {
             FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
             unitManager.clearAllUser();
-            unitManager.loadUserUnits(file.units());
+            unitManager.loadUserUnits(Utility.getDetail(file.units().detail()));
             typeManager.clearAllUser();
-            typeManager.loadTypeDecls(file.types());
+            typeManager.loadTypeDecls(Utility.getDetail(file.types().detail()));
             List<TableId> ids = new ArrayList<>(usedIds.keySet());
             for (TableId id : ids)
             {
                 remove(id);
             }
-            ImmutableList.Builder<Table> loaded = ImmutableList.builder();
-            List<Exception> exceptions = new ArrayList<>();
+            
 
             for (TopLevelItemContext topLevelItemContext : file.topLevelItem())
             {
@@ -227,40 +231,61 @@ public class TableManager
                 }
                 setColumnWidths.consume(widths.build());
             }
-
-            if (exceptions.isEmpty())
-                return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
-            else if (exceptions.get(0) instanceof UserException)
-                throw new UserException("Loading problem", exceptions.get(0));
-            else if (exceptions.get(0) instanceof InternalException)
-                throw new InternalException("Loading problem", exceptions.get(0));
-            else
-                throw new InternalException("Unrecognised exception", exceptions.get(0));
         }
         else if (version == 2)
         {
             MainParser2.FileContext file = Utility.parseAsOne(completeSrc, MainLexer2::new, MainParser2::new, p -> p.file());
-            HashMap<String, SimulationConsumer<String>> contentHandlers = new HashMap<>();
+            
+            HashMap<String, SimulationConsumer<Pair<SaveTag, String>>> contentHandlers = new HashMap<>();
+            typeManager.clearAllUser();
+            unitManager.clearAllUser();
+            contentHandlers.put("TYPES", tagAndContent -> {
+                typeManager.loadTypeDecls(tagAndContent.getSecond());
+            });
+            contentHandlers.put("UNITS", tagAndContent -> {
+                unitManager.loadUserUnits(tagAndContent.getSecond());
+            });
+            
+            contentHandlers.put("TRANSFORMATION", tagAndContent -> {
+                TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
+                loaded.add(transformationLoader.loadOne(this, tagAndContent.getFirst(), trans));
+            });
+            
+            
             for (ContentContext contentContext : file.content())
             {
                 String contentType = contentContext.ATOM(0).getText();
-                SimulationConsumer<String> handler = contentHandlers.get(contentType);
+                SimulationConsumer<Pair<SaveTag, String>> handler = contentHandlers.get(contentType);
                 if (handler == null)
                 {
                     // TODO give warning, but keep content for writing again
                 }
                 else
                 {
-                    handler.consume(Utility.getDetail(contentContext.detail()));
+                    try
+                    {
+                        handler.consume(new Pair<>(new SaveTag(contentContext.detail().DETAIL_BEGIN().getText().substring("@BEGIN".length()).trim()), Utility.getDetail(contentContext.detail())));
+                    }
+                    catch (Exception e)
+                    {
+                        exceptions.add(e);
+                    }
                 }
             }
-            // TODO return actual
-            return new Pair<>(ImmutableList.of(), ImmutableList.of());
         }
         else
         {
             throw new UserException("Unknown file version: " + version + "; corrupt file or not a Columnal file?");
         }
+
+        if (exceptions.isEmpty())
+            return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
+        else if (exceptions.get(0) instanceof UserException)
+            throw new UserException("Loading problem", exceptions.get(0));
+        else if (exceptions.get(0) instanceof InternalException)
+            throw new InternalException("Loading problem", exceptions.get(0));
+        else
+            throw new InternalException("Unrecognised exception", exceptions.get(0));
     }
 
     @OnThread(Tag.Simulation)
@@ -321,7 +346,7 @@ public class TableManager
     public void save(@Nullable File destination, Saver saver) //throws InternalException, UserException
     {
         unitManager.save().forEach(saver::saveUnit);
-        saver.saveType(typeManager.save());
+        typeManager.save().forEach(saver::saveType);
         Map<TableId, TablesWithSameId> values = new HashMap<>();
         // Deep copy:
         synchronized (this)
@@ -637,7 +662,7 @@ public class TableManager
         {
             Log.debug("Reloading:\n" + script);
             ErrorHandler.getErrorHandler().alertOnError_("Error re-running transformations", () -> {
-                loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table()));
+                loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table())).eitherEx_(e -> {throw new UserException("Error updating table", e);}, t -> {});
             });
         }
     }
@@ -688,6 +713,9 @@ public class TableManager
     {
         @OnThread(Tag.Simulation)
         public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException;
+
+        @OnThread(Tag.Simulation)
+        public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table) throws UserException, InternalException;
     }
 
     private static class TablesWithSameId

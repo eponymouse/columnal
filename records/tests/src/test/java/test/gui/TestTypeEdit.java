@@ -85,7 +85,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             Log.debug("Saved:\n" + fileContent);
             FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(file.types());
+            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
             assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
     }
@@ -256,7 +256,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             Log.debug("Saved:\n" + fileContent);
             FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(file.types());
+            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
             assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
     }
@@ -290,7 +290,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             Log.debug("Saved:\n" + fileContent);
             FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(file.types());
+            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
             assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
         });
     }
@@ -339,7 +339,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             remaining.put(typeDefinitionB.getTaggedTypeName(), typeDefinitionB);
             remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
             remaining.remove(toDelete.getTaggedTypeName());
-            tmpTypes.loadTypeDecls(file.types());
+            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
             assertEquals(remaining, tmpTypes.getUserTaggedTypes());
         });
     }

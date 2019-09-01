@@ -224,9 +224,9 @@ public abstract class Table
         public String getCompleteFile()
         {
             return "COLUMNAL\nVERSION 2\n\nUNITS @BEGIN UU\n"
-                + units.stream().map(u -> "UU" + u).collect(Collectors.joining())
+                + units.stream().map(u -> "UU " + u).collect(Collectors.joining())
                 + "@END UU UNITS\n\nTYPES @BEGIN TT\n"
-                + types.stream().map(t -> "TT" + t).collect(Collectors.joining())
+                + types.stream().map(t -> "TT " + t).collect(Collectors.joining())
                 + "@END TT TYPES\n"
                 + tables.stream().collect(Collectors.joining("\n"))
                 + comments.stream().collect(Collectors.joining("\n"))
@@ -261,11 +261,11 @@ public abstract class Table
         if (detailContext == null)
             return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), null, null);
         return Utility.parseAsOne(Utility.getDetail(detailContext.detail()), DisplayLexer::new, DisplayParser::new, p -> {
-            return loadDetails(tableId, tagFromContext, p.tableDisplayDetails());
+            return loadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), p.tableDisplayDetails());
         });
     }
 
-    public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, TableDisplayDetailsContext displayContext) throws UserException
+    public static InitialLoadDetails loadDetails(TableId tableId, SaveTag saveTag, TableDisplayDetailsContext displayContext) throws UserException
     {
         try
         {
@@ -292,7 +292,7 @@ public abstract class Table
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
-            return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), initialPosition, initialShowColumns);
+            return new InitialLoadDetails(tableId, saveTag, initialPosition, initialShowColumns);
         }
         catch (Exception e)
         {
@@ -307,7 +307,7 @@ public abstract class Table
         {
             prevPosition = display.getMostRecentPosition();
         }
-        out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().raw(saveTag.getTag()).nl();
+        out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().nl();
         out.t(DisplayLexer.POSITION, DisplayLexer.VOCABULARY).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
         out.t(DisplayLexer.SHOWCOLUMNS, DisplayLexer.VOCABULARY);
         switch (showColumns.getFirst())

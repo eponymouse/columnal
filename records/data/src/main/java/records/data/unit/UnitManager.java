@@ -302,9 +302,9 @@ public class UnitManager
         return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.<SingleUnit>empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<@NonNull SingleUnit>toList());
     }
 
-    public synchronized void loadUserUnits(UnitsContext units) throws UserException, InternalException
+    public synchronized void loadUserUnits(String unitsSrc) throws UserException, InternalException
     {
-        List<FileItemContext> unitDecls = Utility.parseAsOne(units.detail().detailLine().stream().<String>map(l -> l.DETAIL_LINE().getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
+        List<FileItemContext> unitDecls = Utility.parseAsOne(unitsSrc, UnitLexer::new, UnitParser::new, p -> p.file().fileItem());
 
         for (FileItemContext decl : unitDecls)
         {

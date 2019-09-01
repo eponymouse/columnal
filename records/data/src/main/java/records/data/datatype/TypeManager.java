@@ -131,9 +131,9 @@ public class TypeManager
     }
 
 
-    public void loadTypeDecls(TypesContext types) throws UserException, InternalException
+    public void loadTypeDecls(String typeContent) throws UserException, InternalException
     {
-        TypeDeclsContext typeDecls = Utility.parseAsOne(types.detail().detailLine().stream().<String>map(l -> l.DETAIL_LINE().getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), FormatLexer::new, FormatParser::new, p -> p.typeDecls());
+        TypeDeclsContext typeDecls = Utility.parseAsOne(typeContent, FormatLexer::new, FormatParser::new, p -> p.typeDecls());
         for (TypeDeclContext typeDeclContext : typeDecls.typeDecl())
         {
             loadTypeDecl(typeDeclContext);
@@ -305,13 +305,13 @@ public class TypeManager
     }
 
     @OnThread(Tag.Simulation)
-    public String save()
+    public List<String> save()
     {
         return save(t -> true);
     }
     
     @OnThread(Tag.Simulation)
-    public String save(Predicate<TypeId> saveType)
+    public List<String> save(Predicate<TypeId> saveType)
     {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
         List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t) && saveType.test(t.getTaggedTypeName())).collect(Collectors.<TaggedTypeDefinition>toList());
@@ -340,15 +340,17 @@ public class TypeManager
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(orderedDataTypes);
-        OutputBuilder b = new OutputBuilder();
+        ImmutableList.Builder<String> savedTypes = ImmutableList.builderWithExpectedSize(orderedDataTypes.size());
+        
         for (TaggedTypeDefinition taggedTypeDefinition : orderedDataTypes)
         {
+            OutputBuilder b = new OutputBuilder();
             b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
             b.unquoted(taggedTypeDefinition.getTaggedTypeName());
             taggedTypeDefinition.save(b);
-            b.nl();
+            savedTypes.add(b.toString());
         }
-        return b.toString();
+        return savedTypes.build();
     }
 
     public UnitManager getUnitManager()

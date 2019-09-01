@@ -3,6 +3,7 @@ package records.transformations;
 import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import records.data.SaveTag;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -10,6 +11,8 @@ import records.data.TableManager.TransformationLoader;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DisplayLexer;
+import records.grammar.DisplayParser;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.DetailContext;
@@ -19,6 +22,8 @@ import records.grammar.MainParser.TableContext;
 import records.grammar.MainParser.TableIdContext;
 import records.grammar.MainParser.TransformationContext;
 import records.grammar.MainParser.TransformationNameContext;
+import records.grammar.TableParser2;
+import records.grammar.TableParser2.TableTransformationContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -64,6 +69,7 @@ public class TransformationManager implements TransformationLoader
     }
 
     @OnThread(Tag.Simulation)
+    @Override
     public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException
     {
         try
@@ -78,6 +84,33 @@ public class TransformationManager implements TransformationLoader
             TableIdContext tableIdContext = transformationContext.tableId();
             @SuppressWarnings("identifier")
             Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), detailContext, table.display()), source, detail);
+            mgr.record(transformation);
+            return transformation;
+        }
+        catch (NullPointerException e)
+        {
+            throw new UserException("Could not read transformation: failed to read data", e);
+        }
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table) throws UserException, InternalException
+    {
+        try
+        {
+            TableParser2.TransformationContext transformationContext = table.transformation();
+            TableParser2.TransformationNameContext transformationName = transformationContext.transformationName();
+            TransformationInfo t = getTransformation(transformationName.getText());
+            TableParser2.DetailContext detailContext = transformationContext.detail();
+            String detail = Utility.getDetail(detailContext);
+            @SuppressWarnings("identifier")
+            List<TableId> source = Utility.<TableParser2.SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
+            TableParser2.TableIdContext tableIdContext = transformationContext.tableId();
+            @SuppressWarnings("identifier")
+            Transformation transformation = Utility.parseAsOne(Utility.getDetail(table.display().detail()), DisplayLexer::new, DisplayParser::new, p ->
+                t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), saveTag, p.tableDisplayDetails()), source, detail)
+            );
             mgr.record(transformation);
             return transformation;
         }
