@@ -54,15 +54,18 @@ public abstract class Transformation extends Table
     public final void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
-        // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
-        b.t(MainLexer.TRANSFORMATION).id(renames.tableId(getId())).id(getTransformationName(), QuoteBehaviour.QUOTE_SPACES).nl();
+        b.t(MainLexer.TRANSFORMATION).begin().raw(saveTag.getTag()).nl();
+        b.pushPrefix(saveTag);
+        b.id(renames.tableId(getId())).nl();
+        b.id(getTransformationName(), QuoteBehaviour.DEFAULT).nl();
         b.t(MainLexer.SOURCE);
         for (TableId src : getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
-        b.inner(() -> saveDetail(destination, renames), saveTag);
+        saveDetail(destination, renames);
         savePosition(b);
-        b.end().id(renames.tableId(getId())).nl();
+        b.pop();
+        b.end().raw(saveTag.getTag()).t(MainLexer.TRANSFORMATION).nl();
         then.saveTable(b.toString());
     }
 

@@ -320,7 +320,7 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public void save(@Nullable File destination, Saver saver) //throws InternalException, UserException
     {
-        saver.saveUnit(unitManager.save());
+        unitManager.save().forEach(saver::saveUnit);
         saver.saveType(typeManager.save());
         Map<TableId, TablesWithSameId> values = new HashMap<>();
         // Deep copy:

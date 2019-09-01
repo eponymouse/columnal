@@ -9,7 +9,7 @@ options { tokenVocab = MainLexer2; }
 item : ~NEWLINE;
 
 detailLine : DETAIL_LINE;
-detail: BEGIN detailLine* DETAIL_END;
+detail: DETAIL_BEGIN detailLine* DETAIL_END;
 blank : NEWLINE;
 
 content : { currentContent = getCurrentToken().getText(); } ATOM detail { getCurrentToken().getText().equals(currentContent) }? ATOM NEWLINE; 

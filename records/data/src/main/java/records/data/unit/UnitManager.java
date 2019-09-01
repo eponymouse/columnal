@@ -383,17 +383,17 @@ public class UnitManager
         knownUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
     }
 
-    public String save()
+    public List<String> save()
     {
         return save(u -> true);
     }
 
-    public synchronized String save(Predicate<@UnitIdentifier String> saveUnit)
+    public synchronized List<String> save(Predicate<@UnitIdentifier String> saveUnit)
     {
         return save(knownUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
     }
 
-    public synchronized String save(Stream<@UnitIdentifier String> unitsToSaveStream)
+    public synchronized List<String> save(Stream<@UnitIdentifier String> unitsToSaveStream)
     {
         List<@UnitIdentifier String> toProcess = new ArrayList<>(unitsToSaveStream.collect(Collectors.<@UnitIdentifier String>toList()));
         HashSet<@UnitIdentifier String> unitsToSave = new HashSet<>();
@@ -451,7 +451,7 @@ public class UnitManager
                 b.raw(equiv.getSecond().toString());
             }
             return b.toString();
-        })).collect(Collectors.joining("\n"));
+        })).collect(ImmutableList.<String>toImmutableList());
     }
 
     public synchronized void clearAllUser()

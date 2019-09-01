@@ -143,9 +143,12 @@ public class ClipboardUtils
 
         Workers.onWorkerThread("Copying to clipboard", Priority.FETCH, () -> {
             OutputBuilder b = new OutputBuilder();
-            b.t(MainLexer.UNITS).begin().nl();
-            b.raw(unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond().getType())))).nl();
-            b.end().t(MainLexer.UNITS).nl();
+            b.t(MainLexer.UNITS).begin().raw("UU").nl();
+            for (String unitLine : unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond().getType()))))
+            {
+                b.raw(unitLine).nl();
+            }
+            b.end().t(MainLexer.UNITS).raw("UU").nl();
             b.t(MainLexer.TYPES).begin().nl();
             b.raw(typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond().getType())))).nl();
             b.end().t(MainLexer.TYPES).nl();

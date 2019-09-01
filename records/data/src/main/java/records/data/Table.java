@@ -223,11 +223,11 @@ public abstract class Table
         @OnThread(Tag.Simulation)
         public String getCompleteFile()
         {
-            return "COLUMNAL\nVERSION 2\n\nUNITS @BEGIN\n"
-                + units.stream().collect(Collectors.joining())
-                + "@END UNITS\n\nTYPES @BEGIN\n"
-                + types.stream().collect(Collectors.joining())
-                + "@END TYPES\n"
+            return "COLUMNAL\nVERSION 2\n\nUNITS @BEGIN UU\n"
+                + units.stream().map(u -> "UU" + u).collect(Collectors.joining())
+                + "@END UU UNITS\n\nTYPES @BEGIN TT\n"
+                + types.stream().map(t -> "TT" + t).collect(Collectors.joining())
+                + "@END TT TYPES\n"
                 + tables.stream().collect(Collectors.joining("\n"))
                 + comments.stream().collect(Collectors.joining("\n"))
                 + (displayDetailLines == null ? "" : ("DISPLAY @BEGIN\n" + displayDetailLines.stream().collect(Collectors.joining("\n")) + "\n@END DISPLAY"))
@@ -308,7 +308,6 @@ public abstract class Table
             prevPosition = display.getMostRecentPosition();
         }
         out.t(MainLexer.DISPLAY, MainLexer.VOCABULARY).begin().raw(saveTag.getTag()).nl();
-        out.pushPrefix(saveTag);
         out.t(DisplayLexer.POSITION, DisplayLexer.VOCABULARY).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
         out.t(DisplayLexer.SHOWCOLUMNS, DisplayLexer.VOCABULARY);
         switch (showColumns.getFirst())
@@ -323,7 +322,6 @@ public abstract class Table
         }
         out.nl();
         out.end().t(MainLexer.DISPLAY, MainLexer.VOCABULARY).nl();
-        out.pop();
     }
 
     @OnThread(Tag.Any)

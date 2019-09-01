@@ -6,11 +6,10 @@ import BasicLexer;
     String currentPrefix;
 }
 
-END : '@END';
-BEGIN : '@BEGIN' ' '* ([A-Z][A-Z]+)? '\r'? '\n' {currentPrefix = getText().substring("@BEGIN".length()).trim(); } -> pushMode(DETAIL);
+DETAIL_BEGIN : '@BEGIN' ' '* ([A-Z][A-Z]+) '\r'? '\n' {currentPrefix = getText().substring("@BEGIN".length()).trim(); } -> pushMode(DETAIL);
 VERSION : 'VERSION';
 SOFTWARE : 'COLUMNAL';
 
 mode DETAIL;
-DETAIL_END: ([A-Z][A-Z]+)? ' '* '@END' {getText().startsWith(currentPrefix) && getText().substring(currentPrefix.length()).trim().equals("@END")}? -> popMode;
-DETAIL_LINE: (~[\n\r])* '\r'? '\n' {getText().startsWith(currentPrefix) && !getText().substring(currentPrefix.length()).trim().startsWith("@END")}? {setText(getText().substring(currentPrefix.length()));};
+DETAIL_LINE: (~[\n\r])* '\r'? '\n' {getText().trim().startsWith(currentPrefix)}? {setText(getText().trim().substring(currentPrefix.length()).trim());};
+DETAIL_END: '@END' ' '* ([A-Z][A-Z]+) {getText().endsWith(currentPrefix)}? -> popMode;
