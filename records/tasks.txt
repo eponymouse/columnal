@@ -1,3 +1,10 @@
+Arising from beta testing
+===
+- Need new style of saving to allow graphs
+- Zoomed out view of all transformations?  Or list view?
+- Finish and expose the hide-columns transformation
+- Make the column visibility mechanism more discoverable
+
 High Priority (major bugs/deficiencies, cannot do beta without fixing)
 ===
 - Server internal exception logging (and stats logging?)
