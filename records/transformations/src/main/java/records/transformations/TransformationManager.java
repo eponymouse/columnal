@@ -63,13 +63,6 @@ public class TransformationManager implements TransformationLoader
         );
     }
 
-    // Not static because it needs to access the list of registered transformations
-    @OnThread(Tag.Simulation)
-    public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException
-    {
-        return Utility.parseAsOne(source, MainLexer::new, MainParser::new, parser -> loadOne(mgr, parser.table()));
-    }
-
     @OnThread(Tag.Simulation)
     public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException
     {

@@ -687,9 +687,6 @@ public class TableManager
     public static interface TransformationLoader
     {
         @OnThread(Tag.Simulation)
-        public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException;
-
-        @OnThread(Tag.Simulation)
         public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException;
     }
 
