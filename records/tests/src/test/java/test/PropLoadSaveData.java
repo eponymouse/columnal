@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
  * Created by neil on 07/12/2016.
  */
 @RunWith(JUnitQuickcheck.class)
-public class PropLoadSaveData extends FXApplicationTest
+public class PropLoadSaveData
 {
     @Property(trials = 20)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
