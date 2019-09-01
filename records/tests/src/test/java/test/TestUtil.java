@@ -40,6 +40,7 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.sosy_lab.common.rationals.Rational;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.*;
@@ -53,7 +54,9 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
+import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
+import records.data.unit.UnitDeclaration;
 import records.error.InvalidImmediateValueException;
 import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
@@ -533,6 +536,10 @@ public class TestUtil
         {
             DummyManager dummyManager = new DummyManager();
             
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("myUnit", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("myUnit", "Custom unit for testing", "", ""), null, "New Category"))));
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("myAlias", Either.<@UnitIdentifier String, UnitDeclaration>left("myUnit")));
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("hogshead", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("hogshead", "An English wine cask hogshead", "", ""), new Pair<>(Rational.ofLongs(2387, 10), dummyManager.getUnitManager().loadUse("l")), "Volume"))));
+            
             // TODO add more higher-order types
             TypeManager typeManager = dummyManager.getTypeManager();
             @SuppressWarnings("nullness")
@@ -553,6 +560,13 @@ public class TestUtil
                     ImmutableList.of(new TagType<>("Left", JellyType.number(JellyUnit.unitVariable("a"))),
                             new TagType<>("Right", JellyType.number(JellyUnit.unitVariable("b"))))
             ).instantiate(ImmutableList.of(Either.left(Unit.SCALAR), Either.left(typeManager.getUnitManager().loadUse("m"))), typeManager);
+
+            @SuppressWarnings("nullness")
+            DataType eitherUnits2 = typeManager.registerTaggedType("EitherMyOrHogshead",
+                ImmutableList.of(),
+                ImmutableList.of(new TagType<>("Left", JellyType.number(JellyUnit.fromConcrete(typeManager.getUnitManager().loadUse("myUnit")))),
+                    new TagType<>("Right", JellyType.number(JellyUnit.fromConcrete(typeManager.getUnitManager().loadUse("hogshead")))))
+            ).instantiate(ImmutableList.of(), typeManager);
             
             return new Pair<>(dummyManager, Arrays.<DataType>asList(
                 DataType.BOOLEAN,
@@ -576,6 +590,7 @@ public class TestUtil
                 nested,
                 maybeMaybe,
                 eitherUnits,
+                eitherUnits2,
                 DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)),
                 DataType.record(ImmutableMap.of("bool", DataType.BOOLEAN, "Text", DataType.TEXT, "dtz", DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "c", c)),
                 DataType.record(ImmutableMap.of("z", DataType.NUMBER, "inner", DataType.record(ImmutableMap.of("t 1", DataType.TEXT, "t 2", DataType.NUMBER)))),
