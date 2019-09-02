@@ -10,9 +10,13 @@ import threadchecker.Tag;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class GridComment
 {
+    private final SaveTag saveTag;
+    // Note that the fields below are all mutable;
+            
     // No escapes
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private String content;
@@ -30,8 +34,9 @@ public class GridComment
     //private @MonotonicNonNull GridCommentDisplayBase display;
 
 
-    public GridComment(String content, CellPosition position, int widthInColumns, int heightInColumns)
+    public GridComment(SaveTag saveTag, String content, CellPosition position, int widthInColumns, int heightInColumns)
     {
+        this.saveTag = saveTag;
         this.content = content;
         this.position = position;
         this.widthInColumns = widthInColumns;
@@ -43,7 +48,14 @@ public class GridComment
         String commentSrc;
         synchronized (this)
         {
-            commentSrc = "COMMENT CONTENT @BEGIN\n" + GrammarUtility.escapeChars(content) + "\n@END CONTENT\nDISPLAY @BEGIN\nPOSITION " + IntStream.of(position.columnIndex, position.rowIndex, widthInColumns, heightInColumns).mapToObj(Integer::toString).collect(Collectors.joining(" ")) + "\n@END DISPLAY\n@END COMMENT";
+            String p = saveTag.getTag();
+            commentSrc = "COMMENT @BEGIN " + p + "\n" + Stream.of(
+                "CONTENT @BEGIN",
+                GrammarUtility.escapeChars(content),
+                "@END CONTENT",
+                "DISPLAY @BEGIN",
+                "POSITION " + IntStream.of(position.columnIndex, position.rowIndex, widthInColumns, heightInColumns).mapToObj(Integer::toString).collect(Collectors.joining(" ")),
+                "@END DISPLAY").map(s -> p + " " + s).collect(Collectors.joining("\n")) + "\n@END " + p + " COMMENT";
         }
         saver.saveComment(commentSrc);
     }

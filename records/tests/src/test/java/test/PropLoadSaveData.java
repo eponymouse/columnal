@@ -14,6 +14,7 @@ import records.data.Column;
 import records.data.EditableColumn;
 import records.data.GridComment;
 import records.data.ImmediateDataSource;
+import records.data.SaveTag;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -60,7 +61,7 @@ public class PropLoadSaveData
         ImmutableList<GridComment> comments = TestUtil.makeList(sourceOfRandomness, 0, 5, () -> {
             String content = IntStream.range(0, r.nextInt(3)).mapToObj(_n -> TestUtil.generateColumnIds(sourceOfRandomness, r.nextInt(12)).stream().map(c -> c.getRaw()).collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
             
-            return new GridComment(content, new CellPosition(r.nextInt(100) * AbsRowIndex.ONE, (next[0]++ * 1000) * AbsColIndex.ONE), 1 + r.nextInt(20), 1 + r.nextInt(20));
+            return new GridComment(SaveTag.generateRandom(), content, new CellPosition(r.nextInt(100) * AbsRowIndex.ONE, (next[0]++ * 1000) * AbsColIndex.ONE), 1 + r.nextInt(20), 1 + r.nextInt(20));
         });
         for (GridComment comment : comments)
         {

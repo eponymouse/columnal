@@ -6,7 +6,7 @@ import BasicLexer;
     String currentPrefix;
 }
 
-DETAIL_BEGIN : '@BEGIN' ' '* ([A-Z][A-Z]+) '\r'? '\n' {currentPrefix = getText().substring("@BEGIN".length()).trim(); } -> pushMode(DETAIL);
+DETAIL_BEGIN : '@BEGIN' ' '* ([A-Z][A-Z]+) ' '* '\r'? '\n' {currentPrefix = getText().substring("@BEGIN".length()).trim(); } -> pushMode(DETAIL);
 VERSION : 'VERSION';
 SOFTWARE : 'COLUMNAL';
 

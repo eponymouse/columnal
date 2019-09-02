@@ -37,6 +37,7 @@ import records.grammar.MainParser2;
 import records.grammar.MainParser2.ContentContext;
 import records.grammar.TableLexer2;
 import records.grammar.TableParser2;
+import records.grammar.TableParser2.TableDataContext;
 import records.grammar.TableParser2.TableTransformationContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -205,7 +206,7 @@ public class TableManager
                 if (topLevelItemContext.table() != null)
                     loadOneTable(topLevelItemContext.table()).either_(exceptions::add, loaded::add);
                 if (topLevelItemContext.comment() != null)
-                    loadComment(topLevelItemContext.comment()).either_(exceptions::add, c -> {
+                    loadComment(SaveTag.generateRandom(), topLevelItemContext.comment()).either_(exceptions::add, c -> {
                         comments.add(c);
                         listener.addComment(c);
                     });
@@ -246,9 +247,21 @@ public class TableManager
                 unitManager.loadUserUnits(tagAndContent.getSecond());
             });
             
+            contentHandlers.put("DATA", tagAndContent -> {
+                TableDataContext data = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableData());
+                loaded.add(ImmediateDataSource.loadOne(this, tagAndContent.getFirst(), data));
+            });
+            
             contentHandlers.put("TRANSFORMATION", tagAndContent -> {
                 TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
                 loaded.add(transformationLoader.loadOne(this, tagAndContent.getFirst(), trans));
+            });
+            
+            contentHandlers.put("COMMENT", tagAndContent -> {
+                loadComment(tagAndContent.getFirst(), Utility.<TableParser2.CommentContext, TableParser2>parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.comment())).either_(exceptions::add, c -> {
+                    comments.add(c);
+                    listener.addComment(c);
+                });
             });
             
             
@@ -289,7 +302,7 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public Either<Exception, GridComment> loadComment(CommentContext commentContext) throws UserException, InternalException
+    public Either<Exception, GridComment> loadComment(SaveTag saveTag, CommentContext commentContext) throws UserException, InternalException
     {
         String comment = GrammarUtility.processEscapes(Utility.getDetail(commentContext.detail()).trim(), false);
         
@@ -304,8 +317,28 @@ public class TableManager
             }
         });
         
-        return Either.right(new GridComment(comment, new CellPosition(items[1] * AbsRowIndex.ONE, items[0] * AbsColIndex.ONE), items[2], items[3]));
+        return Either.right(new GridComment(saveTag, comment, new CellPosition(items[1] * AbsRowIndex.ONE, items[0] * AbsColIndex.ONE), items[2], items[3]));
     }
+
+    @OnThread(Tag.Simulation)
+    public Either<Exception, GridComment> loadComment(SaveTag saveTag, TableParser2.CommentContext commentContext) throws UserException, InternalException
+    {
+        String comment = GrammarUtility.processEscapes(Utility.getDetail(commentContext.detail()).trim(), false);
+
+        int[] items = Utility.parseAsOne(Utility.getDetail(commentContext.display().detail()), DisplayLexer::new, DisplayParser::new, p -> {
+            try
+            {
+                return p.commentDisplayDetails().item().stream().mapToInt(i -> Integer.parseInt(i.getText())).toArray();
+            }
+            catch (NumberFormatException e)
+            {
+                throw new UserException("Problem parsing comment position", e);
+            }
+        });
+
+        return Either.right(new GridComment(saveTag, comment, new CellPosition(items[1] * AbsRowIndex.ONE, items[0] * AbsColIndex.ONE), items[2], items[3]));
+    }
+
 
     @OnThread(Tag.Simulation)
     public Either<Exception, Table> loadOneTable(TableContext tableContext)

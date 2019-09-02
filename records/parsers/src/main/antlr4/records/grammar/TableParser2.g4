@@ -7,11 +7,12 @@ item : ~NEWLINE;
 tableId : item;
 importType : item;
 filePath : item;
-dataSourceLinkHeader : DATA tableId LINKED importType filePath dataFormat;
-dataSourceImmediate : DATA tableId dataFormat values NEWLINE;
-values : VALUES detail VALUES;
+//dataSourceLinkHeader : DATA tableId LINKED importType filePath dataFormat;
+dataSourceImmediate : tableId NEWLINE dataFormat values;
+values : VALUES detail VALUES NEWLINE;
 
-dataSource : dataSourceLinkHeader | dataSourceImmediate;
+//dataSourceLinkHeader | 
+dataSource : dataSourceImmediate;
 
 transformationName : item;
 sourceName : item;
@@ -28,4 +29,4 @@ display : DISPLAY detail DISPLAY NEWLINE;
 tableData : dataSource display?;
 tableTransformation : transformation display?;
 
-comment : COMMENT CONTENT detail CONTENT NEWLINE display END COMMENT NEWLINE;
+comment : CONTENT detail CONTENT NEWLINE display;

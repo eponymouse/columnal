@@ -1096,13 +1096,12 @@ public class Utility
         return r;
     }
 
-    public static int loadData(DetailPrefixedContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
+    public static int loadData(List<String> dataLines, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
     {
         int count = 0;
-        for (DetailLineContext line : detail.detailLine())
+        for (String lineText : dataLines)
         {
             count += 1;
-            String lineText = line.DETAIL_LINE().getText();
             try
             {
                 parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
@@ -1396,6 +1395,11 @@ public class Utility
         return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
     }
 
+    public static ImmutableList<String> getDetailLines(DetailPrefixedContext detail)
+    {
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim()).filter(s -> !s.isEmpty()).map(s -> s + "\n").collect(ImmutableList.<String>toImmutableList());
+    }
+
     public static String getDetail(MainParser2.DetailContext detail)
     {
         return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
@@ -1404,6 +1408,11 @@ public class Utility
     public static String getDetail(TableParser2.DetailContext detail)
     {
         return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim() + "\n").filter(s -> !s.trim().isEmpty()).collect(Collectors.joining());
+    }
+
+    public static ImmutableList<String> getDetailLines(TableParser2.DetailContext detail)
+    {
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim()).filter(s -> !s.isEmpty()).map(s -> s + "\n").collect(ImmutableList.<String>toImmutableList());
     }
 
     public interface WrappedCharSequence extends CharSequence

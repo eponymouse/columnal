@@ -11,16 +11,11 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.grammar.DataLexer;
-import records.grammar.DataParser;
-import records.grammar.FormatLexer;
-import records.grammar.FormatParser;
+import records.grammar.*;
 import records.grammar.FormatParser.ColumnContext;
 import records.grammar.FormatParser.ColumnNameContext;
 import records.grammar.FormatParser.DefaultValueContext;
 import records.grammar.FormatParser.TypeContext;
-import records.grammar.MainLexer;
-import records.grammar.MainParser;
 import records.grammar.MainParser.DataFormatContext;
 import records.grammar.MainParser.DataSourceContext;
 import records.grammar.MainParser.DataSourceImmediateContext;
@@ -58,7 +53,7 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), immed.dataFormat(), true);
+            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), Utility.getDetailLines(immed.dataFormat().detailPrefixed()), true);
             List<ColumnMaker<?, ?>> columns = new ArrayList<>();
 
             //TODO check for data row even length, error if not (allow & ignore blank lines)
@@ -84,6 +79,43 @@ public abstract class DataSource extends Table
             throw new UnimplementedException();
     }
 
+    public static Table loadOne(TableManager manager, SaveTag saveTag, TableParser2.TableDataContext table) throws UserException, InternalException
+    {
+        TableParser2.DataSourceContext dataSource = table.dataSource();
+        if (dataSource == null)
+        {
+            throw new UserException("Error parsing: \"" + (table.getText().length() > 100 ? (table.getText().substring(0, 100) + "...") : table.getText()) + "\"");
+        }
+
+        if (dataSource.dataSourceImmediate() != null)
+        {
+            TableParser2.DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
+            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), Utility.getDetailLines(immed.dataFormat().detail()), true);
+            List<ColumnMaker<?, ?>> columns = new ArrayList<>();
+
+            //TODO check for data row even length, error if not (allow & ignore blank lines)
+            for (int i = 0; i < format.size(); i++)
+            {
+                DataType t = format.get(i).dataType;
+                ColumnId columnId = format.get(i).columnId;
+                String defaultValueUnparsed = format.get(i).defaultValueUnparsed;
+                if (defaultValueUnparsed == null)
+                {
+                    throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
+                }
+                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
+            }
+            LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
+            @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
+            ImmediateDataSource immediateDataSource = Utility.parseAsOne(Utility.getDetail(table.display().detail()), DisplayLexer::new, DisplayParser::new, p -> new ImmediateDataSource(manager, loadDetails(new TableId(columnName), saveTag, p.tableDisplayDetails()), recordSet));
+            manager.record(immediateDataSource);
+            return immediateDataSource;
+        }
+        else
+            throw new UnimplementedException();
+    }
+
     @OnThread(Tag.Any)
     public static class LoadedFormat
     {
@@ -100,23 +132,23 @@ public abstract class DataSource extends Table
     }
 
     @OnThread(Tag.Any)
-    public static List<LoadedFormat> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext, boolean editable) throws UserException, InternalException
+    public static List<LoadedFormat> loadFormat(TypeManager typeManager, List<String> formatLines, boolean editable) throws UserException, InternalException
     {
         List<LoadedFormat> r = new ArrayList<>();
-        for (DetailLineContext line : dataFormatContext.detailPrefixed().detailLine())
+        for (String line : formatLines)
         {
-            Utility.parseAsOne(line.DETAIL_LINE().getText(), FormatLexer::new, FormatParser::new, p -> {
+            Utility.parseAsOne(line, FormatLexer::new, FormatParser::new, p -> {
                 ColumnContext column = p.column();
                 ColumnNameContext colName;
                 if (column == null || (colName = column.columnName()) == null)
-                    throw new UserException("Problem on line " + line.getText());
+                    throw new UserException("Problem on line " + line);
                 ColumnId name = new ColumnId(IdentifierUtility.fromParsed(colName));
                 if (r.stream().anyMatch(pr -> pr.columnId.equals(name)))
                     throw new UserException("Duplicate column name: \"" + name + "\"");
 
                 TypeContext type = column.type();
                 if (type == null)
-                    throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
+                    throw new UserException("Null type on line \"" + line + "\" name: " + name + " type: " + type.getText());
                 DefaultValueContext defaultCtx = column.defaultValue();
                 if (defaultCtx == null && editable)
                     throw new UserException("Default value missing for potentially-editable table " + name);
@@ -154,7 +186,18 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detailPrefixed(), p ->
+            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(Utility.getDetailLines(immed.values().detailPrefixed()), p ->
+            {
+                for (int i = 0; i < columns.size(); i++)
+                {
+                    columns.get(i).loadRow(p);
+                }
+            }));
+        }
+
+        public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, TableParser2.DataSourceImmediateContext immed) throws InternalException, UserException
+        {
+            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(Utility.getDetailLines(immed.values().detail()), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {

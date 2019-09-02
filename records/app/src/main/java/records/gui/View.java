@@ -1019,7 +1019,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, record);
                     break;
                 case COMMENT:
-                    Workers.onWorkerThread("Adding new comment", Priority.SAVE, () -> thisView.tableManager.addComment(new GridComment("", cellPosition, 2, 2)));
+                    Workers.onWorkerThread("Adding new comment", Priority.SAVE, () -> thisView.tableManager.addComment(new GridComment(SaveTag.generateRandom(), "", cellPosition, 2, 2)));
                     break;
                 case TRANSFORM:
                     new PickTransformationDialog(thisView).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {

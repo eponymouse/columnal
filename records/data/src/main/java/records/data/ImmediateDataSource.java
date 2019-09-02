@@ -48,7 +48,8 @@ public class ImmediateDataSource extends DataSource
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).begin().raw(saveTag.getTag()).nl();
         b.pushPrefix(saveTag);
-        b.id(renames.tableId(getId())).t(MainLexer.FORMAT).nl();
+        b.id(renames.tableId(getId())).nl();
+        b.t(MainLexer.FORMAT, MainLexer.VOCABULARY).begin().nl();
         String errorTitle = "Error saving table: " + getId().getRaw();
         ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () ->
         {
@@ -68,10 +69,8 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.FORMAT).nl();
-        b.pop();
+        b.t(MainLexer.VALUES).begin().nl();
         ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () -> {
-            b.t(MainLexer.VALUES).begin().raw(saveTag.getTag()).nl();
-            b.pushPrefix(saveTag);
             for (int i = 0; data.indexValid(i); i++)
             {
                 b.indent();
@@ -81,9 +80,9 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.VALUES).nl();
-        b.pop();
         savePosition(b);
-        b.end().id(renames.tableId(getId())).nl();
+        b.pop();
+        b.end().raw(saveTag.getTag()).t(MainLexer.DATA, MainLexer.VOCABULARY).nl();
         then.saveTable(b.toString());
     }
 

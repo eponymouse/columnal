@@ -103,13 +103,13 @@ public class ClipboardUtils
     {
         IsolatedValuesContext ctx = main.isolatedValues();
         // TODO check that units, types match
-        List<LoadedFormat> format = DataSource.loadFormat(typeManager, ctx.dataFormat(), false);
+        List<LoadedFormat> format = DataSource.loadFormat(typeManager, Utility.getDetailLines(ctx.dataFormat().detailPrefixed()), false);
         List<Pair<LoadedFormat, ImmutableList.Builder<Either<String, @Value Object>>>> cols = new ArrayList<>();
         for (int i = 0; i < format.size(); i++)
         {
             cols.add(new Pair<>(format.get(i), ImmutableList.<Either<String, @Value Object>>builder()));
         }
-        Utility.loadData(ctx.values().detailPrefixed(), p -> {
+        Utility.loadData(Utility.getDetailLines(ctx.values().detailPrefixed()), p -> {
             for (int i = 0; i < format.size(); i++)
             {
                 LoadedFormat colFormat = format.get(i);
