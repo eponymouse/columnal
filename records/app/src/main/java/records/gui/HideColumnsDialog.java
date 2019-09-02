@@ -25,6 +25,7 @@ public class HideColumnsDialog extends LightDialog<TableMaker<HideColumns>>
         HideColumnsPanel hideColumnsPanel = new HideColumnsPanel(tableManager, hideColumns.getSrcTableId(), hideColumns.getHiddenColumns());
         getDialogPane().setContent(hideColumnsPanel.getNode());
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         
         setResultConverter(bt -> {
             if (bt == ButtonType.OK)

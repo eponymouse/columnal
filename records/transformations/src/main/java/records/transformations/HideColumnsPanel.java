@@ -101,10 +101,12 @@ public class HideColumnsPanel
 
 
         Button add = new Button("<< Hide");
+        add.getStyleClass().add("add-button");
         add.setMinWidth(Region.USE_PREF_SIZE);
         VBox addWrapper = new VBox(add);
         addWrapper.getStyleClass().add("add-column-wrapper");
 
+        this.shownColumns.getStyleClass().add("shown-columns-list-view");
         this.hiddenColumns.getStyleClass().add("hidden-columns-list-view");
         this.hiddenColumns.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2)
@@ -138,6 +140,9 @@ public class HideColumnsPanel
             ObservableList<ColumnId> selectedItems = shownColumns.getSelectionModel().getSelectedItems();
             addAllItemsToHidden(selectedItems);
             //sortHiddenColumns();
+        });
+        FXUtility.listViewDoubleClick(shownColumns, c -> {
+            addAllItemsToHidden(ImmutableList.of(c));
         });
 
         GridPane gridPane = new GridPane();

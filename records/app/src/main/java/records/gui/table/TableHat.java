@@ -303,13 +303,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 @Override
                 protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                 {
-                    new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
-                        Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
-                                FXUtility.alertOnError_("Error hiding column", () -> {
-                                    parent.getManager().<HideColumns>edit(hide.getId(), makeTrans, null);
-                                })
-                        );
-                    });
+                    editHideColumns(parent, hide);
                 }
             };
             
@@ -487,6 +481,17 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         this.tableDisplay = Utility.later(tableDisplay);
+    }
+
+    public static void editHideColumns(View parent, HideColumns hide)
+    {
+        new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
+            Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
+                    FXUtility.alertOnError_("Error hiding column", () -> {
+                        parent.getManager().<HideColumns>edit(hide.getId(), makeTrans, null);
+                    })
+            );
+        });
     }
 
     public static void editConcatenate(Point2D screenPoint, View parent, Concatenate concatenate)

@@ -59,8 +59,8 @@ public class TransformationManager implements TransformationLoader
             new Filter.Info(),
             new Sort.Info(),
             new Join.Info(),
-            //new HideColumns.Info(),
             new Concatenate.Info(),
+            new HideColumns.Info(),
             new ManualEdit.Info(),
                 
             // Not shown in dialog, as shown separately:

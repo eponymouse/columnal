@@ -96,6 +96,7 @@ import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
+import records.transformations.HideColumns;
 import records.transformations.Join;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
@@ -1440,6 +1441,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else if (table instanceof Join)
         {
             TableHat.editJoin(parent, (Join)table);
+        }
+        else if (table instanceof HideColumns)
+        {
+            TableHat.editHideColumns(parent, (HideColumns)table);
         }
         // For other tables, do nothing
     }

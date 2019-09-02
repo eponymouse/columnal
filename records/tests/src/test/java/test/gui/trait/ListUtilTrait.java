@@ -28,6 +28,8 @@ public interface ListUtilTrait extends FxRobotInterface
         final int index = firstIndex.getAsInt();
 
         clickOn(list);
+        push(KeyCode.DOWN);
+        sleep(100);
         // If nothing selected, selection will begin when you hit a key:
         int existingIndex = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
         if (existingIndex < 0)
@@ -36,13 +38,14 @@ public interface ListUtilTrait extends FxRobotInterface
         if(index > existingIndex)
         {
             for (int i = existingIndex; i < index; i++)
-                type(KeyCode.DOWN);
+                push(KeyCode.DOWN);
         }
         else if (index < existingIndex)
         {
             for (int i = existingIndex; i > index; i--)
-                type(KeyCode.UP);
+                push(KeyCode.UP);
         }
+        sleep(100);
 
         assertEquals(index, (int)TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex()));
     }
