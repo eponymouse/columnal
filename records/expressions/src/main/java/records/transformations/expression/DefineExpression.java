@@ -163,6 +163,9 @@ public class DefineExpression extends Expression
             TypeState typeStateThisTime = typeState;
             Either<@Recorded HasTypeExpression, Definition> define = defineItem.typeOrDefinition;
             @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
+                CheckedExp checkedExp = hasType.check(dataLookup, typeStateThisTime, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+                if (checkedExp == null)
+                    return null;
                 @ExpressionIdentifier String varName = hasType.getVarName();
                 if (varName == null)
                 {
@@ -174,7 +177,7 @@ public class DefineExpression extends Expression
                     onError.recordError(hasType, StyledString.s("Duplicate type for variable " + varName));
                     return null;
                 }
-                return hasType.check(dataLookup, typeStateThisTime, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+                return checkedExp;
             }, equal -> {
                 // We observe the declared variables by differencing TypeState before and after:
                 CheckedExp checkedExp = equal.check(dataLookup, typeStateThisTime, onError);
