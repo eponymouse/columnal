@@ -297,7 +297,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         {
             HideColumns hide = (HideColumns) table;
             
-            Clickable edit = new Clickable()
+            Clickable edit = new Clickable(null, "edit-hide-columns")
             {
                 @OnThread(Tag.FXPlatform)
                 @Override
@@ -307,11 +307,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 }
             };
             
-            collapsedContent = StyledString.s("Drop columns");
+            collapsedContent = StyledString.s("Exclude columns");
             content = StyledString.concat(
                     StyledString.s("From "),
                     editSourceLink(parent, hide),
-                    StyledString.s(", drop columns: "),
+                    StyledString.s(", exclude columns: "),
                     hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
                     StyledString.s(" "),
                     StyledString.s("(edit)").withStyle(edit)

@@ -84,6 +84,25 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
         
         assertEquals(new HashSet<>(toHide), new HashSet<>(hide.getHiddenColumns()));
 
+        checkActualVisibleColumns(mainWindowActions, columnIdsLeft, hide);
+
+        if (toHide.isEmpty())
+            return;
+
+        // Try editing to unhide a column and check it refreshes:
+        clickOn(".edit-hide-columns");
+        ColumnId unHide = toHide.remove(r.nextInt(toHide.size()));
+        selectGivenListViewItem(lookup(".hidden-columns-list-view").<ColumnId>queryListView(), c -> c.equals(unHide));
+        clickOn(".add-button");
+        clickOn(".ok-button");
+        hide = (HideColumns)mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof HideColumns).findFirst().orElseThrow(() -> new AssertionError("No HideColumns found"));
+
+        assertEquals(new HashSet<>(toHide), new HashSet<>(hide.getHiddenColumns()));
+        checkActualVisibleColumns(mainWindowActions, columnIdsLeft, hide);
+    }
+
+    private void checkActualVisibleColumns(MainWindowActions mainWindowActions, ArrayList<ColumnId> columnIdsLeft, HideColumns hide)
+    {
         if (columnIdsLeft.isEmpty())
         {
             fail("TODO check for no-columns error");
@@ -95,6 +114,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
                 @SuppressWarnings("nullness")
                 CellPosition pos = TestUtil.fx(() -> hide.getDisplay().getMostRecentPosition()).offsetByRowCols(1, i);
                 ColumnId columnId = columnIdsLeft.get(i);
+                keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), pos);
                 withItemInBounds(lookup(".table-display-column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> assertEquals(columnId.getRaw(), ((Label)n).getText()));
                 
             }
