@@ -39,6 +39,7 @@ import records.grammar.TableLexer2;
 import records.grammar.TableParser2;
 import records.grammar.TableParser2.TableDataContext;
 import records.grammar.TableParser2.TableTransformationContext;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -53,6 +54,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -76,13 +78,15 @@ public class TableManager
     private final TypeManager typeManager;
     private final TableManagerListener listener;
     private final TransformationLoader transformationLoader;
+    private final PluggedContentHandler pluginManager;
 
-    public TableManager(TransformationLoader transformationLoader, TableManagerListener listener) throws UserException, InternalException
+    public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler, TableManagerListener listener) throws UserException, InternalException
     {
         this.transformationLoader = transformationLoader;
         this.listener = listener;
         this.unitManager = new UnitManager();
         this.typeManager = new TypeManager(unitManager);
+        this.pluginManager = pluggedContentHandler;
     }
 
     @Pure
@@ -181,11 +185,43 @@ public class TableManager
         return OptionalInt.empty();
     }
     
+    public static class Loaded
+    {
+        public final ImmutableList<StyledString> errors;
+        public final ImmutableList<? extends Table> loadedTables;
+        public final ImmutableList<GridComment> gridComments;
+
+        public Loaded(ImmutableList<StyledString> errors, ImmutableList<? extends Table> loadedTables, ImmutableList<GridComment> gridComments)
+        {
+            this.errors = errors;
+            this.loadedTables = loadedTables;
+            this.gridComments = gridComments;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Loaded loaded = (Loaded) o;
+            return errors.equals(loaded.errors) &&
+                    loadedTables.equals(loaded.loadedTables) &&
+                    gridComments.equals(loaded.gridComments);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(errors, loadedTables, gridComments);
+        }
+    }
+    
     @OnThread(Tag.Simulation)
-    public synchronized Pair<ImmutableList<Table>, ImmutableList<GridComment>> loadAll(String completeSrc, SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
+    public synchronized Loaded loadAll(String completeSrc,  SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
         int version = detectVersion(completeSrc).orElse(-1);
         ImmutableList.Builder<Table> loaded = ImmutableList.builder();
+        ImmutableList.Builder<StyledString> errors = ImmutableList.builder();
         List<Exception> exceptions = new ArrayList<>();
         if (version == 1)
         {
@@ -251,7 +287,14 @@ public class TableManager
             contentHandlers.put("DISPLAY", tagAndContent -> {
                 parseDisplayDetail(setColumnWidths, tagAndContent.getSecond());
             });
-            
+
+            for (Entry<String, SimulationConsumer<Pair<SaveTag, String>>> e : pluginManager.getHandledContent(errors::add).entrySet())
+            {
+                if (contentHandlers.putIfAbsent(e.getKey(), e.getValue()) != null)
+                {
+                    errors.add(StyledString.s("Plugin error: handled content " + e.getKey() + " clashes with built-in content."));
+                }
+            }
             
             for (ContentContext contentContext : file.content())
             {
@@ -280,7 +323,7 @@ public class TableManager
         }
 
         if (exceptions.isEmpty())
-            return new Pair<>(loaded.build(), ImmutableList.copyOf(comments));
+            return new Loaded(errors.build(), loaded.build(), ImmutableList.copyOf(comments));
         else if (exceptions.get(0) instanceof UserException)
             throw new UserException("Loading problem", exceptions.get(0));
         else if (exceptions.get(0) instanceof InternalException)

@@ -210,16 +210,6 @@ public class Main extends Application
         ExporterManager.getInstance().registerExporter(new HTMLExporter());
         ExporterManager.getInstance().registerExporter(new ExcelExporter());
         Log.normal("Registered exporters");
-        
-        try
-        {
-            PluginManager.getInstance().scanForPlugins(new File(Utility.getStorageDirectory(), "plugins"));
-            Log.normal("Loaded plugins: " + PluginManager.getInstance().getLoadedPluginNames().collect(Collectors.joining(", ")));
-        }
-        catch (IOException e)
-        {
-            Log.log("Error loading plugins", e);
-        }
     }
 
     @OnThread(Tag.Unique)

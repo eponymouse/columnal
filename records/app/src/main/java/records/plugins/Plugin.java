@@ -1,5 +1,10 @@
 package records.plugins;
 
+import com.google.common.collect.ImmutableMap;
+import records.data.SaveTag;
+import utility.Pair;
+import utility.SimulationConsumer;
+
 public abstract class Plugin
 {
     private final String name;
@@ -13,4 +18,6 @@ public abstract class Plugin
     {
         return name;
     }
+    
+    public abstract ImmutableMap<String, SimulationConsumer<Pair<SaveTag, String>>> getHandledContent();
 }

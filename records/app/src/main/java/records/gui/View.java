@@ -67,6 +67,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.importers.TextImporter;
 import records.importers.manager.ImporterManager;
+import records.plugins.PluginManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
@@ -700,7 +701,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         diskFile = new SimpleObjectProperty<>(location);
         hintMessage = new HintMessage();
         FXUtility.setPseudoclass(View.this, "empty", true);
-        tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
+        tableManager = new TableManager(TransformationManager.getInstance(), new PluginManager(), new TableManagerListener()
         {
             // No-one will add tables after the constructor, so this is okay:
             @SuppressWarnings("initialization")

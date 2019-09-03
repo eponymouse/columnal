@@ -1,25 +1,48 @@
 package records.plugins;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import log.Log;
+import records.data.PluggedContentHandler;
+import records.data.SaveTag;
+import styled.StyledString;
+import utility.Pair;
+import utility.SimulationConsumer;
+import utility.Utility;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class PluginManager
+/**
+ * One instance per opened project.
+ */
+public final class PluginManager implements PluggedContentHandler
 {
-    private static final PluginManager INSTANCE = new PluginManager();
-    
     private final ArrayList<Plugin> loadedPlugins = new ArrayList<>();
-
-    public static PluginManager getInstance()
+    
+    public PluginManager()
     {
-        return INSTANCE;
+        try
+        {
+            scanForPlugins(new File(Utility.getStorageDirectory(), "plugins"));
+            Log.normal("Loaded plugins: " + getLoadedPluginNames().collect(Collectors.joining(", ")));
+        }
+        catch (IOException e)
+        {
+            Log.log("Error finding storage directory to load plugins", e);
+        }
     }
 
     public Stream<String> getLoadedPluginNames()
@@ -27,7 +50,31 @@ public final class PluginManager
         return loadedPlugins.stream().map(p -> p.getPluginName());
     }
 
-    public void scanForPlugins(File directory)
+    public ImmutableList<Plugin> getLoadedPlugins()
+    {
+        return ImmutableList.copyOf(loadedPlugins);
+    }
+
+    @Override
+    public ImmutableMap<String, SimulationConsumer<Pair<SaveTag, String>>> getHandledContent(Consumer<StyledString> onError)
+    {
+        HashMap<String, Pair<String, SimulationConsumer<Pair<SaveTag, String>>>> combined = new HashMap<>();
+
+        for (Plugin plugin : getLoadedPlugins())
+        {
+            for (Entry<String, SimulationConsumer<Pair<SaveTag, String>>> handled : plugin.getHandledContent().entrySet())
+            {
+                Pair<String, SimulationConsumer<Pair<SaveTag, String>>> prev = combined.putIfAbsent(handled.getKey(), new Pair<>(plugin.getPluginName(), handled.getValue()));
+                if (prev != null)
+                {
+                    onError.accept(StyledString.s("Plugin " + plugin.getPluginName() + " handles content " + handled.getKey() + " but so does plugin " + prev.getFirst()));
+                }
+            }
+        }
+        return Utility.mapValues(combined, p -> p.getSecond());
+    }
+
+    private void scanForPlugins(File directory)
     {
         if (!directory.exists())
         {

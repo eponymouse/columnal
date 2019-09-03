@@ -18,6 +18,7 @@ import records.data.SaveTag;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableManager.Loaded;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenImmediateData;
@@ -78,7 +79,7 @@ public class PropLoadSaveData
 
 
             assertEquals(saved, savedAgain);
-            assertEquals(toMap(new Pair<>(original.data, comments)), loaded);
+            assertEquals(toMap(new Loaded(ImmutableList.of(), original.data, comments)), loaded);
             assertEquals(loaded, loadedAgain);
             assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr1.getTypeManager().getKnownTaggedTypes());
             assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr2.getTypeManager().getKnownTaggedTypes());
@@ -93,9 +94,9 @@ public class PropLoadSaveData
         }
     }
 
-    private static <T extends  Table> Pair<Map<TableId, Table>, List<GridComment>> toMap(Pair<ImmutableList<T>, ImmutableList<GridComment>> tablesAndComments)
+    private static <T extends  Table> Pair<Map<TableId, Table>, List<GridComment>> toMap(Loaded tablesAndComments)
     {
-        return tablesAndComments.map(t -> t.stream().collect(Collectors.<Table, TableId, Table>toMap(Table::getId, Function.identity())), cs -> cs);
+        return new Pair<>(tablesAndComments.loadedTables.stream().collect(Collectors.<Table, TableId, Table>toMap(Table::getId, Function.identity())), tablesAndComments.gridComments);
     }
 
     @Property(trials = 20)

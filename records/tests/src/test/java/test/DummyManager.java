@@ -1,5 +1,6 @@
 package test;
 
+import com.google.common.collect.ImmutableMap;
 import records.data.DataSource;
 import records.data.GridComment;
 import records.data.Table;
@@ -16,7 +17,7 @@ public class DummyManager extends TableManager
 {
     public DummyManager() throws InternalException, UserException
     {
-        super(TransformationManager.getInstance(), new TableManagerListener()
+        super(TransformationManager.getInstance(), onError -> ImmutableMap.of(), new TableManagerListener()
         {
             @Override
             public void removeTable(Table t, int remainingCount)
