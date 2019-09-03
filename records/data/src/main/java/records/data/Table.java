@@ -230,7 +230,7 @@ public abstract class Table
                 + "@END TT TYPES\n"
                 + tables.stream().collect(Collectors.joining("\n"))
                 + comments.stream().collect(Collectors.joining("\n"))
-                + (displayDetailLines == null ? "" : ("DISPLAY @BEGIN\n" + displayDetailLines.stream().collect(Collectors.joining("\n")) + "\n@END DISPLAY"))
+                + (displayDetailLines == null ? "" : ("DISPLAY @BEGIN DD" + displayDetailLines.stream().map(d -> "\nDD " + d).collect(Collectors.joining()) + "\n@END DD DISPLAY"))
                 + "\n";
         }
     }

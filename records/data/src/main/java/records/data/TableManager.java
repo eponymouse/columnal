@@ -214,23 +214,8 @@ public class TableManager
 
             if (file.display() != null)
             {
-                ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
-                GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(Utility.getDetail(file.display().detail()), DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
-                for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
-                {
-                    try
-                    {
-                        int columnIndex = Integer.parseInt(columnWidthContext.item(0).getText());
-                        double columnWidth = Double.parseDouble(columnWidthContext.item(1).getText());
-                        widths.add(new Pair<>(columnIndex, columnWidth));
-                    }
-                    catch (NumberFormatException e)
-                    {
-                        // Not a big deal, log but don't worry user
-                        Log.log(e);
-                    }
-                }
-                setColumnWidths.consume(widths.build());
+                String displayDetail = Utility.getDetail(file.display().detail());
+                parseDisplayDetail(setColumnWidths, displayDetail);
             }
         }
         else if (version == 2)
@@ -262,6 +247,9 @@ public class TableManager
                     comments.add(c);
                     listener.addComment(c);
                 });
+            });
+            contentHandlers.put("DISPLAY", tagAndContent -> {
+                parseDisplayDetail(setColumnWidths, tagAndContent.getSecond());
             });
             
             
@@ -299,6 +287,28 @@ public class TableManager
             throw new InternalException("Loading problem", exceptions.get(0));
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
+    }
+
+    @OnThread(Tag.Simulation)
+    public void parseDisplayDetail(SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths, String displayDetail) throws InternalException, UserException
+    {
+        ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
+        GlobalDisplayDetailsContext displayDetails = Utility.parseAsOne(displayDetail, DisplayLexer::new, DisplayParser::new, p -> p.globalDisplayDetails());
+        for (ColumnWidthContext columnWidthContext : displayDetails.columnWidth())
+        {
+            try
+            {
+                int columnIndex = Integer.parseInt(columnWidthContext.item(0).getText());
+                double columnWidth = Double.parseDouble(columnWidthContext.item(1).getText());
+                widths.add(new Pair<>(columnIndex, columnWidth));
+            }
+            catch (NumberFormatException e)
+            {
+                // Not a big deal, log but don't worry user
+                Log.log(e);
+            }
+        }
+        setColumnWidths.consume(widths.build());
     }
 
     @OnThread(Tag.Simulation)
