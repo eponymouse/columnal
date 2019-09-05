@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -13,6 +14,7 @@ import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.unit.Unit;
+import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -33,6 +35,7 @@ import utility.TaggedValue;
 import utility.Utility;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -358,6 +361,7 @@ public class TypeManager
         return unitManager;
     }
 
+    // Also copies units from the unit manager
     public void _test_copyTaggedTypesFrom(TypeManager typeManager) throws IllegalStateException
     {
         for (TaggedTypeDefinition taggedTypeDefinition : typeManager.userTypes.values())
@@ -375,7 +379,14 @@ public class TypeManager
                 }
             }
         }
-        
+
+        for (Entry<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> unit : typeManager.getUnitManager().getAllUserDeclared().entrySet())
+        {
+            if (!unitManager.getAllUserDeclared().containsKey(unit.getKey()))
+            {
+                unitManager.addUserUnit(new Pair<>(unit.getKey(), unit.getValue()));
+            }
+        }
     }
 
     public Either<String, TagInfo> lookupTag(@ExpressionIdentifier String typeName, String constructorName)

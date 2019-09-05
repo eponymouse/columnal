@@ -390,7 +390,7 @@ public class UnitManager
 
     public synchronized List<String> save(Predicate<@UnitIdentifier String> saveUnit)
     {
-        return save(knownUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
+        return save(userUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
     }
 
     public synchronized List<String> save(Stream<@UnitIdentifier String> unitsToSaveStream)
