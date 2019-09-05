@@ -1415,6 +1415,11 @@ public class Utility
         return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim()).filter(s -> !s.isEmpty()).map(s -> s + "\n").collect(ImmutableList.<String>toImmutableList());
     }
 
+    public static ImmutableList<String> getDetailLines(MainParser2.DetailContext detail)
+    {
+        return detail.detailLine().stream().map(l -> l.DETAIL_LINE().getText().trim()).filter(s -> !s.isEmpty()).map(s -> s + "\n").collect(ImmutableList.<String>toImmutableList());
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);

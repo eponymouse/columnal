@@ -13,6 +13,7 @@ import records.data.DataSource;
 import records.data.DataSource.LoadedFormat;
 import records.data.EditableColumn;
 import records.data.RecordSet;
+import records.data.SaveTag;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -24,8 +25,11 @@ import records.error.UserException;
 import records.grammar.DataParser;
 import records.grammar.FormatLexer;
 import records.grammar.MainLexer;
+import records.grammar.MainLexer2;
 import records.grammar.MainParser;
 import records.grammar.MainParser.IsolatedValuesContext;
+import records.grammar.MainParser2;
+import records.grammar.MainParser2.ContentContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -85,7 +89,7 @@ public class ClipboardUtils
         {
             try
             {
-                return Optional.of(Utility.<ImmutableList<LoadedColumnInfo>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
+                return Optional.of(Utility.<ImmutableList<LoadedColumnInfo>, MainParser2>parseAsOne(content.toString(), MainLexer2::new, MainParser2::new, p -> loadIsolatedValues(p, typeManager)));
             }
             catch (UserException e)
             {
@@ -99,17 +103,28 @@ public class ClipboardUtils
         }
     }
 
-    private static ImmutableList<LoadedColumnInfo> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
+    private static ImmutableList<LoadedColumnInfo> loadIsolatedValues(MainParser2 main, TypeManager typeManager) throws InternalException, UserException
     {
-        IsolatedValuesContext ctx = main.isolatedValues();
+        Map<String, List<String>> sections = new HashMap<>();
+        for (ContentContext contentContext : main.file().content())
+        {
+            sections.put(contentContext.ATOM(0).getText(), Utility.getDetailLines(contentContext.detail()));
+        }
+        
         // TODO check that units, types match
-        List<LoadedFormat> format = DataSource.loadFormat(typeManager, Utility.getDetailLines(ctx.dataFormat().detailPrefixed()), false);
+        List<String> formatLines = sections.get("FORMAT");
+        if (formatLines == null)
+            throw new UserException("Missing FORMAT on clipboard (not copied from here?)");
+        List<LoadedFormat> format = DataSource.loadFormat(typeManager, formatLines, false);
         List<Pair<LoadedFormat, ImmutableList.Builder<Either<String, @Value Object>>>> cols = new ArrayList<>();
         for (int i = 0; i < format.size(); i++)
         {
             cols.add(new Pair<>(format.get(i), ImmutableList.<Either<String, @Value Object>>builder()));
         }
-        Utility.loadData(Utility.getDetailLines(ctx.values().detailPrefixed()), p -> {
+        List<String> valueLines = sections.get("VALUES");
+        if (valueLines == null)
+            throw new UserException("Missing VALUES on clipboard (not copied from here?)");
+        Utility.loadData(valueLines, p -> {
             for (int i = 0; i < format.size(); i++)
             {
                 LoadedFormat colFormat = format.get(i);
@@ -143,29 +158,38 @@ public class ClipboardUtils
 
         Workers.onWorkerThread("Copying to clipboard", Priority.FETCH, () -> {
             OutputBuilder b = new OutputBuilder();
+            b.raw("COLUMNAL").nl();
+            b.raw("VERSION 2").nl();
             b.t(MainLexer.UNITS).begin().raw("UU").nl();
+            b.pushPrefix(new SaveTag("UU"));
             for (String unitLine : unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond().getType()))))
             {
                 b.raw(unitLine).nl();
             }
-            b.end().t(MainLexer.UNITS).raw("UU").nl();
-            b.t(MainLexer.TYPES).begin().nl();
+            b.pop();
+            b.end().raw("UU").t(MainLexer.UNITS).nl();
+            b.t(MainLexer.TYPES).begin().raw("TT").nl();
+            b.pushPrefix(new SaveTag("TT"));
             for (String typeLine : typeManager.save(DataTypeUtility.featuresTaggedType(Utility.mapList(columns, p -> p.getSecond().getType()))))
             {
                 b.raw(typeLine).nl();
             }
-            b.end().t(MainLexer.TYPES).nl();
-            b.t(MainLexer.FORMAT).begin().nl();
+            b.pop();
+            b.end().raw("TT").t(MainLexer.TYPES).nl();
+            b.t(MainLexer.FORMAT).begin().raw("FF").nl();
+            b.pushPrefix(new SaveTag("FF"));
             for (Pair<ColumnId, DataTypeValue> c : columns)
             {
                 b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(c.getFirst()).t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
                 FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().getType().save(b));
                 b.nl();
             }
-            b.end().t(MainLexer.FORMAT).nl();
+            b.pop();
+            b.end().raw("FF").t(MainLexer.FORMAT).nl();
             StringBuilder plainText = new StringBuilder();
             FXUtility.alertOnError_("Error copying data values", () -> {
-                b.t(MainLexer.VALUES).begin().nl();
+                b.t(MainLexer.VALUES).begin().raw("VV").nl();
+                b.pushPrefix(new SaveTag("VV"));
                 RowRange rowRange = rowRangeSupplier.get();
                 for (int i = rowRange.startRowIncl; i <= rowRange.endRowIncl; i++)
                 {
@@ -190,8 +214,8 @@ public class ClipboardUtils
                         plainText.append("\n");
                     b.nl();
                 }
-
-                b.end().t(MainLexer.VALUES).nl();
+                b.pop();
+                b.end().raw("VV").t(MainLexer.VALUES).nl();
                 String str = b.toString();
                 Platform.runLater(() -> {
                     Map<DataFormat, Object> copyData = new HashMap<>();
