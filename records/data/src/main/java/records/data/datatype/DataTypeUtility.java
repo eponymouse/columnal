@@ -847,7 +847,7 @@ public class DataTypeUtility
      */
     public static Predicate<@UnitIdentifier String> featuresUnit(List<DataType> dataTypes)
     {
-        // Pre-calculate set of all units:
+        // Pre-calculate set of all units contained by the given types:
         HashSet<@UnitIdentifier String> allUnits = new HashSet<>();
 
         try
@@ -936,7 +936,7 @@ public class DataTypeUtility
      */
     public static Predicate<TypeId> featuresTaggedType(List<DataType> dataTypes)
     {
-        // Pre-calculate set of all types:
+        // Pre-calculate set of all types contained within the given types:
         HashSet<TypeId> allTypes = new HashSet<>();
 
         try
