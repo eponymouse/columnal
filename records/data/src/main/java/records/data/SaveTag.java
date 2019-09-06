@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.dataflow.qual.Pure;
+import records.grammar.MainParser2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -18,6 +19,11 @@ public class SaveTag
     public SaveTag(String tag)
     {
         this.tag = tag;
+    }
+    
+    public SaveTag(MainParser2.DetailContext detailContext)
+    {
+        this(detailContext.DETAIL_BEGIN().getText().substring("@BEGIN".length()).trim());
     }
 
     public static SaveTag generateRandom()

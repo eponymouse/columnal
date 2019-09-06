@@ -28,5 +28,6 @@ display : DISPLAY detail DISPLAY NEWLINE;
 
 tableData : dataSource display?;
 tableTransformation : transformation display?;
+table: tableData | tableTransformation;
 
 comment : CONTENT detail CONTENT NEWLINE display;

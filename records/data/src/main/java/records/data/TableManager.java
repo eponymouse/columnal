@@ -269,13 +269,13 @@ public class TableManager
             });
             
             contentHandlers.put("DATA", tagAndContent -> {
-                TableDataContext data = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableData());
-                loaded.add(ImmediateDataSource.loadOne(this, tagAndContent.getFirst(), data));
+                Table data = loadOneDataTable(tagAndContent);
+                loaded.add(data);
             });
             
             contentHandlers.put("TRANSFORMATION", tagAndContent -> {
-                TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
-                loaded.add(transformationLoader.loadOne(this, tagAndContent.getFirst(), trans));
+                Transformation trans = loadOneTransformation(tagAndContent);
+                loaded.add(trans);
             });
             
             contentHandlers.put("COMMENT", tagAndContent -> {
@@ -308,7 +308,7 @@ public class TableManager
                 {
                     try
                     {
-                        handler.consume(new Pair<>(new SaveTag(contentContext.detail().DETAIL_BEGIN().getText().substring("@BEGIN".length()).trim()), Utility.getDetail(contentContext.detail())));
+                        handler.consume(new Pair<>(new SaveTag(contentContext.detail()), Utility.getDetail(contentContext.detail())));
                     }
                     catch (Exception e)
                     {
@@ -330,6 +330,20 @@ public class TableManager
             throw new InternalException("Loading problem", exceptions.get(0));
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
+    }
+
+    @OnThread(Tag.Simulation)
+    private Transformation loadOneTransformation(Pair<SaveTag, String> tagAndContent) throws InternalException, UserException
+    {
+        TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
+        return transformationLoader.loadOne(this, tagAndContent.getFirst(), trans);
+    }
+
+    @OnThread(Tag.Simulation)
+    private Table loadOneDataTable(Pair<SaveTag, String> tagAndContent) throws InternalException, UserException
+    {
+        TableDataContext table = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableData());
+        return DataSource.loadOne(this, tagAndContent.getFirst(), table);
     }
 
     @OnThread(Tag.Simulation)
@@ -748,7 +762,11 @@ public class TableManager
         {
             Log.debug("Reloading:\n" + script);
             ErrorHandler.getErrorHandler().alertOnError_("Error re-running transformations", () -> {
-                loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table())).eitherEx_(e -> {throw new UserException("Error updating table", e);}, t -> {});
+                ContentContext ctxt = Utility.parseAsOne(script, MainLexer2::new, MainParser2::new, (MainParser2 p) -> p.content());
+                if (ctxt.ATOM(0).getText().equals("DATA"))
+                    loadOneDataTable(new Pair<SaveTag, String>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())));
+                else if (ctxt.ATOM(0).getText().equals("TRANSFORMATION"))
+                    loadOneTransformation(new Pair<>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())));
             });
         }
     }
