@@ -90,7 +90,7 @@ public class Log
         return prev == null ? ImmutableList.of(ourStack) : Utility.prependToList(ourStack, prev);
     }
 
-    public static void log(Exception e)
+    public static void log(Throwable e)
     {
         log("", e);
     }
