@@ -1,6 +1,5 @@
 Arising from beta testing
 ===
-- Need new style of saving to allow graphs
 - Zoomed out view of all transformations?  Or list view?
 - Make the column visibility mechanism more discoverable
 
@@ -371,3 +370,4 @@ Changelog since 0.5.1
 - Added a new "Exclude Columns" transformation
 - Added a "split text" function.
 - Added a "Transform type" recipe.
+- Changed the file format (any files in the old format can still be loaded).
