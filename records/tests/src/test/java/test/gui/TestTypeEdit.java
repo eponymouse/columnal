@@ -26,9 +26,8 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.MainLexer;
-import records.grammar.MainParser;
-import records.grammar.MainParser.FileContext;
+import records.grammar.MainLexer2;
+import records.grammar.MainParser2;
 import records.gui.MainWindow.MainWindowActions;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
@@ -83,11 +82,17 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
-            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
+            tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
             assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
+    }
+
+    @OnThread(Tag.Simulation)
+    public String getTypeSrcFromFile(String fileContent) throws InternalException, UserException
+    {
+        MainParser2.FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
+        return Utility.getDetail(file.content(0).detail());
     }
 
     @OnThread(Tag.Simulation)
@@ -254,9 +259,8 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
-            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
+            tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
             assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
     }
@@ -288,9 +292,8 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
-            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
-            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
+            tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
             assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
         });
     }
@@ -332,14 +335,13 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             // Check that saved units in file match our new unit:
             String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
-            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             HashMap<TypeId, TaggedTypeDefinition> remaining = new HashMap<>();
             remaining.put(typeDefinitionA.getTaggedTypeName(), typeDefinitionA);
             remaining.put(typeDefinitionB.getTaggedTypeName(), typeDefinitionB);
             remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
             remaining.remove(toDelete.getTaggedTypeName());
-            tmpTypes.loadTypeDecls(Utility.getDetail(file.types().detail()));
+            tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
             assertEquals(remaining, tmpTypes.getUserTaggedTypes());
         });
     }

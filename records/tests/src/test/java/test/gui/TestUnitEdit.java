@@ -18,9 +18,9 @@ import records.data.unit.Unit;
 import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.grammar.MainLexer;
-import records.grammar.MainParser;
-import records.grammar.MainParser.FileContext;
+import records.grammar.MainLexer2;
+import records.grammar.MainParser2;
+import records.grammar.MainParser2.FileContext;
 import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import test.TestUtil;
@@ -60,10 +60,18 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         // Check that saved units in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+        String unitSrc = getUnitSrcFromFile(fileContent);
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
+        
+        tmpUnits.loadUserUnits(unitSrc);
         assertEquals(ImmutableMap.of(unitDetails.name, unitDetails.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+    }
+
+    @OnThread(Tag.Simulation)
+    public String getUnitSrcFromFile(String fileContent) throws InternalException, records.error.UserException
+    {
+        FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
+        return Utility.getDetail(file.content(0).detail());
     }
 
     @OnThread(Tag.Simulation)
@@ -141,9 +149,8 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         // Check that saved units in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
+        tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
         assertEquals(ImmutableMap.of(details.name, details.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
@@ -176,9 +183,8 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         // Check that saved units in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
+        tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
         assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
@@ -209,9 +215,8 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         // Check that saved units in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(Utility.getDetail(file.units().detail()));
+        tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
         assertEquals(ImmutableMap.of(unitDetailsB.name, unitDetailsB.aliasOrDeclaration, unitDetailsC.name, unitDetailsC.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
