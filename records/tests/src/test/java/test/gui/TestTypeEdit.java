@@ -92,7 +92,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     public String getTypeSrcFromFile(String fileContent) throws InternalException, UserException
     {
         MainParser2.FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
-        return Utility.getDetail(file.content(0).detail());
+        return Utility.getDetail(file.content().stream().filter(c -> c.ATOM(0).getText().equals("TYPES")).findFirst().orElseThrow(() -> new AssertionError("No TYPES section")).detail());
     }
 
     @OnThread(Tag.Simulation)

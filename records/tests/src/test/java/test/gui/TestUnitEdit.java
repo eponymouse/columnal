@@ -71,7 +71,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     public String getUnitSrcFromFile(String fileContent) throws InternalException, records.error.UserException
     {
         FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
-        return Utility.getDetail(file.content(0).detail());
+        return Utility.getDetail(file.content().stream().filter(c -> c.ATOM(0).getText().equals("UNITS")).findFirst().orElseThrow(() -> new AssertionError("No UNITS section")).detail());
     }
 
     @OnThread(Tag.Simulation)
