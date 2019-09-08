@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -109,7 +110,10 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
-        return new KnownLengthRecordSet(this.columns, targetSize);
+        List<SimulationFunction<RecordSet, Column>> columns = this.columns;
+        if (columns.isEmpty())
+            columns = ImmutableList.of(rs -> new MemoryBooleanColumn(rs, new ColumnId("Column to avoid being empty"), Utility.replicate(targetSize, Either.right(true)), true));
+        return new KnownLengthRecordSet(columns, targetSize);
     }
 
     // Only valid after calling generate

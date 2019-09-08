@@ -3,7 +3,11 @@ package test.gen;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.Column;
+import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryBooleanColumn;
+import records.data.RecordSet;
 import records.data.datatype.TypeManager;
 import test.gen.backwards.*;
 import records.data.datatype.DataType;
@@ -12,7 +16,9 @@ import records.error.UserException;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
+import utility.SimulationFunction;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -81,7 +87,10 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
-        return new KnownLengthRecordSet(columnProvider.getColumns(), 1);
+        List<SimulationFunction<RecordSet, Column>> columns = columnProvider.getColumns();
+        if (columns.isEmpty())
+            columns = ImmutableList.of(rs -> new MemoryBooleanColumn(rs, new ColumnId("Column to avoid being empty"), ImmutableList.of(Either.right(true)), true));
+        return new KnownLengthRecordSet(columns, 1);
     }
 
     // Only valid after calling generate

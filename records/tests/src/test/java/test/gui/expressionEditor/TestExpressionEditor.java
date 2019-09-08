@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
@@ -147,6 +148,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             }
 
             // Now check values match:
+            TestUtil.fx_(() -> Clipboard.getSystemClipboard().clear());
             showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
