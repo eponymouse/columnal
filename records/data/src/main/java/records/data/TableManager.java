@@ -261,6 +261,11 @@ public class TableManager
             HashMap<String, SimulationConsumer<Pair<SaveTag, String>>> contentHandlers = new HashMap<>();
             typeManager.clearAllUser();
             unitManager.clearAllUser();
+            List<TableId> ids = new ArrayList<>(usedIds.keySet());
+            for (TableId id : ids)
+            {
+                remove(id);
+            }
             contentHandlers.put("TYPES", tagAndContent -> {
                 typeManager.loadTypeDecls(tagAndContent.getSecond());
             });
