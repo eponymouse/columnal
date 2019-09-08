@@ -221,10 +221,10 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     public void testInvalidUnitLiteral()
     {
         testError("convert unit({m/s},100{yard}/2{s})",
-            e(8, 9, "{"),
-            e(12, 13, 15, 17,  "}"),
-            e(9, 9, 9, 10, "op"),
-            e(12, 12, 15, 16, "op"));
+            e(13, 14, "{"),
+            e(17, 18, 20, 22,  "}"),
+            e(14, 14, 14, 15, "op"),
+            e(17, 17, 20, 21, "op"));
     }
     
     @Ignore // Not sure we can check body without checking condition successfully.
