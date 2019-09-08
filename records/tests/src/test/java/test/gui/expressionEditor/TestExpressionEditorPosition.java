@@ -204,7 +204,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     public void testPos16(@From(GenRandom.class) Random r)
     {
         testCaretPositionsAndDisplay(r, "@definex::[Text],x=[\"a\";\"b\"]@thenx;(x;x)@enddefine",
-            "@define x :: [Text],\n       x = [\"a\" ; \"b\"]\n@thenx;(x;x)@enddefine ",
+            "@define x :: [Text], \n       x = [\"a\" ; \"b\"]\n  @then x ; (x ; x)\n@enddefine ",
             p(0,7,8,10,11,12,13,14,15,16, 17,18,19,20,21,22,23,24,25,26,27,28,  33,34,35,36,37,38,39,40,50),
             p(0,7,8,10,11,15,16, 17,18,19,20,21,22,23,24,25,26,27,28,  33,34,35,36,37,38,39,40,50)
         );
