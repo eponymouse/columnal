@@ -112,13 +112,18 @@ public class BackwardsFunction extends BackwardsProvider
             Collections.shuffle(picked, random);
             
             ImmutableList.Builder<Expression> substitutions = ImmutableList.builder();
+            ImmutableList.Builder<DataType> substitutedTypes = ImmutableList.builder();
             for (int i = 0; i < picked.size(); i++)
             {
                 if (picked.get(i))
+                {
                     substitutions.add(expressions.get(i));
+                    if (paramTypes != null)
+                        substitutedTypes.add(paramTypes.get(i));
+                }
             }
             
-            return new Functioned(substitutions.build(), paramTypes, subs -> {
+            return new Functioned(substitutions.build(), paramTypes == null ? null : substitutedTypes.build(), subs -> {
                 ImmutableList.Builder<Expression> substituted = ImmutableList.builder();
                 int nextParam = 0;
                 for (int i = 0; i < picked.size(); i++)
