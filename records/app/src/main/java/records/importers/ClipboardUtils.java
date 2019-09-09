@@ -127,6 +127,8 @@ public class ClipboardUtils
         Utility.loadData(valueLines, p -> {
             for (int i = 0; i < format.size(); i++)
             {
+                if (i > 0)
+                    p.comma();
                 LoadedFormat colFormat = format.get(i);
                 cols.get(i).getSecond().add(DataType.loadSingleItem(colFormat.dataType, p, false));
             }
@@ -197,9 +199,11 @@ public class ClipboardUtils
                     boolean firstValueInRow = true;
                     for (Pair<ColumnId, DataTypeValue> c : columns)
                     {
+                        if (!firstValueInRow)
+                            b.raw(",");
                         b.data(c.getSecond(), i);
                         if (!firstValueInRow)
-                            plainText.append("\t");
+                            plainText.append(", ");
                         try
                         {
                             plainText.append(DataTypeUtility.valueToString(c.getSecond().getType(), c.getSecond().getCollapsed(i), null));

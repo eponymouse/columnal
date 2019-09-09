@@ -64,6 +64,11 @@ public class IdentifierUtility
         return asExpressionIdentifier(parsedIdent.labelName().getText());
     }
 
+    public static @Nullable @ExpressionIdentifier String fromParsed(records.grammar.DataParser2.LabelContext parsedIdent)
+    {
+        return asExpressionIdentifier(parsedIdent.labelName().getText());
+    }
+
     @SuppressWarnings("identifier")
     public static @UnitIdentifier String fromParsed(SingleUnitContext parsedIdent)
     {

@@ -221,7 +221,7 @@ public class TransformationEdits
                                         stringVersion = e.getInvalid();
                                     }
                                     // Now turn String back into the new type:
-                                    newValues.add(columnDetails.dataType.loadSingleItem(stringVersion));
+                                    newValues.add(columnDetails.dataType.loadSingleItem(stringVersion.trim()));
                                 }
                                 
                                 return columnDetails.dataType.makeImmediateColumn(c.getName(), newValues.build(), columnDetails.defaultValue);

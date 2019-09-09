@@ -103,7 +103,7 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(defaultValueUnparsed.trim(), DataLexer2::new, DataParser2::new, p -> DataType.loadSingleItem(t, p, false));
                 columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
@@ -186,11 +186,11 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadData(Utility.getDetailLines(immed.values().detailPrefixed()), p ->
+            super(Utility.<ColumnMaker<?, ?>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, c -> create(c)), () -> Utility.loadDataOld1(Utility.getDetailLines(immed.values().detailPrefixed()), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
-                    columns.get(i).loadRow(p);
+                    columns.get(i).loadRow1(p);
                 }
             }));
         }
@@ -201,6 +201,8 @@ public abstract class DataSource extends Table
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
+                    if (i != 0)
+                        p.comma();
                     columns.get(i).loadRow(p);
                 }
             }));

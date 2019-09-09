@@ -61,7 +61,9 @@ import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.DataLexer;
+import records.grammar.DataLexer2;
 import records.grammar.DataParser;
+import records.grammar.DataParser2;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.DetailLineContext;
 import records.grammar.MainParser.DetailPrefixedContext;
@@ -1096,7 +1098,7 @@ public class Utility
         return r;
     }
 
-    public static int loadData(List<String> dataLines, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
+    public static int loadDataOld1(List<String> dataLines, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
     {
         int count = 0;
         for (String lineText : dataLines)
@@ -1105,6 +1107,40 @@ public class Utility
             try
             {
                 parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
+                {
+                    try
+                    {
+                        p.startRow();
+                        if (!p.isMatchedEOF())
+                        {
+                            withEachRow.accept(p);
+                        }
+                        p.endRow();
+                        return 0;
+                    }
+                    catch (ParseCancellationException e)
+                    {
+                        throw new ParseException("token", p);
+                    }
+                });
+            }
+            catch (UserException  e)
+            {
+                throw new UserException("Error loading data line: \"" + lineText + "\"", e);
+            }
+        }
+        return count;
+    }
+
+    public static int loadData(List<String> dataLines, ExConsumer<DataParser2> withEachRow) throws UserException, InternalException
+    {
+        int count = 0;
+        for (String lineText : dataLines)
+        {
+            count += 1;
+            try
+            {
+                parseAsOne(lineText, DataLexer2::new, DataParser2::new, p ->
                 {
                     try
                     {

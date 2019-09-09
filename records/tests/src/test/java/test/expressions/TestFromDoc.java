@@ -24,7 +24,9 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
+import records.grammar.DataLexer2;
 import records.grammar.DataParser;
+import records.grammar.DataParser2;
 import records.jellytype.JellyType;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -168,7 +170,7 @@ public class TestFromDoc
                     {
                         DataType dataType = typeManager.loadTypeUse(columnTypes[c]);
                         List<Either<String, @Value Object>> loadedValues = Utility.<String, Either<String, @Value Object>>mapListEx(columnValues.get(c), unparsed -> {
-                            return Utility.<Either<String, @Value Object>, DataParser>parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
+                            return Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(unparsed, DataLexer2::new, DataParser2::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
                         });
                         if (length == -1)

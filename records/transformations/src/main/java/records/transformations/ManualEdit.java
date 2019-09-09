@@ -21,7 +21,9 @@ import records.error.InternalException;
 import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.grammar.DataLexer;
+import records.grammar.DataLexer2;
 import records.grammar.DataParser;
+import records.grammar.DataParser2;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.EditColumnContext;
@@ -641,9 +643,9 @@ edit : editHeader editColumn*;
                 List<Pair<@Value Object, Either<String, @Value Object>>> replacementValues = new ArrayList<>();
                 for (EditColumnDataContext editColumnDatum : editColumnContext.editColumnData())
                 {
-                    @Value Object key = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(editColumnDatum.value(0).VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
+                    @Value Object key = Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(editColumnDatum.value(0).VALUE().getText().trim(), DataLexer2::new, DataParser2::new, p -> DataType.loadSingleItem(replacementKey == null ? DataType.NUMBER : replacementKey.getSecond(), p, false)).<@Value Object>eitherEx(s -> {throw new UserException(s);}, x -> x);
                     ValueContext dataValue = editColumnDatum.value(1);
-                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(dataValue.VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> dataValue.INVALID_VALUE_BEGIN() != null ? Either.<String, @Value Object>left(p.string().STRING().getText()) : DataType.loadSingleItem(dataType, p, false));
+                    Either<String, @Value Object> value = Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(dataValue.VALUE().getText().trim(), DataLexer2::new, DataParser2::new, p -> dataValue.INVALID_VALUE_BEGIN() != null ? Either.<String, @Value Object>left(p.string().STRING().getText()) : DataType.loadSingleItem(dataType, p, false));
                     replacementValues.add(new Pair<>(key, value));
                 }
                 

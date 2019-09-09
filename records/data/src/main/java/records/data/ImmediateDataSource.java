@@ -75,8 +75,14 @@ public class ImmediateDataSource extends DataSource
             for (int i = 0; data.indexValid(i); i++)
             {
                 b.indent();
+                boolean first = true;
                 for (Column c : data.getColumns())
+                {
+                    if (!first)
+                        b.raw(",");
                     b.data(c.getType(), i);
+                    first = false;
+                }
                 b.nl();
             }
         });

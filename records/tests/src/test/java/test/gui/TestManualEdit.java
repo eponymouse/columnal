@@ -632,7 +632,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                         // Bit of a hack, but need to deal with truncated numbers, so we get direct content if truncated:
                         if (DataTypeUtility.isNumber(column.getType().getType()) && content.contains("\u2026"))
                             return internalContent;
-                        return column.getType().getType().loadSingleItem(content);
+                        return column.getType().getType().loadSingleItem(content.trim());
                     });
                     if (cellValue == null)
                         throw new MissingCellException();

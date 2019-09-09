@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -41,8 +42,8 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
 {
     @Property(trials=3)
     @OnThread(Tag.Simulation)
-    public void testHideColumns(@NumTables(minTables = 1, maxTables = 1) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @From(GenRandom.class) Random r) throws Exception
+    public void testHideColumns(@When(seed=1L) @NumTables(minTables = 1, maxTables = 1) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
@@ -95,6 +96,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
         selectGivenListViewItem(lookup(".hidden-columns-list-view").<ColumnId>queryListView(), c -> c.equals(unHide));
         clickOn(".add-button");
         clickOn(".ok-button");
+        sleep(500);
         hide = (HideColumns)mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof HideColumns).findFirst().orElseThrow(() -> new AssertionError("No HideColumns found"));
 
         assertEquals(new HashSet<>(toHide), new HashSet<>(hide.getHiddenColumns()));
