@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -21,16 +20,19 @@ import records.data.RecordSet;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.TableDisplay;
+import records.transformations.Calculate;
 import records.transformations.Filter;
 import records.transformations.Sort;
-import records.transformations.Calculate;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.function.FromString;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -51,9 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait, EnterStructuredValueTrait, ClickOnTableHeaderTrait
@@ -93,9 +93,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 TestUtil.sleep(2000);
 
                 List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
-                checkAllMatch(latestDataA);
+                checkAllMatch(colA.getType(), latestDataA);
                 List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
-                checkAllMatch(latestDataB);
+                checkAllMatch(colB.getType(), latestDataB);
             }
         });
     }
@@ -157,9 +157,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
 
             // Check data matches:
             List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
-            checkAllMatch(latestDataA);
+            checkAllMatch(colA.getType(), latestDataA);
             List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
-            checkAllMatch(latestDataB);
+            checkAllMatch(colB.getType(), latestDataB);
 
             // Check changes are properly linked up:
             int changes = 3;
@@ -177,9 +177,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 TestUtil.sleep(2000);
 
                 latestDataA = getDataViaGraphics(details, 0);
-                checkAllMatch(latestDataA);
+                checkAllMatch(colA.getType(), latestDataA);
                 latestDataB = getDataViaGraphics(details, 1);
-                checkAllMatch(latestDataB);
+                checkAllMatch(colB.getType(), latestDataB);
             }
         });
     }
@@ -204,9 +204,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         TestUtil.sleep(1000);
         // First check that the data is valid to begin with:
         List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);
-        checkAllMatch(origDataA);
+        checkAllMatch(colA.getType(), origDataA);
         List<List<@Nullable String>> origDataB = getDataViaGraphics(details, 1);
-        checkAllMatch(origDataB);
+        checkAllMatch(colB.getType(), origDataB);
         return details;
     }
 
@@ -239,21 +239,30 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             return null;
     }
 
-    @OnThread(Tag.Any)
-    @SafeVarargs
-    private final void checkAllMatch(List<List<@Nullable String>>... originals)
+    @OnThread(Tag.Simulation)
+    private final void checkAllMatch(DataType dataType, List<List<@Nullable String>> data)
     {
-        for (int row = 0; row < originals[0].size(); row++)
+        for (int row = 0; row < data.size(); row++)
         {
-            @Nullable String first = originals[0].get(row).get(0);
-            for (List<List<@Nullable String>> data : originals)
+            @Nullable String first = data.get(row).get(0);
+            List<@Nullable String> valsForRow = data.get(row);
+            for (int column = 0; column < valsForRow.size(); column++)
             {
-                List<@Nullable String> valsForRow = data.get(row);
-                for (int column = 0; column < valsForRow.size(); column++)
+                String value = valsForRow.get(column);
+                if (first != null && value != null && !first.equals(value))
                 {
-                    String value = valsForRow.get(column);
-                    assertEquals("Row " + row + " table " + column, first, value);
+                    // Try flexibly parsing then compare:
+                    try
+                    {
+                        TestUtil.assertValueEqual("Flexible", FromString.convertEntireString(DataTypeUtility.value(first), dataType), FromString.convertEntireString(DataTypeUtility.value(value), dataType));
+                        return;
+                    }
+                    catch (Throwable t)
+                    {
+                        assertNull(t);
+                    }
                 }
+                assertEquals("Row " + row + " table " + column, first, value);
             }
         }
     }
