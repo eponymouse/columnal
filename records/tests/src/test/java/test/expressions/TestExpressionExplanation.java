@@ -43,6 +43,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListExList;
+import utility.Utility.RecordMap;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -148,10 +149,11 @@ public class TestExpressionExplanation
                 e("@call @function none(@entire T2\\asc, @function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                     // Once for function, once for call:
                     e("@function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
-                    explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, q(3), true, null, 
-                        e("x", q(3), 3, null),
+                    e("@call @function not(x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
+                        explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, vv("x", 3), false, null, 
+                        e("x", vv("x", 3), 3, null),
                         m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
-        )));
+        ))));
         
         testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", r(0), false, l("T1", "half false", 0)));
 
@@ -173,19 +175,19 @@ public class TestExpressionExplanation
         // The matching row is the third row (index 2).
         // The value being matched against is (asc, alphabet animals)
         
-        // First clause is (_n, _a) @given n > text length(a)
-        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(_n, _a)", "n > @call @function text length(a)")), "true", r(2), false,
-                m("(_n, _a)", r(2, v("n", 3), v("a", "Cat")), true, null,
-                    m("_n", r(2, v("n", 3)), true, null),
-                    m("_a", r(2, v("a", "Cat")), true, null)),
+        // First clause is (n, a) @given n > text length(a)
+        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(a: n, b: a)", "n > @call @function text length(a)")), "true", r(2), false,
+                m("(a: n, b: a)", r(2, v("n", 3), v("a", "Cat")), true, null,
+                    m("n", r(2, v("n", 3)), true, null),
+                    m("a", r(2, v("a", "Cat")), true, null)),
                 e("n > @call @function text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
                     e("n", r(2, v("n", 3)), 3, null),
                     e("@call @function text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
                     )
                 );
         // Second clause is (3,  _ ; "t") @given false @then 1 > 0
-        Explanation megaClause2Expl = clause(ImmutableList.of(pattern("(3, _ ; \"t\")", "false")), "1 > 0", r(2), false,
-            m("(3, _ ; \"t\")", r(2), true, null,
+        Explanation megaClause2Expl = clause(ImmutableList.of(pattern("(a: 3, b: (_ ; \"t\"))", "false")), "1 > 0", r(2), false,
+            m("(a:3, b:(_ ; \"t\"))", r(2), true, null,
                 m("3", r(2), true, null,
                     e("3", r(2), 3, null)),
                 m("_ ; \"t\"", r(2), true, null,
@@ -196,16 +198,16 @@ public class TestExpressionExplanation
         );
         
         // Third clause is @case (_n, "Cat") @then n > 2
-        Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(_n, \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
-            m("(_n, \"Cat\")", r(2, v("n", 3)), true, null, 
-                    m("_n", r(2, v("n", 3)), true, null),
+        Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(a: n, b: \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
+            m("(a: n, b: \"Cat\")", r(2, v("n", 3)), true, null, 
+                    m("n", r(2, v("n", 3)), true, null),
                     m("\"Cat\"", r(2), true, null, e("\"Cat\"", r(2), "Cat", null)))    
         );
         Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
         
-        String fullMega = "@match (@column asc, @column alphabet animals) @case (_n, _a) @given n > @call @function text length(a) @then true @case (3,  _ ; \"t\") @given false @then 1 > 0 @case (_n, \"Cat\") @then n > 2 @case _ @then false @endmatch";
+        String fullMega = "@match (a:@column asc, b:@column alphabet animals) @case (a:n, b:a) @given n > @call @function text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
         testCheckExplanation("T2", fullMega, CheckType.NO_ROWS, e(fullMega, r(2), true, null, 
-            e("(@column asc, @column alphabet animals)", r(2), new Object[]{3, "Cat"}, null,
+            e("(a:@column asc, b:@column alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
                 e("@column asc", r(2), 3, l("T2", "asc", 2)),
                 e("@column alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
                 ),
@@ -225,6 +227,13 @@ public class TestExpressionExplanation
     private Pair<OptionalInt, ImmutableMap<String, @Value Object>> q(Object value)
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of("?1", value));
+    }
+
+    // No row index, and a mapping from a single name to the given value
+    @SuppressWarnings("value")
+    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> vv(String name, Object value)
+    {
+        return new Pair<>(OptionalInt.empty(), ImmutableMap.of(name, value));
     }
     
     private static class VarValue
