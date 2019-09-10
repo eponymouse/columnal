@@ -163,7 +163,8 @@ public class GenNonsenseExpression extends Generator<Expression>
                         {
                             if (!onlyCallTargets)
                                 return new ColumnReference(new ColumnId(ident), ColumnReferenceType.CORRESPONDING_ROW);
-                        } else
+                        }
+                        else
                         {
                             columnReferences.put(ident, false);
                             return new IdentExpression(ident);
@@ -238,7 +239,18 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<Expression>>asList(
             () -> genDepth(false, r, depth, gs),
-            () -> new IdentExpression(TestUtil.generateVarName(r)),
+            () -> {
+                // Variable name for pattern match:
+                while (true)
+                {
+                    @ExpressionIdentifier String ident = TestUtil.generateVarName(r);
+                    if (!columnReferences.getOrDefault(ident, false))
+                    {
+                        columnReferences.put(ident, false);
+                        return new IdentExpression(ident);
+                    }
+                }
+            },
             () ->
             {
                 try
