@@ -77,7 +77,7 @@ public class RecordExpression extends Expression
             fieldValues.put(member.getFirst(), valuesBuilder.add(member.getSecond().calculateValue(state)).value);
         }
         
-        return result(DataTypeUtility.value(new RecordMap(fieldValues)), state, valuesBuilder.build());
+        return result(DataTypeUtility.value(new RecordMap(fieldValues)), state, valuesBuilder.build(), ImmutableList.of(), true);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class RecordExpression extends Expression
             state = result.evaluateState;
         }
 
-        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false); 
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), true); 
     }
 
     @Override

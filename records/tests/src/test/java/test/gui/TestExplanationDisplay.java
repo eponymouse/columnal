@@ -128,19 +128,19 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.NO_ROWS, "@match (num: @column asc, animal: @column alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call @function text length(animal) =~ n) & (n > 5) @endmatch");
         testFailureExplanation(
-                "(num: \u2192asc, animal: \u2192alphabet animals) was (num: 1, animal: \"Aardvark\"), using asc (row 1), alphabet animals (row 1)",
+                "(num: \u2192asc, animal: \u2192alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)",
                 "(num: n) matched",
                 "n was 1",
                 "n > 5 was false",
-                "(num:_, animal: animal) matched",
+                "(num: _, animal: animal) matched",
                 "animal was \"Aardvark\"",
                 "text length(animal) was 8",
                 "n matched",
-                "n = text length(animal) was true",
+                "text length(animal) =~ n was true",
                 "n was 8",
                 "n > 5 was true",
                 "(text length(animal) =~ n) & (n > 5) was true",
-                "match (\u2192asc, \u2192alphabet animals) case (num:n) given n > 5 then false case (num:_, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
+                "match (num: \u2192asc, animal: \u2192alphabet animals) case (num: n) given n > 5 then false case (num: _, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
     }
 
     @Test
