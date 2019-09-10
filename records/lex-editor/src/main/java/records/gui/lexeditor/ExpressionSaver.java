@@ -14,7 +14,9 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
+import records.data.TableId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -1076,6 +1078,15 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 public @Nullable @ExpressionIdentifier String standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
                 {
                     return functionDefinition.getName();
+                }
+
+                @Override
+                public @Nullable @ExpressionIdentifier String column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+                {
+                    if (referenceType == ColumnReferenceType.CORRESPONDING_ROW && tableName == null)
+                        return columnName.getRaw();
+                    
+                    return super.column(self, tableName, columnName, referenceType);
                 }
             });
             
