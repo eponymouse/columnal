@@ -20,6 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.*;
 import records.data.Table.TableDisplayBase;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
@@ -268,6 +269,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             TestUtil.delay(100);
             clickOn(".id-new-transform");
             TestUtil.delay(100);
+            scrollTo(".id-transform-edit");
             clickOn(".id-transform-edit");
             TestUtil.delay(100);
             write(sortId.getRaw());

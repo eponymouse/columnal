@@ -2,7 +2,7 @@ parser grammar DataParser2;
 
 options { tokenVocab = DataLexer2; }
 
-number : (PLUS | MINUS)? POSITIVE_INTEGER (DOT POSITIVE_INTEGER)? WS?;
+number : (PLUS | MINUS)? POSITIVE_INTEGER (DOT POSITIVE_INTEGER?)? WS?;
 bool : (TRUE | FALSE) WS?;
 string : STRING WS?; // Includes text and dates
 ymd: POSITIVE_INTEGER MINUS POSITIVE_INTEGER MINUS POSITIVE_INTEGER WS?;
