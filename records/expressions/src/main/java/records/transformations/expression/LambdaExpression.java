@@ -73,7 +73,9 @@ public class LambdaExpression extends Expression
                     ValueResult result = parameters.get(i).matchAsPattern(arg(i), state);
                     state = result.evaluateState;
                 }
-                return body.calculateValue(state).value;
+                ValueResult bodyOutcome = body.calculateValue(state);
+                addExtraExplanation(() -> bodyOutcome.makeExplanation(ExecutionType.VALUE));
+                return bodyOutcome.value;
             }
         };
         
