@@ -1148,6 +1148,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     params.add(e);
             }
 
+            if (foundThen)
+                itemsIfInvalid.add(keywordToInvalid(Keyword.THEN, keywordErrorDisplayer));
+
             if (params != null)
             {
                 ImmutableList<@Recorded Expression> args = ImmutableList.<@Recorded Expression>copyOf(params);
@@ -1208,10 +1211,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     definitions = e.visit(new VisitDefinitions(definitions, i < bracketContent.commas.size() ? bracketContent.commas.get(i).getSecond() : keywordErrorDisplayer));
             }
 
+            if (foundThen)
+                itemsIfInvalid.add(keywordToInvalid(Keyword.THEN, keywordErrorDisplayer));
             if (definitions != null)
             {
                 ImmutableList<DefineItem> defs = ImmutableList.<DefineItem>copyOf(definitions);
-                itemsIfInvalid.add(keywordToInvalid(Keyword.THEN, keywordErrorDisplayer));
+                
                 currentScopes.push(new Scope(keywordErrorDisplayer, expect(ImmutableList.of(Keyword.ENDDEFINE), s -> expectSingle(locationRecorder, s), (e, s) -> {
                     DefineExpression defineExpression = new DefineExpression(initialDefine, defs, e, s);
                     return Either.<@Recorded Expression, Terminator>left(locationRecorder.<Expression>record(new CanonicalSpan(initialDefine.start, s.end), defineExpression));
