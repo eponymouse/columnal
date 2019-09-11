@@ -53,7 +53,7 @@ class JellyTypeIdent extends JellyType
         if (var != null)
             return var.getRight("Variable " + name + " should be type variable but was unit variable");
         
-        return new TypeCons(null, name, ImmutableList.of(), ImmutableSet.of());
+        return new TypeCons(null, name, ImmutableList.of(), TypeExp.ALL_TYPE_CLASSES);
         
     }
 
