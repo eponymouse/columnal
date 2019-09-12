@@ -141,8 +141,10 @@ public final class UnitExp implements StyledShowable
                 if (pointer != null)
                 {
                     // Must remove before doing times in place, otherwise modification exception:
+                    // In turn, must take value before removal because entry.getValue() is not valid after iterator removal:
+                    int value = entry.getValue();
                     iterator.remove();
-                    timesInPlace(pointer.raisedTo(entry.getValue()));
+                    timesInPlace(pointer.raisedTo(value));
                     substituted = true;
                     // Breaks the for/iterator loop
                     break;
