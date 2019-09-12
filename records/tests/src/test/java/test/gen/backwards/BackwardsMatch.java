@@ -411,7 +411,7 @@ public class BackwardsMatch extends BackwardsProvider
                         for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
                         {
                             // We don't have to match every item:
-                            if (members.size() >= 1 && r.nextInt(3) == 1)
+                            if (canMatchMore && members.size() >= 1 && r.nextInt(3) == 1)
                                 continue;
                             
                             DataType dataType = entry.getValue();
