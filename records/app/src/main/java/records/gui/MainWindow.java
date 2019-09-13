@@ -74,7 +74,7 @@ public class MainWindow
     {
         View v = new View(destinationFile);
         // We don't use bind because FXUtility.setIcon needs to temporarily change title:
-        FXUtility.addChangeListenerPlatformNNAndCallNow(v.titleProperty(), stage::setTitle);
+        v.addTitleListenerAndCallNow(stage::setTitle);
         views.put(v, stage);
         stage.setOnHidden(e -> {
             views.remove(v);

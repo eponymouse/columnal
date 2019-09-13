@@ -949,9 +949,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         // Don't allow focus
     }
 
-    public ObjectExpression<String> titleProperty()
+    public void addTitleListenerAndCallNow(FXPlatformConsumer<String> onTitleChange)
     {
-        return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
+        FXUtility.addChangeListenerPlatformNNAndCallNow(diskFile, f -> onTitleChange.consume(f.getName() + " [" + f.getParent() + "]"));
     }
     
     public DataCellSupplier getDataCellSupplier()
