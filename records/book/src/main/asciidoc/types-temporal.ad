@@ -1,0 +1,22 @@
+= Date and time types
+
+Columnal has a set of types specifically to deal with dates and times.  Some of these types require some further understanding - time zones in particular are surprisingly complex.
+
+== Local times and dates
+
+The `Time` type is straightforward: a `Time` is a time of day, like 03:10:23 or 14:15.  The time stores seconds and fractions of seconds, although this may be zero.  Internally Columnal deals with the 24-hour clock, although conversion functions can deal with AM/PM times instead.  Only valid times are allowed: 35:15
+
+The `Date` type is a date such as 8th February 2002.  The main problem with dates is that different countries represent dates differently: 3/9/19 is in March to an American but in September to a Brit.  Internally Columnal uses the ISO 8601 date representation, which uses year-month-day, so would represent 8th February 2002 as 2002-02-08.  Conversion functions can deal with (English) month names, which are preferred to ambiguous date formats such as the 3/9/19 above.  Only valid dates are permitted: you cannot have 40th January 2006 or 29th February 2019 (which was not a leap year).
+
+Sometimes you only need a year and month, for example if you are keeping track of sales during a whole month, you don't want a specific date like 1st June 2018, you just want June 2018.  The `DateYM` type is a date with just a year (the Y) and a month (the M).  Internally Columnal uses the year-month format, like 2018-06.
+
+The `DateTime` type glues together a date and a time, for example 2005-03-21 14:24:02.993.  It uses the internal representations for date and time discussed above.
+
+== Time zones
+
+The `DateTime` type has no mention of time zone.  Often if you are dealing with date-times in one location the time zone is irrelevant.  If you own a shop and are recording the time of sale, you may be fine to just assume it is always local time.  However, if you have a data set of social media messages which are recording what time they are sent, and you want to order this, it's important to know which time zone the date-time was in.  That's where `DateTimeZoned` is useful.
+
+`DateTimeZoned` combines a date-time with a time zone.  This allows for conversion to other time zones or correct comparisons of values across different time zones.  
+
+// The main complexity of `DateTimeZoned` comes not from Columnal, but from the fact that time zones themselves are complex.
+

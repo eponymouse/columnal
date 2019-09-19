@@ -1,0 +1,23 @@
+= Types: when to use which
+
+The previous sections have explained the variety of types available in Columnal.  This section provides a guide and examples of which type to use in different circumstances.
+
+If you have a quantity or measurement use a `Number`.
+
+Some things that look like numbers should instead be stored as text.  For example, phone numbers and ISBNs of books should be stored as text to preserve leading zeroes.  A good rule is: would I ever add this value to another number?  If the answer is no, storing as `Text` may be the better option.
+
+`Text` is relatively straightforward, but be careful not to over-use it.  If your text has a limited set of possible values, you may instead want to use `Boolean` or a tagged type.
+
+If you have something that is yes/no, on/off or true/false, `Boolean` is suitable.  For example, if you want to track if a signature has been received, whether or not an item is in stock, or whether an email has been read.  Beware of overusing `Boolean`, though - just because something has two possible values doesn't mean it has to be boolean.  If you want to record something like whether someone is left-handed or right-handed, you are probably better to use a tagged type with Left and Right tags, which is clearer than a boolean true/false where it is difficult to remember if true is left-handed or true is right-handed.
+
+A tagged type is useful when you want to represent values which can be something *or* something else.  There's three main uses for tagged types:
+
+ * Storing categories or types with a limited number of values.  For example, storing whether a product is Available or Discontinued, whether a customer discount is None, Senior or Child.
+
+ * Storing values which may have a choice of types.  For example, the supplier for a part may either be a numeric identifier of a known supplier, or a text name of a one-off supplier.
+
+ * Storing values which can be missing.  The simplest case is to use the built-in Optional type which either has a value or the None tag.  It can be useful to build your own such types when you need more information about why it is missing; for example in a survey you may want to distinguish did-not-answer from does-not-know when asking someone's blood type.
+
+A record type is useful if you need to group values together.  For example, a global location is represented as latitude and longitude so it makes some sense to pair them into a record.  This is especially true if you need to represent a location which may be missing, which can be represented with a record wrapped in an Optional.  Frequently, record types make most sense to use when they are nested inside another type, such as a tagged type or a list.
+
+A list is useful if you need to store a varying number of values.  For example, you may store a list of regularly recorded heart rates for each workout, or a list of date-and-weight records for each weight-loss patient. 

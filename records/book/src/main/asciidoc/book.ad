@@ -6,9 +6,13 @@ Rules of writing:
  - When introducing a concept, never be more than two sentences from an example.
  - Choose realistic examples
  - Shorter is better
- - Justify why features are useful
+ - Justify why features are useful, and why the alternative is not as good
 ////
 
 include::types-tagged.ad[]
 
 include::types-units.ad[]
+
+include::types-temporal.ad[]
+
+include::types-summary.ad[]
