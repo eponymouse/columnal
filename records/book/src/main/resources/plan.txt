@@ -1,0 +1,38 @@
+Aim:
+ - Micro lessons are useful on-demand but won't explain underlying concepts and principles.
+ - The book is for explaining the underlying model and deeper concepts
+
+Key topics:
+ - Types
+   - Tagged types
+   - Record types
+   - Numerical units
+   - Temporal
+ - Immutability
+ - Transformations
+   - Filter and sort
+   - Aggregate
+ - Version control/file format
+   - Diffing
+   - Merging
+
+Possible outline:
+ 1. Principles: types, immutability and transformation
+Part 1: Types
+ 2. Tagged types: solutions for missing data and complex data
+ 3. Numerical units: safer tracking for calculations
+ 4. Temporal types: differences and usage
+ 5. Lists: uses and powerful
+ 6. Type summary: when to use sum, product and list types, and combinations thereof.
+Part 2: Data and transformation
+ 7. Import and export
+ 8. Immutability: never edit data table
+ 9. Transformations overview: why have them, and different types
+ 10. Filter and sort
+ 11. Calculate
+ 12. Aggregate
+ 13. Concat and join
+Part 3: Version Control
+ 14. What is version control and why should you use it
+ 15. Diffing: understanding diffs
+ 16. Merging: how to merge and what to do it if goes wrong.

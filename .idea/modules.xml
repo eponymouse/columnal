@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/records/anns/anns.iml" filepath="$PROJECT_DIR$/records/anns/anns.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/app/app.iml" filepath="$PROJECT_DIR$/records/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/book/book.iml" filepath="$PROJECT_DIR$/records/book/book.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/data/data.iml" filepath="$PROJECT_DIR$/records/data/data.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/expressions/expressions.iml" filepath="$PROJECT_DIR$/records/expressions/expressions.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/functions/functions.iml" filepath="$PROJECT_DIR$/records/functions/functions.iml" />

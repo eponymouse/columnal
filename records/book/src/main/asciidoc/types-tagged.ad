@@ -1,0 +1,30 @@
+= Tagged types
+
+// Different uses: Enums, Optional, Wrapped types
+
+== What are tagged types?
+Tagged types allow you to specify that a value can have several different options.  Whenever you describe data as being a limited choice between something *or* something else, the "or" is a sign you may want a tagged type.  For example:
+
+* A car may be left-hand drive *or* right-hand drive.
+* A person's height may have been recorded in centimetres *or* in feet and inches.
+* A survey response may be missing *or* have a numeric score.
+
+These represent three major uses of tagged types (categories, choices, and optional), which will be covered in the next three sections.  To understand why tagged types are useful, it can help to look at the alternatives.
+
+.How not to do it: missing data
+====
+A researcher may collect data from a patient such as age.  But there may be a participant who does not know their age, which means a mechanism is needed to record "unknown".  But they have chosen the Number type for age.  The researcher decides to use a dummy numeric value to mean missing.  They pick 99 as a code for missing.  But later they may encounter a patient who is actually 99; it becomes impossible to distinguish the magic number 99 from the real data 99.  Later they use a better code, 999, but then they calculate an average of this column and the one 999 value among many patients secretly inflates the average without them spotting the issue.
+
+The fix is to use a tagged type.  Age is either a number or it is a special missing tag.  This eliminates confusion on entry and forces the analysis to confront the issue of missing data.
+====
+
+== Tagged types for categories
+Many data columns have a very limited set of values they can take.  For example, day of the week only has seven possible values; a soccer result can only be win, loss or draw; a product might be classified into available, out of stock and discontinued.  Tagged types are ideal for these scenarios.  The type contains a list of the individual tags.
+
+.How not to do it: categories as text.
+====
+A market researcher is asking people whether they prefer a new product in red or black.  The data is recorded into a Text column, which ends up with values such as "Red", "red.", "R" and so on.  When it comes time to analyse the results, effort must be spent on classifying each text response.
+
+The fix is to use a tagged type with 
+
+====

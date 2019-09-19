@@ -1,0 +1,4 @@
+= The Book
+:doctype: book
+
+include::types-tagged.ad[]

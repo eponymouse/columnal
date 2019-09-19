@@ -244,6 +244,7 @@
     <bytecodeTargetLevel>
       <module name="anns" target="1.8" />
       <module name="app" target="1.8" />
+      <module name="book" target="1.8" />
       <module name="data" target="1.8" />
       <module name="expressions" target="1.8" />
       <module name="functions" target="1.8" />
