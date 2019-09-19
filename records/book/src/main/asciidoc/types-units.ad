@@ -1,0 +1,19 @@
+= Units
+
+Numbers are often a measure in a particular unit.  You might have a price in dollars, a length in centimetres, a duration in seconds, an angle in degrees, or a staff count in number of people.
+
+Columnal lets you explicitly state the units for a particular column.  This gives several benefits:
+
+* If you add two numbers, they are required to have the same unit.  This prevents accidents such as adding a length in centimetres to one in inches, or adding a duration in seconds to one in minutes.
+* There are built-in functions to convert between units, so you can convert a distance in miles to kilometres without needing to look up the conversion yourself.
+* Units are tracked through multiplication in division.  If you divide a number in metres by a number of seconds, the result is automatically marked as metres per second.
+
+Several units are provided by default, and you can also create your own units.
+
+== Creating units
+
+// TODO content
+
+== Converting between units
+
+// TODO content

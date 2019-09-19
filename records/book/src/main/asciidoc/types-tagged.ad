@@ -25,6 +25,15 @@ Many data columns have a very limited set of values they can take.  For example,
 ====
 A market researcher is asking people whether they prefer a new product in red or black.  The data is recorded into a Text column, which ends up with values such as "Red", "red.", "R" and so on.  When it comes time to analyse the results, effort must be spent on classifying each text response.
 
-The fix is to use a tagged type with 
-
+The fix is to use a tagged type with two possibilities, Red and Black.  That way no other data can enter the system and cause such confusion.
 ====
+
+// TODO screenshot
+
+== Tagged types for choices
+
+// TODO content
+
+== Tagged types for optional items
+
+// TODO content

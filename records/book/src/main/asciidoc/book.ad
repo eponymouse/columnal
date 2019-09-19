@@ -1,4 +1,14 @@
 = The Book
 :doctype: book
 
+////
+Rules of writing:
+ - When introducing a concept, never be more than two sentences from an example.
+ - Choose realistic examples
+ - Shorter is better
+ - Justify why features are useful
+////
+
 include::types-tagged.ad[]
+
+include::types-units.ad[]
