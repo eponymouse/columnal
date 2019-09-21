@@ -1,6 +1,8 @@
 = The Book
 :doctype: book
-
+Neil Brown
+v1.0, 2019-10-01
+:toc:
 ////
 Rules of writing:
  - When introducing a concept, never be more than two sentences from an example.
@@ -9,10 +11,19 @@ Rules of writing:
  - Justify why features are useful, and why the alternative is not as good
 ////
 
+include::introduction.ad[]
+
 include::types-tagged.ad[]
 
 include::types-units.ad[]
 
 include::types-temporal.ad[]
 
+// TODO records ?
+// TODO lists ?
+
 include::types-summary.ad[]
+
+include::data-immutability.ad[]
+
+include::transformations-overview.ad[]

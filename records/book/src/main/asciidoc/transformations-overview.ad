@@ -1,0 +1,19 @@
+= Transformations
+
+The last section explained the principle of immutability.  All data processing in Columnal leaves the source data table(s) untouched and instead produces a new table with the results of the calculation.  This processing is called a transformation, and there are several different types.  They are explained in some more detail in the following sections, but summarised here:
+
+ * Sorting copies the source rows and reorders them by values of a particular column(s).
+
+ * Filtering copies only the source rows that match a given criteria (but does not reorder them).
+
+ * Calculation calculates a new expression (like a formula in a spreadsheet) for each row in the source table.
+
+ * Aggregate collects together rows that share the value in a particular column(s) and performs a calculation on that group of rows. 
+
+ * Concatenate joins two or more tables vertically, giving all the rows from the first source table, followed by all the rows from the second source table and so on.
+
+ * Join joins two tables by matching values in a particular identifier column then joining those rows together.
+ 
+ * Check calculates a boolean expression, and is useful for things like sanity checks on data (for example, are all prices above zero).
+
+ * Excluding columns copies all rows, but only retains some of the columns.

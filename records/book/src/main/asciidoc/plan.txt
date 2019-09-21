@@ -32,7 +32,14 @@ Part 2: Data and transformation
  11. Calculate
  12. Aggregate
  13. Concat and join
-Part 3: Version Control
- 14. What is version control and why should you use it
- 15. Diffing: understanding diffs
- 16. Merging: how to merge and what to do it if goes wrong.
+Part 3: Expressions
+ 1. Overview
+ 2. Operators
+ 3. Functions
+ 4. Control structures
+ 5. Define
+ 6. Functions 
+Part 4: Version Control
+ 1. What is version control and why should you use it
+ 2. Diffing: understanding diffs
+ 3. Merging: how to merge and what to do it if goes wrong.
