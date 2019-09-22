@@ -15,6 +15,7 @@ public class ExplanationLocation
 {
     public final TableId tableId;
     public final ColumnId columnId;
+    @SuppressWarnings("optional.field")
     public final Optional<@TableDataRowIndex Integer> rowIndex;
 
     public ExplanationLocation(TableId tableId, ColumnId columnId)

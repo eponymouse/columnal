@@ -372,6 +372,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                         @Override
                         public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                         {
+                            @SuppressWarnings("optional")
                             Entry<@ExpressionIdentifier String, DataType> first = fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).findFirst().orElseThrow(() -> new UserException("Empty record type"));
                             // Recurse first:
                             first.getValue().apply(this);

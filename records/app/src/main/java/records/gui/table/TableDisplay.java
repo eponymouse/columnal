@@ -1193,10 +1193,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             @OnThread(Tag.FXPlatform)
             private <@NonNull T> Optional<Expression> unwrapOptionalType(DataType inner, ColumnReference columnReference, FXPlatformSupplierInt<RecogniserAndType<@NonNull @ImmediateValue T>> recogniser)
             {
-                return Optional.<Optional<Expression>>ofNullable(FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> new EnterValueDialog<@ImmediateValue T>(parent, inner, recogniser.get()).showAndWait().flatMap((@NonNull @ImmediateValue T v) -> Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
+                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> new EnterValueDialog<@ImmediateValue T>(parent, inner, recogniser.get()).showAndWait().flatMap((@NonNull @ImmediateValue T v) -> Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
                     Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@NonNull @ImmediateValue T) v);
                     return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
-                }))))).orElse(Optional.<Expression>empty());
+                }))));
+                if (optionalExpression == null)
+                    return Optional.empty();
+                else
+                    return optionalExpression;
             }
         };
     }

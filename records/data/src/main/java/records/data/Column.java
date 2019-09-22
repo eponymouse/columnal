@@ -83,12 +83,6 @@ public abstract class Column
         return recordSet.indexValid(index);
     }
 
-    // If supported, get number of distinct values quickly:
-    public Optional<List<@NonNull ?>> fastDistinct() throws UserException
-    {
-        return Optional.empty();
-    }
-
     public final int getLength() throws UserException, InternalException
     {
         return recordSet.getLength();
