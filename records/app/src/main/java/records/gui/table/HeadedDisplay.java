@@ -107,7 +107,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
 
     protected class TableHeaderItem extends FloatingItem<Pane>
     {
-        private @Nullable final TableManager tableManager;
+        private final @Nullable TableManager tableManager;
         private final Table table;
         private final TableId initialTableName;
         private final VirtualGridSupplierFloating floatingItems;

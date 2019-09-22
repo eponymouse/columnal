@@ -106,7 +106,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         }
     }
 
-    @NonNull
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
@@ -117,7 +116,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     }
 
     // Only valid after calling generate
-    @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Pair<List<@Value Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
@@ -609,8 +607,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         });
     }
 
-    @Value
-    protected TemporalAccessor makeTemporalValue(DateTimeInfo dateTimeInfo)
+    protected @Value TemporalAccessor makeTemporalValue(DateTimeInfo dateTimeInfo)
     {
         @Value TemporalAccessor value;
         switch (dateTimeInfo.getType())

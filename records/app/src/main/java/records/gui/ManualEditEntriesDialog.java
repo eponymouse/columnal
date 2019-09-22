@@ -49,11 +49,11 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         FancyList<Entry, HBox> fancyList = new FancyList<Entry, HBox>(originalEntries, true, false, false)
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(@Nullable Entry initialContentNull, boolean editImmediately)
+            protected @OnThread(Tag.FXPlatform) Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(Optional<Entry> initialContentNull, boolean editImmediately)
             {
                 // Can't be null because we don't allow adding items:
-                @SuppressWarnings("nullness")
-                @NonNull Entry initialContent = initialContentNull;
+                @SuppressWarnings("optional")
+                @NonNull Entry initialContent = initialContentNull.get();
                 
                 HBox content = new HBox(new Label("Loading..."));
                 Workers.onWorkerThread("Loading replacement values", Priority.FETCH, () -> {

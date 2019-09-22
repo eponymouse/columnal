@@ -141,7 +141,7 @@ public class Main extends Application
         CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
         Thread thread = new Thread()
         {
-            @OnThread(Tag.Unique)
+            @OnThread(Tag.Worker)
             public void run()
             {
                 upgradeInfo.complete(fetchUpgradeInfo(System.getProperty("columnal.version")));
@@ -212,7 +212,7 @@ public class Main extends Application
         Log.normal("Registered exporters");
     }
 
-    @OnThread(Tag.Unique)
+    @OnThread(Tag.Worker)
     private Optional<UpgradeInfo> fetchUpgradeInfo(@Nullable String currentVersion)
     {
         if (currentVersion == null)

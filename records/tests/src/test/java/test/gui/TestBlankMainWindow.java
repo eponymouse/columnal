@@ -404,7 +404,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 addNewRow();
                 values.add(initialVal);
                 // Now test for equality:
-                @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+                RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
                 DataTypeValue column = recordSet.getColumns().get(1).getType();
                 assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
                 for (int j = 0; j < values.size(); j++)
@@ -472,7 +472,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 MatcherAssert.assertThat(TestUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
         }
         // Now test for equality:
-        @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+        RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
         DataTypeValue column = recordSet.getColumns().get(1).getType();
         assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
         for (int i = 0; i < values.size(); i++)

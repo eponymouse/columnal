@@ -677,7 +677,7 @@ public class TestUtil
             if (r.nextBoolean())
                 localTime = localTime.minusSeconds(localTime.getSecond());
         }
-        @SuppressWarnings("value")
+        @SuppressWarnings("valuetype")
         @Value LocalTime ret = localTime;
         return ret;
     }
@@ -737,7 +737,7 @@ public class TestUtil
         }
         else if (value instanceof TaggedValue)
         {
-            TaggedValue t = ((TaggedValue)value);
+            @Value TaggedValue t = ((TaggedValue)value);
             return t.getTagIndex() + (t.getInner() == null ? "" : ":" + toString(t.getInner()));
         }
         else

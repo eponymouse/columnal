@@ -182,7 +182,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 addTransforms(dummyManager, srcId, 0, nextPos(src));
                 tableCount = dummyManager.getAllTables().size();
                 
-                @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
+                Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
                     MainWindowActions details = supplier.get();
                     this.tableManager = details._test_getTableManager();

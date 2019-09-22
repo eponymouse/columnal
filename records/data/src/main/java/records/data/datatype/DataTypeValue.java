@@ -100,7 +100,7 @@ public final class DataTypeValue
     {
         applyGet(new DataTypeVisitorGet<Void>()
         {
-            @SuppressWarnings("value")
+            @SuppressWarnings("valuetype")
             @OnThread(Tag.Simulation)
             private <T> void set(GetValue<@Value T> g, Class<T> castTo) throws UserException, InternalException
             {
@@ -482,7 +482,7 @@ public final class DataTypeValue
             return null;
         @NonNull Function<DataTypeValue, @Nullable GetValue<@Value T>> gFinal = g;
         return (int destIndex, final @Nullable ProgressListener prog) -> {
-            @OnThread(Tag.Simulation) @NonNull Pair<DataTypeValue, Integer> src = getOriginalIndex.apply(destIndex);
+            @NonNull Pair<DataTypeValue, Integer> src = getOriginalIndex.apply(destIndex);
             @Nullable GetValue<@Value T> innerGet = gFinal.apply(src.getFirst());
             if (innerGet == null)
                 throw new InternalException("Inner get in several was null");

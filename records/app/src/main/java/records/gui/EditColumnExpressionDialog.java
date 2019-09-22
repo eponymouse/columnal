@@ -355,9 +355,8 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             {
             }
 
-            @Nullable
             @Override
-            public UnitType calculateResult()
+            public @Nullable UnitType calculateResult()
             {
                 return UnitType.UNIT;
             }

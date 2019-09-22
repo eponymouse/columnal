@@ -54,6 +54,7 @@ import utility.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -455,9 +456,9 @@ public class TypesDialog extends Dialog<Void>
 
             @Override
             @OnThread(Tag.FXPlatform)
-            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
+            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(Optional<Either<@Localized String, TagType<JellyType>>> initialContent, boolean editImmediately)
             {
-                TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
+                TagValueEdit tagValueEdit = new TagValueEdit(!initialContent.isPresent() ? null : initialContent.get().<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
                 return new Pair<>(tagValueEdit, tagValueEdit.currentValue::get);
             }
 

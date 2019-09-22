@@ -25,6 +25,8 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.TranslationUtility;
 
+import java.util.Optional;
+
 // Shows an editable list of table ids
 @OnThread(Tag.FXPlatform)
 public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>>
@@ -93,12 +95,12 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
         }
         
         @Override
-        protected Pair<PickTablePane, FXPlatformSupplier<String>> makeCellContent(@Nullable String original, boolean editImmediately)
+        protected Pair<PickTablePane, FXPlatformSupplier<String>> makeCellContent(Optional<String> original, boolean editImmediately)
         {
-            if (original == null)
-                original = "";
-            SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original);
-            PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original, t -> {
+            if (!original.isPresent())
+                original = Optional.of("");
+            SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original.get());
+            PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original.get(), t -> {
                 curValue.set(t.getId().getRaw());
                 focusAddButton();
             });

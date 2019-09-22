@@ -16,7 +16,7 @@ import java.util.function.Function;
  */
 public class GenValueSpecifiedType extends GenValueBase<ValueGenerator>
 {
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public GenValueSpecifiedType()
     {
         super(ValueGenerator.class);

@@ -1,12 +1,7 @@
 package annotation.userindex.qual;
 
-import org.checkerframework.framework.qual.DefaultFor;
-import org.checkerframework.framework.qual.ImplicitFor;
-import org.checkerframework.framework.qual.InvisibleQualifier;
-import org.checkerframework.framework.qual.LiteralKind;
-import org.checkerframework.framework.qual.SubtypeOf;
 import org.checkerframework.framework.qual.DefaultQualifierInHierarchy;
-import org.checkerframework.framework.qual.TypeUseLocation;
+import org.checkerframework.framework.qual.SubtypeOf;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -18,7 +13,6 @@ import java.lang.annotation.Target;
 @SubtypeOf({})
 @DefaultQualifierInHierarchy
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-//@ImplicitFor(literals = {LiteralKind.NULL}, typeNames = {Void.class})
 public @interface UnknownIfUserIndex
 {
 }

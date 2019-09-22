@@ -100,7 +100,7 @@ public class ToString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
-                    TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
+                    @Value TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
                     return tag.getName() + ((taggedValue.getInner() == null || tag.getInner() == null) ? "" : ("(" + convertToString(tag.getInner(), taggedValue.getInner()) + ")"));
                 }

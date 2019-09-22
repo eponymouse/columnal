@@ -1,9 +1,6 @@
 package annotation.qual;
 
-import org.checkerframework.framework.qual.DefaultFor;
-import org.checkerframework.framework.qual.ImplicitFor;
 import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeUseLocation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;

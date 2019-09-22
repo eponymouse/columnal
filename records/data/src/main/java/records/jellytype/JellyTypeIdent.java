@@ -76,11 +76,11 @@ class JellyTypeIdent extends JellyType
     {
         Stream<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>> taggedTypes = mgr.getKnownTaggedTypes().values().stream().<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>map(ttd -> Either.<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>left(ttd));
         Stream<Pair<DataType, ImmutableList<String>>> basicTypes = Stream.<Pair<DataType, ImmutableList<String>>>of(
-            new Pair<>(DataType.BOOLEAN, ImmutableList.of("bool")),
-            new Pair<>(DataType.NUMBER, ImmutableList.of("int", "integer", "float", "double")),
-            new Pair<>(DataType.TEXT, ImmutableList.of("string"))
+            new Pair<>(DataType.BOOLEAN, ImmutableList.<String>of("bool")),
+            new Pair<>(DataType.NUMBER, ImmutableList.<String>of("int", "integer", "float", "double")),
+            new Pair<>(DataType.TEXT, ImmutableList.<String>of("string"))
         );
-        Stream<Pair<DataType, ImmutableList<String>>> dateTypes = Arrays.stream(DateTimeType.values()).<Pair<DataType, ImmutableList<String>>>map(dtt -> new Pair<>(DataType.date(new DateTimeInfo(dtt)), ImmutableList.of()));
+        Stream<Pair<DataType, ImmutableList<String>>> dateTypes = Arrays.stream(DateTimeType.values()).<Pair<DataType, ImmutableList<String>>>map(dtt -> new Pair<>(DataType.date(new DateTimeInfo(dtt)), ImmutableList.<String>of()));
         return Stream.<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>concat(taggedTypes, Stream.<Pair<DataType, ImmutableList<String>>>concat(basicTypes, dateTypes).<Either<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>>map(t -> Either.<TaggedTypeDefinition, Pair<DataType, ImmutableList<String>>>right(t)));
     }
 

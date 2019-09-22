@@ -171,8 +171,8 @@ public abstract class BinaryOpExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(
-            lhs._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newLHS -> copy(p.getSecond().apply(newLHS), rhs))),
-            rhs._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newRHS -> copy(lhs, p.getSecond().apply(newRHS))))
+            lhs._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), newLHS -> copy(p.getSecond().apply(newLHS), rhs))),
+            rhs._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), newRHS -> copy(lhs, p.getSecond().apply(newRHS))))
         );
     }
 

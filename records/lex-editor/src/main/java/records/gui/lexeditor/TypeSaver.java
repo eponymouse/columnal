@@ -50,9 +50,8 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfo(ImmutableList.of(Operator.COMMA, Operator.COLON), new MakeNary<TypeExpression, TypeSaver, Operator, BracketContent>()
         {
-            @Nullable
             @Override
-            public <R extends StyledShowable> @Recorded R makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent, R> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
+            public <R extends StyledShowable> @Recorded @Nullable R makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, CanonicalSpan>> operators, BracketAndNodes<TypeExpression, TypeSaver, BracketContent, R> bracketedStatus, EditorLocationAndErrorRecorder errorDisplayerRecord)
             {
                 return bracketedStatus.applyBrackets.apply(new BracketContent(typeExpressions, ImmutableList.copyOf(operators)));
             }
@@ -366,14 +365,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     {
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, TypeExpression, TypeExpression>()
         {
-            @Nullable
             @Override
-            public @Recorded TypeExpression apply(@NonNull BracketContent items)
+            public @Nullable @Recorded TypeExpression apply(@NonNull BracketContent items)
             {
                 return record(closed.location, new InvalidOpTypeExpression(items.typeExpressions));
             }
 
-            @NonNull
             @Override
             public @Recorded TypeExpression applySingle(@NonNull @Recorded TypeExpression singleItem)
             {

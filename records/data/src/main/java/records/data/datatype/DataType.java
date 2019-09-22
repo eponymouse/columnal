@@ -120,7 +120,7 @@ public abstract class DataType implements StyledShowable
     {
         return apply(new DataTypeVisitorEx<Column, InternalException>()
         {
-            @SuppressWarnings("value")
+            @SuppressWarnings("valuetype")
             private <T> @Value T castTo(Class<T> cls, @Value Object value) throws InternalException
             {
                 if (!cls.isAssignableFrom(value.getClass()))
@@ -197,7 +197,7 @@ public abstract class DataType implements StyledShowable
     {
         return apply(new DataTypeVisitorEx<DataTypeValue, InternalException>()
         {
-            @SuppressWarnings("value")
+            @SuppressWarnings("valuetype")
             private <T> GetValue<@Value T> castTo(Class<T> cls)
             {
                 return (i, prog) -> {
@@ -699,7 +699,7 @@ public abstract class DataType implements StyledShowable
     {
         return apply(new DataTypeVisitor<SimulationFunction<RecordSet, EditableColumn>>()
         {
-            @SuppressWarnings("value")
+            @SuppressWarnings("valuetype")
             private <T> List<Either<String, T>> listValue(List<Either<String, @Value Object>> values, FunctionInt<@Value Object, @Value T> applyValue) throws InternalException
             {
                 return Utility.mapListInt(values, x -> x.<@Value T>mapInt(applyValue));

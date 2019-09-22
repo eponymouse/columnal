@@ -145,9 +145,8 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         {
         }
 
-        @NonNull
         @Override
-        public final @Value V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+        public final @NonNull @Value V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
         {
             // Must do this first in case it finds an error:
             _beforeGet(index, progressListener);

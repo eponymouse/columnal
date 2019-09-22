@@ -94,7 +94,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     {
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
-        @OnThread(Tag.Simulation) FinalTextFormat ftf = format._test_getResultNoGUI();
+        FinalTextFormat ftf = format._test_getResultNoGUI();
         assertEquals("Failure with content: " + content + "\n\n", formatAndData.format, ftf);
         checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.make().getTypeManager(), writeDataToFile(formatAndData), ftf));
         

@@ -412,7 +412,6 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
 
 
     @Override
-    @NonNull
     @OnThread(Tag.Any)
     public RecordSet getData() throws UserException
     {

@@ -316,14 +316,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         return new BracketAndNodes<Expression, ExpressionSaver, BracketContent, Expression>(new ApplyBrackets<BracketContent, Expression, Expression>()
         {
-            @Nullable
             @Override
-            public @Recorded Expression apply(@NonNull BracketContent items)
+            public @Recorded @Nullable Expression apply(@NonNull BracketContent items)
             {
                 return record(closed.location, items.expressions.size() == 1 ? items.expressions.get(0) : new InvalidOperatorExpression(items.expressions));
             }
-
-            @NonNull
+            
             @Override
             public @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
             {
@@ -485,14 +483,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         return new BracketAndNodes<>(new ApplyBrackets<BracketContent, Expression, Expression>()
         {
-            @Nullable
             @Override
-            public @Recorded Expression apply(@NonNull BracketContent items)
+            public @Recorded @Nullable Expression apply(@NonNull BracketContent items)
             {
                 return null;
             }
 
-            @NonNull
             @Override
             public @Recorded Expression applySingle(@NonNull @Recorded Expression singleItem)
             {
@@ -1120,14 +1116,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @SuppressWarnings("recorded") // We can't actually record BracketContent
             BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
             {
-                @Nullable
                 @Override
-                public @Recorded BracketContent apply(@NonNull BracketContent items)
+                public @Recorded @Nullable BracketContent apply(@NonNull BracketContent items)
                 {
                     return items;
                 }
 
-                @NonNull
                 @Override
                 public @Recorded BracketContent applySingle(@NonNull @Recorded Expression singleItem)
                 {
@@ -1183,14 +1177,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             @SuppressWarnings("recorded") // We can't actually record BracketContent
             BracketContent bracketContent = makeContent.fetchContent(new BracketAndNodes<Expression, ExpressionSaver, BracketContent, BracketContent>(new ApplyBrackets<BracketContent, Expression, BracketContent>()
             {
-                @Nullable
                 @Override
-                public @Recorded BracketContent apply(@NonNull BracketContent items)
+                public @Recorded @Nullable BracketContent apply(@NonNull BracketContent items)
                 {
                     return items;
                 }
 
-                @NonNull
                 @Override
                 public @Recorded BracketContent applySingle(@NonNull @Recorded Expression singleItem)
                 {

@@ -200,7 +200,7 @@ public class TestUnit
         }
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private Matcher<Object> numberMatch(BigDecimal n)
     {
         return new CustomMatcher<Object>(n.toPlainString()) {

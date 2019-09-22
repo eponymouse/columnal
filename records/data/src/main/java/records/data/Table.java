@@ -134,7 +134,6 @@ public abstract class Table
         return id;
     }
 
-    @NonNull
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 

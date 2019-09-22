@@ -81,9 +81,9 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     // Note that bigDecimals.length <= longs.length, not ==
     // That is, bigDecimals may not be as long as the longs array if it doesn't have to be.
     private @Nullable BigDecimal @Nullable [] bigDecimals;
-    @MonotonicNonNull
+    
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataTypeValue dataType;
+    private @MonotonicNonNull DataTypeValue dataType;
     @OnThread(value = Tag.Any)
     private final NumberInfo displayInfo;
     private final @Nullable BeforeGet<NumericColumnStorage> beforeGet;
@@ -384,7 +384,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
     */
 
-    @NonNull
     private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         checkRange(index);

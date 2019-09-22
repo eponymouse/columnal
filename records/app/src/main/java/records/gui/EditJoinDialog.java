@@ -33,6 +33,7 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -154,9 +155,9 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) Pair<DualColumnPane, FXPlatformSupplier<Pair<@Nullable ColumnId, @Nullable ColumnId>>> makeCellContent(@Nullable Pair<@Nullable ColumnId, @Nullable ColumnId> initialContent, boolean editImmediately)
+        protected @OnThread(Tag.FXPlatform) Pair<DualColumnPane, FXPlatformSupplier<Pair<@Nullable ColumnId, @Nullable ColumnId>>> makeCellContent(Optional< Pair<@Nullable ColumnId, @Nullable ColumnId>> initialContent, boolean editImmediately)
         {
-            DualColumnPane dualColumnPane = new DualColumnPane(initialContent);
+            DualColumnPane dualColumnPane = new DualColumnPane(initialContent.orElse(null));
             if (editImmediately)
                 FXUtility.onceNotNull(dualColumnPane.sceneProperty(), s -> FXUtility.runAfter(dualColumnPane.primaryColumn::requestFocus));
             return new Pair<DualColumnPane, FXPlatformSupplier<Pair<@Nullable ColumnId, @Nullable ColumnId>>>(dualColumnPane, dualColumnPane::getValue);
@@ -209,8 +210,8 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         public Stream<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>> pick(@Nullable TableId primaryTable, @Nullable TableId secondaryTable)
         {
             return Utility.streamNullable(
-                primaryTable == null ? null : new Pair<>(primaryColumn.isFocused() ? System.currentTimeMillis() : lastPrimaryEditTime, Either.right(new Pair<>(primaryTable, c -> primaryColumn.setText(c.getRaw())))),
-                secondaryTable == null ? null : new Pair<>(secondaryColumn.isFocused() ? System.currentTimeMillis() : lastSecondaryEditTime, Either.right(new Pair<>(secondaryTable, c -> secondaryColumn.setText(c.getRaw()))))
+                primaryTable == null ? null : new Pair<>(primaryColumn.isFocused() ? System.currentTimeMillis() : lastPrimaryEditTime, Either.right(new Pair<TableId, FXPlatformConsumer<ColumnId>>(primaryTable, c -> primaryColumn.setText(c.getRaw())))),
+                secondaryTable == null ? null : new Pair<>(secondaryColumn.isFocused() ? System.currentTimeMillis() : lastSecondaryEditTime, Either.right(new Pair<TableId, FXPlatformConsumer<ColumnId>>(secondaryTable, c -> secondaryColumn.setText(c.getRaw()))))
             );
         }
     }

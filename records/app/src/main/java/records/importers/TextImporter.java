@@ -253,7 +253,6 @@ public class TextImporter implements Importer
         };
     }
 
-    @NonNull
     private static Map<Charset, List<String>> getInitial(File textFile) throws IOException
     {
         Map<Charset, List<String>> initial = new LinkedHashMap<>();

@@ -169,7 +169,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         else if (table instanceof Concatenate)
         {
             Concatenate concatenate = (Concatenate)table;
-            @OnThread(Tag.Any) Stream<TableId> sources = concatenate.getPrimarySources();
+            Stream<TableId> sources = concatenate.getPrimarySources();
             StyledString sourceText = sources.map(t -> t.toStyledString()).collect(StyledString.joining(", "));
             if (sourceText.toPlain().isEmpty())
             {
@@ -338,7 +338,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         if (e instanceof InternalException)
                             Log.log(e);
                     }
-                    new PickManualEditIdentifierDialog(parent, manualEdit.getReplacementIdentifier(), columnIds).showAndWait().ifPresent(newEditBy -> {
+                    new PickManualEditIdentifierDialog(parent, Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait().ifPresent(newEditBy -> {
                         Workers.onWorkerThread("Changing edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Changing edit transformation", () -> {
                             TableMaker<ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
                             parent.getManager().edit(manualEdit.getId(), maker, null);
@@ -528,7 +528,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             if (e instanceof InternalException)
                 Log.log(e);
         }
-        Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, deleteIfCancel ? null : manualEdit.getReplacementIdentifier(), columnIds).showAndWait();
+        Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, deleteIfCancel ? Optional.empty() : Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait();
         columnId.ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
             TableMaker<ManualEdit> makeSwapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
             parent.getManager().edit(manualEdit.getId(), makeSwapped, TableAndColumnRenames.EMPTY);

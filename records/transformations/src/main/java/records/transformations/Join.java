@@ -249,7 +249,7 @@ public class Join extends Transformation
     }
 
     @Override
-    public @NonNull @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
     {
         if (recordSet != null)
             return recordSet;

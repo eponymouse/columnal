@@ -75,7 +75,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             @From(GenRandom.class) Random r) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
-            @Initialized final int tableLength = 1 + r.nextInt(20);
+            final @Initialized int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
             
             int changes = 3;
@@ -108,7 +108,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         @From(GenRandom.class) Random r) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
-            @Initialized final int tableLength = 1 + r.nextInt(20);
+            final @Initialized int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
 
             // We try deleting a random table in the chain, and check that its cells are gone
@@ -232,7 +232,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     
     private @Nullable String getGraphicalValue(MainWindowActions details, TableDisplay tableDisplay, int columnIndex, int row)
     {
-        @OnThread(Tag.FXPlatform) @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
+        @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
         if (cell != null)
             return cell._test_getGraphicalText().replace(", ", ",");
         else

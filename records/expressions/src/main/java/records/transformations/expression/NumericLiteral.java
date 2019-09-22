@@ -138,7 +138,8 @@ public class NumericLiteral extends Literal
         return numberAsString();
     }
 
-    public @Nullable @Recorded @Pure UnitExpression getUnitExpression()
+    @Pure
+    public @Nullable @Recorded UnitExpression getUnitExpression()
     {
         return unit;
     }

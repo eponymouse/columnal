@@ -16,13 +16,14 @@ public final @Value class TaggedValue
     private final int tagIndex;
     private @Nullable @Value Object innerItem;
 
+    @SuppressWarnings("valuetype")
     public @Value TaggedValue(int tagIndex, @Nullable @Value Object innerItem)
     {
         this.tagIndex = tagIndex;
         this.innerItem = innerItem;
     }
     
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @ImmediateValue TaggedValue immediate(int tagIndex, @Nullable @ImmediateValue Object innerItem)
     {
         return new TaggedValue(tagIndex, innerItem);

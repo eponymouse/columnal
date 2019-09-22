@@ -233,15 +233,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     {
         return new BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression>(new ApplyBrackets<Void, UnitExpression, UnitExpression>()
         {
-            @Nullable
             @Override
-            public @Recorded UnitExpression apply(@NonNull Void items)
+            public @Recorded @Nullable UnitExpression apply(@NonNull Void items)
             {
                 // Can't happen
                 throw new IllegalStateException();
             }
 
-            @NonNull
             @Override
             public @Recorded UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
             {

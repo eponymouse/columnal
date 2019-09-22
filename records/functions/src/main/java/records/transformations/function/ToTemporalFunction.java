@@ -112,7 +112,6 @@ public abstract class ToTemporalFunction
             throw new UserException("Function " + name + " could not parse date/time: \"" + src + "\"");
         }
 
-        @NonNull
         private List<Pair<DateTimeFormatter, @Value Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
         {
             List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = new ArrayList<>();

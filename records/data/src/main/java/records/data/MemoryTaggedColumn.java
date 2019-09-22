@@ -67,7 +67,7 @@ public class MemoryTaggedColumn extends EditableColumn
     }
 
 
-    @SuppressWarnings("value") // Not 100% sure why this is needed
+    @SuppressWarnings("valuetype") // Not 100% sure why this is needed
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {

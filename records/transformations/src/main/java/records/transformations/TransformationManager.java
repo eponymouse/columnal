@@ -36,9 +36,8 @@ import java.util.stream.Collectors;
  */
 public class TransformationManager implements TransformationLoader
 {
-    @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private static TransformationManager instance;
+    private static @MonotonicNonNull TransformationManager instance;
 
     @OnThread(Tag.Any)
     public synchronized static TransformationManager getInstance()

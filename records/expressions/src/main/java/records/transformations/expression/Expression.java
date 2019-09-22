@@ -946,7 +946,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // Used for testing
     public final Stream<Pair<Expression, Function<Expression, Expression>>> _test_allMutationPoints()
     {
-        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(Stream.<Pair<Expression, Function<Expression, Expression>>>of(new Pair<>(this, e -> e)), _test_childMutationPoints());
+        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(Stream.<Pair<Expression, Function<Expression, Expression>>>of(new Pair<Expression, Function<Expression, Expression>>(this, e -> e)), _test_childMutationPoints());
     }
 
     public abstract Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints();

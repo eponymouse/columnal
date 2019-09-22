@@ -74,7 +74,7 @@ public class AppUtility
             @OnThread(Tag.Simulation)
             public Expression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
+                @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
                 TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
                 ConstructorExpression constructor = new ConstructorExpression(typeManager, typeName.getRaw(), tag.getName());
                 @Value Object innerValue = taggedValue.getInner();

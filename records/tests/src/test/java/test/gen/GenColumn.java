@@ -68,7 +68,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     }
 
     // Only valid to call after generate has been called at least once
-    @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type, SourceOfRandomness sourceOfRandomness) throws InternalException
     {

@@ -37,7 +37,7 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
     private final TextField byColumnName;
     private final ImmutableList<ColumnId> srcTableColumns;
 
-    public PickManualEditIdentifierDialog(View parent, @Nullable Optional<ColumnId> startingValue, ImmutableList<ColumnId> srcTableColumns)
+    public PickManualEditIdentifierDialog(View parent, Optional<Optional<ColumnId>> startingValue, ImmutableList<ColumnId> srcTableColumns)
     {
         super(parent, true);
         initModality(Modality.NONE);
@@ -47,9 +47,9 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
 
         RadioButton byRowRadio = GUI.radioButton(group, "manual.edit.byrownum");
         byColumnRadio = GUI.radioButton(group, "manual.edit.bycolumn");
-        byRowRadio.setSelected(startingValue != null && !startingValue.isPresent());
-        byColumnRadio.setSelected(startingValue == null || startingValue.isPresent());
-        byColumnName = new TextField(startingValue == null ? "" : startingValue.map(c -> c.getRaw()).orElse(""));
+        byRowRadio.setSelected(startingValue.isPresent() && !startingValue.get().isPresent());
+        byColumnRadio.setSelected(!startingValue.isPresent() || startingValue.get().isPresent());
+        byColumnName = new TextField(!startingValue.isPresent() ? "" : startingValue.get().map(c -> c.getRaw()).orElse(""));
         byColumnName.disableProperty().bind(byRowRadio.selectedProperty());
         getDialogPane().setContent(new VBox(
             new Label("Pick column to use to identify the edited rows if the source data changes:"),

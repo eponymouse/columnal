@@ -56,8 +56,8 @@ public class Workers
         public default void addedToQueue(long finished, long us) {};
     }
 
-    @GuardedBy("<self>")
     @OnThread(value = Tag.Any)
+    @GuardedBy("<self>")
     private static final Stack<WorkChunk> currentlyRunning = new Stack<>();
 
     private static class WorkChunk

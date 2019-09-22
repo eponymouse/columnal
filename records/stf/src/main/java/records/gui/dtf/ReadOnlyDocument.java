@@ -23,7 +23,7 @@ public class ReadOnlyDocument extends Document
 
     public ReadOnlyDocument(String content, boolean error)
     {
-        this.content = ImmutableList.of(new Pair<>(ImmutableSet.of(), content));
+        this.content = ImmutableList.of(new Pair<>(ImmutableSet.<String>of(), content));
         this.error = error;
     }
 

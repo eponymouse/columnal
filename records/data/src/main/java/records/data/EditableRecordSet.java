@@ -85,7 +85,7 @@ public class EditableRecordSet extends RecordSet
                 {
                     try
                     {
-                        @SuppressWarnings("value")
+                        @SuppressWarnings("valuetype")
                         T t = g.get(i);
                         r.add(Either.right(t));
                     }
@@ -189,7 +189,6 @@ public class EditableRecordSet extends RecordSet
         });
     }
 
-    @NonNull
     public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, @Value Object defaultValue) throws InternalException, UserException
     {
         return new EditableRecordSet(Collections.<SimulationFunction<RecordSet, EditableColumn>>singletonList(type.makeImmediateColumn(name, defaultValue)::apply), () -> 0);

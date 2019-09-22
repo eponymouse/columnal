@@ -133,7 +133,6 @@ public class RectangularTableCellSelection implements CellSelection
         );
     }
 
-    @NonNull
     public CellPosition calcBottomRightIncl()
     {
         return new CellPosition(
@@ -142,7 +141,6 @@ public class RectangularTableCellSelection implements CellSelection
         );
     }
 
-    @NonNull
     public CellPosition calcTopLeftIncl()
     {
         return new CellPosition(

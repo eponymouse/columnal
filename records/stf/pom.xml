@@ -14,6 +14,12 @@
     <dependencies>
         <dependency>
             <groupId>groupId</groupId>
+            <artifactId>anns</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>groupId</groupId>
             <artifactId>utility</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
@@ -32,20 +38,20 @@
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
-            <version>2.5.7</version>
+            <version>2.10.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker</artifactId>
-            <version>2.5.7</version>
+            <version>2.10.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- The annotated JDK to use (change to jdk7 if using Java 7) -->
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>jdk8</artifactId>
-            <version>2.5.7</version>
+            <version>2.10.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -70,8 +76,8 @@
 
         <dependency>
             <groupId>org.bluej</groupId>
-            <artifactId>threadchecker</artifactId>
-            <version>0.1</version>
+            <artifactId>anns-threadchecker</artifactId>
+            <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 

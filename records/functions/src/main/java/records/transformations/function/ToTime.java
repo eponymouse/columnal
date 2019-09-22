@@ -55,7 +55,6 @@ public class ToTime extends ToTemporalFunction
         return new DateTimeInfo(DateTimeType.TIMEOFDAY);
     }
 
-    @NonNull
     private List<String> l(String o)
     {
         return Collections.<String>singletonList(o);

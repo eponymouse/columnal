@@ -112,8 +112,7 @@ public class GUI
         node.getStyleClass().add(makeId(msgKey));
         return node;
     }
-
-    @NonNull
+    
     public static String makeId(@LocalizableKey String msgKey)
     {
         return "id-" + msgKey.replace(".", "-");
@@ -152,7 +151,7 @@ public class GUI
 
     public static MenuItem menuItemPos(@LocalizableKey String menuItemKey, FXPlatformConsumer<Point2D> onActionWithItemCentre, String... styleClasses)
     {
-        @OnThread(Tag.FXPlatform) Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
+        Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
         MenuItem item = new MenuItem(stringAndShortcut.getFirst());
         item.setOnAction(e -> {
             ContextMenu parentPopup = item.getParentPopup();

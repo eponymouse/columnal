@@ -1139,17 +1139,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new UnitLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
         };
         ImmutableList<Pair<String, Function<NestedLiteralSource, LiteralOutcome>>> anywhere = ImmutableList.of(
-            new Pair<>("date{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTHDAY, c.innerContent))),
-            new Pair<>("datetime{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIME, c.innerContent))),
-            new Pair<>("datetimezoned{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIMEZONED, c.innerContent))),
-            new Pair<>("dateym{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTH, c.innerContent))),
-            new Pair<>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
-            new Pair<>("type{", c -> {
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("date{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTHDAY, c.innerContent))),
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("datetime{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIME, c.innerContent))),
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("datetimezoned{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.DATETIMEZONED, c.innerContent))),
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("dateym{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.YEARMONTH, c.innerContent))),
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("time{", c -> new LiteralOutcome(c, new TemporalLiteral(DateTimeType.TIMEOFDAY, c.innerContent))),
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("type{", c -> {
                 TypeLexer typeLexer = new TypeLexer(typeManager, true, false);
                 LexerResult<TypeExpression, CodeCompletionContext> processed = typeLexer.process(c.innerContent, 0, insertListener);
                 return new LiteralOutcome(c.prefix, processed.adjustedContent, processed.display, new TypeLiteralExpression(processed.result), c.terminatedProperly ? "}" : "", processed.removedChars, processed.caretPositions, processed.wordBoundaryCaretPositions, processed.errors, processed.autoCompleteDetails, processed.locationRecorder);
             }),
-            new Pair<>("unit{", unitLit)
+            new Pair<String, Function<NestedLiteralSource, LiteralOutcome>>("unit{", unitLit)
         );
         if (lastWasNumber)
             return Utility.appendToList(anywhere, new Pair<>("{", unitLit));

@@ -170,7 +170,7 @@ public class MainWindow
             upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
             {
                 @Override
-                @OnThread(value = Tag.Unique, ignoreParent = true)
+                @OnThread(value = Tag.Worker, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
                     opt.ifPresent(u -> Platform.runLater(() -> u.showIn(stackPane, 1)));
@@ -311,7 +311,7 @@ public class MainWindow
     public static void closeAll()
     {
         // Take copy to avoid concurrent modification:
-        new HashMap<>(views).forEach((v, s) -> {
+        new HashMap<View, Stage>(views).forEach((v, s) -> {
             v.ensureSaved();
             s.hide();
         });

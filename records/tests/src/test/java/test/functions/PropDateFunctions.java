@@ -216,7 +216,7 @@ public class PropDateFunctions
         {
             @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, srcType);
             assertNotNull(instance);
-            return instance.getFirst().call(src.toArray());
+            return instance.getFirst().call(src.toArray(new @Value Object[0]));
         }
         catch (RuntimeException e)
         {

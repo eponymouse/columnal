@@ -18,8 +18,7 @@ import java.util.List;
  */
 public class GenUnit extends Generator<Unit>
 {
-    @MonotonicNonNull
-    private List<SingleUnit> units;
+    private @MonotonicNonNull List<SingleUnit> units;
 
     public GenUnit()
     {

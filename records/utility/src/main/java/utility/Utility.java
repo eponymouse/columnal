@@ -342,8 +342,8 @@ public class Utility
         }
         else if (ax instanceof TaggedValue)
         {
-            TaggedValue at = cast(ax, TaggedValue.class);
-            TaggedValue bt = cast(bx, TaggedValue.class);
+            @Value TaggedValue at = cast(ax, TaggedValue.class);
+            @Value TaggedValue bt = cast(bx, TaggedValue.class);
             cmp = Integer.compare(at.getTagIndex(), bt.getTagIndex());
             if (cmp != 0)
                 return cmp;
@@ -447,7 +447,7 @@ public class Utility
             return number;
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value BigDecimal toBigDecimal(@Value Number n)
     {
         if (n instanceof BigDecimal)
@@ -542,7 +542,7 @@ public class Utility
         return parseNumberOpt(number).orElseThrow(() -> new UserException("Problem parsing number \"" + number + "\""));
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static Optional<@ImmediateValue Number> parseNumberOpt(String number)
     {
         // First try as a long:
@@ -609,7 +609,7 @@ public class Utility
         return Rational.ofBigDecimal(new BigDecimal(text));
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Number negate(@Value Number n)
     {
         if (n instanceof BigDecimal)
@@ -619,7 +619,7 @@ public class Utility
     }
     
     // If !add, subtract
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Number addSubtractNumbers(@Value Number lhs, @Value Number rhs, boolean add)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
@@ -645,7 +645,7 @@ public class Utility
         }
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Number multiplyNumbers(@Value Number lhs, @Value Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
@@ -665,7 +665,7 @@ public class Utility
         }
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Number divideNumbers(@Value Number lhs, @Value Number rhs) throws UserException
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
@@ -688,7 +688,7 @@ public class Utility
         }
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Number raiseNumber(@Value Number lhs, @Value Number rhs) throws UserException
     {
         // It must fit in an int and not be massive/tiny:
@@ -1049,7 +1049,7 @@ public class Utility
         return OptionalInt.empty();
     }
 
-    @SuppressWarnings("value") // Input is @Value, so output will be too
+    @SuppressWarnings("valuetype") // Input is @Value, so output will be too
     public static <T> @Value T cast(@Value Object x, Class<T> cls) throws InternalException
     {
         if (cls.isInstance(x))
@@ -1068,7 +1068,7 @@ public class Utility
         return null;
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public static @Value Object @Value [] castTuple(@Value Object x, int tupleSize) throws InternalException
     {
         Object[] tuple = cast(x, Object[].class);
@@ -1832,7 +1832,7 @@ public class Utility
             this.values = ImmutableMap.copyOf(values);
         }
         
-        @SuppressWarnings("value")
+        @SuppressWarnings("valuetype")
         public static @ImmediateValue RecordMap immediate(Map<@ExpressionIdentifier String, @ImmediateValue Object> values)
         {
             return new RecordMap(values);
@@ -1937,7 +1937,7 @@ public class Utility
             }
         }
 
-        @SuppressWarnings("value")
+        @SuppressWarnings("valuetype")
         public static @Value ListEx empty()
         {
             return new ListEx()
@@ -1961,12 +1961,13 @@ public class Utility
     {
         private final List<? extends @Value Object> items;
 
+        @SuppressWarnings("valuetype")
         public @Value ListExList(List<? extends @Value Object> items)
         {
             this.items = items;
         }
 
-        @SuppressWarnings("value")
+        @SuppressWarnings("valuetype")
         public static @ImmediateValue ListExList immediate(List<? extends @ImmediateValue Object> items)
         {
             return new ListExList(items);
@@ -2040,7 +2041,7 @@ public class Utility
             File mruFile = new File(getStorageDirectory(), MRU_FILE_NAME);
             if (mruFile.exists())
             {
-                return FileUtils.readLines(mruFile, "UTF-8").stream().map(File::new).collect(ImmutableList.<File>toImmutableList());
+                return FileUtils.readLines(mruFile, "UTF-8").stream().<File>map(File::new).collect(ImmutableList.<File>toImmutableList());
             }
         }
         catch (IOException e)
@@ -2103,7 +2104,7 @@ public class Utility
     public static <T> Stream<T> intercalateStreamM(Stream<T> original, Supplier<T> makeSpacer)
     {
         // Not ideal, but it works:
-        ImmutableList<T> origList = original.collect(ImmutableList.<T>toImmutableList());
+        @UnknownKeyFor ImmutableList<T> origList = original.collect(ImmutableList.<T>toImmutableList());
         ArrayList<T> inclSpacers = new ArrayList<>();
         for (int i = 0; i < origList.size(); i++)
         {

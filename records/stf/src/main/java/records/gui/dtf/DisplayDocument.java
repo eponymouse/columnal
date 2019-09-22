@@ -30,7 +30,7 @@ public abstract class DisplayDocument extends Document
     @Override
     Stream<Pair<Set<String>, String>> getStyledSpans(boolean focused)
     {
-        return Stream.of(new Pair<>(ImmutableSet.of(), content));
+        return Stream.of(new Pair<>(ImmutableSet.<String>of(), content));
     }
 
     @Override

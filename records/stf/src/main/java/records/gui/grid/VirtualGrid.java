@@ -423,7 +423,7 @@ public final class VirtualGrid implements ScrollBindable
                 for (Iterator<SelectionListener> iterator = FXUtility.mouse(VirtualGrid.this).selectionListeners.iterator(); iterator.hasNext(); )
                 {
                     SelectionListener selectionListener = iterator.next();
-                    @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> outcome = selectionListener.selectionChanged(oldVal, s);
+                    Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> outcome = selectionListener.selectionChanged(oldVal, s);
                     if (outcome.getFirst() == ListenerOutcome.REMOVE)
                         iterator.remove();
                     if (outcome.getSecond() != null)

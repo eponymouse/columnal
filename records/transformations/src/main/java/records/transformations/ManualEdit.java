@@ -262,7 +262,7 @@ edit : editHeader editColumn*;
     }
 
     @Override
-    public @NonNull @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
     {
         return recordSet.eitherEx(e -> {throw new UserException(e);}, rs -> rs);
     }

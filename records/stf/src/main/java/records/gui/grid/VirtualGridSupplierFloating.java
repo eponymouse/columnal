@@ -118,7 +118,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     protected void keyboardActivate(CellPosition cellPosition)
     {
         // Avoid concurrent modification issues:
-        for (FloatingItem<?> item : new ArrayList<>(items))
+        for (FloatingItem<?> item : new ArrayList<@NonNull FloatingItem<?>>(items))
         {
             item.keyboardActivate(cellPosition);
         }

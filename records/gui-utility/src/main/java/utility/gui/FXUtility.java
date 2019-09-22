@@ -300,7 +300,7 @@ public class FXUtility
     {
         if (!loadedFonts.contains(fontFileName))
         {
-            try (@Nullable InputStream fis = ResourceUtility.getResourceAsStream(fontFileName))
+            try (InputStream fis = ResourceUtility.getResourceAsStream(fontFileName))
             {
                 if (fis == null)
                 {

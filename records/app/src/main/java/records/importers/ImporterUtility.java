@@ -76,7 +76,6 @@ public class ImporterUtility
         }
     }
 
-    @NonNull
     @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<? extends List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {

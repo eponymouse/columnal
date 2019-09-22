@@ -223,14 +223,14 @@ public class TestExpressionExplanation
     }
 
     // No row index, and a mapping from a single implicit lambda arg param to the given value
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private Pair<OptionalInt, ImmutableMap<String, @Value Object>> q(Object value)
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of("?1", value));
     }
 
     // No row index, and a mapping from a single name to the given value
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private Pair<OptionalInt, ImmutableMap<String, @Value Object>> vv(String name, Object value)
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of(name, value));
@@ -248,7 +248,7 @@ public class TestExpressionExplanation
         }
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private VarValue v(String name, Object value)
     {
         return new VarValue(name, value);
@@ -296,7 +296,7 @@ public class TestExpressionExplanation
         return explanation(expressionSrc, ExecutionType.VALUE, rowIndexAndVars, result, location, children);
     }
     
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();

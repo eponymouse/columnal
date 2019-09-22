@@ -252,7 +252,7 @@ public class CallExpression extends Expression
         if (function instanceof ConstructorExpression)
         {
             ConstructorExpression constructor = (ConstructorExpression) function;
-            TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
+            @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
             if (taggedValue.getTagIndex() != constructor.getTagIndex())
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
             // If we do match, go to the inner:
@@ -319,7 +319,7 @@ public class CallExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         //return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(
-            return function._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), arguments)));
+            return function._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), arguments)));
             //param._test_allMutationPoints().<Pair<Expression, Function<Expression, Expression>>>map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
         //);
     }

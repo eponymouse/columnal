@@ -31,9 +31,9 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
     private final DumbObjectPool<@Value TemporalAccessor> pool;
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
-    @MonotonicNonNull
+    
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private DataTypeValue dataType;
+    private @MonotonicNonNull DataTypeValue dataType;
     private final @Nullable BeforeGet<TemporalColumnStorage> beforeGet;
 
     public TemporalColumnStorage(DateTimeInfo dateTimeInfo, boolean isImmediateData) throws InternalException

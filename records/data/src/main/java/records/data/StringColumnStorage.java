@@ -28,9 +28,9 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
     @SuppressWarnings("unchecked")
     private final DumbObjectPool<@Value String> pool = new DumbObjectPool<>((Class<@Value String>)(Class)String.class, 1000, null);
     private final @Nullable BeforeGet<StringColumnStorage> beforeGet;
-    @MonotonicNonNull
+    
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private DataTypeValue dataType;
+    private @MonotonicNonNull DataTypeValue dataType;
 
     public StringColumnStorage(@Nullable BeforeGet<StringColumnStorage> beforeGet, boolean isImmediateData)
     {

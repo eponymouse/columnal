@@ -83,7 +83,6 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         return dummyManager.getTypeManager();
     }
 
-    @NonNull
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
@@ -94,7 +93,6 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     }
 
     // Only valid after calling generate
-    @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Pair<@Value Object, Expression> makeOfType(DataType type) throws UserException, InternalException
     {

@@ -335,7 +335,6 @@ public class BackwardsMatch extends BackwardsProvider
     }
 
     // Pattern and an optional guard
-    @NonNull
     private PatternInfo makePatternMatch(int maxLevels, DataType t, @Value Object actual, boolean canMatchMore)
     {
         try
@@ -371,7 +370,7 @@ public class BackwardsMatch extends BackwardsProvider
                 {
                     if (r.nextBoolean())
                     {
-                        TaggedValue p = (TaggedValue) actual;
+                        @Value TaggedValue p = (TaggedValue) actual;
                         return t.apply(new SpecificDataTypeVisitor<PatternInfo>()
                         {
                             @Override

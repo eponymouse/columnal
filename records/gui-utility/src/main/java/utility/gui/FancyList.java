@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
 
@@ -212,7 +213,7 @@ public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
      * graphical component.
      */
     @OnThread(Tag.FXPlatform)
-    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
+    protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(Optional<T> initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
     {
@@ -427,7 +428,7 @@ public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
             });
             //deleteButton.visibleProperty().bind(deletable);
             setMargin(deleteButton, new Insets(0, 8, 0, 4));
-            Pair<CELL_CONTENT, FXPlatformSupplier<T>> pair = makeCellContent(initialContent, editImmediately);
+            Pair<CELL_CONTENT, FXPlatformSupplier<T>> pair = makeCellContent(Optional.ofNullable(initialContent), editImmediately);
             this.content = pair.getFirst();
             this.value = pair.getSecond();
             setCenter(this.content);

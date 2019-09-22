@@ -116,7 +116,7 @@ public class InitialWindow
             upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
             {
                 @Override
-                @OnThread(value = Tag.Unique, ignoreParent = true)
+                @OnThread(value = Tag.Worker, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
                     opt.ifPresent(u -> Platform.runLater(() -> u.showIn(content, 2)));

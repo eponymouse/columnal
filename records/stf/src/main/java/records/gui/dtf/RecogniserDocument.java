@@ -127,7 +127,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, text).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     @RequiresNonNull("saveChange")
     private void save(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save, String text, FXPlatformRunnable reset, SuccessDetails<V> x)
     {
@@ -148,7 +148,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     {
         if (!curErrorPosition.isPresent() || curErrorPosition.getAsInt() >= text.length())
         {
-            return Stream.of(new Pair<>(ImmutableSet.of(), text));
+            return Stream.of(new Pair<>(ImmutableSet.<String>of(), text));
         }
         else
         {
@@ -172,7 +172,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         relinquishFocus.consume(defocusCause);
     }
 
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     public Either<ErrorDetails, V> getLatestValue()
     {
         return latestValue.map((SuccessDetails<V> x) -> x.value);

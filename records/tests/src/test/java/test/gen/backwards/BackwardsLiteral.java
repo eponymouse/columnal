@@ -81,7 +81,7 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return ImmutableList.of(() -> {
-                    TaggedValue taggedValue = (TaggedValue) targetValue;
+                    @Value TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
                     TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
@@ -162,7 +162,7 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return ImmutableList.of(() -> {
-                    TaggedValue taggedValue = (TaggedValue) targetValue;
+                    @Value TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
                     TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);

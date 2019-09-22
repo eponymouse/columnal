@@ -819,7 +819,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
             try
             {
-                @OnThread(Tag.Any) List<Column> tableColumns = table.getData().getColumns();
+                List<Column> tableColumns = table.getData().getColumns();
                 OptionalInt ourIndex = Utility.findFirstIndex(tableColumns, otherCol -> otherCol.getName().equals(c));
                 if (ourIndex.isPresent())
                 {
@@ -1512,7 +1512,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         if (defaultValue != null)
                         {
-                            @OnThread(Tag.Simulation) String string = DataTypeUtility.valueToString(column.getType().getType(), defaultValue, null);
+                            String string = DataTypeUtility.valueToString(column.getType().getType(), defaultValue, null);
                             Platform.runLater(() -> {
                                 DataCellSupplier.@Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
                                 if (cell != null)

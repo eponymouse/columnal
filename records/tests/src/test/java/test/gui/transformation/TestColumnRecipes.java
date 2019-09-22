@@ -101,7 +101,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
      * @throws Exception
      */ 
     @OnThread(Tag.Simulation)
-    @SuppressWarnings("value")
+    @SuppressWarnings("valuetype")
     private void testTypeTransform(DataType from, @Nullable DataType to, @Nullable Function<ColumnId, Expression> expression, ImmutableList<Object> values, @Nullable Runnable execAfterTypeSelection) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(from.makeImmediateColumn(new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));

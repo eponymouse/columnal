@@ -50,6 +50,7 @@ import utility.TranslationUtility;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
@@ -131,9 +132,9 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         }
 
         @Override
-        protected Pair<SortPane, FXPlatformSupplier<Pair<String, Direction>>> makeCellContent(@Nullable Pair<String, Direction> initialContent, boolean editImmediately)
+        protected Pair<SortPane, FXPlatformSupplier<Pair<String, Direction>>> makeCellContent(Optional<Pair<String, Direction>> initialContent, boolean editImmediately)
         {
-            SortPane sortPane = new SortPane(initialContent);
+            SortPane sortPane = new SortPane(initialContent.orElse(null));
             if (editImmediately)
                 FXUtility.onceNotNull(sortPane.sceneProperty(), s -> FXUtility.runAfter(sortPane.columnField::requestFocus));
             return new Pair<>(sortPane, sortPane::getCurrentValue);

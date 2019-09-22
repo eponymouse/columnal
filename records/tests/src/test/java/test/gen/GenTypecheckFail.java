@@ -69,7 +69,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             StringBuilder s = new StringBuilder("Expression : " + expression);
             s.append(" col types: ");
-            @OnThread(Tag.Any) List<Column> columns = recordSet.getColumns();
+            List<Column> columns = recordSet.getColumns();
             for (int i = 0; i < columns.size(); i++)
             {
                 Column column = columns.get(i);

@@ -95,7 +95,7 @@ public class BackwardsColumnRef extends BackwardsProvider
                 }
 
                 @Override
-                @SuppressWarnings("value")
+                @SuppressWarnings("valuetype")
                 @OnThread(Tag.Simulation)
                 public Column record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
                 {
