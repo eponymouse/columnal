@@ -1,0 +1,13 @@
+= Lists
+
+Lists are a sequence of items of the same type.  For example, `["A", "B", "C"]` or `[3, 2, 1]`.  Lists are useful when you have a collection of items, but, unlike a record, you don't know how many values you might have.
+
+== Columns of lists
+
+One powerful feature that lists enable is the ability to have a list (or even nested lists) in each entry in a table column.  This allows for more complex data to be easily represented in tables.
+
+This feature is complicated to achieve in spreadsheets and databases because it is not possible to have an arbitrary number of values on each row.
+
+== Varying types
+
+If you have a list where you need the items to have varying types, first define a tagged type with all the possibilities, then use a list of that tagged type.

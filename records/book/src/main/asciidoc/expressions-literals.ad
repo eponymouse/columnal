@@ -1,0 +1,57 @@
+= Expression Literals
+
+A literal is a value that needs no further calculation.  For example `3` is a literal, but `1 + 2` is not.  As with every expression in Columnal, every literal has a type.  This section briefly outlines the way to write literals of the different types.
+
+== Number literals
+
+Numbers are written in the standard way, for example `34`, `1.2`, `-36.7`.  You must use dot as the decimal separator; the European style of using comma is not supported.
+
+=== Writing numbers with exponent notation
+
+There is no "E-notation" for numbers; you must write out all the digits.  So Avogadro's constant would be written 602214150000000000000000 as a literal.  If you want to use E-notation, you can instead multiply by 10 raised to a power (although this is technically no longer a literal); the previous number can be written `6.02214076*(10^23)`.
+
+=== Writing numbers with units.
+
+Number literals can have units.  These are written in curly brackets after the number.  For example `10{m}` is 10 metres, `30{mile/hour}` is 30 miles per hour, `0.12{foot^3}` is 0.12 cubic feet.
+
+== Text literals
+
+Text literals are written in double-quotes.  For example `"Hello"`, `"Goodbye!"`.  All text items are used exactly as they are written, including spaces, accented characters and so on, with the exception of a few escape characters.
+
+=== Escape characters
+
+Certain characters are escape characters and treated specially.  If you want to write a double-quote in a text literal, you must write `^q` instead.  If you want a line-break, you must write `^n`.  If you want the `^` character itself, you must write `^c` to distinguish it from the other escapes.
+
+== Boolean literals
+
+Boolean literals are very straightforward: `true` is true and `false` is false.  They are case-sensitive: if you write `True` you will get an unknown-variable error.
+
+== Date/time literals
+
+Date/time literals are written in a special way.  If you want to write a time, write it like this: `time{11:21}`.  There is some flexibility in how you write these literals -- the best way to explain is through some examples:
+
+.DateYM type:
+   - dateym{April 2003}
+   - dateym{Apr 2003}
+   - dateym{04/2003}
+
+.Date type:
+   - date{10 April 2003}
+   - date{2004-04-10}
+   - date{Apr 10 2003}
+
+.Time type:
+   - time{08:57}
+   - time{9:12:03 PM}
+   - time{23:59:59.999999}
+
+.Datetime type:
+   - datetime{10 April 2003 08:57}
+   - datetime{2010-11-28 9:12:03 PM}
+   - datetime{Sep 3 1921 23:59:59.999999}
+
+.Datetimezoned type:
+   - datetimezoned{10 April 2003 08:57+03:00}
+   - datetimezoned{2010-11-28 9:12:03 PM Asia/Jakarta}
+   - datetimezoned{Sep 3 1921 23:59:59.999999 Africa/Khartoum}
+

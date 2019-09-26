@@ -1,0 +1,21 @@
+= Expressions
+
+An expression specifies the calculation of a value.  For example, `1 + 2` is an expression; `Price * 1.2` is another.  Expressions are similar to formulas in spreadsheets.  Expressions can be made up of several constituent parts:
+
+ * Literals.  These are single values such as `64.2` or `"Hello"` with no further calculation needed.
+
+ * Operators.  These are things such as `+`, `*` and several more specific to Columnal.
+
+ * Functions.  These are functions such as `text length` or `maximum` which perform useful commonly-needed calculations.
+
+ * Control structures.  These are things such as if-then-else which perform a check and then choose which expression to evaluate.
+
+ * Other structures.  These allow defining new variables or new functions, which is useful in large expressions.
+
+These parts are explained in more detail in the following sections.  The important thing to first understand about Columnal's expressions is that they are type-checked.
+
+== Type-checking
+
+Every expression in Columnal has a type.  For example, `482.245` has type `Number` as does `3 / 4.5`, `"Hello"` has type `Text`, `1 < 2` has type `Boolean`.
+
+These types are checked when you write an expression.  This is done to highlight mistakes as early as possible; a mistake has less impact it is fixed immediately rather than fixed later on.  If the types do not check successfully, you will get an error.  For example, `1 + "Hi"` is a mistake, because it makes no sense to add a number to text, and will give a type error.

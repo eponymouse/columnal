@@ -13,17 +13,28 @@ Rules of writing:
 
 include::introduction.ad[]
 
+// Types
+
 include::types-tagged.ad[]
 
 include::types-units.ad[]
 
 include::types-temporal.ad[]
 
-// TODO records ?
-// TODO lists ?
+include::types-records.ad[]
+
+include::types-lists.ad[]
 
 include::types-summary.ad[]
+
+// Transformations
 
 include::data-immutability.ad[]
 
 include::transformations-overview.ad[]
+
+// Expressions
+
+include::expressions-overview.ad[]
+
+include::expressions-literals.ad[]

@@ -1,0 +1,8 @@
+= Record types
+
+Sometimes a value will have multiple consituent parts.  For example, a GPS position will have latitude and longitude.  A colour may be represented as red, green and blue values.  It can be useful to represent such compound values as a record type.
+
+A record type is a collection of fields.  Each field has a name and a type.  So `(latitude: Number, longitude: Number)` is a record type with two fields.  One is called latitude, the other longitude, and they are both numbers.
+
+There are two approaches to storing compound data like this.  One approach is to use a separate column for each part, for example a Number column for longitude and a second Number column for latitude.  The alternate approach is to use a record type that combines these two into a single column.  The record approach is particularly useful if the record type will be used as part of another type, for example inside an Optional type or inside a list.
+

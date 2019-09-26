@@ -32,6 +32,7 @@ Part 2: Data and transformation
  11. Calculate
  12. Aggregate
  13. Concat and join
+ 14. Reshaping summary -- what to use when
 Part 3: Expressions
  1. Overview
  2. Operators
