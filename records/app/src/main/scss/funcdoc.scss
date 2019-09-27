@@ -47,7 +47,7 @@ body.indiv {
 }
 .type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header, .literal-name-header, .column-header {
     font-size: 18pt;
-    background-color: #e3e3ff;
+    background-color: $doc-header-background;
     padding: 8;
 }
 .function-type, .syntax-type {
