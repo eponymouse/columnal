@@ -31,27 +31,27 @@ Boolean literals are very straightforward: `true` is true and `false` is false. 
 Date/time literals are written in a special way.  If you want to write a time, write it like this: `time{11:21}`.  There is some flexibility in how you write these literals -- the best way to explain is through some examples:
 
 .DateYM type:
-   - dateym{April 2003}
-   - dateym{Apr 2003}
-   - dateym{04/2003}
+   - `dateym{April 2003}`
+   - `dateym{Apr 2003}`
+   - `dateym{04/2003}`
 
 .Date type:
-   - date{10 April 2003}
-   - date{2004-04-10}
-   - date{Apr 10 2003}
+   - `date{10 April 2003}`
+   - `date{2004-04-10}`
+   - `date{Apr 10 2003}`
 
 .Time type:
-   - time{08:57}
-   - time{9:12:03 PM}
-   - time{23:59:59.999999}
+   - `time{08:57}`
+   - `time{9:12:03 PM}`
+   - `time{23:59:59.999999}`
 
 .Datetime type:
-   - datetime{10 April 2003 08:57}
-   - datetime{2010-11-28 9:12:03 PM}
-   - datetime{Sep 3 1921 23:59:59.999999}
+   - `datetime{10 April 2003 08:57}`
+   - `datetime{2010-11-28 9:12:03 PM}`
+   - `datetime{Sep 3 1921 23:59:59.999999}`
 
 .Datetimezoned type:
-   - datetimezoned{10 April 2003 08:57+03:00}
-   - datetimezoned{2010-11-28 9:12:03 PM Asia/Jakarta}
-   - datetimezoned{Sep 3 1921 23:59:59.999999 Africa/Khartoum}
+   - `datetimezoned{10 April 2003 08:57+03:00}`
+   - `datetimezoned{2010-11-28 9:12:03 PM Asia/Jakarta}`
+   - `datetimezoned{Sep 3 1921 23:59:59.999999 Africa/Khartoum}`
 
