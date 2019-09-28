@@ -35,4 +35,20 @@
             <output>12</output>
         </example>
     </function>
+    <function name="get optionals from list">
+        <typeArg>t</typeArg>
+        <argType name="list of optionals">[@apply Optional(t)]</argType>
+        <returnType name="present values">[t]</returnType>
+        <description>
+            <p>Gets all the present values from the list of optionals, in the same order as the original list.  All None items are discarded.</p>
+        </description>
+        <example>
+            <inputArg>[@call @tag Optional\Is(17), @tag Optional\None, @call @tag Optional\Is(42), @tag Optional\None]</inputArg>
+            <output>[17, 42]</output>
+        </example>
+        <example>
+            <inputArg>[@tag Optional\None]</inputArg>
+            <output>[]</output>
+        </example>
+    </function>
 </functionDocumentation>

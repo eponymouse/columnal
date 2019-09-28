@@ -28,6 +28,7 @@ import records.transformations.function.number.RoundDP;
 import records.transformations.function.number.RoundSF;
 import records.transformations.function.optional.GetOptionalOrDefault;
 import records.transformations.function.optional.GetOptionalOrError;
+import records.transformations.function.optional.GetOptionalsFromList;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
 import records.transformations.function.text.StringLowerCase;
@@ -64,6 +65,7 @@ public class FunctionList
             new GetElementOrDefault(),
             new GetOptionalOrError(),
             new GetOptionalOrDefault(),
+            new GetOptionalsFromList(),
             new InList(),
             new JoinLists(),
             new KeepFunction(),
