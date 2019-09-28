@@ -27,6 +27,8 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     // calculated values (false)
     private final boolean isImmediateData;
     private HashMap<Integer, String> errorEntries = new HashMap<>();
+    // Max of errorEntries.keySet() or -1 if empty
+    private int latestError = -1;
 
     protected SparseErrorColumnStorage(boolean isImmediateData)
     {
@@ -41,11 +43,20 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     protected final void setError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row, String error)
     {
         errorEntries.put(row, error);
+        if (row > latestError)
+            latestError = row;
     }
-    
+
+    private void recalculateLatestError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this)
+    {
+        latestError = errorEntries.keySet().stream().mapToInt(i -> i).max().orElse(-1);
+    }
+
     protected final void unsetError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row)
     {
         errorEntries.remove(row);
+        if (row >= latestError)
+            recalculateLatestError();
     }
     
     private final HashMap<Integer, String> mapErrors(Function<Integer, @Nullable Integer> rowChange)
@@ -61,6 +72,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
                 removed.put(k, v);
         });
         errorEntries = modified;
+        recalculateLatestError();
         return removed;
     }
 
@@ -103,7 +115,8 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     public final SimulationRunnable insertRows(int index, List<Either<String, T>> itemsErr) throws InternalException
     {
         int itemsSize = itemsErr.size();
-        mapErrors(i -> i < index ? i : i + itemsSize);
+        if (index <= latestError)
+            mapErrors(i -> i < index ? i : i + itemsSize);
         
         ArrayList<@Nullable T> items = new ArrayList<>();
         for (int i = 0; i < itemsErr.size(); i++)
