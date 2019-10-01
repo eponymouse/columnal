@@ -4,6 +4,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -80,17 +82,10 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -167,7 +162,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void start(Stage stage) throws Exception
     {
         super.start(stage);
-        final CompletableFuture<Optional<Exception>> finish = new CompletableFuture<>();
+        final CompletableFuture<Optional<Throwable>> finish = new CompletableFuture<>();
         TableManager dummyManager = new DummyManager();
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {
             try
@@ -179,7 +174,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 srcId = src.getId();
                 dummyManager.record(src);
                 
-                addTransforms(dummyManager, srcId, 0, nextPos(src));
+                addTransforms(dummyManager, srcId, 0, nextPos(src), Multimaps.newMultimap(new HashMap<>(), ArrayList::new), new Random(10L));
                 tableCount = dummyManager.getAllTables().size();
                 
                 Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
@@ -198,7 +193,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                     Platform.runLater(() -> Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
                 }).start();
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
                 Log.log(e);
                 finish.complete(Optional.of(e));
@@ -206,15 +201,16 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             }
         });
         com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(finish);
-        //assertNull(finish.get(5, TimeUnit.SECONDS).orElse(null));
+        assertNull(finish.get(30, TimeUnit.SECONDS).orElse(null));
     }
 
     // Returns next target position
+    // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it 
     @SuppressWarnings("identifier")
     @OnThread(Tag.Simulation)
-    private CellPosition addTransforms(TableManager dummyManager, TableId srcId, int depth, CellPosition targetPos) throws InternalException, UserException
+    private CellPosition addTransforms(TableManager dummyManager, TableId srcId, int depth, CellPosition targetPos, Multimap<TableId, TableId> unavailableTables, Random r) throws InternalException, UserException
     {
-        TableId sortId = new TableId(srcId.getRaw() + " then Sort");
+        TableId sortId = new TableId(ch(r) + srcId.getRaw() + " then Sort");
         Sort sort = new Sort(dummyManager, new InitialLoadDetails(sortId, null, targetPos, null), srcId, sortBy);
         dummyManager.record(sort);
         transformPositions.put(sortId, targetPos);
@@ -223,19 +219,19 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals(((Sort)t).getSortBy().get(0).getFirst(), newCol);
         });
 
-        TableId filterId = new TableId(srcId.getRaw() + " then Filter");
+        TableId filterId = new TableId(ch(r) + srcId.getRaw() + " then Filter");
         Filter filter = new Filter(dummyManager, new InitialLoadDetails(filterId, null, targetPos, null), srcId, makeFilterCalcExpression(dummyManager.getTypeManager()));
         dummyManager.record(filter);
         transformPositions.put(filterId, targetPos);
         targetPos = nextPos(filter);
 
-        TableId calculateId = new TableId(srcId.getRaw() + " then Calculate");
+        TableId calculateId = new TableId(ch(r) + srcId.getRaw() + " then Calculate");
         Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
 
-        TableId manualId = new TableId(srcId.getRaw() + " then Edit");
+        TableId manualId = new TableId(ch(r) + srcId.getRaw() + " then Edit");
         ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, null, targetPos, null), srcId, null, ImmutableMap.of());
         dummyManager.record(manualEdit);
         transformPositions.put(manualId, targetPos);
@@ -243,17 +239,52 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         // TODO concatenate some of the others
 
+        ImmutableList<TableId> derived = ImmutableList.of(sortId, filterId, calculateId, manualId);
+        for (TableId tableId : derived)
+        {
+            unavailableTables.put(srcId, tableId);
+        }
+        checkAvailability(dummyManager, unavailableTables);
+
         depth += 1;
         if (depth < 3)
         {
-            targetPos = addTransforms(dummyManager, sortId, depth, targetPos);
-            targetPos = addTransforms(dummyManager, filterId, depth, targetPos);
-            targetPos = addTransforms(dummyManager, calculateId, depth, targetPos);
+            for (TableId tableId : derived)
+            {
+                targetPos = addTransforms(dummyManager, tableId, depth, targetPos, unavailableTables, r);
+            }
         }
         
         return targetPos;
     }
-    
+
+    private String ch(Random r)
+    {
+        return "" + (char)(r.nextInt(26));
+    }
+
+    // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it
+    private void checkAvailability(TableManager manager, Multimap<TableId, TableId> unavailableTables)
+    {
+        ImmutableList<TableId> allTables = manager.getAllTables().stream().map(t -> t.getId()).collect(ImmutableList.toImmutableList());
+        // I think this is only O(N^2) but N is small anyway
+        for (TableId tableId : allTables)
+        {
+            HashSet<TableId> available = new HashSet<>(allTables);
+            removeAllMapped(unavailableTables, available, tableId);
+            assertEquals(available, new HashSet<>(manager.getAllTablesAvailableTo(tableId).stream().map(t -> t.getId()).collect(Collectors.toList())));
+        }
+    }
+
+    private void removeAllMapped(Multimap<TableId, TableId> unavailableTables, HashSet<TableId> available, TableId tableId)
+    {
+        for (TableId id : unavailableTables.get(tableId))
+        {
+            available.remove(id);
+            removeAllMapped(unavailableTables, available, id);
+        }
+    }
+
     @OnThread(Tag.Simulation)
     private CellPosition nextPos(Table table) throws InternalException, UserException
     {

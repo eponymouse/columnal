@@ -100,4 +100,31 @@ public class PropDAG
     {
         propLinearise(new Graph(ImmutableList.of("A", "B", "BL", "C", "EK", "ENU", "JR", "Nested", "VQ"), ImmutableMap.of("VQ", ImmutableList.of("BL"), "JR", ImmutableList.of("BL", "BL")), ImmutableList.of()));
     }
+
+    @Test
+    public void testSpecificLate()
+    {
+        propLineariseLateness(new Graph(ImmutableList.of("T2", "T9", "T6", "A", "S", "P", "E", "m"), ImmutableMap.of( "m", ImmutableList.of("T9"), "S", ImmutableList.of("T6", "E"), "T2", ImmutableList.of("A"), "T9", ImmutableList.of("T2", "S", "P")), ImmutableList.of("T2")));
+        ImmutableMap.Builder<Object, List<Object>> b = ImmutableMap.builder();
+        b.put("T2", ImmutableList.of("T9"));
+        b.put("T9", ImmutableList.of("m"));
+        b.put("T6", ImmutableList.of("S"));
+        b.put("A", ImmutableList.of("T2"));
+        b.put("S", ImmutableList.of("T9"));
+        b.put("P", ImmutableList.of("T9"));
+        b.put("E", ImmutableList.of("S"));
+        
+        propLineariseLateness(new Graph(ImmutableList.of("T2", "T9", "T6", "A", "S", "P", "E", "m"), b.build(), ImmutableList.of()));
+
+        b = ImmutableMap.builder();
+        b.put("T 216378", ImmutableList.of("T 963337"));
+        b.put("T 963337", ImmutableList.of("merged flagbadnonwords fixdupe25"));
+        b.put("T 663438", ImmutableList.of("Summary Per Participant"));
+        b.put("Averages For Filtered", ImmutableList.of("T 216378"));
+        b.put("Summary Per Participant", ImmutableList.of("T 963337"));
+        b.put("Per Frequency All Participants", ImmutableList.of("T 963337"));
+        b.put("Excluded Participants On Accuracy", ImmutableList.of("Summary Per Participant"));
+
+        propLineariseLateness(new Graph(ImmutableList.of("T 216378", "T 963337", "T 663438", "Averages For Filtered", "Summary Per Participant", "Per Frequency All Participants", "Excluded Participants On Accuracy", "merged flagbadnonwords fixdupe25"), b.build(), ImmutableList.of()));
+    }
 }
