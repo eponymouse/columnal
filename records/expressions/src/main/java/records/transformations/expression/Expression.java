@@ -1120,7 +1120,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         public Stream<ColumnReference> getAvailableColumnReferences()
         {
-            return tableManager.getAllTablesAvailableTo(srcTable == null ? null : srcTable.getId()).stream().flatMap(t -> {
+            return tableManager.getAllTablesAvailableTo(us).stream().flatMap(t -> {
                 try
                 {
                     boolean isUsOrSrc = Objects.equals(us, t.getId()) || (srcTable != null && Objects.equals(t.getId(), srcTable.getId()));
