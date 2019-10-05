@@ -458,10 +458,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
                 if (stem.equals("@table"))
                 {
-                    @Nullable Consumed<@ExpressionIdentifier String> name = IdentifierUtility.consumeExpressionIdentifier(content, nonLetter, curCaretPos);
+                    @Nullable Consumed<@ExpressionIdentifier String> name = IdentifierUtility.consumeExpressionIdentifier(content, nonLetter, curIndex);
                     if (name != null)
                     {
-                        saver.saveOperand(new TableReference(new TableId(name.item)), new CanonicalSpan(curIndex, name.positionAfter));
+                        saver.saveOperand(new TableReference(new TableId(name.item)), removedChars.map(curIndex, name.positionAfter));
                         chunks.add(new ContentChunk("@table " + name.item, ChunkType.IDENT));
                         curIndex = name.positionAfter;
                         continue nextToken;

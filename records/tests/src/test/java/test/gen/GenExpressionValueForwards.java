@@ -724,7 +724,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
                 columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i)));
                 // Each row gets the same full list:
-                return new Pair<List<@Value Object>, Expression>(replicateM(() -> new ListExList(value)), TableReference.makeEntireColumnReference(tableId, name));
+                return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), TableReference.makeEntireColumnReference(tableId, name));
             }
             else
             {
