@@ -25,6 +25,7 @@ import records.grammar.MainLexer;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.DetailPrefixedContext;
 import records.grammar.MainParser.DisplayContext;
+import records.grammar.Versions.OverallVersion;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -222,7 +223,7 @@ public abstract class Table
         @OnThread(Tag.Simulation)
         public String getCompleteFile()
         {
-            return "COLUMNAL\nVERSION 2\n\nUNITS @BEGIN UU\n"
+            return "COLUMNAL\nVERSION " + OverallVersion.latest().asNumber() + "\n\nUNITS @BEGIN UU\n"
                 + units.stream().map(u -> "UU " + u).collect(Collectors.joining())
                 + "@END UU UNITS\n\nTYPES @BEGIN TT\n"
                 + types.stream().map(t -> "TT " + t).collect(Collectors.joining())

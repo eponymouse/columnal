@@ -30,6 +30,7 @@ import records.grammar.MainParser;
 import records.grammar.MainParser.IsolatedValuesContext;
 import records.grammar.MainParser2;
 import records.grammar.MainParser2.ContentContext;
+import records.grammar.Versions.OverallVersion;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -161,7 +162,7 @@ public class ClipboardUtils
         Workers.onWorkerThread("Copying to clipboard", Priority.FETCH, () -> {
             OutputBuilder b = new OutputBuilder();
             b.raw("COLUMNAL").nl();
-            b.raw("VERSION 2").nl();
+            b.raw("VERSION " + OverallVersion.latest().asNumber()).nl();
             b.t(MainLexer.UNITS).begin().raw("UU").nl();
             b.pushPrefix(new SaveTag("UU"));
             for (String unitLine : unitManager.save(DataTypeUtility.featuresUnit(Utility.mapList(columns, p -> p.getSecond().getType()))))

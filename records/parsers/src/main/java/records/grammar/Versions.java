@@ -19,6 +19,16 @@ public class Versions
     public static enum OverallVersion
     {
         ONE, TWO, THREE;
+
+        public static OverallVersion latest()
+        {
+            return OverallVersion.values()[OverallVersion.values().length - 1];
+        }
+        
+        public int asNumber()
+        {
+            return ordinal() + 1;
+        }
     }
     
     public static enum ExpressionVersion
