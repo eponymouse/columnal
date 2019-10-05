@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -66,7 +67,7 @@ public class TableReference extends NonOperatorExpression
             fields.put("rows", TypeExp.list(this, TypeExp.record(this, fields, true)));
         }
         
-        return new CheckedExp(TypeExp.record(this, fields, true), typeState);
+        return new CheckedExp(onError.recordType(this, TypeExp.record(this, fields, true)), typeState);
     }
 
     @Override
@@ -168,7 +169,8 @@ public class TableReference extends NonOperatorExpression
         return expressionStyler.styleExpression(tableName.toStyledString(), this);
     }
 
-    public static Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
+    @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
+    public static @Recorded Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
     {
         return new FieldAccessExpression(new TableReference(tableId), new IdentExpression(columnId.getRaw()));
     }
