@@ -55,19 +55,21 @@ public class TableReference extends NonOperatorExpression
             onError.recordError(this, StyledString.s("Unknown table: " + tableName.getRaw()));
             return null;
         }
-        HashMap<@ExpressionIdentifier String, TypeExp> fields = new HashMap<>();
+        HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsSingle = new HashMap<>();
+        HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList = new HashMap<>();
 
         for (Entry<ColumnId, DataTypeValue> entry : table.getColumnTypes().entrySet())
         {
-            fields.put(entry.getKey().getRaw(), TypeExp.list(this, TypeExp.fromDataType(this, entry.getValue().getType())));
+            fieldsAsList.put(entry.getKey().getRaw(), TypeExp.list(this, TypeExp.fromDataType(this, entry.getValue().getType())));
+            fieldsAsSingle.put(entry.getKey().getRaw(), TypeExp.fromDataType(this, entry.getValue().getType()));
         }
         
-        if (!fields.containsKey("rows"))
+        if (!fieldsAsList.containsKey("rows"))
         {
-            fields.put("rows", TypeExp.list(this, TypeExp.record(this, fields, true)));
+            fieldsAsList.put("rows", TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
         }
         resolvedTable = table;
-        return new CheckedExp(onError.recordType(this, TypeExp.record(this, fields, true)), typeState);
+        return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), typeState);
     }
 
     @Override
