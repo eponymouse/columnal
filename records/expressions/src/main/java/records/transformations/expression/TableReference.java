@@ -66,7 +66,7 @@ public class TableReference extends NonOperatorExpression
         {
             fields.put("rows", TypeExp.list(this, TypeExp.record(this, fields, true)));
         }
-        
+        resolvedTable = table;
         return new CheckedExp(onError.recordType(this, TypeExp.record(this, fields, true)), typeState);
     }
 
