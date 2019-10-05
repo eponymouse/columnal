@@ -38,8 +38,10 @@ import java.util.stream.Stream;
 
 public class TableReference extends NonOperatorExpression
 {
+    public static final String ROWS = "rows";
     private final TableId tableName;
     private @MonotonicNonNull FoundTable resolvedTable;
+    private boolean includeRows;
 
     public TableReference(TableId tableName)
     {
@@ -64,9 +66,10 @@ public class TableReference extends NonOperatorExpression
             fieldsAsSingle.put(entry.getKey().getRaw(), TypeExp.fromDataType(this, entry.getValue().getType()));
         }
         
-        if (!fieldsAsList.containsKey("rows"))
+        if (!fieldsAsList.containsKey(ROWS))
         {
-            fieldsAsList.put("rows", TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
+            includeRows = true;
+            fieldsAsList.put(ROWS, TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
         }
         resolvedTable = table;
         return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), typeState);
@@ -85,7 +88,44 @@ public class TableReference extends NonOperatorExpression
             @Override
             public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
             {
+                if (includeRows && name.equals(ROWS))
+                    return DataTypeUtility.value(new RowsAsList());
                 return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
+            }
+            
+            class RowsAsList extends ListEx
+            {
+                @Override
+                public int size() throws InternalException, UserException
+                {
+                    return resolvedTableNN.getRowCount();
+                }
+
+                @Override
+                public @Value Object get(int index) throws InternalException, UserException
+                {
+                    ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
+                    for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
+                    {
+                        rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
+                    }
+                    ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
+                    
+                    return DataTypeUtility.value(new Record()
+                    {
+                        @Override
+                        public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                        {
+                            return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
+                        }
+
+                        @Override
+                        public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                        {
+                            return rowValues;
+                        }
+                    });
+                }
             }
             
             class ColumnAsList extends ListEx

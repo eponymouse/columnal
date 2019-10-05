@@ -98,7 +98,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     public void testExplanationSimple2() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "@column asc < 4");
-        testFailureExplanation("\u2192asc was 4, using asc (row 4)", "\u2192asc < 4 was false");
+        testFailureExplanation("asc was 4, using asc (row 4)", "asc < 4 was false");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.STANDALONE, "@call @function all(@table T2#asc, ? < 4)");
         testFailureExplanation(
-     //"\u2192asc was 4, using asc (row 4)",
+     //"asc was 4, using asc (row 4)",
             "? was 4",
             "? < 4 was false",
             "all(\u2195asc, ? < 4) was false, using asc (row 4)");
@@ -117,10 +117,10 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.ALL_ROWS, "@column asc < @call @function text length(@column alphabet animals)");
         testFailureExplanation(
-     "\u2192asc was 3, using asc (row 3)",
-            "\u2192alphabet animals was \"Cat\", using alphabet animals (row 3)",
-            "text length(\u2192alphabet animals) was 3",
-            "\u2192asc < text length(\u2192alphabet animals) was false");
+     "asc was 3, using asc (row 3)",
+            "alphabet animals was \"Cat\", using alphabet animals (row 3)",
+            "text length(alphabet animals) was 3",
+            "asc < text length(alphabet animals) was false");
     }
 
     @Test
@@ -128,7 +128,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.NO_ROWS, "@match (num: @column asc, animal: @column alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call @function text length(animal) =~ n) & (n > 5) @endmatch");
         testFailureExplanation(
-                "(num: \u2192asc, animal: \u2192alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)",
+                "(num: asc, animal: alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)",
                 "(num: n) matched",
                 "n was 1",
                 "n > 5 was false",
@@ -140,7 +140,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
                 "n was 8",
                 "n > 5 was true",
                 "(text length(animal) =~ n) & (n > 5) was true",
-                "match (num: \u2192asc, animal: \u2192alphabet animals) case (num: n) given n > 5 then false case (num: _, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
+                "match (num: asc, animal: alphabet animals) case (num: n) given n > 5 then false case (num: _, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
     }
 
     @Test
@@ -148,11 +148,11 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.NO_ROWS, "@if (@column asc + 1) > 3 @then (@column asc + 1) > 4 @else (@column asc + 1) > 3 @endif");
         testFailureExplanation(
-                "\u2192asc was 4, using asc (row 4)",
-                "\u2192asc + 1 was 5",
-                "(\u2192asc + 1) > 3 was true",
-                "(\u2192asc + 1) > 4 was true",
-                "if (\u2192asc + 1) > 3 then (\u2192asc + 1) > 4 else (\u2192asc + 1) > 3 endif was true"
+                "asc was 4, using asc (row 4)",
+                "asc + 1 was 5",
+                "(asc + 1) > 3 was true",
+                "(asc + 1) > 4 was true",
+                "if (asc + 1) > 3 then (asc + 1) > 4 else (asc + 1) > 3 endif was true"
         );
     }  
 
