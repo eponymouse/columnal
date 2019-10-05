@@ -18,7 +18,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.lexeditor.ExpressionEditor;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.function.FunctionList;
@@ -57,25 +56,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest implements En
     @OnThread(Tag.Any)
     private ExpressionEditor makeExpressionEditor(DummyManager dummyManager, @Nullable Expression initial)
     {
-        return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(new ColumnLookup()
-        {
-            @Override
-            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
-            {
-                return null;
-            }
-
-            @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
-            {
-                return Stream.of();
-            }
-            
-            @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
-            {
-                return Stream.of();
-            }
-        }), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TestUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

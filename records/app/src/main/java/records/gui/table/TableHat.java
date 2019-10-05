@@ -775,7 +775,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new EditCheckExpressionDialog(parent, srcTable, check.getCheckType(), check.getCheckExpression(), false, ct -> Check.getColumnLookup(parent.getManager(), check.getSrcTableId(), ct)).showAndWait().ifPresent(p -> {
+                    new EditCheckExpressionDialog(parent, srcTable, check.getCheckType(), check.getCheckExpression(), false, ct -> Check.getColumnLookup(parent.getManager(), check.getSrcTableId(), check.getId(), ct)).showAndWait().ifPresent(p -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> {
                             parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), check.getDetailsForCopy(), check.getSrcTableId(), p.getFirst(), p.getSecond()), null);
                         }));

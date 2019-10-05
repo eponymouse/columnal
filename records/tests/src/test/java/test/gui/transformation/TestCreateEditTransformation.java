@@ -50,12 +50,12 @@ import records.transformations.Aggregate;
 import records.transformations.Check.CheckType;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.ImplicitLambdaArg;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StandardFunction;
+import records.transformations.expression.TableReference;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
 import test.gen.GenImmediateData;
@@ -334,7 +334,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             private ArrayList<AggCalculation> usual() throws InternalException
             {
                 ArrayList<AggCalculation> calculations = new ArrayList<>();
-                ColumnReference groupExp = new ColumnReference(columnDetails.name, ColumnReferenceType.CORRESPONDING_ROW);
+                ColumnReference groupExp = new ColumnReference(columnDetails.name);
                 if (random.nextBoolean())
                 {
                     // Keep group as a list:
@@ -396,7 +396,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 if (random.nextBoolean())
                 {
                     calculations.add(new AggCalculation(name.apply("Split"),
-                        new ColumnReference(new ColumnId("Split Col"), ColumnReferenceType.CORRESPONDING_ROW),
+                        new ColumnReference(new ColumnId("Split Col")),
                         splitColumnType,
                             distinctSplitValues.stream().<@Nullable @Value Object>map(x -> x).collect(Collectors.<@Nullable @Value Object>toList())
                     ));
@@ -551,7 +551,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         final Expression checkExpression;
         final boolean expectedPass = checkType == CheckType.ANY_ROW || (checkType == CheckType.ALL_ROWS && allEqualToContained);
-        Expression containedItemExpression = Expression.parse(null, DataTypeUtility.valueToString(srcColumn.getType().getType(), containedItem, null, true), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
+        Expression containedItemExpression = TestUtil.parseExpression(DataTypeUtility.valueToString(srcColumn.getType().getType(), containedItem, null, true), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
         if (r.nextInt(3) == 0)
         {
             // Fake it using a stand-alone check
@@ -571,14 +571,14 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 
             checkExpression = new CallExpression(
                 FunctionList.getFunctionLookup(tableManager.getUnitManager()), function,
-                    new ColumnReference(srcColumn.getName(), ColumnReferenceType.WHOLE_COLUMN),
+                    TableReference.makeEntireColumnReference(srcTable.getId(), srcColumn.getName()),
                     new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression), false));
             
             checkType = CheckType.STANDALONE;
         }
         else
         {
-            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), containedItemExpression), false);
+            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName()), containedItemExpression), false);
         }
 
         @SuppressWarnings("nullness")

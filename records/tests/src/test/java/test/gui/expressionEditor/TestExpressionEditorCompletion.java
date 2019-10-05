@@ -31,7 +31,6 @@ import records.gui.lexeditor.completion.LexCompletion;
 import records.transformations.Calculate;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.function.FunctionList;
@@ -71,7 +70,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
                 new EditableRecordSet(
                     ImmutableList.of(rs -> DataType.NUMBER.makeImmediateColumn(new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
                     (SimulationSupplier<Integer>)() -> 0)));
-        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), Expression.parse(null, expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
+        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), TestUtil.parseExpression(expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
 
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
@@ -244,7 +243,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
+        assertEquals(new ColumnReference(new ColumnId("My Number")), finish());
     }
 
     @Test
@@ -258,40 +257,40 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         // Doesn't matter if registered as double click or two single:
         clickOn(point(cell).atOffset(5, 0));
         clickOn(point(cell).atOffset(5, 0));
-        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.CORRESPONDING_ROW), finish());
+        assertEquals(new ColumnReference(new ColumnId("My Number")), finish());
     }
 
     @Test
     public void testColumn2() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        write("@entire My Nu");
+        write("@table ID");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+        assertEquals(new TableReference(new TableId("IDS")), finish());
     }
 
     @Test
     public void testColumn2a() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        write("@entire MY NU");
+        write("@entire id");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+        assertEquals(new TableReference(new TableId("IDS")), finish());
     }
 
     @Test
     public void testColumn2b() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        write("@ent");
+        write("@tab");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new ColumnReference(new ColumnId("My Number"), ColumnReferenceType.WHOLE_COLUMN), finish());
+        assertEquals(new TableReference(new TableId("IDS")), finish());
     }
 
     private void checkPosition()
@@ -587,6 +586,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
         StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(functionLookup.lookup("from text to")));
         // Should still have trailing x:
-        assertEquals(Expression.parse(null, "@invalidops(@call @function from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
+        assertEquals(TestUtil.parseExpression("@invalidops(@call @function from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }

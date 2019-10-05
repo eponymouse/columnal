@@ -39,7 +39,6 @@ import records.gui.grid.VirtualGrid;
 import records.gui.lexeditor.EditorDisplay;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -212,7 +211,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         sleep(500);
         Calculate calculate = getCalculate(mainWindowActions);
         Expression expression = TestUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
-        MatcherAssert.assertThat(expression, Matchers.isIn(ImmutableList.of(new ColumnReference(new TableId("Table1"), new ColumnId(columnNameToReplace), ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(new ColumnId(columnNameToReplace), ColumnReferenceType.CORRESPONDING_ROW))));
+        MatcherAssert.assertThat(expression, Matchers.isIn(ImmutableList.of(new ColumnReference(new TableId("Table1"), new ColumnId(columnNameToReplace)), new ColumnReference(new ColumnId(columnNameToReplace)))));
         
     }
 

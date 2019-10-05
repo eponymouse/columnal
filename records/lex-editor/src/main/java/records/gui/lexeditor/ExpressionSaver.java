@@ -30,7 +30,6 @@ import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.InsertListener;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
@@ -941,14 +940,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         // We look for things where people have tried to use
         // C/Java style array indexing of lists.  Because it's invalid
         // we can't know types, so we use syntax.
-        // For the list we look for @entire column references
+        // For the list we look for column references
         // (most likely item by far to be a list).
         if (first instanceof ColumnReference && second instanceof ArrayExpression)
         {
             ColumnReference columnReference = (ColumnReference) first;
             ArrayExpression arrayExpression = (ArrayExpression) second;
             
-            if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN && arrayExpression.getElements().size() == 1)
+            if (arrayExpression.getElements().size() == 1)
             {
                 CanonicalSpan location = new CanonicalSpan(locationRecorder.recorderFor(first).start, locationRecorder.recorderFor(second).end);
                 
@@ -1077,12 +1076,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
 
                 @Override
-                public @Nullable @ExpressionIdentifier String column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+                public @Nullable @ExpressionIdentifier String column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
                 {
-                    if (referenceType == ColumnReferenceType.CORRESPONDING_ROW && tableName == null)
+                    if (tableName == null)
                         return columnName.getRaw();
                     
-                    return super.column(self, tableName, columnName, referenceType);
+                    return super.column(self, tableName, columnName);
                 }
             });
             

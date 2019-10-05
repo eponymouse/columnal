@@ -21,9 +21,9 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.ColumnLookup.ClickedReference;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.function.FunctionLookup;
@@ -53,18 +53,15 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                         if (showing)
                         {
                             columnPicker.enableColumnPickingMode(null, display.sceneProperty(), c -> display.isFocused() && columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).findFirst().isPresent(), c -> {
-                                String ref = "";
-                                ImmutableList<ColumnReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.<ColumnReference,  Boolean>comparing(cr -> cr.getTableId() != null).thenComparing(cr -> cr.getReferenceType())).collect(ImmutableList.<ColumnReference>toImmutableList());
-                                if (!columnReferences.get(0).getReferenceType().equals(ColumnReferenceType.CORRESPONDING_ROW))
-                                    ref += "@entire ";
-                                if (columnReferences.get(0).getTableId() != null)
-                                    ref += columnReferences.get(0).getTableId().getRaw() + "\\";
-                                ref += c.getSecond().getRaw();
-                                content.replaceSelection(ref);
-                                FXUtility.runAfterDelay(Duration.millis(50), () -> {
-                                    w.requestFocus();
-                                    display.requestFocus();
-                                });
+                                ImmutableList<ClickedReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.<ClickedReference,  Boolean>comparing(cr -> cr.getTableId() != null)).collect(ImmutableList.<ClickedReference>toImmutableList());
+                                if (!columnReferences.isEmpty())
+                                {
+                                    content.replaceSelection(columnReferences.get(0).getExpression().save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY));
+                                    FXUtility.runAfterDelay(Duration.millis(50), () -> {
+                                        w.requestFocus();
+                                        display.requestFocus();
+                                    });
+                                }
                             });
                         }
                         else

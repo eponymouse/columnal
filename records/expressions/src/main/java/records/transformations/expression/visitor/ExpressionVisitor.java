@@ -11,7 +11,6 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -36,7 +35,9 @@ public interface ExpressionVisitor<T>
 
     T list(ArrayExpression self, ImmutableList<@Recorded Expression> items);
 
-    T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType);
+    T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName);
+
+    T table(TableReference self, TableId tableName);
 
     T litBoolean(BooleanLiteral self, @Value Boolean value);
 

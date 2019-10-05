@@ -30,7 +30,6 @@ import records.gui.View;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import threadchecker.OnThread;
@@ -58,7 +57,7 @@ public class TransformationEdits
         Expression expression = calc.getCalculatedColumns().get(columnId);
         // If that doesn't exist, copy the name of the column if appropriate:
         if (expression == null && calc.getData().getColumns().stream().anyMatch(c -> c.getName().equals(columnId)))
-            expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
+            expression = new ColumnReference(columnId); 
         // expression may still be null
         
         EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed == null ? null : calc.makeEditor(ed)), () -> Calculate.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {

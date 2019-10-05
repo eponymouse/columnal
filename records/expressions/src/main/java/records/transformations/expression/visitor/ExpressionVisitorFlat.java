@@ -11,7 +11,6 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
@@ -65,7 +64,13 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+    public T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
+    {
+        return makeDef(self);
+    }
+
+    @Override
+    public T table(TableReference self, TableId tableName)
     {
         return makeDef(self);
     }

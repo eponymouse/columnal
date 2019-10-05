@@ -18,6 +18,7 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -351,7 +352,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
         @Override
         @OnThread(Tag.Simulation)
         @SuppressWarnings("identifier")
-        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);
 

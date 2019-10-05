@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
+import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
@@ -17,7 +18,6 @@ import records.transformations.expression.function.ValueFunction.ArgumentExplana
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.visitor.ExpressionVisitor;
@@ -166,18 +166,23 @@ public class CallExpression extends Expression
                 Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
-                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference) param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference)
                 {
                     ColumnReference colRef = (ColumnReference) param;
-                    // Offer to turn a this-row column reference into whole column:
-                    onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
-                            new QuickFix<>("fix.wholeColumn", this, () -> {
-                                @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                                        CallExpression newCall = new CallExpression(function, ImmutableList.of(new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN)));
-                                return newCall;
-                            }
-                            )
-                    ));
+                    FoundTable table = dataLookup.getTable(colRef.getTableId());
+                    if (table != null)
+                    {
+                        FoundTable tableNN = table;
+                        // Offer to turn a this-row column reference into whole column:
+                        onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
+                                new QuickFix<>("fix.wholeColumn", this, () -> {
+                                    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                                            CallExpression newCall = new CallExpression(function, ImmutableList.of(TableReference.makeEntireColumnReference(tableNN.getTableId(), colRef.getColumnId())));
+                                    return newCall;
+                                }
+                                )
+                        ));
+                    }
                 }
             }
             else if (takesList && arguments.size() > 1)

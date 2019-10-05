@@ -33,7 +33,6 @@ import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.LexCompletionGroup;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -355,6 +354,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 continue nextToken;
             }
             
+            /*
             if (content.startsWith("@entire", curIndex))
             {
                 @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos == null ? -1 * RawInputLocation.ONE : curCaretPos);
@@ -378,6 +378,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     
                 }
             }
+             */
 
             @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
             final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
@@ -394,8 +395,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     {
                         TableId tableId = availableColumn.getTableId();
                         String columnIdRaw = availableColumn.getColumnId().getRaw();
-                        if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW &&
-                                (
+                        if ((
                                         (tableId == null && columnIdRaw.equals(text))
                                                 || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(text))
                                 ))
@@ -404,6 +404,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                             wasColumn = true;
                             break;
                         }
+                        /*
                         else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
                                 text.startsWith("@entire ") &&
                                 ((tableId == null && ("@entire " + columnIdRaw).equals(text))
@@ -413,6 +414,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                             wasColumn = true;
                             break;
                         }
+                         */
                     }
 
                     if (!wasColumn)
@@ -469,6 +471,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     nonLetter = rawLength(content);
                 String stem = content.substring(curIndex, nonLetter);
 
+                /*
                 if (Utility.startsWithIgnoreCase("@entire",stem))
                 {
                     for (ColumnReference columnReference : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences().sorted(Comparator.comparing((ColumnReference c) -> c.getTableId() == null ? "" : c.getTableId().getRaw()).thenComparing((ColumnReference c) -> c.getColumnId().getRaw()))))
@@ -480,6 +483,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     }
                     
                 }
+                 */
 
                 // We skip to next non-letter to prevent trying to complete the keyword as a function:
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
@@ -856,11 +860,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
         {
-            if (availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW && availableColumn.getTableId() == null)
+            if (availableColumn.getTableId() == null)
             {
                 matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), "Column", WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
             
+            /*
             if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
             {
                 String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + "\\") + availableColumn.getColumnId().getRaw();
@@ -875,6 +880,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.ENTIRE_COLUMN)));
                 }
             }
+             */
         }
     }
 
@@ -890,10 +896,8 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 "      <link rel=\"stylesheet\" href=\"" + webURL + "\">\n" +
                 "   </head>\n" +
                 "   <body class=\"indiv\">\n" +
-                "      <div class=\"column-item\"><span class=\"column-header\"/>" + (c.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + (c.getTableId() != null ? c.getTableId().getRaw() + ":<wbr>" : "") + c.getColumnId().getRaw() + "</span>" +
-                (c.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW ? 
-                    ("<p>This uses the value of the column in the current row.</p>") :
-                    ("<p>This gives the whole set of values from the column as a list.</p>")) +
+                "      <div class=\"column-item\"><span class=\"column-header\"/>" + (c.getTableId() != null ? c.getTableId().getRaw() + ":<wbr>" : "") + c.getColumnId().getRaw() + "</span>" +
+                "<p>This uses the value of the column in the current row.</p>" +
                 "</div></body></html>";
     }
 

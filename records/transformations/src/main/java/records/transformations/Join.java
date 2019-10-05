@@ -17,6 +17,7 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.JoinColumnLineContext;
 import records.grammar.TransformationParser.JoinContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -302,7 +303,7 @@ public class Join extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             if (source.size() != 2)
                 throw new UserException("Expected two tables as join sources but found " + source.size());

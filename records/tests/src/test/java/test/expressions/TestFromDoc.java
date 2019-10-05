@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
@@ -29,11 +30,11 @@ import records.grammar.DataParser;
 import records.grammar.DataParser2;
 import records.jellytype.JellyType;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
 import records.transformations.function.FunctionList;
@@ -187,7 +188,7 @@ public class TestFromDoc
                     tables.put(new TableId(tableName), new KnownLengthRecordSet(columns, length));
                 }
 
-                Expression expression = Expression.parse(null, line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+                Expression expression = TestUtil.parseExpression(line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
                 TypeState typeState = TestUtil.createTypeState(typeManager);
                 for (Entry<String, TypeExp> e : variables.entrySet())
@@ -281,10 +282,7 @@ public class TestFromDoc
             {
                 Column column = tables.get(columnReference.getTableId()).getColumn(columnReference.getColumnId());
                 DataTypeValue type = column.getType();
-                if (columnReference.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
-                    return new FoundColumn(columnReference.getTableId(), type, null);
-                else
-                    return new FoundColumn(columnReference.getTableId(), DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
+                return new FoundColumn(columnReference.getTableId(), type, null);
             }
             catch (Exception e)
             {
@@ -293,13 +291,26 @@ public class TestFromDoc
         }
 
         @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
+        public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
         {
-            return tables.entrySet().stream().flatMap(e -> e.getValue().getColumns().stream().map(c -> new ColumnReference(e.getKey(), c.getName(), ColumnReferenceType.WHOLE_COLUMN)));
+            return null; // TODO
+            // return new FoundColumn(columnReference.getTableId(), DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
         }
 
         @Override
-        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        public Stream<ColumnReference> getAvailableColumnReferences()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public Stream<TableReference> getAvailableTableReferences()
+        {
+            return tables.entrySet().stream().map(t -> new TableReference(t.getKey()));
+        }
+
+        @Override
+        public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
         {
             return Stream.empty(); // Not used here
         }

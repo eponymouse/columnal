@@ -182,7 +182,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testPaste(String original, int caretPos, String paste, String expected, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> {
@@ -193,7 +193,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
-        assertEquals(Expression.parse(null, expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
+        assertEquals(TestUtil.parseExpression(expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
         moveAndDismissPopupsAtPos(point(".cancel-button"));
         clickOn();
@@ -202,7 +202,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspaceRetype(String original, int deleteBefore, int deleteCount, String retype, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
@@ -250,8 +250,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspace(String original, int deleteBefore, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        Expression originalExp = Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
         
         assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save(false)));
@@ -276,8 +276,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testDelete(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        EditorDisplay expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        EditorDisplay expressionEditor = enter(TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 
@@ -297,8 +297,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testCut(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = Expression.parse(null, expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        EditorDisplay expressionEditor = enter(Expression.parse(null, original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        EditorDisplay expressionEditor = enter(TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 

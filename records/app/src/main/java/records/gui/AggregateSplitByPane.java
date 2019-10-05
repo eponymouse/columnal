@@ -27,7 +27,6 @@ import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.recipe.ExpressionRecipe;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.IdentExpression;
@@ -380,7 +379,7 @@ public class AggregateSplitByPane extends BorderPane
                     }
                     return true;
                 }))).showAndWait()
-                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0), ColumnReferenceType.CORRESPONDING_ROW)))
+                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0))))
                     .orElse(null);
             }
         };
@@ -398,7 +397,7 @@ public class AggregateSplitByPane extends BorderPane
                         new SelectInfo("agg.recipe.pick.result", "agg-recipe/result-column", t -> true, true)
                     )
                 ).showAndWait()
-                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0), ColumnReferenceType.CORRESPONDING_ROW), new ColumnReference(null, c.get(1), ColumnReferenceType.CORRESPONDING_ROW)))
+                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0)), new ColumnReference(null, c.get(1))))
                     .orElse(null);
             }
         };

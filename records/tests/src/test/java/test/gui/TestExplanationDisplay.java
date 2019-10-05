@@ -80,7 +80,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
 
     private void addCheck(@ExpressionIdentifier String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
     {
-        Expression expression = Expression.parse(null, expressionSrc, mainWindowActions._test_getTableManager().getTypeManager(), FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()));
+        Expression expression = TestUtil.parseExpression(expressionSrc, mainWindowActions._test_getTableManager().getTypeManager(), FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()));
         Check check = new Check(mainWindowActions._test_getTableManager(), new InitialLoadDetails(null, null, CHECK_POS, null), new TableId(srcTable), checkType, expression);
         mainWindowActions._test_getTableManager().record(check);
         // Wait for GUI:

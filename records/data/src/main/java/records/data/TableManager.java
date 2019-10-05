@@ -21,24 +21,19 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
-import records.grammar.DisplayLexer;
-import records.grammar.DisplayParser;
+import records.grammar.*;
 import records.grammar.DisplayParser.ColumnWidthContext;
 import records.grammar.DisplayParser.GlobalDisplayDetailsContext;
-import records.grammar.GrammarUtility;
-import records.grammar.MainLexer;
-import records.grammar.MainLexer2;
-import records.grammar.MainParser;
 import records.grammar.MainParser.CommentContext;
 import records.grammar.MainParser.FileContext;
 import records.grammar.MainParser.TableContext;
 import records.grammar.MainParser.TopLevelItemContext;
-import records.grammar.MainParser2;
 import records.grammar.MainParser2.ContentContext;
-import records.grammar.TableLexer2;
-import records.grammar.TableParser2;
 import records.grammar.TableParser2.TableDataContext;
 import records.grammar.TableParser2.TableTransformationContext;
+import records.grammar.Versions.ExpressionVersion;
+import records.grammar.Versions.MainVersion;
+import records.grammar.Versions.OverallVersion;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -158,7 +153,7 @@ public class TableManager
         return unitManager;
     }
 
-    public static OptionalInt detectVersion(String completeSrc)
+    public static OverallVersion detectVersion(String completeSrc) throws UserException
     {
         // Bit of manual parsing to find file version:
         Iterator<String> lines = Utility.<String>iterableStream(Pattern.compile("\\r?\\n").splitAsStream(completeSrc).map(s -> s.trim()).filter(s -> !s.isEmpty())).iterator();
@@ -173,7 +168,14 @@ public class TableManager
                     try
                     {
                         int v = Integer.parseInt(version.substring("COLUMNAL".length()).trim());
-                        return OptionalInt.of(v);
+                        switch (v)
+                        {
+                            case 1: return OverallVersion.ONE; 
+                            case 2: return OverallVersion.TWO;
+                            case 3: return OverallVersion.THREE;
+                            default:
+                                throw new UserException("Unknown file version: " + version + "; you may need to update Columnal to the latest version to read this file.");
+                        }
                     }
                     catch (NumberFormatException e)
                     {
@@ -182,7 +184,7 @@ public class TableManager
                 }
             }
         }
-        return OptionalInt.empty();
+        throw new UserException("Cannot locate file version; corrupt file or not a Columnal file?");
     }
     
     public static class Loaded
@@ -219,11 +221,11 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public synchronized Loaded loadAll(String completeSrc,  SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
-        int version = detectVersion(completeSrc).orElse(-1);
+        OverallVersion version = detectVersion(completeSrc);
         ImmutableList.Builder<Table> loaded = ImmutableList.builder();
         ImmutableList.Builder<StyledString> errors = ImmutableList.builder();
         List<Exception> exceptions = new ArrayList<>();
-        if (version == 1)
+        if (Versions.getMainVersion(version) == MainVersion.ONE)
         {
             FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
             unitManager.clearAllUser();
@@ -240,7 +242,7 @@ public class TableManager
             for (TopLevelItemContext topLevelItemContext : file.topLevelItem())
             {
                 if (topLevelItemContext.table() != null)
-                    loadOneTable(topLevelItemContext.table()).either_(exceptions::add, loaded::add);
+                    loadOneTable(topLevelItemContext.table(), Versions.getExpressionVersion(version)).either_(exceptions::add, loaded::add);
                 if (topLevelItemContext.comment() != null)
                     loadComment(SaveTag.generateRandom(), topLevelItemContext.comment()).either_(exceptions::add, c -> {
                         comments.add(c);
@@ -254,7 +256,7 @@ public class TableManager
                 parseDisplayDetail(setColumnWidths, displayDetail);
             }
         }
-        else if (version == 2)
+        else if (Versions.getMainVersion(version) == MainVersion.TWO)
         {
             MainParser2.FileContext file = Utility.parseAsOne(completeSrc, MainLexer2::new, MainParser2::new, p -> p.file());
             
@@ -279,7 +281,7 @@ public class TableManager
             });
             
             contentHandlers.put("TRANSFORMATION", tagAndContent -> {
-                Transformation trans = loadOneTransformation(tagAndContent);
+                Transformation trans = loadOneTransformation(tagAndContent, Versions.getExpressionVersion(version));
                 loaded.add(trans);
             });
             
@@ -338,10 +340,10 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    private Transformation loadOneTransformation(Pair<SaveTag, String> tagAndContent) throws InternalException, UserException
+    private Transformation loadOneTransformation(Pair<SaveTag, String> tagAndContent, ExpressionVersion expressionVersion) throws InternalException, UserException
     {
         TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
-        return transformationLoader.loadOne(this, tagAndContent.getFirst(), trans);
+        return transformationLoader.loadOne(this, tagAndContent.getFirst(), trans, expressionVersion);
     }
 
     @OnThread(Tag.Simulation)
@@ -413,7 +415,7 @@ public class TableManager
 
 
     @OnThread(Tag.Simulation)
-    public Either<Exception, Table> loadOneTable(TableContext tableContext)
+    public Either<Exception, Table> loadOneTable(TableContext tableContext, ExpressionVersion expressionVersion)
     {
         if (tableContext.dataSource() != null)
         {
@@ -431,7 +433,7 @@ public class TableManager
         {
             try
             {
-                return Either.right(transformationLoader.loadOne(this, tableContext));
+                return Either.right(transformationLoader.loadOne(this, tableContext, expressionVersion));
             }
             catch (InternalException | UserException e)
             {
@@ -771,7 +773,7 @@ public class TableManager
                 if (ctxt.ATOM(0).getText().equals("DATA"))
                     loadOneDataTable(new Pair<SaveTag, String>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())));
                 else if (ctxt.ATOM(0).getText().equals("TRANSFORMATION"))
-                    loadOneTransformation(new Pair<>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())));
+                    loadOneTransformation(new Pair<>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())), ExpressionVersion.latest());
             });
         }
     }
@@ -821,10 +823,10 @@ public class TableManager
     public static interface TransformationLoader
     {
         @OnThread(Tag.Simulation)
-        public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException;
+        public Transformation loadOne(TableManager mgr, TableContext table, ExpressionVersion expressionVersion) throws UserException, InternalException;
 
         @OnThread(Tag.Simulation)
-        public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table) throws UserException, InternalException;
+        public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table, ExpressionVersion expressionVersion) throws UserException, InternalException;
     }
 
     private static class TablesWithSameId

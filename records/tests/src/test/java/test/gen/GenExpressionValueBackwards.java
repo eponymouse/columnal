@@ -8,6 +8,7 @@ import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.TypeManager;
 import test.gen.backwards.*;
 import records.data.datatype.DataType;
@@ -69,7 +70,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         {
             DataType type = makeType(r);
             Pair<@Value Object, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), getTypeManager(), getRecordSet(), p.getSecond(), this);
+            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), getTypeManager(), new TableId("Backwards"), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {

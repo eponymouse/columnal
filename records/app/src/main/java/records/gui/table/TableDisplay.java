@@ -103,7 +103,6 @@ import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.expression.*;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.ValueFunction;
@@ -877,11 +876,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c)))), ImmutableList.of());
                 })::makeMenuItem);
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c)))), ImmutableList.of());
                 })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
@@ -969,7 +968,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
                     {
                         @SuppressWarnings("recorded")
-                        private final @Recorded ColumnReference columnReference = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW);
+                        private final @Recorded ColumnReference columnReference = new ColumnReference(columnId);
 
                         @Override
                         @OnThread(Tag.Simulation)

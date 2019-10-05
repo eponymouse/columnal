@@ -11,7 +11,6 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
@@ -81,7 +80,13 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+    public Stream<T> column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
+    {
+        return Stream.of();
+    }
+
+    @Override
+    public Stream<T> table(TableReference self, TableId tableName)
     {
         return Stream.of();
     }

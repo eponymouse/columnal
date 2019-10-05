@@ -15,6 +15,7 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
@@ -316,7 +317,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             ImmutableMap.Builder<ColumnId, Expression> columns = ImmutableMap.builder();
 
@@ -325,7 +326,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             {
                 @SuppressWarnings("identifier")
                 ColumnId columnId = new ColumnId(transformItemContext.column.getText());
-                columns.put(columnId, Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
+                columns.put(columnId, Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
             }
 
             return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());

@@ -11,6 +11,7 @@ import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -29,7 +30,6 @@ import records.error.UserException;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
@@ -83,6 +83,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     {
     }
 
+    private TableId tableId = new TableId("Gen Forwards Table");
     // Easier than passing parameters around:
     private List<SimulationFunction<RecordSet, Column>> columns;
     // The length of the column we are generating:
@@ -98,7 +99,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         {
             DataType type = makeType(r);
             Pair<List<@Value Object>, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, p.getFirst(), dummyManager.getTypeManager(), getRecordSet(), p.getSecond(), this);
+            return new ExpressionValue(type, p.getFirst(), dummyManager.getTypeManager(), tableId, getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {
@@ -684,12 +685,12 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     private ExpressionMaker columnRef(DataType type) throws UserException, InternalException
     {
         ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
-        return () ->
-        {
+        return () -> {
             List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
             columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
-            return new Pair<List<@Value Object>, Expression>(value, new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
+            return new Pair<List<@Value Object>, Expression>(value, TableReference.makeEntireColumnReference(tableId, name));
         };
+        // TODO use the #rows item
     }
     
     private ExpressionMaker fix(int maxLevels, DataType type)

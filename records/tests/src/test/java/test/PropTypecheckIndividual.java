@@ -466,13 +466,13 @@ public class PropTypecheckIndividual
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
     {
         TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        assertEquals(expression, dataType, checkConcrete(typeManager, Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+        assertEquals(expression, dataType, checkConcrete(typeManager, TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 
     private void checkConcreteType(ExFunction<TypeManager, DataType> dataType, String expression) throws InternalException, UserException
     {
         TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+        assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 
     @Test

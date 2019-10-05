@@ -60,6 +60,7 @@ import records.data.unit.UnitDeclaration;
 import records.error.InvalidImmediateValueException;
 import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
+import records.grammar.Versions.ExpressionVersion;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
@@ -69,9 +70,9 @@ import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.*;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.LocationInfo;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
@@ -1208,7 +1209,7 @@ public class TestUtil
     public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
-        Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
+        Expression expression = TestUtil.parseExpression(expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
         assertNotNull(expression.checkExpression(TestUtil.dummyColumnLookup(), createTypeState(mgr.getTypeManager()), excOnError()));
         return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty(), (m, e) -> {throw new InternalException("No type lookup in runExpression");})).value;
     }
@@ -1224,13 +1225,25 @@ public class TestUtil
             }
 
             @Override
+            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            {
+                return null;
+            }
+
+            @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
                 return Stream.empty();
             }
 
             @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            public Stream<TableReference> getAvailableTableReferences()
+            {
+                return Stream.empty();
+            }
+
+            @Override
+            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
                 return Stream.empty();
             }
@@ -1504,6 +1517,11 @@ public class TestUtil
         });
     }
 
+    public static Expression parseExpression(String expressionSrc, TypeManager typeManager, FunctionLookup functionLookup) throws InternalException, UserException
+    {
+        return Expression.parse(null, expressionSrc, ExpressionVersion.latest(), typeManager, functionLookup);
+    }
+
     public static interface TestRunnable
     {
         public void run() throws Exception;
@@ -1579,11 +1597,17 @@ public class TestUtil
             if (srcTable == null)
                 return Stream.empty();
             else
-                return srcTable.getColumns().stream().flatMap(c -> Arrays.stream(ColumnReferenceType.values()).map(rt -> new ColumnReference(c.getName(), rt)));
+                return srcTable.getColumns().stream().map(c -> new ColumnReference(c.getName()));
         }
 
         @Override
-        public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+        public Stream<TableReference> getAvailableTableReferences()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
         {
             return Stream.empty(); // Not used in testing
         }
@@ -1598,21 +1622,19 @@ public class TestUtil
                 else if (columnReference.getTableId() == null) // || tableName.equals(srcTable.getId()))
                 {
                     Column column = srcTable.getColumn(columnReference.getColumnId());
-                    switch (columnReference.getReferenceType())
-                    {
-                        case CORRESPONDING_ROW:
-                            return new FoundColumn(new TableId("SingleTableLookup"), column.getType(), null);
-                        case WHOLE_COLUMN:
-                            return new FoundColumn(new TableId("SingleTableLookup"), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
-                        default:
-                            throw new InternalException("Unknown reference type: " + columnReference.getReferenceType());
-                    }
+                    return new FoundColumn(new TableId("SingleTableLookup"), column.getType(), null);
                 }
             }
             catch (InternalException | UserException e)
             {
                 Log.log(e);
             }
+            return null;
+        }
+
+        @Override
+        public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+        {
             return null;
         }
     }

@@ -10,10 +10,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
+import test.TestUtil;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ public class TestLoadSaveExpression
     {
         //TODO add tests with units
         assertBothWays(
-            new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
+            new ColumnReference(new ColumnId("Card")),
             "@column Card"
         );
         assertBothWays(
@@ -44,8 +44,8 @@ public class TestLoadSaveExpression
         );
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
-            new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            Expression.parse(null, "@column Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            new ColumnReference(new ColumnId("Card")),
+            TestUtil.parseExpression("@column Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
     @Test
@@ -57,11 +57,11 @@ public class TestLoadSaveExpression
         );
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
-            new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@column Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
+            TestUtil.parseExpression("@column Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
         assertBothWays(
-            new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
+            new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
             "@column Card <> \"xxx\""
         );
         assertBothWays(
@@ -99,7 +99,7 @@ public class TestLoadSaveExpression
                         new BooleanLiteral(true),
                         new BooleanLiteral(false),
                         new NumericLiteral(632, null),
-                        new ColumnReference(new ColumnId("Date"), ColumnReferenceType.CORRESPONDING_ROW)),
+                        new ColumnReference(new ColumnId("Date"))),
                         Arrays.asList(AddSubtractOp.ADD, AddSubtractOp.SUBTRACT, AddSubtractOp.ADD))),
                 new NumericLiteral(62, null),
                 new StringLiteral("hi")
@@ -117,7 +117,7 @@ public class TestLoadSaveExpression
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        assertEquals(expression, Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        assertEquals(expression, TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
         assertEquals(src, expression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
     }
 }

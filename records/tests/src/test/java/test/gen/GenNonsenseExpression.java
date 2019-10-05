@@ -21,7 +21,6 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.function.FunctionList;
@@ -162,7 +161,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         if (columnReferences.getOrDefault(ident, false))
                         {
                             if (!onlyCallTargets)
-                                return new ColumnReference(new ColumnId(ident), ColumnReferenceType.CORRESPONDING_ROW);
+                                return new ColumnReference(new ColumnId(ident));
                         }
                         else
                         {
@@ -187,13 +186,16 @@ public class GenNonsenseExpression extends Generator<Expression>
                         if (columnReferences.getOrDefault(columnId.getRaw(), true))
                         {
                             columnReferences.put(columnId.getRaw(), true);
-                            return new ColumnReference(columnId, r.nextBoolean() ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
+                            return new ColumnReference(columnId);
                         }
                         else
                         {
                             return new IdentExpression(TestUtil.checkNonNull(IdentifierUtility.asExpressionIdentifier(columnId.getRaw())));
                         }
-                    }  
+                    },
+                    () -> {
+                        return new TableReference(TestUtil.generateTableId(r));
+                    }
                 ));
             }
             

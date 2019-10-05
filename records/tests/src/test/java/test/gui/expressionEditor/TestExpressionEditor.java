@@ -23,6 +23,7 @@ import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
+import records.data.TableId;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -229,13 +230,14 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     private void testSimple(String expressionSrc) throws Exception
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression expression = TestUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         
         // Check once using structured entry:
         testEntry(new ExpressionValue(
             DataType.BOOLEAN, // Type is unused here
             ImmutableList.of(),
             dummyManager.getTypeManager(),
+            new TableId("TEE"),
             new KnownLengthRecordSet(ImmutableList.of(rs -> new MemoryBooleanColumn(rs, new ColumnId("Col1"), ImmutableList.of(), true)), 0),
             expression,
             null
@@ -245,7 +247,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        Expression expression = Expression.parse(null, expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression expression = TestUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
 
         assertEquals(expression, plainEntry(plainEntry, dummyManager.getTypeManager()));
     }

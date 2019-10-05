@@ -20,6 +20,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.TableReference;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -96,7 +97,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     public void testNoOpEdit(String src) throws UserException, InternalException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        testNoOpEdit(Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        testNoOpEdit(TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -113,13 +114,25 @@ public class PropLoadSaveExpression extends FXApplicationTest
             }
 
             @Override
+            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            {
+                return null;
+            }
+
+            @Override
             public Stream<ColumnReference> getAvailableColumnReferences()
             {
                 return expression.allColumnReferences().distinct();
             }
 
             @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            public Stream<TableReference> getAvailableTableReferences()
+            {
+                return expression.allTableReferences().distinct();
+            }
+
+            @Override
+            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
                 // Not used:
                 return Stream.empty();
@@ -152,7 +165,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         String saved = expression.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
         TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        Expression reloaded = Expression.parse(null, saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression reloaded = TestUtil.parseExpression(saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);

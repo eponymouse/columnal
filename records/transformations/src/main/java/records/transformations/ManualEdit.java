@@ -30,6 +30,7 @@ import records.grammar.TransformationParser.EditColumnContext;
 import records.grammar.TransformationParser.EditColumnDataContext;
 import records.grammar.TransformationParser.EditContext;
 import records.grammar.TransformationParser.ValueContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -619,7 +620,7 @@ edit : editHeader editColumn*;
         }
         
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             EditContext editContext = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.edit());
             @Nullable Pair<ColumnId, DataType> replacementKey;

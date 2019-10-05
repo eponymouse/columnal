@@ -33,7 +33,6 @@ import records.transformations.Filter;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.NumericLiteral;

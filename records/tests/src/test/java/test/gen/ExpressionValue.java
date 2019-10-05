@@ -3,6 +3,7 @@ package test.gen;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.Expression;
@@ -20,14 +21,16 @@ public class ExpressionValue extends SingleTableLookup implements ColumnLookup
     // Number of values  in list will equal number of rows
     // in recordSet.  Will be 1 for GenBackwards and N for GenForwards.
     public final List<@Value Object> value;
+    public final TableId tableId;
     public final RecordSet recordSet;
     public final Expression expression;
     public final TypeManager typeManager;
     public final @Nullable GenExpressionValueBase generator;
 
-    public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, RecordSet recordSet, Expression expression, @Nullable GenExpressionValueBase generator)
+    public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, TableId tableId, RecordSet recordSet, Expression expression, @Nullable GenExpressionValueBase generator)
     {
         super(recordSet);
+        this.tableId = tableId;
         this.type = type;
         this.value = value;
         this.typeManager = typeManager;
@@ -44,7 +47,7 @@ public class ExpressionValue extends SingleTableLookup implements ColumnLookup
 
     public ExpressionValue withExpression(Expression replacement)
     {
-        return new ExpressionValue(type, value, typeManager, recordSet, replacement, generator);
+        return new ExpressionValue(type, value, typeManager, tableId, recordSet, replacement, generator);
     }
     
     public int getExpressionLength()

@@ -79,7 +79,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
     String dotCssClassFor(String expression) throws InternalException, UserException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        return "." + ExpressionUtil.makeCssClass(Expression.parse(null, expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        return "." + ExpressionUtil.makeCssClass(TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     /**
@@ -191,7 +191,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertEquals(1, calculate.getCalculatedColumns().size());
             Expression actual = calculate.getCalculatedColumns().values().iterator().next();
             assertEquals(
-                Expression.parse(null, result, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())),
+                TestUtil.parseExpression(result, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())),
                 actual);
         }
         catch (Exception e)

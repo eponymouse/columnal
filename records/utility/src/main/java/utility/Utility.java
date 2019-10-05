@@ -2198,6 +2198,18 @@ public class Utility
     }
 
     /**
+     * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
+     */
+    public static <K, V, E extends Throwable> V getOrThrow(Map<K, V> map, K key, Supplier<E> makeException) throws E
+    {
+        V v = map.get(key);
+        if (v != null)
+            return v;
+        else
+            throw makeException.get();
+    }
+
+    /**
      * Type-safe contains method for Set.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
     public static <K> boolean contains(Set<K> set, K key)

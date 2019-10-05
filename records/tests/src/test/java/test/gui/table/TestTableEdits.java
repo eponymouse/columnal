@@ -8,7 +8,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
@@ -45,13 +44,8 @@ import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.expression.AndExpression;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
-import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression;
-import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
@@ -69,7 +63,6 @@ import test.gui.trait.EnterColumnDetailsTrait;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.trait.TextFieldTrait;
-import test.gui.transformation.TestSort;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -82,12 +75,18 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -150,7 +149,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             ;
         try
         {
-            return Expression.parse(null, src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+            return TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         }
         catch (InternalException | UserException e)
         {
@@ -226,7 +225,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         targetPos = nextPos(filter);
 
         TableId calculateId = new TableId(ch(r) + srcId.getRaw() + " then Calculate");
-        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"), ColumnReferenceType.CORRESPONDING_ROW)));
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"))));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);

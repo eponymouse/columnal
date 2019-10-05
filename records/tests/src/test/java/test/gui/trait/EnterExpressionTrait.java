@@ -16,7 +16,6 @@ import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.DefineItem;
 import records.transformations.expression.DefineExpression.Definition;
@@ -185,9 +184,16 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
+            public UnitType column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
             {
-                write((referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnName.getRaw(), DELAY);
+                write(columnName.getRaw(), DELAY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType table(TableReference self, TableId tableName)
+            {
+                write("@table " + tableName.getRaw(), DELAY);
                 return UnitType.UNIT;
             }
 

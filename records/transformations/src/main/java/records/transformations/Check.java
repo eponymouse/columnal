@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -20,10 +21,10 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.CheckContext;
 import records.grammar.TransformationParser.CheckTypeContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.EvaluateState.TypeLookup;
@@ -31,6 +32,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
+import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.function.FunctionList;
@@ -185,11 +187,11 @@ public class Check extends Transformation implements SingleSourceTransformation
     @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
-        return getColumnLookup(getManager(), srcTableId, checkType);
+        return getColumnLookup(getManager(), srcTableId, getId(), checkType);
     }
 
     @OnThread(Tag.Any)
-    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId, CheckType checkType)
+    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId, @Nullable TableId us, CheckType checkType)
     {
         return new ColumnLookup()
         {
@@ -223,19 +225,11 @@ public class Check extends Transformation implements SingleSourceTransformation
                     }
                     else
                     {
-                        switch (columnReference.getReferenceType())
-                        {
-                            case CORRESPONDING_ROW:
-                                if (checkType == CheckType.STANDALONE)
-                                    return null;
-                                else
-                                    return new FoundColumn(column.getFirst(), column.getSecond().getType(), null);
-                            case WHOLE_COLUMN:
-                                Column columnFinal = column.getSecond();
-                                return new FoundColumn(column.getFirst(), DataTypeValue.array(columnFinal.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
-                            default:
-                                throw new InternalException("Unknown reference type: " + columnReference.getReferenceType());
-                        }
+                
+                        if (checkType == CheckType.STANDALONE)
+                            return null;
+                        else
+                            return new FoundColumn(column.getFirst(), column.getSecond().getType(), null);
                     }
                 }
                 catch (InternalException | UserException e)
@@ -256,15 +250,9 @@ public class Check extends Transformation implements SingleSourceTransformation
                         {
                             for (Column column : t.getData().getColumns())
                             {
-                                columns.add(new ColumnReference(column.getName(), ColumnReferenceType.WHOLE_COLUMN));
                                 if (checkType != CheckType.STANDALONE)
-                                    columns.add(new ColumnReference(column.getName(), ColumnReferenceType.CORRESPONDING_ROW));
+                                    columns.add(new ColumnReference(column.getName()));
                             }
-                        }
-
-                        for (Column column : t.getData().getColumns())
-                        {
-                            columns.add(new ColumnReference(t.getId(), column.getName(), ColumnReferenceType.WHOLE_COLUMN));
                         }
                         return columns.build();
                     }
@@ -277,9 +265,38 @@ public class Check extends Transformation implements SingleSourceTransformation
             }
 
             @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
-                return getAvailableColumnReferences().filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+                return getAvailableColumnReferences().filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId())).map(c -> new ClickedReference(tableId, columnId)
+                {
+                    @Override
+                    public Expression getExpression()
+                    {
+                        return c;
+                    }
+                });
+            }
+
+            @Override
+            public Stream<TableReference> getAvailableTableReferences()
+            {
+                return tableManager.getAllTablesAvailableTo(us).stream().map(t -> new TableReference(t.getId()));
+            }
+
+            @Override
+            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            {
+                Table t;
+                if (tableName == null)
+                {
+                    if (us == null)
+                        t = null;
+                    else
+                        t = tableManager.getSingleTableOrNull(us);
+                }
+                else
+                    t = tableManager.getSingleTableOrNull(tableName);
+                return Utility.onNullable(t, FoundTable::new);
             }
         };
     }
@@ -394,7 +411,7 @@ public class Check extends Transformation implements SingleSourceTransformation
         }
         
         @Override
-        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             CheckContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::check);
 
@@ -409,7 +426,7 @@ public class Check extends Transformation implements SingleSourceTransformation
             else
                 checkType = CheckType.STANDALONE;
             
-            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
+            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
         }
 
         @Override

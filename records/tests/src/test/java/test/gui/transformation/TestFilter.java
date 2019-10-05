@@ -18,7 +18,6 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Filter;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.NumericLiteral;
@@ -97,7 +96,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         TestUtil.sleep(1000);
 
         @SuppressWarnings("recorded")
-        ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
+        ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName()), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
         assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Filter.class).findFirst().get().getFilterExpression());
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));

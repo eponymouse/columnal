@@ -22,15 +22,16 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
+import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -442,7 +443,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             SummaryContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::summary);
 
@@ -451,7 +452,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             {
                 @SuppressWarnings("identifier")
                 ColumnId columnId = new ColumnId(sumType.column.getText());
-                summaryTypes.add(new Pair<>(columnId, Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
+                summaryTypes.add(new Pair<>(columnId, Expression.parse(null, sumType.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
             }
             @SuppressWarnings("identifier")
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());
@@ -864,7 +865,8 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
     {
         if (result != null)
             return getColumnLookup(result);
-        return new ColumnLookup()
+        else
+            return new ColumnLookup()
         {
             @Override
             public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
@@ -879,7 +881,19 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            {
+                return Stream.empty();
+            }
+
+            @Override
+            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            {
+                return null;
+            }
+
+            @Override
+            public Stream<TableReference> getAvailableTableReferences()
             {
                 return Stream.empty();
             }
@@ -899,7 +913,6 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             {
                 TableId tableId = columnReference.getTableId();
                 ColumnId columnId = columnReference.getColumnId();
-                ColumnReferenceType columnReferenceType = columnReference.getReferenceType();
                 boolean grouped = false;
                 if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
                 {
@@ -936,23 +949,17 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                         throw new UserException("Could not find column: " + columnId.getRaw());
     
                     @NonNull Column columnFinal = column;
-                    switch (columnReferenceType)
+                    if (grouped)
                     {
-                        case CORRESPONDING_ROW:
-                            if (grouped)
-                            {
-                                return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
-                                    Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
-                                    return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
-                                }), null);
-                            }
-                            else
-                            {
-                                // If not grouped, must be in split by
-                                return new FoundColumn(table.getFirst(), columnFinal.getType(), null);
-                            }
-                        case WHOLE_COLUMN:
-                            return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(columnFinal))), null);
+                        return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
+                            Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
+                            return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
+                        }), null);
+                    }
+                    else
+                    {
+                        // If not grouped, must be in split by
+                        return new FoundColumn(table.getFirst(), columnFinal.getType(), null);
                     }
                 }
                 catch (InternalException e)
@@ -973,9 +980,16 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public Stream<ColumnReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
+            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
-                return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId()));
+                return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId())).map(c -> new ClickedReference(tableId, columnId)
+                {
+                    @Override
+                    public Expression getExpression()
+                    {
+                        return c;
+                    }
+                });
             }
 
             public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
@@ -987,8 +1001,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                             {
                                 @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
                                 return t.getData().getColumns().stream()
-                                    .flatMap(c -> (tableId != null ? Stream.of(ColumnReferenceType.WHOLE_COLUMN) : Arrays.stream(ColumnReferenceType.values()))
-                                    .map(rt -> new ColumnReference(tableId, c.getName(), rt)));
+                                    .map(c -> new ColumnReference(tableId, c.getName()));
                             }
                             catch (UserException e)
                             {
@@ -999,6 +1012,18 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                             }
                             return Stream.empty();
                         }).distinct();
+            }
+
+            @Override
+            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            {
+                return Utility.onNullable(tableManager.getSingleTableOrNull(tableName == null ? getId() : tableName), FoundTable::new);
+            }
+
+            @Override
+            public Stream<TableReference> getAvailableTableReferences()
+            {
+                return tableManager.getAllTablesAvailableTo(getId()).stream().map(t -> new TableReference(t.getId()));
             }
         };
     }

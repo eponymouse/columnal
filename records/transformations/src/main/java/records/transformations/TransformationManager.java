@@ -24,6 +24,7 @@ import records.grammar.MainParser.TransformationContext;
 import records.grammar.MainParser.TransformationNameContext;
 import records.grammar.TableParser2;
 import records.grammar.TableParser2.TableTransformationContext;
+import records.grammar.Versions.ExpressionVersion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -69,7 +70,7 @@ public class TransformationManager implements TransformationLoader
 
     @OnThread(Tag.Simulation)
     @Override
-    public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException
+    public Transformation loadOne(TableManager mgr, TableContext table, ExpressionVersion expressionVersion) throws UserException, InternalException
     {
         try
         {
@@ -82,7 +83,7 @@ public class TransformationManager implements TransformationLoader
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
             TableIdContext tableIdContext = transformationContext.tableId();
             @SuppressWarnings("identifier")
-            Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), detailContext, table.display()), source, detail);
+            Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), detailContext, table.display()), source, detail, expressionVersion);
             mgr.record(transformation);
             return transformation;
         }
@@ -94,7 +95,7 @@ public class TransformationManager implements TransformationLoader
 
     @Override
     @OnThread(Tag.Simulation)
-    public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table) throws UserException, InternalException
+    public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table, ExpressionVersion expressionVersion) throws UserException, InternalException
     {
         try
         {
@@ -108,7 +109,7 @@ public class TransformationManager implements TransformationLoader
             TableParser2.TableIdContext tableIdContext = transformationContext.tableId();
             @SuppressWarnings("identifier")
             Transformation transformation = Utility.parseAsOne(Utility.getDetail(table.display().detail()), DisplayLexer::new, DisplayParser::new, p ->
-                t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), saveTag, p.tableDisplayDetails()), source, detail)
+                t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), saveTag, p.tableDisplayDetails()), source, detail, expressionVersion)
             );
             mgr.record(transformation);
             return transformation;

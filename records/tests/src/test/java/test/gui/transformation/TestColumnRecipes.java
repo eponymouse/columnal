@@ -35,7 +35,6 @@ import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.expression.*;
-import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
@@ -87,7 +86,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         
         Aggregate agg = (Aggregate) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Aggregate).findFirst().orElseThrow(() -> new RuntimeException("No aggregate"));
         assertEquals(ImmutableList.of(), agg.getSplitBy());
-        assertEquals(ImmutableList.of(new CallExpression(getFunctionLookup(), sum ? "sum" : "average", new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW))), Utility.mapListI(agg.getColumnExpressions(), p -> p.getSecond()));
+        assertEquals(ImmutableList.of(new CallExpression(getFunctionLookup(), sum ? "sum" : "average", new ColumnReference(srcColumn.getName()))), Utility.mapListI(agg.getColumnExpressions(), p -> p.getSecond()));
     }
     
     private final Object ERR = new Object();
@@ -161,7 +160,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @OnThread(Tag.Simulation)
     public void testNumToBoolean() throws Exception
     {
-        testTypeTransform(DataType.number(new NumberInfo(Unit.SCALAR)), DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(1, null)), false), ImmutableList.of(1, 0, 0, 1, ERR), null);
+        testTypeTransform(DataType.number(new NumberInfo(Unit.SCALAR)), DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(new ColumnReference(c), new NumericLiteral(1, null)), false), ImmutableList.of(1, 0, 0, 1, ERR), null);
     }
 
     @Test
@@ -175,21 +174,21 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @OnThread(Tag.Simulation)
     public void testDateToText() throws Exception
     {
-        testTypeTransform(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.TEXT, c -> new CallExpression(getFunctionLookup(), "to text", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(), null);
+        testTypeTransform(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.TEXT, c -> new CallExpression(getFunctionLookup(), "to text", new ColumnReference(c)), ImmutableList.of(), null);
     }
 
     @Test
     @OnThread(Tag.Simulation)
     public void testTextualNumberToNumber() throws Exception
     {
-        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37", "0", "1.65", "-3.562", "none"), null);
+        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c)), ImmutableList.of("37", "0", "1.65", "-3.562", "none"), null);
     }
 
     @Test
     @OnThread(Tag.Simulation)
     public void testTextualNumberToNumber2() throws Exception
     {
-        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
+        testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", new ColumnReference(c)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
     }
 
     @Test
@@ -197,7 +196,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testTextualNumberToNumber3() throws Exception
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        testTypeTransform(DataType.TEXT, typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.NUMBER)), typeManager), c -> new CallExpression(getFunctionLookup(), "extract number or none", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
+        testTypeTransform(DataType.TEXT, typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.NUMBER)), typeManager), c -> new CallExpression(getFunctionLookup(), "extract number or none", new ColumnReference(c)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
     }
 
     @Test
@@ -212,7 +211,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testTextualTimeToTime() throws Exception
     {
         DataType time = DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
-        testTypeTransform(DataType.TEXT, time, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(time)), new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of("4:51", "16:05", "5:21PM", "0:00:03.435346346 AM"), null);
+        testTypeTransform(DataType.TEXT, time, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(time)), new ColumnReference(c)), ImmutableList.of("4:51", "16:05", "5:21PM", "0:00:03.435346346 AM"), null);
     }
 
     @Test
@@ -220,14 +219,14 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testTextualDateToDate() throws Exception
     {
         DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
-        testTypeTransform(DataType.TEXT, date, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(date)), new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(ERR, "May 12 2018", "30-04-17", "21 Jun 2018", ERR, "2018-03-04"), null);
+        testTypeTransform(DataType.TEXT, date, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(date)), new ColumnReference(c)), ImmutableList.of(ERR, "May 12 2018", "30-04-17", "21 Jun 2018", ERR, "2018-03-04"), null);
     }
 
     @Test
     @OnThread(Tag.Simulation)
     public void testTextualNumberToBoolean() throws Exception
     {
-        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW))), ImmutableList.of("T", "F", "T", "T", "F"), null);
+        testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c))), ImmutableList.of("T", "F", "T", "T", "F"), null);
     }
 
     @Test
@@ -235,7 +234,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testTextualNumberToBoolean2() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c ->
-            new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW))), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
+            new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", new ColumnReference(c))), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
     }
 
     @Test
@@ -244,7 +243,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     {
         DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIME));
         DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
-        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "date from datetime", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)), ImmutableList.of(ERR), null);
+        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "date from datetime", new ColumnReference(c)), ImmutableList.of(ERR), null);
     }
 
     @Test
@@ -253,7 +252,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     {
         DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
         DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH));
-        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "dateym from date", new CallExpression(getFunctionLookup(), "date from datetime", new CallExpression(getFunctionLookup(), "datetime from datetimezoned", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW)))), ImmutableList.of(ERR), null);
+        testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "dateym from date", new CallExpression(getFunctionLookup(), "date from datetime", new CallExpression(getFunctionLookup(), "datetime from datetimezoned", new ColumnReference(c)))), ImmutableList.of(ERR), null);
     }
     
     @Test
@@ -261,7 +260,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testOptionalNumberToNumber() throws Exception
     {
         Unit s = new UnitManager().loadUse("s");
-        testTypeTransform(optional(DataType.number(new NumberInfo(s))), DataType.number(new NumberInfo(s)), c -> new CallExpression(getFunctionLookup(), "get optional or", new ColumnReference(c, ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(34, UnitExpression.load(s))), ImmutableList.of(new TaggedValue(0, null)), () -> {
+        testTypeTransform(optional(DataType.number(new NumberInfo(s))), DataType.number(new NumberInfo(s)), c -> new CallExpression(getFunctionLookup(), "get optional or", new ColumnReference(c), new NumericLiteral(34, UnitExpression.load(s))), ImmutableList.of(new TaggedValue(0, null)), () -> {
             write("34");
             clickOn(".ok-button");
         });
