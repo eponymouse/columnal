@@ -21,7 +21,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -49,7 +48,6 @@ import records.data.Table.InitialLoadDetails;
 import records.data.Table.TableDisplayBase;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.ListExDTV;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
@@ -71,7 +69,6 @@ import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.*;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.type.TypeExpression;
@@ -1519,7 +1516,7 @@ public class TestUtil
 
     public static Expression parseExpression(String expressionSrc, TypeManager typeManager, FunctionLookup functionLookup) throws InternalException, UserException
     {
-        return Expression.parse(null, expressionSrc, ExpressionVersion.latest(), typeManager, functionLookup);
+        return ExpressionUtil.parse(null, expressionSrc, ExpressionVersion.latest(), typeManager, functionLookup);
     }
 
     public static interface TestRunnable

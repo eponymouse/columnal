@@ -6,12 +6,9 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
-import records.data.datatype.ListExDTV;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -32,6 +29,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
+import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
@@ -426,7 +424,7 @@ public class Check extends Transformation implements SingleSourceTransformation
             else
                 checkType = CheckType.STANDALONE;
             
-            return new Check(mgr, initialLoadDetails, srcTableId, checkType, Expression.parse(null, loaded.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
+            return new Check(mgr, initialLoadDetails, srcTableId, checkType, ExpressionUtil.parse(null, loaded.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
         }
 
         @Override

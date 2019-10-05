@@ -1,6 +1,8 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
@@ -28,17 +30,40 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import log.Log;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
+import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionLexer2;
+import records.grammar.ExpressionParser;
+import records.grammar.ExpressionParser.*;
+import records.grammar.ExpressionParser2;
+import records.grammar.ExpressionParser2.TableRefContext;
+import records.grammar.ExpressionParser2BaseVisitor;
+import records.grammar.ExpressionParserBaseVisitor;
+import records.grammar.GrammarUtility;
+import records.grammar.Versions.ExpressionVersion;
 import records.jellytype.JellyType;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.ConstructorExpression;
+import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.MatchExpression.MatchClause;
+import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.QuickFix;
@@ -49,6 +74,7 @@ import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
@@ -59,8 +85,11 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
+import utility.ExFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 import utility.TranslationUtility;
@@ -69,6 +98,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -183,4 +214,888 @@ public class ExpressionUtil
         }
         return ImmutableList.of();
     }
+
+    public static Expression parse(@Nullable String keyword, String src, ExpressionVersion expressionVersion, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
+    {
+        if (keyword != null)
+        {
+            src = src.trim();
+            if (src.startsWith(keyword))
+                src = src.substring(keyword.length());
+            else
+                throw new UserException("Missing keyword: " + keyword);
+        }
+        try
+        {
+            switch (expressionVersion)
+            {
+                case ONE:
+                    return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
+                    {
+                        return new CompileExpression(typeManager, functionLookup).visit(p.completeExpression().topLevelExpression());
+                    });
+                case TWO:
+                default:
+                    return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer2::new, ExpressionParser2::new, p ->
+                    {
+                        return new CompileExpression2(typeManager, functionLookup).visit(p.completeExpression().topLevelExpression());
+                    });
+            }
+            
+        }
+        catch (RuntimeException e)
+        {
+            throw new UserException("Problem parsing expression \"" + src + "\"", e);
+        }
+    }
+
+    @SuppressWarnings("recorded")
+    private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
+    {
+        private final TypeManager typeManager;
+        private final FunctionLookup functionLookup;
+
+        public CompileExpression(TypeManager typeManager, FunctionLookup functionLookup)
+        {
+            this.typeManager = typeManager;
+            this.functionLookup = functionLookup;
+        }
+
+        @Override
+        public Expression visitColumnRef(ColumnRefContext ctx)
+        {
+            TableIdContext tableIdContext = ctx.tableId();
+            if (ctx.columnId() == null)
+                throw new RuntimeException("Error processing column reference");
+            TableId tableName = tableIdContext == null ? null : new TableId(IdentifierUtility.fromParsed(tableIdContext.ident()));
+            ColumnId columnName = new ColumnId(IdentifierUtility.fromParsed(ctx.columnId().ident()));
+            // This isn't quite correct for the loading, but v1 was only
+            // used during private beta, so we can live with incorrect loading:
+            if (ctx.columnRefType().WHOLECOLUMN() != null && tableName != null)
+                return TableReference.makeEntireColumnReference(tableName, columnName);
+            else
+                return new ColumnReference(tableName, columnName);
+        }
+
+        @Override
+        public Expression visitNumericLiteral(NumericLiteralContext ctx)
+        {
+            try
+            {
+                @Nullable @Recorded UnitExpression unitExpression;
+                if (ctx.CURLIED() == null)
+                {
+                    unitExpression = null;
+                }
+                else
+                {
+                    String unitText = ctx.CURLIED().getText();
+                    unitText = StringUtils.removeStart(StringUtils.removeEnd(unitText, "}"), "{");
+                    unitExpression = UnitExpression.load(unitText);
+                }
+                return new NumericLiteral(Utility.parseNumber((ctx.ADD_OR_SUBTRACT() == null ? "" : ctx.ADD_OR_SUBTRACT().getText()) + ctx.NUMBER().getText()), unitExpression);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException("Error parsing unit: \"" + ctx.CURLIED().getText() + "\"", e);
+            }
+        }
+
+        @Override
+        public Expression visitStringLiteral(StringLiteralContext ctx)
+        {
+            return new StringLiteral(ctx.RAW_STRING().getText());
+        }
+
+        @Override
+        public Expression visitBooleanLiteral(BooleanLiteralContext ctx)
+        {
+            return new BooleanLiteral(Boolean.valueOf(ctx.getText()));
+        }
+
+        @Override
+        public Expression visitConstructor(ConstructorContext ctx)
+        {
+            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : IdentifierUtility.fromParsed(ctx.typeName().ident()), ctx.constructorName().getText());
+        }
+
+        @Override
+        public Expression visitNotEqualExpression(NotEqualExpressionContext ctx)
+        {
+            return new NotEqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public EqualExpression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
+        {
+            return new EqualExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), ctx.EQUALITY_PATTERN() != null);
+        }
+
+        @Override
+        public Expression visitAndExpression(AndExpressionContext ctx)
+        {
+            return new AndExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitOrExpression(OrExpressionContext ctx)
+        {
+            return new OrExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitRaisedExpression(RaisedExpressionContext ctx)
+        {
+            return new RaiseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitDivideExpression(DivideExpressionContext ctx)
+        {
+            return new DivideExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAddSubtractExpression(AddSubtractExpressionContext ctx)
+        {
+            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, AddSubtractOp>mapList(ctx.ADD_OR_SUBTRACT(), op -> op.getText().equals("+") ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
+        }
+
+        @Override
+        public Expression visitGreaterThanExpression(GreaterThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.GREATER_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Expression visitLessThanExpression(LessThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.LESS_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Expression visitTimesExpression(TimesExpressionContext ctx)
+        {
+            return new TimesExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitStringConcatExpression(StringConcatExpressionContext ctx)
+        {
+            return new StringConcatExpression(Utility.mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
+        {
+            return IfThenElseExpression.unrecorded(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
+        }
+
+        @Override
+        public Expression visitDefineExpression(DefineExpressionContext ctx)
+        {
+            return visitDefinitions(ctx.definition()).either(bad -> {
+                ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                for (Expression expression : bad)
+                {
+                    b.add(new InvalidIdentExpression("@define"));
+                    b.add(expression);
+                }
+                b.add(new InvalidIdentExpression("@then"));
+                b.add(visitTopLevelExpression(ctx.topLevelExpression()));
+                b.add(new InvalidIdentExpression("@enddefine"));
+                return new InvalidOperatorExpression(b.build());
+            }, mixed -> DefineExpression.unrecorded(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
+        }
+        
+        private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, Definition>>> visitDefinitions(List<DefinitionContext> definitionContexts)
+        {
+            Either<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>> builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>right(ImmutableList.<Either<HasTypeExpression, Definition>>builder());
+
+            for (DefinitionContext def : definitionContexts)
+            {
+                if (def.expression() != null && def.expression().size() > 0)
+                {
+                    Expression lhs = visitExpression(def.expression(0));
+                    Expression rhs = visitExpression(def.expression(1));
+                    builders.either_(b -> b.add(new EqualExpression(ImmutableList.of(lhs, rhs), false)), b -> b.add(Either.right(new Definition(lhs, rhs))));
+                }
+                else
+                {
+                    Expression expression = visitHasTypeExpression(def.hasTypeExpression());
+                    if (!(expression instanceof HasTypeExpression))
+                    {
+                        builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>left(builders.<ImmutableList.Builder<Expression>>either(b -> b, mixed -> {
+                            ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                            b.addAll(Utility.mapListI(mixed.build(), e -> e.either(x -> x, x -> new EqualExpression(ImmutableList.of(x.lhsPattern, x.rhsValue), false))));
+                            return b;
+                        }));
+                    }
+                                
+                    builders.either_(b -> b.add(expression), b -> b.add(Either.left((HasTypeExpression)expression)));
+                }
+            }
+            
+            return builders.mapBoth(b -> b.build(), b -> b.build());
+        }
+
+        @Override
+        public Expression visitHasTypeExpression(HasTypeExpressionContext ctx)
+        {
+            Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
+            return new HasTypeExpression(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
+        }
+
+        @Override
+        public Expression visitLambdaExpression(LambdaExpressionContext ctx)
+        {
+            List<TopLevelExpressionContext> es = ctx.topLevelExpression();
+            return new LambdaExpression(Utility.mapListI(es.subList(0, es.size() - 1), e -> visitTopLevelExpression(e)), visitTopLevelExpression(es.get(es.size() - 1)));
+        }
+
+        @Override
+        public Expression visitCustomLiteralExpression(CustomLiteralExpressionContext ctx)
+        {
+            String literalContent = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");
+            class Lit<A>
+            {
+                final String prefix;
+                final Function<A, Expression> makeExpression;
+                final ExFunction<String, A> normalLoad;
+                final Function<String, A> errorLoad;
+
+                Lit(String prefix, Function<A, Expression> makeExpression, ExFunction<String, A> normalLoad, Function<String, A> errorLoad)
+                {
+                    this.prefix = prefix;
+                    this.makeExpression = makeExpression;
+                    this.normalLoad = normalLoad;
+                    this.errorLoad = errorLoad;
+                }
+                
+                public Optional<Expression> load(String src)
+                {
+                    if (src.startsWith(prefix))
+                    {
+                        src = StringUtils.removeStart(src, prefix);
+                        A value;
+                        try
+                        {
+                            value = normalLoad.apply(src);
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            Log.log(e);
+                            value = errorLoad.apply(src);
+                        }
+                        return Optional.of(makeExpression.apply(value));
+                    }
+                    return Optional.empty();
+                }
+            }
+            ImmutableList<Lit<?>> loaders = ImmutableList.of(
+                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, InvalidSingleUnitExpression::identOrUnfinished),
+                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(t), InvalidIdentTypeExpression::identOrUnfinished
+                ),
+                new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
+                new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
+                new Lit<String>("time{", s -> new TemporalLiteral(DateTimeType.TIMEOFDAY, s), s -> s, s -> s),
+                new Lit<String>("datetime{", s -> new TemporalLiteral(DateTimeType.DATETIME, s), s -> s, s -> s),
+                new Lit<String>("datetimezoned{", s -> new TemporalLiteral(DateTimeType.DATETIMEZONED, s), s -> s, s -> s)
+            );
+            
+            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(s -> Stream.of(s)).orElse(Stream.empty())).findFirst();
+            
+            return loaded.orElseGet(() -> InvalidIdentExpression.identOrUnfinished(literalContent.replace('{','_').replace('}', '_')));
+        }
+
+        @Override
+        public Expression visitCallExpression(CallExpressionContext ctx)
+        {
+            Expression function = visitCallTarget(ctx.callTarget());
+            
+            ImmutableList<@NonNull Expression> args;
+            args = Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), e -> visitTopLevelExpression(e));
+            
+            return new CallExpression(function, args);
+        }
+
+        @Override
+        public Expression visitStandardFunction(StandardFunctionContext ctx)
+        {
+            String functionName = ctx.ident().getText();
+            @Nullable StandardFunctionDefinition functionDefinition = null;
+            try
+            {
+                functionDefinition = functionLookup.lookup(functionName);
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+                // Carry on, but function is null so will count as unknown
+            }
+            if (functionDefinition == null)
+            {
+                return InvalidIdentExpression.identOrUnfinished(functionName);
+            }
+            else
+            {
+                return new StandardFunction(functionDefinition);
+            }
+        }
+        
+        /*
+        @Override
+        public Expression visitBinaryOpExpression(BinaryOpExpressionContext ctx)
+        {
+            @Nullable Op op = Op.parse(ctx.binaryOp().getText());
+            if (op == null)
+                throw new RuntimeException("Broken operator parse: " + ctx.binaryOp().getText());
+            return new BinaryOpExpression(visitExpression(ctx.expression().get(0)), op, visitExpression(ctx.expression().get(1)));
+        }
+        */
+
+        @Override
+        public Expression visitMatch(MatchContext ctx)
+        {
+            ImmutableList.Builder<MatchClause> clauses = ImmutableList.builder();
+            for (MatchClauseContext matchClauseContext : ctx.matchClause())
+            {
+                ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
+                for (PatternContext patternContext : matchClauseContext.pattern())
+                {
+                    @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                    @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                    patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
+                }
+                clauses.add(new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
+            }
+            return new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), visitTopLevelExpression(ctx.topLevelExpression()), clauses.build(), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO));
+        }
+
+        @Override
+        public Expression visitArrayExpression(ArrayExpressionContext ctx)
+        {
+            if (ctx.topLevelExpression() == null)
+                return new ArrayExpression(ImmutableList.of());
+            else
+                return new ArrayExpression(Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), c -> visitTopLevelExpression(c)));
+        }
+
+        @Override
+        public Expression visitRecordExpression(RecordExpressionContext ctx)
+        {
+            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
+            for (int i = 0; i < ctx.ident().size(); i++)
+            {
+                members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
+            }
+            return new RecordExpression(members.build());
+        }
+
+        @Override
+        public Expression visitFieldAccessExpression(FieldAccessExpressionContext ctx)
+        {
+            return new FieldAccessExpression(visitExpression(ctx.expression()), new IdentExpression(IdentifierUtility.fromParsed(ctx.ident())));
+        }
+
+        @Override
+        public Expression visitBracketedExpression(BracketedExpressionContext ctx)
+        {
+            return visitTopLevelExpression(ctx.topLevelExpression());
+        }
+
+        @Override
+        public Expression visitVarRef(VarRefContext ctx)
+        {
+            return new IdentExpression(IdentifierUtility.fromParsed(ctx.ident()));
+        }
+
+        @Override
+        public Expression visitUnfinished(UnfinishedContext ctx)
+        {
+            return new InvalidIdentExpression(GrammarUtility.processEscapes(ctx.RAW_STRING().getText(), false));
+        }
+
+        @Override
+        public Expression visitImplicitLambdaParam(ImplicitLambdaParamContext ctx)
+        {
+            return new ImplicitLambdaArg();
+        }
+
+        @Override
+        public Expression visitPlusMinusPattern(PlusMinusPatternContext ctx)
+        {
+            return new PlusMinusPatternExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAny(AnyContext ctx)
+        {
+            return new MatchAnythingExpression();
+        }
+
+        @Override
+        public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
+        {
+            return new InvalidOperatorExpression(Utility.<InvalidOpItemContext, Expression>mapListI(ctx.invalidOpItem(), 
+                c -> visitExpression(c.expression())));
+        }
+
+        public Expression visitChildren(RuleNode node) {
+            @Nullable Expression result = this.defaultResult();
+            int n = node.getChildCount();
+
+            for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
+                ParseTree c = node.getChild(i);
+                Expression childResult = c.accept(this);
+                if (childResult == null)
+                    break;
+                result = this.aggregateResult(result, childResult);
+            }
+            if (result == null)
+                throw new RuntimeException("No CompileExpression rules matched for " + node.getText());
+            else
+                return result;
+        }
+    }
+
+    @SuppressWarnings("recorded")
+    private static class CompileExpression2 extends ExpressionParser2BaseVisitor<Expression>
+    {
+        private final TypeManager typeManager;
+        private final FunctionLookup functionLookup;
+
+        public CompileExpression2(TypeManager typeManager, FunctionLookup functionLookup)
+        {
+            this.typeManager = typeManager;
+            this.functionLookup = functionLookup;
+        }
+
+        @Override
+        public Expression visitColumnRef(ExpressionParser2.ColumnRefContext ctx)
+        {
+            ExpressionParser2.TableIdContext tableIdContext = ctx.tableId();
+            if (ctx.columnId() == null)
+                throw new RuntimeException("Error processing column reference");
+            TableId tableName = tableIdContext == null ? null : new TableId(IdentifierUtility.fromParsed(tableIdContext.ident()));
+            ColumnId columnName = new ColumnId(IdentifierUtility.fromParsed(ctx.columnId().ident()));
+            return new ColumnReference(tableName, columnName);
+        }
+
+        @Override
+        public Expression visitTableRef(TableRefContext ctx)
+        {
+            return new TableReference(new TableId(IdentifierUtility.fromParsed(ctx.tableId().ident())));
+        }
+
+        @Override
+        public Expression visitNumericLiteral(ExpressionParser2.NumericLiteralContext ctx)
+        {
+            try
+            {
+                @Nullable @Recorded UnitExpression unitExpression;
+                if (ctx.CURLIED() == null)
+                {
+                    unitExpression = null;
+                }
+                else
+                {
+                    String unitText = ctx.CURLIED().getText();
+                    unitText = StringUtils.removeStart(StringUtils.removeEnd(unitText, "}"), "{");
+                    unitExpression = UnitExpression.load(unitText);
+                }
+                return new NumericLiteral(Utility.parseNumber((ctx.ADD_OR_SUBTRACT() == null ? "" : ctx.ADD_OR_SUBTRACT().getText()) + ctx.NUMBER().getText()), unitExpression);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException("Error parsing unit: \"" + ctx.CURLIED().getText() + "\"", e);
+            }
+        }
+
+        @Override
+        public Expression visitStringLiteral(ExpressionParser2.StringLiteralContext ctx)
+        {
+            return new StringLiteral(ctx.RAW_STRING().getText());
+        }
+
+        @Override
+        public Expression visitBooleanLiteral(ExpressionParser2.BooleanLiteralContext ctx)
+        {
+            return new BooleanLiteral(Boolean.valueOf(ctx.getText()));
+        }
+
+        @Override
+        public Expression visitConstructor(ExpressionParser2.ConstructorContext ctx)
+        {
+            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : IdentifierUtility.fromParsed(ctx.typeName().ident()), ctx.constructorName().getText());
+        }
+
+        @Override
+        public Expression visitNotEqualExpression(ExpressionParser2.NotEqualExpressionContext ctx)
+        {
+            return new NotEqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public EqualExpression visitEqualExpression(ExpressionParser2.EqualExpressionContext ctx)
+        {
+            return new EqualExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), ctx.EQUALITY_PATTERN() != null);
+        }
+
+        @Override
+        public Expression visitAndExpression(ExpressionParser2.AndExpressionContext ctx)
+        {
+            return new AndExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitOrExpression(ExpressionParser2.OrExpressionContext ctx)
+        {
+            return new OrExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitRaisedExpression(ExpressionParser2.RaisedExpressionContext ctx)
+        {
+            return new RaiseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitDivideExpression(ExpressionParser2.DivideExpressionContext ctx)
+        {
+            return new DivideExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAddSubtractExpression(ExpressionParser2.AddSubtractExpressionContext ctx)
+        {
+            return new AddSubtractExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, AddSubtractOp>mapList(ctx.ADD_OR_SUBTRACT(), op -> op.getText().equals("+") ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
+        }
+
+        @Override
+        public Expression visitGreaterThanExpression(ExpressionParser2.GreaterThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.GREATER_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Expression visitLessThanExpression(ExpressionParser2.LessThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.LESS_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Expression visitTimesExpression(ExpressionParser2.TimesExpressionContext ctx)
+        {
+            return new TimesExpression(Utility.<ExpressionParser2.ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitStringConcatExpression(ExpressionParser2.StringConcatExpressionContext ctx)
+        {
+            return new StringConcatExpression(Utility.mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitIfThenElseExpression(ExpressionParser2.IfThenElseExpressionContext ctx)
+        {
+            return IfThenElseExpression.unrecorded(visitTopLevelExpression(ctx.topLevelExpression(0)), visitTopLevelExpression(ctx.topLevelExpression(1)), visitTopLevelExpression(ctx.topLevelExpression(2)));
+        }
+
+        @Override
+        public Expression visitDefineExpression(ExpressionParser2.DefineExpressionContext ctx)
+        {
+            return visitDefinitions(ctx.definition()).either(bad -> {
+                ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                for (Expression expression : bad)
+                {
+                    b.add(new InvalidIdentExpression("@define"));
+                    b.add(expression);
+                }
+                b.add(new InvalidIdentExpression("@then"));
+                b.add(visitTopLevelExpression(ctx.topLevelExpression()));
+                b.add(new InvalidIdentExpression("@enddefine"));
+                return new InvalidOperatorExpression(b.build());
+            }, mixed -> DefineExpression.unrecorded(mixed, visitTopLevelExpression(ctx.topLevelExpression())));
+        }
+
+        private Either<ImmutableList<Expression>, ImmutableList<Either<HasTypeExpression, Definition>>> visitDefinitions(List<ExpressionParser2.DefinitionContext> definitionContexts)
+        {
+            Either<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>> builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>right(ImmutableList.<Either<HasTypeExpression, Definition>>builder());
+
+            for (ExpressionParser2.DefinitionContext def : definitionContexts)
+            {
+                if (def.expression() != null && def.expression().size() > 0)
+                {
+                    Expression lhs = visitExpression(def.expression(0));
+                    Expression rhs = visitExpression(def.expression(1));
+                    builders.either_(b -> b.add(new EqualExpression(ImmutableList.of(lhs, rhs), false)), b -> b.add(Either.right(new Definition(lhs, rhs))));
+                }
+                else
+                {
+                    Expression expression = visitHasTypeExpression(def.hasTypeExpression());
+                    if (!(expression instanceof HasTypeExpression))
+                    {
+                        builders = Either.<ImmutableList.Builder<Expression>, ImmutableList.Builder<Either<HasTypeExpression, Definition>>>left(builders.<ImmutableList.Builder<Expression>>either(b -> b, mixed -> {
+                            ImmutableList.Builder<Expression> b = ImmutableList.builder();
+                            b.addAll(Utility.mapListI(mixed.build(), e -> e.either(x -> x, x -> new EqualExpression(ImmutableList.of(x.lhsPattern, x.rhsValue), false))));
+                            return b;
+                        }));
+                    }
+
+                    builders.either_(b -> b.add(expression), b -> b.add(Either.left((HasTypeExpression)expression)));
+                }
+            }
+
+            return builders.mapBoth(b -> b.build(), b -> b.build());
+        }
+
+        @Override
+        public Expression visitHasTypeExpression(ExpressionParser2.HasTypeExpressionContext ctx)
+        {
+            Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
+            return new HasTypeExpression(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
+        }
+
+        @Override
+        public Expression visitLambdaExpression(ExpressionParser2.LambdaExpressionContext ctx)
+        {
+            List<ExpressionParser2.TopLevelExpressionContext> es = ctx.topLevelExpression();
+            return new LambdaExpression(Utility.mapListI(es.subList(0, es.size() - 1), e -> visitTopLevelExpression(e)), visitTopLevelExpression(es.get(es.size() - 1)));
+        }
+
+        @Override
+        public Expression visitCustomLiteralExpression(ExpressionParser2.CustomLiteralExpressionContext ctx)
+        {
+            String literalContent = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");
+            class Lit<A>
+            {
+                final String prefix;
+                final Function<A, Expression> makeExpression;
+                final ExFunction<String, A> normalLoad;
+                final Function<String, A> errorLoad;
+
+                Lit(String prefix, Function<A, Expression> makeExpression, ExFunction<String, A> normalLoad, Function<String, A> errorLoad)
+                {
+                    this.prefix = prefix;
+                    this.makeExpression = makeExpression;
+                    this.normalLoad = normalLoad;
+                    this.errorLoad = errorLoad;
+                }
+
+                public Optional<Expression> load(String src)
+                {
+                    if (src.startsWith(prefix))
+                    {
+                        src = StringUtils.removeStart(src, prefix);
+                        A value;
+                        try
+                        {
+                            value = normalLoad.apply(src);
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            Log.log(e);
+                            value = errorLoad.apply(src);
+                        }
+                        return Optional.of(makeExpression.apply(value));
+                    }
+                    return Optional.empty();
+                }
+            }
+            ImmutableList<Lit<?>> loaders = ImmutableList.of(
+                    new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, InvalidSingleUnitExpression::identOrUnfinished),
+                    new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(t), InvalidIdentTypeExpression::identOrUnfinished
+                    ),
+                    new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
+                    new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
+                    new Lit<String>("time{", s -> new TemporalLiteral(DateTimeType.TIMEOFDAY, s), s -> s, s -> s),
+                    new Lit<String>("datetime{", s -> new TemporalLiteral(DateTimeType.DATETIME, s), s -> s, s -> s),
+                    new Lit<String>("datetimezoned{", s -> new TemporalLiteral(DateTimeType.DATETIMEZONED, s), s -> s, s -> s)
+            );
+
+            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(s -> Stream.of(s)).orElse(Stream.empty())).findFirst();
+
+            return loaded.orElseGet(() -> InvalidIdentExpression.identOrUnfinished(literalContent.replace('{','_').replace('}', '_')));
+        }
+
+        @Override
+        public Expression visitCallExpression(ExpressionParser2.CallExpressionContext ctx)
+        {
+            Expression function = visitCallTarget(ctx.callTarget());
+
+            ImmutableList<@NonNull Expression> args;
+            args = Utility.<ExpressionParser2.TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), e -> visitTopLevelExpression(e));
+
+            return new CallExpression(function, args);
+        }
+
+        @Override
+        public Expression visitStandardFunction(ExpressionParser2.StandardFunctionContext ctx)
+        {
+            String functionName = ctx.ident().getText();
+            @Nullable StandardFunctionDefinition functionDefinition = null;
+            try
+            {
+                functionDefinition = functionLookup.lookup(functionName);
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+                // Carry on, but function is null so will count as unknown
+            }
+            if (functionDefinition == null)
+            {
+                return InvalidIdentExpression.identOrUnfinished(functionName);
+            }
+            else
+            {
+                return new StandardFunction(functionDefinition);
+            }
+        }
+        
+        /*
+        @Override
+        public Expression visitBinaryOpExpression(BinaryOpExpressionContext ctx)
+        {
+            @Nullable Op op = Op.parse(ctx.binaryOp().getText());
+            if (op == null)
+                throw new RuntimeException("Broken operator parse: " + ctx.binaryOp().getText());
+            return new BinaryOpExpression(visitExpression(ctx.expression().get(0)), op, visitExpression(ctx.expression().get(1)));
+        }
+        */
+
+        @Override
+        public Expression visitMatch(ExpressionParser2.MatchContext ctx)
+        {
+            ImmutableList.Builder<MatchClause> clauses = ImmutableList.builder();
+            for (ExpressionParser2.MatchClauseContext matchClauseContext : ctx.matchClause())
+            {
+                ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
+                for (ExpressionParser2.PatternContext patternContext : matchClauseContext.pattern())
+                {
+                    ExpressionParser2.@Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                    @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                    patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
+                }
+                clauses.add(new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
+            }
+            return new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), visitTopLevelExpression(ctx.topLevelExpression()), clauses.build(), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO));
+        }
+
+        @Override
+        public Expression visitArrayExpression(ExpressionParser2.ArrayExpressionContext ctx)
+        {
+            if (ctx.topLevelExpression() == null)
+                return new ArrayExpression(ImmutableList.of());
+            else
+                return new ArrayExpression(Utility.<ExpressionParser2.TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), c -> visitTopLevelExpression(c)));
+        }
+
+        @Override
+        public Expression visitRecordExpression(ExpressionParser2.RecordExpressionContext ctx)
+        {
+            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
+            for (int i = 0; i < ctx.ident().size(); i++)
+            {
+                members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
+            }
+            return new RecordExpression(members.build());
+        }
+
+        @Override
+        public Expression visitFieldAccessExpression(ExpressionParser2.FieldAccessExpressionContext ctx)
+        {
+            return new FieldAccessExpression(visitExpression(ctx.expression()), new IdentExpression(IdentifierUtility.fromParsed(ctx.ident())));
+        }
+
+        @Override
+        public Expression visitBracketedExpression(ExpressionParser2.BracketedExpressionContext ctx)
+        {
+            return visitTopLevelExpression(ctx.topLevelExpression());
+        }
+
+        @Override
+        public Expression visitVarRef(ExpressionParser2.VarRefContext ctx)
+        {
+            return new IdentExpression(IdentifierUtility.fromParsed(ctx.ident()));
+        }
+
+        @Override
+        public Expression visitUnfinished(ExpressionParser2.UnfinishedContext ctx)
+        {
+            return new InvalidIdentExpression(GrammarUtility.processEscapes(ctx.RAW_STRING().getText(), false));
+        }
+
+        @Override
+        public Expression visitImplicitLambdaParam(ExpressionParser2.ImplicitLambdaParamContext ctx)
+        {
+            return new ImplicitLambdaArg();
+        }
+
+        @Override
+        public Expression visitPlusMinusPattern(ExpressionParser2.PlusMinusPatternContext ctx)
+        {
+            return new PlusMinusPatternExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAny(ExpressionParser2.AnyContext ctx)
+        {
+            return new MatchAnythingExpression();
+        }
+
+        @Override
+        public Expression visitInvalidOpExpression(ExpressionParser2.InvalidOpExpressionContext ctx)
+        {
+            return new InvalidOperatorExpression(Utility.<ExpressionParser2.InvalidOpItemContext, Expression>mapListI(ctx.invalidOpItem(),
+                    c -> visitExpression(c.expression())));
+        }
+
+        public Expression visitChildren(RuleNode node) {
+            @Nullable Expression result = this.defaultResult();
+            int n = node.getChildCount();
+
+            for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
+                ParseTree c = node.getChild(i);
+                Expression childResult = c.accept(this);
+                if (childResult == null)
+                    break;
+                result = this.aggregateResult(result, childResult);
+            }
+            if (result == null)
+                throw new RuntimeException("No CompileExpression rules matched for " + node.getText());
+            else
+                return result;
+        }
+    }
+
 }

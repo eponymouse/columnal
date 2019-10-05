@@ -31,6 +31,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
@@ -452,7 +453,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             {
                 @SuppressWarnings("identifier")
                 ColumnId columnId = new ColumnId(sumType.column.getText());
-                summaryTypes.add(new Pair<>(columnId, Expression.parse(null, sumType.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
+                summaryTypes.add(new Pair<>(columnId, ExpressionUtil.parse(null, sumType.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()))));
             }
             @SuppressWarnings("identifier")
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.<ColumnId>toImmutableList());

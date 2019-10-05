@@ -25,6 +25,7 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.MultipleTableLookup.CalculationEditor;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -326,7 +327,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             {
                 @SuppressWarnings("identifier")
                 ColumnId columnId = new ColumnId(transformItemContext.column.getText());
-                columns.put(columnId, Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
+                columns.put(columnId, ExpressionUtil.parse(null, transformItemContext.expression().EXPRESSION().getText(), expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
             }
 
             return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());

@@ -48,6 +48,12 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String fromParsed(records.grammar.ExpressionParser2.IdentContext parsedIdent)
+    {
+        return parsedIdent.getText();
+    }
+
+    @SuppressWarnings("identifier")
     public static @ExpressionIdentifier String fromParsed(records.grammar.FormatParser.IdentContext parsedIdent)
     {
         return parsedIdent.getText();
