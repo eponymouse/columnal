@@ -153,12 +153,13 @@ public class PropRunTransformation
                     new ColumnReference(target.getName()),
                     new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", TableReference.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
+        srcTable.mgr.record(filter);
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
             @Value Object data = filter.getData().getColumn(target.getName()).getType().getCollapsed(row);
             assertTrue("Value " + targetValue + " should be " + op.saveOp()+ " " + data + " (but wasn't)", check.test(Utility.compareValues(data, targetValue)));
         }
-        srcTable.mgr.record(filter);
+        
 
         Filter invertedFilter = new Filter(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(),
             new ComparisonExpression(
@@ -166,13 +167,14 @@ public class PropRunTransformation
                     new ColumnReference(target.getName()),
                     new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", TableReference.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
-
+        srcTable.mgr.record(invertedFilter);
+        
         // Lengths should equal original:
         @TableDataRowIndex int filterLength = filter.getData().getLength();
         @TableDataRowIndex int invertedFilterLength = invertedFilter.getData().getLength();
         assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
 
-        srcTable.mgr.record(invertedFilter);
+        
 
         boolean includeSourceColumn = r.nextBoolean();
         Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, includeSourceColumn);
