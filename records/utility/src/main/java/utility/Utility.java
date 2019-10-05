@@ -322,8 +322,6 @@ public class Utility
         int cmp;
         if (ax instanceof Number)
             cmp = compareNumbers(Utility.cast(ax, Number.class), Utility.cast(bx, Number.class), epsilon);
-        else if (ax instanceof List)
-            cmp = compareLists((List<@NonNull @Value ?>)Utility.cast(ax, List.class), (List<@NonNull @Value ?>)Utility.cast(bx, List.class), epsilon);
         else if (ax instanceof ListEx)
             cmp = compareLists(Utility.cast(ax, ListEx.class), Utility.cast(bx, ListEx.class), epsilon);
         else if (ax instanceof Comparable)
