@@ -293,8 +293,35 @@ public class TestFromDoc
         @Override
         public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
         {
-            return null; // TODO
-            // return new FoundColumn(columnReference.getTableId(), DataTypeValue.array(type.getType(), (i, prog) -> DataTypeUtility.value(new ListExDTV(column))), null);
+            if (tableName == null || !tables.containsKey(tableName))
+                return null;
+            RecordSet recordSet = tables.get(tableName);
+            
+            return new FoundTable()
+            {
+                @Override
+                public TableId getTableId()
+                {
+                    return tableName;
+                }
+
+                @Override
+                public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException
+                {
+                    ImmutableMap.Builder<ColumnId, DataTypeValue> columns = ImmutableMap.builder();
+                    for (Column column : recordSet.getColumns())
+                    {
+                        columns.put(column.getName(), column.getType());
+                    }
+                    return columns.build();
+                }
+
+                @Override
+                public int getRowCount() throws InternalException, UserException
+                {
+                    return recordSet.getLength();
+                }
+            };
         }
 
         @Override
