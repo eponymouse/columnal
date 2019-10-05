@@ -29,7 +29,7 @@ public class ExpressionValue extends SingleTableLookup implements ColumnLookup
 
     public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, TableId tableId, RecordSet recordSet, Expression expression, @Nullable GenExpressionValueBase generator)
     {
-        super(recordSet);
+        super(tableId, recordSet);
         this.tableId = tableId;
         this.type = type;
         this.value = value;

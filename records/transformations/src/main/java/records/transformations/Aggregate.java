@@ -30,6 +30,7 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.TableReference;
@@ -1018,7 +1019,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             @Override
             public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
             {
-                return Utility.onNullable(tableManager.getSingleTableOrNull(tableName == null ? getId() : tableName), FoundTable::new);
+                return Utility.onNullable(tableManager.getSingleTableOrNull(tableName == null ? getId() : tableName), FoundTableActual::new);
             }
 
             @Override

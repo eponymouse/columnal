@@ -1498,9 +1498,9 @@ public class TestUtil
         fx_(() -> virtualGrid.redoLayoutAfterScroll());
     }
 
-    public static TypeState createTypeState(TypeManager typeManager)
+    public static TypeState createTypeState(TypeManager typeManager) throws InternalException
     {
-        return new TypeState(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        return TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
 
     public static Unit getUnit(DataType numberType) throws InternalException
@@ -1581,26 +1581,25 @@ public class TestUtil
 
     public static class SingleTableLookup implements ColumnLookup
     {
-        private final @Nullable RecordSet srcTable;
+        private final TableId tableId;
+        private final RecordSet srcTable;
 
-        public SingleTableLookup(RecordSet srcTable)
+        public SingleTableLookup(TableId tableId, RecordSet srcTable)
         {
+            this.tableId = tableId;
             this.srcTable = srcTable;
         }
 
         @Override
         public Stream<ColumnReference> getAvailableColumnReferences()
         {
-            if (srcTable == null)
-                return Stream.empty();
-            else
-                return srcTable.getColumns().stream().map(c -> new ColumnReference(c.getName()));
+            return srcTable.getColumns().stream().map(c -> new ColumnReference(c.getName()));
         }
 
         @Override
         public Stream<TableReference> getAvailableTableReferences()
         {
-            return Stream.empty();
+            return Stream.of(new TableReference(tableId));
         }
 
         @Override
@@ -1614,12 +1613,10 @@ public class TestUtil
         {
             try
             {
-                if (srcTable == null)
-                    return null;
-                else if (columnReference.getTableId() == null) // || tableName.equals(srcTable.getId()))
+                if (columnReference.getTableId() == null || tableId.equals(columnReference.getTableId()))
                 {
                     Column column = srcTable.getColumn(columnReference.getColumnId());
-                    return new FoundColumn(new TableId("SingleTableLookup"), column.getType(), null);
+                    return new FoundColumn(tableId, column.getType(), null);
                 }
             }
             catch (InternalException | UserException e)
@@ -1632,7 +1629,34 @@ public class TestUtil
         @Override
         public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
         {
-            return null;
+            if (!tableId.equals(tableName))
+                return null;
+            
+            return new FoundTable()
+            {
+                @Override
+                public TableId getTableId()
+                {
+                    return tableId;
+                }
+
+                @Override
+                public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException
+                {
+                    ImmutableMap.Builder<ColumnId, DataTypeValue> columns = ImmutableMap.builder();
+                    for (Column column : srcTable.getColumns())
+                    {
+                        columns.put(column.getName(), column.getType());
+                    }
+                    return columns.build();
+                }
+
+                @Override
+                public int getRowCount() throws InternalException, UserException
+                {
+                    return srcTable.getLength();
+                }
+            };
         }
     }
     

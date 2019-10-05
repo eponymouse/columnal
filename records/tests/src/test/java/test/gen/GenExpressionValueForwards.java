@@ -16,6 +16,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
@@ -28,9 +29,31 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
-import records.transformations.expression.*;
+import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
+import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DivideExpression;
+import records.transformations.expression.EqualExpression;
+import records.transformations.expression.Expression;
+import records.transformations.expression.FieldAccessExpression;
+import records.transformations.expression.IdentExpression;
+import records.transformations.expression.IfThenElseExpression;
+import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.OrExpression;
+import records.transformations.expression.RecordExpression;
+import records.transformations.expression.StringConcatExpression;
+import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TableReference;
+import records.transformations.expression.TemporalLiteral;
+import records.transformations.expression.TimesExpression;
+import records.transformations.expression.TypeLiteralExpression;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
@@ -44,6 +67,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListExList;
 import utility.Utility.RecordMap;
 
 import java.math.BigDecimal;
@@ -686,11 +710,41 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     {
         ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
         return () -> {
-            List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
-            columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
-            return new Pair<List<@Value Object>, Expression>(value, TableReference.makeEntireColumnReference(tableId, name));
+            @Nullable DataType listInnerType = type.apply(new FlatDataTypeVisitor<@Nullable DataType>(null)
+            {
+                @Override
+                public @Nullable DataType array(DataType inner) throws InternalException, InternalException
+                {
+                    return inner;
+                }
+            });
+            if (listInnerType != null)
+            {
+                // Return whole column:
+                List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
+                columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i)));
+                // Each row gets the same full list:
+                return new Pair<List<@Value Object>, Expression>(replicateM(() -> new ListExList(value)), TableReference.makeEntireColumnReference(tableId, name));
+            }
+            else
+            {
+                List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
+                columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
+
+                FunctionLookup functionLookup = FunctionList.getFunctionLookup(dummyManager.getUnitManager());
+                // Index into a whole column:
+                if (r.nextBoolean())
+                {
+                    // Use #column name
+                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", TableReference.makeEntireColumnReference(tableId, name), new IdentExpression("row")));
+                }
+                else
+                {
+                    // Use #rows
+                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(new TableReference(tableId), new IdentExpression("rows")), new IdentExpression("row")), new IdentExpression(name.getRaw())));
+                }
+            }
         };
-        // TODO use the #rows item
     }
     
     private ExpressionMaker fix(int maxLevels, DataType type)

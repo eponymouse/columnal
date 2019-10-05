@@ -43,6 +43,7 @@ import records.grammar.Versions.ExpressionVersion;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DefineExpression.Definition;
+import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.QuickFix.QuickFixAction;
@@ -106,34 +107,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
         }
         
-        public static final class FoundTable
+        public static interface FoundTable
         {
-            private final Table table;
+            public TableId getTableId();
 
-            public FoundTable(Table table)
-            {
-                this.table = table;
-            }
+            public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException;
 
-            public TableId getTableId()
-            {
-                return table.getId();
-            }
-
-            public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException
-            {
-                ImmutableMap.Builder<ColumnId, DataTypeValue> columns = ImmutableMap.builder();
-                for (Column column : table.getData().getColumns())
-                {
-                    columns.put(column.getName(), column.getType());
-                }
-                return columns.build();
-            }
-
-            public int getRowCount() throws InternalException, UserException
-            {
-                return table.getData().getLength();
-            }
+            public int getRowCount() throws InternalException, UserException;
         }
         
         // If you pass null for table, you get the default table (or null if none)
@@ -187,6 +167,37 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public default @Nullable QuickFix<Expression> getFixForIdent(@ExpressionIdentifier String ident, @Recorded Expression target)
         {
             return null;
+        }
+    }
+
+    // Default implementation of FoundTable
+    public static final class FoundTableActual implements FoundTable
+    {
+        private final Table table;
+
+        public FoundTableActual(Table table)
+        {
+            this.table = table;
+        }
+
+        public TableId getTableId()
+        {
+            return table.getId();
+        }
+
+        public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException
+        {
+            ImmutableMap.Builder<ColumnId, DataTypeValue> columns = ImmutableMap.builder();
+            for (Column column : table.getData().getColumns())
+            {
+                columns.put(column.getName(), column.getType());
+            }
+            return columns.build();
+        }
+
+        public int getRowCount() throws InternalException, UserException
+        {
+            return table.getData().getLength();
         }
     }
     
@@ -803,7 +814,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             if (t == null)
                 return null;
             
-            return new FoundTable(t);
+            return new FoundTableActual(t);
         }
 
         @Override

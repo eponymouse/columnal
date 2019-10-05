@@ -27,6 +27,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
+import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.ExpressionUtil;
@@ -294,7 +295,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                 }
                 else
                     t = tableManager.getSingleTableOrNull(tableName);
-                return Utility.onNullable(t, FoundTable::new);
+                return Utility.onNullable(t, FoundTableActual::new);
             }
         };
     }

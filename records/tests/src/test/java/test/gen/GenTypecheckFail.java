@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
@@ -57,7 +58,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
         public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures, TypeManager typeManager, GenExpressionValueForwards gen)
         {
-            super(recordSet);
+            super(new TableId("SingleTableLookup"), recordSet);
             this.original = original;
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
