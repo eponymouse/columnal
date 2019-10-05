@@ -428,5 +428,12 @@ public abstract class TypeExp implements StyledShowable
         {
             return couldNotUnify;
         }
+        
+        // For testing
+        @Override
+        public String toString()
+        {
+            return getMessage().toPlain();
+        }
     }
 }
