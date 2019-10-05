@@ -636,9 +636,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      *  - per-row columns (with null table id) from
      *    the source table (equivalent to  our table if the column
      *    is unaltered)
-     *  - @entire columns from the source table (equivalent to our table if the column
+     *  - @table columns from the source table (equivalent to our table if the column
      *     is unaltered) 
-     *  -  @entire columns from all tables that
+     *  -  @table columns from all tables that
      *     are behind this in the dependency tree,
      *     with non-null table id.
      */
@@ -783,12 +783,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public Stream<TableReference> getAvailableTableReferences()
         {
-            return tableManager.getAllTablesAvailableTo(us).stream().map(t -> new TableReference(t.getId()));
+            return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> new TableReference(t.getId()));
         }
 
         public Stream<ColumnReference> getAvailableColumnReferences()
         {
-            return tableManager.getAllTablesAvailableTo(us).stream().flatMap(t -> {
+            return tableManager.getAllTablesAvailableTo(us, false).stream().flatMap(t -> {
                 try
                 {
                     boolean isUsOrSrc = Objects.equals(us, t.getId()) || (srcTable != null && Objects.equals(t.getId(), srcTable.getId()));
@@ -809,7 +809,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
         {
-            ImmutableList<Table> available = tableManager.getAllTablesAvailableTo(us);
+            ImmutableList<Table> available = tableManager.getAllTablesAvailableTo(us, false);
             Table t = available.stream().filter(table -> table.getId().equals(tableName)).findFirst().orElse(null);
             if (t == null)
                 return null;

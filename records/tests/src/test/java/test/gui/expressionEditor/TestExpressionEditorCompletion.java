@@ -164,24 +164,22 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@unfinished \"\"");
         checkCompletions(
             c("My Number", 0, 0),
-            c("@entire My Number", 0, 0),
+            c("@table IDS",0, 0),
             c("My Calc"), // Shouldn't see our own column
-            c("@entire My Calc")
+            c("@table Calc") // Shouldn't see our own table
         );
         write("My Nu");
         checkCompletions(
             c("My Number", 0, 5),
-            c("@entire My Number", 0, 5),
+            c("@table IDS", 0, 0),
             c("My Calc"), // Shouldn't see our own column
-            c("@entire My Calc")
+            c("@table Calc") // Shouldn't see our own table
         );
         push(KeyCode.END);
         write("Q");
         checkCompletions(
             c("My Number", 0, 5),
-            c("@entire My Number", 0, 5),
-            c("My Calc"), // Shouldn't see our own column
-            c("@entire My Calc")
+            c("My Calc") // Shouldn't see our own column
         );
         push(KeyCode.END);
         write("+t");
@@ -202,8 +200,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("@unfinished \"\"");
         write("Nu");
         checkCompletions(
-            c("My Number", 0, 2),
-            c("@entire My Number", 0, 2)
+            c("My Number", 0, 2)
         );
     }
 
@@ -275,7 +272,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     public void testColumn2a() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        write("@entire id");
+        write("@table id");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);

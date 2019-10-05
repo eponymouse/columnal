@@ -997,7 +997,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
             {
                 return
-                    tableManager.getAllTablesAvailableTo(getId()).stream()
+                    tableManager.getAllTablesAvailableTo(getId(), false).stream()
                         .flatMap(t -> {
                             try
                             {
@@ -1025,7 +1025,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             @Override
             public Stream<TableReference> getAvailableTableReferences()
             {
-                return tableManager.getAllTablesAvailableTo(getId()).stream().map(t -> new TableReference(t.getId()));
+                return tableManager.getAllTablesAvailableTo(getId(), false).stream().map(t -> new TableReference(t.getId()));
             }
         };
     }

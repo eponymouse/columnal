@@ -271,7 +271,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         {
             HashSet<TableId> available = new HashSet<>(allTables);
             removeAllMapped(unavailableTables, available, tableId);
-            assertEquals(available, new HashSet<>(manager.getAllTablesAvailableTo(tableId).stream().map(t -> t.getId()).collect(Collectors.toList())));
+            assertEquals(available, new HashSet<>(manager.getAllTablesAvailableTo(tableId, true).stream().map(t -> t.getId()).collect(Collectors.toList())));
+            available.remove(tableId);
+            assertEquals(available, new HashSet<>(manager.getAllTablesAvailableTo(tableId, false).stream().map(t -> t.getId()).collect(Collectors.toList())));
         }
     }
 

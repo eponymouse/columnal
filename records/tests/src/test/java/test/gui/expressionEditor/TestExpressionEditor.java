@@ -581,9 +581,9 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
     
     @Test
-    public void testColumnReference() throws Exception
+    public void testTableReference() throws Exception
     {
-        testSimple("@entire Col1");
+        testSimple("@table Table 1");
     }
 
     @Test

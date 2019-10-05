@@ -11,6 +11,7 @@ import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.gui.MainWindow.MainWindowActions;
@@ -41,13 +42,13 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
      */
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testCalculateToCSV(
+    public void testCalculateToCSV(@When(seed=1L)
             @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws Exception
     {
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
-        Table srcData = new ImmediateDataSource(manager, TestUtil.ILD, new EditableRecordSet(expressionValue.recordSet));
+        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(expressionValue.tableId, null, null, null), new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
         Table calculated = new Calculate(manager, TestUtil.ILD, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));

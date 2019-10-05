@@ -279,7 +279,7 @@ public class Check extends Transformation implements SingleSourceTransformation
             @Override
             public Stream<TableReference> getAvailableTableReferences()
             {
-                return tableManager.getAllTablesAvailableTo(us).stream().map(t -> new TableReference(t.getId()));
+                return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> new TableReference(t.getId()));
             }
 
             @Override

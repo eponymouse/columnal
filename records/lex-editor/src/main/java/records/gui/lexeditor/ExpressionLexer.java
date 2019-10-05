@@ -1,5 +1,6 @@
 package records.gui.lexeditor;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
@@ -391,25 +392,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                         TableId tableId = availableColumn.getTableId();
                         String columnIdRaw = availableColumn.getColumnId().getRaw();
                         if ((
-                                        (tableId == null && columnIdRaw.equals(text))
-                                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(text))
-                                ))
+                            (tableId == null && columnIdRaw.equals(text))
+                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(text))
+                        ))
                         {
                             saver.saveOperand(new ColumnReference(availableColumn), location);
                             wasColumn = true;
                             break;
                         }
-                        /*
-                        else if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
-                                text.startsWith("@entire ") &&
-                                ((tableId == null && ("@entire " + columnIdRaw).equals(text))
-                                        || (tableId != null && ("@entire " + tableId.getRaw() + "\\" + columnIdRaw).equals(text))))
-                        {
-                            saver.saveOperand(new ColumnReference(availableColumn), location);
-                            wasColumn = true;
-                            break;
-                        }
-                         */
                     }
 
                     if (!wasColumn)
@@ -466,19 +456,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     nonLetter = rawLength(content);
                 String stem = content.substring(curIndex, nonLetter);
 
-                /*
-                if (Utility.startsWithIgnoreCase("@entire",stem))
+                if (stem.equals("@table"))
                 {
-                    for (ColumnReference columnReference : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences().sorted(Comparator.comparing((ColumnReference c) -> c.getTableId() == null ? "" : c.getTableId().getRaw()).thenComparing((ColumnReference c) -> c.getColumnId().getRaw()))))
+                    @Nullable Consumed<@ExpressionIdentifier String> name = IdentifierUtility.consumeExpressionIdentifier(content, nonLetter, curCaretPos);
+                    if (name != null)
                     {
-                        if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
-                        {
-                            String fullAfterEntire = (columnReference.getTableId() == null ? "" : columnReference.getTableId().getRaw() + "\\") + columnReference.getColumnId().getRaw();
-                        }
+                        saver.saveOperand(new TableReference(new TableId(name.item)), new CanonicalSpan(curIndex, name.positionAfter));
+                        chunks.add(new ContentChunk("@table " + name.item, ChunkType.IDENT));
+                        curIndex = name.positionAfter;
+                        continue nextToken;
                     }
-                    
                 }
-                 */
 
                 // We skip to next non-letter to prevent trying to complete the keyword as a function:
                 String attemptedKeyword = content.substring(curIndex, nonLetter);
@@ -624,7 +612,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         // Add completions even if one is already spotted:
         addFunctionCompletions(completions, stem, canonIndex);
-        addColumnCompletions(completions, stem, canonIndex);
+        addColumnAndTableCompletions(completions, stem, canonIndex);
         addTagCompletions(completions, stem, canonIndex);
         addVariableCompletions(completions, stem, canonIndex);
         addNestedLiteralCompletions(completions, stem, canonIndex, insertListener);
@@ -851,7 +839,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addColumnCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addColumnAndTableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
         for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
         {
@@ -859,23 +847,20 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), "Column", WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
             }
-            
-            /*
-            if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
-            {
-                String withoutEntire = (availableColumn.getTableId() == null ? "" : availableColumn.getTableId().getRaw() + "\\") + availableColumn.getColumnId().getRaw();
-                ArrayList<Pair<CompletionStatus, LexCompletion>> colCompletions = new ArrayList<>();
-                matchWordStart(stem, canonIndex, "@entire " + withoutEntire, "Whole Column", WordPosition.FIRST_WORD).values().forEach(c -> colCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
-                
-                // Add a related item if matches without the entire
-                matchWordStart(stem, canonIndex, withoutEntire, "Whole Column", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> colCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@entire " + withoutEntire))));
+        }
 
-                for (Pair<CompletionStatus, LexCompletion> p : colCompletions)
-                {
-                    identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.ENTIRE_COLUMN)));
-                }
+        for (TableReference tableReference : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
+        {
+            ArrayList<Pair<CompletionStatus, LexCompletion>> tableCompletions = new ArrayList<>();
+            matchWordStart(stem, canonIndex, "@table " + tableReference.getTableId().getRaw(), "Table", WordPosition.FIRST_WORD).values().forEach(c -> tableCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
+
+            // Add a related item if matches without the entire
+            matchWordStart(stem, canonIndex, tableReference.getTableId().getRaw(), "Table", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> tableCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@table " + tableReference.getTableId().getRaw()))));
+
+            for (Pair<CompletionStatus, LexCompletion> p : tableCompletions)
+            {
+                identCompletions.add(p.mapSecond(c -> new ExpressionCompletion(c.withFurtherDetailsHTMLContent(htmlForTable(tableReference)), CompletionType.TABLE)));
             }
-             */
         }
     }
 
@@ -894,6 +879,23 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 "      <div class=\"column-item\"><span class=\"column-header\"/>" + (c.getTableId() != null ? c.getTableId().getRaw() + ":<wbr>" : "") + c.getColumnId().getRaw() + "</span>" +
                 "<p>This uses the value of the column in the current row.</p>" +
                 "</div></body></html>";
+    }
+
+    private String htmlForTable(TableReference t)
+    {
+        String funcdocURL = FXUtility.getStylesheet("funcdoc.css");
+        String webURL = FXUtility.getStylesheet("web.css");
+
+        return "<html>\n" +
+            "   <head>\n" +
+            "      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
+            "      <link rel=\"stylesheet\" href=\"" + funcdocURL + "\">\n" +
+            "      <link rel=\"stylesheet\" href=\"" + webURL + "\">\n" +
+            "   </head>\n" +
+            "   <body class=\"indiv\">\n" +
+            "      <div class=\"table-item\"><span class=\"table-header\"/>" + t.getTableId().getRaw() + "</span>" +
+            "<p>This uses the table.  You can access individual columns by appending # followed by the column name.</p>" +
+            "</div></body></html>";
     }
 
     /**
@@ -1202,7 +1204,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     // Used for ordering, so the order here is significant
     private static enum CompletionType
     {
-        COLUMN, VARIABLE, NESTED_LITERAL, FUNCTION, CONSTRUCTOR, UNIT_LITERAL, CONSTANT, ENTIRE_COLUMN, KEYWORD_CHAIN, KEYWORD; 
+        COLUMN, VARIABLE, NESTED_LITERAL, FUNCTION, CONSTRUCTOR, UNIT_LITERAL, CONSTANT, TABLE, KEYWORD_CHAIN, KEYWORD; 
     }
     
     private static enum CompletionStatus

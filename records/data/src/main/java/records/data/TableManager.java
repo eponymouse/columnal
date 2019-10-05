@@ -504,7 +504,7 @@ public class TableManager
         }
     }
     
-    public synchronized ImmutableList<Table> getAllTablesAvailableTo(@Nullable TableId tableId)
+    public synchronized ImmutableList<Table> getAllTablesAvailableTo(@Nullable TableId tableId, boolean includeSelf)
     {
         // Sources are always available.  Transformations require that they do not
         // (transitively) depend on us.
@@ -513,9 +513,12 @@ public class TableManager
         fetchIdsAndEdges(edges, allIds);
         List<TableId> linearised = GraphUtility.<@NonNull TableId>lineariseDAG(allIds, edges, tableId == null ? ImmutableList.<@NonNull TableId>of() : ImmutableList.<@NonNull TableId>of(tableId));
         int lastIndexIncl = tableId != null ? linearised.indexOf(tableId) : linearised.size() - 1;
+        if (lastIndexIncl == -1)
+            lastIndexIncl = linearised.size() - 1;
         // Shouldn't be any nulls but must satisfy type checker:
         return Utility.filterOutNulls(linearised.subList(0, lastIndexIncl + 1)
             .stream()
+            .filter(id -> includeSelf || !id.equals(tableId))
             .<@Nullable Table>map(t -> getSingleTableOrNull(t)))
             .collect(ImmutableList.<Table>toImmutableList());
     }
