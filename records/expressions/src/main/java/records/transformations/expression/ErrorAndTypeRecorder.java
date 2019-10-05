@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -64,12 +65,12 @@ public interface ErrorAndTypeRecorder
     /**
      * Records the type for a particular expression.
      */
-    public default @Recorded @Nullable TypeExp recordType(Expression expression, @Nullable TypeExp typeExp)
+    public default @Recorded @PolyNull TypeExp recordType(Expression expression, @PolyNull TypeExp typeExp)
     {
-        if (typeExp != null)
-            return recordTypeNN(expression, typeExp);
-        else
+        if (typeExp == null)
             return null;
+        else
+            return recordTypeNN(expression, typeExp);
     }
 
     public default @Nullable CheckedExp recordType(Expression expression, TypeState typeState, @Nullable TypeExp typeExp)
