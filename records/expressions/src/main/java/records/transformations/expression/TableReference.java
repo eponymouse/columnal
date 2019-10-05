@@ -130,7 +130,7 @@ public class TableReference extends NonOperatorExpression
         
         // Sanity check to avoid saving something we can't load:
         if (saveDestination == SaveDestination.EDITOR || (IdentifierUtility.asExpressionIdentifier(renamed.getRaw()) != null))
-            return (saveDestination == SaveDestination.EDITOR ? "" : "@table ") + renamed.getRaw();
+            return "@table " + renamed.getRaw();
         else
             return "@unfinished " + OutputBuilder.quoted(renamed.getRaw());
     }
@@ -180,5 +180,10 @@ public class TableReference extends NonOperatorExpression
             return replaceWith;
         else
             return this;
+    }
+
+    public TableId getTableId()
+    {
+        return tableName;
     }
 }

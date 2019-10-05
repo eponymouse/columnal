@@ -354,23 +354,19 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 continue nextToken;
             }
             
-            /*
-            if (content.startsWith("@entire", curIndex))
+            if (content.startsWith("@table", curIndex))
             {
-                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@entire"), curCaretPos == null ? -1 * RawInputLocation.ONE : curCaretPos);
+                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@table"), curCaretPos == null ? -1 * RawInputLocation.ONE : curCaretPos);
                 if (parsed != null)
                 {
-                    for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+                    for (TableReference availableTable : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
                     {
-                        TableId tableId = availableColumn.getTableId();
-                        String columnIdRaw = availableColumn.getColumnId().getRaw();
-                        if (availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN &&
-                                ((tableId == null && columnIdRaw.equals(parsed.item))
-                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(parsed.item))))
+                        TableId tableId = availableTable.getTableId();
+                        if (tableId.getRaw().equals(parsed.item))
                         {
                             removedChars.setAll(parsed);
-                            saver.saveOperand(new ColumnReference(availableColumn), removedChars.map(curIndex, parsed.positionAfter));
-                            chunks.add(new ContentChunk("@entire " + parsed.item, StyledString.s("@entire " + parsed.item).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
+                            saver.saveOperand(new TableReference(tableId), removedChars.map(curIndex, parsed.positionAfter));
+                            chunks.add(new ContentChunk("@table " + parsed.item, StyledString.s("@table " + parsed.item).withStyle(new StyledCSS("expression-table")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-table-background"))), ChunkType.IDENT));
                             curIndex = parsed.positionAfter;
                             continue nextToken;
                         }
@@ -378,7 +374,6 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     
                 }
             }
-             */
 
             @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
             final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
