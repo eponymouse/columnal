@@ -235,6 +235,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
         testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call @function sum([2, 3, 4])"), "@call @function sum([2, 3, 4])");
     }
 
+    @Ignore // Disabled since move to @table references
     @Test
     public void testListBracketFix3() throws UserException, InternalException
     {
@@ -247,7 +248,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "ACC1", "@call @function sum(@entire ACC1)");
+        testSimpleFix("sum(ACC1)", "ACC1", "@call @function sum(@table Table1#ACC1)");
     }
     
     @Ignore // Not sure if this fix is even worth implementing

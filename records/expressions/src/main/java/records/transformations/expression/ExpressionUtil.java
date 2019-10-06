@@ -5,36 +5,11 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import javafx.beans.binding.BooleanExpression;
-import javafx.geometry.Point2D;
-import javafx.geometry.Side;
-import javafx.scene.Node;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.TextField;
-import javafx.scene.image.WritableImage;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -50,7 +25,8 @@ import records.grammar.ExpressionLexer2;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParser2;
-import records.grammar.ExpressionParser2.TableRefContext;
+import records.grammar.ExpressionParser2.NamespaceContext;
+import records.grammar.ExpressionParser2.SingleIdentContext;
 import records.grammar.ExpressionParser2BaseVisitor;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.grammar.GrammarUtility;
@@ -58,24 +34,14 @@ import records.grammar.Versions.ExpressionVersion;
 import records.jellytype.JellyType;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.DefineExpression.Definition;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.QuickFix;
 import records.transformations.expression.QuickFix.QuickFixReplace;
-import records.transformations.expression.StandardFunction;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.expression.TypeState;
-import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
-import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -87,17 +53,13 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplierInt;
 import utility.IdentifierUtility;
 import utility.Pair;
-import utility.Utility;
 import utility.TranslationUtility;
+import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,10 +86,7 @@ public class ExpressionUtil
 
     public static boolean isCallTarget(Expression expression)
     {
-        // callTarget : varRef | standardFunction | constructor | unfinished;
-        return expression instanceof IdentExpression
-                || expression instanceof StandardFunction
-                || expression instanceof ConstructorExpression;
+        return expression instanceof IdentExpression;
     }
 
     @SuppressWarnings("recorded")
@@ -316,7 +275,14 @@ public class ExpressionUtil
         @Override
         public Expression visitConstructor(ConstructorContext ctx)
         {
-            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : IdentifierUtility.fromParsed(ctx.typeName().ident()), ctx.constructorName().getText());
+            @Nullable @ExpressionIdentifier String type = null;
+            if (ctx.typeName() != null)
+                type = IdentifierUtility.fromParsed(ctx.typeName().ident());
+            @ExpressionIdentifier String tagName = IdentifierUtility.fromParsed(ctx.constructorName().ident());
+            if (type != null)
+                return IdentExpression.tag(type, tagName);
+            else
+                return IdentExpression.tag(tagName);
         }
 
         @Override
@@ -457,7 +423,7 @@ public class ExpressionUtil
         public Expression visitHasTypeExpression(HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            return new HasTypeExpression(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
+            return new HasTypeExpression(IdentExpression.load(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
         }
 
         @Override
@@ -536,25 +502,8 @@ public class ExpressionUtil
         @Override
         public Expression visitStandardFunction(StandardFunctionContext ctx)
         {
-            String functionName = ctx.ident().getText();
-            @Nullable StandardFunctionDefinition functionDefinition = null;
-            try
-            {
-                functionDefinition = functionLookup.lookup(functionName);
-            }
-            catch (InternalException e)
-            {
-                Utility.report(e);
-                // Carry on, but function is null so will count as unknown
-            }
-            if (functionDefinition == null)
-            {
-                return InvalidIdentExpression.identOrUnfinished(functionName);
-            }
-            else
-            {
-                return new StandardFunction(functionDefinition);
-            }
+            @ExpressionIdentifier String functionName = IdentifierUtility.fromParsed(ctx.ident());
+            return IdentExpression.function(ImmutableList.<@ExpressionIdentifier String>of(functionName));
         }
         
         /*
@@ -609,7 +558,7 @@ public class ExpressionUtil
         @Override
         public Expression visitFieldAccessExpression(FieldAccessExpressionContext ctx)
         {
-            return new FieldAccessExpression(visitExpression(ctx.expression()), new IdentExpression(IdentifierUtility.fromParsed(ctx.ident())));
+            return new FieldAccessExpression(visitExpression(ctx.expression()), IdentExpression.load(IdentifierUtility.fromParsed(ctx.ident())));
         }
 
         @Override
@@ -621,7 +570,7 @@ public class ExpressionUtil
         @Override
         public Expression visitVarRef(VarRefContext ctx)
         {
-            return new IdentExpression(IdentifierUtility.fromParsed(ctx.ident()));
+            return IdentExpression.load(IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override
@@ -686,23 +635,6 @@ public class ExpressionUtil
         }
 
         @Override
-        public Expression visitColumnRef(ExpressionParser2.ColumnRefContext ctx)
-        {
-            ExpressionParser2.TableIdContext tableIdContext = ctx.tableId();
-            if (ctx.columnId() == null)
-                throw new RuntimeException("Error processing column reference");
-            TableId tableName = tableIdContext == null ? null : new TableId(IdentifierUtility.fromParsed(tableIdContext.ident()));
-            ColumnId columnName = new ColumnId(IdentifierUtility.fromParsed(ctx.columnId().ident()));
-            return new ColumnReference(tableName, columnName);
-        }
-
-        @Override
-        public Expression visitTableRef(TableRefContext ctx)
-        {
-            return new TableReference(new TableId(IdentifierUtility.fromParsed(ctx.tableId().ident())));
-        }
-
-        @Override
         public Expression visitNumericLiteral(ExpressionParser2.NumericLiteralContext ctx)
         {
             try
@@ -736,12 +668,6 @@ public class ExpressionUtil
         public Expression visitBooleanLiteral(ExpressionParser2.BooleanLiteralContext ctx)
         {
             return new BooleanLiteral(Boolean.valueOf(ctx.getText()));
-        }
-
-        @Override
-        public Expression visitConstructor(ExpressionParser2.ConstructorContext ctx)
-        {
-            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : IdentifierUtility.fromParsed(ctx.typeName().ident()), ctx.constructorName().getText());
         }
 
         @Override
@@ -882,7 +808,7 @@ public class ExpressionUtil
         public Expression visitHasTypeExpression(ExpressionParser2.HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            return new HasTypeExpression(new IdentExpression(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
+            return new HasTypeExpression(IdentExpression.load(IdentifierUtility.fromParsed(ctx.singleIdent())), customLiteralExpression);
         }
 
         @Override
@@ -957,30 +883,6 @@ public class ExpressionUtil
 
             return new CallExpression(function, args);
         }
-
-        @Override
-        public Expression visitStandardFunction(ExpressionParser2.StandardFunctionContext ctx)
-        {
-            String functionName = ctx.ident().getText();
-            @Nullable StandardFunctionDefinition functionDefinition = null;
-            try
-            {
-                functionDefinition = functionLookup.lookup(functionName);
-            }
-            catch (InternalException e)
-            {
-                Utility.report(e);
-                // Carry on, but function is null so will count as unknown
-            }
-            if (functionDefinition == null)
-            {
-                return InvalidIdentExpression.identOrUnfinished(functionName);
-            }
-            else
-            {
-                return new StandardFunction(functionDefinition);
-            }
-        }
         
         /*
         @Override
@@ -1023,30 +925,33 @@ public class ExpressionUtil
         @Override
         public Expression visitRecordExpression(ExpressionParser2.RecordExpressionContext ctx)
         {
-            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
-            for (int i = 0; i < ctx.ident().size(); i++)
+            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.singleIdent().size());
+            for (int i = 0; i < ctx.singleIdent().size(); i++)
             {
-                members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
+                members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.singleIdent(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
             }
             return new RecordExpression(members.build());
         }
 
         @Override
+        public Expression visitIdent(ExpressionParser2.IdentContext ctx)
+        {
+            NamespaceContext namespaceContext = ctx.namespace();
+            @ExpressionIdentifier String namespace = namespaceContext == null ? null : IdentifierUtility.fromParsed(namespaceContext.singleIdent());
+            
+            return IdentExpression.load(namespace, Utility.<SingleIdentContext, @ExpressionIdentifier String>mapListI(ctx.singleIdent(), IdentifierUtility::fromParsed));
+        }
+
+        @Override
         public Expression visitFieldAccessExpression(ExpressionParser2.FieldAccessExpressionContext ctx)
         {
-            return new FieldAccessExpression(visitExpression(ctx.expression()), new IdentExpression(IdentifierUtility.fromParsed(ctx.ident())));
+            return new FieldAccessExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
         }
 
         @Override
         public Expression visitBracketedExpression(ExpressionParser2.BracketedExpressionContext ctx)
         {
             return visitTopLevelExpression(ctx.topLevelExpression());
-        }
-
-        @Override
-        public Expression visitVarRef(ExpressionParser2.VarRefContext ctx)
-        {
-            return new IdentExpression(IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override

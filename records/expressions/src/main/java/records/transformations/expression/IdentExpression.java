@@ -7,23 +7,38 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
+import records.data.datatype.TypeManager.TagInfo;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.jellytype.JellyType;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.function.StandardFunctionDefinition;
+import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
+import records.typeExp.units.MutUnitVar;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
+import utility.Utility;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -40,59 +55,259 @@ import java.util.stream.Stream;
 public class IdentExpression extends NonOperatorExpression
 {
     // TODO add resolver listener
-    private final @ExpressionIdentifier String text;
-    private @MonotonicNonNull Boolean isDeclaration;
+    private final @Nullable @ExpressionIdentifier String namespace;
+    private final ImmutableList<@ExpressionIdentifier String> idents;
+    private @MonotonicNonNull Resolution resolution;
 
-    public IdentExpression(@ExpressionIdentifier String text)
+    private IdentExpression(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
     {
-        this.text = text;
+        this.namespace = namespace;
+        this.idents = idents;
     }
+
+    public static IdentExpression load(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+    {
+        return new IdentExpression(namespace, idents);
+    }
+
+    public static IdentExpression load(@ExpressionIdentifier String ident)
+    {
+        return new IdentExpression(null, ImmutableList.<@ExpressionIdentifier String>of(ident));
+    }
+
+    public static IdentExpression tag(@ExpressionIdentifier String typeName, @ExpressionIdentifier String tagName)
+    {
+        return new IdentExpression("tag", ImmutableList.<@ExpressionIdentifier String>of(typeName, tagName));
+    }
+    
+    public static IdentExpression tag(@ExpressionIdentifier String tagName)
+    {
+        return new IdentExpression("tag", ImmutableList.<@ExpressionIdentifier String>of(tagName));
+    }
+
+    public static IdentExpression function(ImmutableList<@ExpressionIdentifier String> functionFullName)
+    {
+        return new IdentExpression("function", functionFullName);
+    }
+
+    public static IdentExpression column(@ExpressionIdentifier String columnName)
+    {
+        return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(columnName));
+    }
+
 
     @Override
     public @Nullable CheckedExp check(@Recorded IdentExpression this, ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
-        if (!GrammarUtility.validIdentifier(text))
+        String invalid = streamAllParts().filter(n -> !GrammarUtility.validIdentifier(n)).findFirst().orElse(null);
+        if (invalid != null)
         {
-            onError.recordError(this, StyledString.s("Invalid identifier: \"" + text + "\""));
+            onError.recordError(this, StyledString.s("Invalid identifier: \"" + invalid + "\""));
             return null;
         }
+        // Possible lookup destinations, in order of preference:
+        // (Preference is roughly how likely it is that the user defined it and wants it)
+        // - Local variable (cannot be scoped)
+        // - Column name (Scope: "column")
+        // - Table name (Scope: "table")
+        // - Tag name (Scope: "tag")
+        // - Standard function name (Scope: "function")
         
-        isDeclaration = false;
         @Nullable TypeState state = original;
-        List<TypeExp> varType = state.findVarType(text);
-        if (varType == null)
+        boolean singleUnscoped = namespace != null || idents.size() != 1;
+        List<TypeExp> varType = singleUnscoped ? null : state.findVarType(idents.get(0));
+        
+        if (varType != null)
         {
-            if (kind == ExpressionKind.PATTERN)
+            resolution = new Resolution()
             {
-                varType = ImmutableList.of(new MutVar(this));
-                state = state.add(text, varType.get(0), s -> onError.recordError(this, s));
-                if (state == null)
-                    return null;
-                isDeclaration = true;
-            }
-            else
-            {
-                onError.recordError(this, StyledString.s("Unknown name: \"" + text + "\""));
-                @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(text, this);
-                if (fix != null)
+                @Override
+                public boolean isDeclarationInMatch()
                 {
-                    onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
+                    return false;
                 }
+
+                @Override
+                public boolean isVariable()
+                {
+                    return true;
+                }
+
+                @Override
+                public ValueResult getValue(EvaluateState state) throws InternalException
+                {
+                    return result(state.get(idents.get(0)), state);
+                }
+            };
+            // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
+            return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
+        }
+        
+        if (singleUnscoped && kind == ExpressionKind.PATTERN)
+        {
+            MutVar patternType = new MutVar(this);
+            state = state.add(idents.get(0), patternType, s -> onError.recordError(this, s));
+            if (state == null)
                 return null;
+            resolution = new Resolution()
+            {
+                @Override
+                public boolean isDeclarationInMatch()
+                {
+                    return true;
+                }
+
+                @Override
+                public boolean isVariable()
+                {
+                    return true;
+                }
+
+                @Override
+                public ValueResult getValue(EvaluateState state) throws InternalException
+                {
+                    throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+                }
+            };
+            return onError.recordType(this, state, patternType);
+        }
+        
+        if (namespace != null)
+        {
+            switch (namespace)
+            {
+                case "column":
+                    break;
+                case "table":
+                    break;
+                case "tag":
+                    Either<String, TagInfo> tag;
+                    switch (idents.size())
+                    {
+                        case 1:
+                            tag = state.getTypeManager().lookupTag(null, idents.get(0));
+                            break;
+                        case 2:
+                            tag = state.getTypeManager().lookupTag(idents.get(0), idents.get(1));
+                            break;
+                        default:
+                            onError.recordError(this, StyledString.s("Found " + idents.size() + " identifiers but tags should either have one (tag name) or two (type name, tag name)"));
+                            return null;
+                    }
+                    resolution = new Resolution()
+                    {
+                        @Override
+                        public boolean isVariable()
+                        {
+                            return false;
+                        }
+
+                        @Override
+                        public @Nullable TagInfo getResolvedConstructor()
+                        {
+                            return tag.leftToNull();
+                        }
+
+                        @Override
+                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                        {
+                            return result(tag.<@Value Object>eitherEx(s -> {
+                                throw new InternalException("Attempting to fetch function despite failing type check");
+                            }, t -> {
+                                TagType<?> tag1 = t.getTagInfo();
+                                if (tag1.getInner() == null)
+                                    return new TaggedValue(t.tagIndex, null);
+                                else
+                                    return ValueFunction.value(new ValueFunction()
+                                    {
+                                        @Override
+                                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                                        {
+                                            return new TaggedValue(t.tagIndex, arg(0));
+                                        }
+                                    });
+                            }), state, ImmutableList.of());
+                        }
+                    };
+                    return onError.recordType(this, state, tag.<@Nullable TypeExp>eitherEx(s -> null, t -> makeTagType(t)));
+                case "function":
+                    StandardFunctionDefinition functionDefinition = state.getFunctionLookup().lookup(idents.stream().collect(Collectors.joining("\\")));
+                    if (functionDefinition != null)
+                    {
+                        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(state.getTypeManager());
+                        resolution = new Resolution()
+                        {
+                            @Override
+                            public boolean isVariable()
+                            {
+                                return false;
+                            }
+
+                            @Override
+                            public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+                            {
+                                return functionDefinition;
+                            }
+
+                            @Override
+                            public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                            {
+                                return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+                                    Either<MutUnitVar, MutVar> typeExp = type.getSecond().get(s);
+                                    if (typeExp == null)
+                                        throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
+                                    return typeExp.<Unit, DataType>mapBothEx(u -> {
+                                        Unit concrete = u.toConcreteUnit();
+                                        if (concrete == null)
+                                            throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
+                                        return concrete;
+                                    }, t -> t.toConcreteType(state.getTypeManager(), true).eitherEx(
+                                            l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
+                                            t2 -> t2
+                                    ));
+                                })), state);
+                            }
+                        };
+                        return onError.recordType(this, state, functionDefinition.getType(state.getTypeManager()).getFirst());
+                    }
+                    break;
+                default:
+                    onError.recordError(this, StyledString.s("Unknown namespace: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
+                    return null;
             }
         }
-        // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
+        
+        // Didn't find it anywhere:
+        onError.recordError(this, StyledString.s("Unknown name: \"" + idents.stream().collect(Collectors.joining("\\")) + "\""));
+        @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(namespace, idents, this);
+        if (fix != null)
+        {
+            onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
+        }
+        return null;
+        
+    }
+
+    private Stream<@ExpressionIdentifier String> streamAllParts()
+    {
+        return Stream.<@ExpressionIdentifier String>concat(Utility.<@ExpressionIdentifier String>streamNullable(namespace), idents.stream());
+    }
+
+    private TypeExp makeTagType(TagInfo t) throws InternalException
+    {
+        TagType<JellyType> tt = t.getTagInfo();
+        Pair<TypeExp, ImmutableList<TypeExp>> taggedType = TypeExp.fromTagged(this, t.wholeType);
+        return taggedType.getSecond().get(t.tagIndex);
     }
 
     @Override
     public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        if (isDeclaration == null)
+        if (resolution == null)
             throw new InternalException("Calling matchAsPattern on variable without typecheck");
-        else if (isDeclaration)
-            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(text, value), ImmutableList.of(), ImmutableList.of(), false);
+        else if (resolution.isDeclarationInMatch())
+            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state.add(idents.get(0), value), ImmutableList.of(), ImmutableList.of(), false);
         else
             return super.matchAsPattern(value, state);
     }
@@ -100,12 +315,10 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
-        if (isDeclaration == null)
+        if (resolution == null)
             throw new InternalException("Calling getValue on variable without typecheck");
-        else if (isDeclaration)
-            throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
         else
-            return result(state.get(text), state);
+            return resolution.getValue(state);
     }
 
     @Override
@@ -113,7 +326,7 @@ public class IdentExpression extends NonOperatorExpression
     {
         // We are a trivial match, no point saying _foo matched successfully if
         // we appear inside a tuple, etc.
-        if (isDeclaration != null && isDeclaration)
+        if (resolution != null && resolution.isDeclarationInMatch())
             return skipIfTrivial;
         else
             return super.hideFromExplanation(skipIfTrivial);
@@ -122,13 +335,27 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return text;
+        return toText();
+    }
+
+    private String toText()
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (namespace != null)
+            stringBuilder.append(namespace).append("\\\\");
+        for (int i = 0; i < idents.size(); i++)
+        {
+            if (i > 0)
+                stringBuilder.append("\\");
+            stringBuilder.append(idents.get(i));
+        }
+        return stringBuilder.toString();
     }
 
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(text), this);
+        return expressionStyler.styleExpression(StyledString.s(toText()), this);
     }
 
     @Override
@@ -146,18 +373,17 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof IdentExpression && text.equals(((IdentExpression)o).text);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IdentExpression that = (IdentExpression) o;
+        return Objects.equals(namespace, that.namespace) &&
+                idents.equals(that.idents);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(text);
-    }
-
-    public @ExpressionIdentifier String getText()
-    {
-        return text;
+        return Objects.hash(namespace, idents);
     }
 
     @Override
@@ -169,7 +395,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public <T> T visit(ExpressionVisitor<T> visitor)
     {
-        return visitor.ident(this, text);
+        return visitor.ident(this, namespace, idents, resolution != null && resolution.isVariable());
     }
 
     /**
@@ -177,6 +403,58 @@ public class IdentExpression extends NonOperatorExpression
      */
     public boolean isVarDeclaration()
     {
-        return isDeclaration != null && isDeclaration;
+        return resolution != null && resolution.isDeclarationInMatch();
+    }
+
+    /**
+     * Only valid to call after type-checking!  Before that we can't know.
+     * Bit hacky to provide this, but useful elsewhere...
+     */
+    public @Nullable TagInfo getResolvedConstructor()
+    {
+        return resolution != null ? resolution.getResolvedConstructor() : null;
+    }
+
+    /**
+     * Only valid to call after type-checking!  Before that we can't know.
+     * Bit hacky to provide this, but useful elsewhere...
+     */
+    public @Nullable StandardFunctionDefinition getFunctionDefinition()
+    {
+        return resolution != null ? resolution.getResolvedFunctionDefinition() : null;
+    }
+
+    private static interface Resolution
+    {
+        public default boolean isDeclarationInMatch()
+        {
+            return false;
+        }
+
+        public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
+
+        public boolean isVariable();
+        
+        public default @Nullable TagInfo getResolvedConstructor()
+        {
+            return null;
+        }
+
+        public default @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+        {
+            return null;
+        }
+    }
+    
+    // If parameter is IdentExpression with single ident and no namespace, return the ident
+    public static @Nullable @ExpressionIdentifier String getSingleIdent(Expression expression)
+    {
+        if (expression instanceof IdentExpression)
+        {
+            IdentExpression identExpression = (IdentExpression) expression;
+            if (identExpression.namespace == null && identExpression.idents.size() == 1)
+                return identExpression.idents.get(0);
+        }
+        return null;
     }
 }

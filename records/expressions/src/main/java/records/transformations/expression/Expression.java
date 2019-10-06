@@ -164,7 +164,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId);
 
 
-        public default @Nullable QuickFix<Expression> getFixForIdent(@ExpressionIdentifier String ident, @Recorded Expression target)
+        public default @Nullable QuickFix<Expression> getFixForIdent(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, @Recorded Expression target)
         {
             return null;
         }
@@ -516,9 +516,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     {
         return visit(new ExpressionVisitorStream<String>() {
             @Override
-            public Stream<String> ident(IdentExpression self, @ExpressionIdentifier String ident)
+            public Stream<String> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
             {
-                return Stream.of(ident);
+                if (isVariable)
+                    return Stream.of(idents.get(0));
+                else
+                    return Stream.of();
             }
 
             @Override
@@ -669,7 +672,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public @Nullable QuickFix<Expression> getFixForIdent(@ExpressionIdentifier String ident, @Recorded Expression target)
+        public @Nullable QuickFix<Expression> getFixForIdent(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, @Recorded Expression target)
         {
             if (editing == null)
                 return null;
@@ -692,9 +695,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
                 columnsFromSrc = srcTable == null ? ImmutableList.of() : srcTable.getData().getColumnIds();
 
-                if (columnsInUs.contains(new ColumnId(ident)) && !columnsFromSrc.contains(new ColumnId(ident)))
+                if ((namespace == null || namespace.equals("column")) && idents.size() == 1 && columnsInUs.contains(new ColumnId(idents.get(0))) && !columnsFromSrc.contains(new ColumnId(idents.get(0))))
                 {
-                    return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + ident), ImmutableList.of(), target, new QuickFixAction()
+                    return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + idents.get(0)), ImmutableList.of(), target, new QuickFixAction()
                     {
                         @Override
                         public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
@@ -809,8 +812,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         @Override
         public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
         {
+            if (tableName == null && srcTable != null)
+                tableName = srcTable.getId();
             ImmutableList<Table> available = tableManager.getAllTablesAvailableTo(us, false);
-            Table t = available.stream().filter(table -> table.getId().equals(tableName)).findFirst().orElse(null);
+            TableId tableNameFinal = tableName;
+            Table t = available.stream().filter(table -> table.getId().equals(tableNameFinal)).findFirst().orElse(null);
             if (t == null)
                 return null;
             
@@ -864,7 +870,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     if (c != null && editing != null && !Objects.equals(columnReference.getColumnId(), editing.getCurrentlyEditingColumn()) && c.getAlteredState() == AlteredState.OVERWRITTEN
                         )
                     {
-                        return new Pair<>(StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table.")), getFixForIdent(columnReference.getColumnId().getRaw(), columnReference));
+                        return new Pair<>(StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table.")), getFixForIdent("column", ImmutableList.of(columnReference.getColumnId().getRaw()), columnReference));
                     }
                 }
                 catch (InternalException | UserException e)

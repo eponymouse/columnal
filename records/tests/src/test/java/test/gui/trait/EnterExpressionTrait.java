@@ -36,6 +36,7 @@ import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -214,6 +215,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 return UnitType.UNIT;
             }
 
+            /*
             @Override
             public UnitType standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
             {
@@ -264,6 +266,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 }
                 return UnitType.UNIT;
             }
+             */
 
             @Override
             public UnitType match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
@@ -322,9 +325,14 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType ident(IdentExpression self, @ExpressionIdentifier String text)
+            public UnitType ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
             {
-                write(text, DELAY);
+                if (namespace != null)
+                {
+                    write(namespace + "\\\\", DELAY);
+                }
+                write(idents.stream().collect(Collectors.joining("\\")), DELAY);
+                
                 return UnitType.UNIT;
             }
 

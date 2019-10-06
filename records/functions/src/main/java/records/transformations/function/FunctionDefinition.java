@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 /**
@@ -75,9 +76,34 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         return split[split.length - 1];
     }
 
-    public Object getScopedName()
+    /**
+     * Function name, scoped with backslashes, not colons
+     */
+    public String getScopedName()
     {
-        return funcDocKey;
+        return funcDocKey.replace(':', '\\');
+    }
+
+    @SuppressWarnings("identifier")
+    public ImmutableList<@ExpressionIdentifier String> getFullName()
+    {
+        String[] split = funcDocKey.split(":");
+        return ImmutableList.copyOf(split);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || !(o instanceof FunctionDefinition)) return false;
+        FunctionDefinition that = (FunctionDefinition) o;
+        return Objects.equals(funcDocKey, that.funcDocKey);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(funcDocKey);
     }
 
     private static class Details

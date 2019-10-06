@@ -38,6 +38,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static records.data.datatype.DataType.BOOLEAN;
 import static records.data.datatype.DataType.TEXT;
@@ -389,11 +390,25 @@ public class TypeManager
         }
     }
 
-    public Either<String, TagInfo> lookupTag(@ExpressionIdentifier String typeName, String constructorName)
+    // Either error message or tag
+    public Either<String, TagInfo> lookupTag(@Nullable @ExpressionIdentifier String typeName, @ExpressionIdentifier String constructorName)
     {
-        @Nullable TaggedTypeDefinition type = allKnownTypes.get(new TypeId(typeName));
+        @Nullable TaggedTypeDefinition type;
+        if (typeName != null)
+        {
+            type = allKnownTypes.get(new TypeId(typeName));
+        }
+        else
+        {
+            ImmutableList<Pair<TaggedTypeDefinition, TagType<JellyType>>> possibles = allKnownTypes.values().stream().flatMap(ttd -> ttd.getTags().stream().map(tt -> new Pair<>(ttd, tt))).filter(tt -> tt.getSecond().getName().equals(constructorName)).collect(ImmutableList.<Pair<TaggedTypeDefinition, TagType<JellyType>>>toImmutableList());
+            if (possibles.isEmpty())
+                return Either.left("No such tag found: " + constructorName);
+            else if (possibles.size() >= 2)
+                return Either.left("Multiple tags found: " + possibles.stream().map(p -> p.getFirst().getTaggedTypeName().getRaw()).collect(Collectors.joining(", ")));
+            type = possibles.get(0).getFirst();
+        }
         if (type == null)
-            return Either.left(constructorName);
+            return Either.left("No such type found: " + typeName);
 
         try
         {
@@ -402,12 +417,12 @@ public class TypeManager
             if (matchingTag.isPresent())
                 return Either.<String, TagInfo>right(new TagInfo(typeFinal, matchingTag.get().getFirst()));
             else
-                return Either.left(typeName);
+                return Either.<String, TagInfo>left("No such tag: " + constructorName);
         }
         catch (InternalException e)
         {
             Utility.report(e);
-            return Either.left(constructorName);
+            return Either.left("Error fetching: " + constructorName);
         }
     }
 

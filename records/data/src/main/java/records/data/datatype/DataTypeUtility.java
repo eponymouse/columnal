@@ -411,7 +411,7 @@ public class DataTypeUtility
             public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 @Value TaggedValue tv = Utility.cast(item, TaggedValue.class);
-                String tagName = (asExpression ? ("@tag " + typeName.getRaw() + "\\") : "") + tags.get(tv.getTagIndex()).getName();
+                String tagName = (asExpression ? ("tag\\\\" + typeName.getRaw() + "\\") : "") + tags.get(tv.getTagIndex()).getName();
                 @Nullable @Value Object tvInner = tv.getInner();
                 if (tvInner != null)
                 {

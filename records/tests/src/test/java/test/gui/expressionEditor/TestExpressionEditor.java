@@ -291,19 +291,19 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testCall5() throws Exception
     {
-        testSimple("@call @tag Optional\\Is(1)");
+        testSimple("@call tag\\\\Optional\\Is(1)");
     }
 
     @Test
     public void testCall6() throws Exception
     {
-        testSimple("@call @tag A\\Single(1)");
+        testSimple("@call tag\\\\A\\Single(1)");
     }
 
     @Test
     public void testCall7() throws Exception
     {
-        testSimple("1 + @call @tag Optional\\Is(@call @tag A\\Single(1))");
+        testSimple("1 + @call tag\\\\Optional\\Is(@call @tag A\\Single(1))");
     }
     
     @Test
@@ -468,13 +468,13 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testTagNames() throws Exception
     {
-        testSimple("@tag A\\Single = @tag A\\Single");
+        testSimple("tag\\\\A\\Single = tag\\\\A\\Single");
     }
     
     @Test
     public void testOverlappingTagNames() throws Exception
     {
-        testSimple("@match (@if (@tag A\\Single = @tag A\\Single) @then @call @function from text to(type{B}, \"Single\") @else @tag B\\Single @endif) @case @tag B\\Single @given @call @function from text to(type{Boolean}, \"true\") @then @call @function from text to(type{(a: Nested, b: Number {cm})}, \"(a: A(Single), b:-2147483648)\") @endmatch");
+        testSimple("@match (@if (tag\\\\A\\Single = tag\\\\A\\Single) @then @call @function from text to(type{B}, \"Single\") @else tag\\\\B\\Single @endif) @case tag\\\\B\\Single @given @call @function from text to(type{Boolean}, \"true\") @then @call @function from text to(type{(a: Nested, b: Number {cm})}, \"(a: A(Single), b:-2147483648)\") @endmatch");
     }
     
     @Test

@@ -10,11 +10,11 @@
             <p>Gets the value from inside an optional value, if it is present.  If the value is blank, gives an error.  If you want to supply a value in this case, use <link function="get optional or"/>.</p>
         </description>
         <example>
-            <inputArg>@call @tag Optional\Is(17)</inputArg>
+            <inputArg>@call tag\\Optional\Is(17)</inputArg>
             <output>17</output>
         </example>
         <example>
-            <inputArg>@tag Optional\None</inputArg>
+            <inputArg>tag\\Optional\None</inputArg>
             <output>error</output>
         </example>
     </function>
@@ -27,11 +27,11 @@
             <p>Gets the value from inside an optional value, if it is present.  If the value is blank, returns the second parameter instead.</p>
         </description>
         <example>
-            <inputArg>(@call @tag Optional\Is(17), 12)</inputArg>
+            <inputArg>(@call tag\\Optional\Is(17), 12)</inputArg>
             <output>17</output>
         </example>
         <example>
-            <inputArg>(@tag Optional\None, 12)</inputArg>
+            <inputArg>(tag\\Optional\None, 12)</inputArg>
             <output>12</output>
         </example>
     </function>
@@ -43,11 +43,11 @@
             <p>Gets all the present values from the list of optionals, in the same order as the original list.  All None items are discarded.</p>
         </description>
         <example>
-            <inputArg>[@call @tag Optional\Is(17), @tag Optional\None, @call @tag Optional\Is(42), @tag Optional\None]</inputArg>
+            <inputArg>[@call tag\\Optional\Is(17), @tag Optional\None, @call @tag Optional\Is(42), @tag Optional\None]</inputArg>
             <output>[17, 42]</output>
         </example>
         <example>
-            <inputArg>[@tag Optional\None]</inputArg>
+            <inputArg>[tag\\Optional\None]</inputArg>
             <output>[]</output>
         </example>
     </function>

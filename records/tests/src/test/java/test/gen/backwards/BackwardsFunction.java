@@ -64,13 +64,13 @@ public class BackwardsFunction extends BackwardsProvider
             else
             {
                 ImmutableList<String> paramNames = IntStream.range(0, paramsAndBody.callActualParameters.size()).mapToObj(n -> funcName + " param " + n).collect(ImmutableList.toImmutableList());
-                function = new LambdaExpression(Utility.mapListI(paramNames, name -> new IdentExpression(name)), paramsAndBody.turnFormalNamesIntoBody.apply(Utility.mapListI(paramNames, name -> new IdentExpression(name))));
+                function = new LambdaExpression(Utility.mapListI(paramNames, name -> IdentExpression.load(name)), paramsAndBody.turnFormalNamesIntoBody.apply(Utility.mapListI(paramNames, name -> IdentExpression.load(name))));
             }
             
-            Either<@Recorded HasTypeExpression, Definition> definition = Either.right(new Definition(new IdentExpression(funcName), function));
+            Either<@Recorded HasTypeExpression, Definition> definition = Either.right(new Definition(IdentExpression.load(funcName), function));
             return DefineExpression.unrecorded(paramsAndBody.actualParameterTypes == null ? ImmutableList.of(definition)
-                : ImmutableList.of(Either.left(new HasTypeExpression(new IdentExpression(funcName), new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
-                , new CallExpression(new IdentExpression(funcName), paramsAndBody.callActualParameters));
+                : ImmutableList.of(Either.left(new HasTypeExpression(IdentExpression.load(funcName), new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
+                , new CallExpression(IdentExpression.load(funcName), paramsAndBody.callActualParameters));
         });
     }
     

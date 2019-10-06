@@ -136,23 +136,23 @@
         </description>
         <example>
             <inputArg>"-34.20m"</inputArg>
-            <output>@call @tag Optional\Is(-34.2)</output>
+            <output>@call tag\\Optional\Is(-34.2)</output>
         </example>
         <example>
             <inputArg>"£17,000,000"</inputArg>
-            <output>@call @tag Optional\Is(17000000)</output>
+            <output>@call tag\\Optional\Is(17000000)</output>
         </example>
         <example>
             <inputArg>"The 6 cats"</inputArg>
-            <output>@call @tag Optional\Is(6)</output>
+            <output>@call tag\\Optional\Is(6)</output>
         </example>
         <example>
             <inputArg>"2 and 2 makes 4"</inputArg>
-            <output>@tag Optional\None</output>
+            <output>tag\\Optional\None</output>
         </example>
         <example>
             <inputArg>"Two"</inputArg>
-            <output>@tag Optional\None</output>
+            <output>tag\\Optional\None</output>
         </example>
     </function>
 </functionDocumentation>

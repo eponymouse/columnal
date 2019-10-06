@@ -1253,7 +1253,7 @@ public class TestUtil
     @SuppressWarnings("recorded")
     public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType, boolean canAddAsType) throws InternalException
     {
-        ConstructorExpression constructorExpression = new ConstructorExpression(constructor);
+        IdentExpression constructorExpression = IdentExpression.tag(constructor.getTypeName().getRaw(), constructor.getTagInfo().getName());
         Expression r;
         if (arg == null)
         {
@@ -1277,7 +1277,7 @@ public class TestUtil
                 FunctionDefinition asType = FunctionList.lookup(unitManager, "as type");
                 if (asType == null)
                     throw new RuntimeException("Could not find as type");
-                return new CallExpression(new StandardFunction(asType),ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r));
+                return new CallExpression(IdentExpression.function(asType.getFullName()),ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r));
             }
         }
         return r;

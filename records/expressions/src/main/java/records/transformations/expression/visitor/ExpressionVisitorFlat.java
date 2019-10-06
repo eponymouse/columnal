@@ -100,7 +100,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T ident(IdentExpression self, @ExpressionIdentifier String text)
+    public T ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
     {
         return makeDef(self);
     }
@@ -154,12 +154,6 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
-    {
-        return makeDef(self);
-    }
-
-    @Override
     public T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return makeDef(self);
@@ -198,12 +192,6 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
 
     @Override
     public T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
-    {
-        return makeDef(self);
-    }
-
-    @Override
-    public T constructor(ConstructorExpression self, Either<String, TagInfo> tag)
     {
         return makeDef(self);
     }

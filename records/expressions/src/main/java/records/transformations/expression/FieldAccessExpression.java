@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -48,14 +49,16 @@ public class FieldAccessExpression extends Expression
         if (lhsChecked == null)
             return null;
         
-        if (!(fieldName instanceof IdentExpression))
+        @ExpressionIdentifier String fieldText = IdentExpression.getSingleIdent(fieldName);
+        
+        if (fieldText == null)
         {
-            onError.recordError(fieldName, StyledString.s("Field name must be a valid name (and not an expression)"));
+            onError.recordError(fieldName, StyledString.s("Field name must be a valid name by itself"));
             return null;
         }
         
         @Recorded TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
-        TypeExp recordType = TypeExp.record(this, ImmutableMap.of(((IdentExpression)fieldName).getText(), fieldType), false);
+        TypeExp recordType = TypeExp.record(this, ImmutableMap.of(fieldText, fieldType), false);
         
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
             return null;
@@ -68,8 +71,11 @@ public class FieldAccessExpression extends Expression
     {
         ValueResult lhsResult = lhsRecord.calculateValue(state);
         @Value Record record = Utility.cast(lhsResult.value, Record.class);
-        
-        return result(record.getField(((IdentExpression)fieldName).getText()), state, ImmutableList.of(lhsResult));
+
+        @ExpressionIdentifier String fieldText = IdentExpression.getSingleIdent(fieldName);
+        if (fieldText == null)
+            throw new InternalException("Field is not single name despite being after type-check: " + fieldName.toString());
+        return result(record.getField(fieldText), state, ImmutableList.of(lhsResult));
     }
 
     @Override

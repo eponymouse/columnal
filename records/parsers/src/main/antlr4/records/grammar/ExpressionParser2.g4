@@ -2,19 +2,14 @@ parser grammar ExpressionParser2;
 
 options { tokenVocab = ExpressionLexer2; }
 
-ident : IDENT;
-
-tableId : ident;
-columnId : ident;
-columnRef : COLUMN (tableId SCOPE)? columnId;
-tableRef: TABLE tableId;
+singleIdent : IDENT;
+namespace: singleIdent SCOPE SCOPE;
+ident : namespace? singleIdent (SCOPE singleIdent)*;
 
 numericLiteral : ADD_OR_SUBTRACT? NUMBER CURLIED?;
 stringLiteral : RAW_STRING;
 booleanLiteral : TRUE | FALSE;
 unfinished : UNFINISHED RAW_STRING;
-
-varRef  : ident;
 
 any : ANYTHING;
 
@@ -24,7 +19,7 @@ customLiteralExpression : CUSTOM_LITERAL;
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
 // Similar,y constructor may need an argument, but that's sorted out in type checking.
-terminal : columnRef | tableRef | numericLiteral | stringLiteral | booleanLiteral | varRef | any | implicitLambdaParam | constructor | standardFunction | customLiteralExpression | unfinished;
+terminal : ident | numericLiteral | stringLiteral | booleanLiteral | any | implicitLambdaParam | customLiteralExpression | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -45,23 +40,18 @@ ifThenElseExpression : IF topLevelExpression THEN topLevelExpression ELSE topLev
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | PLUS_MINUS | COMMA;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
-fieldAccessExpression : expression FIELD_ACCESS ident;
+fieldAccessExpression : expression FIELD_ACCESS expression;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | stringConcatExpression | fieldAccessExpression;
 
 invalidOpItem : expression;
 invalidOpExpression : INVALIDOPS OPEN_BRACKET (invalidOpItem (COMMA invalidOpItem)*)? CLOSE_BRACKET;
 
-constructor : CONSTRUCTOR typeName SCOPE constructorName;
-
-standardFunction : FUNCTION ident;
-callTarget : varRef | standardFunction | constructor | unfinished;
+callTarget : ident | unfinished;
 callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression (COMMA topLevelExpression)*) CLOSE_BRACKET;
 
-recordExpression : OPEN_BRACKET ident COLON topLevelExpression (COMMA ident COLON topLevelExpression)* CLOSE_BRACKET;
+recordExpression : OPEN_BRACKET singleIdent COLON topLevelExpression (COMMA singleIdent COLON topLevelExpression)* CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (topLevelExpression (COMMA topLevelExpression)*)? CLOSE_SQUARE;
 
-typeName : ident;
-constructorName : ident;
 pattern : topLevelExpression (CASEGUARD topLevelExpression)?;
 
 /* Single argument, matched once as variable name or tuple pattern */
@@ -75,7 +65,7 @@ match : MATCH topLevelExpression matchClause+ ENDMATCH;
 
 lambdaExpression : FUNCTION OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)* CLOSE_BRACKET THEN topLevelExpression ENDFUNCTION;
 
-hasTypeExpression : varRef HAS_TYPE customLiteralExpression;
+hasTypeExpression : singleIdent HAS_TYPE customLiteralExpression;
 definition : (expression EQUALITY expression) | hasTypeExpression;
 defineExpression: DEFINE definition (COMMA definition)* THEN topLevelExpression ENDDEFINE;
 

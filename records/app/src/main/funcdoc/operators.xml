@@ -226,7 +226,7 @@
             <output>true</output>
         </example>
         <example>
-            <input>@tag Optional\None &lt; @call @tag Optional\Is(0)</input>
+            <input>tag\\Optional\None &lt; @call @tag Optional\Is(0)</input>
             <output>true</output>
         </example>
         <example>

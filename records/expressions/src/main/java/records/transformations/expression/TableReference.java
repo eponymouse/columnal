@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 
 public class TableReference extends NonOperatorExpression
 {
-    public static final String ROWS = "rows";
+    public static final @ExpressionIdentifier String ROWS = "rows";
     private final TableId tableName;
     private @MonotonicNonNull FoundTable resolvedTable;
     private boolean includeRows;
@@ -214,7 +214,7 @@ public class TableReference extends NonOperatorExpression
     @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
     public static @Recorded Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
     {
-        return new FieldAccessExpression(new TableReference(tableId), new IdentExpression(columnId.getRaw()));
+        return new FieldAccessExpression(new TableReference(tableId),  IdentExpression.load(columnId.getRaw()));
     }
 
     @Override

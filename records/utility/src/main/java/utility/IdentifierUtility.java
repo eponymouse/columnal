@@ -3,6 +3,7 @@ package utility;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.units.RawInputLocation;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.antlr.v4.runtime.CharStreams;
@@ -16,6 +17,7 @@ import records.grammar.UnitLexer;
 import records.grammar.UnitParser.SingleUnitContext;
 import utility.Utility.DescriptiveErrorListener;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,7 +50,7 @@ public class IdentifierUtility
     }
 
     @SuppressWarnings("identifier")
-    public static @ExpressionIdentifier String fromParsed(records.grammar.ExpressionParser2.IdentContext parsedIdent)
+    public static @ExpressionIdentifier String fromParsed(records.grammar.ExpressionParser2.SingleIdentContext parsedIdent)
     {
         return parsedIdent.getText();
     }
@@ -187,22 +189,50 @@ public class IdentifierUtility
             return null;
     }
 
-    public static @Nullable Consumed<String> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
+    public static @Nullable Consumed<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> consumePossiblyScopedExpressionIdentifier(String content, @RawInputLocation int startFrom, @RawInputLocation int includeTrailingSpaceOrDoubleSpaceIfEndsAt)
     {
-        @Nullable Consumed<@ExpressionIdentifier String> before = consumeExpressionIdentifier(content, startFrom, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
-        if (before != null)
+        ArrayList<Consumed<@ExpressionIdentifier String>> items = new ArrayList<>();
+        boolean firstHadDouble = false;
+        @RawInputLocation int nextPos = startFrom;
+        do
         {
-            if (before.positionAfter < content.length() && content.charAt(before.positionAfter) == '\\')
+            if (!items.isEmpty())
+                nextPos = items.get(items.size() - 1).positionAfter + RawInputLocation.ONE;
+            if (items.size() == 1 && content.charAt(nextPos) == '\\')
             {
-                @Nullable Consumed<@ExpressionIdentifier String> after = consumeExpressionIdentifier(content, before.positionAfter + RawInputLocation.ONE, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
-                if (after != null)
-                {
-                    return new Consumed<>(before.item + "\\" + after.item, after.positionAfter, ImmutableSet.<@RawInputLocation Integer>copyOf(Sets.<@RawInputLocation Integer>union(before.removedCharacters, after.removedCharacters)));
-                }
+                firstHadDouble = true;
+                nextPos += RawInputLocation.ONE;
             }
-            return new Consumed<>(before.item, before.positionAfter, before.removedCharacters);
+            
+            @Nullable Consumed<@ExpressionIdentifier String> next = consumeExpressionIdentifier(content, nextPos, includeTrailingSpaceOrDoubleSpaceIfEndsAt);
+            if (next == null)
+                break;
+            else
+                items.add(next);
         }
-        return null;
+        while (items.get(items.size() - 1).positionAfter < content.length() && content.charAt(items.get(items.size() - 1).positionAfter) == '\\');
+        
+        if (items.isEmpty())
+            return null;
+        else
+        {
+            @Nullable @ExpressionIdentifier String first = null;
+            ArrayList<@ExpressionIdentifier String> parts = new ArrayList<>();
+            HashSet<@RawInputLocation Integer> removed = new HashSet<>();
+            if (firstHadDouble && items.size() >= 2)
+            {
+                first = items.get(0).item;
+                removed.addAll(items.get(0).removedCharacters);
+                items.remove(0);
+            }
+            for (int i = 0; i < items.size(); i++)
+            {
+                parts.add(items.get(i).item);
+                removed.addAll(items.get(i).removedCharacters);
+            }
+            
+            return new Consumed<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>(new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>(first, ImmutableList.<@ExpressionIdentifier String>copyOf(parts)), items.get(items.size() - 1).positionAfter, ImmutableSet.<@RawInputLocation Integer>copyOf(removed));
+        }
     }
 
     @SuppressWarnings({"identifier", "units"})

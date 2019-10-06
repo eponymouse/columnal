@@ -333,7 +333,7 @@ public class AggregateSplitByPane extends BorderPane
             @Override
             public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
-                return new IdentExpression(TypeState.GROUP_COUNT);
+                return IdentExpression.load(TypeState.GROUP_COUNT);
             }
         };
         ExpressionRecipe sum = numberColumnRecipe("expression.recipe.sum", srcTable, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, c));

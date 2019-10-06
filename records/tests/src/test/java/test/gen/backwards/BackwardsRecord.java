@@ -65,7 +65,7 @@ public class BackwardsRecord extends BackwardsProvider
                     valueMap.put(f.getKey(), parent.makeValue(f.getValue()));
             }
             
-            return new FieldAccessExpression(parent.make(recordType, new RecordMap(valueMap), maxLevels - 1), new IdentExpression(ourField));
+            return new FieldAccessExpression(parent.make(recordType, new RecordMap(valueMap), maxLevels - 1), IdentExpression.load(ourField));
         });
     }
 }

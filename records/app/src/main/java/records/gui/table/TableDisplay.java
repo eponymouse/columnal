@@ -884,7 +884,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
-                return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new IdentExpression(TypeState.GROUP_COUNT))), ImmutableList.of(c));
+                return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, IdentExpression.load(TypeState.GROUP_COUNT))), ImmutableList.of(c));
             })::makeMenuItem);
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
                 return new Sort(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(c, Direction.ASCENDING)));
@@ -1144,7 +1144,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @SuppressWarnings("recorded")
                         private TypeTransform toText() throws InternalException
                         {
-                            return new TypeTransform(new CallExpression(new StandardFunction(new ToString()), ImmutableList.of(columnReference)), DataType.TEXT);
+                            return new TypeTransform(new CallExpression(IdentExpression.function(new ToString().getFullName()), ImmutableList.of(columnReference)), DataType.TEXT);
                         }
                         
                         @OnThread(Tag.Simulation)

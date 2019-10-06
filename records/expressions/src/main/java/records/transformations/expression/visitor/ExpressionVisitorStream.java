@@ -116,7 +116,7 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> ident(IdentExpression self, @ExpressionIdentifier String text)
+    public Stream<T> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
     {
         return Stream.of();
     }
@@ -170,12 +170,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
-    {
-        return Stream.of();
-    }
-
-    @Override
     public Stream<T> concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
     {
         return apply(expressions);
@@ -207,12 +201,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
 
     @Override
     public Stream<T> litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
-    {
-        return Stream.of();
-    }
-
-    @Override
-    public Stream<T> constructor(ConstructorExpression self, Either<String, TagInfo> tag)
     {
         return Stream.of();
     }

@@ -47,21 +47,9 @@ public class HasTypeExpression extends Expression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable @ExpressionIdentifier String varName = lhsVar.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
-        {
-            @Override
-            protected @Nullable @ExpressionIdentifier String makeDef(Expression expression)
-            {
-                onError.recordError(lhsVar, StyledString.s("Left-hand side of :: must be a valid name"));
-                return null;
-            }
-
-            @Override
-            public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @ExpressionIdentifier String text)
-            {
-                return text;
-            }
-        });
+        @Nullable @ExpressionIdentifier String varName = IdentExpression.getSingleIdent(lhsVar);
+        if (varName == null)
+            onError.recordError(lhsVar, StyledString.s("Left-hand side of :: must be a valid name"));
         
         @Nullable @Recorded TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable @Recorded TypeExpression>()
         {

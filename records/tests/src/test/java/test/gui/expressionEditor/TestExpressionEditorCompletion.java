@@ -566,7 +566,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         scrollLexAutoCompleteToOption("from text to()");
         push(KeyCode.ENTER);
         write("1");
-        StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")));
+        IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")).getFullName());
         assertEquals(new CallExpression(fromTextTo, ImmutableList.of(new NumericLiteral(1, null))), finish());
     }
 
@@ -581,7 +581,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         push(KeyCode.ENTER);
         write("1");
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
-        StandardFunction fromTextTo = new StandardFunction(TestUtil.checkNonNull(functionLookup.lookup("from text to")));
+        IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
         assertEquals(TestUtil.parseExpression("@invalidops(@call @function from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }

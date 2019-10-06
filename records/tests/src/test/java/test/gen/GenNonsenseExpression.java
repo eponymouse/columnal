@@ -152,8 +152,8 @@ public class GenNonsenseExpression extends Generator<Expression>
         {
             // Call targets:
             ArrayList<ExSupplier<Expression>> items = new ArrayList<ExSupplier<Expression>>(Arrays.<ExSupplier<Expression>>asList(
-                () -> new ConstructorExpression(genTag(r).getSecond()),
-                () -> new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
+                () -> IdentExpression.tag(genTag(r).getSecond().getTagInfo().getName()),
+                () -> IdentExpression.function(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager())).getFullName()),
                 () -> {
                     while (true)
                     {
@@ -166,7 +166,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         else
                         {
                             columnReferences.put(ident, false);
-                            return new IdentExpression(ident);
+                            return IdentExpression.column(ident);
                         }
                     }
                 }
@@ -190,7 +190,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         }
                         else
                         {
-                            return new IdentExpression(TestUtil.checkNonNull(IdentifierUtility.asExpressionIdentifier(columnId.getRaw())));
+                            return IdentExpression.column(TestUtil.checkNonNull(IdentifierUtility.asExpressionIdentifier(columnId.getRaw())));
                         }
                     },
                     () -> {
@@ -249,7 +249,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                     if (!columnReferences.getOrDefault(ident, false))
                     {
                         columnReferences.put(ident, false);
-                        return new IdentExpression(ident);
+                        return IdentExpression.column(ident);
                     }
                 }
             },

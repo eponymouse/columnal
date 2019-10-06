@@ -354,96 +354,15 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 curIndex += RawInputLocation.ONE;
                 continue nextToken;
             }
-            
-            if (content.startsWith("@table", curIndex))
-            {
-                @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex + rawLength("@table"), curCaretPos == null ? -1 * RawInputLocation.ONE : curCaretPos);
-                if (parsed != null)
-                {
-                    for (TableReference availableTable : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
-                    {
-                        TableId tableId = availableTable.getTableId();
-                        if (tableId.getRaw().equals(parsed.item))
-                        {
-                            removedChars.setAll(parsed);
-                            saver.saveOperand(new TableReference(tableId), removedChars.map(curIndex, parsed.positionAfter));
-                            chunks.add(new ContentChunk("@table " + parsed.item, StyledString.s("@table " + parsed.item).withStyle(new StyledCSS("expression-table")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-table-background"))), ChunkType.IDENT));
-                            curIndex = parsed.positionAfter;
-                            continue nextToken;
-                        }
-                    }
-                    
-                }
-            }
 
-            @Nullable Consumed<String> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
+            @Nullable Consumed<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
             final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
             if (parsed != null && parsed.positionAfter > curIndex)
             {
                 prevWasIdent = true;
-                String text = parsed.item;
                 removedChars.setAll(parsed);
                 CanonicalSpan location = removedChars.map(curIndex, ((parsed.positionAfter < content.length() && content.charAt(parsed.positionAfter) == ' ') ? parsed.positionAfter + RawInputLocation.ONE : parsed.positionAfter));
-
-                boolean wasColumn = false;
-                {
-                    for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
-                    {
-                        TableId tableId = availableColumn.getTableId();
-                        String columnIdRaw = availableColumn.getColumnId().getRaw();
-                        if ((
-                            (tableId == null && columnIdRaw.equals(text))
-                                || (tableId != null && (tableId.getRaw() + "\\" + columnIdRaw).equals(text))
-                        ))
-                        {
-                            saver.saveOperand(new ColumnReference(availableColumn), location);
-                            wasColumn = true;
-                            break;
-                        }
-                    }
-
-                    if (!wasColumn)
-                    {
-                        boolean wasFunction = false;
-                        for (StandardFunctionDefinition function : allFunctions)
-                        {
-                            if (function.getName().equals(text))
-                            {
-                                saver.saveOperand(new StandardFunction(function), location);
-                                wasFunction = true;
-                                break;
-                            }
-                        }
-
-                        if (!wasFunction)
-                        {
-                            boolean wasTagged = false;
-                            for (TaggedTypeDefinition taggedType : typeManager.getKnownTaggedTypes().values())
-                            {
-                                for (TagType<JellyType> tag : taggedType.getTags())
-                                {
-                                    if (tag.getName().equals(text) || text.equals(taggedType.getTaggedTypeName().getRaw() + "\\" + tag.getName()))
-                                    {
-                                        saver.saveOperand(new ConstructorExpression(typeManager, taggedType.getTaggedTypeName().getRaw(), tag.getName()), location);
-                                        wasTagged = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!wasTagged)
-                                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), location);
-                        }
-                    }
-                }
-                if (wasColumn)
-                {
-                    chunks.add(new ContentChunk(text, StyledString.s(text).withStyle(new StyledCSS("expression-column")).withStyle(new EditorDisplay.TokenBackground(ImmutableList.of("expression-column-background"))), ChunkType.IDENT));
-                }
-                else
-                {
-                    chunks.add(new ContentChunk(text, ChunkType.IDENT));
-                }
+                saver.saveOperand(IdentExpression.load(parsed.item.getFirst(), parsed.item.getSecond()), location);
                 curIndex = parsed.positionAfter;
                 continue nextToken;
             }

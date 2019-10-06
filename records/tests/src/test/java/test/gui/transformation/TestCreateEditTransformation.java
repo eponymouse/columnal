@@ -52,9 +52,9 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.ImplicitLambdaArg;
 import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.StandardFunction;
 import records.transformations.expression.TableReference;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
@@ -348,7 +348,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     // Minimum:
                     calculations.add(new AggCalculation(name.apply("Min"),
-                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum"))), ImmutableList.of(groupExp)),
+                            new CallExpression(IdentExpression.function(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "minimum")).getFullName()), ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().min(valueComparator).orElse(null)))
                     ));
@@ -357,7 +357,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     // Maximum:
                     calculations.add(new AggCalculation(name.apply("Max"),
-                            new CallExpression(new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum"))), ImmutableList.of(groupExp)),
+                            new CallExpression(IdentExpression.function(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "maximum")).getFullName()), ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().max(valueComparator).orElse(null)))
                     ));
@@ -367,7 +367,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     // First:
                     calculations.add(new AggCalculation(name.apply("First"),
                             new CallExpression(
-                                new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "element"))), 
+                                IdentExpression.function(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "element")).getFullName()), 
                                 ImmutableList.of(groupExp, new NumericLiteral(1, null))),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> gr.stream().findFirst().orElse(null)))
@@ -377,7 +377,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     calculations.add(new AggCalculation(name.apply("Sum"),
                         new CallExpression(
-                            new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "sum"))),
+                            IdentExpression.function(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "sum")).getFullName()),
                             ImmutableList.of(groupExp)),
                         columnDetails.dataType,
                         perGroup.apply(g -> withEithers(g, gr -> gr.stream().reduce((a, b) -> Utility.addSubtractNumbers((Number)a, (Number)b, true)).orElse(null)))
@@ -387,7 +387,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 {
                     calculations.add(new AggCalculation(name.apply("Concat"),
                             new CallExpression(
-                                    new StandardFunction(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "join text"))),
+                                    IdentExpression.function(TestUtil.checkNonNull(FunctionList.lookup(unitManager, "join text")).getFullName()),
                                     ImmutableList.of(groupExp)),
                             columnDetails.dataType,
                             perGroup.apply(g -> withEithers(g, gr -> DataTypeUtility.value(gr.stream().map(s -> (String)s).collect(Collectors.joining("")))))

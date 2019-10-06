@@ -502,13 +502,13 @@ public class PropTypecheckIndividual
     @Test
     public void checkDefine2() throws UserException, InternalException
     {
-        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
     public void checkDefine2b() throws UserException, InternalException
     {
-        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist :: type{Number{m}}, dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist :: type{Number{m}}, dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
@@ -545,14 +545,14 @@ public class PropTypecheckIndividual
     public void checkDefineErr3() throws UserException, InternalException
     {
         // Typing variable we don't define
-        checkConcreteType((DataType)null, "@define dist2 :: type{@apply Optional(Number{m})}, dist = (1 * 32{m/s} * 10{s}) @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType((DataType)null, "@define dist2 :: type{@apply Optional(Number{m})}, dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test
     public void checkDefineErr3b() throws UserException, InternalException
     {
         // Type after definition
-        checkConcreteType((DataType)null, "@define dist = (1 * 32{m/s} * 10{s}), dist :: type{@apply Optional(Number{m})} @then @call @tag Optional\\Is(dist * 3) @enddefine");
+        checkConcreteType((DataType)null, "@define dist = (1 * 32{m/s} * 10{s}), dist :: type{@apply Optional(Number{m})} @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
     @Test

@@ -158,21 +158,24 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                         {
                             CanonicalSpan span = CanonicalSpan.fromTo(locationRecorder.recorderFor(callTarget), c);
                             
-                            if (callTarget instanceof StandardFunction)
+                            if (callTarget instanceof IdentExpression)
                             {
-                                StandardFunction function = (StandardFunction) callTarget;
-                                ImmutableList<String> paramNames = function.getFunction().getParamNames();
-                                String funcDocURL = ExpressionLexer.makeFuncDocURL(function.getFunction());
-                                if (args.expressions.isEmpty())
+                                StandardFunctionDefinition function = ((IdentExpression)callTarget).getFunctionDefinition();
+                                if (function != null)
                                 {
-                                    // No params yet, need to add in the empty bit between brackets
-                                    locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0, funcDocURL, span));
-                                }
-                                else
-                                {
-                                    for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
+                                    ImmutableList<String> paramNames = function.getParamNames();
+                                    String funcDocURL = ExpressionLexer.makeFuncDocURL(function);
+                                    if (args.expressions.isEmpty())
                                     {
-                                        locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i, funcDocURL, span));
+                                        // No params yet, need to add in the empty bit between brackets
+                                        locationRecorder.recordEntryPrompt(c, makeParamPrompt(function.getName(), paramNames, 0, funcDocURL, span));
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < args.expressions.size() && i < paramNames.size(); i++)
+                                        {
+                                            locationRecorder.recordEntryPrompt(args.expressions.get(i), makeParamPrompt(function.getName(), paramNames, i, funcDocURL, span));
+                                        }
                                     }
                                 }
                             }
@@ -1064,24 +1067,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }
 
                 @Override
-                public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @ExpressionIdentifier String text)
+                public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
                 {
-                    return text;
-                }
-
-                @Override
-                public @Nullable @ExpressionIdentifier String standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition)
-                {
-                    return functionDefinition.getName();
-                }
-
-                @Override
-                public @Nullable @ExpressionIdentifier String column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
-                {
-                    if (tableName == null)
-                        return columnName.getRaw();
-                    
-                    return super.column(self, tableName, columnName);
+                    if (namespace == null && idents.size() == 1)
+                        return idents.get(0);
+                    return super.ident(self, namespace, idents, isVariable);
                 }
             });
             

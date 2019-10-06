@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataItemPosition;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
+import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
@@ -68,7 +69,7 @@ public class CallExpression extends Expression
         {
             StandardFunctionDefinition functionDefinition = functionLookup.lookup(functionName);
             if (functionDefinition != null)
-                return new StandardFunction(functionDefinition);
+                return IdentExpression.function(functionDefinition.getFullName());
         }
         catch (InternalException e)
         {
@@ -81,10 +82,20 @@ public class CallExpression extends Expression
     public @Nullable CheckedExp check(@Recorded CallExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
+        
+        if (!(function instanceof IdentExpression))
+        {
+            onError.recordError(this, StyledString.concat(StyledString.s("Invalid call target: "), function.toStyledString()));
+        }
+
+        @Nullable CheckedExp functionType = function.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        if (functionType == null)
+            return null;
+        
         for (@Recorded Expression argument : arguments)
         {
             // Pattern can go through constructors, but arguments of functions must be expressions:
-            ExpressionKind argKind = function instanceof ConstructorExpression ? kind : ExpressionKind.EXPRESSION;
+            ExpressionKind argKind = ((IdentExpression)function).getResolvedConstructor() != null ? kind : ExpressionKind.EXPRESSION;
             @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, argKind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
@@ -92,9 +103,7 @@ public class CallExpression extends Expression
             paramTypesBuilder.add(checkedExp);
         }
         ImmutableList<CheckedExp> paramTypes = paramTypesBuilder.build();
-        @Nullable CheckedExp functionType = function.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
-        if (functionType == null)
-            return null;
+        
         
         TypeExp returnType = new MutVar(this);
 
@@ -254,11 +263,14 @@ public class CallExpression extends Expression
     @Override
     public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        if (function instanceof ConstructorExpression)
+        if (!(function instanceof IdentExpression))
+            throw new InternalException("Matching invalid call target as pattern: " + function.toString());
+        TagInfo tag = ((IdentExpression)function).getResolvedConstructor();
+        if (tag != null)
         {
-            ConstructorExpression constructor = (ConstructorExpression) function;
+            
             @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
-            if (taggedValue.getTagIndex() != constructor.getTagIndex())
+            if (taggedValue.getTagIndex() != tag.tagIndex)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
             // If we do match, go to the inner:
             @Nullable @Value Object inner = taggedValue.getInner();

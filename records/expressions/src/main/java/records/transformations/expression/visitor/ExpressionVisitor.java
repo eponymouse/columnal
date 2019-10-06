@@ -47,7 +47,7 @@ public interface ExpressionVisitor<T>
     // Singular name to avoid clash with Object.equals
     T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern);
 
-    T ident(IdentExpression self, @ExpressionIdentifier String text);
+    T ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable);
 
     T ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression);
 
@@ -65,8 +65,6 @@ public interface ExpressionVisitor<T>
 
     T raise(RaiseExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
 
-    T standardFunction(StandardFunction self, StandardFunctionDefinition functionDefinition);
-
     T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions);
 
     T litText(StringLiteral self, String rawValue);
@@ -78,8 +76,6 @@ public interface ExpressionVisitor<T>
     T litType(TypeLiteralExpression self, @Recorded TypeExpression type);
 
     T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression);
-
-    T constructor(ConstructorExpression self, Either<String, TagInfo> tag);
 
     T match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses);
     

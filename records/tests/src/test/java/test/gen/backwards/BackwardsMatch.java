@@ -107,7 +107,7 @@ public class BackwardsMatch extends BackwardsProvider
                 if (numVar == null)
                     return ImmutableList.of();
                 @NonNull VarInfo numVarFinal = numVar;
-                IdentExpression varRef = new IdentExpression(numVar.name);
+                IdentExpression varRef = IdentExpression.load(numVar.name);
                 return ImmutableList.of(() -> {
                     return new AddSubtractExpression(ImmutableList.of(
                         new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(TestUtil.getUnit(numVarFinal.type)))))),
@@ -141,11 +141,11 @@ public class BackwardsMatch extends BackwardsProvider
                     @ExpressionIdentifier String name = boolVar.name;
                     // need to negate the value if it doesn't match:
                     if (boolVar.value.equals(targetValue))
-                        return ImmutableList.of(() -> new IdentExpression(name));
+                        return ImmutableList.of(() -> IdentExpression.load(name));
                     else
                     {
-                        return ImmutableList.of(() -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "not", new IdentExpression(name)),
-                            () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), new IdentExpression(name)), false)
+                        return ImmutableList.of(() -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "not", IdentExpression.load(name)),
+                            () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), IdentExpression.load(name)), false)
                         );
                     }
                 }
@@ -256,7 +256,7 @@ public class BackwardsMatch extends BackwardsProvider
         if (!declVars.isEmpty())
         {
             VarInfo v = declVars.get(r.nextInt(declVars.size()));
-            defines.add(Either.left(new HasTypeExpression(new IdentExpression(v.name), new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
+            defines.add(Either.left(new HasTypeExpression(IdentExpression.load(v.name), new TypeLiteralExpression(TypeExpression.fromDataType(v.type)))));
             defines.add(Either.right(new Definition(match.pattern, toMatch)));
             return DefineExpression.unrecorded(defines.build(), IfThenElseExpression.unrecorded(guard, correctOutcome, parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }
@@ -465,7 +465,7 @@ public class BackwardsMatch extends BackwardsProvider
                         @ExpressionIdentifier String varName = "var" + nextVar++;
                         if (!varContexts.isEmpty())
                             varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
-                        return new PatternInfo(new IdentExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal), false));
+                        return new PatternInfo(IdentExpression.load(varName), new EqualExpression(ImmutableList.of(IdentExpression.load(varName), rhsVal), false));
                     }
                     if (canMatchMore && r.nextInt(0, 5) == 1)
                         return new PatternInfo(new MatchAnythingExpression(), null);

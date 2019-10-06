@@ -736,12 +736,12 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 if (r.nextBoolean())
                 {
                     // Use #column name
-                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", TableReference.makeEntireColumnReference(tableId, name), new IdentExpression("row")));
+                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", TableReference.makeEntireColumnReference(tableId, name), IdentExpression.load("row")));
                 }
                 else
                 {
                     // Use #rows
-                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(new TableReference(tableId), new IdentExpression("rows")), new IdentExpression("row")), new IdentExpression(name.getRaw())));
+                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(new TableReference(tableId), IdentExpression.load("rows")), IdentExpression.load("row")), IdentExpression.load(name.getRaw())));
                 }
             }
         };

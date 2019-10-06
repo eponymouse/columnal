@@ -76,7 +76,7 @@ public class AppUtility
             {
                 @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
                 TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
-                ConstructorExpression constructor = new ConstructorExpression(typeManager, typeName.getRaw(), tag.getName());
+                IdentExpression constructor = IdentExpression.tag(typeName.getRaw(), tag.getName());
                 @Value Object innerValue = taggedValue.getInner();
                 DataType innerType = tag.getInner();
                 Expression expression = innerValue == null || innerType == null ? constructor : new CallExpression(constructor, ImmutableList.of(valueToExpression(typeManager, functionLookup, innerType, innerValue)));

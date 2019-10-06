@@ -24,6 +24,8 @@ public interface StandardFunctionDefinition
 {
     public @ExpressionIdentifier String getName();
 
+    public ImmutableList<@ExpressionIdentifier String> getFullName();
+
     @OnThread(Tag.Simulation)
     public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException;
 

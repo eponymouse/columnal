@@ -62,15 +62,15 @@ public class TypeLiteralExpression extends NonOperatorExpression
         if (expression instanceof CallExpression)
         {
             CallExpression call = (CallExpression) expression;
-            if (call.getFunction() instanceof StandardFunction)
+            if (call.getFunction() instanceof IdentExpression)
             {
-                StandardFunction func = (StandardFunction) call.getFunction();
-                if (func.getName().equals("from text"))
+                IdentExpression func = (IdentExpression) call.getFunction();
+                if (Objects.equals(func.getFunctionDefinition(), functionLookup.lookup("from text")))
                 {
                     StandardFunctionDefinition fromTextTo = functionLookup.lookup("from text to");
                     if (fromTextTo != null)
                     {
-                        return new CallExpression(new StandardFunction(fromTextTo), ImmutableList.of(new TypeLiteralExpression(fixTo),
+                        return new CallExpression(IdentExpression.function(fromTextTo.getFullName()), ImmutableList.of(new TypeLiteralExpression(fixTo),
                             call.getParams().get(0)));
                     }
                 }
@@ -81,13 +81,14 @@ public class TypeLiteralExpression extends NonOperatorExpression
         if (asType == null)
             throw new InternalException("Missing as type function");
         if (expression instanceof CallExpression
-            && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
+            && ((CallExpression) expression).getFunction() instanceof  IdentExpression &&
+                Objects.equals(((IdentExpression)((CallExpression) expression).getFunction()).getFunctionDefinition(), asType)
             )
         {
             expression = ((CallExpression) expression).getParams().get(1);
         }
 
-        return new CallExpression(new StandardFunction(asType), ImmutableList.of(
+        return new CallExpression(IdentExpression.function(asType.getFullName()), ImmutableList.of(
             new TypeLiteralExpression(fixTo),
             expression
         ));

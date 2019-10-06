@@ -111,7 +111,7 @@ public class TestLoadSaveExpression
     @Test
     public void testCalls() throws UserException, InternalException
     {
-        assertBothWays(new CallExpression(new ConstructorExpression(DummyManager.make().getTypeManager(), "Optional", "Is"), ImmutableList.of(new NumericLiteral(3, null))), "@call @tag Optional\\Is(3)");
+        assertBothWays(new CallExpression(IdentExpression.tag("Optional", "Is"), ImmutableList.of(new NumericLiteral(3, null))), "@call tag\\\\Optional\\Is(3)");
     }
 
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
