@@ -1234,7 +1234,7 @@ public class TestUtil
             }
 
             @Override
-            public Stream<TableReference> getAvailableTableReferences()
+            public Stream<TableId> getAvailableTableReferences()
             {
                 return Stream.empty();
             }
@@ -1597,9 +1597,9 @@ public class TestUtil
         }
 
         @Override
-        public Stream<TableReference> getAvailableTableReferences()
+        public Stream<TableId> getAvailableTableReferences()
         {
-            return Stream.of(new TableReference(tableId));
+            return Stream.of(tableId);
         }
 
         @Override

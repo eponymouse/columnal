@@ -41,7 +41,6 @@ import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.QuickFix.QuickFixReplace;
 import records.transformations.expression.UnitExpression.UnitLookupException;
 import records.transformations.expression.function.FunctionLookup;
-import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -231,7 +230,7 @@ public class ExpressionUtil
             // This isn't quite correct for the loading, but v1 was only
             // used during private beta, so we can live with incorrect loading:
             if (ctx.columnRefType().WHOLECOLUMN() != null && tableName != null)
-                return TableReference.makeEntireColumnReference(tableName, columnName);
+                return IdentExpression.makeEntireColumnReference(tableName, columnName);
             else
                 return new ColumnReference(tableName, columnName);
         }

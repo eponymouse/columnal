@@ -186,7 +186,7 @@ public class CallExpression extends Expression
                         onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
                                 new QuickFix<>("fix.wholeColumn", this, () -> {
                                     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                                            CallExpression newCall = new CallExpression(function, ImmutableList.of(TableReference.makeEntireColumnReference(tableNN.getTableId(), colRef.getColumnId())));
+                                            CallExpression newCall = new CallExpression(function, ImmutableList.of(IdentExpression.makeEntireColumnReference(tableNN.getTableId(), colRef.getColumnId())));
                                     return newCall;
                                 }
                                 )

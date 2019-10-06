@@ -31,7 +31,6 @@ import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.ExpressionUtil;
-import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.function.FunctionList;
@@ -277,9 +276,9 @@ public class Check extends Transformation implements SingleSourceTransformation
             }
 
             @Override
-            public Stream<TableReference> getAvailableTableReferences()
+            public Stream<TableId> getAvailableTableReferences()
             {
-                return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> new TableReference(t.getId()));
+                return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> t.getId());
             }
 
             @Override

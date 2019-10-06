@@ -33,7 +33,6 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.ExpressionUtil;
-import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -895,7 +894,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public Stream<TableReference> getAvailableTableReferences()
+            public Stream<TableId> getAvailableTableReferences()
             {
                 return Stream.empty();
             }
@@ -1023,9 +1022,9 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public Stream<TableReference> getAvailableTableReferences()
+            public Stream<TableId> getAvailableTableReferences()
             {
-                return tableManager.getAllTablesAvailableTo(getId(), false).stream().map(t -> new TableReference(t.getId()));
+                return tableManager.getAllTablesAvailableTo(getId(), false).stream().map(t -> t.getId());
             }
         };
     }

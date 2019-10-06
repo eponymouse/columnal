@@ -1,5 +1,7 @@
 package test.expressions;
 
+import annotation.identifier.qual.ExpressionIdentifier;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -20,7 +22,8 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
-import records.transformations.expression.TableReference;
+import records.transformations.expression.IdentExpression;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -32,6 +35,7 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -126,9 +130,19 @@ public class PropLoadSaveExpression extends FXApplicationTest
             }
 
             @Override
-            public Stream<TableReference> getAvailableTableReferences()
+            public Stream<TableId> getAvailableTableReferences()
             {
-                return expression.allTableReferences().distinct();
+                return expression.visit(new ExpressionVisitorStream<TableId>() {
+                    @Override
+                    public Stream<TableId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+                    {
+                        if (Objects.equals(namespace, "table"))
+                        {
+                            return Stream.of(new TableId(idents.get(0)));
+                        }
+                        return super.ident(self, namespace, idents, isVariable);
+                    }
+                }).distinct();
             }
 
             @Override

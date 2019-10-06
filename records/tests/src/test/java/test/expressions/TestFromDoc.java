@@ -34,7 +34,6 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.TableReference;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FromString;
 import records.transformations.function.FunctionList;
@@ -331,9 +330,9 @@ public class TestFromDoc
         }
 
         @Override
-        public Stream<TableReference> getAvailableTableReferences()
+        public Stream<TableId> getAvailableTableReferences()
         {
-            return tables.entrySet().stream().map(t -> new TableReference(t.getKey()));
+            return tables.entrySet().stream().map(t -> t.getKey());
         }
 
         @Override

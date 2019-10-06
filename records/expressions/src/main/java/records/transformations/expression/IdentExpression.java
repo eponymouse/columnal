@@ -4,12 +4,16 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
@@ -18,6 +22,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.jellytype.JellyType;
+import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
@@ -32,9 +37,13 @@ import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
+import utility.Utility.Record;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -54,6 +63,9 @@ import java.util.stream.Stream;
  */
 public class IdentExpression extends NonOperatorExpression
 {
+    // The name of the field in a table reference with the list of rows
+    public static final @ExpressionIdentifier String ROWS = "rows";
+    
     // TODO add resolver listener
     private final @Nullable @ExpressionIdentifier String namespace;
     private final ImmutableList<@ExpressionIdentifier String> idents;
@@ -90,9 +102,20 @@ public class IdentExpression extends NonOperatorExpression
         return new IdentExpression("function", functionFullName);
     }
 
+    public static IdentExpression table(@ExpressionIdentifier String tableName)
+    {
+        return new IdentExpression("table", ImmutableList.<@ExpressionIdentifier String>of(tableName));
+    }
+
     public static IdentExpression column(@ExpressionIdentifier String columnName)
     {
         return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(columnName));
+    }
+
+    @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
+    public static @Recorded Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
+    {
+        return new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), load(columnId.getRaw()));
     }
 
 
@@ -180,7 +203,123 @@ public class IdentExpression extends NonOperatorExpression
                 case "column":
                     break;
                 case "table":
-                    break;
+                    FoundTable table = dataLookup.getTable(new TableId(idents.get(0)));
+                    if (table == null)
+                    {
+                        onError.recordError(this, StyledString.s("Unknown table: " + idents.get(0)));
+                        return null;
+                    }
+                    HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsSingle = new HashMap<>();
+                    HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList = new HashMap<>();
+
+                    for (Entry<ColumnId, DataTypeValue> entry : table.getColumnTypes().entrySet())
+                    {
+                        fieldsAsList.put(entry.getKey().getRaw(), TypeExp.list(this, TypeExp.fromDataType(this, entry.getValue().getType())));
+                        fieldsAsSingle.put(entry.getKey().getRaw(), TypeExp.fromDataType(this, entry.getValue().getType()));
+                    }
+
+                    boolean includeRows;
+                    if (!fieldsAsList.containsKey(ROWS))
+                    {
+                        includeRows = true;
+                        fieldsAsList.put(ROWS, TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
+                    }
+                    else
+                        includeRows = false;
+                    FoundTable resolvedTable = table;
+                    resolution = new Resolution()
+                    {
+                        @Override
+                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                        {
+                            if (resolvedTable == null)
+                                throw new InternalException("Attempting to fetch value despite type check failure");
+                            final FoundTable resolvedTableNN = resolvedTable;
+                            final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
+                            @Value Record result = DataTypeUtility.value(new Record()
+                            {
+                                @Override
+                                public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                                {
+                                    if (includeRows && name.equals(ROWS))
+                                        return DataTypeUtility.value(new RowsAsList());
+                                    return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
+                                }
+
+                                class RowsAsList extends ListEx
+                                {
+                                    @Override
+                                    public int size() throws InternalException, UserException
+                                    {
+                                        return resolvedTableNN.getRowCount();
+                                    }
+
+                                    @Override
+                                    public @Value Object get(int index) throws InternalException, UserException
+                                    {
+                                        ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
+                                        for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
+                                        {
+                                            rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
+                                        }
+                                        ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
+
+                                        return DataTypeUtility.value(new Record()
+                                        {
+                                            @Override
+                                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                                            {
+                                                return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
+                                            }
+
+                                            @Override
+                                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                                            {
+                                                return rowValues;
+                                            }
+                                        });
+                                    }
+                                }
+
+                                class ColumnAsList extends ListEx
+                                {
+                                    private final DataTypeValue dataTypeValue;
+
+                                    ColumnAsList(DataTypeValue dataTypeValue)
+                                    {
+                                        this.dataTypeValue = dataTypeValue;
+                                    }
+
+                                    @Override
+                                    public int size() throws InternalException, UserException
+                                    {
+                                        return resolvedTableNN.getRowCount();
+                                    }
+
+                                    @Override
+                                    public @Value Object get(int index) throws InternalException, UserException
+                                    {
+                                        return dataTypeValue.getCollapsed(index);
+                                    }
+                                }
+
+                                @Override
+                                public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                                {
+                                    return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
+                                }
+                            });
+
+                            return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), false);
+                        }
+
+                        @Override
+                        public boolean isVariable()
+                        {
+                            return false;
+                        }
+                    };
+                    return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), state);
                 case "tag":
                     Either<String, TagInfo> tag;
                     switch (idents.size())
@@ -335,10 +474,10 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return toText();
+        return toText(resolution == null ? idents : resolution.save(idents, renames));
     }
 
-    private String toText()
+    private String toText(ImmutableList<@ExpressionIdentifier String> idents)
     {
         StringBuilder stringBuilder = new StringBuilder();
         if (namespace != null)
@@ -355,7 +494,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(toText()), this);
+        return expressionStyler.styleExpression(StyledString.s(toText(idents)), this);
     }
 
     @Override
@@ -432,6 +571,11 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
+        
+        public default ImmutableList<@ExpressionIdentifier String> save(ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+        {
+            return original;
+        }
 
         public boolean isVariable();
         

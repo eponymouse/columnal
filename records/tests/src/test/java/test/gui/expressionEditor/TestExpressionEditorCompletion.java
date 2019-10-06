@@ -265,7 +265,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new TableReference(new TableId("IDS")), finish());
+        assertEquals(IdentExpression.table("IDS"), finish());
     }
 
     @Test
@@ -276,7 +276,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new TableReference(new TableId("IDS")), finish());
+        assertEquals(IdentExpression.table("IDS"), finish());
     }
 
     @Test
@@ -287,7 +287,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new TableReference(new TableId("IDS")), finish());
+        assertEquals(IdentExpression.table("IDS"), finish());
     }
 
     private void checkPosition()

@@ -380,7 +380,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     @Nullable Consumed<@ExpressionIdentifier String> name = IdentifierUtility.consumeExpressionIdentifier(content, nonLetter, curIndex);
                     if (name != null)
                     {
-                        saver.saveOperand(new TableReference(new TableId(name.item)), removedChars.map(curIndex, name.positionAfter));
+                        saver.saveOperand(IdentExpression.table(name.item), removedChars.map(curIndex, name.positionAfter));
                         chunks.add(new ContentChunk("@table " + name.item, ChunkType.IDENT));
                         curIndex = name.positionAfter;
                         continue nextToken;
@@ -768,13 +768,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             }
         }
 
-        for (TableReference tableReference : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
+        for (TableId tableReference : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
         {
             ArrayList<Pair<CompletionStatus, LexCompletion>> tableCompletions = new ArrayList<>();
-            matchWordStart(stem, canonIndex, "@table " + tableReference.getTableId().getRaw(), "Table", WordPosition.FIRST_WORD).values().forEach(c -> tableCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
+            matchWordStart(stem, canonIndex, "@table " + tableReference.getRaw(), "Table", WordPosition.FIRST_WORD).values().forEach(c -> tableCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
 
             // Add a related item if matches without the entire
-            matchWordStart(stem, canonIndex, tableReference.getTableId().getRaw(), "Table", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> tableCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@table " + tableReference.getTableId().getRaw()))));
+            matchWordStart(stem, canonIndex, tableReference.getRaw(), "Table", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> tableCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@table " + tableReference.getRaw()))));
 
             for (Pair<CompletionStatus, LexCompletion> p : tableCompletions)
             {
@@ -800,7 +800,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 "</div></body></html>";
     }
 
-    private String htmlForTable(TableReference t)
+    private String htmlForTable(TableId t)
     {
         String funcdocURL = FXUtility.getStylesheet("funcdoc.css");
         String webURL = FXUtility.getStylesheet("web.css");
@@ -812,7 +812,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             "      <link rel=\"stylesheet\" href=\"" + webURL + "\">\n" +
             "   </head>\n" +
             "   <body class=\"indiv\">\n" +
-            "      <div class=\"table-item\"><span class=\"table-header\"/>" + t.getTableId().getRaw() + "</span>" +
+            "      <div class=\"table-item\"><span class=\"table-header\"/>" + t.getRaw() + "</span>" +
             "<p>This uses the table.  You can access individual columns by appending # followed by the column name.</p>" +
             "</div></body></html>";
     }

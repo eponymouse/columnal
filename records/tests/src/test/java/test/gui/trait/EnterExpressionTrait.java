@@ -192,13 +192,6 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType table(TableReference self, TableId tableName)
-            {
-                write("@table " + tableName.getRaw(), DELAY);
-                return UnitType.UNIT;
-            }
-
-            @Override
             public UnitType call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
             {
                 enterExpression(typeManager, callTarget, EntryBracketStatus.SUB_EXPRESSION, r);

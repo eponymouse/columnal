@@ -194,7 +194,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         }
                     },
                     () -> {
-                        return new TableReference(TestUtil.generateTableId(r));
+                        return IdentExpression.table(TestUtil.generateTableId(r).getRaw());
                     }
                 ));
             }

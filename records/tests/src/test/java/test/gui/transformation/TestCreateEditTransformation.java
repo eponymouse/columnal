@@ -55,7 +55,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.ImplicitLambdaArg;
 import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.TableReference;
 import records.transformations.function.FunctionList;
 import test.TestUtil;
 import test.gen.GenImmediateData;
@@ -571,7 +570,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 
             checkExpression = new CallExpression(
                 FunctionList.getFunctionLookup(tableManager.getUnitManager()), function,
-                    TableReference.makeEntireColumnReference(srcTable.getId(), srcColumn.getName()),
+                    IdentExpression.makeEntireColumnReference(srcTable.getId(), srcColumn.getName()),
                     new EqualExpression(ImmutableList.of(new ImplicitLambdaArg(), containedItemExpression), false));
             
             checkType = CheckType.STANDALONE;

@@ -49,7 +49,6 @@ import records.transformations.expression.OrExpression;
 import records.transformations.expression.RecordExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TableReference;
 import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TypeLiteralExpression;
@@ -724,7 +723,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
                 columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i)));
                 // Each row gets the same full list:
-                return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), TableReference.makeEntireColumnReference(tableId, name));
+                return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), IdentExpression.makeEntireColumnReference(tableId, name));
             }
             else
             {
@@ -736,12 +735,12 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 if (r.nextBoolean())
                 {
                     // Use #column name
-                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", TableReference.makeEntireColumnReference(tableId, name), IdentExpression.load("row")));
+                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", IdentExpression.makeEntireColumnReference(tableId, name), IdentExpression.load("row")));
                 }
                 else
                 {
                     // Use #rows
-                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(new TableReference(tableId), IdentExpression.load("rows")), IdentExpression.load("row")), IdentExpression.load(name.getRaw())));
+                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), IdentExpression.load("rows")), IdentExpression.load("row")), IdentExpression.load(name.getRaw())));
                 }
             }
         };

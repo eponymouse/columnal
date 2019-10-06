@@ -37,8 +37,6 @@ public interface ExpressionVisitor<T>
 
     T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName);
 
-    T table(TableReference self, TableId tableName);
-
     T litBoolean(BooleanLiteral self, @Value Boolean value);
 
     T call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments);

@@ -30,8 +30,8 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.TableReference;
 import records.transformations.function.FunctionList;
 import test.gen.GenImmediateData;
 import test.gen.GenRandom;
@@ -151,7 +151,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName()),
-                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", TableReference.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
+                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", IdentExpression.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
         srcTable.mgr.record(filter);
         for (int row = 0; row < filter.getData().getLength(); row++)
@@ -165,7 +165,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName()),
-                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", TableReference.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
+                    new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", IdentExpression.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
         srcTable.mgr.record(invertedFilter);
         
@@ -237,14 +237,14 @@ public class PropRunTransformation
         }).findFirst();
         assumeTrue(numericColumn.isPresent());
 
-        Expression countExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "list length", TableReference.makeEntireColumnReference(original.data().getId(), original.data().getData().getColumns().get(0).getName()));
+        Expression countExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "list length", IdentExpression.makeEntireColumnReference(original.data().getId(), original.data().getData().getColumns().get(0).getName()));
         Aggregate aggregate = new Aggregate(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         RecordSet summaryRS = aggregate.getData();
         assertEquals(1, summaryRS.getLength());
         assertEquals(1, summaryRS.getColumns().size());
         assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryRS.getColumns().get(0).getType().getCollapsed(0)));
 
-        Expression sumExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "sum", TableReference.makeEntireColumnReference(original.data().getId(), numericColumn.get().getName()));
+        Expression sumExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "sum", IdentExpression.makeEntireColumnReference(original.data().getId(), numericColumn.get().getName()));
         aggregate = new Aggregate(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
         summaryRS = aggregate.getData();
         assertEquals(1, summaryRS.getLength());

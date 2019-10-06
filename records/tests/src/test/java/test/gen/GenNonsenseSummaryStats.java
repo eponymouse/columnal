@@ -11,9 +11,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Aggregate;
 import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
-import records.transformations.expression.TableReference;
+import records.transformations.expression.IdentExpression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -45,7 +44,7 @@ public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
         {
             DummyManager mgr = new DummyManager();
             List<Pair<ColumnId, Expression>> summaries = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
-                new CallExpression(FunctionList.getFunctionLookup(mgr.getUnitManager()),"count", TableReference.makeEntireColumnReference(TestUtil.generateTableId(sourceOfRandomness), TestUtil.generateColumnId(sourceOfRandomness)))));
+                new CallExpression(FunctionList.getFunctionLookup(mgr.getUnitManager()),"count", IdentExpression.makeEntireColumnReference(TestUtil.generateTableId(sourceOfRandomness), TestUtil.generateColumnId(sourceOfRandomness)))));
             return new Transformation_Mgr(mgr, new Aggregate(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
         }
         catch (InternalException | UserException e)

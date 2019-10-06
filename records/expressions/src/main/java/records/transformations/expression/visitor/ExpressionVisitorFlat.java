@@ -70,12 +70,6 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T table(TableReference self, TableId tableName)
-    {
-        return makeDef(self);
-    }
-
-    @Override
     public T litBoolean(BooleanLiteral self, @Value Boolean value)
     {
         return makeDef(self);

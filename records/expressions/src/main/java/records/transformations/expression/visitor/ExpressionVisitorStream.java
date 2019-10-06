@@ -86,12 +86,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> table(TableReference self, TableId tableName)
-    {
-        return Stream.of();
-    }
-
-    @Override
     public Stream<T> litBoolean(BooleanLiteral self, @Value Boolean value)
     {
         return Stream.of();

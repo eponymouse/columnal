@@ -131,7 +131,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         // This is really for the editor autocomplete, but it doesn't rely on any GUI
         // functionality so can be here:
-        public Stream<TableReference> getAvailableTableReferences();
+        public Stream<TableId> getAvailableTableReferences();
 
         public static abstract class ClickedReference
         {
@@ -498,18 +498,6 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     }
 
     // Note that there will be duplicates if referred to multiple times
-    public final Stream<TableReference> allTableReferences(@Recorded Expression this)
-    {
-        return visit(new ExpressionVisitorStream<TableReference>() {
-            @Override
-            public Stream<TableReference> table(TableReference self, TableId tableName)
-            {
-                return Stream.of(self);
-            }
-        });
-    }
-
-    // Note that there will be duplicates if referred to multiple times
     @Override
     @SuppressWarnings("recorded")
     public final Stream<String> allVariableReferences()
@@ -784,9 +772,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public Stream<TableReference> getAvailableTableReferences()
+        public Stream<TableId> getAvailableTableReferences()
         {
-            return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> new TableReference(t.getId()));
+            return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> t.getId());
         }
 
         public Stream<ColumnReference> getAvailableColumnReferences()
