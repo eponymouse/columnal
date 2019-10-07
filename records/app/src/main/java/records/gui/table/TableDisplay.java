@@ -876,11 +876,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "Sum", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, new ColumnReference(c)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Sum.NAME, IdentExpression.column(c)))), ImmutableList.of());
                 })::makeMenuItem);
 
                 r.add(columnQuickTransform(tableManager, table, "recipe.average", "Average", c, (newId, insertPos) -> {
-                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, new ColumnReference(c)))), ImmutableList.of());
+                    return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, IdentExpression.column(c)))), ImmutableList.of());
                 })::makeMenuItem);
             }
             r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
@@ -968,7 +968,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
                     {
                         @SuppressWarnings("recorded")
-                        private final @Recorded ColumnReference columnReference = new ColumnReference(columnId);
+                        private final @Recorded Expression columnReference = IdentExpression.column(columnId);
 
                         @Override
                         @OnThread(Tag.Simulation)
@@ -1190,7 +1190,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
             @SuppressWarnings("cast.unsafe")
             @OnThread(Tag.FXPlatform)
-            private <@NonNull T> Optional<Expression> unwrapOptionalType(DataType inner, ColumnReference columnReference, FXPlatformSupplierInt<RecogniserAndType<@NonNull @ImmediateValue T>> recogniser)
+            private <@NonNull T> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, FXPlatformSupplierInt<RecogniserAndType<@NonNull @ImmediateValue T>> recogniser)
             {
                 @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> new EnterValueDialog<@ImmediateValue T>(parent, inner, recogniser.get()).showAndWait().flatMap((@NonNull @ImmediateValue T v) -> Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
                     Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@NonNull @ImmediateValue T) v);

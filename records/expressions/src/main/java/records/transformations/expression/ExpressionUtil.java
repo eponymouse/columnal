@@ -44,6 +44,7 @@ import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -88,6 +89,65 @@ public class ExpressionUtil
         return expression instanceof IdentExpression;
     }
 
+    public static Stream<TableId> tablesFromExpression(Expression expression)
+    {
+        return tablesFromExpressions(Stream.of(expression));
+    }
+
+    public static Stream<TableId> tablesFromExpressions(Stream<Expression> expressions)
+    {
+        return expressions.flatMap(e -> e.visit(new ExpressionVisitorStream<TableId>() {
+            @Override
+            public Stream<TableId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                if (namespace != null)
+                {
+                    switch (namespace)
+                    {
+                        case "column":
+                            if (idents.size() == 2)
+                                return Stream.of(new TableId(idents.get(0)));
+                            break;
+                        case "table":
+                            return Stream.of(new TableId(idents.get(0)));
+                    }
+                }
+                return super.ident(self, namespace, idents, isVariable);
+            }
+        }));
+    }
+
+    public static Stream<Pair<@Nullable TableId, ColumnId>> columnsFromExpressions(Stream<Expression> expressions)
+    {
+        return expressions.flatMap(new Function<Expression, Stream<? extends Pair<@Nullable TableId, ColumnId>>>()
+        {
+            @Override
+            public Stream<Pair<@Nullable TableId, ColumnId>> apply(Expression e)
+            {
+                return e.visit(new ExpressionVisitorStream<Pair<@Nullable TableId, ColumnId>>()
+                {
+                    @Override
+                    public Stream<Pair<@Nullable TableId, ColumnId>> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+                    {
+                        if (namespace != null)
+                        {
+                            switch (namespace)
+                            {
+                                case "column":
+                                    if (idents.size() == 2)
+                                        return Stream.of(new Pair<>(new TableId(idents.get(0)), new ColumnId(idents.get(1))));
+                                    else if (idents.size() == 1)
+                                        return Stream.of(new Pair<>(null, new ColumnId(idents.get(0))));
+                                    break;
+                            }
+                        }
+                        return super.ident(self, namespace, idents, isVariable);
+                    }
+                });
+            }
+        });
+    }
+    
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
     public static List<QuickFix<Expression>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
@@ -232,7 +292,7 @@ public class ExpressionUtil
             if (ctx.columnRefType().WHOLECOLUMN() != null && tableName != null)
                 return IdentExpression.makeEntireColumnReference(tableName, columnName);
             else
-                return new ColumnReference(tableName, columnName);
+                return IdentExpression.column(tableName, columnName);
         }
 
         @Override

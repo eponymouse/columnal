@@ -44,8 +44,8 @@ import records.transformations.Filter;
 import records.transformations.ManualEdit;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
@@ -225,7 +225,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         targetPos = nextPos(filter);
 
         TableId calculateId = new TableId(ch(r) + srcId.getRaw() + " then Calculate");
-        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), new ColumnReference(new ColumnId("Boolean"))));
+        Calculate calc = new Calculate(dummyManager, new InitialLoadDetails(calculateId, null, targetPos, null), srcId, ImmutableMap.of(new ColumnId("Boolean"), IdentExpression.column(new ColumnId("Boolean"))));
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);

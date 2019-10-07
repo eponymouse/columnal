@@ -185,13 +185,6 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
-            {
-                write(columnName.getRaw(), DELAY);
-                return UnitType.UNIT;
-            }
-
-            @Override
             public UnitType call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
             {
                 enterExpression(typeManager, callTarget, EntryBracketStatus.SUB_EXPRESSION, r);

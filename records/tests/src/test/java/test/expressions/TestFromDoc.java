@@ -29,7 +29,6 @@ import records.grammar.DataLexer2;
 import records.grammar.DataParser;
 import records.grammar.DataParser2;
 import records.jellytype.JellyType;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -275,13 +274,13 @@ public class TestFromDoc
 
         @Override
         @SuppressWarnings("nullness")
-        public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+        public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
         {
             try
             {
-                Column column = tables.get(columnReference.getTableId()).getColumn(columnReference.getColumnId());
+                Column column = tables.get(tableId).getColumn(columnId);
                 DataTypeValue type = column.getType();
-                return new FoundColumn(columnReference.getTableId(), type, null);
+                return new FoundColumn(tableId, type, null);
             }
             catch (Exception e)
             {
@@ -324,7 +323,7 @@ public class TestFromDoc
         }
 
         @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
+        public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
         {
             return Stream.empty();
         }

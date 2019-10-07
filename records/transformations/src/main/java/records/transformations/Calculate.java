@@ -219,7 +219,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
     @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
-        return TransformationUtil.tablesFromExpressions(newColumns.values().stream());
+        return ExpressionUtil.tablesFromExpressions(newColumns.values().stream());
     }
 
     @Override

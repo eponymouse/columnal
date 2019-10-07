@@ -31,7 +31,7 @@ public class TestLoadSaveExpression
     {
         //TODO add tests with units
         assertBothWays(
-            new ColumnReference(new ColumnId("Card")),
+            IdentExpression.column(new ColumnId("Card")),
             "@column Card"
         );
         assertBothWays(
@@ -44,7 +44,7 @@ public class TestLoadSaveExpression
         );
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
-            new ColumnReference(new ColumnId("Card")),
+            IdentExpression.column(new ColumnId("Card")),
             TestUtil.parseExpression("@column Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
@@ -57,11 +57,11 @@ public class TestLoadSaveExpression
         );
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
-            new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
+            new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
             TestUtil.parseExpression("@column Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
         assertBothWays(
-            new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
+            new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
             "@column Card <> \"xxx\""
         );
         assertBothWays(
@@ -99,7 +99,7 @@ public class TestLoadSaveExpression
                         new BooleanLiteral(true),
                         new BooleanLiteral(false),
                         new NumericLiteral(632, null),
-                        new ColumnReference(new ColumnId("Date"))),
+                        IdentExpression.column(new ColumnId("Date"))),
                         Arrays.asList(AddSubtractOp.ADD, AddSubtractOp.SUBTRACT, AddSubtractOp.ADD))),
                 new NumericLiteral(62, null),
                 new StringLiteral("hi")

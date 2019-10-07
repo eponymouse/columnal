@@ -49,7 +49,6 @@ import records.importers.ClipboardUtils.LoadedColumnInfo;
 import records.transformations.Aggregate;
 import records.transformations.Check.CheckType;
 import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
@@ -333,7 +332,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             private ArrayList<AggCalculation> usual() throws InternalException
             {
                 ArrayList<AggCalculation> calculations = new ArrayList<>();
-                ColumnReference groupExp = new ColumnReference(columnDetails.name);
+                Expression groupExp = IdentExpression.column(columnDetails.name);
                 if (random.nextBoolean())
                 {
                     // Keep group as a list:
@@ -395,7 +394,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 if (random.nextBoolean())
                 {
                     calculations.add(new AggCalculation(name.apply("Split"),
-                        new ColumnReference(new ColumnId("Split Col")),
+                        IdentExpression.column(new ColumnId("Split Col")),
                         splitColumnType,
                             distinctSplitValues.stream().<@Nullable @Value Object>map(x -> x).collect(Collectors.<@Nullable @Value Object>toList())
                     ));
@@ -577,7 +576,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
         else
         {
-            checkExpression = new EqualExpression(ImmutableList.of(new ColumnReference(srcColumn.getName()), containedItemExpression), false);
+            checkExpression = new EqualExpression(ImmutableList.of(IdentExpression.column(srcColumn.getName()), containedItemExpression), false);
         }
 
         @SuppressWarnings("nullness")

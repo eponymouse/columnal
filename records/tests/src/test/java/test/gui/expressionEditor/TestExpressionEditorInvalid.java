@@ -17,7 +17,6 @@ import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.lexeditor.ExpressionEditor;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.function.FunctionList;

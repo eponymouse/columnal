@@ -22,8 +22,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.jellytype.JellyType;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.visitor.ExpressionVisitor;
@@ -34,6 +36,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
@@ -107,9 +110,17 @@ public class IdentExpression extends NonOperatorExpression
         return new IdentExpression("table", ImmutableList.<@ExpressionIdentifier String>of(tableName));
     }
 
-    public static IdentExpression column(@ExpressionIdentifier String columnName)
+    public static IdentExpression column(@Nullable TableId tableName, ColumnId columnName)
     {
-        return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(columnName));
+        if (tableName == null)
+            return column(columnName);
+        else
+            return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(tableName.getRaw(), columnName.getRaw()));
+    }
+
+    public static IdentExpression column(ColumnId columnName)
+    {
+        return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(columnName.getRaw()));
     }
 
     @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
@@ -201,7 +212,57 @@ public class IdentExpression extends NonOperatorExpression
             switch (namespace)
             {
                 case "column":
-                    break;
+                    Expression.ColumnLookup.@Nullable FoundColumn col;
+                    final ColumnId columnName;
+                    if (idents.size() == 1)
+                    {
+                        columnName = new ColumnId(idents.get(0));
+                        col = dataLookup.getColumn(this, null, columnName);
+                    }
+                    else
+                    {
+                        columnName = new ColumnId(idents.get(1));
+                        col = dataLookup.getColumn(this, new TableId(idents.get(0)), columnName);
+                    }
+                    if (col == null)
+                    {
+                        onError.recordError(this, StyledString.s("Could not find source column " + toText(idents)));
+                        return null;
+                    }
+                    if (col.information != null)
+                    {
+                        onError.recordInformation(this, col.information);
+                    }
+                    TableId resolvedTableName = col.tableId;
+                    DataTypeValue column = col.dataTypeValue;
+                    resolution = new Resolution()
+                    {
+                        @Override
+                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                        {
+                            if (column == null || resolvedTableName == null)
+                                throw new InternalException("Attempting to fetch value despite type check failure");
+                            return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())), false);
+                        }
+
+                        @Override
+                        public boolean isVariable()
+                        {
+                            return false;
+                        }
+
+                        @Override
+                        public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                        {
+                            final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
+
+                            final @Nullable TableId renamedTableId = renamed.getFirst();
+                            ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
+
+                            return tablePlusColumn;
+                        }
+                    };
+                    return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
                 case "table":
                     FoundTable table = dataLookup.getTable(new TableId(idents.get(0)));
                     if (table == null)
@@ -229,6 +290,12 @@ public class IdentExpression extends NonOperatorExpression
                     FoundTable resolvedTable = table;
                     resolution = new Resolution()
                     {
+                        @Override
+                        public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                        {
+                            return ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw());
+                        }
+
                         @Override
                         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
                         {
@@ -474,7 +541,8 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return toText(resolution == null ? idents : resolution.save(idents, renames));
+        // TODO not sure this should rely on type-checking for the renames
+        return toText(resolution == null ? idents : resolution.save(saveDestination, idents, renames));
     }
 
     private String toText(ImmutableList<@ExpressionIdentifier String> idents)
@@ -572,7 +640,7 @@ public class IdentExpression extends NonOperatorExpression
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
-        public default ImmutableList<@ExpressionIdentifier String> save(ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+        public default ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
         {
             return original;
         }

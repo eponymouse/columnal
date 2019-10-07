@@ -21,7 +21,6 @@ import records.grammar.TransformationParser.CheckTypeContext;
 import records.grammar.Versions.ExpressionVersion;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.EvaluateState.TypeLookup;
@@ -31,6 +30,7 @@ import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.ValueResult;
 import records.transformations.expression.ExpressionUtil;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.function.FunctionList;
@@ -47,6 +47,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
@@ -194,26 +195,26 @@ public class Check extends Transformation implements SingleSourceTransformation
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
+            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
             {
                 try
                 {
                     Pair<TableId, Column> column = null;
                     Table srcTable = tableManager.getSingleTableOrNull(srcTableId);
-                    if (columnReference.getTableId() == null)
+                    if (tableId == null)
                     {
                         if (srcTable != null)
                         {
-                            Column col = srcTable.getData().getColumnOrNull(columnReference.getColumnId());
+                            Column col = srcTable.getData().getColumnOrNull(columnId);
                             column = col == null ? null : new Pair<>(srcTable.getId(), col);
                         }
                     }
                     else
                     {
-                        Table table = tableManager.getSingleTableOrNull(columnReference.getTableId());
+                        Table table = tableManager.getSingleTableOrNull(tableId);
                         if (table != null)
                         {
-                            Column col = table.getData().getColumnOrNull(columnReference.getColumnId());
+                            Column col = table.getData().getColumnOrNull(columnId);
                             column = col == null ? null : new Pair<>(table.getId(), col);
                         }
                     }
@@ -238,26 +239,31 @@ public class Check extends Transformation implements SingleSourceTransformation
             }
 
             @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
-                return tableManager.getAllTables().stream().flatMap(t -> {
-                    try
+                return tableManager.getAllTables().stream().<Pair<@Nullable TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<@Nullable TableId, ColumnId>>>()
+                {
+                    @Override
+                    public Stream<Pair<@Nullable TableId, ColumnId>> apply(Table t)
                     {
-                        Stream.Builder<ColumnReference> columns = Stream.builder();
-                        if (t.getId().equals(srcTableId))
+                        try
                         {
-                            for (Column column : t.getData().getColumns())
+                            Stream.Builder<Pair<@Nullable TableId, ColumnId>> columns = Stream.builder();
+                            if (t.getId().equals(srcTableId))
                             {
-                                if (checkType != CheckType.STANDALONE)
-                                    columns.add(new ColumnReference(column.getName()));
+                                for (Column column : t.getData().getColumns())
+                                {
+                                    if (checkType != CheckType.STANDALONE)
+                                        columns.add(new Pair<>(null, column.getName()));
+                                }
                             }
+                            return columns.build();
                         }
-                        return columns.build();
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        Log.log(e);
-                        return Stream.of();
+                        catch (InternalException | UserException e)
+                        {
+                            Log.log(e);
+                            return Stream.<Pair<@Nullable TableId, ColumnId>>of();
+                        }
                     }
                 });
             }
@@ -265,12 +271,12 @@ public class Check extends Transformation implements SingleSourceTransformation
             @Override
             public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
-                return getAvailableColumnReferences().filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId())).map(c -> new ClickedReference(tableId, columnId)
+                return getAvailableColumnReferences().filter(c -> tableId.equals(c.getFirst()) && columnId.equals(c.getSecond())).map(c -> new ClickedReference(tableId, columnId)
                 {
                     @Override
                     public Expression getExpression()
                     {
-                        return c;
+                        return IdentExpression.column(c.getFirst(), c.getSecond());
                     }
                 });
             }
@@ -317,7 +323,7 @@ public class Check extends Transformation implements SingleSourceTransformation
     @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
-        return TransformationUtil.tablesFromExpression(checkExpression);
+        return ExpressionUtil.tablesFromExpression(checkExpression);
     }
 
     @OnThread(Tag.Any)

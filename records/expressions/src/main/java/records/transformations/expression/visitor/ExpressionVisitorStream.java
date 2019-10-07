@@ -80,12 +80,6 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
-    {
-        return Stream.of();
-    }
-
-    @Override
     public Stream<T> litBoolean(BooleanLiteral self, @Value Boolean value)
     {
         return Stream.of();

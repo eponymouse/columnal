@@ -20,7 +20,6 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.ColumnLookup.ClickedReference;

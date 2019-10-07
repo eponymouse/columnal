@@ -161,12 +161,12 @@ public class GenNonsenseExpression extends Generator<Expression>
                         if (columnReferences.getOrDefault(ident, false))
                         {
                             if (!onlyCallTargets)
-                                return new ColumnReference(new ColumnId(ident));
+                                return IdentExpression.column(new ColumnId(ident));
                         }
                         else
                         {
                             columnReferences.put(ident, false);
-                            return IdentExpression.column(ident);
+                            return IdentExpression.column(new ColumnId(ident));
                         }
                     }
                 }
@@ -186,11 +186,11 @@ public class GenNonsenseExpression extends Generator<Expression>
                         if (columnReferences.getOrDefault(columnId.getRaw(), true))
                         {
                             columnReferences.put(columnId.getRaw(), true);
-                            return new ColumnReference(columnId);
+                            return IdentExpression.column(columnId);
                         }
                         else
                         {
-                            return IdentExpression.column(TestUtil.checkNonNull(IdentifierUtility.asExpressionIdentifier(columnId.getRaw())));
+                            return IdentExpression.column(columnId);
                         }
                     },
                     () -> {
@@ -249,7 +249,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                     if (!columnReferences.getOrDefault(ident, false))
                     {
                         columnReferences.put(ident, false);
-                        return IdentExpression.column(ident);
+                        return IdentExpression.column(new ColumnId(ident));
                     }
                 }
             },

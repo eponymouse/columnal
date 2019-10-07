@@ -206,7 +206,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
-        return TransformationUtil.tablesFromExpression(filterExpression);
+        return ExpressionUtil.tablesFromExpression(filterExpression);
     }
 
     @Override

@@ -26,7 +26,6 @@ import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression;
@@ -150,7 +149,7 @@ public class PropRunTransformation
         Filter filter = new Filter(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(),
             new ComparisonExpression(
                 Arrays.asList(
-                    new ColumnReference(target.getName()),
+                    IdentExpression.column(target.getName()),
                     new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", IdentExpression.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
         srcTable.mgr.record(filter);
@@ -164,7 +163,7 @@ public class PropRunTransformation
         Filter invertedFilter = new Filter(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(),
             new ComparisonExpression(
                 Arrays.asList(
-                    new ColumnReference(target.getName()),
+                    IdentExpression.column(target.getName()),
                     new CallExpression(FunctionList.getFunctionLookup(srcTable.mgr.getUnitManager()), "element", IdentExpression.makeEntireColumnReference(srcTable.data().getId(), target.getName()), new NumericLiteral(targetRowIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
         srcTable.mgr.record(invertedFilter);
@@ -408,7 +407,7 @@ public class PropRunTransformation
         {
             ColumnId old = oldColumns.get(r.nextInt(oldColumns.size())).getName();
             ColumnId newId = new ColumnId(IdentifierUtility.identNum("Trans", i));
-            newCols.put(newId, new ColumnReference(old));
+            newCols.put(newId, IdentExpression.column(old));
             columnMapping.put(newId, old);
         }
 

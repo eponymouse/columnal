@@ -64,12 +64,6 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T column(ColumnReference self, @Nullable TableId tableName, ColumnId columnName)
-    {
-        return makeDef(self);
-    }
-
-    @Override
     public T litBoolean(BooleanLiteral self, @Value Boolean value)
     {
         return makeDef(self);

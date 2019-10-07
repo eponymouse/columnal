@@ -14,6 +14,7 @@ import javafx.beans.value.ObservableObjectValue;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -760,11 +761,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      */
     private void addColumnAndTableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
     {
-        for (ColumnReference availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+        for (Pair<@Nullable TableId, ColumnId> availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
         {
-            if (availableColumn.getTableId() == null)
+            if (availableColumn.getFirst() == null)
             {
-                matchWordStart(stem, canonIndex, availableColumn.getColumnId().getRaw(), "Column", WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn)), CompletionType.COLUMN))));
+                matchWordStart(stem, canonIndex, availableColumn.getSecond().getRaw(), "Column", WordPosition.FIRST_WORD, WordPosition.LATER_WORD).forEach((k, v) -> identCompletions.add(new Pair<>(k == WordPosition.FIRST_WORD ? CompletionStatus.DIRECT : CompletionStatus.RELATED, new ExpressionCompletion(v.withFurtherDetailsHTMLContent(htmlForColumn(availableColumn.getFirst(), availableColumn.getSecond())), CompletionType.COLUMN))));
             }
         }
 
@@ -783,7 +784,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
 
-    private String htmlForColumn(ColumnReference c)
+    private String htmlForColumn(@Nullable TableId t, ColumnId c)
     {
         String funcdocURL = FXUtility.getStylesheet("funcdoc.css");
         String webURL = FXUtility.getStylesheet("web.css");
@@ -795,7 +796,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 "      <link rel=\"stylesheet\" href=\"" + webURL + "\">\n" +
                 "   </head>\n" +
                 "   <body class=\"indiv\">\n" +
-                "      <div class=\"column-item\"><span class=\"column-header\"/>" + (c.getTableId() != null ? c.getTableId().getRaw() + ":<wbr>" : "") + c.getColumnId().getRaw() + "</span>" +
+                "      <div class=\"column-item\"><span class=\"column-header\"/>" + (t != null ? t.getRaw() + ":<wbr>" : "") + c.getRaw() + "</span>" +
                 "<p>This uses the value of the column in the current row.</p>" +
                 "</div></body></html>";
     }

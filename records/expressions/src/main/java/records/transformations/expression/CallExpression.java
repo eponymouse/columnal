@@ -1,12 +1,15 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.DataItemPosition;
+import records.data.TableId;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
@@ -22,6 +25,7 @@ import records.error.UserException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.TypeExp.TypeError;
@@ -36,6 +40,7 @@ import records.transformations.expression.function.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -175,22 +180,25 @@ public class CallExpression extends Expression
                 Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
-                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference)
+                if (!TypeExp.isList(prunedParam))
                 {
-                    ColumnReference colRef = (ColumnReference) param;
-                    FoundTable table = dataLookup.getTable(colRef.getTableId());
-                    if (table != null)
+                    @Nullable Pair<@Nullable TableId, ColumnId> columnDetails = getColumn(param);
+                    if (columnDetails != null)
                     {
-                        FoundTable tableNN = table;
-                        // Offer to turn a this-row column reference into whole column:
-                        onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
-                                new QuickFix<>("fix.wholeColumn", this, () -> {
-                                    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
-                                            CallExpression newCall = new CallExpression(function, ImmutableList.of(IdentExpression.makeEntireColumnReference(tableNN.getTableId(), colRef.getColumnId())));
-                                    return newCall;
-                                }
-                                )
-                        ));
+                        FoundTable table = dataLookup.getTable(columnDetails.getFirst());
+                        if (table != null)
+                        {
+                            FoundTable tableNN = table;
+                            // Offer to turn a this-row column reference into whole column:
+                            onError.recordQuickFixes(this, Collections.<QuickFix<Expression>>singletonList(
+                                    new QuickFix<>("fix.wholeColumn", this, () -> {
+                                        @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                                                CallExpression newCall = new CallExpression(function, ImmutableList.of(IdentExpression.makeEntireColumnReference(tableNN.getTableId(), columnDetails.getSecond())));
+                                        return newCall;
+                                    }
+                                    )
+                            ));
+                        }
                     }
                 }
             }
@@ -211,6 +219,32 @@ public class CallExpression extends Expression
         }
         
         return onError.recordType(this, state, returnType);
+    }
+
+    private @Nullable Pair<@Nullable TableId, ColumnId> getColumn(Expression expression)
+    {
+        return expression.visit(new ExpressionVisitorFlat<@Nullable Pair<@Nullable TableId, ColumnId>>()
+        {
+            @Override
+            protected @Nullable Pair<@Nullable TableId, ColumnId> makeDef(Expression expression)
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable Pair<@Nullable TableId, ColumnId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                if (Objects.equals(namespace, "column"))
+                {
+                    if (idents.size() == 2)
+                        return new Pair<>(new TableId(idents.get(0)), new ColumnId(idents.get(1)));
+                    else if (idents.size() == 1)
+                        return new Pair<>(null, new ColumnId(idents.get(0)));
+                }
+                
+                return null;
+            }
+        });
     }
 
     @Override
@@ -247,7 +281,11 @@ public class CallExpression extends Expression
                     @OnThread(Tag.Simulation)
                     public @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException
                     {
-                        return arg instanceof ColumnReference ? ((ColumnReference) arg).getElementLocation(DataItemPosition.row(index)) : null;
+                        @Nullable Pair<@Nullable TableId, ColumnId> details = getColumn(arg);
+                        if (details != null && details.getFirst() != null)
+                            return new ExplanationLocation(details.getFirst(), details.getSecond(), DataItemPosition.row(index));
+                        else
+                            return null;
                     }
                 });
             }

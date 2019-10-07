@@ -26,7 +26,6 @@ import records.gui.SelectColumnDialog.SelectInfo;
 import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.gui.recipe.ExpressionRecipe;
 import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.IdentExpression;
@@ -336,7 +335,7 @@ public class AggregateSplitByPane extends BorderPane
                 return IdentExpression.load(TypeState.GROUP_COUNT);
             }
         };
-        ExpressionRecipe sum = numberColumnRecipe("expression.recipe.sum", srcTable, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, c));
+        ExpressionRecipe sum = numberColumnRecipe("expression.recipe.sum", srcTable, c -> new CallExpression(FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), Sum.NAME, IdentExpression.column(c)));
         ExpressionRecipe min = dualColumnRecipe("expression.recipe.min", srcTable, directOrByIndex(parent, Min.NAME, MinIndex.NAME));
         ExpressionRecipe max = dualColumnRecipe("expression.recipe.max", srcTable, directOrByIndex(parent, Max.NAME, MaxIndex.NAME));
         
@@ -345,22 +344,22 @@ public class AggregateSplitByPane extends BorderPane
         return dialog;
     }
 
-    private static BiFunction<ColumnReference, ColumnReference, Expression> directOrByIndex(View parent, String directFunctionName, String getIndexFunctionName)
+    private static BiFunction<ColumnId, ColumnId, Expression> directOrByIndex(View parent, String directFunctionName, String getIndexFunctionName)
     {
         return (main, show) -> {
             FunctionLookup functionLookup = FunctionList.getFunctionLookup(parent.getManager().getUnitManager());
             if (main.equals(show))
             {
-                return new CallExpression(functionLookup, directFunctionName, main);
+                return new CallExpression(functionLookup, directFunctionName, IdentExpression.column(main));
             }
             else
             {
-                return new CallExpression(functionLookup, GetElement.NAME, show, new CallExpression(functionLookup, getIndexFunctionName, main));
+                return new CallExpression(functionLookup, GetElement.NAME, IdentExpression.column(show), new CallExpression(functionLookup, getIndexFunctionName, IdentExpression.column(main)));
             }
         };
     }
 
-    private static ExpressionRecipe numberColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Function<ColumnReference, Expression> makeExpression)
+    private static ExpressionRecipe numberColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Function<ColumnId, Expression> makeExpression)
     {
         return new ExpressionRecipe(nameKey)
         {
@@ -379,13 +378,13 @@ public class AggregateSplitByPane extends BorderPane
                     }
                     return true;
                 }))).showAndWait()
-                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0))))
+                    .map(c -> makeExpression.apply(c.get(0)))
                     .orElse(null);
             }
         };
     }
 
-    private static ExpressionRecipe dualColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, BiFunction<ColumnReference, ColumnReference, Expression> makeExpression)
+    private static ExpressionRecipe dualColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, BiFunction<ColumnId, ColumnId, Expression> makeExpression)
     {
         return new ExpressionRecipe(nameKey)
         {
@@ -397,7 +396,7 @@ public class AggregateSplitByPane extends BorderPane
                         new SelectInfo("agg.recipe.pick.result", "agg-recipe/result-column", t -> true, true)
                     )
                 ).showAndWait()
-                    .map(c -> makeExpression.apply(new ColumnReference(null, c.get(0)), new ColumnReference(null, c.get(1))))
+                    .map(c -> makeExpression.apply(c.get(0), c.get(1)))
                     .orElse(null);
             }
         };

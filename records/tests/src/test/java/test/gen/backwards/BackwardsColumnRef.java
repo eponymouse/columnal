@@ -24,7 +24,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.ColumnReference;
+import records.transformations.expression.IdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -108,7 +108,7 @@ public class BackwardsColumnRef extends BackwardsProvider
                     return new MemoryArrayColumn(rs, name, inner, Collections.singletonList(Either.right((ListEx)value)), new ListExList(Collections.emptyList()));
                 }
             }));
-            return new ColumnReference(name);
+            return IdentExpression.column(name);
 
         });
     }

@@ -945,13 +945,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         // we can't know types, so we use syntax.
         // For the list we look for column references
         // (most likely item by far to be a list).
-        if (first instanceof ColumnReference && second instanceof ArrayExpression)
+        /* TODO
+        if (first instanceof IdentExpression && second instanceof ArrayExpression)
         {
-            ColumnReference columnReference = (ColumnReference) first;
             ArrayExpression arrayExpression = (ArrayExpression) second;
             
             if (arrayExpression.getElements().size() == 1)
             {
+                first.visit(TODO);
                 CanonicalSpan location = new CanonicalSpan(locationRecorder.recorderFor(first).start, locationRecorder.recorderFor(second).end);
                 
                 return ImmutableList.of(new <Expression>TextQuickFix("fix.useElement",location, () -> {
@@ -960,6 +961,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 }));
             }
         }
+        */
         
         return super.fixesForAdjacentOperands(first, second);
     }

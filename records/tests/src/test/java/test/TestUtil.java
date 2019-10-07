@@ -1216,7 +1216,7 @@ public class TestUtil
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
             {
                 return null;
             }
@@ -1228,7 +1228,7 @@ public class TestUtil
             }
 
             @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return Stream.empty();
             }
@@ -1591,9 +1591,9 @@ public class TestUtil
         }
 
         @Override
-        public Stream<ColumnReference> getAvailableColumnReferences()
+        public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
         {
-            return srcTable.getColumns().stream().map(c -> new ColumnReference(c.getName()));
+            return srcTable.getColumns().stream().map(c -> new Pair<>(null, c.getName()));
         }
 
         @Override
@@ -1609,13 +1609,13 @@ public class TestUtil
         }
 
         @Override
-        public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+        public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId refTableId, ColumnId refColumnId)
         {
             try
             {
-                if (columnReference.getTableId() == null || tableId.equals(columnReference.getTableId()))
+                if (tableId == null || tableId.equals(refTableId))
                 {
-                    Column column = srcTable.getColumn(columnReference.getColumnId());
+                    Column column = srcTable.getColumn(refColumnId);
                     return new FoundColumn(tableId, column.getType(), null);
                 }
             }

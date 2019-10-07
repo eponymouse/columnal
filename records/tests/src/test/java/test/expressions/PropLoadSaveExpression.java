@@ -18,10 +18,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.lexeditor.ExpressionEditor;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.transformations.function.FunctionList;
@@ -34,6 +34,7 @@ import test.gen.GenNonsenseExpression;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -112,7 +113,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         ColumnLookup columnLookup = new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
             {
                 return null;
             }
@@ -124,9 +125,9 @@ public class PropLoadSaveExpression extends FXApplicationTest
             }
 
             @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
-                return expression.allColumnReferences().distinct();
+                return ExpressionUtil.columnsFromExpressions(Stream.of(expression));
             }
 
             @Override

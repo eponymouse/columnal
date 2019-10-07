@@ -234,14 +234,6 @@ public class MatchExpression extends NonOperatorExpression
                 return Stream.concat(pattern.allVariableReferences(), guard.allVariableReferences());
         }
 
-        public Stream<ColumnReference> allColumnReferences()
-        {
-            if (guard == null)
-                return pattern.allColumnReferences();
-            else
-                return Stream.concat(pattern.allColumnReferences(), guard.allColumnReferences());
-        }
-
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */

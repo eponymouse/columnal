@@ -1,7 +1,6 @@
 package records.transformations;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import log.Log;
@@ -25,7 +24,6 @@ import records.grammar.TransformationParser.SummaryContext;
 import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -33,6 +31,7 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.FoundTableActual;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.ExpressionUtil;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -50,6 +49,7 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -503,7 +503,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
     @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
-        return TransformationUtil.tablesFromExpressions(summaries.stream().map(p -> p.getSecond()));
+        return ExpressionUtil.tablesFromExpressions(summaries.stream().map(p -> p.getSecond()));
     }
 
     @OnThread(Tag.Any)
@@ -870,13 +870,13 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(@Recorded ColumnReference columnReference)
+            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
             {
                 return null;
             }
 
             @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return Stream.empty();
             }
@@ -910,10 +910,8 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             private final TableManager tableManager = getManager();
 
             @Override
-            public @Nullable FoundColumn getColumn(ColumnReference columnReference)
+            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
             {
-                TableId tableId = columnReference.getTableId();
-                ColumnId columnId = columnReference.getColumnId();
                 boolean grouped = false;
                 if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
                 {
@@ -975,7 +973,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             }
 
             @Override
-            public Stream<ColumnReference> getAvailableColumnReferences()
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return getAvailableColumnReferences(true);
             }
@@ -983,35 +981,40 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
             @Override
             public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
             {
-                return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getTableId()) && columnId.equals(c.getColumnId())).map(c -> new ClickedReference(tableId, columnId)
+                return getAvailableColumnReferences(false).filter(c -> tableId.equals(c.getFirst()) && columnId.equals(c.getSecond())).map(c -> new ClickedReference(tableId, columnId)
                 {
                     @Override
                     public Expression getExpression()
                     {
-                        return c;
+                        return IdentExpression.column(c.getFirst(), c.getSecond());
                     }
                 });
             }
 
-            public Stream<ColumnReference> getAvailableColumnReferences(boolean nullIds)
+            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences(boolean nullIds)
             {
                 return
                     tableManager.getAllTablesAvailableTo(getId(), false).stream()
-                        .flatMap(t -> {
-                            try
+                        .<Pair<@Nullable TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<@Nullable TableId, ColumnId>>>()
+                        {
+                            @Override
+                            public Stream<Pair<@Nullable TableId, ColumnId>> apply(Table t)
                             {
-                                @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
-                                return t.getData().getColumns().stream()
-                                    .map(c -> new ColumnReference(tableId, c.getName()));
+                                try
+                                {
+                                    @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
+                                    return t.getData().getColumns().stream()
+                                            .<Pair<@Nullable TableId, ColumnId>>map(c -> new Pair<@Nullable TableId, ColumnId>(tableId, c.getName()));
+                                }
+                                catch (UserException e)
+                                {
+                                }
+                                catch (InternalException e)
+                                {
+                                    Log.log(e);
+                                }
+                                return Stream.empty();
                             }
-                            catch (UserException e)
-                            {
-                            }
-                            catch (InternalException e)
-                            {
-                                Log.log(e);
-                            }
-                            return Stream.empty();
                         }).distinct();
             }
 

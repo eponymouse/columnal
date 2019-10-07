@@ -240,7 +240,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals(new ColumnReference(new ColumnId("My Number")), finish());
+        assertEquals(IdentExpression.column(new ColumnId("My Number")), finish());
     }
 
     @Test
@@ -254,7 +254,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         // Doesn't matter if registered as double click or two single:
         clickOn(point(cell).atOffset(5, 0));
         clickOn(point(cell).atOffset(5, 0));
-        assertEquals(new ColumnReference(new ColumnId("My Number")), finish());
+        assertEquals(IdentExpression.column(new ColumnId("My Number")), finish());
     }
 
     @Test
