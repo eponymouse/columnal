@@ -364,6 +364,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 removedChars.setAll(parsed);
                 CanonicalSpan location = removedChars.map(curIndex, ((parsed.positionAfter < content.length() && content.charAt(parsed.positionAfter) == ' ') ? parsed.positionAfter + RawInputLocation.ONE : parsed.positionAfter));
                 saver.saveOperand(IdentExpression.load(parsed.item.getFirst(), parsed.item.getSecond()), location);
+                chunks.add(new ContentChunk((parsed.item.getFirst() == null ? "" : parsed.item.getFirst() + "\\\\") + parsed.item.getSecond().stream().collect(Collectors.joining("\\")), ChunkType.IDENT));
                 curIndex = parsed.positionAfter;
                 continue nextToken;
             }

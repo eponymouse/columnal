@@ -210,7 +210,8 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             this.suppressBracketMatching = suppressBracketMatching;
             this.bracketsAreBalanced = bracketsBalanced;
             this.infoAndPromptForPosition = infoAndPromptForPosition;
-            Log.debug("Showing errors: " + Utility.listToString(errors));
+            if (!errors.isEmpty())
+                Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
         public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int pos)
