@@ -142,9 +142,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     {
         // This is the original expression.  But to prevent type errors we adjust it to the below which
         // will only give runtime errors, not type-checker errors:
-        //String src = "(@column Number >= 4) & @column Boolean";
-        String src = //"@if (@call @function type of(@column Number) = type{Number}) & (@call @function type of(@column Boolean) = type{Boolean}) @then " +
-            "(@column Number >= @call @function from text(\"4\")) & (@column Boolean = @call @function from text(\"true\"))"
+        //String src = "(column\\\\Number >= 4) & column\\\\Boolean";
+        String src = //"@if (@call @function type of(column\\\\Number) = type{Number}) & (@call @function type of(column\\\\Boolean) = type{Boolean}) @then " +
+            "(column\\\\Number >= @call @function from text(\"4\")) & (column\\\\Boolean = @call @function from text(\"true\"))"
             //+ "@else true @endif";
             ;
         try

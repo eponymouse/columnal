@@ -327,7 +327,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     @Test
     public void testInsertIfBefore1() throws Exception
     {
-        loadExpression("@column My Number");
+        loadExpression("column\\\\My Number");
         push(KeyCode.HOME);
         write("@if ");
         String finished = finish().toString();
@@ -339,7 +339,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     @Test
     public void testInsertIfBefore1b() throws Exception
     {
-        loadExpression("@column My Number");
+        loadExpression("column\\\\My Number");
         push(KeyCode.HOME);
         write("if");
         checkPosition();
@@ -354,14 +354,14 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     @Test
     public void testInsertIfBefore2() throws Exception
     {
-        loadExpression("@column My Number");
+        loadExpression("column\\\\My Number");
         push(KeyCode.HOME);
         write("@iftrue@then");
         checkPosition();
         push(KeyCode.END);
         write("@else0@endif");
         String finished = finish().toString();
-        assertEquals("@if true @then @column My Number @else 0 @endif", finished);
+        assertEquals("@if true @then column\\\\My Number @else 0 @endif", finished);
     }
     
     @Test
@@ -436,7 +436,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @column My Number", finish().toString());
+        assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + column\\\\My Number", finish().toString());
     }
     
     @Test

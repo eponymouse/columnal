@@ -177,7 +177,7 @@ public class CallExpression extends Expression
             boolean takesList = functionArgTypeExp != null && functionArgTypeExp.size() == 1 && TypeExp.isList(functionArgTypeExp.get(0));
             if (takesList && arguments.size() == 1)
             {
-                Expression param = arguments.get(0);
+                @Recorded Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
                 if (!TypeExp.isList(prunedParam))
@@ -221,7 +221,7 @@ public class CallExpression extends Expression
         return onError.recordType(this, state, returnType);
     }
 
-    private @Nullable Pair<@Nullable TableId, ColumnId> getColumn(Expression expression)
+    private @Nullable Pair<@Nullable TableId, ColumnId> getColumn(@Recorded Expression expression)
     {
         return expression.visit(new ExpressionVisitorFlat<@Nullable Pair<@Nullable TableId, ColumnId>>()
         {

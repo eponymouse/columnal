@@ -94,6 +94,7 @@ public class ExpressionUtil
         return tablesFromExpressions(Stream.of(expression));
     }
 
+    @SuppressWarnings("recorded")
     public static Stream<TableId> tablesFromExpressions(Stream<Expression> expressions)
     {
         return expressions.flatMap(e -> e.visit(new ExpressionVisitorStream<TableId>() {
@@ -117,6 +118,7 @@ public class ExpressionUtil
         }));
     }
 
+    @SuppressWarnings("recorded")
     public static Stream<Pair<@Nullable TableId, ColumnId>> columnsFromExpressions(Stream<Expression> expressions)
     {
         return expressions.flatMap(new Function<Expression, Stream<? extends Pair<@Nullable TableId, ColumnId>>>()

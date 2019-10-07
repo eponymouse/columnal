@@ -367,9 +367,10 @@ Done after Phil B & Jon A:
 
 Changelog since 0.5.1
 ===
-- Added a new "Exclude Columns" transformation
+- Added a new "Exclude Columns" transformation.
 - Added a "split text" function.
 - Added a "get optionals from list" function.
 - Added a "Transform type" recipe.
 - Added table references, instead of entire-column references.
+- Unified the syntax for column, tag, table and function references. 
 - Changed the file format (any files in the old format can still be loaded).

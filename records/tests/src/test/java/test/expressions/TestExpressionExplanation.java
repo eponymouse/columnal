@@ -155,20 +155,20 @@ public class TestExpressionExplanation
                         m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
         ))));
         
-        testCheckExplanation("T1", "@column half false", CheckType.ALL_ROWS, e("@column half false", r(0), false, l("T1", "half false", 0)));
+        testCheckExplanation("T1", "column\\half false", CheckType.ALL_ROWS, e("column\\\\half false", r(0), false, l("T1", "half false", 0)));
 
-        testCheckExplanation("T1", "@if @column half false @then @column all false @else @column all true @endif", CheckType.ALL_ROWS, e("@if @column half false @then @column all false @else @column all true @endif", r(1), false, null,
-            e("@column half false", r(1), true, l("T1", "half false", 1)),
-            e("@column all false", r(1), false, l("T1", "all false", 1))
+        testCheckExplanation("T1", "@if column\\\\half false @then column\\\\all false @else column\\\\all true @endif", CheckType.ALL_ROWS, e("@if column\\\\half false @then column\\\\all false @else column\\\\all true @endif", r(1), false, null,
+            e("column\\\\half false", r(1), true, l("T1", "half false", 1)),
+            e("column\\\\all false", r(1), false, l("T1", "all false", 1))
                 ));
 
-        testCheckExplanation("T1", "@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", CheckType.ALL_ROWS, e("@match @column half false @case true @then @column all false @case false @then @column all true @endmatch", r(1), false, null,
-                e("@column half false", r(1), true, l("T1", "half false", 1)),
-                clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "@column all false", r(1), true,
+        testCheckExplanation("T1", "@match column\\\\half false @case true @then column\\\\all false @case false @then column\\\\all true @endmatch", CheckType.ALL_ROWS, e("@match column\\\\half false @case true @then column\\\\all false @case false @then column\\\\all true @endmatch", r(1), false, null,
+                e("column\\\\half false", r(1), true, l("T1", "half false", 1)),
+                clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "column\\\\all false", r(1), true,
                     // Bit confusing; outer true is result of pattern match,
                     // inner true is the literal that it was matched against
                     m("true", r(1), true, null, e("true", r(1), true, null))),
-                e("@column all false", r(1), false, l("T1", "all false", 1)))
+                e("column\\\\all false", r(1), false, l("T1", "all false", 1)))
         );
         
         // This is a mega-match clause with multiple clauses that won't match.
@@ -205,11 +205,11 @@ public class TestExpressionExplanation
         );
         Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
         
-        String fullMega = "@match (a:@column asc, b:@column alphabet animals) @case (a:n, b:a) @given n > @call @function text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
+        String fullMega = "@match (a:column\\\\asc, b:column\\\\alphabet animals) @case (a:n, b:a) @given n > @call @function text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
         testCheckExplanation("T2", fullMega, CheckType.NO_ROWS, e(fullMega, r(2), true, null, 
-            e("(a:@column asc, b:@column alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
-                e("@column asc", r(2), 3, l("T2", "asc", 2)),
-                e("@column alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
+            e("(a:column\\\\asc, b:column\\\\alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
+                e("column\\\\asc", r(2), 3, l("T2", "asc", 2)),
+                e("column\\\\alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
                 ),
             megaClause1Expl, megaClause2Expl, megaClause3Expl, outcome));
     }

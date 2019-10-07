@@ -32,7 +32,7 @@ public class TestLoadSaveExpression
         //TODO add tests with units
         assertBothWays(
             IdentExpression.column(new ColumnId("Card")),
-            "@column Card"
+            "column\\\\Card"
         );
         assertBothWays(
             new BooleanLiteral(true),
@@ -45,7 +45,7 @@ public class TestLoadSaveExpression
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             IdentExpression.column(new ColumnId("Card")),
-            TestUtil.parseExpression("@column Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            TestUtil.parseExpression("column\\\\Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
     @Test
@@ -58,11 +58,11 @@ public class TestLoadSaveExpression
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
-            TestUtil.parseExpression("@column Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            TestUtil.parseExpression("column\\\\Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
         assertBothWays(
             new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
-            "@column Card <> \"xxx\""
+            "column\\\\Card <> \"xxx\""
         );
         assertBothWays(
             new NotEqualExpression(new BooleanLiteral(false), new BooleanLiteral(true)),
@@ -104,7 +104,7 @@ public class TestLoadSaveExpression
                 new NumericLiteral(62, null),
                 new StringLiteral("hi")
             ), Arrays.asList(AddSubtractOp.SUBTRACT, AddSubtractOp.ADD)),
-            "@call @function abs(true + false - 632 + @column Date) - 62 + \"hi\""
+            "@call @function abs(true + false - 632 + column\\\\Date) - 62 + \"hi\""
         );
     }
     

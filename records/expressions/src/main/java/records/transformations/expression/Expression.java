@@ -94,7 +94,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // If you pass null for table, you get the default table (or null if none)
         // If no such table/column is found, null is returned
         // Calling getCollapsed  with row number on .dataTypeValue should get corresponding value.
-        public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId);
+        public @Nullable FoundColumn getColumn(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId);
 
         // If no such table is found, null is returned.
         // If null is passed, uses the current table (if applicable; null return if not -- used for converting from column references)
@@ -780,7 +780,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+        public @Nullable FoundColumn getColumn(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId)
         {
             try
             {
@@ -812,7 +812,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         // If column is redefined in this table, issue a warning
-        private @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> checkRedefined(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+        private @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> checkRedefined(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId)
         {
             if (tableId == null && us != null)
             {
