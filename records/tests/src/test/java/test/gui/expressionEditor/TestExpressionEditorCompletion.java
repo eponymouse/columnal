@@ -217,7 +217,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     @Test
     public void testCompIf() throws Exception
     {
-        loadExpression("@if true | false @then 12{m} @else @call@function from text to(type{Number{m}}, \"34\")@endif");
+        loadExpression("@if true | false @then 12{m} @else @callfunction\\\\from text to(type{Number{m}}, \"34\")@endif");
         // Will turn into:
         // @iftrue|false@then12{m}@elsefrom text to(type{Number{m}},"34")@endif
         checkCompletions(
@@ -583,6 +583,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
         IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
-        assertEquals(TestUtil.parseExpression("@invalidops(@call @function from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
+        assertEquals(TestUtil.parseExpression("@invalidops(@call function\\\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }

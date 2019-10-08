@@ -13,7 +13,7 @@
         </description>
         <example>
             <description>Specifies that the destination type of the conversion from text is Boolean.</description>
-            <inputArg>(type{Boolean}, @call @function from text("True"))</inputArg>
+            <inputArg>(type{Boolean}, @call function\\from text("True"))</inputArg>
             <output>true</output>
         </example>
         <example>
@@ -30,7 +30,7 @@
             <p>Gets the type of the given value.</p>
         </description>
         <example>
-            <input>@call @function as type(@call @function type of([3]), @call @function from text("[1, 2, 5]"))</input>
+            <input>@call function\\as type(@call function\\type of([3]), @call function\\from text("[1, 2, 5]"))</input>
             <output>[1, 2, 5]</output>
         </example>
         <example>

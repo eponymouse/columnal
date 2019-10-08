@@ -495,7 +495,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
             {
-                write("@function ");
+                write("function\\\\");
                 for (int i = 0; i < parameters.size(); i++)
                 {
                     if (i > 0)

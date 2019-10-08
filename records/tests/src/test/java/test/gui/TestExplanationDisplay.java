@@ -104,7 +104,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     @Test
     public void testExplanationSimple2b() throws UserException, InternalException
     {
-        addCheck("T2", CheckType.STANDALONE, "@call @function all(@table T2#asc, ? < 4)");
+        addCheck("T2", CheckType.STANDALONE, "@call function\\\\all(@table T2#asc, ? < 4)");
         testFailureExplanation(
      //"asc was 4, using asc (row 4)",
             "? was 4",
@@ -115,7 +115,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     @Test
     public void testExplanationSimple3() throws UserException, InternalException
     {
-        addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < @call @function text length(column\\\\alphabet animals)");
+        addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < @call function\\\\text length(column\\\\alphabet animals)");
         testFailureExplanation(
      "asc was 3, using asc (row 3)",
             "alphabet animals was \"Cat\", using alphabet animals (row 3)",
@@ -126,7 +126,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     @Test
     public void testExplanationMatch() throws UserException, InternalException
     {
-        addCheck("T2", CheckType.NO_ROWS, "@match (num: column\\\\asc, animal: column\\\\alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call @function text length(animal) =~ n) & (n > 5) @endmatch");
+        addCheck("T2", CheckType.NO_ROWS, "@match (num: column\\\\asc, animal: column\\\\alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call function\\\\text length(animal) =~ n) & (n > 5) @endmatch");
         testFailureExplanation(
                 "(num: asc, animal: alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)",
                 "(num: n) matched",

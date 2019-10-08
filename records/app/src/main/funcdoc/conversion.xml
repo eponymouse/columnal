@@ -19,19 +19,19 @@
             </ul>
         </description>
         <example>
-            <input>@call @function from text("65") &gt; 64</input>
+            <input>@call function\\from text("65") &gt; 64</input>
             <output>true</output>
         </example>
         <example>
-            <input>@call @function from text("TRUE") | false</input>
+            <input>@call function\\from text("TRUE") | false</input>
             <output>true</output>
         </example>
         <example>
-            <input>@call @function as type(type{Date}, @call @function from text("21 March 2004"))</input>
-            <output>@call @function date from ymd(2004{year}, 3{month}, 21{day})</output>
+            <input>@call function\\as type(type{Date}, @call function\\from text("21 March 2004"))</input>
+            <output>@call function\\date from ymd(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
-            <input>@call @function as type(type{[(a: Boolean, b: Number{m})]}, @call @function from text("[(a:True, b:0), (a:FALSE, b:-1.6)]"))</input>
+            <input>@call function\\as type(type{[(a: Boolean, b: Number{m})]}, @call function\\from text("[(a:True, b:0), (a:FALSE, b:-1.6)]"))</input>
             <output>[(a:true, b:0{m}), (a:false, b:-1.6{m})]</output>
         </example>
     </function>
@@ -48,7 +48,7 @@
         </description>
         <example>
             <inputArg>(type{Date}, "21 March 2004")</inputArg>
-            <output>@call @function date from ymd(2004{year}, 3{month}, 21{day})</output>
+            <output>@call function\\date from ymd(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
             <inputArg>(type{[(a:Boolean, b:Number{m})]}, "[(a:True, b:0), (a:FALSE, b:-1.6)]")</inputArg>
@@ -68,7 +68,7 @@
         <equivalence>
             <foranytype name="t"><typeConstraint>Readable</typeConstraint><typeConstraint>Showable</typeConstraint><typeConstraint>Equatable</typeConstraint></foranytype>
             <forany name="x">@typevar t</forany>
-            <lhs>@call @function from text(@call @function to text(x))</lhs>
+            <lhs>@call function\\from text(@call function\\to text(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -92,12 +92,12 @@
         </description>
         <equivalence display="false">
             <forany name="x">Number</forany>
-            <lhs>@call @function extract number("a" ; @call @function to text(x) ; "z")</lhs>
+            <lhs>@call function\\extract number("a" ; @call function\\to text(x) ; "z")</lhs>
             <rhs>x</rhs>
         </equivalence>
         <equivalence display="false">
             <forany name="x">Number</forany>
-            <lhs>@call @function extract number(@call @function to text(x))</lhs>
+            <lhs>@call function\\extract number(@call function\\to text(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -122,7 +122,7 @@
         </example>
         <example>
             <description>Swaps dots and commas</description>
-            <inputArg>@call @function replace many([(find: ".", replace: ","), (find: ",", replace: ".")], "10.449,99")</inputArg>
+            <inputArg>@call function\\replace many([(find: ".", replace: ","), (find: ",", replace: ".")], "10.449,99")</inputArg>
             <output>10449.99</output>
         </example>
     </function>

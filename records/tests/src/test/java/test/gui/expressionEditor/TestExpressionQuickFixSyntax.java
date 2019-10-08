@@ -215,7 +215,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     public void testBracketFix8() throws UserException, InternalException
     {
         // Test minuses:
-        testFix("@if true @then abs(-5 - -6 * -7) @else 8 @endif", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then @call @function abs(-5 - (-6 * -7)) @else 8 @endif");
+        testFix("@if true @then abs(-5 - -6 * -7) @else 8 @endif", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then @call function\\\\abs(-5 - (-6 * -7)) @else 8 @endif");
     }
     
     @Test
@@ -224,7 +224,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2)", "2", "", "@call @function sum([2])");
+        testFix("sum(2)", "2", "", "@call function\\\\sum([2])");
     }
 
     @Test
@@ -232,7 +232,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call @function sum([2, 3, 4])"), "@call @function sum([2, 3, 4])");
+        testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call function\\\\sum([2, 3, 4])"), "@call function\\\\sum([2, 3, 4])");
     }
 
     @Ignore // Disabled since move to @table references
@@ -240,7 +240,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     public void testListBracketFix3() throws UserException, InternalException
     {
         // If user tries to use array index syntax, offer the element function instead:
-        testFix("@entire ACC1[3]+2", "1", "." + ExpressionUtil.makeCssClass("element(@entire ACC1, 3)"), "@call @function element(@entire ACC1,3)+2");
+        testFix("@entire ACC1[3]+2", "1", "." + ExpressionUtil.makeCssClass("element(@entire ACC1, 3)"), "@call function\\\\element(@entire ACC1,3)+2");
     }
     
     @Test
@@ -248,7 +248,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "ACC1", "@call @function sum(@table Table1#ACC1)");
+        testSimpleFix("sum(ACC1)", "ACC1", "@call function\\\\sum(@table Table1#ACC1)");
     }
     
     @Ignore // Not sure if this fix is even worth implementing

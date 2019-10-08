@@ -102,15 +102,15 @@ public class TestExpressionExplanation
     @Test
     public void testExplainedElement() throws Exception
     {
-        testExplanation("@call @function element(@table T1#all true, 3)", e("@call @function element(@table T1#all true, 3)", null, true, l("T1", "all true", 2), entire("T1", "all true"), lit(3)));
-        testExplanation("@call @function element(@table T2#asc, 2) > 5", e("@call @function element(@table T2#asc, 2) > 5", null, false, null, e("@call @function element(@table T2#asc, 2)", null, 2, l("T2", "asc", 1), entire("T2", "asc"), lit(2)), lit(5)));
-        testExplanation("(@call @function element(@table T2#asc, 1) < 5) & (@call @function element(@table T2#asc, 2) = 5)",
-            e("(@call @function element(@table T2#asc, 1) < 5) & (@call @function element(@table T2#asc, 2) = 5)", null, false, null,
-                e("@call @function element(@table T2#asc, 1) < 5", null, true, null,
-                    e("@call @function element(@table T2#asc, 1)", null, 1, l("T2", "asc", 0), entire("T2", "asc"), lit(1)),
+        testExplanation("@call function\\\\element(@table T1#all true, 3)", e("@call function\\\\element(@table T1#all true, 3)", null, true, l("T1", "all true", 2), entire("T1", "all true"), lit(3)));
+        testExplanation("@call function\\\\element(@table T2#asc, 2) > 5", e("@call function\\\\element(@table T2#asc, 2) > 5", null, false, null, e("@call function\\\\element(@table T2#asc, 2)", null, 2, l("T2", "asc", 1), entire("T2", "asc"), lit(2)), lit(5)));
+        testExplanation("(@call function\\\\element(@table T2#asc, 1) < 5) & (@call function\\\\element(@table T2#asc, 2) = 5)",
+            e("(@call function\\\\element(@table T2#asc, 1) < 5) & (@call function\\\\element(@table T2#asc, 2) = 5)", null, false, null,
+                e("@call function\\\\element(@table T2#asc, 1) < 5", null, true, null,
+                    e("@call function\\\\element(@table T2#asc, 1)", null, 1, l("T2", "asc", 0), entire("T2", "asc"), lit(1)),
                     lit(5)),
-                e("@call @function element(@table T2#asc, 2) = 5", null, false, null,
-                        e("@call @function element(@table T2#asc, 2)", null, 2, l("T2", "asc", 1), entire("T2", "asc"), lit(2)),
+                e("@call function\\\\element(@table T2#asc, 2) = 5", null, false, null,
+                        e("@call function\\\\element(@table T2#asc, 2)", null, 2, l("T2", "asc", 1), entire("T2", "asc"), lit(2)),
                         lit(5))
             )
         );
@@ -124,32 +124,32 @@ public class TestExpressionExplanation
     @Test
     public void testExplainedAll() throws Exception
     {
-        testExplanation("@call @function all(@table T1#all false, (? = true))", 
-            e("@call @function all(@table T1#all false, (? = true))", null, false, l("T1", "all false", 0),
+        testExplanation("@call function\\\\all(@table T1#all false, (? = true))", 
+            e("@call function\\\\all(@table T1#all false, (? = true))", null, false, l("T1", "all false", 0),
                 entire("T1", "all false"),
                     // Once for the function, once for the function call:
                     e("? = true", null, null, null),
                     explanation("? = true", ExecutionType.CALL_IMPLICIT, q(false), false, null, e("?", q(false), false, null), lit(true))));
-        testExplanation("@call @function all(@table T1#half false, @function not)",
-            e("@call @function all(@table T1#half false, @function not)", null, false, l("T1", "half false", 1), entire("T1", "half false"), e("@function not", null, null, null)));
-        testExplanation("@call @function all(@table T2#asc, (? < 3))",
-            e("@call @function all(@table T2#asc, (? < 3))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+        testExplanation("@call function\\\\all(@table T1#half false, function\\\\not)",
+            e("@call function\\\\all(@table T1#half false, function\\\\not)", null, false, l("T1", "half false", 1), entire("T1", "half false"), e("function\\\\not", null, null, null)));
+        testExplanation("@call function\\\\all(@table T2#asc, (? < 3))",
+            e("@call function\\\\all(@table T2#asc, (? < 3))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                 // Once for function, once for function call:
                 e("? < 3", null, null, null),
                 explanation("? < 3", ExecutionType.CALL_IMPLICIT, q(3), false, null, e("?", q(3), 3, null), lit(3))));
-        testExplanation("@call @function all(@table T2#asc, (? =~ (1.8 \u00B1 1.2)))",
-                e("@call @function all(@table T2#asc, (? =~ (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
+        testExplanation("@call function\\\\all(@table T2#asc, (? =~ (1.8 \u00B1 1.2)))",
+                e("@call function\\\\all(@table T2#asc, (? =~ (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
                     // Once for function, once for call:
                     e("? =~ (1.8 \u00B1 1.2)", null, null, null),
                     explanation("? =~ (1.8 \u00B1 1.2)", ExecutionType.CALL_IMPLICIT, q(4), false, null, 
                         e("?", q(4), 4, null),
                         m("1.8 \u00B1 1.2", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
         )));
-        testExplanation("@call @function none(@table T2#asc, @function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
-                e("@call @function none(@table T2#asc, @function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+        testExplanation("@call function\\\\none(@table T2#asc, function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
+                e("@call function\\\\none(@table T2#asc, function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                     // Once for function, once for call:
-                    e("@function (x) @then @call @function not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
-                    e("@call @function not(x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
+                    e("function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
+                    e("@call function\\\\not(x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
                         explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, vv("x", 3), false, null, 
                         e("x", vv("x", 3), 3, null),
                         m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
@@ -176,13 +176,13 @@ public class TestExpressionExplanation
         // The value being matched against is (asc, alphabet animals)
         
         // First clause is (n, a) @given n > text length(a)
-        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(a: n, b: a)", "n > @call @function text length(a)")), "true", r(2), false,
+        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(a: n, b: a)", "n > @call function\\\\text length(a)")), "true", r(2), false,
                 m("(a: n, b: a)", r(2, v("n", 3), v("a", "Cat")), true, null,
                     m("n", r(2, v("n", 3)), true, null),
                     m("a", r(2, v("a", "Cat")), true, null)),
-                e("n > @call @function text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
+                e("n > @call function\\\\text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
                     e("n", r(2, v("n", 3)), 3, null),
-                    e("@call @function text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
+                    e("@call function\\\\text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
                     )
                 );
         // Second clause is (3,  _ ; "t") @given false @then 1 > 0
@@ -205,7 +205,7 @@ public class TestExpressionExplanation
         );
         Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
         
-        String fullMega = "@match (a:column\\\\asc, b:column\\\\alphabet animals) @case (a:n, b:a) @given n > @call @function text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
+        String fullMega = "@match (a:column\\\\asc, b:column\\\\alphabet animals) @case (a:n, b:a) @given n > @call function\\\\text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
         testCheckExplanation("T2", fullMega, CheckType.NO_ROWS, e(fullMega, r(2), true, null, 
             e("(a:column\\\\asc, b:column\\\\alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
                 e("column\\\\asc", r(2), 3, l("T2", "asc", 2)),

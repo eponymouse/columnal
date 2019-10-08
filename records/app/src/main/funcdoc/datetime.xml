@@ -13,7 +13,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Date</forany>
-            <lhs>@match @call @function to text(x) @case y ; "-" ; m ; "-" ; d @then @call @function date from ymd(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
+            <lhs>@match @call function\\to text(x) @case y ; "-" ; m ; "-" ; d @then @call function\\date from ymd(@call function\\from text(y), @call function\\from text(m), @call function\\from text(d)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -22,7 +22,7 @@
         </example>
         <example>
             <inputArg>(2004{year}, 08{month}, 06{day})</inputArg>
-            <output>@call @function from text("6 August 2004")</output>
+            <output>@call function\\from text("6 August 2004")</output>
         </example>
     </function>
 
@@ -36,7 +36,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Time</forany>
-            <lhs>@match @call @function to text(x) @case h ; ":" ; m ; ":" ; s @then @call @function time from hms(@call @function from text(h), @call @function from text(m), @call @function from text(s)) @endmatch</lhs>
+            <lhs>@match @call function\\to text(x) @case h ; ":" ; m ; ":" ; s @then @call function\\time from hms(@call function\\from text(h), @call function\\from text(m), @call function\\from text(s)) @endmatch</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -66,7 +66,7 @@
         </description>
         <example>
             <inputArg>datetimezoned{2001-03-04 06:54 UTC}</inputArg>
-            <output>@call @function from text("06:54")</output>
+            <output>@call function\\from text("06:54")</output>
         </example>
     </function>
 
@@ -132,8 +132,8 @@
             <p>Gets the year and month part of a Date as a DateYM.</p>
         </description>
         <example>
-            <inputArg>@call @function from text("2001-03-04")</inputArg>
-            <output>@call @function from text("2001-03")</output>
+            <inputArg>@call function\\from text("2001-03-04")</inputArg>
+            <output>@call function\\from text("2001-03")</output>
         </example>
     </function>
 
@@ -145,8 +145,8 @@
             <p>Creates a DateTime from the given Date and Time.</p>
         </description>
         <example>
-            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"))</inputArg>
-            <output>@call @function from text("2001-02-03 04:56")</output>
+            <inputArg>(@call function\\from text("2001-02-03"), @call function\\from text("04:56"))</inputArg>
+            <output>@call function\\from text("2001-02-03 04:56")</output>
         </example>
     </function>
     
@@ -160,8 +160,8 @@
             <p>Note that because many of the three-letter abbreviations for time zones overlap, they are not supported here, and you must spell out the full name.</p>
         </description>
         <example>
-            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"), "America/Vancouver")</inputArg>
-            <output>@call @function from text("2001-02-03 04:56 America/Vancouver")</output>
+            <inputArg>(@call function\\from text("2001-02-03"), @call function\\from text("04:56"), "America/Vancouver")</inputArg>
+            <output>@call function\\from text("2001-02-03 04:56 America/Vancouver")</output>
         </example>
     </function>
     
@@ -176,11 +176,11 @@
         <equivalence>
             <forany name="a">Date</forany>
             <forany name="b">Date</forany>
-            <lhs>@call @function days between(a, b)</lhs>
-            <rhs>-1 * @call @function days between(b, a)</rhs>
+            <lhs>@call function\\days between(a, b)</lhs>
+            <rhs>-1 * @call function\\days between(b, a)</rhs>
         </equivalence>
         <example>
-            <inputArg>(@call @function from text("7 May 2003"), @call @function from text("16 October 2004"))</inputArg>
+            <inputArg>(@call function\\from text("7 May 2003"), @call function\\from text("16 October 2004"))</inputArg>
             <output>528{day}</output>
         </example>
     </function>
@@ -195,8 +195,8 @@
         <equivalence>
             <forany name="date">Date</forany>
             <forany name="days" min="-999999" max="999999">Number{day}</forany>
-            <lhs>@call @function days between(date, @call @function add days(date, @call @function round(days)))</lhs>
-            <rhs>@call @function round(days)</rhs>
+            <lhs>@call function\\days between(date, @call function\\add days(date, @call function\\round(days)))</lhs>
+            <rhs>@call function\\round(days)</rhs>
         </equivalence>
         <example>
             <inputArg>(date{2002-11-01}, 28{day})</inputArg>

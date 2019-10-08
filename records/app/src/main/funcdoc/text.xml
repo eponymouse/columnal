@@ -34,7 +34,7 @@
         </description>
         <equivalence display="false">
             <forany name="x">Text</forany>
-            <lhs>@call @function replace("", "foo", x)</lhs>
+            <lhs>@call function\\replace("", "foo", x)</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>
@@ -88,13 +88,13 @@
         </description>
         <equivalence>
             <forany name="x">[Text]</forany>
-            <lhs>@call @function join text(x)</lhs>
-            <rhs>@call @function join text with(x, "")</rhs>
+            <lhs>@call function\\join text(x)</lhs>
+            <rhs>@call function\\join text with(x, "")</rhs>
         </equivalence>
         <equivalence>
             <forany name="x">[Text]</forany>
-            <lhs>@call @function join text(x)</lhs>
-            <rhs>@call @function combine(x, (? ; ?))</rhs> 
+            <lhs>@call function\\join text(x)</lhs>
+            <rhs>@call function\\combine(x, (? ; ?))</rhs> 
         </equivalence>
         <example>
             <inputArg>["a", "b", "c"]</inputArg>
@@ -119,14 +119,14 @@
         </description>
         <equivalence>
             <forany name="x">[Text]</forany>
-            <lhs>@call @function join text with(x, "")</lhs>
-            <rhs>@call @function join text(x)</rhs>
+            <lhs>@call function\\join text with(x, "")</lhs>
+            <rhs>@call function\\join text(x)</rhs>
         </equivalence>
         <equivalence>
             <forany name="x">[Text]</forany>
             <forany name="sep">Text</forany>
-            <lhs>@call @function join text with(x, sep)</lhs>
-            <rhs>@call @function combine(x, (? ; sep ; ?))</rhs>
+            <lhs>@call function\\join text with(x, sep)</lhs>
+            <rhs>@call function\\combine(x, (? ; sep ; ?))</rhs>
         </equivalence>
         <example>
             <inputArg>(["a", "b", "c"], "+")</inputArg>
@@ -158,8 +158,8 @@
         </description>
         <equivalence>
             <forany name="x">Text</forany>
-            <lhs>@call @function trim(@call @function trim(x))</lhs>
-            <rhs>@call @function trim(x)</rhs>
+            <lhs>@call function\\trim(@call function\\trim(x))</lhs>
+            <rhs>@call function\\trim(x)</rhs>
         </equivalence>
         <example>
             <inputArg>"No spaces  either side."</inputArg>
@@ -186,7 +186,7 @@
         <equivalence display="false">
             <forany name="x">Text</forany>
             <forany name="y">Text</forany>
-            <lhs>@call @function join text with(@call @function split text(x, y), y)</lhs>
+            <lhs>@call function\\join text with(@call function\\split text(x, y), y)</lhs>
             <rhs>x</rhs>
         </equivalence>
         <example>

@@ -456,10 +456,10 @@ public class PropTypecheckIndividual
         checkConcreteType(DataType.number(new NumberInfo(m)), "1 + 2{m}");
         checkConcreteType(DataType.number(new NumberInfo(m)), "1 * 2{m}");
         checkConcreteType(DataType.NUMBER, "1 * 2");
-        checkConcreteType((DataType)null, "@call @function abs(1) + 2{m}");
-        checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1) * 2{m}");
-        checkConcreteType(DataType.NUMBER, "@call @function abs(1)");
-        checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1{m})");
+        checkConcreteType((DataType)null, "@call function\\\\abs(1) + 2{m}");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "@call function\\\\abs(1) * 2{m}");
+        checkConcreteType(DataType.NUMBER, "@call function\\\\abs(1)");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "@call function\\\\abs(1{m})");
         checkConcreteType(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)), "(a:1, b:2{1})");
     }
 
@@ -478,19 +478,19 @@ public class PropTypecheckIndividual
     @Test
     public void checkFromTextFunctions() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@call @function from text to(type{Boolean}, \"true\")");
+        checkConcreteType(DataType.BOOLEAN, "@call function\\\\from text to(type{Boolean}, \"true\")");
     }
 
     @Test
     public void checkFromTextFunctions2() throws UserException, InternalException
     {
-        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call @function from text to(type{A}, \"Hello\")");
+        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, \"Hello\")");
     }
     
     @Test
     public void checkNestedFunctions() throws UserException, InternalException
     {
-        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call @function from text to(type{A}, @call @function from text to(type{Text}, \"Hello\"))");
+        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, @call function\\\\from text to(type{Text}, \"Hello\"))");
     }
 
     @Test
@@ -526,7 +526,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkDefine4() throws UserException, InternalException
     {
-        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, a = @call @function from text(\"\"), b = a @then b @enddefine");
+        checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, a = @call function\\\\from text(\"\"), b = a @then b @enddefine");
     }
 
     @Test
@@ -584,13 +584,13 @@ public class PropTypecheckIndividual
     @Test
     public void checkFunction2() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f = function\\\\(x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
 
     @Test
     public void checkFunction2b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = function\\\\(x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
     
     @Test
@@ -626,7 +626,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkField2() throws UserException, InternalException
     {
-        checkConcreteType(DataType.TEXT, "@define abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call @function element(abs, 1)#b @enddefine");
+        checkConcreteType(DataType.TEXT, "@define abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call function\\\\element(abs, 1)#b @enddefine");
     }
 
     @Test

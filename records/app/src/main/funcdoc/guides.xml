@@ -66,26 +66,26 @@
             <p>Converting from text is primarily done using the <link namespace="conversion" function="from text"/> and <link namespace="conversion" function="from text to"/> functions.  The destination type that is being converted from needs to be known ahead of time.  Often this is apparent from the context and thus the simpler <link namespace="conversion" function="from text"/> can be used.  In cases where this is not possible, you will be prompted to use <link namespace="conversion" function="from text to"/> instead, where the type is specified.</p>
             <example>
                 <description>Converts to number</description>
-                <input>@call @function from text("63.3") + 1</input>
+                <input>@call function\\from text("63.3") + 1</input>
                 <output>64.3</output>
             </example>
             <example>
-                <input>@if @call @function from text("true") @then 1 @else 0 @endif</input>
+                <input>@if @call function\\from text("true") @then 1 @else 0 @endif</input>
                 <output>1</output>
             </example>
             <example>
                 <description>Tries converting to number, but text is not a valid number</description>
-                <input>@call @function from text("true") + 1</input>
+                <input>@call function\\from text("true") + 1</input>
                 <output>error</output>
             </example>
             <example>
                 <description>Converts to a time</description>
-                <input>@call @function from text to(type{Time}, "7:35PM")</input>
+                <input>@call function\\from text to(type{Time}, "7:35PM")</input>
                 <output>time{19:35}</output>
             </example>
             <example>
                 <description>Converts to list of numbers (note the square brackets)</description>
-                <input>@call @function from text to(type{[Number]}, "[1, 2]")</input>
+                <input>@call function\\from text to(type{[Number]}, "[1, 2]")</input>
                 <output>[1, 2]</output>
             </example>
         </section>
@@ -93,15 +93,15 @@
             <title>Converting from another type to text</title>
             <p>Converting to text is primarily done using the <link namespace="conversion" function="to text"/> function.  This converts each type into its standard text form.  Several examples are below.  Most types are straightforward, although note that times convert to the 24-hour clock and dates convert to the ISO 8601 YYYY-MM-DD format.</p>
             <example>
-                <input>@call @function to text(10 - 45.60)</input>
+                <input>@call function\\to text(10 - 45.60)</input>
                 <output>"-35.6"</output>
             </example>
             <example>
-                <input>@call @function to text([true, "a" = "b"])</input>
+                <input>@call function\\to text([true, "a" = "b"])</input>
                 <output>"[true, false]"</output>
             </example>
             <example>
-                <input>@call @function to text(datetime{14 April 2008 5:38PM})</input>
+                <input>@call function\\to text(datetime{14 April 2008 5:38PM})</input>
                 <output>"2018-04-14 17:38"</output>
             </example>
         </section>
@@ -109,16 +109,16 @@
             <title>Converting numbers between different units</title>
             <p>There are three main types of conversion (with more examples below):</p>
             <ul>
-                <li>Converting between related units.  For example, you may want to convert from inches to metres.  This is done using the <link namespace="core" function="convert unit"/> function.  For example, <code>@call @function convert unit({s}, 1.25{minute})</code> will return 75{s} (s being the unit for seconds, min being minutes).</li>
+                <li>Converting between related units.  For example, you may want to convert from inches to metres.  This is done using the <link namespace="core" function="convert unit"/> function.  For example, <code>@call function\\convert unit({s}, 1.25{minute})</code> will return 75{s} (s being the unit for seconds, min being minutes).</li>
                 <li>Converting from a plain number to a number with units.  This is done by multiplying by the number 1 with the attached unit.  For example, to convert the row number to a number of minutes, use <code>row * 1{minute}</code>.  More examples are below</li>
                 <li>Converting from a number with units to a plain number.  This is done by dividing by the number 1 with the units to get rid of.  For example, <code>12{hour} / 1{hour}</code> will give the result 12 without units.</li>
             </ul>
             <example>
-                <input>@call @function convert unit({mile/hour}, 10{m/s})</input>
+                <input>@call function\\convert unit({mile/hour}, 10{m/s})</input>
                 <outputPattern>22.369 &#x00b1; 0.001</outputPattern>
             </example>
             <example>
-                <input>@call @function convert unit({m/s}, 1{mile} / 4{minute})</input>
+                <input>@call function\\convert unit({m/s}, 1{mile} / 4{minute})</input>
                 <outputPattern>6.705 &#x00b1; 0.001</outputPattern>
             </example>
             <example>
@@ -156,7 +156,7 @@
                 <li><link namespace="datetime" function="seconds between"/></li>
             </ul>
             <example>
-                <input>@call @function dateym from ym(2008{year}, 3{month})</input>
+                <input>@call function\\dateym from ym(2008{year}, 3{month})</input>
                 <output>dateym{2008-03}</output>
             </example>
         </section>
@@ -196,9 +196,9 @@
         </section>
         <section>
             <title>How to extract values from Optional</title>
-            <p>The most common case is to supply a default value for a missing item.  This can be done with the "get optional or" function, for example <code>@call @function get optional or(Your optional column, 0)</code> will get the number out of a column named "Your optional column" or zero if the column has a blank value.</p>
+            <p>The most common case is to supply a default value for a missing item.  This can be done with the "get optional or" function, for example <code>@call function\\get optional or(Your optional column, 0)</code> will get the number out of a column named "Your optional column" or zero if the column has a blank value.</p>
             <p>You can also use pattern matches.  The most common form is: <code>@if Optional Column =~ Is(x) @then x @else default value @endif</code>  The =~ operator means that the right hand side is a pattern, so x takes on the value if present, and the then-part is evaluated.  Otherwise the else-part is evaluated and you must supply the missing value.</p>
-            <p>If you are certain the value will not be missing then you can write <code>@call @function get optional(Your optional column)</code> without specifying a default; an error will occur if the value is blank.</p>
+            <p>If you are certain the value will not be missing then you can write <code>@call function\\get optional(Your optional column)</code> without specifying a default; an error will occur if the value is blank.</p>
         </section>
         <section>
             <title>How to convert values to Optional</title>

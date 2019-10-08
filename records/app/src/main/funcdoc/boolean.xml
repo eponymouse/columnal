@@ -12,17 +12,17 @@
         </description>
         <equivalence display="false">
             <forany name="x">Boolean</forany>
-            <lhs>@call @function not(@call @function not(x))</lhs>
+            <lhs>@call function\\not(@call function\\not(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
         <equivalence display="false">
             <forany name="x">Boolean</forany>
-            <lhs>@call @function not(x)</lhs>
+            <lhs>@call function\\not(x)</lhs>
             <rhs>x = false</rhs>
         </equivalence>
         <equivalence display="false">
             <forany name="x">Boolean</forany>
-            <lhs>@call @function not(x)</lhs>
+            <lhs>@call function\\not(x)</lhs>
             <rhs>x &lt;&gt; true</rhs>
         </equivalence>
         <example>
@@ -43,8 +43,8 @@
         </description>
         <equivalence display="false">
             <forany name="x">Boolean</forany>
-            <lhs>@call @function xor(x, true)</lhs>
-            <rhs>@call @function not(x)</rhs>
+            <lhs>@call function\\xor(x, true)</lhs>
+            <rhs>@call function\\not(x)</rhs>
         </equivalence>
         <example>
             <inputArg>(true, true)</inputArg>
