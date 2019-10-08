@@ -149,8 +149,8 @@ public class IdentExpression extends NonOperatorExpression
         // - Standard function name (Scope: "function")
         
         @Nullable TypeState state = original;
-        boolean singleUnscoped = namespace != null || idents.size() != 1;
-        List<TypeExp> varType = singleUnscoped ? null : state.findVarType(idents.get(0));
+        boolean singleUnscoped = namespace == null && idents.size() == 1;
+        List<TypeExp> varType = singleUnscoped ? state.findVarType(idents.get(0)) : null;
         
         if (varType != null)
         {
