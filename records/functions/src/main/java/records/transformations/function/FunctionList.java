@@ -38,6 +38,7 @@ import records.transformations.function.text.StringSplit;
 import utility.Utility;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -128,7 +129,7 @@ public class FunctionList
     {
         for (FunctionDefinition functionDefinition : getAllFunctions(mgr))
         {
-            if (functionDefinition.getName().equals(functionName) || functionDefinition.getDocKey().equals(functionName))
+            if (functionDefinition.getName().equals(functionName) || functionDefinition.getDocKey().equals(functionName) || functionDefinition.getFullName().stream().collect(Collectors.joining("\\")).equals(functionName))
                 return functionDefinition;
         }
         return null;
