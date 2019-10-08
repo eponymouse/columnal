@@ -584,13 +584,13 @@ public class PropTypecheckIndividual
     @Test
     public void checkFunction2() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f = function\\\\(x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
 
     @Test
     public void checkFunction2b() throws UserException, InternalException
     {
-        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = function\\\\(x) @then x + 1 @endfunction @then @call f(3) @enddefine");
+        checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
     
     @Test
