@@ -40,8 +40,6 @@ public abstract class NaryOpExpression extends Expression
     public NaryOpExpression(List<@Recorded Expression> expressions)
     {
         this.expressions = ImmutableList.copyOf(expressions);
-        if (expressions.size() < 2)
-            Log.logStackTrace("Expressions size: " + expressions.size());
     }
 
     @Override
