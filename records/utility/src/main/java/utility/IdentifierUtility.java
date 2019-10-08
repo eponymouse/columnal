@@ -198,7 +198,7 @@ public class IdentifierUtility
         {
             if (!items.isEmpty())
                 nextPos = items.get(items.size() - 1).positionAfter + RawInputLocation.ONE;
-            if (items.size() == 1 && content.charAt(nextPos) == '\\')
+            if (items.size() == 1 && nextPos < content.length() && content.charAt(nextPos) == '\\')
             {
                 firstHadDouble = true;
                 nextPos += RawInputLocation.ONE;
