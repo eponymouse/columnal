@@ -147,11 +147,11 @@ public class IdentExpression extends NonOperatorExpression
         // - Table name (Scope: "table")
         // - Tag name (Scope: "tag")
         // - Standard function name (Scope: "function")
-        
+
         @Nullable TypeState state = original;
         boolean singleUnscoped = namespace == null && idents.size() == 1;
         List<TypeExp> varType = singleUnscoped ? state.findVarType(idents.get(0)) : null;
-        
+
         if (varType != null)
         {
             resolution = new Resolution()
@@ -177,7 +177,7 @@ public class IdentExpression extends NonOperatorExpression
             // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
             return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
         }
-        
+
         if (singleUnscoped && kind == ExpressionKind.PATTERN)
         {
             MutVar patternType = new MutVar(this);
@@ -206,282 +206,299 @@ public class IdentExpression extends NonOperatorExpression
             };
             return onError.recordType(this, state, patternType);
         }
-        
-        if (namespace != null)
+
+        if (namespace == null || namespace.equals("column"))
         {
-            switch (namespace)
+            Expression.ColumnLookup.@Nullable FoundColumn col;
+            final ColumnId columnName;
+            if (idents.size() == 1)
             {
-                case "column":
-                    Expression.ColumnLookup.@Nullable FoundColumn col;
-                    final ColumnId columnName;
-                    if (idents.size() == 1)
+                columnName = new ColumnId(idents.get(0));
+                col = dataLookup.getColumn(this, null, columnName);
+            }
+            else
+            {
+                columnName = new ColumnId(idents.get(1));
+                col = dataLookup.getColumn(this, new TableId(idents.get(0)), columnName);
+            }
+            if (col == null && Objects.equals(namespace, "column"))
+            {
+                onError.recordError(this, StyledString.s("Could not find source column " + toText(idents)));
+                return null;
+            }
+            else if (col != null)
+            {
+                if (col.information != null)
+                {
+                    onError.recordInformation(this, col.information);
+                }
+                TableId resolvedTableName = col.tableId;
+                DataTypeValue column = col.dataTypeValue;
+                resolution = new Resolution()
+                {
+                    @Override
+                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
                     {
-                        columnName = new ColumnId(idents.get(0));
-                        col = dataLookup.getColumn(this, null, columnName);
+                        if (column == null || resolvedTableName == null)
+                            throw new InternalException("Attempting to fetch value despite type check failure");
+                        return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())), false);
                     }
-                    else
+
+                    @Override
+                    public boolean isVariable()
                     {
-                        columnName = new ColumnId(idents.get(1));
-                        col = dataLookup.getColumn(this, new TableId(idents.get(0)), columnName);
+                        return false;
                     }
-                    if (col == null)
+
+                    @Override
+                    public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
                     {
-                        onError.recordError(this, StyledString.s("Could not find source column " + toText(idents)));
-                        return null;
+                        final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
+
+                        final @Nullable TableId renamedTableId = renamed.getFirst();
+                        ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
+
+                        return tablePlusColumn;
                     }
-                    if (col.information != null)
+                };
+                return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
+            }
+        }
+        if (namespace == null || namespace.equals("table"))
+        {
+            FoundTable table = dataLookup.getTable(new TableId(idents.get(0)));
+            if (table == null && Objects.equals(namespace, "table"))
+            {
+                onError.recordError(this, StyledString.s("Unknown table: " + idents.get(0)));
+                return null;
+            }
+            else if (table != null)
+            {
+                HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsSingle = new HashMap<>();
+                HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList = new HashMap<>();
+
+                for (Entry<ColumnId, DataTypeValue> entry : table.getColumnTypes().entrySet())
+                {
+                    fieldsAsList.put(entry.getKey().getRaw(), TypeExp.list(this, TypeExp.fromDataType(this, entry.getValue().getType())));
+                    fieldsAsSingle.put(entry.getKey().getRaw(), TypeExp.fromDataType(this, entry.getValue().getType()));
+                }
+
+                boolean includeRows;
+                if (!fieldsAsList.containsKey(ROWS))
+                {
+                    includeRows = true;
+                    fieldsAsList.put(ROWS, TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
+                }
+                else
+                    includeRows = false;
+                FoundTable resolvedTable = table;
+                resolution = new Resolution()
+                {
+                    @Override
+                    public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
                     {
-                        onError.recordInformation(this, col.information);
+                        return ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw());
                     }
-                    TableId resolvedTableName = col.tableId;
-                    DataTypeValue column = col.dataTypeValue;
-                    resolution = new Resolution()
+
+                    @Override
+                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
                     {
-                        @Override
-                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                        if (resolvedTable == null)
+                            throw new InternalException("Attempting to fetch value despite type check failure");
+                        final FoundTable resolvedTableNN = resolvedTable;
+                        final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
+                        @Value Record result = DataTypeUtility.value(new Record()
                         {
-                            if (column == null || resolvedTableName == null)
-                                throw new InternalException("Attempting to fetch value despite type check failure");
-                            return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())), false);
-                        }
+                            @Override
+                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                            {
+                                if (includeRows && name.equals(ROWS))
+                                    return DataTypeUtility.value(new RowsAsList());
+                                return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
+                            }
 
-                        @Override
-                        public boolean isVariable()
-                        {
-                            return false;
-                        }
-
-                        @Override
-                        public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
-                        {
-                            final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
-
-                            final @Nullable TableId renamedTableId = renamed.getFirst();
-                            ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
-
-                            return tablePlusColumn;
-                        }
-                    };
-                    return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
-                case "table":
-                    FoundTable table = dataLookup.getTable(new TableId(idents.get(0)));
-                    if (table == null)
-                    {
-                        onError.recordError(this, StyledString.s("Unknown table: " + idents.get(0)));
-                        return null;
-                    }
-                    HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsSingle = new HashMap<>();
-                    HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList = new HashMap<>();
-
-                    for (Entry<ColumnId, DataTypeValue> entry : table.getColumnTypes().entrySet())
-                    {
-                        fieldsAsList.put(entry.getKey().getRaw(), TypeExp.list(this, TypeExp.fromDataType(this, entry.getValue().getType())));
-                        fieldsAsSingle.put(entry.getKey().getRaw(), TypeExp.fromDataType(this, entry.getValue().getType()));
-                    }
-
-                    boolean includeRows;
-                    if (!fieldsAsList.containsKey(ROWS))
-                    {
-                        includeRows = true;
-                        fieldsAsList.put(ROWS, TypeExp.list(this, TypeExp.record(this, fieldsAsSingle, true)));
-                    }
-                    else
-                        includeRows = false;
-                    FoundTable resolvedTable = table;
-                    resolution = new Resolution()
-                    {
-                        @Override
-                        public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
-                        {
-                            return ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw());
-                        }
-
-                        @Override
-                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                        {
-                            if (resolvedTable == null)
-                                throw new InternalException("Attempting to fetch value despite type check failure");
-                            final FoundTable resolvedTableNN = resolvedTable;
-                            final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
-                            @Value Record result = DataTypeUtility.value(new Record()
+                            class RowsAsList extends ListEx
                             {
                                 @Override
-                                public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                                public int size() throws InternalException, UserException
                                 {
-                                    if (includeRows && name.equals(ROWS))
-                                        return DataTypeUtility.value(new RowsAsList());
-                                    return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
-                                }
-
-                                class RowsAsList extends ListEx
-                                {
-                                    @Override
-                                    public int size() throws InternalException, UserException
-                                    {
-                                        return resolvedTableNN.getRowCount();
-                                    }
-
-                                    @Override
-                                    public @Value Object get(int index) throws InternalException, UserException
-                                    {
-                                        ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
-                                        for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
-                                        {
-                                            rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
-                                        }
-                                        ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
-
-                                        return DataTypeUtility.value(new Record()
-                                        {
-                                            @Override
-                                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
-                                            {
-                                                return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
-                                            }
-
-                                            @Override
-                                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
-                                            {
-                                                return rowValues;
-                                            }
-                                        });
-                                    }
-                                }
-
-                                class ColumnAsList extends ListEx
-                                {
-                                    private final DataTypeValue dataTypeValue;
-
-                                    ColumnAsList(DataTypeValue dataTypeValue)
-                                    {
-                                        this.dataTypeValue = dataTypeValue;
-                                    }
-
-                                    @Override
-                                    public int size() throws InternalException, UserException
-                                    {
-                                        return resolvedTableNN.getRowCount();
-                                    }
-
-                                    @Override
-                                    public @Value Object get(int index) throws InternalException, UserException
-                                    {
-                                        return dataTypeValue.getCollapsed(index);
-                                    }
+                                    return resolvedTableNN.getRowCount();
                                 }
 
                                 @Override
-                                public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                                public @Value Object get(int index) throws InternalException, UserException
                                 {
-                                    return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
-                                }
-                            });
+                                    ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
+                                    for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
+                                    {
+                                        rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
+                                    }
+                                    ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
 
-                            return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), false);
-                        }
-
-                        @Override
-                        public boolean isVariable()
-                        {
-                            return false;
-                        }
-                    };
-                    return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), state);
-                case "tag":
-                    Either<String, TagInfo> tag;
-                    switch (idents.size())
-                    {
-                        case 1:
-                            tag = state.getTypeManager().lookupTag(null, idents.get(0));
-                            break;
-                        case 2:
-                            tag = state.getTypeManager().lookupTag(idents.get(0), idents.get(1));
-                            break;
-                        default:
-                            onError.recordError(this, StyledString.s("Found " + idents.size() + " identifiers but tags should either have one (tag name) or two (type name, tag name)"));
-                            return null;
-                    }
-                    resolution = new Resolution()
-                    {
-                        @Override
-                        public boolean isVariable()
-                        {
-                            return false;
-                        }
-
-                        @Override
-                        public @Nullable TagInfo getResolvedConstructor()
-                        {
-                            return tag.leftToNull();
-                        }
-
-                        @Override
-                        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                        {
-                            return result(tag.<@Value Object>eitherEx(s -> {
-                                throw new InternalException("Attempting to fetch function despite failing type check");
-                            }, t -> {
-                                TagType<?> tag1 = t.getTagInfo();
-                                if (tag1.getInner() == null)
-                                    return new TaggedValue(t.tagIndex, null);
-                                else
-                                    return ValueFunction.value(new ValueFunction()
+                                    return DataTypeUtility.value(new Record()
                                     {
                                         @Override
-                                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                                        public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
                                         {
-                                            return new TaggedValue(t.tagIndex, arg(0));
+                                            return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
+                                        }
+
+                                        @Override
+                                        public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                                        {
+                                            return rowValues;
                                         }
                                     });
-                            }), state, ImmutableList.of());
-                        }
-                    };
-                    return onError.recordType(this, state, tag.<@Nullable TypeExp>eitherEx(s -> null, t -> makeTagType(t)));
-                case "function":
-                    StandardFunctionDefinition functionDefinition = state.getFunctionLookup().lookup(idents.stream().collect(Collectors.joining("\\")));
-                    if (functionDefinition != null)
-                    {
-                        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(state.getTypeManager());
-                        resolution = new Resolution()
-                        {
-                            @Override
-                            public boolean isVariable()
+                                }
+                            }
+
+                            class ColumnAsList extends ListEx
                             {
-                                return false;
+                                private final DataTypeValue dataTypeValue;
+
+                                ColumnAsList(DataTypeValue dataTypeValue)
+                                {
+                                    this.dataTypeValue = dataTypeValue;
+                                }
+
+                                @Override
+                                public int size() throws InternalException, UserException
+                                {
+                                    return resolvedTableNN.getRowCount();
+                                }
+
+                                @Override
+                                public @Value Object get(int index) throws InternalException, UserException
+                                {
+                                    return dataTypeValue.getCollapsed(index);
+                                }
                             }
 
                             @Override
-                            public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
                             {
-                                return functionDefinition;
+                                return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
                             }
+                        });
 
-                            @Override
-                            public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                            {
-                                return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
-                                    Either<MutUnitVar, MutVar> typeExp = type.getSecond().get(s);
-                                    if (typeExp == null)
-                                        throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
-                                    return typeExp.<Unit, DataType>mapBothEx(u -> {
-                                        Unit concrete = u.toConcreteUnit();
-                                        if (concrete == null)
-                                            throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
-                                        return concrete;
-                                    }, t -> t.toConcreteType(state.getTypeManager(), true).eitherEx(
-                                            l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
-                                            t2 -> t2
-                                    ));
-                                })), state);
-                            }
-                        };
-                        return onError.recordType(this, state, functionDefinition.getType(state.getTypeManager()).getFirst());
+                        return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), false);
                     }
+
+                    @Override
+                    public boolean isVariable()
+                    {
+                        return false;
+                    }
+                };
+                return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), state);
+            }
+        }
+        if (namespace == null || namespace.equals("tag"))
+        {
+            TagInfo tag = null;
+            switch (idents.size())
+            {
+                case 1:
+                    tag = state.getTypeManager().lookupTag(null, idents.get(0)).leftToNull();
+                    break;
+                case 2:
+                    tag = state.getTypeManager().lookupTag(idents.get(0), idents.get(1)).leftToNull();
                     break;
                 default:
-                    onError.recordError(this, StyledString.s("Unknown namespace: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
-                    return null;
+                    if (Objects.equals(namespace, "tag"))
+                    {
+                        onError.recordError(this, StyledString.s("Found " + idents.size() + " identifiers but tags should either have one (tag name) or two (type name, tag name)"));
+                        return null;
+                    }
+                    break;
             }
+            if (tag != null)
+            {
+                TagInfo tagFinal = tag;
+                resolution = new Resolution()
+                {
+                    @Override
+                    public boolean isVariable()
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public @Nullable TagInfo getResolvedConstructor()
+                    {
+                        return tagFinal;
+                    }
+
+                    @Override
+                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                    {
+                        @Value Object value;
+                        if (tagFinal.getTagInfo().getInner() == null)
+                            value = new TaggedValue(tagFinal.tagIndex, null);
+                        else
+                            value = ValueFunction.value(new ValueFunction()
+                                {
+                                    @Override
+                                    public @OnThread(Tag.Simulation)
+                                    @Value Object _call() throws InternalException, UserException
+                                    {
+                                    return new TaggedValue(tagFinal.tagIndex, arg(0));
+                        }
+                                });
+                        return result(value, state, ImmutableList.of());
+                    }
+                };
+                return onError.recordType(this, state, makeTagType(tagFinal));
+            }
+        }
+        if (namespace == null || namespace.equals("function"))
+        {
+            StandardFunctionDefinition functionDefinition = state.getFunctionLookup().lookup(idents.stream().collect(Collectors.joining("\\")));
+            if (functionDefinition != null)
+            {
+                Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(state.getTypeManager());
+                resolution = new Resolution()
+                {
+                    @Override
+                    public boolean isVariable()
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+                    {
+                        return functionDefinition;
+                    }
+
+                    @Override
+                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+                    {
+                        return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+                            Either<MutUnitVar, MutVar> typeExp = type.getSecond().get(s);
+                            if (typeExp == null)
+                                throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
+                            return typeExp.<Unit, DataType>mapBothEx(u -> {
+                                Unit concrete = u.toConcreteUnit();
+                                if (concrete == null)
+                                    throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
+                                return concrete;
+                            }, t -> t.toConcreteType(state.getTypeManager(), true).eitherEx(
+                                    l -> {
+                                        throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "), l.getErrorText()));
+                                    },
+                                    t2 -> t2
+                            ));
+                        })), state);
+                    }
+                };
+                return onError.recordType(this, state, functionDefinition.getType(state.getTypeManager()).getFirst());
+            }
+        }
+        if (namespace != null && !ImmutableList.of("column", "table", "tag", "function").contains(namespace))
+        {
+            onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
+            return null;
         }
         
         // Didn't find it anywhere:

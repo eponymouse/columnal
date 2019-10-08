@@ -799,7 +799,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 
                 if (rs != null)
                 {
-                    Column column = rs.getSecond().getColumn(columnId);
+                    Column column = rs.getSecond().getColumnOrNull(columnId);
+                    if (column == null)
+                        return null;
                     DataTypeValue columnType = column.getType();
                     return new FoundColumn(rs.getFirst(), columnType, checkRedefined(expression, tableId, columnId));
                 }
