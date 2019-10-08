@@ -145,10 +145,10 @@ public class TestExpressionExplanation
                         e("?", q(4), 4, null),
                         m("1.8 \u00B1 1.2", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
         )));
-        testExplanation("@call function\\\\none(@table T2#asc, function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
-                e("@call function\\\\none(@table T2#asc, function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+        testExplanation("@call function\\\\none(@table T2#asc, @function(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
+                e("@call function\\\\none(@table T2#asc, @function(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
                     // Once for function, once for call:
-                    e("function\\\\(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
+                    e("@function(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
                     e("@call function\\\\not(x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
                         explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, vv("x", 3), false, null, 
                         e("x", vv("x", 3), 3, null),

@@ -94,9 +94,9 @@ public class LambdaExpression extends Expression
         String params = parameters.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", "));
         String body = this.body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
         if (saveDestination == SaveDestination.SAVE_EXTERNAL)
-            return "function\\\\(" + params + ") @then " + body + "@endfunction";
+            return "@function(" + params + ") @then " + body + "@endfunction";
         else
-            return "function\\\\" + params + " @then " + body + "@endfunction";
+            return "@function" + params + " @then " + body + "@endfunction";
     }
 
     @Override
@@ -131,7 +131,7 @@ public class LambdaExpression extends Expression
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(
-            StyledString.s("function\\\\)"),
+            StyledString.s("@function("),
             parameters.stream().map(e -> e.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)).collect(StyledString.joining(", ")),
             StyledString.s(") @then "),
             body.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),

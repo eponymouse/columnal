@@ -614,21 +614,21 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testLambda() throws Exception
     {
         // Can't have function return type because it can't be stored in a column:
-        testSimple("@define f = function\\\\(x) @then x + 3 @endfunction @then @call f(1) @enddefine");
+        testSimple("@define f = @function(x) @then x + 3 @endfunction @then @call f(1) @enddefine");
     }
 
     @Test
     public void testLambda2() throws Exception
     {
         // Can't have function return type because it can't be stored in a column:
-        testSimple("@define f = function\\\\(x, _, 3 \u00B1 4) @then x + 3 @endfunction @then true @enddefine");
+        testSimple("@define f = @function(x, _, 3 \u00B1 4) @then x + 3 @endfunction @then true @enddefine");
     }
 
     @Test
     public void testLambda3() throws Exception
     {
         // Can't have function return type because it can't be stored in a column:
-        testSimple("@define f = function\\\\(x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2, [3], 5) @enddefine");
+        testSimple("@define f = @function(x, _, 3 \u00B1 4) @then x + 3 @endfunction @then @call f(2, [3], 5) @enddefine");
     }
     
     // Check that if an internal is unterminated, the outer still counts as terminated:

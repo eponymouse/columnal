@@ -77,7 +77,7 @@
             <output>2229672.96{mm^2}</output>
         </example>
         <example>
-            <input>@define sq = function\\(x) @then x*x @endfunction, x = @call sq(256) @then x - 1 @enddefine</input>
+            <input>@define sq = @function(x) @then x*x @endfunction, x = @call sq(256) @then x - 1 @enddefine</input>
             <output>65535</output>
         </example>
         <example>
@@ -99,11 +99,11 @@
             <p>If the function you need is very simple and uses its parameter once, you may find the <link syntax="quest"/> syntax useful.</p>
         </description>
         <example>
-            <input>@define low = function\\(a, b) @then @if a &lt; b @then a @else b @endif @endfunction @then @call low(3, -5) @enddefine</input>
+            <input>@define low = @function(a, b) @then @if a &lt; b @then a @else b @endif @endfunction @then @call low(3, -5) @enddefine</input>
             <output>-5</output>
         </example>
         <example>
-            <input>@call function\\apply each([2,3,4], function\\(x) @then x * x @endfunction)</input>
+            <input>@call function\\apply each([2,3,4], @function(x) @then x * x @endfunction)</input>
             <output>[4,9,16]</output>
         </example>
     </syntax>
