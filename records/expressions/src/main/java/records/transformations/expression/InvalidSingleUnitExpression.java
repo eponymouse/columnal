@@ -30,7 +30,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     @Override
     public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return "@unfinished "+ OutputBuilder.quoted(name);
         else
             return name;

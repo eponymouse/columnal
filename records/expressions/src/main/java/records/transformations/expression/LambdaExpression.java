@@ -93,7 +93,7 @@ public class LambdaExpression extends Expression
     {
         String params = parameters.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", "));
         String body = this.body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return "@function(" + params + ") @then " + body + "@endfunction";
         else
             return "@function" + params + " @then " + body + "@endfunction";

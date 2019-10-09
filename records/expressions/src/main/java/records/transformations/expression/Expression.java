@@ -485,12 +485,158 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     
     public abstract <T> T visit(@Recorded Expression this, ExpressionVisitor<T> visitor);
 
-    public static enum SaveDestination
+    public static interface SaveDestination
     {
-        // Include things like @invalid, @call for saving to disk, clipboard, etc
-        SAVE_EXTERNAL,
-        // Load into editor, so leave out keywords, don't scope things which don't need scoping:
-        EDITOR
+        /**
+         * Disambiguates namespace plus idents for the purpose of saving.
+         * @param namespace
+         * @param idents
+         * @return
+         */
+        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents);
+
+        /**
+         * Makes a new save destination with the given names defined (namespace plus idents for each entry) 
+         * @param names
+         * @return
+         */
+        SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names);
+
+        /**
+         * Do we need keywords like @call, @unfinished, etc?
+         * @return
+         */
+        boolean needKeywords();
+        
+        public static final SaveDestination TO_STRING = new SaveDestination()
+        {
+            @Override
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            {
+                // Give everything in full:
+                return new Pair<>(namespace, idents);
+            }
+
+            @Override
+            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            {
+                return this;
+            }
+
+            @Override
+            public boolean needKeywords()
+            {
+                return false;
+            }
+        };
+        // Same thing so can just re-use:
+        public static final SaveDestination TO_EDITOR_FULL_NAME = TO_STRING;
+        
+        public static final SaveDestination TO_FILE = new SaveDestination()
+        {
+            @Override
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            {
+                // Give everything in full:
+                return new Pair<>(namespace, idents);
+            }
+
+            @Override
+            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            {
+                return this;
+            }
+
+            @Override
+            public boolean needKeywords()
+            {
+                return true;
+            }
+        };
+        
+        static final class ToEditor implements SaveDestination
+        {
+            private final ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names;
+
+            public ToEditor(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            {
+                this.names = names;
+            }
+
+            @Override
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            {
+                // Need to keep adding idents backwards from end until it is not ambigious:
+                boolean usingNamespace = false;
+                int firstIdentUsed = idents.size() - 1;
+                // Can only increase scoping if we're not using the namespace or are not yet using all idents
+                increaseScoping: while (!usingNamespace || firstIdentUsed > 0)
+                {
+                    ImmutableList<@ExpressionIdentifier String> inUse = idents.subList(firstIdentUsed, idents.size());
+
+                    int matchCount = 0;
+                    for (Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> name : names)
+                    {
+                        // We need to make sure that name resolving to its intended destination is not mistaken for a conflict.
+                        // Our first step of resolution is to add the namespace, and if that isn't enough, we scope name further and further.
+                        // Conflicts arise only when:
+                        // - The namespace for the target is non-null AND not in use AND there is another name from another namespace which would match.  In this case, use namespace
+                        // - (The namespace for the target is null OR in use) AND there are *more than one* names from that namespace (or any namespaceif target has null) which would match.  In this case, increase scoping. 
+                        
+                        if (!usingNamespace && namespace != null && !namespace.equals(name.getFirst()) && couldMatch(inUse, name.getSecond()))
+                        {
+                            usingNamespace = true;
+                            continue increaseScoping;
+                        }
+                        
+                        if ((usingNamespace || namespace == null || namespace.equals(name.getFirst())) && couldMatch(inUse, name.getSecond()))
+                        {
+                            matchCount += 1;
+                        }
+                    }
+                    if (matchCount > 1 && firstIdentUsed > 0)
+                    {
+                        firstIdentUsed -= 1;
+                    }
+                    else
+                    {
+                        break increaseScoping;
+                    }
+                }
+                return new Pair<>(usingNamespace ? namespace : null, idents.subList(firstIdentUsed, idents.size()));
+            }
+
+            private boolean couldMatch(ImmutableList<@ExpressionIdentifier String> currentCandidateScoping, ImmutableList<@ExpressionIdentifier String> fullName)
+            {
+                if (currentCandidateScoping.size() > fullName.size())
+                    return false; // Already scoped enough to avoid the confusion
+                // We go backwards:
+                for (int i = 1; i <= currentCandidateScoping.size(); i++)
+                {
+                    if (!currentCandidateScoping.get(currentCandidateScoping.size() - i).equals(fullName.get(fullName.size() - i)))
+                    {
+                        return false; 
+                    }
+                }
+                // All match up to the length we've scoped to:
+                return true;
+            }
+
+            @Override
+            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            {
+                return new ToEditor(Utility.concatI(this.names, names));
+            }
+
+            @Override
+            public boolean needKeywords()
+            {
+                return false;
+            }
+        }
+        
+        // Class is immutable, so this is fine:
+        public static final SaveDestination TO_EDITOR = new ToEditor(ImmutableList.of());
     }
     
     /**
@@ -530,9 +676,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     }
 
     @Override
-    public String toString()
+    public final String toString()
     {
-        return save(SaveDestination.SAVE_EXTERNAL, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.TO_STRING, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

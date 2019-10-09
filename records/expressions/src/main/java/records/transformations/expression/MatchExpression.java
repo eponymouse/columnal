@@ -360,7 +360,7 @@ public class MatchExpression extends NonOperatorExpression
                     Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.EDITOR, BracketedStatus.NEED_BRACKETS, state.getTypeManager(), TableAndColumnRenames.EMPTY) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.TO_STRING, BracketedStatus.NEED_BRACKETS, state.getTypeManager(), TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override

@@ -344,7 +344,7 @@ public class CallExpression extends Expression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        return (saveDestination == SaveDestination.SAVE_EXTERNAL ? "@call " : "") + function.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + "(" + arguments.stream().map(a -> a.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", ")) + ")";
+        return (saveDestination.needKeywords() ? "@call " : "") + function.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + "(" + arguments.stream().map(a -> a.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

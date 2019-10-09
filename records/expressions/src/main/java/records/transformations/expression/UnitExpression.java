@@ -175,7 +175,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     @Override
     public final StyledString toStyledString()
     {
-        return StyledString.s(save(SaveDestination.SAVE_EXTERNAL, true));
+        return StyledString.s(save(SaveDestination.TO_STRING, true));
     }
 
     @Override
@@ -194,6 +194,6 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     @Override
     public String toString()
     {
-        return save(SaveDestination.SAVE_EXTERNAL, true);
+        return save(SaveDestination.TO_STRING, true);
     }
 }

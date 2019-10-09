@@ -290,7 +290,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                             try
                             {
                                 TypeExpression fixedExpression = TypeExpression.fromJellyType(fixed, typeManager);
-                                String str = fixedExpression.save(SaveDestination.EDITOR, new TableAndColumnRenames(ImmutableMap.of()));
+                                String str = fixedExpression.save(SaveDestination.TO_EDITOR_FULL_NAME, new TableAndColumnRenames(ImmutableMap.of()));
                                 return new Pair<>(str, fixedExpression.toStyledString());
                             }
                             catch (UserException ex)

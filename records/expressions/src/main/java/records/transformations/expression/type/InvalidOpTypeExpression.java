@@ -30,7 +30,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
                 items.stream().map(item -> item.save(saveDestination, renames)).collect(Collectors.joining(", ")) 
                 + ")";

@@ -173,7 +173,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             {
                 if (e.errorMessage != null || !e.quickFixes.isEmpty())
                 {
-                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), e.errorMessage == null ? StyledString.s("") : e.errorMessage, Utility.mapListI(e.quickFixes, f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(SaveDestination.EDITOR, true), f)));
+                    saver.locationRecorder.addErrorAndFixes(new CanonicalSpan(CanonicalLocation.ZERO, removedCharacters.map(lastIndex)), e.errorMessage == null ? StyledString.s("") : e.errorMessage, Utility.mapListI(e.quickFixes, f -> new TextQuickFix(saver.locationRecorder.recorderFor(f.getReplacementTarget()), u -> u.save(SaveDestination.TO_EDITOR_FULL_NAME, true), f)));
                 }
             }
         }

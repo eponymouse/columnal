@@ -54,7 +54,7 @@ public class TypeApplyExpression extends TypeExpression
     public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
         StringBuilder sb = new StringBuilder();
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
         {
             sb.append(OutputBuilder.stripQuotes(FormatLexer.VOCABULARY.getLiteralName(FormatLexer.APPLY)));
             sb.append(" ");

@@ -14,6 +14,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCo
 {
     public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, boolean requireConcreteType, boolean emptyAllowed, FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
     {
-        super(originalContent == null ? null : originalContent.save(SaveDestination.EDITOR, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), typeManager, onChange, "type-editor");
+        super(originalContent == null ? null : originalContent.save(SaveDestination.TO_EDITOR, new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), typeManager, onChange, "type-editor");
     }
 }

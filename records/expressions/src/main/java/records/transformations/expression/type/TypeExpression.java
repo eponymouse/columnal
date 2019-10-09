@@ -424,6 +424,6 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
     @Override
     public String toString()
     {
-        return save(SaveDestination.SAVE_EXTERNAL, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.TO_STRING, TableAndColumnRenames.EMPTY);
     }
 }

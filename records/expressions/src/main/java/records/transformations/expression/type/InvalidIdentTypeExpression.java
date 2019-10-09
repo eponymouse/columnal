@@ -34,7 +34,7 @@ public class InvalidIdentTypeExpression extends TypeExpression
     @Override
     public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
     {
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INCOMPLETE) + " " + OutputBuilder.quoted(value);
         else
             return value;

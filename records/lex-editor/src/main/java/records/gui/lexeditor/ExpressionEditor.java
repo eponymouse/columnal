@@ -42,7 +42,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, @Nullable DataType expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
     {
-        super(startingValue == null ? null : startingValue.save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), typeManager, onChangeHandler, "expression-editor");
+        super(startingValue == null ? null : startingValue.save(SaveDestination.TO_EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), typeManager, onChangeHandler, "expression-editor");
         
         FXUtility.onceNotNull(display.sceneProperty(), s -> {
             FXUtility.onceNotNull(s.windowProperty(), w -> {
@@ -55,7 +55,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
                                 ImmutableList<ClickedReference> columnReferences = columnLookup.get().getPossibleColumnReferences(c.getFirst().getId(), c.getSecond()).sorted(Comparator.<ClickedReference,  Boolean>comparing(cr -> cr.getTableId() != null)).collect(ImmutableList.<ClickedReference>toImmutableList());
                                 if (!columnReferences.isEmpty())
                                 {
-                                    content.replaceSelection(columnReferences.get(0).getExpression().save(SaveDestination.EDITOR, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY));
+                                    content.replaceSelection(columnReferences.get(0).getExpression().save(SaveDestination.TO_EDITOR, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY));
                                     FXUtility.runAfterDelay(Duration.millis(50), () -> {
                                         w.requestFocus();
                                         display.requestFocus();

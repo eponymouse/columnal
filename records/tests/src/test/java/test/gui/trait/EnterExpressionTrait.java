@@ -179,7 +179,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             {
                 write("unit{", DELAY);
                 push(KeyCode.DELETE);
-                write(self.getUnit().save(SaveDestination.EDITOR, true));
+                write(self.getUnit().save(SaveDestination.TO_EDITOR, true));
                 write("}");
                 return UnitType.UNIT;
             }

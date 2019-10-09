@@ -28,7 +28,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public String save(SaveDestination saveDestination, boolean topLevel)
     {
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return "@INVALIDOPS (" + 
                 items.stream().map(item -> item.save(saveDestination, false)).collect(Collectors.joining(", "))
                 + ")";

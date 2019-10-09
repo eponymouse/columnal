@@ -55,7 +55,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
-        if (saveDestination == SaveDestination.SAVE_EXTERNAL)
+        if (saveDestination.needKeywords())
             return "@unfinished " + OutputBuilder.quoted(text);
         else
             return text;
