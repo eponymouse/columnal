@@ -38,7 +38,7 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @OnThread(Tag.Simulation)
     public void testTimeSubtractionFix1()
     {
-        testFix("time from hms(12{hour}, 34{minute}, 56{s}) - time{9:00AM}", "56", "", "@call function\\\\seconds between(@call function\\\\time from hms(12{hour}, 34{minute}, 56{s}), time{9:00AM})");
+        testFix("time from hms(12{hour}, 34{minute}, 56{s}) - time{9:00AM}", "56", "", "@call function\\\\datetime\\seconds between(@call function\\\\time from hms(12{hour}, 34{minute}, 56{s}), time{9:00AM})");
     }
     
     @Test
