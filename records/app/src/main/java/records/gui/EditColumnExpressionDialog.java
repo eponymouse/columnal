@@ -70,6 +70,9 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColumnExpressionDialog<T>.Result>
 {
+
+    private final SimpleObjectProperty<ColumnLookup> curColumnLookup;
+
     public class Result
     {
         public final ColumnId columnId;
@@ -120,8 +123,8 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         this.sidePane = sidePane;
         setResizable(true);
         initModality(Modality.NONE);
-        
-        SimpleObjectProperty<ColumnLookup> curColumnLookup = new SimpleObjectProperty<>(makeColumnLookup.apply(initialName));
+
+        curColumnLookup = new SimpleObjectProperty<>(makeColumnLookup.apply(initialName));
 
         nameField = new ColumnNameTextField(initialName);
         FXUtility.addChangeListenerPlatform(nameField.valueProperty(), v -> {
@@ -453,14 +456,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     @NonNull Window window = getScene().getWindow();
                     Expression expression = recipe.makeExpression(window, makeColumnPicker());
                     if (expression != null)
-                        expressionEditor.setContent(expression.save(SaveDestination.TO_EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
+                        expressionEditor.setContent(expression.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
                 }, "recipe-button"));
             }
         }
         
         public void update(Expression curContent)
         {
-            boolean empty = curContent.save(SaveDestination.TO_EDITOR, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY).trim().isEmpty();
+            boolean empty = curContent.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY).trim().isEmpty();
             setVisible(empty);
         }
         

@@ -280,7 +280,7 @@ public class TestFromDoc
             {
                 Column column = tables.get(tableId).getColumn(columnId);
                 DataTypeValue type = column.getType();
-                return new FoundColumn(tableId, type, null);
+                return new FoundColumn(tableId, false, type, null);
             }
             catch (Exception e)
             {

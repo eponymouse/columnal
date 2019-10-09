@@ -12,6 +12,6 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitLexer, CodeCo
 {
     public UnitEditor(TypeManager typeManager, @Nullable UnitExpression originalContent, FXPlatformConsumer<@NonNull @Recorded UnitExpression> onChange)
     {
-        super(originalContent == null ? null : originalContent.save(SaveDestination.TO_EDITOR, true), new UnitLexer(typeManager, false), typeManager, onChange, "unit-editor");
+        super(originalContent == null ? null : originalContent.save(SaveDestination.toUnitEditor(typeManager.getUnitManager()), true), new UnitLexer(typeManager, false), typeManager, onChange, "unit-editor");
     }
 }

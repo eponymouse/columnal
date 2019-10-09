@@ -127,7 +127,7 @@ public interface EnterTypeTrait extends FxRobotInterface
     public default void enterUnit(UnitExpression unitExpression, Random r) throws InternalException
     {
         // Bit of a hack...
-        for (char c : unitExpression.save(SaveDestination.TO_EDITOR, true).toCharArray())
+        for (char c : unitExpression.save(SaveDestination.TO_EDITOR_FULL_NAME, true).toCharArray())
         {
             write(c);
             if (c == '(')

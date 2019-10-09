@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.transformations.expression.Expression.SaveDestination;
+import records.transformations.expression.Expression.SaveDestination.ToEditor;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -82,7 +83,7 @@ public class TestDisambiguate
     
     private static SaveDestination makeNames(Name... names)
     {
-        return SaveDestination.TO_EDITOR.withNames(Arrays.stream(names).map(n -> new Pair<>(n.namespace, n.names)).collect(ImmutableList.toImmutableList()));
+        return new ToEditor(Arrays.stream(names).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(n -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>(n.namespace, n.names)).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
     }
     
     private static String t(SaveDestination destination, Name name)

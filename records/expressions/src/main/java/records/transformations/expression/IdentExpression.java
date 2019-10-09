@@ -169,6 +169,12 @@ public class IdentExpression extends NonOperatorExpression
                 }
 
                 @Override
+                public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                {
+                    return null;
+                }
+
+                @Override
                 public ValueResult getValue(EvaluateState state) throws InternalException
                 {
                     return result(state.get(idents.get(0)), state);
@@ -199,6 +205,12 @@ public class IdentExpression extends NonOperatorExpression
                 }
 
                 @Override
+                public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                {
+                    return null;
+                }
+
+                @Override
                 public ValueResult getValue(EvaluateState state) throws InternalException
                 {
                     throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
@@ -223,7 +235,7 @@ public class IdentExpression extends NonOperatorExpression
             }
             if (col == null && Objects.equals(namespace, "column"))
             {
-                onError.recordError(this, StyledString.s("Could not find source column " + toText(idents)));
+                onError.recordError(this, StyledString.s("Could not find source column " + toText(namespace, idents)));
                 return null;
             }
             else if (col != null)
@@ -232,7 +244,7 @@ public class IdentExpression extends NonOperatorExpression
                 {
                     onError.recordInformation(this, col.information);
                 }
-                TableId resolvedTableName = col.tableId;
+                TableId resolvedTableName = col.tableCanBeOmitted ? null : col.tableId;
                 DataTypeValue column = col.dataTypeValue;
                 resolution = new Resolution()
                 {
@@ -251,14 +263,20 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    {
+                        return "column";
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
                     {
                         final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
 
                         final @Nullable TableId renamedTableId = renamed.getFirst();
                         ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
 
-                        return tablePlusColumn;
+                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
                     }
                 };
                 return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
@@ -295,9 +313,15 @@ public class IdentExpression extends NonOperatorExpression
                 resolution = new Resolution()
                 {
                     @Override
-                    public ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
                     {
-                        return ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw());
+                        return "table";
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                    {
+                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
                     }
 
                     @Override
@@ -424,6 +448,12 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
+                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    {
+                        return "tag";
+                    }
+
+                    @Override
                     public @Nullable TagInfo getResolvedConstructor()
                     {
                         return tagFinal;
@@ -463,6 +493,12 @@ public class IdentExpression extends NonOperatorExpression
                     public boolean isVariable()
                     {
                         return false;
+                    }
+
+                    @Override
+                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    {
+                        return "function";
                     }
 
                     @Override
@@ -559,10 +595,15 @@ public class IdentExpression extends NonOperatorExpression
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         // TODO not sure this should rely on type-checking for the renames
-        return toText(resolution == null ? idents : resolution.save(saveDestination, idents, renames));
+        return toText(resolution == null ? saveDestination.disambiguate(namespace, idents) : resolution.save(saveDestination, idents, renames));
     }
 
-    private String toText(ImmutableList<@ExpressionIdentifier String> idents)
+    private static String toText(Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> namespaceAndIdents)
+    {
+        return toText(namespaceAndIdents.getFirst(), namespaceAndIdents.getSecond());
+    }
+    
+    private static String toText(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
     {
         StringBuilder stringBuilder = new StringBuilder();
         if (namespace != null)
@@ -579,7 +620,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(toText(idents)), this);
+        return expressionStyler.styleExpression(StyledString.s(toText(namespace, idents)), this);
     }
 
     @Override
@@ -600,14 +641,13 @@ public class IdentExpression extends NonOperatorExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IdentExpression that = (IdentExpression) o;
-        return Objects.equals(namespace, that.namespace) &&
-                idents.equals(that.idents);
+        return Objects.equals(toString(), that.toString());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(namespace, idents);
+        return Objects.hash(toString());
     }
 
     @Override
@@ -657,9 +697,11 @@ public class IdentExpression extends NonOperatorExpression
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
-        public default ImmutableList<@ExpressionIdentifier String> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+        public @Nullable @ExpressionIdentifier String getFoundNamespace();
+        
+        public default Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
         {
-            return original;
+            return saveDestination.disambiguate(getFoundNamespace(), original);
         }
 
         public boolean isVariable();

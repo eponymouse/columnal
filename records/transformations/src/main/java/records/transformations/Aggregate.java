@@ -950,7 +950,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                     @NonNull Column columnFinal = column;
                     if (grouped)
                     {
-                        return new FoundColumn(table.getFirst(), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
+                        return new FoundColumn(table.getFirst(), srcTableId.equals(tableId), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
                             Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
                             return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
                         }), null);
@@ -958,7 +958,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                     else
                     {
                         // If not grouped, must be in split by
-                        return new FoundColumn(table.getFirst(), columnFinal.getType(), null);
+                        return new FoundColumn(table.getFirst(), srcTableId.equals(tableId), columnFinal.getType(), null);
                     }
                 }
                 catch (InternalException e)

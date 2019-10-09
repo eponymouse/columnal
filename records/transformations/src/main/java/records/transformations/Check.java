@@ -228,7 +228,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                         if (checkType == CheckType.STANDALONE)
                             return null;
                         else
-                            return new FoundColumn(column.getFirst(), column.getSecond().getType(), null);
+                            return new FoundColumn(column.getFirst(), srcTableId.equals(tableId), column.getSecond().getType(), null);
                     }
                 }
                 catch (InternalException | UserException e)

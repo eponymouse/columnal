@@ -248,7 +248,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "ACC1", "@call function\\\\sum(@table Table1#ACC1)");
+        testSimpleFix("sum(ACC1)", "ACC1", "@call function\\\\number\\sum(table\\Table1#ACC1)");
     }
     
     @Ignore // Not sure if this fix is even worth implementing

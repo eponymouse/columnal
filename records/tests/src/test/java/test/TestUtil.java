@@ -1616,7 +1616,7 @@ public class TestUtil
                 if (tableId == null || tableId.equals(refTableId))
                 {
                     Column column = srcTable.getColumn(refColumnId);
-                    return new FoundColumn(tableId, column.getType(), null);
+                    return new FoundColumn(tableId, true, column.getType(), null);
                 }
             }
             catch (InternalException | UserException e)

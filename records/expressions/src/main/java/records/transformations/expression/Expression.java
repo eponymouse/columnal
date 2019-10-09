@@ -21,17 +21,22 @@ import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType;
 import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.QuickFix.QuickFixAction;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
+import records.transformations.expression.function.FunctionLookup;
+import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.function.ValueFunction.RecordedFunctionResult;
 import records.transformations.expression.visitor.ExpressionVisitor;
@@ -71,12 +76,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final class FoundColumn
         {
             public final TableId tableId;
+            public final boolean tableCanBeOmitted;
             public final DataTypeValue dataTypeValue;
             public final @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information;
 
-            public FoundColumn(TableId tableId, DataTypeValue dataTypeValue, @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information)
+            public FoundColumn(TableId tableId, boolean tableCanBeOmitted, DataTypeValue dataTypeValue, @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information)
             {
                 this.tableId = tableId;
+                this.tableCanBeOmitted = tableCanBeOmitted;
                 this.dataTypeValue = dataTypeValue;
                 this.information = information;
             }
@@ -635,8 +642,53 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
         }
         
-        // Class is immutable, so this is fine:
-        public static final SaveDestination TO_EDITOR = new ToEditor(ImmutableList.of());
+        // We need names of tables, columns, functions, tags:
+        public static SaveDestination toExpressionEditor(TypeManager typeManager, ColumnLookup columnLookup, FunctionLookup functionLookup)
+        {
+            ImmutableList.Builder<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names = ImmutableList.builder();
+
+            for (TaggedTypeDefinition ttd : typeManager.getKnownTaggedTypes().values())
+            {
+                for (TagType<JellyType> tag : ttd.getTags())
+                {
+                    names.add(new Pair<>("tag", ImmutableList.<@ExpressionIdentifier String>of(ttd.getTaggedTypeName().getRaw(), tag.getName())));
+                }
+            }
+            try
+            {
+                for (StandardFunctionDefinition function : functionLookup.getAllFunctions())
+                {
+                    names.add(new Pair<>("function", function.getFullName()));
+                }
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+
+            for (Pair<@Nullable TableId, ColumnId> column : Utility.iterableStream(columnLookup.getAvailableColumnReferences()))
+            {
+                names.add(new Pair<>("column", column.getFirst() == null ? ImmutableList.<@ExpressionIdentifier String>of(column.getSecond().getRaw()) : ImmutableList.<@ExpressionIdentifier String>of(column.getFirst().getRaw(), column.getSecond().getRaw())));
+            }
+            for (TableId table : Utility.iterableStream(columnLookup.getAvailableTableReferences()))
+            {
+                names.add(new Pair<>("table", ImmutableList.<@ExpressionIdentifier String>of(table.getRaw())));
+            }
+            
+            return new ToEditor(names.build());
+        }
+
+        public static SaveDestination toTypeEditor(TypeManager typeManager)
+        {
+            // There is no scoping on type names at the moment anyway:
+            return TO_EDITOR_FULL_NAME;
+        }
+
+        public static SaveDestination toUnitEditor(UnitManager unitManager)
+        {
+            // There is no scoping on unit names at the moment anyway:
+            return TO_EDITOR_FULL_NAME;
+        }
     }
     
     /**
@@ -949,7 +1001,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     if (column == null)
                         return null;
                     DataTypeValue columnType = column.getType();
-                    return new FoundColumn(rs.getFirst(), columnType, checkRedefined(expression, tableId, columnId));
+                    return new FoundColumn(rs.getFirst(), srcTable != null && srcTable.getId().equals(rs.getFirst()), columnType, checkRedefined(expression, tableId, columnId));
                 }
             }
             catch (InternalException | UserException e)
