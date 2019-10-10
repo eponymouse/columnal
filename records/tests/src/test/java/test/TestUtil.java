@@ -1613,7 +1613,7 @@ public class TestUtil
         {
             try
             {
-                if (tableId == null || tableId.equals(refTableId))
+                if (refTableId == null || refTableId.equals(tableId))
                 {
                     Column column = srcTable.getColumn(refColumnId);
                     return new FoundColumn(tableId, true, column.getType(), null);
