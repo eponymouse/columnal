@@ -251,9 +251,9 @@ public class IdentExpression extends NonOperatorExpression
                     @Override
                     public ValueResult getValue(EvaluateState state) throws InternalException, UserException
                     {
-                        if (column == null || resolvedTableName == null)
+                        if (column == null)
                             throw new InternalException("Attempting to fetch value despite type check failure");
-                        return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(resolvedTableName, columnName, state.getRowIndex())), false);
+                        return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(col.tableId, columnName, state.getRowIndex())), false);
                     }
 
                     @Override
