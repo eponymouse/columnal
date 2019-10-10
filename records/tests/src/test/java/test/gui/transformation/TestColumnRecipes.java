@@ -86,7 +86,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         
         Aggregate agg = (Aggregate) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Aggregate).findFirst().orElseThrow(() -> new RuntimeException("No aggregate"));
         assertEquals(ImmutableList.of(), agg.getSplitBy());
-        assertEquals(ImmutableList.of(new CallExpression(getFunctionLookup(), sum ? "sum" : "average", IdentExpression.column(srcColumn.getName()))), Utility.mapListI(agg.getColumnExpressions(), p -> p.getSecond()));
+        assertEquals(ImmutableList.of(new CallExpression(getFunctionLookup(), sum ? "sum" : "average", IdentExpression.column(table.getId(), srcColumn.getName()))), Utility.mapListI(agg.getColumnExpressions(), p -> p.getSecond()));
     }
     
     private final Object ERR = new Object();
