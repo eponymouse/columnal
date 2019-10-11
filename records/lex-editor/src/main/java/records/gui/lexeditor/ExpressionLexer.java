@@ -773,10 +773,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         for (TableId tableReference : Utility.iterableStream(columnLookup.get().getAvailableTableReferences()))
         {
             ArrayList<Pair<CompletionStatus, LexCompletion>> tableCompletions = new ArrayList<>();
-            matchWordStart(stem, canonIndex, "@table " + tableReference.getRaw(), "Table", WordPosition.FIRST_WORD).values().forEach(c -> tableCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
+            matchWordStart(stem, canonIndex, "table\\" + tableReference.getRaw(), "Table", WordPosition.FIRST_WORD).values().forEach(c -> tableCompletions.add(new Pair<>(CompletionStatus.DIRECT, c)));
 
             // Add a related item if matches without the entire
-            matchWordStart(stem, canonIndex, tableReference.getRaw(), "Table", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> tableCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("@table " + tableReference.getRaw()))));
+            matchWordStart(stem, canonIndex, tableReference.getRaw(), "Table", WordPosition.FIRST_WORD_NON_EMPTY, WordPosition.LATER_WORD).forEach((k, v) -> tableCompletions.add(new Pair<>(CompletionStatus.RELATED, v.withReplacement("table\\" + tableReference.getRaw()))));
 
             for (Pair<CompletionStatus, LexCompletion> p : tableCompletions)
             {

@@ -104,7 +104,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     @Test
     public void testExplanationSimple2b() throws UserException, InternalException
     {
-        addCheck("T2", CheckType.STANDALONE, "@call function\\\\all(@table T2#asc, ? < 4)");
+        addCheck("T2", CheckType.STANDALONE, "@call function\\\\all(table\\\\T2#asc, ? < 4)");
         testFailureExplanation(
      //"asc was 4, using asc (row 4)",
             "? was 4",

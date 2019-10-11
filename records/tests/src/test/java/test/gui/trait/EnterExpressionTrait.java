@@ -313,11 +313,13 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             @Override
             public UnitType ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
             {
+                /*
                 if (namespace != null)
                 {
                     write(namespace + "\\\\", DELAY);
                 }
-                write(idents.stream().collect(Collectors.joining("\\")), DELAY);
+                write(idents.stream().collect(Collectors.joining("\\")), DELAY);*/
+                write(idents.get(idents.size() - 1), DELAY);
                 
                 return UnitType.UNIT;
             }

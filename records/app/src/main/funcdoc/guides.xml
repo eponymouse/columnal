@@ -10,7 +10,7 @@
         <section id="columns">
             <title>Columns</title>
             <p>Most expressions use a column.  This might be to use a column value to filter out some rows (e.g. <code>Sales &gt; 0</code>, or to subtract the value in one column from the value in another (e.g. <code>After - Before</code>.</p>
-            <p>To use the value of a column on the current row in a Filter or Calculate, just type the name of the column, e.g. <code>Price</code>.  If you need to use the whole column as a list, use the table name and column name like this: <code>@table Sales#Price</code>.  The entire column can be useful if you need access to specific entries using the <link namespace="list" function="element"/> or <link namespace="list" function="element or"/> functions, but an Aggregate transformation which helps to calculate column totals, averages, etc, may be more appropriate.</p>
+            <p>To use the value of a column on the current row in a Filter or Calculate, just type the name of the column, e.g. <code>Price</code>.  If you need to use the whole column as a list, use the table name and column name like this: <code>table\\Sales#Price</code>.  The entire column can be useful if you need access to specific entries using the <link namespace="list" function="element"/> or <link namespace="list" function="element or"/> functions, but an Aggregate transformation which helps to calculate column totals, averages, etc, may be more appropriate.</p>
         </section>
         <section id="maths">
             <title>Numeric calculations</title>

@@ -16,7 +16,7 @@ public class Single extends FunctionDefinition
 {
     public Single() throws InternalException
     {
-        super("list:single");
+        super("list:get single");
     }
 
     @Override
