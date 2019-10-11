@@ -148,19 +148,19 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Property(trials = 2)
     public void testRetypeParameter(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call function\\\\sum([2])", 7, 3, "[2]", r);
+        testBackspaceRetype("@call sum([2])", 7, 3, "[2]", r);
     }
 
     @Property(trials = 2)
     public void testRetypeParameter2(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call function\\\\sum([])", 6, 2, "[]", r);
+        testBackspaceRetype("@call sum([])", 6, 2, "[]", r);
     }
 
     @Property(trials = 2)
     public void testRetypeParameter3(@From(GenRandom.class) Random r) throws Exception
     {
-        testBackspaceRetype("@call function\\\\convert unit(foo*unit{m}, 1{cm})", 15, 2, "fo", r);
+        testBackspaceRetype("@call convert unit(foo*unit{m}, 1{cm})", 15, 2, "fo", r);
     }
 
     @Property(trials = 2)

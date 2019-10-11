@@ -69,7 +69,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         TestUtil.fxTest_(() -> {
             try
             {
-                testNoOpEdit("@ifN100m Time=~@call tag\\\\Optional\\Is(m)@then100{m}/m@else@ifN100yd time=~@call tag\\\\Optional\\Is(y)@then@call function\\\\convert unit(unit{m/s},100{yard}/y)@else0{m/s}@endif@endif");
+                testNoOpEdit("@ifN100m Time=~@call tag\\\\Optional\\Is(var\\\\m)@then100{m}/m@else@ifN100yd time=~@call tag\\\\Optional\\Is(var\\\\y)@then@call function\\\\core\\convert unit(unit{m/s},100{yard}/y)@else0{m/s}@endif@endif");
             }
             catch (UserException | InternalException e)
             {
